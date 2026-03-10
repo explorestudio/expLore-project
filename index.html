@@ -4288,6 +4288,79 @@
         .test-action-btn--danger { border-color:rgba(239,68,68,0.4); color:#fca5a5; }
         .test-action-btn--danger:hover { background:rgba(239,68,68,0.15); }
 
+        
+        /* ══ Effets météo ══ */
+        @keyframes rainFall {
+            0%   { transform: translateY(-10px) translateX(0); opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 0.7; }
+            100% { transform: translateY(110vh) translateX(-20px); opacity: 0; }
+        }
+        @keyframes sunRay {
+            0%, 100% { opacity: 0.06; }
+            50%       { opacity: 0.13; }
+        }
+        @keyframes fogDrift {
+            0%   { transform: translateX(-5%); }
+            100% { transform: translateX(5%); }
+        }
+        .weather-raindrop {
+            position: absolute;
+            width: 1.5px;
+            border-radius: 2px;
+            background: linear-gradient(to bottom, transparent, rgba(174,214,241,0.7));
+            animation: rainFall linear infinite;
+            pointer-events: none;
+        }
+        .weather-sun-ray {
+            position: absolute;
+            top: -20%;
+            width: 60px;
+            height: 160%;
+            background: linear-gradient(to bottom, rgba(255,220,80,0.18), transparent);
+            transform-origin: top center;
+            animation: sunRay ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        .weather-fog-layer {
+            position: absolute;
+            left: -10%; right: -10%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(200,210,220,0.08) 30%,
+                rgba(200,210,220,0.14) 55%,
+                rgba(200,210,220,0.08) 80%,
+                transparent 100%
+            );
+            animation: fogDrift 8s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        .weather-fog-layer:nth-child(2) {
+            animation-duration: 13s;
+            animation-direction: alternate-reverse;
+            opacity: 0.7;
+        }
+
+        
+        /* ══ Overlay cosmétique carte (météo + cycle jour/nuit) ══ */
+        #mapConditionOverlay {
+            position: absolute; inset: 0; z-index: 5;
+            pointer-events: none;
+            transition: background 3s ease, opacity 2s ease;
+            opacity: 0;
+        }
+        #mapConditionOverlay.active { opacity: 1; }
+        #rainCanvas {
+            position: absolute; inset: 0; z-index: 6;
+            pointer-events: none; opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+        #rainCanvas.active { opacity: 1; }
+        @keyframes scrollToastIn  { from{opacity:0;transform:translateY(20px) scale(0.95);}to{opacity:1;transform:translateY(0) scale(1);} }
+        @keyframes scrollToastOut { to{opacity:0;transform:translateY(10px) scale(0.97);} }
+
         </style>
 </head>
 <body>
@@ -4367,7 +4440,15 @@
         </div>
 
         <!-- Map -->
-        <div id="map"></div>
+        <div id="map">
+            <div id="mapConditionOverlay"></div>
+            <canvas id="rainCanvas"></canvas>
+        </div>
+
+        <!-- ══ Couche météo ══ -->
+        <div id="weatherOverlay" style="position:absolute;inset:0;z-index:35;pointer-events:none;overflow:hidden;opacity:0;transition:opacity 1.2s ease;"></div>
+
+
 
         
 
@@ -6772,6 +6853,7 @@
                 const _snIcon = document.getElementById('scrollNearbyIcon');
                 if (_snIcon) _snIcon.innerHTML = scrollIconSVG(20);
                 updateDustVisibility();
+                setTimeout(applyMapCondition, 800);
                 updateEchoVisibility();
                 updateInfoVisibility();
                 checkNearbyPOI();
@@ -7057,6 +7139,7 @@
                        : '🌆 Crépuscule';
             document.getElementById('testHourLabel').textContent = label;
             _testHour = h;
+            applyMapCondition();
             refreshTestState();
         }
 
@@ -7069,6 +7152,7 @@
             } else {
                 updateTestHour(val);
             }
+            applyMapCondition();
             refreshTestState();
         }
 
@@ -7078,6 +7162,8 @@
                 btn.classList.toggle('test-weather-btn--active',
                     (val === null && btn.dataset.w === 'null') || btn.dataset.w === val);
             });
+            applyWeatherEffect(val);
+            applyMapCondition();
             refreshTestState();
         }
 
@@ -7127,6 +7213,143 @@
                 'Lumens : ' + (bagInv.lumens || 0),
                 'Cartes collectées : ' + collectedCards.length,
             ].join('<br>');
+        }
+
+
+        // ══ Effets visuels météo ══
+        function applyWeatherEffect(weather) {
+            const overlay = document.getElementById('weatherOverlay');
+            if (!overlay) return;
+
+            // Vider
+            overlay.innerHTML = '';
+            overlay.style.opacity = '0';
+            overlay.style.background = '';
+
+            if (!weather) return; // météo réelle = pas d'effet simulé
+
+            setTimeout(() => {
+                if (weather === 'rain') {
+                    // 60 gouttes réparties aléatoirement
+                    for (let i = 0; i < 60; i++) {
+                        const drop = document.createElement('div');
+                        drop.className = 'weather-raindrop';
+                        const height = 12 + Math.random() * 18;
+                        drop.style.cssText = [
+                            'left:' + (Math.random() * 105) + '%',
+                            'top:' + (-Math.random() * 20) + '%',
+                            'height:' + height + 'px',
+                            'opacity:' + (0.4 + Math.random() * 0.5),
+                            'animation-duration:' + (0.6 + Math.random() * 0.8) + 's',
+                            'animation-delay:' + (-Math.random() * 2) + 's'
+                        ].join(';');
+                        overlay.appendChild(drop);
+                    }
+                    overlay.style.background = 'linear-gradient(to bottom, rgba(30,50,80,0.18) 0%, transparent 60%)';
+
+                } else if (weather === 'clear') {
+                    // Rayons de soleil obliques
+                    for (let i = 0; i < 7; i++) {
+                        const ray = document.createElement('div');
+                        ray.className = 'weather-sun-ray';
+                        ray.style.cssText = [
+                            'left:' + (5 + i * 14) + '%',
+                            'transform:rotate(' + (-15 + i * 5) + 'deg)',
+                            'animation-duration:' + (3 + i * 0.7) + 's',
+                            'animation-delay:' + (-i * 0.4) + 's'
+                        ].join(';');
+                        overlay.appendChild(ray);
+                    }
+                    overlay.style.background = 'radial-gradient(ellipse at 70% 10%, rgba(255,220,60,0.12) 0%, transparent 60%)';
+
+                } else if (weather === 'fog') {
+                    // Deux couches de brouillard qui dérivent
+                    for (let i = 0; i < 2; i++) {
+                        const fog = document.createElement('div');
+                        fog.className = 'weather-fog-layer';
+                        overlay.appendChild(fog);
+                    }
+                    overlay.style.background = 'rgba(180,195,210,0.06)';
+                }
+
+                overlay.style.opacity = '1';
+            }, 50);
+        }
+
+
+        // ══════════════════════════════════════════
+        //  CONDITIONS VISUELLES (météo + cycle jour/nuit)
+        // ══════════════════════════════════════════
+
+        let _rainAnimFrame = null;
+
+        const MAP_CONDITIONS = {
+            night: { overlay: 'rgba(10,8,40,0.55)',   mapFilter: 'brightness(0.45) saturate(0.5) hue-rotate(200deg)', rain: false },
+            dawn:  { overlay: 'rgba(255,100,20,0.15)', mapFilter: 'brightness(0.75) saturate(0.8) sepia(0.15)',        rain: false },
+            day:   { overlay: 'transparent',           mapFilter: 'none',                                               rain: false },
+            dusk:  { overlay: 'rgba(255,80,20,0.18)',  mapFilter: 'brightness(0.8) saturate(1.1) sepia(0.1)',          rain: false },
+            rain:  { overlay: 'rgba(20,30,60,0.28)',   mapFilter: 'brightness(0.78) saturate(0.7)',                    rain: true  },
+            clear: { overlay: 'rgba(255,240,180,0.06)',mapFilter: 'brightness(1.08) saturate(1.15)',                   rain: false },
+            fog:   { overlay: 'rgba(200,210,220,0.32)',mapFilter: 'brightness(0.9) saturate(0.4)',                     rain: false }
+        };
+
+        function applyMapCondition() {
+            const weather = getSimulatedWeather();
+            const hour    = getSimulatedHour();
+            const condKey = weather || (
+                hour >= 22 || hour < 6  ? 'night' :
+                hour >= 6  && hour < 9  ? 'dawn'  :
+                hour >= 9  && hour < 19 ? 'day'   : 'dusk'
+            );
+            const cond  = MAP_CONDITIONS[condKey] || MAP_CONDITIONS.day;
+            const overlayEl = document.getElementById('mapConditionOverlay');
+            // Cibler le canvas MapLibre pour le filtre
+            const mapCanvas = document.querySelector('#map canvas:not(#rainCanvas)');
+
+            if (overlayEl) {
+                overlayEl.style.background = cond.overlay;
+                overlayEl.classList.toggle('active', cond.overlay !== 'transparent');
+            }
+            if (mapCanvas) mapCanvas.style.filter = cond.mapFilter || 'none';
+
+            if (cond.rain) startRain();
+            else stopRain();
+        }
+
+        function startRain() {
+            const canvas = document.getElementById('rainCanvas');
+            if (!canvas || _rainAnimFrame) return;
+            canvas.classList.add('active');
+            canvas.width  = canvas.offsetWidth  || window.innerWidth;
+            canvas.height = canvas.offsetHeight || window.innerHeight;
+            const ctx = canvas.getContext('2d');
+            const drops = Array.from({ length: 120 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                l: Math.random() * 14 + 8,
+                v: Math.random() * 4 + 5
+            }));
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = 'rgba(180,200,255,0.35)';
+                ctx.lineWidth = 0.8;
+                drops.forEach(d => {
+                    ctx.beginPath();
+                    ctx.moveTo(d.x, d.y);
+                    ctx.lineTo(d.x - d.l * 0.2, d.y + d.l);
+                    ctx.stroke();
+                    d.y += d.v; d.x -= d.v * 0.2;
+                    if (d.y > canvas.height) { d.y = -d.l; d.x = Math.random() * canvas.width; }
+                });
+                _rainAnimFrame = requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        function stopRain() {
+            const canvas = document.getElementById('rainCanvas');
+            if (canvas) canvas.classList.remove('active');
+            if (_rainAnimFrame) { cancelAnimationFrame(_rainAnimFrame); _rainAnimFrame = null; }
         }
 
         function initJoystick() {
@@ -11268,13 +11491,17 @@
                     dawn:  h => h >= 6  && h < 9,
                     day:   h => h >= 9  && h < 19,
                     dusk:  h => h >= 19 && h < 22,
-                    rain: () => true, sun: () => true, fog: () => true
+                    // Météo : vérifier la condition simulée (ou réelle à venir)
+                    rain: () => { const w = getSimulatedWeather(); return w === 'rain'; },
+                    sun:  () => { const w = getSimulatedWeather(); return w === 'clear'; },
+                    fog:  () => { const w = getSimulatedWeather(); return w === 'fog'; }
                 };
                 const check = TIME_WINDOWS[condition];
                 if (check && !check(hour)) {
                     const COND_LABELS = {
-                        night: 'la nuit (22h–6h)', dawn: '’aube (6h–9h)',
-                        day:   'la journée (9h–19h)', dusk: 'au crépuscule (19h–22h)'
+                        night: 'la nuit (22h–6h)', dawn: "à l'aube (6h–9h)",
+                        day:   'en journée (9h–19h)', dusk: 'au crépuscule (19h–22h)',
+                        rain:  'sous la pluie', sun: 'par temps ensoleillé', fog: 'par temps de brouillard'
                     };
                     showToast('Ce slot s\'ouvre ' + (COND_LABELS[condition] || 'à certaines heures'));
                     return;
