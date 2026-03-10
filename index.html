@@ -172,31 +172,23 @@
 
         /* isometric-fallback CSS removed — tilt handled natively by Google Maps API */
 
-        .controls {
-            position: absolute;
-            bottom: 20px;
-            left: 16px;
-            right: 16px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            padding: 16px;
-            z-index: 20;
-        }
+        
 
-        .controls-hint {
-            text-align: center;
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 12px;
-        }
+        
 
         .nearby-poi {
             background: #ECFDF5;
             border: 2px solid #10B981;
             border-radius: 8px;
             padding: 16px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
+            /* position:absolute ancré au .app-container (position:relative),
+               hors du flux DOM → n'affecte pas la position du joystick */
+            position: absolute;
+            bottom: 20px;
+            left: 16px;
+            right: 16px;
+            z-index: 25;
         }
 
         .nearby-poi-header {
@@ -2396,12 +2388,11 @@
 
         /* ── Marqueur Point d'Information ── */
         .info-marker {
-            width: 30px; height: 30px; border-radius: 50%;
-            background: linear-gradient(135deg, #1D4ED8, #2563EB);
+            width: 34px; height: 34px; border-radius: 50%;
+            background: linear-gradient(135deg, #0369A1, #0EA5E9);
             border: 3px solid white;
             display: flex; align-items: center; justify-content: center;
-            color: white; font-family: Georgia, serif; font-style: italic;
-            font-weight: 900; font-size: 16px; line-height: 1;
+            font-size: 16px; line-height: 1;
             box-shadow: 0 3px 10px rgba(29,78,216,0.55);
             cursor: pointer;
             transition: transform 0.15s, box-shadow 0.15s, background 0.3s;
@@ -4086,7 +4077,218 @@
 
         #metaCinematique.show { display: flex !important; }
 
-    </style>
+    
+        /* ══ Marqueur Panneau d'information (i) ══ */
+        .panneau-marker {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #92400E, #B45309);
+            border: 3px solid white;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 3px 10px rgba(146,64,14,0.6);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            position: relative;
+        }
+        .panneau-marker .panneau-i {
+            font-size: 15px; font-weight: 900;
+            font-family: Georgia, serif; font-style: italic;
+            color: white; line-height: 1; pointer-events: none;
+        }
+        .panneau-marker.in-range {
+            background: linear-gradient(135deg, #B45309, #D97706);
+            box-shadow: 0 3px 18px rgba(217,119,6,0.9);
+            animation: panneauPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes panneauPulse {
+            0%,100% { box-shadow: 0 3px 18px rgba(217,119,6,0.9); }
+            50%     { box-shadow: 0 3px 26px rgba(217,119,6,1), 0 0 0 7px rgba(217,119,6,0.18); }
+        }
+        .panneau-ring {
+            position: absolute; top: -6px; left: -6px;
+            width: 44px; height: 44px;
+            pointer-events: none; overflow: visible;
+        }
+
+        /* ══ Bannière nearby panneau ══ */
+        #nearbyPanneau {
+            background: #FEF3C7; border-color: #B45309;
+        }
+
+        /* ══ Écran panneau ══ */
+        #panneauScreen {
+            position: absolute; inset: 0; z-index: 500;
+            background: #1a1006;
+            display: flex; flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+        }
+        #panneauScreen.show { transform: translateY(0); }
+        .panneau-screen-header {
+            background: linear-gradient(135deg, #92400E, #B45309);
+            padding: 16px 20px;
+            display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+        }
+        .panneau-screen-back {
+            background: none; border: none; color: white;
+            font-size: 22px; cursor: pointer; padding: 0;
+        }
+        .panneau-screen-title { font-size: 15px; font-weight: 800; color: white; flex: 1; }
+        .panneau-screen-sub   { font-size: 11px; color: rgba(255,255,255,0.6); }
+        .panneau-screen-body  { flex: 1; overflow-y: auto; padding: 20px 16px; }
+
+        /* Slots */
+        .panneau-slots { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .panneau-slot {
+            width: 56px; height: 72px; border-radius: 10px;
+            border: 2px dashed rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.05);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 4px; cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .panneau-slot.filled  { border: 2px solid #D97706; background: rgba(217,119,6,0.15); }
+        .panneau-slot.special { border: 2px dashed #8B5CF6; background: rgba(139,92,246,0.08); }
+        .panneau-slot.special.filled { border: 2px solid #8B5CF6; background: rgba(139,92,246,0.2); }
+        .panneau-slot-icon  { font-size: 22px; }
+        .panneau-slot-label { font-size: 8px; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.2; }
+        .panneau-slot.filled .panneau-slot-label         { color: #D97706; }
+        .panneau-slot.special.filled .panneau-slot-label { color: #8B5CF6; }
+
+        /* Entrées audio */
+        .panneau-entry {
+            background: rgba(255,255,255,0.06); border-radius: 10px;
+            padding: 14px; margin-bottom: 12px;
+            border-left: 3px solid #B45309;
+        }
+        .panneau-entry-title { font-size: 12px; font-weight: 700; color: #D97706; margin-bottom: 8px; }
+        .panneau-entry-audio { display: flex; align-items: flex-start; gap: 10px; }
+        .panneau-audio-btn {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: #B45309; border: none; color: white;
+            font-size: 14px; cursor: pointer; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .panneau-audio-btn.playing { background: #D97706; animation: audioPulse 1s ease-in-out infinite; }
+        @keyframes audioPulse { 0%,100%{transform:scale(1);}50%{transform:scale(1.1);} }
+        .panneau-audio-text { font-size: 12px; color: rgba(255,255,255,0.75); line-height: 1.6; flex: 1; }
+        .panneau-locked-entry {
+            background: rgba(255,255,255,0.03); border-radius: 10px;
+            padding: 14px; margin-bottom: 12px;
+            border-left: 3px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; gap: 10px;
+            color: rgba(255,255,255,0.3); font-size: 12px;
+        }
+        .panneau-complete-banner {
+            background: linear-gradient(135deg, #92400E, #D97706);
+            border-radius: 12px; padding: 16px; text-align: center;
+            margin-top: 12px; cursor: pointer;
+            animation: completePulse 2s ease-in-out infinite;
+        }
+        @keyframes completePulse {
+            0%,100%{box-shadow:0 0 0 0 rgba(217,119,6,0.4);}
+            50%{box-shadow:0 0 0 12px rgba(217,119,6,0);}
+        }
+        .panneau-complete-title { font-size: 15px; font-weight: 800; color: white; margin-bottom: 4px; }
+        .panneau-complete-sub   { font-size: 11px; color: rgba(255,255,255,0.7); }
+
+        
+        /* ══ Toast parchemin supertypé ══ */
+        #scrollRewardToast {
+            position: absolute;
+            bottom: 80px;
+            left: 16px;
+            right: 16px;
+            z-index: 600;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+            cursor: pointer;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+            pointer-events: none;
+        }
+        #scrollRewardToast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .scroll-toast-inner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 16px;
+            background: rgba(15,10,30,0.93);
+            backdrop-filter: blur(12px);
+        }
+        .scroll-toast-icon {
+            font-size: 26px;
+            flex-shrink: 0;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .scroll-toast-body { flex: 1; min-width: 0; }
+        .scroll-toast-label {
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            opacity: 0.6; color: white; margin-bottom: 2px;
+        }
+        .scroll-toast-name {
+            font-size: 14px; font-weight: 800; color: white;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .scroll-toast-cta {
+            font-size: 11px; font-weight: 700;
+            color: white; opacity: 0.5;
+            flex-shrink: 0;
+        }
+        .scroll-toast-bar {
+            height: 3px;
+            transform-origin: left;
+            animation: none;
+        }
+        @keyframes toastBarShrink {
+            from { transform: scaleX(1); }
+            to   { transform: scaleX(0); }
+        }
+
+        
+        @keyframes scrollToastIn {
+            from { opacity:0; transform:translateY(20px) scale(0.95); }
+            to   { opacity:1; transform:translateY(0)    scale(1); }
+        }
+        @keyframes scrollToastOut {
+            to { opacity:0; transform:translateY(10px) scale(0.97); }
+        }
+        
+        /* ══ Mode test ══ */
+        .avatar-menu-divider { height:1px; background:rgba(0,0,0,0.08); margin:4px 0; }
+        .avatar-menu-item--test { color:#6366f1 !important; font-weight:700; }
+        .test-time-btn {
+            background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+            color:white; border-radius:20px; padding:5px 12px; font-size:12px;
+            cursor:pointer; transition:background 0.15s;
+        }
+        .test-time-btn:hover, .test-time-btn--reset { background:rgba(99,102,241,0.3); border-color:#6366f1; }
+        .test-weather-btn {
+            background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+            color:white; border-radius:20px; padding:6px 14px; font-size:13px;
+            cursor:pointer; transition:all 0.15s;
+        }
+        .test-weather-btn--active { background:rgba(99,102,241,0.35); border-color:#6366f1; font-weight:700; }
+        .test-action-btn {
+            background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+            color:white; border-radius:10px; padding:10px 14px; font-size:13px;
+            cursor:pointer; text-align:left; transition:background 0.15s;
+        }
+        .test-action-btn:hover { background:rgba(255,255,255,0.13); }
+        .test-action-btn--danger { border-color:rgba(239,68,68,0.4); color:#fca5a5; }
+        .test-action-btn--danger:hover { background:rgba(239,68,68,0.15); }
+
+        </style>
 </head>
 <body>
     <div id="mainApp" class="app-container">
@@ -4127,6 +4329,10 @@
                         <button class="avatar-menu-item avatar-menu-item--disabled">
                             <span>🛒</span> Magasin <span class="soon-badge">Bientôt</span>
                         </button>
+                        <div class="avatar-menu-divider"></div>
+                        <button class="avatar-menu-item avatar-menu-item--test" onclick="closeAvatarMenu(); openTestPanel()">
+                            <span>🧪</span> Mode test
+                        </button>
                     </div>
                 </div>
             </div>
@@ -4163,16 +4369,69 @@
         <!-- Map -->
         <div id="map"></div>
 
-        <!-- BOUTON TEST TEMPORAIRE -->
-        <button id="testBtn" onclick="addTestCards()" style="
-            position:absolute; bottom:200px; right:16px; z-index:1000;
-            background:#ef4444; color:white; border:none; border-radius:20px;
-            padding:10px 16px; font-size:13px; font-weight:700;
-            box-shadow:0 4px 12px rgba(0,0,0,0.3); cursor:pointer;
-            letter-spacing:0.5px;
-        ">🧪 TEST</button>
+        
 
         
+
+
+        <!-- ══ PANNEAU TEST ══ -->
+        <div id="testPanel" style="
+            display:none; position:absolute; inset:0; z-index:900;
+            background:rgba(10,10,20,0.97); color:white;
+            flex-direction:column; overflow-y:auto;
+        ">
+            <div style="padding:16px 16px 8px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
+                <button onclick="closeTestPanel()" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:0 6px 0 0;">←</button>
+                <span style="font-size:16px;font-weight:800;">🧪 Mode test</span>
+            </div>
+
+            <!-- Heure simulée -->
+            <div style="padding:16px; border-bottom:1px solid rgba(255,255,255,0.08);">
+                <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Heure simulée</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                    <input type="range" id="testHourSlider" min="0" max="23" value="12"
+                        oninput="updateTestHour(this.value)"
+                        style="flex:1;accent-color:#6366f1;">
+                    <span id="testHourLabel" style="font-size:18px;font-weight:800;min-width:50px;text-align:right;">12h00</span>
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button onclick="setTestHour(3)"  class="test-time-btn">🌙 3h</button>
+                    <button onclick="setTestHour(7)"  class="test-time-btn">🌅 7h</button>
+                    <button onclick="setTestHour(14)" class="test-time-btn">☀️ 14h</button>
+                    <button onclick="setTestHour(20)" class="test-time-btn">🌆 20h</button>
+                    <button onclick="setTestHour(null)" class="test-time-btn test-time-btn--reset">↺ Réelle</button>
+                </div>
+            </div>
+
+            <!-- Météo simulée -->
+            <div style="padding:16px; border-bottom:1px solid rgba(255,255,255,0.08);">
+                <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Météo simulée</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;" id="testWeatherBtns">
+                    <button onclick="setTestWeather(null)"  class="test-weather-btn test-weather-btn--active" data-w="null">↺ Réelle</button>
+                    <button onclick="setTestWeather('clear')" class="test-weather-btn" data-w="clear">☀️ Soleil</button>
+                    <button onclick="setTestWeather('rain')"  class="test-weather-btn" data-w="rain">🌧 Pluie</button>
+                    <button onclick="setTestWeather('fog')"   class="test-weather-btn" data-w="fog">🌫 Brouillard</button>
+                </div>
+            </div>
+
+            <!-- Actions de test -->
+            <div style="padding:16px; border-bottom:1px solid rgba(255,255,255,0.08);">
+                <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Actions</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <button onclick="addTestCards()" class="test-action-btn">🃏 Débloquer toutes les cartes</button>
+                    <button onclick="addTestScrolls(5)" class="test-action-btn">📜 +5 parchemins</button>
+                    <button onclick="addTestOrbes(3)" class="test-action-btn">🔮 +3 orbes</button>
+                    <button onclick="addTestDust(500)" class="test-action-btn">✨ +500 poudre</button>
+                    <button onclick="resetProgress()" class="test-action-btn test-action-btn--danger">⚠️ Réinitialiser la progression</button>
+                </div>
+            </div>
+
+            <!-- État actuel -->
+            <div style="padding:16px;">
+                <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">État actuel</div>
+                <div id="testStateDisplay" style="font-size:12px;color:#d1d5db;line-height:1.8;font-family:monospace;"></div>
+            </div>
+        </div>
 
         <!-- Joystick -->
         <div class="joystick-container">
@@ -4186,8 +4445,6 @@
         </div>
 
         <!-- Controls -->
-        <div class="controls">
-            <div class="controls-hint">Utilisez les flèches ← ↑ → ↓ pour vous déplacer</div>
 
             <div id="nearbyPOI" class="nearby-poi hidden">
                 <div class="nearby-poi-header">
@@ -4200,6 +4457,29 @@
                     <div class="nearby-poi-distance">À portée de collecte !</div>
                 </div>
                 <button class="collect-btn" id="poiCollectBtn" onclick="collectCard()">Collecter la carte</button>
+            </div>
+
+            <div id="nearbyInfo" class="nearby-poi hidden" style="background:#E0F2FE;border-color:#0EA5E9;">
+                <div class="nearby-poi-header">
+                    <div>
+                        <div class="nearby-poi-name" style="color:#0369A1;">🌄 <span id="infoPointName"></span></div>
+                        <div class="nearby-poi-distance" style="color:#0EA5E9;">Point panorama à portée</div>
+                    </div>
+                </div>
+                <button class="collect-btn" style="background:#0EA5E9;" onclick="openViewfinderFromNearby()">📷 Prendre une photo</button>
+            </div>
+
+            <div id="nearbyPanneau" class="nearby-poi hidden">
+                <div class="nearby-poi-header">
+                    <div>
+                        <div class="nearby-poi-name" style="color:#92400E;">
+                            <span style="font-style:italic;font-family:Georgia,serif;font-weight:900;font-size:14px;background:#B45309;color:white;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;">i</span>
+                            <span id="panneauNearbyName"></span>
+                        </div>
+                        <div class="nearby-poi-distance" style="color:#B45309;" id="panneauNearbySlots"></div>
+                    </div>
+                </div>
+                <button class="collect-btn" style="background:#B45309;" onclick="openPanneauScreen()">Consulter le panneau</button>
             </div>
 
             <div id="nearbyDust" class="nearby-poi hidden" style="background: #F3E8FF; border-color: #A855F7;">
@@ -4235,12 +4515,24 @@
             <div id="nearbyScroll" class="nearby-poi hidden" style="background: #FFFBEB; border-color: #D97706;">
                 <div class="nearby-poi-header">
                     <div>
-                        <div class="nearby-poi-name" style="color: #92400E;" id="scrollName">📜 Parchemin</div>
+                        <div class="nearby-poi-name" style="color: #92400E;" id="scrollName" style="display:flex;align-items:center;gap:5px;"><span id="scrollNearbyIcon" style="display:inline-flex;align-items:center;"></span>Parchemin</div>
                         <div class="nearby-poi-distance" style="color: #D97706;">À portée de collecte !</div>
                     </div>
                 </div>
                 <button onclick="collectScroll()" class="collect-btn" style="background: #D97706;">Collecter le parchemin</button>
             </div>
+
+        <!-- Toast gain parchemin supertypé -->
+        <div id="scrollRewardToast" onclick="openBagToScrolls()">
+            <div class="scroll-toast-inner">
+                <div class="scroll-toast-icon" id="scrollToastIcon">📜</div>
+                <div class="scroll-toast-body">
+                    <div class="scroll-toast-label">Parchemin obtenu</div>
+                    <div class="scroll-toast-name" id="scrollToastName">Parchemin</div>
+                </div>
+                <div class="scroll-toast-cta">Voir →</div>
+            </div>
+            <div class="scroll-toast-bar" id="scrollToastBar"></div>
         </div>
 
         <!-- Mise au Point Screen -->
@@ -5149,6 +5441,18 @@
             </div>
         </div>
         <!-- ═══════════════════════════════════════
+             ÉCRAN PANNEAU
+        ═══════════════════════════════════════ -->
+        <div id="panneauScreen">
+            <div class="panneau-screen-header">
+                <button class="panneau-screen-back" onclick="closePanneauScreen()">←</button>
+                <div class="panneau-screen-title" id="panneauScreenTitle"></div>
+                <div class="panneau-screen-sub"   id="panneauScreenSub"></div>
+            </div>
+            <div class="panneau-screen-body" id="panneauScreenBody"></div>
+        </div>
+
+        <!-- ═══════════════════════════════════════
              SAC À DOS
         ═══════════════════════════════════════ -->
         <div id="bagScreen" class="bag-screen">
@@ -5727,8 +6031,8 @@
         const DUST_RADIUS = 30;
         const ECHO_RADIUS = 30;
         const ORB_RADIUS = 30;
-        const SCROLL_RADIUS = 30;
-        const INFO_RADIUS = 30;
+        const SCROLL_RADIUS = 20;  // Réduit de 30 à 20m
+        const INFO_RADIUS = 20;     // Réduit de 30 à 20m
         const MOVE_SPEED = 0.000015;
         // Tilt offset: shift camera center north so player appears in lower third of screen
         const TILT_OFFSET_LAT = 0.0018;
@@ -5755,24 +6059,24 @@
                 name: 'Commune',   
                 color: '#10B981', 
                 shape: 'triangle', 
-                exp: { 0: 160, 1: 320, 2: 480  },
-                // Paliers de poudre pour entrées carnet (1 par niveau)
+                exp: { 0: 160, 1: 320, 2: 480 },
+                increment: 20,
                 milestones: {
-                    0: [0.5],           // 1 palier : 50% (80 poudre)
-                    1: [0.5],           // 1 palier : 50% (160 poudre)
-                    2: [0.5]            // 1 palier : 50% (240 poudre)
+                    0: [0.5],
+                    1: [0.5],
+                    2: [0.5]
                 }
             },
             rare:      { 
                 name: 'Rare',      
                 color: '#3B82F6', 
                 shape: 'pentagon', 
-                exp: { 0: 280, 1: 560, 2: 840  },
-                // Paliers de poudre pour entrées carnet (2 par niveau)
+                exp: { 0: 250, 1: 520, 2: 800 },
+                increment: 20,
                 milestones: {
-                    0: [0.33, 0.66],    // 2 paliers : 33%, 66% (93, 187 poudre)
-                    1: [0.33, 0.66],    // 2 paliers : 33%, 66% (187, 373 poudre)
-                    2: [0.33, 0.66]     // 2 paliers : 33%, 66% (280, 560 poudre)
+                    0: [0.33, 0.66],
+                    1: [0.33, 0.66],
+                    2: [0.33, 0.66]
                 }
             },
             epic:      { 
@@ -5791,12 +6095,12 @@
                 name: 'Légendaire',
                 color: '#F97316', 
                 shape: 'hexagon',  
-                exp: { 0: 400, 1: 800, 2: 1200 },
-                // Paliers de poudre pour entrées carnet (3 par niveau)
+                exp: { 0: 400, 1: 820, 2: 1200 },
+                increment: 25,
                 milestones: {
-                    0: [0.25, 0.5, 0.75],  // 3 paliers : 25%, 50%, 75% (100, 200, 300 poudre)
-                    1: [0.25, 0.5, 0.75],  // 3 paliers : 25%, 50%, 75% (200, 400, 600 poudre)
-                    2: [0.25, 0.5, 0.75]   // 3 paliers : 25%, 50%, 75% (300, 600, 900 poudre)
+                    0: [0.25, 0.5, 0.75],
+                    1: [0.25, 0.5, 0.75],
+                    2: [0.25, 0.5, 0.75]
                 }
             }
         };
@@ -6251,8 +6555,9 @@
 
             map.addControl(new maplibregl.AttributionControl({ compact: true }));
 
-            // Disable default interactions we don't want
+            // Désactiver uniquement doubleClickZoom et keyboard (gérés manuellement)
             map.doubleClickZoom.disable();
+            map.keyboard.disable();
 
             // ---- Player marker (HTML element) ----
             const playerEl = document.createElement('div');
@@ -6284,13 +6589,12 @@
                 paint: {
                     'circle-radius': [
                         'interpolate', ['exponential', 2], ['zoom'],
-                        14, 7.3,
-                        15, 14.6,
-                        16, 29.2,
-                        17, 58.4,
-                        17.5, 82.6,
-                        18, 116.8,
-                        19, 233.7
+                        14, 6.25,   // 50m à zoom 14
+                        15, 12.5,   // 50m à zoom 15
+                        16, 25,     // 50m à zoom 16
+                        17, 50,     // 50m à zoom 17
+                        18, 100,    // 50m à zoom 18
+                        19, 200     // 50m à zoom 19
                     ],
                     'circle-color': '#EF4444',
                     'circle-opacity': 0.08,
@@ -6319,13 +6623,12 @@
                 paint: {
                     'circle-radius': [
                         'interpolate', ['exponential', 2], ['zoom'],
-                        14, 4.4,
-                        15, 8.8,
-                        16, 17.5,
-                        17, 35.0,
-                        17.5, 49.6,
-                        18, 70.1,
-                        19, 140.2
+                        14, 3.75,   // 30m à zoom 14
+                        15, 7.5,    // 30m à zoom 15
+                        16, 15,     // 30m à zoom 16
+                        17, 30,     // 30m à zoom 17
+                        18, 60,     // 30m à zoom 18
+                        19, 120     // 30m à zoom 19
                     ],
                     'circle-color': '#A855F7',
                     'circle-opacity': 0.08,
@@ -6354,13 +6657,12 @@
                 paint: {
                     'circle-radius': [
                         'interpolate', ['exponential', 2], ['zoom'],
-                        14, 4.4,
-                        15, 8.8,
-                        16, 17.5,
-                        17, 35.0,
-                        17.5, 49.6,
-                        18, 70.1,
-                        19, 140.2
+                        14, 3.75,   // 30m à zoom 14
+                        15, 7.5,    // 30m à zoom 15
+                        16, 15,     // 30m à zoom 16
+                        17, 30,     // 30m à zoom 17
+                        18, 60,     // 30m à zoom 18
+                        19, 120     // 30m à zoom 19
                     ],
                     'circle-color': '#6366F1',
                     'circle-opacity': 0.08,
@@ -6370,14 +6672,29 @@
                 }
             });
 
-            // Info circles (30m) — bleu, même rayon que dust/echo
+            // Orb circles (30m)
             map.addSource('orb-circles', {
                     type: 'geojson',
                     data: { type: 'FeatureCollection', features: ORB_POINTS.map(o => ({ type: 'Feature', properties: { id: o.id }, geometry: { type: 'Point', coordinates: [o.lng, o.lat] } })) }
                 });
                 map.addLayer({
-                    id: 'orb-circles', type: 'circle', source: 'orb-circles',
-                    paint: { 'circle-radius': 28, 'circle-color': 'rgba(99,102,241,0.12)', 'circle-stroke-width': 1.5, 'circle-stroke-color': 'rgba(99,102,241,0.5)' }
+                    id: 'orb-circles', 
+                    type: 'circle', 
+                    source: 'orb-circles',
+                    paint: { 
+                        'circle-radius': [
+                            'interpolate', ['exponential', 2], ['zoom'],
+                            14, 3.75,   // 30m à zoom 14
+                            15, 7.5,    // 30m à zoom 15
+                            16, 15,     // 30m à zoom 16
+                            17, 30,     // 30m à zoom 17
+                            18, 60,     // 30m à zoom 18
+                            19, 120     // 30m à zoom 19
+                        ],
+                        'circle-color': 'rgba(99,102,241,0.12)', 
+                        'circle-stroke-width': 1.5, 
+                        'circle-stroke-color': 'rgba(99,102,241,0.5)' 
+                    }
                 });
 
                 map.addSource('scroll-circles', {
@@ -6385,8 +6702,24 @@
                     data: { type: 'FeatureCollection', features: SCROLL_POINTS.map(s => ({ type: 'Feature', properties: { id: s.id }, geometry: { type: 'Point', coordinates: [s.lng, s.lat] } })) }
                 });
                 map.addLayer({
-                    id: 'scroll-circles', type: 'circle', source: 'scroll-circles',
-                    paint: { 'circle-radius': 28, 'circle-color': 'rgba(217,119,6,0.12)', 'circle-stroke-width': 1.5, 'circle-stroke-color': 'rgba(217,119,6,0.5)' }
+                    id: 'scroll-circles', 
+                    type: 'circle', 
+                    source: 'scroll-circles',
+                    paint: { 
+                        // Rayon adapté au zoom pour correspondre à SCROLL_RADIUS (20m)
+                        'circle-radius': [
+                            'interpolate', ['exponential', 2], ['zoom'],
+                            14, 2.5,   // 20m à zoom 14
+                            15, 5,     // 20m à zoom 15
+                            16, 10,    // 20m à zoom 16
+                            17, 20,    // 20m à zoom 17
+                            18, 40,    // 20m à zoom 18
+                            19, 80     // 20m à zoom 19
+                        ],
+                        'circle-color': 'rgba(217,119,6,0.12)', 
+                        'circle-stroke-width': 1.5, 
+                        'circle-stroke-color': 'rgba(217,119,6,0.5)' 
+                    }
                 });
 
                 map.addSource('info-circles', {
@@ -6400,13 +6733,12 @@
                 paint: {
                     'circle-radius': [
                         'interpolate', ['exponential', 2], ['zoom'],
-                        14, 4.4,
-                        15, 8.8,
-                        16, 17.5,
-                        17, 35.0,
-                        17.5, 49.6,
-                        18, 70.1,
-                        19, 140.2
+                        14, 2.5,   // 20m à zoom 14
+                        15, 5,     // 20m à zoom 15
+                        16, 10,    // 20m à zoom 16
+                        17, 20,    // 20m à zoom 17
+                        18, 40,    // 20m à zoom 18
+                        19, 80     // 20m à zoom 19
                     ],
                     'circle-color': '#1D4ED8',
                     'circle-opacity': 0.07,
@@ -6434,7 +6766,11 @@
                 }
                 // Populate circles with initial data now that sources exist
                 initInfoMarkers();
+                initPanneauMarkers();
                 updatePOIVisibility();
+                // Injecter le SVG parchemin dans la bannière nearby (une seule fois)
+                const _snIcon = document.getElementById('scrollNearbyIcon');
+                if (_snIcon) _snIcon.innerHTML = scrollIconSVG(20);
                 updateDustVisibility();
                 updateEchoVisibility();
                 updateInfoVisibility();
@@ -6559,15 +6895,21 @@
         // We shift the camera center slightly north so the player appears in the lower third.
         // Geographic offset doesn't affect marker positions (unlike pixel padding/offset).
         const CAM_LAT_OFFSET = 0.0012; // degrees north (~130m) — adjust if needed
+        let _cameraMoving = false;
         function updatePlayerOnMap() {
             if (!map || !playerMarker) return;
             playerMarker.setLngLat([playerPos.lng, playerPos.lat]);
+            // Éviter d'empiler des easeTo : on saute si un est déjà en cours
+            if (_cameraMoving) return;
+            _cameraMoving = true;
             map.easeTo({
                 center: [playerPos.lng, playerPos.lat + CAM_LAT_OFFSET],
                 pitch: ISOMETRIC_TILT,
                 bearing: ISOMETRIC_HEADING,
-                duration: 80
+                duration: 120,
+                easing: t => t  // linéaire — pas de rebond
             });
+            setTimeout(() => { _cameraMoving = false; }, 100);
         }
 
 
@@ -6608,27 +6950,217 @@
             checkNearbyPOI();
         });
 
+
+        // ══ Toast gain de parchemin supertypé ══
+                function showScrollGainToast() {
+            const existing = document.getElementById('scrollGainToast');
+            if (existing) existing.remove();
+
+            const _appEl   = document.querySelector('.app-container') || document.body;
+            const _appRect = _appEl.getBoundingClientRect();
+            const toast    = document.createElement('div');
+            toast.id = 'scrollGainToast';
+            toast.style.cssText = [
+                'position:fixed',
+                'bottom:' + (window.innerHeight - _appRect.bottom + 90) + 'px',
+                'left:'   + (_appRect.left + 16) + 'px',
+                'right:'  + (window.innerWidth - _appRect.right + 16) + 'px',
+                'z-index:700',
+                'border-radius:14px',
+                'overflow:hidden',
+                'box-shadow:0 6px 24px rgba(0,0,0,0.35)',
+                'cursor:pointer',
+                'animation:scrollToastIn 0.4s cubic-bezier(0.34,1.56,0.64,1)'
+            ].join(';');
+
+            toast.innerHTML =
+                '<div style="background:linear-gradient(135deg,#78350F,#B45309);padding:13px 16px;display:flex;align-items:center;gap:12px;">' +
+                    '<div style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+                        scrollIconSVG(32) +
+                    '</div>' +
+                    '<div style="flex:1;">' +
+                        '<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px;">Parchemin obtenu</div>' +
+                        '<div style="font-size:14px;font-weight:800;color:white;">Parchemin</div>' +
+                    '</div>' +
+                    '<div style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;">Voir →</div>' +
+                '</div>';
+
+            toast.addEventListener('click', () => {
+                toast.remove();
+                ['journalScreen', 'orbSynthOverlay'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.remove('show');
+                });
+                _bagCat = 2; _bagSel = null;
+                document.getElementById('bagScreen').classList.add('show');
+                _bagRender();
+            });
+
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.animation = 'scrollToastOut 0.3s ease forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 5000);
+        }
+
+
+        function scrollIconSVG(size) {
+            const s = size || 26;
+            const r = s / 26; // ratio
+            const w = Math.round(s), h2 = Math.round(s * 28/26);
+            return `<svg width="${w}" height="${h2}" viewBox="0 0 26 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="4" width="18" height="20" rx="2" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5"/>
+                <rect x="2" y="3" width="5" height="22" rx="2.5" fill="#F59E0B" stroke="#D97706" stroke-width="1"/>
+                <rect x="19" y="3" width="5" height="22" rx="2.5" fill="#F59E0B" stroke="#D97706" stroke-width="1"/>
+                <line x1="8" y1="10" x2="18" y2="10" stroke="#D97706" stroke-width="1" opacity="0.6"/>
+                <line x1="8" y1="14" x2="18" y2="14" stroke="#D97706" stroke-width="1" opacity="0.6"/>
+                <line x1="8" y1="18" x2="14" y2="18" stroke="#D97706" stroke-width="1" opacity="0.6"/>
+            </svg>`;
+        }
+
+
+
+        // ══════════════════════════════════════════
+        //  MODE TEST
+        // ══════════════════════════════════════════
+        let _testHour    = null;   // null = heure réelle
+        let _testWeather = null;   // null = météo réelle
+
+        // Surcharge de getHours pour les slots horaires
+        function getSimulatedHour() {
+            return _testHour !== null ? _testHour : new Date().getHours();
+        }
+
+        function getSimulatedWeather() {
+            return _testWeather; // null = pas de simulation
+        }
+
+        function openTestPanel() {
+            document.getElementById('testPanel').style.display = 'flex';
+            updateTestHour(document.getElementById('testHourSlider').value);
+            refreshTestState();
+        }
+
+        function closeTestPanel() {
+            document.getElementById('testPanel').style.display = 'none';
+        }
+
+        function updateTestHour(val) {
+            const h = parseInt(val);
+            document.getElementById('testHourSlider').value = h;
+            const label = h + 'h00';
+            const slot = h >= 22 || h < 6 ? '🌙 Nuit'
+                       : h >= 6 && h < 9  ? '🌅 Aube'
+                       : h >= 9 && h < 19 ? '☀️ Journée'
+                       : '🌆 Crépuscule';
+            document.getElementById('testHourLabel').textContent = label;
+            _testHour = h;
+            refreshTestState();
+        }
+
+        function setTestHour(val) {
+            if (val === null) {
+                _testHour = null;
+                const real = new Date().getHours();
+                document.getElementById('testHourSlider').value = real;
+                document.getElementById('testHourLabel').textContent = 'Réelle (' + real + 'h)';
+            } else {
+                updateTestHour(val);
+            }
+            refreshTestState();
+        }
+
+        function setTestWeather(val) {
+            _testWeather = val;
+            document.querySelectorAll('.test-weather-btn').forEach(btn => {
+                btn.classList.toggle('test-weather-btn--active',
+                    (val === null && btn.dataset.w === 'null') || btn.dataset.w === val);
+            });
+            refreshTestState();
+        }
+
+        function addTestScrolls(n) {
+            for (let i = 0; i < n; i++) {
+                bagInv.parchemins.push({ id: 'test_scroll_' + Date.now() + '_' + i, name: 'Parchemin', desc: 'Parchemin de test.' });
+            }
+            saveProgress();
+            refreshTestState();
+            showToast('📜 +' + n + ' parchemins ajoutés');
+        }
+
+        function addTestOrbes(n) {
+            bagInv.orbes = (bagInv.orbes || 0) + n;
+            saveProgress();
+            refreshTestState();
+            showToast('🔮 +' + n + ' orbes ajoutés');
+        }
+
+        function addTestDust(n) {
+            bagInv.dust = (bagInv.dust || 0) + n;
+            saveProgress();
+            refreshTestState();
+            showToast('✨ +' + n + ' poudre ajoutée');
+        }
+
+        function resetProgress() {
+            if (!confirm('Réinitialiser toute la progression ?')) return;
+            localStorage.removeItem('lyonCardsProgress');
+            location.reload();
+        }
+
+        function refreshTestState() {
+            const el = document.getElementById('testStateDisplay');
+            if (!el) return;
+            const hour = getSimulatedHour();
+            const slot = hour >= 22 || hour < 6 ? 'Nuit'
+                       : hour >= 6 && hour < 9  ? 'Aube'
+                       : hour >= 9 && hour < 19 ? 'Journée'
+                       : 'Crépuscule';
+            el.innerHTML = [
+                'Heure : ' + hour + 'h → <b>' + slot + '</b>' + (_testHour !== null ? ' (simulée)' : ' (réelle)'),
+                'Météo : ' + (_testWeather || 'réelle'),
+                'Parchemins : ' + (bagInv.parchemins ? bagInv.parchemins.length : 0),
+                'Orbes : ' + (bagInv.orbes || 0),
+                'Poudre : ' + (bagInv.dust || 0),
+                'Lumens : ' + (bagInv.lumens || 0),
+                'Cartes collectées : ' + collectedCards.length,
+            ].join('<br>');
+        }
+
         function initJoystick() {
             const base = document.getElementById('joystickBase');
             const stick = document.getElementById('joystickStick');
             if (!base || !stick) return;
 
             let isDragging = false;
-            let centerX = 0, centerY = 0;
 
             function isUIOpen() {
-                return document.getElementById('collectionsPanel').classList.contains('show') ||
-                       document.getElementById('cardPopup').classList.contains('show') ||
-                       document.getElementById('cardDetailView').classList.contains('show') ||
-                       document.getElementById('journalScreen').classList.contains('show');
+                const ids = [
+                    'collectionsPanel', 'cardPopup', 'cardDetailView',
+                    'journalScreen', 'orbSynthOverlay', 'bagScreen',
+                    'questScreen', 'panneauScreen', 'testPanel',
+                    'studioScreen', 'progressionScreen', 'museumScreen'
+                ];
+                return ids.some(id => {
+                    const el = document.getElementById(id);
+                    // orbSynthOverlay utilise opacity/pointer-events, pas la classe 'show'
+                    if (id === 'orbSynthOverlay') return el && el.classList.contains('show');
+                    return el && (el.classList.contains('show') || el.style.display === 'flex');
+                });
+            }
+
+            function getCenter() {
+                // Recalculé à chaque fois — le DOM peut changer de taille
+                // quand les bannières nearby apparaissent/disparaissent
+                const rect = base.getBoundingClientRect();
+                return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
             }
 
             function handleStart(e) {
                 if (isUIOpen()) return;
                 isDragging = true;
-                const rect = base.getBoundingClientRect();
-                centerX = rect.left + rect.width / 2;
-                centerY = rect.top + rect.height / 2;
                 handleMove(e);
             }
 
@@ -6636,8 +7168,9 @@
                 if (!isDragging) return;
                 e.preventDefault();
                 const touch = e.touches ? e.touches[0] : e;
-                let dx = touch.clientX - centerX;
-                let dy = touch.clientY - centerY;
+                const center = getCenter(); // toujours frais
+                let dx = touch.clientX - center.x;
+                let dy = touch.clientY - center.y;
                 const maxDist = 35;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist > maxDist) { dx = (dx / dist) * maxDist; dy = (dy / dist) * maxDist; }
@@ -6801,11 +7334,14 @@
                 nearbyScrollDiv.classList.add('hidden');
             }
 
+            // Panneaux
+            checkNearbyPanneau();
+
             // Info points — mise à jour du marqueur (pulsation si dans zone)
             currentNearbyInfo = null;
             infoMarkers.forEach(({ el, inner, info }) => {
                 const alreadySaved = museumCollection.some(m => m.infoId === info.id);
-                if (alreadySaved) return; // déjà capturé, marqueur masqué
+                if (alreadySaved) return;
                 const dist = getDistance(playerPos.lat, playerPos.lng, info.lat, info.lng);
                 const inZone = dist <= INFO_RADIUS;
                 const target = inner || el;
@@ -6816,6 +7352,14 @@
                     target.classList.remove('in-range');
                 }
             });
+            // Bannière panorama
+            const nearbyInfoDiv = document.getElementById('nearbyInfo');
+            if (currentNearbyInfo) {
+                document.getElementById('infoPointName').textContent = currentNearbyInfo.title;
+                nearbyInfoDiv.classList.remove('hidden');
+            } else {
+                nearbyInfoDiv.classList.add('hidden');
+            }
         }
 
         // ==================== VISIBILITY ====================
@@ -6964,6 +7508,97 @@
                 });
             }
         }
+
+
+        // ══════════════════════════════════════════════
+        // PANNEAUX D'INFORMATION
+        // complexity: 'simple' (1-2 slots), 'moyen' (3-4 slots, 1 spécial), 'important' (5 slots, 2 spéciaux)
+        // slot.special: null | { type:'meteo', condition:'rain'|'night'|'fog'|'sun' }
+        // ══════════════════════════════════════════════
+        const PANNEAU_POINTS = [
+            {
+                id: 'pan_croixrousse', lat: 45.7755, lng: 4.8295,
+                title: 'La Montée de la Grande-Côte',
+                complexity: 'simple',
+                slots: [{ id: 0, special: null }, { id: 1, special: null }],
+                contents: [
+                    { title: 'Les canuts et la soie', audio: "La Croix-Rousse fut le quartier des canuts — ces tisserands lyonnais qui fabriquaient les soieries les plus prisées d'Europe. Au XIXe siècle, plus de 30 000 métiers à tisser battaient dans ces immeubles aux fenêtres hautes, construits spécialement pour laisser entrer la lumière nécessaire au travail de la soie." },
+                    { title: "La révolte de 1831", audio: "En novembre 1831, les canuts se soulevèrent pour réclamer un tarif minimum garanti. Leur cri — 'Vivre en travaillant ou mourir en combattant' — résonna dans toute la France. Ce fut l'une des premières grandes révoltes ouvrières de l'ère industrielle, trois semaines avant que l'armée ne reprenne la ville." }
+                ],
+                rewardTier: 1
+            },
+            {
+                id: 'pan_guillotiere', lat: 45.7490, lng: 4.8440,
+                title: 'Le Pont de la Guillotière',
+                complexity: 'moyen',
+                slots: [
+                    { id: 0, special: null },
+                    { id: 1, special: null },
+                    { id: 2, special: { type: 'meteo', condition: 'rain' } }
+                ],
+                contents: [
+                    { title: 'Le plus vieux pont de Lyon', audio: "Le pont de la Guillotière est le plus ancien pont encore debout de Lyon. Sa construction débuta au XIIe siècle sous l'impulsion des frères Pontifes, un ordre religieux voué à la construction de ponts. Pendant cinq siècles, ce fut le seul passage pour traverser le Rhône à Lyon." },
+                    { title: 'Les crues du Rhône', audio: "Le pont fut emporté ou gravement endommagé plus de vingt fois par les crues du Rhône entre le XIIe et le XIXe siècle. Chaque reconstruction apportait de légères modifications. Le pont actuel date essentiellement du XVIIe siècle, bien que ses fondations soient médiévales." },
+                    { title: 'La mémoire des inondations', audio: "Par temps de pluie intense, le Rhône peut encore monter de plusieurs mètres en quelques heures à cet endroit. Les anciennes marques de crues gravées sur les piliers — aujourd'hui sous le tablier — témoignent d'inondations cataclysmiques. La crue de 1840 atteignit près de 8 mètres au-dessus du niveau normal." }
+                ],
+                rewardTier: 2
+            },
+            {
+                id: 'pan_monplaisir', lat: 45.7430, lng: 4.8600,
+                title: 'Le Quartier Lumière',
+                complexity: 'moyen',
+                slots: [
+                    { id: 0, special: null },
+                    { id: 1, special: null },
+                    { id: 2, special: null },
+                    { id: 3, special: { type: 'meteo', condition: 'sun' } }
+                ],
+                contents: [
+                    { title: "L'invention du cinéma", audio: "C'est dans cette villa bourgeoise de Monplaisir que les frères Lumière mirent au point le Cinématographe entre 1894 et 1895. Louis, le plus technique des deux, résout le problème de l'entraînement de la pellicule en s'inspirant du mécanisme des machines à coudre. L'idée lui serait venue en une nuit de fièvre." },
+                    { title: 'La première séance', audio: "Le 28 décembre 1895, au Salon Indien du Grand Café à Paris, les Lumière organisèrent la première projection publique payante de l'histoire. Mais la toute première démonstration avait eu lieu six mois plus tôt, ici même à Lyon, devant la Société d'Encouragement à l'Industrie Nationale." },
+                    { title: 'Un empire industriel oublié', audio: "On retient les frères Lumière pour le cinéma, mais leur empire industriel était bien plus vaste. Leur usine de plaques photographiques à Monplaisir employait plus de 2 000 personnes et produisait des millions de plaques par an. C'était l'une des plus grandes entreprises photographiques du monde." },
+                    { title: 'La lumière et la pellicule', audio: "En pleine lumière, on distingue encore sur la façade de la villa les traces de l'atelier vitré où Louis Lumière développait ses expériences. L'orientation plein sud était délibérée — il avait besoin d'une lumière naturelle constante pour calibrer ses émulsions photographiques. Les jardins servaient de studio de tournage en extérieur." }
+                ],
+                rewardTier: 2
+            },
+            {
+                id: 'pan_saxe', lat: 45.7540, lng: 4.8450,
+                title: 'Le Marché de la Création',
+                complexity: 'simple',
+                slots: [{ id: 0, special: null }],
+                contents: [
+                    { title: 'Un marché pas comme les autres', audio: "Le marché de la Création, qui se tient chaque dimanche sur le boulevard des Belges, est l'un des rares marchés d'artistes en France où seuls les créateurs eux-mêmes peuvent exposer — sans revendeurs ni artisanat importé. Il fut fondé en 1983 par un collectif d'artistes lyonnais refusant les galeries traditionnelles." }
+                ],
+                rewardTier: 1
+            },
+            {
+                id: 'pan_brotteaux', lat: 45.7665, lng: 4.8490,
+                title: 'Les Brotteaux',
+                complexity: 'important',
+                slots: [
+                    { id: 0, special: null },
+                    { id: 1, special: null },
+                    { id: 2, special: null },
+                    { id: 3, special: { type: 'meteo', condition: 'night' } },
+                    { id: 4, special: { type: 'meteo', condition: 'rain' } }
+                ],
+                contents: [
+                    { title: 'Les sables du Rhône', audio: "Le nom 'Brotteaux' vient du vieux français 'brotteau' — un terrain sablonneux formé par les alluvions d'un fleuve. Jusqu'au XVIIIe siècle, cette rive gauche du Rhône n'était qu'un banc de sable et de galets régulièrement inondé. Les Lyonnais y venaient se baigner et pique-niquer en été." },
+                    { title: 'La gare disparue', audio: "Les Brotteaux abritaient autrefois une gare ferroviaire inaugurée en 1857 — la Gare des Brotteaux — qui fut pendant longtemps la porte d'entrée vers les Alpes et la Côte d'Azur. Rendue obsolète par la gare de la Part-Dieu, elle ferma définitivement en 1983. Sa façade Belle Époque est aujourd'hui un restaurant." },
+                    { title: 'Les fusillés de la Libération', audio: "En août 1944, lors de la libération de Lyon, des combats acharnés se déroulèrent dans ce quartier. Plusieurs dizaines de résistants furent fusillés par les Allemands dans les dernières heures de l'Occupation. Une plaque commémorative discrète, souvent inaperçue, marque l'emplacement exact de ces exécutions." },
+                    { title: 'La vie nocturne des Brotteaux', audio: "La nuit, les Brotteaux révèlent leur double nature. Le quartier bourgeois du XIXe siècle — ses immeubles haussmanniens, ses brasseries Art déco — coexiste avec une vie nocturne intense concentrée autour de la rue Moncey. Cette dualité jour/nuit est inscrite dans l'ADN du quartier depuis sa construction." },
+                    { title: 'Les pluies et le fleuve', audio: "Quand il pleut sur Lyon, les Brotteaux retrouvent une mémoire ancienne. Les caves de plusieurs immeubles portent encore des repères de crues du XIXe siècle. Des riverains racontent que lors des grandes pluies, l'odeur particulière de la vase remonte parfois depuis les sous-sols — vestige des anciens bancs de sable du Rhône." }
+                ],
+                rewardTier: 3
+            }
+        ];
+
+        let panneauState = {};
+        const PANNEAU_RADIUS = 40;
+        let currentNearbyPanneau = null;
+        let panneauMarkers = [];
+        let currentPanneauScreen = null;
+
 
         // ==================== COLLECTION ====================
 
@@ -7421,8 +8056,15 @@
                 action: { icon: "🔍", label: "Déchiffrer" },
                 getItems() {
                     if (!bagInv.parchemins.length)
-                        return [{ id: "_empty", icon: "📜", name: "Aucun parchemin", sub: "", qty: 0, desc: "Des parchemins sont cachés dans la ville, porteurs de récits anciens.", empty: true }];
-                    return bagInv.parchemins.map(p => ({ id: p.id, icon: "📜", name: p.name, sub: "Parchemin", qty: 1, desc: p.desc }));
+                        return [{ id: "_empty", icon: "📜", name: "Aucun parchemin", sub: "", qty: 0, desc: "Des parchemins se collectent en explorant la ville ou en faisant progresser tes cartes.", empty: true }];
+                    return [{
+                        id:      'parchemins_all',
+                        name:    'Parchemin',
+                        sub:     'Exploration & carnets',
+                        qty:     bagInv.parchemins.length,
+                        desc:    "Des parchemins accumulés au fil de tes explorations et de la progression de tes cartes. Utilise-les dans les panneaux d'information.",
+                        svgIcon: scrollIconSVG(28)
+                    }];
                 }
             },
             {
@@ -7471,9 +8113,11 @@
         function _bagTabs() {
             document.getElementById("bagTabsEl").innerHTML = BAG_CATS.map((cat, i) => {
                 const qty = cat.getItems().reduce((s, it) => s + (it.empty ? 0 : it.qty), 0);
+                // Utiliser le SVG canonique pour l'onglet parchemins
+                const tabIco = cat.id === 'parchemins' ? scrollIconSVG(22) : cat.icon;
                 return "<div class='bag-tab " + (i === _bagCat ? "active" : "") + "' onclick='_bagSelCat(" + i + ")'>" +
                     (qty > 0 ? "<div class='bag-tab-badge'>" + qty + "</div>" : "") +
-                    "<div class='bag-tab-ico'>" + cat.icon + "</div>" +
+                    "<div class='bag-tab-ico'>" + tabIco + "</div>" +
                     "<div class='bag-tab-lbl'>" + cat.label + "</div></div>";
             }).join("");
         }
@@ -7486,19 +8130,27 @@
             document.getElementById("bagCatQt").textContent  = items.filter(it => !it.empty).length + " type(s)";
             document.getElementById("bagListEl").innerHTML =
                 "<div class='bag-grp-lbl'>" + (items[0]?.empty ? "Vide" : "En réserve") + "</div>" +
-                items.map(item =>
-                    "<div class='bag-item " + (_bagSel === item.id ? "sel" : "") + (item.empty ? " empty-item" : "") + "' " +
-                    "id='bgi_" + item.id + "' onclick='_bagSelItem(\"" + item.id + "\")'>" +
-                    "<div class='bag-item-ico'>" + item.icon + "</div>" +
-                    "<div class='bag-item-info'><div class='bag-item-name'>" + item.name + "</div>" +
+                items.map(item => {
+                    const colorStyle = item.color ? " style='border-left:3px solid " + item.color + ";'" : "";
+                    const icoContent = item.svgIcon
+                        ? "<div style='width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;'>" + item.svgIcon + "</div>"
+                        : "<div class='bag-item-ico'>" + (item.icon || "📜") + "</div>";
+                    const typedBadge = item.typed  ? "<span style='font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;background:" + (item.color||'#888') + ";color:white;margin-left:4px;vertical-align:middle;'>Supertypé</span>" : "";
+                    return "<div class='bag-item " + (_bagSel === item.id ? "sel" : "") + (item.empty ? " empty-item" : "") + "'" + colorStyle +
+                    " id='bgi_" + item.id + "' onclick='_bagSelItem(\"" + item.id + "\")'>" +
+                    icoContent +
+                    "<div class='bag-item-info'><div class='bag-item-name'>" + item.name + typedBadge + "</div>" +
                     "<div class='bag-item-sub'>" + item.sub + "</div></div>" +
-                    "<div class='bag-item-qty'>× " + item.qty + "</div></div>"
-                ).join("");
+                    "<div class='bag-item-qty'>× " + item.qty + "</div></div>";
+                }).join("");
         }
 
         function _bagDetail(item) {
-            document.getElementById("bagDtlName").textContent = item ? item.name : "—";
-            document.getElementById("bagDtlDesc").textContent = item ? item.desc : "Sélectionne un objet pour en savoir plus.";
+            const nameEl = document.getElementById("bagDtlName");
+            const descEl = document.getElementById("bagDtlDesc");
+            nameEl.textContent = item ? item.name : "—";
+            nameEl.style.color = (item && item.color) ? item.color : "";
+            descEl.textContent = item ? item.desc : "Sélectionne un objet pour en savoir plus.";
         }
 
         function _bagSelCat(i) {
@@ -8138,7 +8790,7 @@
             if (!currentNearbyScroll) return;
             const scroll = currentNearbyScroll;
             collectedScrolls.push(scroll.id);
-            bagInv.parchemins.push({ id: scroll.id, name: scroll.name, desc: "Un fragment d'histoire lyonnaise." });
+            bagInv.parchemins.push({ id: scroll.id, name: 'Parchemin', desc: "Trouvé près de " + scroll.name + " lors de ton exploration." });
             updateScrollVisibility();
             checkNearbyPOI();
             saveProgress();
@@ -8537,15 +9189,25 @@
             document.getElementById('cardExpDisplay').textContent = `${cl.experience}/${needed} 💜`;
             document.getElementById('cardExpBar').style.width = `${Math.min(1, cl.experience / needed) * 100}%`;
             if (xpFull) {
-                // XP pleine — attente orbe
-                btn.disabled = true;
-                btn.textContent = '🔮 Place un orbe pour progresser';
+                // XP pleine — bouton orbe actif
+                const hasOrb = bagInv.orbes > 0;
+                btn.disabled = !hasOrb;
+                btn.onclick = hasOrb ? () => {
+                    placeOrbe();
+                    setTimeout(() => openJournalScreen(), 200);
+                } : null;
+                btn.textContent = hasOrb
+                    ? '🔮 Place un orbe pour progresser'
+                    : '🔮 Aucun orbe disponible';
             } else {
-                const canAdd = memorialDust >= DUST_INCREMENT;
+                const cfg = RARITY_CONFIG[selectedCard.rarity] || RARITY_CONFIG.common;
+                const increment = cfg.increment || 20;
+                const canAdd = memorialDust >= increment;
                 btn.disabled = !canAdd;
+                btn.onclick = canAdd ? addExperience : null;
                 btn.textContent = canAdd
-                    ? `💜 Ajouter ${DUST_INCREMENT} poudre (+EXP)`
-                    : `💜 Poudre insuffisante (${memorialDust}/${DUST_INCREMENT})`;
+                    ? `💜 Donner de la poudre`
+                    : `💜 Poudre insuffisante (${memorialDust}/${increment})`;
             }
         }
 
@@ -8596,7 +9258,9 @@
             if (!cl) return;
             const needed = getExpNeeded(card, level);
             const xp = cl.experience;
-            const xpBefore = xp - DUST_INCREMENT;
+            const cfg = RARITY_CONFIG[rarity] || RARITY_CONFIG.common;
+            const increment = cfg.increment || 20;
+            const xpBefore = xp - increment;
 
             // Seuils XP répartis uniformément selon nombre de paliers
             const thresholds = [];
@@ -8629,16 +9293,23 @@
                 };
                 gainAutoLumen();
                 showMilestoneEffect();
+
+                
+
+                dustBlocked = true;
                 showBubble(dialogueText, 'heart', () => {
                     unlockJournalEntry(cardId, level, entry);
-                    setTimeout(() => openJournalScreen(), 300);
+                    setTimeout(() => {
+                        openJournalScreen();
+                        dustBlocked = false;
+                        setTimeout(() => {
+                            animateLastJournalEntry();
+
+                        }, 400);
+                    }, 300);
                 });
-            } else {
-                if (!cl.memCount) cl.memCount = 0;
-                cl.memCount++;
-                const memIdx = (cl.memCount - 1) % MEMORY_LINES.length;
-                showBubble(MEMORY_LINES[memIdx], 'memory');
-            }
+            } // pas de bulle intermédiaire — animation particules suffit
+
         }
 
         function showBubble(text, type, onAfter) {
@@ -8675,30 +9346,112 @@
             const entries = document.querySelectorAll('#journalPage0 .journal-entry-new');
             if (!entries.length) return;
             const last = entries[entries.length - 1];
-            last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Pas de scrollIntoView — le header reste stable
+            // Juste un highlight discret
+            last.style.outline = '2px solid rgba(146,64,14,0.3)';
+            last.style.borderRadius = '4px';
+            setTimeout(function() { last.style.outline = ''; }, 1500);
+        }
+
+
+        function showDustParticles(xpRatio) {
+            // xpRatio : 0→1, progression dans le palier courant
+            // Plus on est proche du prochain palier, plus l'animation est intense
+            const cardEl = document.querySelector('.card-frame') || document.querySelector('.card-detail-inner');
+            if (!cardEl) return;
+
+            // Trouver le prochain palier
+            const cfg = RARITY_CONFIG[selectedCard?.rarity] || RARITY_CONFIG.common;
+            const cl = cardLevels[selectedCard?.id];
+            if (!cl) return;
+            const level = cl.level;
+            const milestones = cfg.milestones[level] || [0.5];
+            const needed = getExpNeeded(selectedCard, level);
+
+            // Trouver dans quel inter-palier on est
+            const thresholds = [0, ...milestones, 1];
+            let segStart = 0, segEnd = 1;
+            for (let i = 0; i < thresholds.length - 1; i++) {
+                if (xpRatio >= thresholds[i] && xpRatio < thresholds[i+1]) {
+                    segStart = thresholds[i];
+                    segEnd = thresholds[i+1];
+                    break;
+                }
+            }
+            const segProgress = segEnd > segStart
+                ? (xpRatio - segStart) / (segEnd - segStart)
+                : 0;
+
+            // Intensité : 1-2 particules au début, 5-6 près du palier
+            const count = Math.round(1 + segProgress * 4);
+            const intensity = 0.4 + segProgress * 0.6; // opacité/taille
+
+            const rect = cardEl.getBoundingClientRect();
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                const angle = -60 + Math.random() * 120; // vers le haut ±60°
+                const dist = 40 + Math.random() * 60 * intensity;
+                const size = 4 + Math.random() * 6 * intensity;
+                const startX = rect.left + rect.width * (0.3 + Math.random() * 0.4);
+                const startY = rect.top + rect.height * (0.4 + Math.random() * 0.3);
+                const rad = angle * Math.PI / 180;
+                const dx = Math.sin(rad) * dist;
+                const dy = -Math.cos(rad) * dist;
+
+                p.style.cssText = `
+                    position:fixed;
+                    left:${startX}px; top:${startY}px;
+                    width:${size}px; height:${size}px;
+                    border-radius:50%;
+                    background:radial-gradient(circle, #fde68a, #f59e0b);
+                    opacity:${0.6 + intensity * 0.4};
+                    pointer-events:none;
+                    z-index:9999;
+                    transition: transform ${0.5 + Math.random() * 0.3}s ease-out, opacity ${0.4 + Math.random() * 0.3}s ease-out;
+                `;
+                document.body.appendChild(p);
+
+                // Halo sur la carte si très proche du palier
+                if (segProgress > 0.75) {
+                    cardEl.style.boxShadow = `0 0 ${12 + segProgress * 20}px rgba(245,158,11,${0.2 + segProgress * 0.3})`;
+                    setTimeout(() => { cardEl.style.boxShadow = ''; }, 800);
+                }
+
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        p.style.transform = `translate(${dx}px, ${dy}px)`;
+                        p.style.opacity = '0';
+                    }, i * 40);
+                });
+                setTimeout(() => p.remove(), 1200 + i * 40);
+            }
         }
 
         function addExperience() {
-            if (!selectedCard || memorialDust < DUST_INCREMENT) return;
+            if (!selectedCard || dustBlocked) return;
             const cl = cardLevels[selectedCard.id];
             if (cl.level >= MAX_LEVEL) return;
-
             const needed = getExpNeeded(selectedCard, cl.level);
-
-            // Bloquer si XP déjà au max du niveau courant (attente orbe)
             if (cl.experience >= needed) return;
 
-            const expBefore = cl.experience;
+            // Incrément selon rareté
+            const cfg = RARITY_CONFIG[selectedCard.rarity] || RARITY_CONFIG.common;
+            const increment = cfg.increment || 20;
+            if (memorialDust < increment) return;
 
-            memorialDust -= DUST_INCREMENT;
+            memorialDust -= increment;
             document.getElementById('dustCounter').textContent = memorialDust;
             document.getElementById('cardDetailDustCounter').textContent = memorialDust;
-            cl.dustSpent = (cl.dustSpent || 0) + DUST_INCREMENT;
-            cl.experience = Math.min(needed, cl.experience + DUST_INCREMENT);
+            cl.dustSpent = (cl.dustSpent || 0) + increment;
+            cl.experience = Math.min(needed, cl.experience + increment);
 
             const level = cl.level;
+            const xpRatio = cl.experience / needed; // progression dans le palier courant
 
-            // Dialogue poudre
+            // Animation particules (pas de texte intermédiaire)
+            showDustParticles(xpRatio);
+
+            // Palier franchi ?
             setTimeout(() => showDustDialogue(selectedCard.id, level), 150);
 
             updateCardLevelDisplay();
@@ -8741,7 +9494,15 @@
             saveProgress();
             updateCardLevelDisplay();
 
-            // Lancer l'overlay de synthèse
+            // Donner un parchemin au level up
+            bagInv.parchemins.push({
+                id:   'scroll_card_' + Date.now(),
+                name: 'Parchemin',
+                desc: "Un parchemin obtenu en progressant avec " + selectedCard.name + "."
+            });
+            setTimeout(() => showScrollGainToast(), 1800);
+
+                        // Lancer l'overlay de synthèse
             const SYNTH_TEXTS = [
                 "Le premier chapitre s'achève. Ce que tu as appris ne s'oubliera pas — la mémoire a pris racine.",
                 "Un chapitre se ferme, un autre s'ouvre. L'histoire continue, plus profonde.",
@@ -8757,10 +9518,67 @@
         function orbSynthClose() {
             const overlay = document.getElementById('orbSynthOverlay');
             overlay.classList.remove('show');
-            // Fermer le carnet et revenir à la carte
+
+            // Toujours ouvrir le carnet pour montrer l'animation de scellement
+            const sealedLvl = selectedCard ? (cardLevels[selectedCard.id].level - 1) : undefined;
+
+            // Ouvrir le carnet si pas déjà ouvert
             const journalEl = document.getElementById('journalScreen');
-            if (journalEl) journalEl.classList.remove('show');
-            renderJournalBio();
+            if (!journalEl.classList.contains('show')) {
+                openJournalScreen();
+            }
+
+            // Rendre sans la couleur finale sur le niveau scellé
+            renderJournalBio(undefined, sealedLvl);
+
+            // Lancer l'animation après que le DOM soit peint
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    animateSealLevel();
+                });
+            });
+        }
+
+        function animateSealLevel() {
+            if (!selectedCard) return;
+            const cl = cardLevels[selectedCard.id];
+            if (!cl) return;
+
+            const sealedLvl = cl.level - 1;
+            const LEVEL_COLORS = ['#10B981', '#3B82F6', '#F59E0B'];
+            const color = LEVEL_COLORS[sealedLvl] || '#10B981';
+
+            const group = document.getElementById('journalGroup_' + sealedLvl);
+            if (!group) return;
+
+            // Préparer le groupe comme conteneur
+            group.style.position = 'relative';
+            group.style.borderLeft = '3px solid ' + color;
+            group.style.background = 'transparent';
+            group.style.overflow = 'hidden';
+
+            // Div qui monte de bas en haut comme une jauge
+            var fill = document.createElement('div');
+            fill.style.cssText = [
+                'position:absolute',
+                'left:0', 'right:0', 'top:0',
+                'height:0',
+                'background:' + color + '30',
+                'pointer-events:none',
+                'z-index:0',
+                'transition:height 2.5s cubic-bezier(0.4,0,0.2,1)'
+            ].join(';');
+            group.appendChild(fill);
+
+            void fill.offsetHeight;
+
+            fill.style.height = '100%';
+
+            // Une fois rempli, stabiliser le fond sur le groupe et retirer le fill
+            setTimeout(function() {
+                group.style.background = color + '18';
+                fill.remove();
+            }, 2600);
         }
 
         function showCardDialogue() {
@@ -8768,7 +9586,7 @@
             showClickDialogue();
         }
 
-        function renderJournalBio(animateLevel) {
+        function renderJournalBio(animateLevel, skipColorLevel) {
             if (!selectedCard) return;
             const cardId = selectedCard.id;
             const cl = cardLevels[cardId] || { level: 0 };
@@ -8797,8 +9615,9 @@
                 const isClosed  = cl.level > lvl;
                 const isAnimate = (animateLevel === lvl + 1); // juste après level-up
                 const color     = LEVEL_COLORS[lvl];
-                const bg        = isClosed ? color + '18' : 'transparent';
-                const border    = isClosed ? `border-left:3px solid ${color};` : '';
+                const skipColor = (skipColorLevel !== undefined && lvl === skipColorLevel);
+                const bg        = (isClosed && !skipColor) ? color + '18' : 'transparent';
+                const border    = (isClosed && !skipColor) ? `border-left:3px solid ${color};` : '';
                 html2 += `<div class="journal-level-group${isAnimate?' animating':''}" style="background:${bg};${border}" id="journalGroup_${lvl}">`;
                 if (isClosed) {
                     html2 += `<div class="journal-level-group-label" style="color:${color};">${LEVEL_LABELS[lvl]}</div>`;
@@ -9054,12 +9873,16 @@
 
         let journalOpenedFromCollections = false;
         let journalOpenedFromBag = false;
+        let journalOpenedFromCardDetail = false;
         let cardDetailOpenedFromBag = false;
 
         function openJournalScreen(maxLevel) {
             if (!selectedCard) return;
             journalOpenedFromCollections = document.getElementById('collectionsPanel')?.classList.contains('show') ?? false;
             journalOpenedFromBag = document.getElementById('bagScreen')?.classList.contains('show') ?? false;
+            // Ouvert depuis la fiche carte (flux map → toast → carte → poudre → palier → journal)
+            journalOpenedFromCardDetail = !journalOpenedFromCollections && !journalOpenedFromBag &&
+                (document.getElementById('cardDetailView')?.classList.contains('show') ?? false);
             document.getElementById('journalScreenCardName').textContent = selectedCard.name;
             document.getElementById('journalScreenCardType').textContent = selectedCard.type;
             // Sticky header dans la page bio
@@ -9158,10 +9981,11 @@
         function closeJournalScreen() {
             document.getElementById('journalScreen').classList.remove('show');
             if (journalOpenedFromBag) {
-                // Revenir à la fiche carte (cardDetailView reste ouverte)
-                // La carte reste sélectionnée — l'utilisateur peut relire puis ← pour revenir au sac
                 journalOpenedFromBag = false;
-                // S'assurer que cardDetailView est visible
+                document.getElementById('cardDetailView').classList.add('show');
+            } else if (journalOpenedFromCardDetail) {
+                // Flux map → toast → carte → poudre → palier → journal → retour à la fiche carte
+                journalOpenedFromCardDetail = false;
                 document.getElementById('cardDetailView').classList.add('show');
             } else if (!journalOpenedFromCollections) {
                 document.getElementById('cardDetailView').classList.remove('show');
@@ -10196,6 +11020,327 @@
 
         let currentInfoPoint = null;
 
+
+        // ══════════════════════════════════════════════
+        // PANNEAUX D'INFORMATION — logique complète
+        // ══════════════════════════════════════════════
+
+        function getPanneauState(panId) {
+            if (!panneauState[panId]) {
+                const pan = PANNEAU_POINTS.find(p => p.id === panId);
+                panneauState[panId] = { slots: new Array(pan.slots.length).fill(null), unlocked: [] };
+            }
+            return panneauState[panId];
+        }
+
+        function getPanneauProgress(panId) {
+            const state = getPanneauState(panId);
+            const pan   = PANNEAU_POINTS.find(p => p.id === panId);
+            return { filled: state.slots.filter(s => s !== null).length, total: pan.slots.length };
+        }
+
+
+        // ══════════════════════════════════════════════
+        // Toast gain parchemin supertypé
+        // ══════════════════════════════════════════════
+        let _scrollToastTimer = null;
+
+        function showScrollRewardToast(scroll) {
+            const toast  = document.getElementById('scrollRewardToast');
+            const icon   = document.getElementById('scrollToastIcon');
+            const name   = document.getElementById('scrollToastName');
+            const bar    = document.getElementById('scrollToastBar');
+            if (!toast) return;
+
+            // Couleur du supertype
+            const color  = scroll.color || '#D97706';
+            icon.textContent = scroll.symbol || '📜';
+            icon.style.background = color + '33';
+            icon.style.border = '2px solid ' + color + '88';
+            name.textContent = scroll.name || 'Parchemin';
+            name.style.color = color;
+
+            // Barre de progression
+            bar.style.background = color;
+            bar.style.animation = 'none';
+            bar.offsetHeight; // reflow
+            bar.style.animation = 'toastBarShrink 4s linear forwards';
+
+            // Afficher
+            toast.classList.add('show');
+            if (_scrollToastTimer) clearTimeout(_scrollToastTimer);
+            _scrollToastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        function openBagToScrolls() {
+            // Masquer le toast
+            const toast = document.getElementById('scrollRewardToast');
+            if (toast) toast.classList.remove('show');
+            if (_scrollToastTimer) { clearTimeout(_scrollToastTimer); _scrollToastTimer = null; }
+
+            // Fermer le journal si ouvert
+            const journalScreen = document.getElementById('journalScreen');
+            if (journalScreen && journalScreen.classList.contains('show')) {
+                journalScreen.classList.remove('show');
+                journalOpenedFromCardDetail = false;
+                journalOpenedFromBag = false;
+                journalOpenedFromCollections = false;
+                // Garder la cardDetailView ouverte en arrière-plan
+            }
+
+            // Ouvrir le sac sur l'onglet parchemins (index 4)
+            _bagCat = 4;
+            _bagSel = null;
+            document.getElementById('bagScreen').classList.add('show');
+            _bagRender();
+        }
+
+        function initPanneauMarkers() {
+            PANNEAU_POINTS.forEach(pan => {
+                // Wrapper 0×0 — même pattern que tous les autres marqueurs
+                const el = document.createElement('div');
+                el.style.cssText = 'width:0;height:0;overflow:visible;cursor:pointer;';
+
+                const inner = document.createElement('div');
+                inner.className = 'panneau-marker';
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-50%);';
+
+                // Lettre i italique
+                const span = document.createElement('span');
+                span.className = 'panneau-i';
+                span.textContent = 'i';
+                inner.appendChild(span);
+
+                // SVG anneau de progression (cercle, en absolute pour ne pas perturber le flex)
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('class', 'panneau-ring');
+                svg.setAttribute('viewBox', '0 0 44 44');
+                svg.style.cssText = 'position:absolute;top:-6px;left:-6px;pointer-events:none;';
+                svg.innerHTML =
+                    '<circle cx="22" cy="22" r="19" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>' +
+                    '<circle class="panneau-ring-fill" cx="22" cy="22" r="19" fill="none" stroke="#D97706"' +
+                    ' stroke-width="2.5" stroke-dasharray="119.4" stroke-dashoffset="119.4"' +
+                    ' stroke-linecap="round" transform="rotate(-90 22 22)"/>';
+                inner.appendChild(svg);
+
+                el.appendChild(inner);
+
+                el.addEventListener('click', () => {
+                    const dist = getDistance(playerPos.lat, playerPos.lng, pan.lat, pan.lng);
+                    if (dist > PANNEAU_RADIUS) {
+                        showToast('Approche-toi de ' + pan.title);
+                        return;
+                    }
+                    currentPanneauScreen = pan;
+                    openPanneauScreen();
+                });
+
+                new maplibregl.Marker({ element: el, anchor: 'center' })
+                    .setLngLat([pan.lng, pan.lat])
+                    .addTo(map);
+
+                panneauMarkers.push({ el, inner, svg, pan });
+                updatePanneauRing(pan.id);
+            });
+        }
+
+        function updatePanneauRing(panId) {
+            const entry = panneauMarkers.find(m => m.pan.id === panId);
+            if (!entry) return;
+            const { filled, total } = getPanneauProgress(panId);
+            const fill = entry.svg.querySelector('.panneau-ring-fill');
+            if (!fill) return;
+            const perim  = 119.4;
+            const offset = perim - (filled / total) * perim;
+            fill.setAttribute('stroke-dashoffset', String(offset));
+            if (filled === total) fill.setAttribute('stroke', '#F59E0B');
+        }
+
+        function checkNearbyPanneau() {
+            currentNearbyPanneau = null;
+            const nearbyDiv = document.getElementById('nearbyPanneau');
+            panneauMarkers.forEach(({ inner, pan }) => {
+                const dist = getDistance(playerPos.lat, playerPos.lng, pan.lat, pan.lng);
+                if (dist <= PANNEAU_RADIUS) {
+                    currentNearbyPanneau = pan;
+                    inner.classList.add('in-range');
+                } else {
+                    inner.classList.remove('in-range');
+                }
+            });
+            if (currentNearbyPanneau) {
+                document.getElementById('panneauNearbyName').textContent = currentNearbyPanneau.title;
+                const { filled, total } = getPanneauProgress(currentNearbyPanneau.id);
+                document.getElementById('panneauNearbySlots').textContent =
+                    filled === total ? '✓ Complété' : filled + '/' + total + ' parchemins insérés';
+                nearbyDiv.classList.remove('hidden');
+            } else {
+                nearbyDiv.classList.add('hidden');
+            }
+        }
+
+        function openPanneauScreen() {
+            if (!currentNearbyPanneau) return;
+            const pan   = currentNearbyPanneau;
+            const state = getPanneauState(pan.id);
+            const CLABELS = { simple: 'Point simple', moyen: 'Point moyen', important: 'Point important' };
+            const SLABELS = { rain: '🌧 Pluie', night: '🌙 Nuit', fog: '🌫 Brouillard', sun: '☀️ Soleil' };
+
+            document.getElementById('panneauScreenTitle').textContent = pan.title;
+            document.getElementById('panneauScreenSub').textContent   = CLABELS[pan.complexity] || '';
+
+            let html = '';
+
+            // ── Slots ──
+            html += `<div style="margin-bottom:8px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">Emplacements parchemins</div>`;
+            html += `<div class="panneau-slots">`;
+            pan.slots.forEach((slot, i) => {
+                const filled    = state.slots[i] !== null;
+                const isSpecial = slot.special !== null;
+                const cls = 'panneau-slot' + (isSpecial ? ' special' : '') + (filled ? ' filled' : '');
+                const icon  = filled ? '📜' : (isSpecial ? '✦' : '+');
+                // Compter les parchemins d'exploration disponibles
+                const exploCount = bagInv.parchemins.filter(p => !p.typed && !p.supertype).length;
+                const anyCount   = bagInv.parchemins.length;
+                const canFill    = filled ? false : (isSpecial ? exploCount > 0 : anyCount > 0);
+                const label = filled ? 'Inséré'
+                    : (isSpecial
+                        ? (SLABELS[slot.special.condition] || 'Spécial') + (exploCount === 0 ? ' 🔒' : '')
+                        : 'Libre' + (anyCount === 0 ? ' 🔒' : ''));
+                html += `<div class="${cls}" onclick="insertScrollInSlot('${pan.id}',${i})">`;
+                html += `<div class="panneau-slot-icon">${icon}</div>`;
+                html += `<div class="panneau-slot-label">${label}</div></div>`;
+            });
+            html += `</div>`;
+
+            // ── Mémoires ──
+            html += `<div style="margin-bottom:8px;margin-top:4px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">Mémoires du lieu</div>`;
+            pan.contents.forEach((c, i) => {
+                if (state.unlocked.includes(i)) {
+                    html += `<div class="panneau-entry">`;
+                    html += `<div class="panneau-entry-title">🔊 ${c.title}</div>`;
+                    html += `<div class="panneau-entry-audio">`;
+                    html += `<button class="panneau-audio-btn" onclick="playPanneauAudio('${pan.id}',${i},this)">▶</button>`;
+                    html += `<div class="panneau-audio-text" id="pat_${pan.id}_${i}">${c.audio}</div>`;
+                    html += `</div></div>`;
+                } else {
+                    html += `<div class="panneau-locked-entry">🔒 <span>Mémoire ${i+1} — insérez un parchemin pour révéler</span></div>`;
+                }
+            });
+
+            // ── Lootbox si complet ──
+            const { filled, total } = getPanneauProgress(pan.id);
+            if (filled === total && !state.lootboxOpened) {
+                html += `<div class="panneau-complete-banner" onclick="openPanneauLootbox('${pan.id}')">`;
+                html += `<div class="panneau-complete-title">🎁 Panneau complété !</div>`;
+                html += `<div class="panneau-complete-sub">Touche pour révéler ta récompense</div></div>`;
+            }
+
+            document.getElementById('panneauScreenBody').innerHTML = html;
+            document.getElementById('panneauScreen').classList.add('show');
+        }
+
+        function closePanneauScreen() {
+            document.getElementById('panneauScreen').classList.remove('show');
+        }
+
+        function insertScrollInSlot(panId, slotIdx) {
+            const state  = getPanneauState(panId);
+            const pan    = PANNEAU_POINTS.find(p => p.id === panId);
+            const slot   = pan.slots[slotIdx];
+
+            if (state.slots[slotIdx] !== null) { showToast('Ce slot est déjà rempli'); return; }
+            if (!bagInv.parchemins || bagInv.parchemins.length === 0) {
+                showToast('❌ Tu ne possèdes aucun parchemin');
+                return;
+            }
+
+            const isSpecial = slot.special !== null;
+            const condition = slot.special ? slot.special.condition : null;
+
+            // Slots horaires : vérifier l'heure actuelle
+            if (isSpecial && condition) {
+                const hour = getSimulatedHour();
+                const TIME_WINDOWS = {
+                    night: h => h >= 22 || h < 6,
+                    dawn:  h => h >= 6  && h < 9,
+                    day:   h => h >= 9  && h < 19,
+                    dusk:  h => h >= 19 && h < 22,
+                    rain: () => true, sun: () => true, fog: () => true
+                };
+                const check = TIME_WINDOWS[condition];
+                if (check && !check(hour)) {
+                    const COND_LABELS = {
+                        night: 'la nuit (22h–6h)', dawn: '’aube (6h–9h)',
+                        day:   'la journée (9h–19h)', dusk: 'au crépuscule (19h–22h)'
+                    };
+                    showToast('Ce slot s\'ouvre ' + (COND_LABELS[condition] || 'à certaines heures'));
+                    return;
+                }
+            }
+
+            const used = bagInv.parchemins.splice(0, 1)[0];
+            state.slots[slotIdx] = used.id || 'parchemin';
+            if (!state.unlocked.includes(slotIdx)) state.unlocked.push(slotIdx);
+            updatePanneauRing(panId);
+            openPanneauScreen();
+        }
+        function playPanneauAudio(panId, idx, btn) {
+            const pan    = PANNEAU_POINTS.find(p => p.id === panId);
+            const textEl = document.getElementById('pat_' + panId + '_' + idx);
+            if (!textEl) return;
+            if (btn.classList.contains('playing')) {
+                btn.classList.remove('playing'); btn.textContent = '▶'; return;
+            }
+            btn.classList.add('playing'); btn.textContent = '■';
+            const full = pan.contents[idx].audio;
+            textEl.textContent = '';
+            let i = 0;
+            const speed = Math.max(18, Math.min(45, 3800 / full.length));
+            function type() {
+                if (i >= full.length) { btn.classList.remove('playing'); btn.textContent = '▶'; return; }
+                textEl.textContent += full[i++];
+                setTimeout(type, speed);
+            }
+            type();
+        }
+
+        function openPanneauLootbox(panId) {
+            const pan   = PANNEAU_POINTS.find(p => p.id === panId);
+            const state = getPanneauState(panId);
+            if (state.lootboxOpened) return;
+            state.lootboxOpened = true;
+
+            const rewards = {
+                1: [{ icon: '💜', label: '50 poudre',  fn: () => { memorialDust += 50;  document.getElementById('dustCounter').textContent = memorialDust; } }],
+                2: [{ icon: '💜', label: '100 poudre', fn: () => { memorialDust += 100; document.getElementById('dustCounter').textContent = memorialDust; } },
+                    { icon: '✨', label: '1 Lumen',    fn: () => gainAutoLumen() }],
+                3: [{ icon: '💜', label: '200 poudre', fn: () => { memorialDust += 200; document.getElementById('dustCounter').textContent = memorialDust; } },
+                    { icon: '✨', label: '2 Lumens',   fn: () => { gainAutoLumen(); gainAutoLumen(); } },
+                    { icon: '🔮', label: '1 Orbe',     fn: () => { bagInv.orbes += 1; } }]
+            };
+            (rewards[pan.rewardTier] || rewards[1]).forEach(r => r.fn());
+
+            const rewardHtml = (rewards[pan.rewardTier] || rewards[1]).map(r =>
+                `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                    <div style="font-size:32px;">${r.icon}</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.8);">${r.label}</div>
+                </div>`).join('');
+
+            const ov = document.createElement('div');
+            ov.style.cssText = 'position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;';
+            ov.innerHTML =
+                `<div style="font-size:40px;">🎁</div>
+                 <div style="font-size:18px;font-weight:800;color:#D97706;">Récompense débloquée !</div>
+                 <div style="font-size:13px;color:rgba(255,255,255,0.6);">${pan.title}</div>
+                 <div style="display:flex;gap:24px;">${rewardHtml}</div>
+                 <button onclick="this.parentElement.remove()" style="margin-top:8px;padding:12px 32px;border-radius:24px;background:#D97706;border:none;color:white;font-size:14px;font-weight:700;cursor:pointer;">Continuer ›</button>`;
+            document.body.appendChild(ov);
+            openPanneauScreen();
+        }
+
         function initInfoMarkers() {
             INFO_POINTS.forEach(info => {
                 // Même pattern que les POI : wrapper 0×0 + inner centré
@@ -10206,7 +11351,7 @@
 
                 const inner = document.createElement('div');
                 inner.className = 'info-marker';
-                inner.textContent = 'i';
+                inner.textContent = '🌄';
                 // Centrage absolu sur le point géographique
                 inner.style.position = 'absolute';
                 inner.style.transform = 'translate(-50%, -50%)';
@@ -10270,6 +11415,10 @@
         const VF_ZOOM_MIN = 1;
         const VF_ZOOM_MAX = 4;
         let vfZoomHideTimer = null;
+
+        function openViewfinderFromNearby() {
+            if (currentNearbyInfo) openViewfinder(currentNearbyInfo);
+        }
 
         function openViewfinder(info) {
             currentViewfinderInfo = info;
@@ -11461,6 +12610,7 @@
         let mmTime = 0;
         let mmTouchStartX = 0, mmTouchStartY = 0;
         let mmLumenMode = false;
+        let dustBlocked = false; // bloqué pendant palier narratif
         let mmBrushMode = false;
         let mmBrushPoints = [];
         let mmLastBrushX = 0, mmLastBrushY = 0;
