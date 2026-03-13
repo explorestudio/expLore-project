@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'Univers — ExpLore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IM+Fell+English:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0a0810;
+  --parchment: #f2e8d0;
+  --parchment-dark: #e0d0a8;
+  --parchment-line: rgba(160,130,70,0.22);
+  --gold: #c9913a;
+  --gold-light: #e8c06a;
+  --gold-dim: rgba(201,145,58,0.35);
+  --text-light: #f0ece2;
+  --text-dim: rgba(240,236,226,0.5);
+  --red: #8b2020;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  color: var(--text-light);
+  font-family: 'IM Fell English', serif;
+  overflow-x: hidden;
+  cursor: none;
+  min-height: 100vh;
+}
+
+/* Grain texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 1000;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 200px;
+}
+
+/* Curseur */
+#cur { position:fixed; top:0; left:0; z-index:9999; width:10px; height:10px; background:var(--gold); border-radius:50%; pointer-events:none; transform:translate(-50%,-50%); mix-blend-mode: normal; }
+#cur-ring { position:fixed; top:0; left:0; z-index:9998; width:36px; height:36px; border:1px solid var(--gold-dim); border-radius:50%; pointer-events:none; transform:translate(-50%,-50%); transition:left .15s ease, top .15s ease, width .3s, height .3s, border-color .3s; }
+#cur-ring.over-page { width:52px; height:52px; border-color:rgba(201,145,58,0.6); }
+a, button { cursor:none; }
+
+/* Nav */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+  padding: 20px 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(to bottom, rgba(10,8,16,0.95) 0%, transparent 100%);
+}
+.nav-back {
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--gold); opacity: 0.7;
+  text-decoration: none; display: flex; align-items: center; gap: 10px;
+  transition: opacity 0.2s;
+}
+.nav-back:hover { opacity: 1; }
+.nav-back::before { content: '←'; font-size: 14px; }
+.nav-title {
+  font-family: 'Cormorant Garamond', serif; font-size: 13px; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--text-dim);
+}
+
+/* ── INTRO ── */
+#intro {
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 100px 40px 60px;
+  position: relative;
+}
+.intro-vignette {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 60% 60% at 50% 50%, transparent 0%, rgba(10,8,16,0.7) 100%);
+}
+.intro-particles {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+}
+.intro-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--gold); opacity: 0.6;
+  margin-bottom: 28px;
+  animation: fadeUp 1.2s ease both;
+}
+.intro-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(48px, 7vw, 96px); font-weight: 300; line-height: 1.0;
+  margin-bottom: 32px;
+  animation: fadeUp 1.2s 0.2s ease both;
+}
+.intro-title em { font-style: italic; color: var(--gold); }
+.intro-sub {
+  font-family: 'IM Fell English', serif; font-style: italic;
+  font-size: clamp(16px, 1.8vw, 22px); line-height: 1.7;
+  color: var(--text-dim); max-width: 520px;
+  margin-bottom: 56px;
+  animation: fadeUp 1.2s 0.4s ease both;
+}
+.scroll-cta {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  animation: fadeUp 1.2s 0.7s ease both;
+}
+.scroll-cta span {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--text-dim);
+}
+.scroll-arrow {
+  width: 1px; height: 50px;
+  background: linear-gradient(to bottom, var(--gold), transparent);
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+@keyframes scrollPulse { 0%,100%{opacity:0.3;transform:scaleY(0.7)} 50%{opacity:1;transform:scaleY(1)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── LIVRE CENTRAL ── */
+#livre-scene {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 80px 40px;
+  position: relative;
+}
+
+.livre-container {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Le livre */
+.grand-livre {
+  position: relative;
+  width: min(680px, 90vw); height: min(460px, 60vw);
+  display: flex;
+  filter: drop-shadow(0 40px 80px rgba(0,0,0,0.8));
+  transition: transform 0.3s ease-out;
+}
+.gl-page {
+  flex: 1; position: relative; overflow: hidden;
+}
+.gl-left {
+  border-radius: 6px 0 0 6px;
+  background: linear-gradient(110deg, #ede0be 0%, #f5ead4 40%, #ede0be 100%);
+}
+.gl-right {
+  border-radius: 0 6px 6px 0;
+  background: linear-gradient(70deg, #f0e8d4 0%, #f8f0dc 50%, #e8d8b8 100%);
+}
+.gl-spine {
+  width: 22px; flex-shrink: 0;
+  background: linear-gradient(90deg, #a07840, #d4aa60, #c09040, #b87830);
+  box-shadow: inset -3px 0 6px rgba(0,0,0,0.25), inset 3px 0 4px rgba(255,220,140,0.2);
+}
+.page-lines {
+  position: absolute; inset: 20px;
+  background-image: repeating-linear-gradient(
+    180deg, transparent 0px, transparent 22px,
+    var(--parchment-line) 22px, var(--parchment-line) 23px
+  );
+}
+.page-margin {
+  position: absolute; top: 0; bottom: 0;
+  width: 1px; background: rgba(180,140,60,0.2);
+}
+.gl-left .page-margin { left: 28px; }
+.gl-right .page-margin { right: 28px; }
+
+/* Coins de page */
+.gl-right::after {
+  content: '';
+  position: absolute; bottom: 0; right: 0;
+  width: 0; height: 0;
+  border-style: solid;
+  border-width: 0 0 28px 28px;
+  border-color: transparent transparent rgba(180,150,80,0.25) transparent;
+}
+
+/* Texte sur les pages */
+.page-text {
+  position: absolute; inset: 28px 36px;
+  display: flex; flex-direction: column; gap: 0;
+}
+.page-chapter {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(140,100,40,0.6);
+  margin-bottom: 14px; padding-bottom: 8px;
+  border-bottom: 1px solid rgba(160,120,50,0.2);
+}
+.page-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(15px, 2vw, 20px); font-weight: 600;
+  color: #3a2a10; line-height: 1.2; margin-bottom: 12px;
+}
+.page-body {
+  font-family: 'IM Fell English', serif; font-size: clamp(10px, 1.2vw, 13px);
+  line-height: 1.75; color: rgba(50,35,10,0.8);
+}
+.page-seal {
+  position: absolute; bottom: 24px; right: 32px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; color: rgba(180,100,30,0.4);
+}
+
+/* Numéro de page */
+.page-num {
+  position: absolute; bottom: 22px;
+  font-family: 'IM Fell English', serif; font-size: 11px;
+  color: rgba(140,100,40,0.4); font-style: italic;
+}
+.gl-left .page-num { left: 36px; }
+.gl-right .page-num { right: 36px; }
+
+/* Flash du livre au retour de page */
+.grand-livre.flash {
+  animation: livrFlash 0.5s ease;
+}
+@keyframes livrFlash {
+  0%   { filter: drop-shadow(0 40px 80px rgba(0,0,0,0.8)); }
+  30%  { filter: drop-shadow(0 0 0 3px rgba(201,145,58,0.9)) drop-shadow(0 40px 80px rgba(201,145,58,0.3)); }
+  100% { filter: drop-shadow(0 40px 80px rgba(0,0,0,0.8)); }
+}
+
+/* ── PAGES QUI TOMBENT ── */
+#pages-scene {
+  position: fixed; inset: 0; z-index: 200;
+  pointer-events: none; overflow: hidden;
+}
+.torn-page {
+  position: absolute;
+  background: linear-gradient(135deg, #f5ead4, #ede0be, #f0e8d4);
+  border-radius: 3px 3px 4px 4px;
+  box-shadow: 3px 6px 20px rgba(0,0,0,0.45), 1px 2px 6px rgba(0,0,0,0.3);
+  pointer-events: all;
+  overflow: hidden;
+}
+
+/* Bord déchiré en haut */
+.torn-page::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 8px;
+  background: linear-gradient(135deg, #f5ead4, #ede0be);
+  clip-path: polygon(0% 100%, 4% 0%, 9% 80%, 14% 10%, 19% 70%, 24% 5%, 29% 85%, 34% 15%, 39% 75%, 44% 0%, 49% 90%, 54% 20%, 59% 80%, 64% 5%, 69% 70%, 74% 15%, 79% 85%, 84% 10%, 89% 75%, 94% 20%, 100% 60%, 100% 100%);
+}
+
+.torn-page-lines {
+  position: absolute; inset: 14px 10px 10px;
+  background-image: repeating-linear-gradient(
+    180deg, transparent 0px, transparent 16px,
+    rgba(160,120,50,0.18) 16px, rgba(160,120,50,0.18) 17px
+  );
+}
+.torn-page-content {
+  position: absolute; inset: 16px 14px 12px;
+  font-family: 'IM Fell English', serif;
+}
+.torn-fragment-label {
+  font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(140,100,40,0.55);
+  margin-bottom: 6px; display: block;
+}
+.torn-fragment-text {
+  font-size: clamp(9px, 1.1vw, 11px); line-height: 1.6;
+  color: rgba(40,28,8,0.85);
+  font-style: italic;
+}
+.torn-fragment-text strong {
+  font-style: normal; color: rgba(140,80,20,0.9);
+  font-weight: normal; text-decoration: underline;
+  text-decoration-color: rgba(180,100,30,0.3);
+  text-underline-offset: 2px;
+}
+
+/* Hover effet sur les pages tombantes */
+.torn-page { cursor: pointer; transition: box-shadow 0.2s; }
+.torn-page:hover {
+  box-shadow: 0 0 0 2px rgba(201,145,58,0.7), 4px 8px 24px rgba(0,0,0,0.5);
+  z-index: 300 !important;
+}
+
+/* Animation retour au livre */
+@keyframes pageReturn {
+  0%   { opacity: 1; }
+  40%  { opacity: 0.9; transform: var(--start-transform) scale(1.05); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(0deg) scale(0.2); }
+}
+
+/* ── FRAGMENTS NARRATIFS ── */
+#fragments {
+  padding: 0 10vw 120px;
+  display: flex; flex-direction: column; gap: 0;
+}
+.fragment-block {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 80px; align-items: center;
+  padding: 100px 0;
+  border-top: 1px solid rgba(201,145,58,0.08);
+  opacity: 0; transform: translateY(30px);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+.fragment-block.visible { opacity: 1; transform: translateY(0); }
+.fragment-block:nth-child(even) .frag-text { order: 2; }
+.fragment-block:nth-child(even) .frag-visual { order: 1; }
+
+.frag-num {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px;
+  color: var(--gold); opacity: 0.5; margin-bottom: 16px; display: block;
+}
+.frag-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(26px, 3vw, 42px); font-weight: 300; line-height: 1.1;
+  margin-bottom: 20px;
+}
+.frag-title em { font-style: italic; color: var(--gold); }
+.frag-body {
+  font-family: 'IM Fell English', serif; font-style: italic;
+  font-size: clamp(15px, 1.5vw, 18px); line-height: 1.8;
+  color: var(--text-dim);
+}
+.frag-body strong { font-style: normal; color: var(--text-light); font-weight: normal; }
+
+/* Visuels fragments */
+.frag-visual {
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Carte collectée */
+.lore-card {
+  width: min(200px, 40vw);
+  background: linear-gradient(145deg, #1a1428, #0e0c18);
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px; padding: 20px 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,145,58,0.08);
+  transform: rotate(-2deg);
+  transition: transform 0.4s ease;
+}
+.lore-card:hover { transform: rotate(0deg) scale(1.04); }
+.lc-type {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--gold); opacity: 0.6;
+  display: block; margin-bottom: 8px;
+}
+.lc-name {
+  font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600;
+  color: var(--gold-light); line-height: 1.2; margin-bottom: 10px;
+}
+.lc-div { height: 1px; background: linear-gradient(90deg, var(--gold-dim), transparent); margin-bottom: 10px; }
+.lc-body { font-size: 11px; line-height: 1.6; color: rgba(240,236,226,0.5); margin-bottom: 10px; }
+.lc-rarity {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px;
+  padding: 3px 8px; border-radius: 10px; display: inline-block;
+}
+.lc-rarity.rare { background: rgba(107,79,160,0.3); color: #a07fd4; border: 1px solid rgba(107,79,160,0.4); }
+.lc-rarity.commun { background: rgba(201,145,58,0.15); color: var(--gold); border: 1px solid rgba(201,145,58,0.3); }
+
+/* Sceau */
+.lore-seal {
+  width: min(160px, 35vw); height: min(160px, 35vw);
+  border-radius: 50%;
+  border: 2px solid rgba(139,32,32,0.3);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.lore-seal::before {
+  content: '';
+  position: absolute; inset: 8px; border-radius: 50%;
+  border: 1px dashed rgba(139,32,32,0.2);
+}
+.seal-inner {
+  font-family: 'Cormorant Garamond', serif; font-size: 13px; font-style: italic;
+  color: rgba(180,100,60,0.5); text-align: center; line-height: 1.5;
+  padding: 20px;
+}
+.seal-glyph { font-size: 32px; display: block; margin-bottom: 6px; opacity: 0.4; }
+
+/* Carte mémorielle stylisée */
+.memory-map-mini {
+  width: min(200px, 40vw); height: min(280px, 50vw);
+  background: #060410;
+  border-radius: 8px; position: relative; overflow: hidden;
+  border: 1px solid rgba(201,145,58,0.15);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+}
+.mm-node {
+  position: absolute; width: 10px; height: 10px; border-radius: 50%;
+  box-shadow: 0 0 12px currentColor;
+}
+.mm-node::after {
+  content: ''; position: absolute; inset: -5px; border-radius: 50%;
+  border: 1px solid currentColor; opacity: 0.3;
+}
+.mm-line {
+  position: absolute; height: 1px; transform-origin: left center;
+  opacity: 0.15;
+}
+
+/* ── ÉPILOGUE ── */
+#epilogue {
+  padding: 120px 10vw;
+  text-align: center;
+  border-top: 1px solid rgba(201,145,58,0.08);
+}
+.ep-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(32px, 4vw, 56px); font-weight: 300;
+  line-height: 1.1; margin-bottom: 28px;
+}
+.ep-title em { font-style: italic; color: var(--gold); }
+.ep-body {
+  font-family: 'IM Fell English', serif; font-style: italic;
+  font-size: clamp(16px, 1.6vw, 20px); line-height: 1.8;
+  color: var(--text-dim); max-width: 500px; margin: 0 auto 52px;
+}
+.ep-whisper {
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(201,145,58,0.35);
+  margin-bottom: 48px;
+}
+.ep-cta {
+  display: inline-block; padding: 16px 36px;
+  background: var(--gold); color: var(--ink);
+  font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 400; letter-spacing: 3px;
+  text-transform: uppercase; text-decoration: none; border-radius: 2px;
+  transition: background 0.2s, transform 0.2s;
+}
+.ep-cta:hover { background: var(--gold-light); transform: translateY(-2px); }
+
+/* ── RESPONSIVE ── */
+@media(max-width: 800px) {
+  nav { padding: 16px 20px; }
+  .fragment-block { grid-template-columns: 1fr; gap: 40px; }
+  .fragment-block:nth-child(even) .frag-text { order: 1; }
+  .fragment-block:nth-child(even) .frag-visual { order: 2; }
+  .grand-livre { height: min(280px, 75vw); }
+  #fragments { padding: 0 6vw 80px; }
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<!-- Nav -->
+<nav>
+  <a href="explore_site.html" class="nav-back" data-fr="Retour au site" data-en="Back to site">Retour au site</a>
+  <span class="nav-title">L'Univers · ExpLore</span>
+</nav>
+
+<!-- Pages tombantes (fixed, toute la page) -->
+<div id="pages-scene"></div>
+
+<!-- ── INTRO ── -->
+<section id="intro">
+  <div class="intro-vignette"></div>
+  <div class="intro-particles" id="introParticles"></div>
+  <p class="intro-eyebrow">Fragment — Archives secrètes</p>
+  <h1 class="intro-title">
+    Il existait<br>
+    <em>un Grand Livre.</em>
+  </h1>
+  <p class="intro-sub">
+    Une mémoire collective, tissée de lieux, de figures et d'histoires.<br>
+    Quelqu'un l'efface.
+  </p>
+  <div class="scroll-cta">
+    <span>Descendre pour lire</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ── LIVRE CENTRAL ── -->
+<section id="livre-scene">
+  <div class="livre-container">
+    <div class="grand-livre" id="grandLivre">
+      <!-- Page gauche -->
+      <div class="gl-page gl-left">
+        <div class="page-lines"></div>
+        <div class="page-margin"></div>
+        <div class="page-text">
+          <span class="page-chapter">Prologue · Le Grand Livre</span>
+          <div class="page-heading">De la naissance<br>de la Mémoire</div>
+          <div class="page-body">
+            Avant les premières pierres, avant les premiers noms, il y avait des histoires.
+            Des histoires qui s'accrochaient aux lieux comme la mousse aux murs,
+            qui habitaient les carrefours et les places, les ruelles et les fleuves.
+            <br><br>
+            Ces histoires formaient, ensemble, quelque chose d'immense :
+            le Grand Livre de la Mémoire collective. Non pas écrit sur du papier,
+            mais inscrit dans les pierres, les visages, les gestes répétés
+            de génération en génération.
+          </div>
+        </div>
+        <span class="page-num">i</span>
+      </div>
+
+      <!-- Reliure -->
+      <div class="gl-spine"></div>
+
+      <!-- Page droite -->
+      <div class="gl-page gl-right">
+        <div class="page-lines"></div>
+        <div class="page-margin"></div>
+        <div class="page-text">
+          <span class="page-chapter">Prologue · L'Effacement</span>
+          <div class="page-heading">De ceux qui<br>cherchent à oublier</div>
+          <div class="page-body">
+            Mais toute mémoire a ses ennemis.
+            <br><br>
+            Une organisation — dont on ne prononce pas le nom dans les archives —
+            a commencé son travail dans l'ombre. Méthodique. Patiente. Implacable.
+            Page après page, lieu après lieu, figure après figure :
+            <em>l'effacement.</em>
+            <br><br>
+            Ce qui était su devient flou. Ce qui était flou disparaît.
+          </div>
+        </div>
+        <div class="page-seal">✦</div>
+        <span class="page-num">ii</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FRAGMENTS ── -->
+<section id="fragments">
+
+  <!-- Fragment 1 -->
+  <div class="fragment-block" id="frag1">
+    <div class="frag-text">
+      <span class="frag-num">Fragment I · L'Archéologue</span>
+      <h2 class="frag-title">Tu n'es pas<br><em>un simple joueur.</em></h2>
+      <p class="frag-body">
+        Les archéologues de la mémoire ne fouillent pas la terre.
+        Ils arpentent les villes, les yeux ouverts sur ce que les autres ne voient plus.
+        Une façade, une date gravée, un nom de rue — chaque détail est un indice.
+        <br><br>
+        <strong>Ta mission : retrouver les fragments avant qu'ils disparaissent.</strong>
+        Chaque lieu cache une carte. Chaque carte, un fragment.
+        Ensemble, ils reconstituent ce qu'on cherche à nous faire oublier.
+      </p>
+    </div>
+    <div class="frag-visual">
+      <div class="lore-card">
+        <span class="lc-type">Titre · Spécial</span>
+        <div class="lc-name">Archéologue de la Mémoire</div>
+        <div class="lc-div"></div>
+        <div class="lc-body">Débloqué au premier fragment récupéré. Celui qui voit ce que les autres ignorent.</div>
+        <span class="lc-rarity commun">Rang Novice</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fragment 2 -->
+  <div class="fragment-block" id="frag2">
+    <div class="frag-text">
+      <span class="frag-num">Fragment II · Les Cartes</span>
+      <h2 class="frag-title"><em>Chaque lieu</em><br>cache une carte.</h2>
+      <p class="frag-body">
+        Les cartes ne sont pas de simples objets à collectionner.
+        Elles sont des éclats de mémoire — des fragments arrachés au Grand Livre
+        avant que l'organisation ne les efface définitivement.
+        <br><br>
+        Une carte commune porte un souvenir. Une carte rare, une figure oubliée.
+        <strong>Une carte légendaire : un secret que personne ne devrait connaître.</strong>
+      </p>
+    </div>
+    <div class="frag-visual">
+      <div style="display:flex; gap:20px; align-items:center;">
+        <div class="lore-card" style="transform:rotate(3deg);">
+          <span class="lc-type">Lieu · Histoire</span>
+          <div class="lc-name">Les Frères Lumière</div>
+          <div class="lc-div"></div>
+          <div class="lc-body">Fragment récupéré. Le cinéma naquit ici.</div>
+          <span class="lc-rarity rare">Rare</span>
+        </div>
+        <div class="lore-card" style="transform:rotate(-4deg); margin-top:30px;">
+          <span class="lc-type">Figure · Arts</span>
+          <div class="lc-name">Guignol</div>
+          <div class="lc-div"></div>
+          <div class="lc-body">Fragment partiel. La voix du peuple.</div>
+          <span class="lc-rarity commun">Commun</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fragment 3 -->
+  <div class="fragment-block" id="frag3">
+    <div class="frag-text">
+      <span class="frag-num">Fragment III · La Carte Mémorielle</span>
+      <h2 class="frag-title">Le Grand Livre<br><em>se reconstitue.</em></h2>
+      <p class="frag-body">
+        Au fur et à mesure que tu collectes, une carte apparaît.
+        Non pas une carte géographique — une carte de la mémoire.
+        Les lieux s'y connectent, les figures se retrouvent,
+        les fragments d'histoires forment un réseau de sens.
+        <br><br>
+        <strong>Ce réseau, c'est ce qu'on voulait détruire.</strong>
+        Ce réseau, c'est ce que tu es en train de sauver.
+      </p>
+    </div>
+    <div class="frag-visual">
+      <div class="memory-map-mini" id="memMapMini">
+        <!-- Noeuds générés en JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Fragment 4 -->
+  <div class="fragment-block" id="frag4">
+    <div class="frag-text">
+      <span class="frag-num">Fragment IV · L'Organisation</span>
+      <h2 class="frag-title"><em>Ils n'attendent pas.</em><br>Toi non plus.</h2>
+      <p class="frag-body">
+        On ne sait pas grand-chose de l'organisation.
+        Ni leur nombre, ni leurs méthodes exactes — seulement leurs traces :
+        des lieux qui perdent leur nom, des figures qui disparaissent des archives,
+        des histoires qui ne se transmettent plus.
+        <br><br>
+        <strong>Chaque carte récupérée est un acte de résistance.</strong>
+        Chaque fragment reconstitué, une victoire silencieuse.
+      </p>
+    </div>
+    <div class="frag-visual">
+      <div class="lore-seal">
+        <div class="seal-inner">
+          <span class="seal-glyph">⬡</span>
+          <em>Identité inconnue</em><br>
+          <small style="font-size:10px;opacity:0.6;font-style:normal;">Archives scellées</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ── ÉPILOGUE ── -->
+<section id="epilogue">
+  <p class="ep-whisper">Fin des archives accessibles</p>
+  <h2 class="ep-title">Le reste du livre<br><em>t'attend dans la ville.</em></h2>
+  <p class="ep-body">
+    Ce que tu viens de lire n'est qu'un fragment.
+    Les autres sont éparpillés dans les rues, attachés aux lieux,
+    attendant que quelqu'un les retrouve.
+  </p>
+  <a href="explore_site.html#waitlist" class="ep-cta">Rejoindre l'exploration</a>
+</section>
+
+<script>
+// ── Curseur ──
+var cur = document.getElementById('cur');
+var ring = document.getElementById('cur-ring');
+document.addEventListener('mousemove', function(e) {
+  cur.style.left = e.clientX + 'px'; cur.style.top = e.clientY + 'px';
+  ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px';
+});
+
+// ── Carte mémorielle mini ──
+(function() {
+  var mm = document.getElementById('memMapMini');
+  if (!mm) return;
+  var nodes = [
+    { x:30, y:15, c:'#6b9fff' }, { x:60, y:25, c:'#ff6b9d' },
+    { x:45, y:40, c:'#6bffb0' }, { x:20, y:55, c:'#c9913a' },
+    { x:70, y:50, c:'#6b9fff' }, { x:55, y:65, c:'#ff9d6b' },
+    { x:35, y:75, c:'#a06bff' }, { x:65, y:80, c:'#6bffb0' },
+    { x:80, y:35, c:'#ff6b9d' }, { x:15, y:30, c:'#c9913a' },
+  ];
+  nodes.forEach(function(n) {
+    var el = document.createElement('div');
+    el.className = 'mm-node';
+    el.style.cssText = 'left:'+n.x+'%; top:'+n.y+'%; background:'+n.c+'; color:'+n.c+';';
+    mm.appendChild(el);
+  });
+  // Lignes entre noeuds
+  var pairs = [[0,2],[1,2],[2,3],[2,4],[3,6],[4,5],[5,7],[8,4],[9,3]];
+  pairs.forEach(function(pair) {
+    var a = nodes[pair[0]], b = nodes[pair[1]];
+    var dx = b.x - a.x, dy = b.y - a.y;
+    var len = Math.sqrt(dx*dx + dy*dy);
+    var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    var line = document.createElement('div');
+    line.className = 'mm-line';
+    line.style.cssText = 'left:'+a.x+'%; top:'+a.y+'%; width:'+len+'%; transform:rotate('+angle+'deg); background:rgba(201,145,58,0.4);';
+    mm.appendChild(line);
+  });
+})();
+
+// ── Pages qui tombent ──
+var pageScene = document.getElementById('pages-scene');
+var livre = document.getElementById('grandLivre');
+var fi = null;
+
+var fragments = [
+  { label:'Fragment · Mémoire', text:'<strong>La ville de Lyon</strong> possède plus de 2000 ans d\'histoire, mais combien de ses secrets sont encore vivants ?' },
+  { label:'Fragment · Figure', text:'<strong>Marie Curie</strong> n\'a jamais vécu à Lyon, mais ses travaux ont transformé les laboratoires de la ville à jamais.' },
+  { label:'Fragment · Lieu', text:'Le traboule au <strong>n°9 place Colbert</strong> a servi de refuge à des dizaines de personnes pendant l\'occupation.' },
+  { label:'Fragment · Archive', text:'En <strong>1895</strong>, deux frères filmèrent pour la première fois des ouvriers sortant d\'une usine. La ville ne le savait pas encore.' },
+  { label:'Fragment · Société', text:'La <strong>Croix-Rousse</strong> fut le premier quartier ouvrier organisé d\'Europe. Sa mémoire s\'efface chaque année un peu plus.' },
+  { label:'Fragment · Mystère', text:'Certains lieux de la ville <strong>résistent à l\'oubli</strong>. Nul ne sait pourquoi. Peut-être parce que quelqu\'un les garde.' },
+];
+
+function spawnPage() {
+  var lScene = document.getElementById('livre-scene');
+  if (!lScene) return;
+  var r = lScene.getBoundingClientRect();
+  if (r.bottom < -200 || r.top > window.innerHeight + 200) return;
+
+  var frag = fragments[Math.floor(Math.random() * fragments.length)];
+  var p = document.createElement('div');
+  p.className = 'torn-page';
+
+  // Taille aléatoire mais lisible
+  var w = 140 + Math.floor(Math.random() * 60);
+  var h = 170 + Math.floor(Math.random() * 60);
+
+  // Position départ : depuis le livre
+  var lw = livre.offsetWidth, lh = livre.offsetHeight;
+  var lx = livre.getBoundingClientRect().left;
+  var ly = livre.getBoundingClientRect().top;
+  var sx = lx + lw * 0.3 + Math.random() * lw * 0.4;
+  var sy = ly + lh * 0.2 + Math.random() * lh * 0.4;
+
+  // Destination
+  var tx = (Math.random() - 0.5) * window.innerWidth * 0.8;
+  var ty = window.innerHeight * 0.2 + Math.random() * window.innerHeight * 0.5;
+  var rot = (Math.random() - 0.5) * 50;
+  var dur = 2500 + Math.random() * 2000;
+
+  p.style.cssText = [
+    'width:' + w + 'px',
+    'height:' + h + 'px',
+    'left:' + sx + 'px',
+    'top:' + sy + 'px',
+    'opacity:0',
+    'z-index:' + (200 + Math.floor(Math.random() * 50)),
+    'transform:rotate(0deg)',
+  ].join(';');
+
+  p.innerHTML = '<div class="torn-page-lines"></div>'
+    + '<div class="torn-page-content">'
+    + '<span class="torn-fragment-label">' + frag.label + '</span>'
+    + '<div class="torn-fragment-text">' + frag.text + '</div>'
+    + '</div>';
+
+  // Clic → retour dans le livre
+  p.addEventListener('click', function(e) {
+    e.stopPropagation();
+    ring.classList.remove('over-page');
+    var pr = p.getBoundingClientRect();
+    var lr = livre.getBoundingClientRect();
+    var dtx = lr.left + lr.width / 2 - (pr.left + pr.width / 2);
+    var dty = lr.top + lr.height / 2 - (pr.top + pr.height / 2);
+    p.style.transition = 'transform 0.65s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease 0.2s';
+    p.style.transform = 'translate(' + dtx + 'px,' + dty + 'px) rotate(0deg) scale(0.15)';
+    p.style.opacity = '0';
+    p.style.pointerEvents = 'none';
+    // Flash livre
+    livre.classList.remove('flash');
+    void livre.offsetWidth; // reflow
+    livre.classList.add('flash');
+    setTimeout(function() { livre.classList.remove('flash'); }, 600);
+    setTimeout(function() { if (p.parentNode) p.remove(); }, 800);
+  });
+
+  p.addEventListener('mouseenter', function() { ring.classList.add('over-page'); });
+  p.addEventListener('mouseleave', function() { ring.classList.remove('over-page'); });
+
+  pageScene.appendChild(p);
+
+  // Animation : apparition puis vol
+  requestAnimationFrame(function() {
+    p.style.transition = 'opacity 0.3s ease';
+    p.style.opacity = '1';
+    setTimeout(function() {
+      p.style.transition = 'transform ' + dur + 'ms cubic-bezier(0.15,0.1,0.25,1), opacity 500ms ease ' + (dur * 0.75) + 'ms';
+      p.style.transform = 'translate(' + tx + 'px,' + (ty - sy) + 'px) rotate(' + rot + 'deg)';
+      p.style.opacity = '0';
+      setTimeout(function() { if (p.parentNode) p.remove(); }, dur + 600);
+    }, 80);
+  });
+}
+
+// Démarrer les pages quand le livre est visible
+var livreObs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) {
+      if (!fi) { spawnPage(); fi = setInterval(spawnPage, 1800); }
+    } else {
+      if (fi) { clearInterval(fi); fi = null; }
+    }
+  });
+}, { threshold: 0.2 });
+if (livre) livreObs.observe(livre);
+
+// ── Reveal fragments ──
+var fragBlocks = document.querySelectorAll('.fragment-block');
+if (window.IntersectionObserver) {
+  var fragObs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('visible'); fragObs.unobserve(e.target); }
+    });
+  }, { threshold: 0.15 });
+  fragBlocks.forEach(function(b) { fragObs.observe(b); });
+} else {
+  fragBlocks.forEach(function(b) { b.classList.add('visible'); });
+}
+
+// ── Particules intro ──
+(function() {
+  var c = document.getElementById('introParticles');
+  if (!c) return;
+  for (var i = 0; i < 18; i++) {
+    var p = document.createElement('div');
+    var size = 1 + Math.random() * 2;
+    var x = Math.random() * 100, y = Math.random() * 100;
+    var dur = 6 + Math.random() * 10;
+    var del = Math.random() * 5;
+    p.style.cssText = [
+      'position:absolute', 'border-radius:50%',
+      'width:' + size + 'px', 'height:' + size + 'px',
+      'left:' + x + '%', 'top:' + y + '%',
+      'background:rgba(201,145,58,' + (0.1 + Math.random() * 0.3) + ')',
+      'animation:fpFloat ' + dur + 's ' + del + 's ease-in-out infinite',
+    ].join(';');
+    c.appendChild(p);
+  }
+  var style = document.createElement('style');
+  style.textContent = '@keyframes fpFloat { 0%,100%{transform:translateY(0) scale(1);opacity:0.3} 50%{transform:translateY(-30px) scale(1.2);opacity:0.8} }';
+  document.head.appendChild(style);
+})();
+
+// ── Inclinaison livre selon souris ──
+document.addEventListener('mousemove', function(e) {
+  if (!livre) return;
+  var r = livre.getBoundingClientRect();
+  var cx = (e.clientX - (r.left + r.width / 2)) / (window.innerWidth / 2);
+  var cy = (e.clientY - (r.top + r.height / 2)) / (window.innerHeight / 2);
+  livre.style.transform = 'perspective(1200px) rotateY(' + (cx * 5) + 'deg) rotateX(' + (-cy * 3) + 'deg)';
+});
+</script>
+</body>
+</html>
