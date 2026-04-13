@@ -12082,8 +12082,8 @@
             const el = document.getElementById('albContent');
             if (!el) return;
             const all = getAllCards();
-            // Onglet Cartes = cartes thématiques uniquement (les locales sont dans Ville)
-            const thematic  = all.filter(c => c.cardKind !== 'local');
+            // Onglet Cartes = toutes les cartes (locales + thématiques)
+            const thematic  = all;
             const collected = thematic.filter(c => collectedCards.includes(c.id));
             const locked    = thematic.filter(c => !collectedCards.includes(c.id));
 
