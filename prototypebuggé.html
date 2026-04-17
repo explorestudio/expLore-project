@@ -1508,6 +1508,66 @@
             0%,100% { transform: translate(-50%,-100%) translateY(0); }
             50%     { transform: translate(-50%,-100%) translateY(-4px); }
         }
+        /* Flottaison subtile pour les petits collectables (transform:translate(-50%,-84%)) */
+        @keyframes poiFloatSmall {
+            0%,100% { transform: translate(-50%,-84%) translateY(0); }
+            50%     { transform: translate(-50%,-84%) translateY(-2px); }
+        }
+        /* Flottaison marquée pour les collectables rares */
+        @keyframes poiFloatMedium {
+            0%,100% { transform: translate(-50%,-84%) translateY(0); }
+            50%     { transform: translate(-50%,-84%) translateY(-3.5px); }
+        }
+        /* Rotation douce + flottaison pour le loot mystère */
+        @keyframes poiFloatMystery {
+            0%   { transform: translate(-50%,-84%) translateY(0)    rotate(-2deg); }
+            50%  { transform: translate(-50%,-84%) translateY(-4px) rotate(2deg); }
+            100% { transform: translate(-50%,-84%) translateY(0)    rotate(-2deg); }
+        }
+
+        /* ── POI interactables — pas de bob vertical, juste un léger balancement ── */
+        @keyframes interactSway {
+            0%,100% { transform: rotate(-1.5deg); }
+            50%      { transform: rotate(1.5deg); }
+        }
+        /* Halo au sol pulsant — état "loin" (couleur propre au type) */
+        @keyframes interactHaloIdle {
+            0%,100% { opacity: 0.75; transform: translateX(-50%) scale(1);    }
+            50%      { opacity: 1.0;  transform: translateX(-50%) scale(1.12); }
+        }
+        /* Halo au sol pulsant — état "à portée" (vert, plus intense) */
+        @keyframes interactHaloReady {
+            0%,100% { opacity: 0.85; transform: translateX(-50%) scale(1);    }
+            50%      { opacity: 1.0;  transform: translateX(-50%) scale(1.22); }
+        }
+        /* Prompt TAP qui apparaît à portée */
+        @keyframes tapPromptBob {
+            0%,100% { transform: translateX(-50%) translateY(0);    }
+            50%      { transform: translateX(-50%) translateY(-3px); }
+        }
+        .tap-prompt {
+            position: absolute;
+            top: -22px; left: 50%;
+            transform: translateX(-50%);
+            padding: 3px 10px;
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            border-radius: 10px;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(16,185,129,0.6);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.25s;
+            white-space: nowrap;
+            z-index: 5;
+        }
+        .tap-prompt.show {
+            opacity: 1;
+            animation: tapPromptBob 1.2s ease-in-out infinite;
+        }
         @keyframes poiStemPulse {
             0%,100% { opacity: 0.5; }
             50%     { opacity: 1.0; }
@@ -2707,7 +2767,7 @@
         }
 
         /* HUD XP bar */
-        .hud-xp-bar { position: absolute; top: 70px; left: 14px; right: 80px; z-index: 30; pointer-events: none; display: flex; align-items: center; gap: 6px; transition: opacity 0.2s; }
+        .hud-xp-bar { display: none !important; }
         /* Masquer la barre XP dès qu'un écran/panel est ouvert — visible uniquement sur la map */
         #mainApp:has(.collections-panel.show) .hud-xp-bar,
         #mainApp:has(.card-detail-view.show) .hud-xp-bar,
@@ -5290,6 +5350,19 @@
                 <div style="display:flex;gap:8px;flex-wrap:wrap;" id="testEchoBtns"></div>
             </div>
 
+            <!-- Manipulation de la caméra -->
+            <div style="padding:16px; border-bottom:1px solid rgba(255,255,255,0.08);">
+                <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Manipulation caméra (dev)</div>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 0;">
+                    <input type="checkbox" id="testCameraUnlock" onchange="toggleCameraUnlock(this.checked)"
+                        style="width:18px;height:18px;accent-color:#6366f1;">
+                    <span style="font-size:13px;">Déverrouiller la caméra (zoom, pan, rotate)</span>
+                </label>
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;line-height:1.4;">
+                    Permet de pincer pour zoomer, faire glisser pour déplacer et pivoter. En production, la caméra reste verrouillée.
+                </div>
+            </div>
+
             <!-- Actions de test -->
             <div style="padding:16px; border-bottom:1px solid rgba(255,255,255,0.08);">
                 <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Actions</div>
@@ -7659,6 +7732,16 @@
             { id: 'echo8',  supertype: 'science',  lat: 45.7668, lng: 4.8690 }, // Part-Dieu
             { id: 'echo9',  supertype: 'arts',     lat: 45.7480, lng: 4.8220 }, // Point du Jour
             { id: 'echo10', supertype: 'societe',  lat: 45.7748, lng: 4.8410 }, // Cité Internationale
+            { id: 'echo11', supertype: 'histoire', lat: 45.7640, lng: 4.8280 }, // Cathédrale St-Jean
+            { id: 'echo12', supertype: 'nature',   lat: 45.7590, lng: 4.8160 }, // Parc des Hauteurs
+            { id: 'echo13', supertype: 'science',  lat: 45.7395, lng: 4.8340 }, // Campus LyonTech
+            { id: 'echo14', supertype: 'arts',     lat: 45.7700, lng: 4.8355 }, // Place des Terreaux
+            { id: 'echo15', supertype: 'societe',  lat: 45.7560, lng: 4.8470 }, // Guillotière
+            { id: 'echo16', supertype: 'histoire', lat: 45.7725, lng: 4.8330 }, // Boulevard Croix-Rousse
+            { id: 'echo17', supertype: 'nature',   lat: 45.7820, lng: 4.8565 }, // Lac Tête d'Or
+            { id: 'echo18', supertype: 'science',  lat: 45.7530, lng: 4.8520 }, // Préfecture
+            { id: 'echo19', supertype: 'arts',     lat: 45.7580, lng: 4.8330 }, // Place Bellecour
+            { id: 'echo20', supertype: 'societe',  lat: 45.7470, lng: 4.8410 }, // Place du Pont
         ];
 
         // Textes narratifs par carte × supertype
@@ -8028,8 +8111,7 @@
                 el.style.display = '';
             });
             if (map) {
-                // Zones de capture gérées par captureCanvas — on garde seulement info-capture-circles
-                try { if (map.getLayer('info-capture-circles')) map.setLayoutProperty('info-capture-circles', 'visibility', 'visible'); } catch(e) {}
+                // Zones de capture gérées par captureCanvas — info-capture-circles reste caché
             }
             updatePOIVisibility();
             updateDustVisibility();
@@ -8320,7 +8402,7 @@
         let _walkSpeed = 0.75; // multiplicateur : 0.75 ≈ 5 km/h (marche normale)
         // Tilt offset: shift camera center north so player appears in lower third of screen
         const TILT_OFFSET_LAT = 0.0018;
-        const ISOMETRIC_TILT = 67.5;
+        const ISOMETRIC_TILT = 50;
         const ISOMETRIC_HEADING = 0;  // keep north-up like Waze default
 
         // Génère un polygone ellipse en coords géo, aplati selon le pitch isométrique
@@ -9140,9 +9222,8 @@
             if (!_obDone) {
                 setTimeout(startOnboarding, 800);
             } else {
-                // Tutoriel déjà fait — révéler les layers créés cachés par défaut
-                // Zones de capture gérées par captureCanvas — on garde seulement info-capture-circles
-                try { if (map.getLayer('info-capture-circles')) map.setLayoutProperty('info-capture-circles', 'visibility', 'visible'); } catch(e) {}
+                // Tutoriel déjà fait — zones de capture gérées par captureCanvas
+                // (info-capture-circles reste caché)
             }
             // Sync UI après chargement
             document.getElementById('dustCounter').textContent = memorialDust;
@@ -9230,14 +9311,20 @@
                 pitch: ISOMETRIC_TILT,
                 bearing: ISOMETRIC_HEADING,
                 attributionControl: false,
-                maxPitch: 67,
+                maxPitch: 60,
                 maxZoom: 22
             });
 
             map.addControl(new maplibregl.AttributionControl({ compact: true }));
 
-            // Désactiver uniquement doubleClickZoom et keyboard (gérés manuellement)
+            // ── Verrouiller totalement la caméra (style Pokémon GO / DQ Walk) ──
+            // Le joueur ne peut ni zoomer, ni faire pivoter, ni déplacer la caméra
+            map.scrollZoom.disable();
+            map.boxZoom.disable();
             map.doubleClickZoom.disable();
+            map.touchZoomRotate.disable();
+            map.dragPan.disable();
+            map.dragRotate.disable();
             map.keyboard.disable();
 
             // ---- Player marker (HTML element) ----
@@ -9560,20 +9647,10 @@
                 source: 'info-circles',
                 layout: { visibility: 'none' },
                 paint: {
-                    'circle-radius': [
-                        'interpolate', ['exponential', 2], ['zoom'],
-                        14, 2.5,   // 20m à zoom 14
-                        15, 5,     // 20m à zoom 15
-                        16, 10,    // 20m à zoom 16
-                        17, 20,    // 20m à zoom 17
-                        18, 40,    // 20m à zoom 18
-                        19, 80     // 20m à zoom 19
-                    ],
-                    'circle-color': '#1D4ED8',
-                    'circle-opacity': 0.07,
-                    'circle-stroke-color': '#3B82F6',
-                    'circle-stroke-width': 1.8,
-                    'circle-stroke-opacity': 0.55
+                    'circle-radius': 0,
+                    'circle-opacity': 0,
+                    'circle-stroke-width': 0,
+                    'circle-stroke-opacity': 0
                 }
             });
                 // Hide POI icon labels (metro, restaurants, etc.)
@@ -9619,28 +9696,27 @@
         // ── Helper : construit le visuel cylindre+tige+disque pour un POI collectable ──
         // colors: { top, mid, bot, glow, disk, stroke }
         // iconEl: element DOM à placer en haut (img ou div svg existant)
-        function _buildPoiVisual(pid, colors, iconEl, iconSize) {
+        function _buildPoiVisual(pid, colors, iconEl, iconSize, cylHeight) {
             const sz = iconSize || 52;
+            const H  = cylHeight || 46;  // hauteur du cylindre (variable selon rareté)
             const NS = 'http://www.w3.org/2000/svg';
+            const bot = H - 4;  // position du disque au sol
 
             const wrap = document.createElement('div');
             wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;position:relative;';
 
-            // Icône
             iconEl.style.width  = sz + 'px';
             iconEl.style.height = sz + 'px';
             iconEl.style.position = 'relative';
             iconEl.style.zIndex = '2';
             wrap.appendChild(iconEl);
 
-            // SVG cylindre
             const svg = document.createElementNS(NS, 'svg');
-            svg.setAttribute('viewBox', '0 0 50 46');
-            svg.style.cssText = 'width:50px;height:46px;margin-top:-5px;overflow:visible;animation:poiStemPulse 1.8s ease-in-out infinite;';
+            svg.setAttribute('viewBox', '0 0 50 ' + H);
+            svg.style.cssText = 'width:50px;height:' + H + 'px;margin-top:-5px;overflow:visible;animation:poiStemPulse 1.8s ease-in-out infinite;';
 
             const defs = document.createElementNS(NS, 'defs');
 
-            // Gradient corps
             const lg = document.createElementNS(NS, 'linearGradient');
             lg.id = 'cyl_' + pid; lg.setAttribute('x1','0%'); lg.setAttribute('y1','0%'); lg.setAttribute('x2','0%'); lg.setAttribute('y2','100%');
             [['0%','rgba(0,0,0,0)'],['20%',colors.top],['65%',colors.mid],['100%',colors.bot]].forEach(([o,c]) => {
@@ -9648,7 +9724,6 @@
             });
             defs.appendChild(lg);
 
-            // Gradient disque bas
             const rg = document.createElementNS(NS, 'radialGradient');
             rg.id = 'disk_' + pid; rg.setAttribute('cx','50%'); rg.setAttribute('cy','50%'); rg.setAttribute('r','50%');
             [['0%',colors.disk],['55%',colors.mid],['100%','transparent']].forEach(([o,c]) => {
@@ -9656,7 +9731,6 @@
             });
             defs.appendChild(rg);
 
-            // Glow filter
             const filt = document.createElementNS(NS, 'filter');
             filt.id = 'glow_' + pid;
             const blur = document.createElementNS(NS, 'feGaussianBlur'); blur.setAttribute('stdDeviation','2'); blur.setAttribute('result','blur');
@@ -9668,15 +9742,14 @@
             defs.appendChild(filt);
             svg.appendChild(defs);
 
-            // Corps trapèze
+            // Corps trapèze — hauteur variable
             const body = document.createElementNS(NS, 'path');
-            body.setAttribute('d', 'M23,2 L27,2 L29,42 L21,42 Z');
+            body.setAttribute('d', 'M23,2 L27,2 L29,' + bot + ' L21,' + bot + ' Z');
             body.setAttribute('fill', 'url(#cyl_' + pid + ')');
             body.setAttribute('filter', 'url(#glow_' + pid + ')');
             svg.appendChild(body);
 
-            // Bords lumineux
-            [[23,2,21,42],[27,2,29,42]].forEach(([x1,y1,x2,y2]) => {
+            [[23,2,21,bot],[27,2,29,bot]].forEach(([x1,y1,x2,y2]) => {
                 const l = document.createElementNS(NS,'line');
                 l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
                 l.setAttribute('stroke', colors.glow); l.setAttribute('stroke-width','1.2');
@@ -9684,21 +9757,18 @@
                 svg.appendChild(l);
             });
 
-            // Ellipse haut
             const eTop = document.createElementNS(NS,'ellipse');
             eTop.setAttribute('cx','25'); eTop.setAttribute('cy','2'); eTop.setAttribute('rx','5'); eTop.setAttribute('ry','2');
             eTop.setAttribute('fill', colors.top); eTop.setAttribute('filter','url(#glow_' + pid + ')');
             svg.appendChild(eTop);
 
-            // Ellipse bas remplie
             const eBotF = document.createElementNS(NS,'ellipse');
-            eBotF.setAttribute('cx','25'); eBotF.setAttribute('cy','42'); eBotF.setAttribute('rx','12'); eBotF.setAttribute('ry','4.5');
+            eBotF.setAttribute('cx','25'); eBotF.setAttribute('cy',bot); eBotF.setAttribute('rx','12'); eBotF.setAttribute('ry','4.5');
             eBotF.setAttribute('fill','url(#disk_' + pid + ')'); eBotF.setAttribute('filter','url(#glow_' + pid + ')');
             svg.appendChild(eBotF);
 
-            // Contour ellipse bas
             const eBotS = document.createElementNS(NS,'ellipse');
-            eBotS.setAttribute('cx','25'); eBotS.setAttribute('cy','42'); eBotS.setAttribute('rx','12'); eBotS.setAttribute('ry','4.5');
+            eBotS.setAttribute('cx','25'); eBotS.setAttribute('cy',bot); eBotS.setAttribute('rx','12'); eBotS.setAttribute('ry','4.5');
             eBotS.setAttribute('fill','none'); eBotS.setAttribute('stroke', colors.stroke); eBotS.setAttribute('stroke-width','1.5');
             eBotS.setAttribute('filter','url(#glow_' + pid + ')');
             svg.appendChild(eBotS);
@@ -9714,7 +9784,7 @@
                 const inner = document.createElement('div');
                 inner.style.cssText = `
                     position: absolute;
-                    width: 110px; height: 145px;
+                    width: 60px; height: 85px;
                     transform: translate(-50%, -100%);
                     display: flex; flex-direction: column; align-items: center;
                     pointer-events: none;
@@ -9724,7 +9794,7 @@
                 const _collected = collectedCards.includes(poi.localCardId);
                 const _pid2 = 'card_' + poi.id.replace(/[^a-z0-9]/gi,'');
                 const _img = document.createElement('img');
-                _img.src = 'https://www.dropbox.com/scl/fi/1ev6kq1tiursbecahzkkz/Icone-NebCard.png?rlkey=6g186p229tyq0slqglwcfwcu8&raw=1';
+                _img.src = 'https://explorestudio.github.io/expLore-project/spiral.png?v=2';
                 _img.draggable = false;
                 _img.style.filter = 'drop-shadow(0 2px 14px rgba(140,40,255,0.9))';
                 _img.style.opacity = _collected ? '0.5' : '1';
@@ -9736,7 +9806,7 @@
                     glow:   _collected ? 'rgba(96,165,250,0.8)'   : 'rgba(249,115,22,0.8)',
                     disk:   _collected ? 'rgba(147,197,253,0.7)'  : 'rgba(253,186,116,0.7)',
                     stroke: _collected ? 'rgba(186,230,253,0.9)'  : 'rgba(254,215,170,0.9)'
-                }, _img, 106);
+                }, _img, 54, 45);
                 inner.appendChild(_poiWrap);
                 el.appendChild(inner);
                 el.addEventListener('mouseenter', () => { inner.style.transform = 'translate(-50%,-100%) scale(1.12)'; });
@@ -9764,7 +9834,7 @@
                 // Icône cristal SVG
                 const _dustIcon = document.createElement('div');
                 _dustIcon.style.cssText = 'flex-shrink:0;';
-                _dustIcon.innerHTML = "<svg width=\"28\" height=\"34\" viewBox=\"0 0 24 30\" fill=\"none\"><path d=\"M12,1 L18,8 L19,20 L12,29 L5,20 L6,8 Z\" fill=\"url(#di_d)\"/><path d=\"M12,1 L6,8 L5,20 L12,29 Z\" fill=\"rgba(0,0,0,0.12)\"/><path d=\"M12,1 L18,8 L15,6 L11,2 Z\" fill=\"rgba(255,255,255,0.55)\"/><path d=\"M12,1 L10,5 L12,3 L14,5 Z\" fill=\"rgba(255,255,255,0.75)\"/><defs><linearGradient id=\"di_d\" x1=\"5\" y1=\"1\" x2=\"19\" y2=\"29\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#f3e8ff\"/><stop offset=\"50%\" stop-color=\"#a855f7\"/><stop offset=\"100%\" stop-color=\"#5b21b6\"/></linearGradient></defs></svg>";
+                _dustIcon.innerHTML = '<img src="https://explorestudio.github.io/expLore-project/Powder.png?v=1" style="width:38px;height:38px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
                 const _dPid = 'dust_' + dust.id.replace(/[^a-z0-9]/gi,'');
                 const _dustWrap = _buildPoiVisual(_dPid, {
                     top:    'rgba(192,132,252,0.9)',
@@ -9773,14 +9843,14 @@
                     glow:   'rgba(192,132,252,0.8)',
                     disk:   'rgba(216,180,254,0.7)',
                     stroke: 'rgba(233,213,255,0.9)'
-                }, _dustIcon, 28);
+                }, _dustIcon, 30, 30);
                 inner.appendChild(_dustWrap);
                 el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([dust.lng, dust.lat]).addTo(map);
                 dustMarkers.push({ marker, el, dust });
-                const delay = (Math.random() * 2).toFixed(2);
-                inner.style.animation = 'dustGlow 2.5s ease-in-out ' + delay + 's infinite';
+                const _dDelay = (Math.random() * 2).toFixed(2);
+                inner.style.animation = 'poiFloatSmall 3s ease-in-out ' + _dDelay + 's infinite';
             });
 
             // ---- Echo markers ----
@@ -9794,7 +9864,15 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-84%);width:54px;height:100px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
                 const _echoIcon = document.createElement('div');
                 _echoIcon.style.cssText = 'flex-shrink:0;';
-                _echoIcon.innerHTML = "<svg width=\"28\" height=\"32\" viewBox=\"0 0 24 28\" fill=\"none\"><path d=\"M12,1 L20,6 L20,18 L12,27 L4,18 L4,6 Z\" fill=\"url(#di_e)\"/><path d=\"M12,1 L4,6 L4,18 L12,27 Z\" fill=\"rgba(0,0,0,0.10)\"/><path d=\"M12,1 L20,6 L16,4 L11,2 Z\" fill=\"rgba(255,255,255,0.5)\"/><path d=\"M12,12 L16,10 L16,16 L12,18 L8,16 L8,10 Z\" fill=\"rgba(255,255,255,0.15)\"/><defs><linearGradient id=\"di_e\" x1=\"4\" y1=\"1\" x2=\"20\" y2=\"27\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#d1fae5\"/><stop offset=\"50%\" stop-color=\"#10b981\"/><stop offset=\"100%\" stop-color=\"#065f46\"/></linearGradient></defs></svg>";
+                const _echoImgMap = {
+                    histoire: 'EchoHistoireIcon.png',
+                    nature:   'EchoNatureIcon.png',
+                    science:  'EchoScienceIcon.png',
+                    arts:     'EchoArtIcon.png',
+                    societe:  'EchoSocieteIcon.png'
+                };
+                const _echoImgSrc = _echoImgMap[echo.supertype] || 'EchoHistoire.png';
+                _echoIcon.innerHTML = '<img src="https://explorestudio.github.io/expLore-project/' + _echoImgSrc + '?v=1" style="width:40px;height:40px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));" draggable="false"/>';
                 const _hex = info.color.replace('#','');
                 const _er = parseInt(_hex.slice(0,2),16);
                 const _eg = parseInt(_hex.slice(2,4),16);
@@ -9807,12 +9885,14 @@
                     glow:   'rgba(52,211,153,0.85)',
                     disk:   'rgba(110,231,183,0.7)',
                     stroke: 'rgba(167,243,208,0.9)'
-                }, _echoIcon, 28);
+                }, _echoIcon, 34, 40);
                 inner.appendChild(_eWrap);
                 el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([echo.lng, echo.lat]).addTo(map);
                 echoMarkers.push({ marker, el, echo });
+                const _eDelay = (Math.random() * 2).toFixed(2);
+                inner.style.animation = 'poiFloatSmall 3.2s ease-in-out ' + _eDelay + 's infinite';
             });
 
             // ---- Orb markers — orbe mémorielle ----
@@ -9833,12 +9913,14 @@
                     glow:   'rgba(34,211,238,0.85)',
                     disk:   'rgba(103,232,249,0.7)',
                     stroke: 'rgba(164,244,250,0.9)'
-                }, _oIcon, 28);
+                }, _oIcon, 42, 55);
                 inner.appendChild(_oWrap);
                 el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([orb.lng, orb.lat]).addTo(map);
                 orbMarkers.push({ marker, el, orb });
+                const _oDelay = (Math.random() * 2).toFixed(2);
+                inner.style.animation = 'poiFloatMedium 2.8s ease-in-out ' + _oDelay + 's infinite';
             });
 
             // ---- Scroll markers ----
@@ -9859,12 +9941,14 @@
                     glow:   'rgba(251,191,36,0.8)',
                     disk:   'rgba(253,230,138,0.7)',
                     stroke: 'rgba(255,245,180,0.9)'
-                }, _sIcon, 28);
+                }, _sIcon, 34, 40);
                 inner.appendChild(_sWrap);
                 el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([scroll.lng, scroll.lat]).addTo(map);
                 scrollMarkers.push({ marker, el, scroll });
+                const _sDelay = (Math.random() * 2).toFixed(2);
+                inner.style.animation = 'poiFloatSmall 3.1s ease-in-out ' + _sDelay + 's infinite';
             });
 
             // ---- Loot markers — objet mystère ----
@@ -9885,12 +9969,14 @@
                     glow:   'rgba(236,72,153,0.85)',
                     disk:   'rgba(249,168,212,0.7)',
                     stroke: 'rgba(252,207,232,0.9)'
-                }, _lIcon, 28);
+                }, _lIcon, 46, 55);
                 inner.appendChild(_lWrap);
                 el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([loot.lng, loot.lat]).addTo(map);
                 lootMarkers.push({ marker, el, loot });
+                const _lDelay = (Math.random() * 2).toFixed(2);
+                inner.style.animation = 'poiFloatMystery 3.5s ease-in-out ' + _lDelay + 's infinite';
             });
 
             // Hide all POI icons and labels to keep the map clean
@@ -10704,20 +10790,28 @@
             // Panneaux
             checkNearbyPanneau();
 
-            // Info points — mise à jour du marqueur (pulsation si dans zone)
+            // Info points — halo ready + prompt TAP à portée
             currentNearbyInfo = null;
             infoMarkers.forEach(({ el, inner, info }) => {
                 const alreadySaved = museumCollection.some(m => m.infoId === info.id);
                 if (alreadySaved) return;
                 const dist = getDistance(playerPos.lat, playerPos.lng, info.lat, info.lng);
                 const inZone = dist <= INFO_RADIUS;
+                const halo = inner.querySelector('.interact-halo');
+                const prompt = inner.querySelector('.tap-prompt');
                 if (inZone) {
                     currentNearbyInfo = info;
-                    inner.style.boxShadow = '0 3px 16px rgba(255,200,60,0.9), 0 0 0 2px rgba(255,220,80,0.7)';
-                    inner.style.animation = 'interactGlow 1.4s ease-in-out infinite';
+                    if (halo) {
+                        halo.style.background = 'radial-gradient(ellipse, rgba(52,211,153,1) 0%, rgba(16,185,129,0.7) 35%, rgba(5,150,105,0.3) 65%, transparent 85%)'; halo.style.boxShadow = '0 0 16px 4px rgba(52,211,153,0.6)';
+                        halo.style.animation = 'interactHaloReady 1.4s ease-in-out infinite';
+                    }
+                    if (prompt) prompt.classList.add('show');
                 } else {
-                    inner.style.boxShadow = '0 3px 10px rgba(180,140,40,0.5)';
-                    inner.style.animation = '';
+                    if (halo) {
+                        halo.style.background = 'radial-gradient(ellipse, rgba(253,224,71,0.95) 0%, rgba(245,158,11,0.55) 35%, rgba(180,120,20,0.25) 65%, transparent 85%)'; halo.style.boxShadow = '0 0 12px 3px rgba(253,224,71,0.4)';
+                        halo.style.animation = 'interactHaloIdle 2.5s ease-in-out infinite';
+                    }
+                    if (prompt) prompt.classList.remove('show');
                 }
             });
             // Bannière panorama
@@ -12114,6 +12208,31 @@
             saveProgress();
         }
 
+
+        // Toggle caméra dev — permet de zoomer/pan/rotate pour le debug
+        function toggleCameraUnlock(enabled) {
+            if (!map) return;
+            if (enabled) {
+                map.scrollZoom.enable();
+                map.boxZoom.enable();
+                map.doubleClickZoom.enable();
+                map.touchZoomRotate.enable();
+                map.dragPan.enable();
+                map.dragRotate.enable();
+                map.keyboard.enable();
+                showToast('🔓 Caméra déverrouillée');
+            } else {
+                map.scrollZoom.disable();
+                map.boxZoom.disable();
+                map.doubleClickZoom.disable();
+                map.touchZoomRotate.disable();
+                map.dragPan.disable();
+                map.dragRotate.disable();
+                map.keyboard.disable();
+                showToast('🔒 Caméra verrouillée');
+            }
+        }
+
         function addTestCards() {
             // Toutes les cartes : locales + thématiques saison 1 + requises par la la voûte
             const allCards = getAllCards();
@@ -12357,8 +12476,8 @@
 
         // ── Switch vue isométrique : Zoom In ↔ Zoom Out ──
         const MAP_VIEW = {
-            close: { pitch: 67, zoom: 18, label: '🔭', desc: 'Vue proche',   camOffset: 0.0012 },
-            far:   { pitch: 45, zoom: 15, label: '🗺️', desc: 'Vue ensemble', camOffset: 0 }
+            close: { pitch: 50, zoom: 17, label: '🔭', desc: 'Vue proche',   camOffset: 0.0012 },
+            far:   { pitch: 35, zoom: 15, label: '🗺️', desc: 'Vue ensemble', camOffset: 0 }
         };
         let _mapViewMode = 'close';
 
@@ -15649,11 +15768,31 @@
                 inner.className = 'panneau-marker';
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-50%);';
 
-                // Icône stèle SVG
+                // Prompt TAP à portée
+                const tapPrompt = document.createElement('div');
+                tapPrompt.className = 'tap-prompt';
+                tapPrompt.textContent = 'TAP ›';
+                inner.appendChild(tapPrompt);
+
+                // Icône stèle avec léger balancement
                 const span = document.createElement('div');
-                span.style.cssText = 'display:flex;align-items:center;justify-content:center;';
-                span.innerHTML = "<svg width=\"34\" height=\"36\" viewBox=\"0 0 30 32\" fill=\"none\"><path d=\"M6,4 L24,4 L26,8 L26,24 L24,28 L6,28 L4,24 L4,8 Z\" fill=\"url(#di_pan)\"/><path d=\"M6,4 L4,8 L4,24 L6,28 Z\" fill=\"rgba(0,0,0,0.15)\"/><path d=\"M6,4 L24,4 L26,8 L8,8 Z\" fill=\"rgba(255,255,255,0.2)\"/><line x1=\"9\" y1=\"12\" x2=\"21\" y2=\"12\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"1\"/><line x1=\"9\" y1=\"16\" x2=\"21\" y2=\"16\" stroke=\"rgba(255,255,255,0.35)\" stroke-width=\"1\"/><line x1=\"9\" y1=\"20\" x2=\"17\" y2=\"20\" stroke=\"rgba(255,255,255,0.35)\" stroke-width=\"1\"/><rect x=\"12\" y=\"28\" width=\"6\" height=\"3\" fill=\"rgba(80,80,120,0.6)\"/><defs><linearGradient id=\"di_pan\" x1=\"4\" y1=\"4\" x2=\"26\" y2=\"28\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#c7d2fe\"/><stop offset=\"50%\" stop-color=\"#6366f1\"/><stop offset=\"100%\" stop-color=\"#312e81\"/></linearGradient></defs></svg>";
+                span.style.cssText = 'display:flex;align-items:center;justify-content:center;animation:interactSway 4s ease-in-out infinite;transform-origin:center bottom;';
+                span.innerHTML = '<img src="https://explorestudio.github.io/expLore-project/PanelInfoIcon.png?v=2" style="width:68px;height:68px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5));" draggable="false"/>';
                 inner.appendChild(span);
+
+                // Halo au sol pulsant (indigo pour panneau)
+                const halo = document.createElement('div');
+                halo.className = 'interact-halo';
+                halo.style.cssText = `
+                    position:absolute;bottom:-8px;left:50%;
+                    width:80px;height:20px;
+                    background:radial-gradient(ellipse, rgba(165,180,252,0.95) 0%, rgba(99,102,241,0.6) 35%, rgba(67,56,202,0.25) 65%, transparent 85%);
+                    border-radius:50%;
+                    animation:interactHaloIdle 2.5s ease-in-out infinite;
+                    pointer-events:none;
+                    box-shadow:0 0 12px 3px rgba(165,180,252,0.4);
+                `;
+                inner.appendChild(halo);
 
                 // SVG anneau de progression (cercle, en absolute pour ne pas perturber le flex)
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -15707,11 +15846,24 @@
             const nearbyDiv = document.getElementById('nearbyPanneau');
             panneauMarkers.forEach(({ inner, pan }) => {
                 const dist = getDistance(playerPos.lat, playerPos.lng, pan.lat, pan.lng);
-                if (dist <= PANNEAU_RADIUS) {
+                const inZone = dist <= PANNEAU_RADIUS;
+                const halo = inner.querySelector('.interact-halo');
+                const prompt = inner.querySelector('.tap-prompt');
+                if (inZone) {
                     currentNearbyPanneau = pan;
                     inner.classList.add('in-range');
+                    if (halo) {
+                        halo.style.background = 'radial-gradient(ellipse, rgba(52,211,153,1) 0%, rgba(16,185,129,0.7) 35%, rgba(5,150,105,0.3) 65%, transparent 85%)'; halo.style.boxShadow = '0 0 16px 4px rgba(52,211,153,0.6)';
+                        halo.style.animation = 'interactHaloReady 1.4s ease-in-out infinite';
+                    }
+                    if (prompt) prompt.classList.add('show');
                 } else {
                     inner.classList.remove('in-range');
+                    if (halo) {
+                        halo.style.background = 'radial-gradient(ellipse, rgba(165,180,252,0.95) 0%, rgba(99,102,241,0.6) 35%, rgba(67,56,202,0.25) 65%, transparent 85%)'; halo.style.boxShadow = '0 0 12px 3px rgba(165,180,252,0.4)';
+                        halo.style.animation = 'interactHaloIdle 2.5s ease-in-out infinite';
+                    }
+                    if (prompt) prompt.classList.remove('show');
                 }
             });
             if (currentNearbyPanneau) {
@@ -15898,19 +16050,28 @@
                 if (!_obDone) { el.dataset.obHidden = 'true'; el.style.display = 'none'; }
 
                 const inner = document.createElement('div');
-                inner.style.cssText = [
-                    'position:absolute',
-                    'transform:translate(-50%,-50%)',
-                    'width:52px','height:52px',
-                    'border-radius:12px',
-                    'background:linear-gradient(145deg,#7C3F1A,#4A2010)',
-                    'border:2px solid rgba(200,130,50,0.85)',
-                    'box-shadow:0 3px 12px rgba(100,50,10,0.6)',
-                    'display:flex','align-items:center','justify-content:center',
-                    'font-size:26px','cursor:pointer','user-select:none',
-                    'transition:transform 0.15s'
-                ].join(';');
-                inner.innerHTML = "<svg width=\"34\" height=\"30\" viewBox=\"0 0 30 26\" fill=\"none\"><path d=\"M2,10 L15,4 L28,10 L28,20 L15,26 L2,20 Z\" fill=\"url(#di_bz)\"/><path d=\"M2,10 L2,20 L15,26 L15,16 Z\" fill=\"rgba(0,0,0,0.2)\"/><path d=\"M28,10 L28,20 L15,26 L15,16 Z\" fill=\"rgba(0,0,0,0.1)\"/><path d=\"M2,10 L15,4 L28,10 L15,16 Z\" fill=\"url(#di_bzt)\"/><rect x=\"12\" y=\"9\" width=\"6\" height=\"7\" rx=\"1\" fill=\"#92400e\" stroke=\"#d97706\" stroke-width=\"0.8\"/><circle cx=\"15\" cy=\"12.5\" r=\"1.2\" fill=\"#fbbf24\"/><defs><linearGradient id=\"di_bz\" x1=\"2\" y1=\"10\" x2=\"28\" y2=\"26\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#92400e\"/><stop offset=\"100%\" stop-color=\"#451a03\"/></linearGradient><linearGradient id=\"di_bzt\" x1=\"2\" y1=\"4\" x2=\"28\" y2=\"16\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#b45309\"/><stop offset=\"100%\" stop-color=\"#78350f\"/></linearGradient></defs></svg>";
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-90%);display:flex;flex-direction:column;align-items:center;cursor:pointer;pointer-events:auto;';
+                inner.innerHTML = `
+                    <!-- Prompt TAP à portée -->
+                    <div class="tap-prompt">TAP ›</div>
+                    <!-- Icône avec léger balancement -->
+                    <div style="animation:interactSway 3.5s ease-in-out infinite;transform-origin:center bottom;">
+                        <img src="https://explorestudio.github.io/expLore-project/BazarIcon.png?v=2"
+                            style="width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5));pointer-events:none;"
+                            draggable="false"/>
+                    </div>
+                    <!-- Halo au sol pulsant (ambre pour bazar) -->
+                    <div class="interact-halo" style="
+                        position:absolute;bottom:-4px;left:50%;
+                        width:80px;height:20px;
+                        background:radial-gradient(ellipse, rgba(251,191,36,0.95) 0%, rgba(217,119,6,0.6) 35%, rgba(180,83,9,0.25) 65%, transparent 85%);
+                        border-radius:50%;
+                        animation:interactHaloIdle 2.5s ease-in-out infinite;
+                        pointer-events:none;
+                        transform-origin:center center;
+                        box-shadow:0 0 12px 3px rgba(251,191,36,0.4);
+                    "></div>
+                `;
                 el.appendChild(inner);
 
                 el.addEventListener('click', () => {
@@ -15937,6 +16098,26 @@
                     if (dist <= BAZAR_RADIUS && dist < nearestDist) {
                         nearest = bazar;
                         nearestDist = dist;
+                    }
+                });
+                // Mettre à jour halos + prompts des bazars
+                bazarMarkers.forEach(({ inner, bazar }) => {
+                    const d = getDistance(playerPos.lat, playerPos.lng, bazar.lat, bazar.lng);
+                    const inZone = d <= BAZAR_RADIUS;
+                    const halo = inner.querySelector('.interact-halo');
+                    const prompt = inner.querySelector('.tap-prompt');
+                    if (inZone) {
+                        if (halo) {
+                            halo.style.background = 'radial-gradient(ellipse, rgba(52,211,153,1) 0%, rgba(16,185,129,0.7) 35%, rgba(5,150,105,0.3) 65%, transparent 85%)'; halo.style.boxShadow = '0 0 16px 4px rgba(52,211,153,0.6)';
+                            halo.style.animation = 'interactHaloReady 1.4s ease-in-out infinite';
+                        }
+                        if (prompt) prompt.classList.add('show');
+                    } else {
+                        if (halo) {
+                            halo.style.background = 'radial-gradient(ellipse, rgba(251,191,36,0.95) 0%, rgba(217,119,6,0.6) 35%, rgba(180,83,9,0.25) 65%, transparent 85%)'; halo.style.boxShadow = '0 0 12px 3px rgba(251,191,36,0.4)';
+                            halo.style.animation = 'interactHaloIdle 2.5s ease-in-out infinite';
+                        }
+                        if (prompt) prompt.classList.remove('show');
                     }
                 });
                 const nearbyDiv = document.getElementById('nearbyBazar');
@@ -16014,19 +16195,25 @@
                 if (!_obDone) { el.dataset.obHidden = 'true'; el.style.display = 'none'; }
 
                 const inner = document.createElement('div');
-                inner.style.cssText = [
-                    'position:absolute',
-                    'transform:translate(-50%,-50%)',
-                    'width:52px','height:52px',
-                    'border-radius:12px',
-                    'background:linear-gradient(145deg,#FFFBF0,#EED9A0)',
-                    'border:2px solid rgba(255,240,180,0.95)',
-                    'box-shadow:0 3px 10px rgba(180,140,40,0.5)',
-                    'display:flex','align-items:center','justify-content:center',
-                    'font-size:26px','cursor:pointer','user-select:none',
-                    'transition:transform 0.15s'
-                ].join(';');
-                inner.innerHTML = "<svg width=\"34\" height=\"34\" viewBox=\"0 0 30 30\" fill=\"none\"><rect x=\"5\" y=\"3\" width=\"20\" height=\"16\" rx=\"3\" fill=\"url(#di_if)\"/><rect x=\"5\" y=\"3\" width=\"20\" height=\"16\" rx=\"3\" stroke=\"rgba(200,160,60,0.8)\" stroke-width=\"1\"/><path d=\"M5,3 L25,3 L23,2 L7,2 Z\" fill=\"rgba(255,255,255,0.4)\"/><text x=\"15\" y=\"14\" text-anchor=\"middle\" font-size=\"10\" font-weight=\"900\" fill=\"#92400e\" font-family=\"system-ui\">i</text><rect x=\"13\" y=\"19\" width=\"4\" height=\"7\" rx=\"1\" fill=\"#d97706\"/><ellipse cx=\"15\" cy=\"27\" rx=\"5\" ry=\"2\" fill=\"rgba(180,120,30,0.4)\"/><defs><linearGradient id=\"di_if\" x1=\"5\" y1=\"3\" x2=\"25\" y2=\"19\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#fffbf0\"/><stop offset=\"100%\" stop-color=\"#fde68a\"/></linearGradient></defs></svg>";
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-90%);display:flex;flex-direction:column;align-items:center;cursor:pointer;pointer-events:auto;';
+                inner.innerHTML = `
+                    <div class="tap-prompt">TAP ›</div>
+                    <div style="animation:interactSway 3.8s ease-in-out infinite;transform-origin:center bottom;">
+                        <img src="https://explorestudio.github.io/expLore-project/PanoramaIcon.png?v=2"
+                            style="width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5));pointer-events:none;"
+                            draggable="false"/>
+                    </div>
+                    <!-- Halo au sol pulsant (ivoire pour panorama) -->
+                    <div class="interact-halo" style="
+                        position:absolute;bottom:-4px;left:50%;
+                        width:80px;height:20px;
+                        background:radial-gradient(ellipse, rgba(253,224,71,0.95) 0%, rgba(245,158,11,0.55) 35%, rgba(180,120,20,0.25) 65%, transparent 85%);
+                        border-radius:50%;
+                        animation:interactHaloIdle 2.5s ease-in-out infinite;
+                        pointer-events:none;
+                        box-shadow:0 0 12px 3px rgba(253,224,71,0.4);
+                    "></div>
+                `;
                 el.appendChild(inner);
 
                 el.addEventListener('click', () => {
@@ -17781,7 +17968,6 @@
             const tctx = terrainOff.getContext('2d');
             mmCtx = tctx;
             drawTerrainRelief();
-            drawRivers();
             drawLandmarks();
             mmCtx = savedCtx;
             // Coller le terrain complet
