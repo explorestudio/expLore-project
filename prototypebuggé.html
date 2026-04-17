@@ -1508,6 +1508,14 @@
             0%,100% { transform: translate(-50%,-100%) translateY(0); }
             50%     { transform: translate(-50%,-100%) translateY(-4px); }
         }
+        @keyframes poiStemPulse {
+            0%,100% { opacity: 0.5; }
+            50%     { opacity: 1.0; }
+        }
+        @keyframes poiShadowPulse {
+            0%,100% { transform: scaleX(1);   opacity: 0.35; }
+            50%     { transform: scaleX(0.75); opacity: 0.55; }
+        }
         @keyframes haloRotate {
             from { transform: rotate(0deg); }
             to   { transform: rotate(360deg); }
@@ -3139,30 +3147,52 @@
         .shop-item.owned .shop-item-price { color: #10B981; }
 
         /* ── Marqueur Point d'Information ── */
-        .info-marker {
-            width: 34px; height: 34px; border-radius: 50%;
-            background: linear-gradient(135deg, #0369A1, #0EA5E9);
-            border: 3px solid white;
+        /* ── POI interactables ── */
+        .info-marker, .bazar-marker {
+            display: flex; flex-direction: column; align-items: center;
+            cursor: pointer; user-select: none;
+            position: absolute; transform: translate(-50%, -84%);
+            pointer-events: none;
+        }
+        .interactable-icon {
+            width: 48px; height: 48px; border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 16px; line-height: 1;
-            box-shadow: 0 3px 10px rgba(29,78,216,0.55);
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s, background 0.3s;
-            user-select: none;
+            font-size: 24px; line-height: 1;
+            position: relative; z-index: 2;
+            pointer-events: all;
         }
-        .info-marker:hover {
-            transform: scale(1.15);
-            box-shadow: 0 5px 16px rgba(29,78,216,0.7);
+        .info-marker .interactable-icon {
+            background: linear-gradient(145deg, #FFFBF0, #EED9A0);
+            border: 2px solid rgba(255,240,180,0.95);
+            box-shadow: 0 3px 10px rgba(180,140,40,0.5);
         }
-        /* Dans la zone de capture : pulsation verte */
-        .info-marker.in-range {
-            background: linear-gradient(135deg, #059669, #10B981);
-            box-shadow: 0 3px 14px rgba(16,185,129,0.7);
-            animation: infoInRangePulse 1.4s ease-in-out infinite;
+        .bazar-marker .interactable-icon {
+            background: linear-gradient(145deg, #7C3F1A, #4A2010);
+            border: 2px solid rgba(200,130,50,0.85);
+            box-shadow: 0 3px 10px rgba(100,50,10,0.6);
         }
-        @keyframes infoInRangePulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5), 0 3px 14px rgba(16,185,129,0.6); }
-            50%       { box-shadow: 0 0 0 8px rgba(16,185,129,0), 0 3px 20px rgba(16,185,129,0.8); }
+        .interactable-tap-badge {
+            position: absolute; top: -5px; right: -5px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #FBBF24; border: 2px solid white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 8px; font-weight: 900; color: #1a1a1a;
+            opacity: 0; transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .info-marker.in-range .interactable-tap-badge,
+        .bazar-marker.in-range .interactable-tap-badge { opacity: 1; }
+        .info-marker.in-range .interactable-icon {
+            box-shadow: 0 3px 16px rgba(255,200,60,0.9), 0 0 0 2px rgba(255,220,80,0.7);
+            animation: interactGlow 1.4s ease-in-out infinite;
+        }
+        .bazar-marker.in-range .interactable-icon {
+            box-shadow: 0 3px 16px rgba(200,110,30,0.9), 0 0 0 2px rgba(220,140,50,0.7);
+            animation: interactGlow 1.4s ease-in-out infinite;
+        }
+        @keyframes interactGlow {
+            0%,100% { filter: brightness(1);    }
+            50%      { filter: brightness(1.3); }
         }
 
         /* ── Écran fiche Info ── */
@@ -5185,6 +5215,7 @@
         <div id="map">
             <div id="mapConditionOverlay"></div>
             <canvas id="rainCanvas"></canvas>
+            <canvas id="captureCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;"></canvas>
         </div>
 
         <!-- ══ Couche météo ══ -->
@@ -6972,15 +7003,15 @@
             localCardId: 'card21',
             thematicPool: ['tc_microscope','tc_darwin','tc_cabinet','tc_bibliotheque'] },
 
-            { id: 'terreaux',         name: 'Place des Terreaux',        lat: 45.7675, lng: 4.8336,
+            { id: 'terreaux',         name: 'Place des Terreaux',        lat: 45.7695, lng: 4.8318,
             localCardId: 'card9',
             thematicPool: ['tc_moliere','tc_masque','tc_commedia','tc_imprimerie'] },
 
-            { id: 'opera',            name: 'Opéra de Lyon',             lat: 45.7673, lng: 4.8361,
+            { id: 'opera',            name: 'Opéra de Lyon',             lat: 45.7662, lng: 4.8382,
             localCardId: 'card7',
             thematicPool: ['tc_moliere','tc_masque','tc_commedia','tc_imprimerie'] },
 
-            { id: 'hotel_ville',      name: 'Hôtel de Ville',            lat: 45.7674, lng: 4.8348,
+            { id: 'hotel_ville',      name: 'Hôtel de Ville',            lat: 45.7690, lng: 4.8368,
             localCardId: 'card8',
             thematicPool: ['tc_academie','tc_bibliotheque','tc_cabinet','tc_gutenberg'] },
 
@@ -7004,7 +7035,7 @@
             localCardId: 'card24',
             thematicPool: ['tc_imprimerie','tc_gutenberg','tc_masque','tc_commedia'] },
 
-            { id: 'beaux_arts',       name: 'Musée des Beaux-Arts',      lat: 45.7677, lng: 4.8344,
+            { id: 'beaux_arts',       name: 'Musée des Beaux-Arts',      lat: 45.7652, lng: 4.8325,
             localCardId: 'card10',
             thematicPool: ['tc_masque','tc_moliere','tc_cabinet','tc_bibliotheque'] },
 
@@ -7903,8 +7934,8 @@
                 if (el) { el.dataset.obHidden = 'true'; el.classList.add('hidden'); }
             });
             if (map) {
-                ['poi-capture-circles','dust-capture-circles','echo-capture-circles',
-                 'orb-circles','scroll-circles','info-capture-circles'].forEach(id => {
+                ['poi-capture-circles','poi-capture-circles-stroke','poi-dot-fill','poi-dot-stroke','dust-capture-circles','dust-capture-circles-stroke','echo-capture-circles','echo-capture-circles-stroke',
+                 'orb-circles','orb-circles-stroke','scroll-circles','scroll-circles-stroke','loot-circles','loot-circles-stroke','info-capture-circles'].forEach(id => {
                     try { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'hidden'); } catch(e) {}
                 });
             }
@@ -7980,7 +8011,7 @@
             if (map && map.getSource('poi-circles')) {
                 map.getSource('poi-circles').setData({
                     type: 'FeatureCollection',
-                    features: [{ type: 'Feature', properties: { id: 'ob_elara', status: 'local' }, geometry: { type: 'Point', coordinates: [_obSpawnLng, _obSpawnLat] } }]
+                    features: [{ type: 'Feature', properties: { id: 'ob_elara', status: 'local', lng: _obSpawnLng, lat: _obSpawnLat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(_obSpawnLng, _obSpawnLat, 50, ISOMETRIC_TILT)] } }]
                 });
                 try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'visible'); } catch(e) {}
             }
@@ -7997,17 +8028,23 @@
                 el.style.display = '';
             });
             if (map) {
-                ['poi-capture-circles','dust-capture-circles','echo-capture-circles',
-                 'orb-circles','scroll-circles','info-capture-circles'].forEach(id => {
-                    try { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); } catch(e) {}
-                });
+                // Zones de capture gérées par captureCanvas — on garde seulement info-capture-circles
+                try { if (map.getLayer('info-capture-circles')) map.setLayoutProperty('info-capture-circles', 'visibility', 'visible'); } catch(e) {}
             }
             updatePOIVisibility();
             updateDustVisibility();
             updateEchoVisibility();
             updateOrbVisibility();
+            if (typeof _capUpdate === 'function') _capUpdate();
             updateScrollVisibility();
             updateLootVisibility();
+            setTimeout(() => {
+                _capStart();
+                const weather = getSimulatedWeather();
+                const hour = getSimulatedHour();
+                const condKey = weather || (hour >= 22 || hour < 6 ? 'night' : hour >= 6 && hour < 9 ? 'dawn' : hour >= 9 && hour < 19 ? 'day' : 'dusk');
+                _applyCaptureLayers(condKey);
+            }, 500);
         }
 
         // ── Déclenchement collecte tutoriel ──
@@ -8285,6 +8322,24 @@
         const TILT_OFFSET_LAT = 0.0018;
         const ISOMETRIC_TILT = 67.5;
         const ISOMETRIC_HEADING = 0;  // keep north-up like Waze default
+
+        // Génère un polygone ellipse en coords géo, aplati selon le pitch isométrique
+        // radiusM = rayon en mètres, pitch = inclinaison caméra (0=top, 90=horizontal)
+        function _geoEllipse(lng, lat, radiusM, pitch, steps) {
+            steps = steps || 48;
+            const pitchRad = (pitch || 67.5) * Math.PI / 180;
+            const scaleY = 0.45; // aplatissement vertical selon pitch
+            const coords = [];
+            const mPerDegLat = 111320;
+            const mPerDegLng = 111320 * Math.cos(lat * Math.PI / 180);
+            for (let i = 0; i <= steps; i++) {
+                const angle = (i / steps) * Math.PI * 2;
+                const dx = Math.cos(angle) * radiusM / mPerDegLng;
+                const dy = Math.sin(angle) * radiusM * scaleY / mPerDegLat;
+                coords.push([lng + dx, lat + dy]);
+            }
+            return coords;
+        }
         const DUST_INCREMENT = 20;
 
         // Lignes de remémoration — déclenchées entre les trivias quand on donne de la poudre
@@ -8618,6 +8673,98 @@
         function refreshThematicDraws() {
             const now = Date.now();
             let changed = false;
+
+        // ── Helper : construit le visuel cylindre+tige+disque pour un POI collectable ──
+        // colors: { top, mid, bot, glow, disk, stroke }
+        // iconEl: element DOM à placer en haut (img ou div svg existant)
+        function _buildPoiVisual(pid, colors, iconEl, iconSize) {
+            const sz = iconSize || 52;
+            const NS = 'http://www.w3.org/2000/svg';
+
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;position:relative;';
+
+            // Icône
+            iconEl.style.width  = sz + 'px';
+            iconEl.style.height = sz + 'px';
+            iconEl.style.position = 'relative';
+            iconEl.style.zIndex = '2';
+            wrap.appendChild(iconEl);
+
+            // SVG cylindre
+            const svg = document.createElementNS(NS, 'svg');
+            svg.setAttribute('viewBox', '0 0 50 46');
+            svg.style.cssText = 'width:50px;height:46px;margin-top:-5px;overflow:visible;animation:poiStemPulse 1.8s ease-in-out infinite;';
+
+            const defs = document.createElementNS(NS, 'defs');
+
+            // Gradient corps
+            const lg = document.createElementNS(NS, 'linearGradient');
+            lg.id = 'cyl_' + pid; lg.setAttribute('x1','0%'); lg.setAttribute('y1','0%'); lg.setAttribute('x2','0%'); lg.setAttribute('y2','100%');
+            [['0%','rgba(0,0,0,0)'],['20%',colors.top],['65%',colors.mid],['100%',colors.bot]].forEach(([o,c]) => {
+                const s = document.createElementNS(NS,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); lg.appendChild(s);
+            });
+            defs.appendChild(lg);
+
+            // Gradient disque bas
+            const rg = document.createElementNS(NS, 'radialGradient');
+            rg.id = 'disk_' + pid; rg.setAttribute('cx','50%'); rg.setAttribute('cy','50%'); rg.setAttribute('r','50%');
+            [['0%',colors.disk],['55%',colors.mid],['100%','transparent']].forEach(([o,c]) => {
+                const s = document.createElementNS(NS,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); rg.appendChild(s);
+            });
+            defs.appendChild(rg);
+
+            // Glow filter
+            const filt = document.createElementNS(NS, 'filter');
+            filt.id = 'glow_' + pid;
+            const blur = document.createElementNS(NS, 'feGaussianBlur'); blur.setAttribute('stdDeviation','2'); blur.setAttribute('result','blur');
+            const merge = document.createElementNS(NS, 'feMerge');
+            const mn1 = document.createElementNS(NS,'feMergeNode'); mn1.setAttribute('in','blur');
+            const mn2 = document.createElementNS(NS,'feMergeNode'); mn2.setAttribute('in','SourceGraphic');
+            merge.appendChild(mn1); merge.appendChild(mn2);
+            filt.appendChild(blur); filt.appendChild(merge);
+            defs.appendChild(filt);
+            svg.appendChild(defs);
+
+            // Corps trapèze
+            const body = document.createElementNS(NS, 'path');
+            body.setAttribute('d', 'M23,2 L27,2 L29,42 L21,42 Z');
+            body.setAttribute('fill', 'url(#cyl_' + pid + ')');
+            body.setAttribute('filter', 'url(#glow_' + pid + ')');
+            svg.appendChild(body);
+
+            // Bords lumineux
+            [[23,2,21,42],[27,2,29,42]].forEach(([x1,y1,x2,y2]) => {
+                const l = document.createElementNS(NS,'line');
+                l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+                l.setAttribute('stroke', colors.glow); l.setAttribute('stroke-width','1.2');
+                l.setAttribute('filter', 'url(#glow_' + pid + ')');
+                svg.appendChild(l);
+            });
+
+            // Ellipse haut
+            const eTop = document.createElementNS(NS,'ellipse');
+            eTop.setAttribute('cx','25'); eTop.setAttribute('cy','2'); eTop.setAttribute('rx','5'); eTop.setAttribute('ry','2');
+            eTop.setAttribute('fill', colors.top); eTop.setAttribute('filter','url(#glow_' + pid + ')');
+            svg.appendChild(eTop);
+
+            // Ellipse bas remplie
+            const eBotF = document.createElementNS(NS,'ellipse');
+            eBotF.setAttribute('cx','25'); eBotF.setAttribute('cy','42'); eBotF.setAttribute('rx','12'); eBotF.setAttribute('ry','4.5');
+            eBotF.setAttribute('fill','url(#disk_' + pid + ')'); eBotF.setAttribute('filter','url(#glow_' + pid + ')');
+            svg.appendChild(eBotF);
+
+            // Contour ellipse bas
+            const eBotS = document.createElementNS(NS,'ellipse');
+            eBotS.setAttribute('cx','25'); eBotS.setAttribute('cy','42'); eBotS.setAttribute('rx','12'); eBotS.setAttribute('ry','4.5');
+            eBotS.setAttribute('fill','none'); eBotS.setAttribute('stroke', colors.stroke); eBotS.setAttribute('stroke-width','1.5');
+            eBotS.setAttribute('filter','url(#glow_' + pid + ')');
+            svg.appendChild(eBotS);
+
+            wrap.appendChild(svg);
+            return wrap;
+        }
+
             POIS.forEach(poi => {
                 if (!poi.localCardId) return;
                 if (!collectedCards.includes(poi.localCardId)) return;
@@ -8642,7 +8789,99 @@
             setInterval(() => {
                 const now = Date.now();
                 let needsRefresh = false;
-                POIS.forEach(poi => {
+    
+        // ── Helper : construit le visuel cylindre+tige+disque pour un POI collectable ──
+        // colors: { top, mid, bot, glow, disk, stroke }
+        // iconEl: element DOM à placer en haut (img ou div svg existant)
+        function _buildPoiVisual(pid, colors, iconEl, iconSize) {
+            const sz = iconSize || 52;
+            const NS = 'http://www.w3.org/2000/svg';
+
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;position:relative;';
+
+            // Icône
+            iconEl.style.width  = sz + 'px';
+            iconEl.style.height = sz + 'px';
+            iconEl.style.position = 'relative';
+            iconEl.style.zIndex = '2';
+            wrap.appendChild(iconEl);
+
+            // SVG cylindre
+            const svg = document.createElementNS(NS, 'svg');
+            svg.setAttribute('viewBox', '0 0 50 46');
+            svg.style.cssText = 'width:50px;height:46px;margin-top:-5px;overflow:visible;animation:poiStemPulse 1.8s ease-in-out infinite;';
+
+            const defs = document.createElementNS(NS, 'defs');
+
+            // Gradient corps
+            const lg = document.createElementNS(NS, 'linearGradient');
+            lg.id = 'cyl_' + pid; lg.setAttribute('x1','0%'); lg.setAttribute('y1','0%'); lg.setAttribute('x2','0%'); lg.setAttribute('y2','100%');
+            [['0%','rgba(0,0,0,0)'],['20%',colors.top],['65%',colors.mid],['100%',colors.bot]].forEach(([o,c]) => {
+                const s = document.createElementNS(NS,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); lg.appendChild(s);
+            });
+            defs.appendChild(lg);
+
+            // Gradient disque bas
+            const rg = document.createElementNS(NS, 'radialGradient');
+            rg.id = 'disk_' + pid; rg.setAttribute('cx','50%'); rg.setAttribute('cy','50%'); rg.setAttribute('r','50%');
+            [['0%',colors.disk],['55%',colors.mid],['100%','transparent']].forEach(([o,c]) => {
+                const s = document.createElementNS(NS,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); rg.appendChild(s);
+            });
+            defs.appendChild(rg);
+
+            // Glow filter
+            const filt = document.createElementNS(NS, 'filter');
+            filt.id = 'glow_' + pid;
+            const blur = document.createElementNS(NS, 'feGaussianBlur'); blur.setAttribute('stdDeviation','2'); blur.setAttribute('result','blur');
+            const merge = document.createElementNS(NS, 'feMerge');
+            const mn1 = document.createElementNS(NS,'feMergeNode'); mn1.setAttribute('in','blur');
+            const mn2 = document.createElementNS(NS,'feMergeNode'); mn2.setAttribute('in','SourceGraphic');
+            merge.appendChild(mn1); merge.appendChild(mn2);
+            filt.appendChild(blur); filt.appendChild(merge);
+            defs.appendChild(filt);
+            svg.appendChild(defs);
+
+            // Corps trapèze
+            const body = document.createElementNS(NS, 'path');
+            body.setAttribute('d', 'M23,2 L27,2 L29,42 L21,42 Z');
+            body.setAttribute('fill', 'url(#cyl_' + pid + ')');
+            body.setAttribute('filter', 'url(#glow_' + pid + ')');
+            svg.appendChild(body);
+
+            // Bords lumineux
+            [[23,2,21,42],[27,2,29,42]].forEach(([x1,y1,x2,y2]) => {
+                const l = document.createElementNS(NS,'line');
+                l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+                l.setAttribute('stroke', colors.glow); l.setAttribute('stroke-width','1.2');
+                l.setAttribute('filter', 'url(#glow_' + pid + ')');
+                svg.appendChild(l);
+            });
+
+            // Ellipse haut
+            const eTop = document.createElementNS(NS,'ellipse');
+            eTop.setAttribute('cx','25'); eTop.setAttribute('cy','2'); eTop.setAttribute('rx','5'); eTop.setAttribute('ry','2');
+            eTop.setAttribute('fill', colors.top); eTop.setAttribute('filter','url(#glow_' + pid + ')');
+            svg.appendChild(eTop);
+
+            // Ellipse bas remplie
+            const eBotF = document.createElementNS(NS,'ellipse');
+            eBotF.setAttribute('cx','25'); eBotF.setAttribute('cy','42'); eBotF.setAttribute('rx','12'); eBotF.setAttribute('ry','4.5');
+            eBotF.setAttribute('fill','url(#disk_' + pid + ')'); eBotF.setAttribute('filter','url(#glow_' + pid + ')');
+            svg.appendChild(eBotF);
+
+            // Contour ellipse bas
+            const eBotS = document.createElementNS(NS,'ellipse');
+            eBotS.setAttribute('cx','25'); eBotS.setAttribute('cy','42'); eBotS.setAttribute('rx','12'); eBotS.setAttribute('ry','4.5');
+            eBotS.setAttribute('fill','none'); eBotS.setAttribute('stroke', colors.stroke); eBotS.setAttribute('stroke-width','1.5');
+            eBotS.setAttribute('filter','url(#glow_' + pid + ')');
+            svg.appendChild(eBotS);
+
+            wrap.appendChild(svg);
+            return wrap;
+        }
+
+            POIS.forEach(poi => {
                     if (!poi.localCardId) return;
                     if (!collectedCards.includes(poi.localCardId)) return;
                     const state = thematicState[poi.id];
@@ -8902,10 +9141,8 @@
                 setTimeout(startOnboarding, 800);
             } else {
                 // Tutoriel déjà fait — révéler les layers créés cachés par défaut
-                ['poi-capture-circles','dust-capture-circles','echo-capture-circles',
-                 'orb-circles','scroll-circles','info-capture-circles'].forEach(id => {
-                    try { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); } catch(e) {}
-                });
+                // Zones de capture gérées par captureCanvas — on garde seulement info-capture-circles
+                try { if (map.getLayer('info-capture-circles')) map.setLayoutProperty('info-capture-circles', 'visibility', 'visible'); } catch(e) {}
             }
             // Sync UI après chargement
             document.getElementById('dustCounter').textContent = memorialDust;
@@ -8919,8 +9156,16 @@
             updateDustVisibility();
             updateEchoVisibility();
             updateOrbVisibility();
+            if (typeof _capUpdate === 'function') _capUpdate();
             updateScrollVisibility();
             updateLootVisibility();
+            setTimeout(() => {
+                _capStart();
+                const weather = getSimulatedWeather();
+                const hour = getSimulatedHour();
+                const condKey = weather || (hour >= 22 || hour < 6 ? 'night' : hour >= 6 && hour < 9 ? 'dawn' : hour >= 9 && hour < 19 ? 'day' : 'dusk');
+                _applyCaptureLayers(condKey);
+            }, 500);
             updateProgressionHUD();
             updateAvatarMenuXP();
             updateCameraHUD();
@@ -9137,24 +9382,58 @@
             });
             map.addLayer({
                 id: 'poi-capture-circles',
-                type: 'circle',
+                type: 'fill',
                 source: 'poi-circles',
                 layout: { visibility: 'none' },
                 paint: {
-                    'circle-radius': [
-                        'interpolate', ['exponential', 2], ['zoom'],
-                        14, 6.25,   // 50m à zoom 14
-                        15, 12.5,   // 50m à zoom 15
-                        16, 25,     // 50m à zoom 16
-                        17, 50,     // 50m à zoom 17
-                        18, 100,    // 50m à zoom 18
-                        19, 200     // 50m à zoom 19
-                    ],
-                    'circle-color': '#EF4444',
-                    'circle-opacity': 0.08,
-                    'circle-stroke-color': '#EF4444',
-                    'circle-stroke-width': 1.5,
-                    'circle-stroke-opacity': 0.4
+                    'fill-color': ['match', ['get', 'status'],
+                        'thematic_available', '#F59E0B',
+                        'cooldown', '#9CA3AF', '#EF4444'],
+                    'fill-opacity': 0.13
+                }
+            });
+            map.addLayer({
+                id: 'poi-capture-circles-stroke',
+                type: 'line',
+                source: 'poi-circles',
+                layout: { visibility: 'none' },
+                paint: {
+                    'line-color': ['match', ['get', 'status'],
+                        'thematic_available', '#F59E0B',
+                        'cooldown', '#9CA3AF', '#EF4444'],
+                    'line-opacity': 0.95,
+                    'line-width': 2.5
+                }
+            });
+
+            // Petit disque concentrique central (rayon ~8m)
+            map.addSource('poi-dot-source', {
+                type: 'geojson',
+                data: { type: 'FeatureCollection', features: [] }
+            });
+            map.addLayer({
+                id: 'poi-dot-fill',
+                type: 'fill',
+                source: 'poi-dot-source',
+                layout: { visibility: 'none' },
+                paint: {
+                    'fill-color': ['match', ['get', 'status'],
+                        'thematic_available', '#F59E0B',
+                        'cooldown', '#9CA3AF', '#EF4444'],
+                    'fill-opacity': 0.75
+                }
+            });
+            map.addLayer({
+                id: 'poi-dot-stroke',
+                type: 'line',
+                source: 'poi-dot-source',
+                layout: { visibility: 'none' },
+                paint: {
+                    'line-color': ['match', ['get', 'status'],
+                        'thematic_available', '#FFE580',
+                        'cooldown', '#D1D5DB', '#FF8888'],
+                    'line-opacity': 1.0,
+                    'line-width': 1.5
                 }
             });
 
@@ -9165,119 +9444,110 @@
                     type: 'FeatureCollection',
                     features: DUST_POINTS.map(d => ({
                         type: 'Feature',
-                        properties: { id: d.id },
-                        geometry: { type: 'Point', coordinates: [d.lng, d.lat] }
+                        properties: { id: d.id, lng: d.lng, lat: d.lat },
+                        geometry: { type: 'Polygon', coordinates: [_geoEllipse(d.lng, d.lat, 30, ISOMETRIC_TILT)] }
                     }))
                 }
             });
             map.addLayer({
                 id: 'dust-capture-circles',
-                type: 'circle',
+                type: 'fill',
                 source: 'dust-circles',
                 layout: { visibility: 'none' },
-                paint: {
-                    'circle-radius': [
-                        'interpolate', ['exponential', 2], ['zoom'],
-                        14, 3.75,   // 30m à zoom 14
-                        15, 7.5,    // 30m à zoom 15
-                        16, 15,     // 30m à zoom 16
-                        17, 30,     // 30m à zoom 17
-                        18, 60,     // 30m à zoom 18
-                        19, 120     // 30m à zoom 19
-                    ],
-                    'circle-color': '#A855F7',
-                    'circle-opacity': 0.08,
-                    'circle-stroke-color': '#A855F7',
-                    'circle-stroke-width': 1.2,
-                    'circle-stroke-opacity': 0.35
-                }
+                paint: { 'fill-color': '#A855F7', 'fill-opacity': 0.08 }
+            });
+            map.addLayer({
+                id: 'dust-capture-circles-stroke',
+                type: 'line',
+                source: 'dust-circles',
+                layout: { visibility: 'none' },
+                paint: { 'line-color': '#A855F7', 'line-opacity': 0.75, 'line-width': 2 }
             });
 
-            // Echo circles (30m)
+            // Echo circles (30m) — ellipses
             map.addSource('echo-circles', {
                 type: 'geojson',
                 data: {
                     type: 'FeatureCollection',
                     features: ECHO_POINTS.map(e => ({
                         type: 'Feature',
-                        properties: { id: e.id, supertype: e.supertype },
-                        geometry: { type: 'Point', coordinates: [e.lng, e.lat] }
+                        properties: { id: e.id, supertype: e.supertype, lng: e.lng, lat: e.lat },
+                        geometry: { type: 'Polygon', coordinates: [_geoEllipse(e.lng, e.lat, 30, ISOMETRIC_TILT)] }
                     }))
                 }
             });
             map.addLayer({
                 id: 'echo-capture-circles',
-                type: 'circle',
+                type: 'fill',
                 source: 'echo-circles',
                 layout: { visibility: 'none' },
-                paint: {
-                    'circle-radius': [
-                        'interpolate', ['exponential', 2], ['zoom'],
-                        14, 3.75,   // 30m à zoom 14
-                        15, 7.5,    // 30m à zoom 15
-                        16, 15,     // 30m à zoom 16
-                        17, 30,     // 30m à zoom 17
-                        18, 60,     // 30m à zoom 18
-                        19, 120     // 30m à zoom 19
-                    ],
-                    'circle-color': '#6366F1',
-                    'circle-opacity': 0.08,
-                    'circle-stroke-color': '#6366F1',
-                    'circle-stroke-width': 1.2,
-                    'circle-stroke-opacity': 0.35
-                }
+                paint: { 'fill-color': '#06B6D4', 'fill-opacity': 0.10 }
+            });
+            map.addLayer({
+                id: 'echo-capture-circles-stroke',
+                type: 'line',
+                source: 'echo-circles',
+                layout: { visibility: 'none' },
+                paint: { 'line-color': '#10B981', 'line-opacity': 0.85, 'line-width': 2 }
             });
 
             // Orb circles (30m)
             map.addSource('orb-circles', {
                     type: 'geojson',
-                    data: { type: 'FeatureCollection', features: ORB_POINTS.map(o => ({ type: 'Feature', properties: { id: o.id }, geometry: { type: 'Point', coordinates: [o.lng, o.lat] } })) }
+                    data: { type: 'FeatureCollection', features: ORB_POINTS.map(o => ({ type: 'Feature', properties: { id: o.id, lng: o.lng, lat: o.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(o.lng, o.lat, 30, ISOMETRIC_TILT)] } })) }
                 });
                 map.addLayer({
-                    id: 'orb-circles', 
-                    type: 'circle', 
+                    id: 'orb-circles',
+                    type: 'fill',
                     source: 'orb-circles',
                     layout: { visibility: 'none' },
-                    paint: { 
-                        'circle-radius': [
-                            'interpolate', ['exponential', 2], ['zoom'],
-                            14, 3.75,   // 30m à zoom 14
-                            15, 7.5,    // 30m à zoom 15
-                            16, 15,     // 30m à zoom 16
-                            17, 30,     // 30m à zoom 17
-                            18, 60,     // 30m à zoom 18
-                            19, 120     // 30m à zoom 19
-                        ],
-                        'circle-color': 'rgba(99,102,241,0.12)', 
-                        'circle-stroke-width': 1.5, 
-                        'circle-stroke-color': 'rgba(99,102,241,0.5)' 
-                    }
+                    paint: { 'fill-color': '#6366F1', 'fill-opacity': 0.08 }
+                });
+                map.addLayer({
+                    id: 'orb-circles-stroke',
+                    type: 'line',
+                    source: 'orb-circles',
+                    layout: { visibility: 'none' },
+                    paint: { 'line-color': '#06B6D4', 'line-opacity': 0.75, 'line-width': 2 }
                 });
 
                 map.addSource('scroll-circles', {
                     type: 'geojson',
-                    data: { type: 'FeatureCollection', features: SCROLL_POINTS.map(s => ({ type: 'Feature', properties: { id: s.id }, geometry: { type: 'Point', coordinates: [s.lng, s.lat] } })) }
+                    data: { type: 'FeatureCollection', features: SCROLL_POINTS.map(s => ({ type: 'Feature', properties: { id: s.id, lng: s.lng, lat: s.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(s.lng, s.lat, 20, ISOMETRIC_TILT)] } })) }
                 });
                 map.addLayer({
-                    id: 'scroll-circles', 
-                    type: 'circle', 
+                    id: 'scroll-circles',
+                    type: 'fill',
                     source: 'scroll-circles',
                     layout: { visibility: 'none' },
-                    paint: { 
-                        // Rayon adapté au zoom pour correspondre à SCROLL_RADIUS (20m)
-                        'circle-radius': [
-                            'interpolate', ['exponential', 2], ['zoom'],
-                            14, 2.5,   // 20m à zoom 14
-                            15, 5,     // 20m à zoom 15
-                            16, 10,    // 20m à zoom 16
-                            17, 20,    // 20m à zoom 17
-                            18, 40,    // 20m à zoom 18
-                            19, 80     // 20m à zoom 19
-                        ],
-                        'circle-color': 'rgba(217,119,6,0.12)', 
-                        'circle-stroke-width': 1.5, 
-                        'circle-stroke-color': 'rgba(217,119,6,0.5)' 
-                    }
+                    paint: { 'fill-color': '#F59E0B', 'fill-opacity': 0.10 }
+                });
+                map.addLayer({
+                    id: 'scroll-circles-stroke',
+                    type: 'line',
+                    source: 'scroll-circles',
+                    layout: { visibility: 'none' },
+                    paint: { 'line-color': '#F59E0B', 'line-opacity': 0.85, 'line-width': 2 }
+                });
+
+                // Loot circles (~20m)
+                map.addSource('loot-circles', {
+                    type: 'geojson',
+                    data: { type: 'FeatureCollection', features: LOOT_POINTS.map(l => ({ type: 'Feature', properties: { id: l.id, lng: l.lng, lat: l.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(l.lng, l.lat, 20, ISOMETRIC_TILT)] } })) }
+                });
+                map.addLayer({
+                    id: 'loot-circles',
+                    type: 'fill',
+                    source: 'loot-circles',
+                    layout: { visibility: 'none' },
+                    paint: { 'fill-color': '#EC4899', 'fill-opacity': 0.10 }
+                });
+                map.addLayer({
+                    id: 'loot-circles-stroke',
+                    type: 'line',
+                    source: 'loot-circles',
+                    layout: { visibility: 'none' },
+                    paint: { 'line-color': '#EC4899', 'line-opacity': 0.85, 'line-width': 2 }
                 });
 
                 map.addSource('info-circles', {
@@ -9337,13 +9607,105 @@
                 updateInfoVisibility();
                 checkNearbyPOI();
                 if (!_obDone) {
-                    ['poi-capture-circles','dust-capture-circles','echo-capture-circles','orb-circles','scroll-circles','info-capture-circles'].forEach(id => {
+                    ['poi-capture-circles','poi-capture-circles-stroke','poi-dot-fill','poi-dot-stroke','dust-capture-circles','dust-capture-circles-stroke','echo-capture-circles','echo-capture-circles-stroke','orb-circles','orb-circles-stroke','scroll-circles','scroll-circles-stroke','loot-circles','loot-circles-stroke','info-capture-circles'].forEach(id => {
                         try { if (map.getLayer(id)) map.setLayoutProperty(id,'visibility','hidden'); } catch(e){}
                     });
                 }
             }); // end map.on('load')
 
             map.on('zoom', updateAvatarScale);
+
+
+        // ── Helper : construit le visuel cylindre+tige+disque pour un POI collectable ──
+        // colors: { top, mid, bot, glow, disk, stroke }
+        // iconEl: element DOM à placer en haut (img ou div svg existant)
+        function _buildPoiVisual(pid, colors, iconEl, iconSize) {
+            const sz = iconSize || 52;
+            const NS = 'http://www.w3.org/2000/svg';
+
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;position:relative;';
+
+            // Icône
+            iconEl.style.width  = sz + 'px';
+            iconEl.style.height = sz + 'px';
+            iconEl.style.position = 'relative';
+            iconEl.style.zIndex = '2';
+            wrap.appendChild(iconEl);
+
+            // SVG cylindre
+            const svg = document.createElementNS(NS, 'svg');
+            svg.setAttribute('viewBox', '0 0 50 46');
+            svg.style.cssText = 'width:50px;height:46px;margin-top:-5px;overflow:visible;animation:poiStemPulse 1.8s ease-in-out infinite;';
+
+            const defs = document.createElementNS(NS, 'defs');
+
+            // Gradient corps
+            const lg = document.createElementNS(NS, 'linearGradient');
+            lg.id = 'cyl_' + pid; lg.setAttribute('x1','0%'); lg.setAttribute('y1','0%'); lg.setAttribute('x2','0%'); lg.setAttribute('y2','100%');
+            [['0%','rgba(0,0,0,0)'],['20%',colors.top],['65%',colors.mid],['100%',colors.bot]].forEach(([o,c]) => {
+                const s = document.createElementNS(NS,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); lg.appendChild(s);
+            });
+            defs.appendChild(lg);
+
+            // Gradient disque bas
+            const rg = document.createElementNS(NS, 'radialGradient');
+            rg.id = 'disk_' + pid; rg.setAttribute('cx','50%'); rg.setAttribute('cy','50%'); rg.setAttribute('r','50%');
+            [['0%',colors.disk],['55%',colors.mid],['100%','transparent']].forEach(([o,c]) => {
+                const s = document.createElementNS(NS,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); rg.appendChild(s);
+            });
+            defs.appendChild(rg);
+
+            // Glow filter
+            const filt = document.createElementNS(NS, 'filter');
+            filt.id = 'glow_' + pid;
+            const blur = document.createElementNS(NS, 'feGaussianBlur'); blur.setAttribute('stdDeviation','2'); blur.setAttribute('result','blur');
+            const merge = document.createElementNS(NS, 'feMerge');
+            const mn1 = document.createElementNS(NS,'feMergeNode'); mn1.setAttribute('in','blur');
+            const mn2 = document.createElementNS(NS,'feMergeNode'); mn2.setAttribute('in','SourceGraphic');
+            merge.appendChild(mn1); merge.appendChild(mn2);
+            filt.appendChild(blur); filt.appendChild(merge);
+            defs.appendChild(filt);
+            svg.appendChild(defs);
+
+            // Corps trapèze
+            const body = document.createElementNS(NS, 'path');
+            body.setAttribute('d', 'M23,2 L27,2 L29,42 L21,42 Z');
+            body.setAttribute('fill', 'url(#cyl_' + pid + ')');
+            body.setAttribute('filter', 'url(#glow_' + pid + ')');
+            svg.appendChild(body);
+
+            // Bords lumineux
+            [[23,2,21,42],[27,2,29,42]].forEach(([x1,y1,x2,y2]) => {
+                const l = document.createElementNS(NS,'line');
+                l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+                l.setAttribute('stroke', colors.glow); l.setAttribute('stroke-width','1.2');
+                l.setAttribute('filter', 'url(#glow_' + pid + ')');
+                svg.appendChild(l);
+            });
+
+            // Ellipse haut
+            const eTop = document.createElementNS(NS,'ellipse');
+            eTop.setAttribute('cx','25'); eTop.setAttribute('cy','2'); eTop.setAttribute('rx','5'); eTop.setAttribute('ry','2');
+            eTop.setAttribute('fill', colors.top); eTop.setAttribute('filter','url(#glow_' + pid + ')');
+            svg.appendChild(eTop);
+
+            // Ellipse bas remplie
+            const eBotF = document.createElementNS(NS,'ellipse');
+            eBotF.setAttribute('cx','25'); eBotF.setAttribute('cy','42'); eBotF.setAttribute('rx','12'); eBotF.setAttribute('ry','4.5');
+            eBotF.setAttribute('fill','url(#disk_' + pid + ')'); eBotF.setAttribute('filter','url(#glow_' + pid + ')');
+            svg.appendChild(eBotF);
+
+            // Contour ellipse bas
+            const eBotS = document.createElementNS(NS,'ellipse');
+            eBotS.setAttribute('cx','25'); eBotS.setAttribute('cy','42'); eBotS.setAttribute('rx','12'); eBotS.setAttribute('ry','4.5');
+            eBotS.setAttribute('fill','none'); eBotS.setAttribute('stroke', colors.stroke); eBotS.setAttribute('stroke-width','1.5');
+            eBotS.setAttribute('filter','url(#glow_' + pid + ')');
+            svg.appendChild(eBotS);
+
+            wrap.appendChild(svg);
+            return wrap;
+        }
 
             POIS.forEach(poi => {
                 const el = document.createElement('div');
@@ -9352,30 +9714,30 @@
                 const inner = document.createElement('div');
                 inner.style.cssText = `
                     position: absolute;
-                    width: 44px; height: 52px;
+                    width: 110px; height: 145px;
                     transform: translate(-50%, -100%);
                     display: flex; flex-direction: column; align-items: center;
                     pointer-events: none;
-                    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.35));
+                    filter: drop-shadow(0 4px 12px rgba(120,40,220,0.6));
                     transition: transform 0.15s;
                 `;
-                inner.innerHTML = `
-                    <div style="
-                        width:40px;height:40px;border-radius:50% 50% 50% 4px;
-                        background:linear-gradient(135deg,#C87830,#8B5520);
-                        border:2.5px solid #F0DDB0;
-                        display:flex;align-items:center;justify-content:center;
-                        font-size:20px;
-                        box-shadow:0 3px 8px rgba(100,60,20,0.5);
-                    ">🎴</div>
-                    <div style="
-                        width:0;height:0;
-                        border-left:6px solid transparent;
-                        border-right:6px solid transparent;
-                        border-top:8px solid #F0DDB0;
-                        margin-top:-1px;
-                    "></div>
-                `;
+                const _collected = collectedCards.includes(poi.localCardId);
+                const _pid2 = 'card_' + poi.id.replace(/[^a-z0-9]/gi,'');
+                const _img = document.createElement('img');
+                _img.src = 'https://www.dropbox.com/scl/fi/1ev6kq1tiursbecahzkkz/Icone-NebCard.png?rlkey=6g186p229tyq0slqglwcfwcu8&raw=1';
+                _img.draggable = false;
+                _img.style.filter = 'drop-shadow(0 2px 14px rgba(140,40,255,0.9))';
+                _img.style.opacity = _collected ? '0.5' : '1';
+                _img.style.borderRadius = '50%';
+                const _poiWrap = _buildPoiVisual(_pid2, {
+                    top:    _collected ? 'rgba(147,197,253,0.9)'  : 'rgba(253,186,116,0.9)',
+                    mid:    _collected ? 'rgba(96,165,250,0.55)'  : 'rgba(249,115,22,0.55)',
+                    bot:    _collected ? 'rgba(59,130,246,0.85)'  : 'rgba(234,88,12,0.85)',
+                    glow:   _collected ? 'rgba(96,165,250,0.8)'   : 'rgba(249,115,22,0.8)',
+                    disk:   _collected ? 'rgba(147,197,253,0.7)'  : 'rgba(253,186,116,0.7)',
+                    stroke: _collected ? 'rgba(186,230,253,0.9)'  : 'rgba(254,215,170,0.9)'
+                }, _img, 106);
+                inner.appendChild(_poiWrap);
                 el.appendChild(inner);
                 el.addEventListener('mouseenter', () => { inner.style.transform = 'translate(-50%,-100%) scale(1.12)'; });
                 el.addEventListener('mouseleave', () => { inner.style.transform = 'translate(-50%,-100%) scale(1)'; });
@@ -9394,98 +9756,112 @@
 
             // ---- Dust markers — powder icon (triangle pile) ----
             DUST_POINTS.forEach(dust => {
-                // el = 0x0 : MapLibre écrit transform:translate() sur ce div.
-                // Tout le visuel est dans un enfant positionné en absolu.
                 const el = document.createElement('div');
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
                 const inner = document.createElement('div');
-                inner.style.cssText = 'position:absolute;left:-12px;top:-28px;width:24px;height:28px;pointer-events:none;';
-                inner.innerHTML = `<svg width="24" height="28" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <!-- Ombre au sol -->
-                  <ellipse cx="12" cy="27" rx="6" ry="2" fill="rgba(0,0,0,0.15)"/>
-                  <!-- Corps du cristal -->
-                  <path d="M12,1 L18,9 L20,21 L12,28 L4,21 L6,9 Z" fill="url(#dcg)"/>
-                  <!-- Facette gauche sombre -->
-                  <path d="M12,1 L6,9 L4,21 L12,28 Z" fill="rgba(0,0,0,0.10)"/>
-                  <!-- Reflet haut -->
-                  <path d="M12,1 L18,9 L15,7 L11,2 Z" fill="rgba(255,255,255,0.50)"/>
-                  <path d="M8,10 L11,17 L9,14 Z" fill="rgba(255,255,255,0.25)"/>
-                  <!-- Couronne -->
-                  <path d="M12,1 L9,6 L12,4 L15,6 Z" fill="rgba(255,255,255,0.7)"/>
-                  <defs>
-                    <linearGradient id="dcg" x1="4" y1="1" x2="20" y2="28" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stop-color="#c084fc"/>
-                      <stop offset="50%" stop-color="#a855f7"/>
-                      <stop offset="100%" stop-color="#7c3aed"/>
-                    </linearGradient>
-                  </defs>
-                </svg>`;
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-84%);width:54px;height:100px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                // Icône cristal SVG
+                const _dustIcon = document.createElement('div');
+                _dustIcon.style.cssText = 'flex-shrink:0;';
+                _dustIcon.innerHTML = "<svg width=\"28\" height=\"34\" viewBox=\"0 0 24 30\" fill=\"none\"><path d=\"M12,1 L18,8 L19,20 L12,29 L5,20 L6,8 Z\" fill=\"url(#di_d)\"/><path d=\"M12,1 L6,8 L5,20 L12,29 Z\" fill=\"rgba(0,0,0,0.12)\"/><path d=\"M12,1 L18,8 L15,6 L11,2 Z\" fill=\"rgba(255,255,255,0.55)\"/><path d=\"M12,1 L10,5 L12,3 L14,5 Z\" fill=\"rgba(255,255,255,0.75)\"/><defs><linearGradient id=\"di_d\" x1=\"5\" y1=\"1\" x2=\"19\" y2=\"29\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#f3e8ff\"/><stop offset=\"50%\" stop-color=\"#a855f7\"/><stop offset=\"100%\" stop-color=\"#5b21b6\"/></linearGradient></defs></svg>";
+                const _dPid = 'dust_' + dust.id.replace(/[^a-z0-9]/gi,'');
+                const _dustWrap = _buildPoiVisual(_dPid, {
+                    top:    'rgba(192,132,252,0.9)',
+                    mid:    'rgba(168,85,247,0.55)',
+                    bot:    'rgba(124,58,237,0.85)',
+                    glow:   'rgba(192,132,252,0.8)',
+                    disk:   'rgba(216,180,254,0.7)',
+                    stroke: 'rgba(233,213,255,0.9)'
+                }, _dustIcon, 28);
+                inner.appendChild(_dustWrap);
                 el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
-                    .setLngLat([dust.lng, dust.lat])
-                    .addTo(map);
+                    .setLngLat([dust.lng, dust.lat]).addTo(map);
                 dustMarkers.push({ marker, el, dust });
-                // Glow sur l'enfant uniquement — jamais de transform sur el
                 const delay = (Math.random() * 2).toFixed(2);
-                inner.style.animation = `dustGlow 2.5s ease-in-out ${delay}s infinite`;
+                inner.style.animation = 'dustGlow 2.5s ease-in-out ' + delay + 's infinite';
             });
 
-            // ---- Echo markers — sound wave / echo icon ----
+            // ---- Echo markers ----
             ECHO_POINTS.forEach(echo => {
                 const info = SUPERTYPES[echo.supertype];
-                // Parse color hex to rgb for wave arcs
-                const hex = info.color.replace('#','');
-                const r = parseInt(hex.slice(0,2),16);
-                const g = parseInt(hex.slice(2,4),16);
-                const b = parseInt(hex.slice(4,6),16);
                 const el = document.createElement('div');
-                el.style.cssText = 'width:28px;height:24px;cursor:default;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));';
+                el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
-                el.title = `Écho ${info.name}`;
-                el.innerHTML = echoSvg(info.color, 28);
+                el.title = 'Écho ' + info.name;
+                const inner = document.createElement('div');
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-84%);width:54px;height:100px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                const _echoIcon = document.createElement('div');
+                _echoIcon.style.cssText = 'flex-shrink:0;';
+                _echoIcon.innerHTML = "<svg width=\"28\" height=\"32\" viewBox=\"0 0 24 28\" fill=\"none\"><path d=\"M12,1 L20,6 L20,18 L12,27 L4,18 L4,6 Z\" fill=\"url(#di_e)\"/><path d=\"M12,1 L4,6 L4,18 L12,27 Z\" fill=\"rgba(0,0,0,0.10)\"/><path d=\"M12,1 L20,6 L16,4 L11,2 Z\" fill=\"rgba(255,255,255,0.5)\"/><path d=\"M12,12 L16,10 L16,16 L12,18 L8,16 L8,10 Z\" fill=\"rgba(255,255,255,0.15)\"/><defs><linearGradient id=\"di_e\" x1=\"4\" y1=\"1\" x2=\"20\" y2=\"27\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#d1fae5\"/><stop offset=\"50%\" stop-color=\"#10b981\"/><stop offset=\"100%\" stop-color=\"#065f46\"/></linearGradient></defs></svg>";
+                const _hex = info.color.replace('#','');
+                const _er = parseInt(_hex.slice(0,2),16);
+                const _eg = parseInt(_hex.slice(2,4),16);
+                const _eb = parseInt(_hex.slice(4,6),16);
+                const _ePid = 'echo_' + echo.id.replace(/[^a-z0-9]/gi,'');
+                const _eWrap = _buildPoiVisual(_ePid, {
+                    top:    'rgba(52,211,153,0.9)',
+                    mid:    'rgba(16,185,129,0.55)',
+                    bot:    'rgba(5,150,105,0.85)',
+                    glow:   'rgba(52,211,153,0.85)',
+                    disk:   'rgba(110,231,183,0.7)',
+                    stroke: 'rgba(167,243,208,0.9)'
+                }, _echoIcon, 28);
+                inner.appendChild(_eWrap);
+                el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
-                    .setLngLat([echo.lng, echo.lat])
-                    .addTo(map);
+                    .setLngLat([echo.lng, echo.lat]).addTo(map);
                 echoMarkers.push({ marker, el, echo });
             });
 
-            // ---- Orb markers — glowing orb ----
+            // ---- Orb markers — orbe mémorielle ----
             ORB_POINTS.forEach(orb => {
                 const el = document.createElement('div');
-                el.style.cssText = 'width:28px;height:28px;cursor:default;filter:drop-shadow(0 0 6px rgba(99,102,241,0.8));';
+                el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
-                el.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="14" cy="14" r="11" fill="url(#orbGrad)" opacity="0.92"/>
-                    <circle cx="14" cy="14" r="11" stroke="#818CF8" stroke-width="1.5" fill="none"/>
-                    <circle cx="10" cy="10" r="3.5" fill="rgba(255,255,255,0.35)"/>
-                    <circle cx="18" cy="17" r="1.5" fill="rgba(255,255,255,0.2)"/>
-                    <defs>
-                        <radialGradient id="orbGrad" cx="40%" cy="35%" r="65%">
-                            <stop offset="0%" stop-color="#A5B4FC"/>
-                            <stop offset="55%" stop-color="#6366F1"/>
-                            <stop offset="100%" stop-color="#3730A3"/>
-                        </radialGradient>
-                    </defs>
-                </svg>`;
+                const inner = document.createElement('div');
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-84%);width:54px;height:100px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                const _oIcon = document.createElement('div');
+                _oIcon.style.cssText = 'flex-shrink:0;filter:drop-shadow(0 0 6px rgba(99,102,241,0.8));';
+                _oIcon.innerHTML = "<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\"><circle cx=\"12\" cy=\"13\" r=\"10\" fill=\"url(#di_o)\"/><ellipse cx=\"12\" cy=\"13\" rx=\"10\" ry=\"10\" stroke=\"rgba(103,232,249,0.6)\" stroke-width=\"1\"/><ellipse cx=\"9\" cy=\"9\" rx=\"3.5\" ry=\"2.5\" fill=\"rgba(255,255,255,0.35)\" transform=\"rotate(-20 9 9)\"/><circle cx=\"15\" cy=\"16\" r=\"1.2\" fill=\"rgba(255,255,255,0.2)\"/><defs><radialGradient id=\"di_o\" cx=\"38%\" cy=\"35%\" r=\"65%\"><stop offset=\"0%\" stop-color=\"#cffafe\"/><stop offset=\"55%\" stop-color=\"#06b6d4\"/><stop offset=\"100%\" stop-color=\"#164e63\"/></radialGradient></defs></svg>";
+                const _oPid = 'orb_' + orb.id.replace(/[^a-z0-9]/gi,'');
+                const _oWrap = _buildPoiVisual(_oPid, {
+                    top:    'rgba(103,232,249,0.9)',
+                    mid:    'rgba(6,182,212,0.55)',
+                    bot:    'rgba(8,145,178,0.85)',
+                    glow:   'rgba(34,211,238,0.85)',
+                    disk:   'rgba(103,232,249,0.7)',
+                    stroke: 'rgba(164,244,250,0.9)'
+                }, _oIcon, 28);
+                inner.appendChild(_oWrap);
+                el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([orb.lng, orb.lat]).addTo(map);
                 orbMarkers.push({ marker, el, orb });
             });
 
-            // ---- Scroll markers — parchment scroll ----
+            // ---- Scroll markers ----
             SCROLL_POINTS.forEach(scroll => {
                 const el = document.createElement('div');
-                el.style.cssText = 'width:26px;height:28px;cursor:default;filter:drop-shadow(0 2px 5px rgba(217,119,6,0.6));';
+                el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
-                el.innerHTML = `<svg width="26" height="28" viewBox="0 0 26 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="4" y="4" width="18" height="20" rx="2" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5"/>
-                    <rect x="2" y="3" width="5" height="22" rx="2.5" fill="#F59E0B" stroke="#D97706" stroke-width="1"/>
-                    <rect x="19" y="3" width="5" height="22" rx="2.5" fill="#F59E0B" stroke="#D97706" stroke-width="1"/>
-                    <line x1="8" y1="10" x2="18" y2="10" stroke="#D97706" stroke-width="1" opacity="0.6"/>
-                    <line x1="8" y1="14" x2="18" y2="14" stroke="#D97706" stroke-width="1" opacity="0.6"/>
-                    <line x1="8" y1="18" x2="14" y2="18" stroke="#D97706" stroke-width="1" opacity="0.6"/>
-                </svg>`;
+                const inner = document.createElement('div');
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-84%);width:54px;height:100px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                const _sIcon = document.createElement('div');
+                _sIcon.style.cssText = 'flex-shrink:0;';
+                _sIcon.innerHTML = "<svg width=\"28\" height=\"30\" viewBox=\"0 0 24 26\" fill=\"none\"><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#di_s)\"/><rect x=\"2\" y=\"3\" width=\"4\" height=\"20\" rx=\"2\" fill=\"#f59e0b\" stroke=\"#92400e\" stroke-width=\"0.8\"/><rect x=\"18\" y=\"3\" width=\"4\" height=\"20\" rx=\"2\" fill=\"#f59e0b\" stroke=\"#92400e\" stroke-width=\"0.8\"/><line x1=\"8\" y1=\"9\" x2=\"16\" y2=\"9\" stroke=\"#92400e\" stroke-width=\"0.9\" opacity=\"0.6\"/><line x1=\"8\" y1=\"13\" x2=\"16\" y2=\"13\" stroke=\"#92400e\" stroke-width=\"0.9\" opacity=\"0.6\"/><line x1=\"8\" y1=\"17\" x2=\"13\" y2=\"17\" stroke=\"#92400e\" stroke-width=\"0.9\" opacity=\"0.6\"/><path d=\"M4,4 L20,4 L18,3 L6,3 Z\" fill=\"rgba(255,255,255,0.3)\"/><defs><linearGradient id=\"di_s\" x1=\"4\" y1=\"4\" x2=\"20\" y2=\"22\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#fef9c3\"/><stop offset=\"100%\" stop-color=\"#d97706\"/></linearGradient></defs></svg>";
+                const _sPid = 'scroll_' + scroll.id.replace(/[^a-z0-9]/gi,'');
+                const _sWrap = _buildPoiVisual(_sPid, {
+                    top:    'rgba(251,191,36,0.9)',
+                    mid:    'rgba(245,158,11,0.55)',
+                    bot:    'rgba(180,83,9,0.85)',
+                    glow:   'rgba(251,191,36,0.8)',
+                    disk:   'rgba(253,230,138,0.7)',
+                    stroke: 'rgba(255,245,180,0.9)'
+                }, _sIcon, 28);
+                inner.appendChild(_sWrap);
+                el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([scroll.lng, scroll.lat]).addTo(map);
                 scrollMarkers.push({ marker, el, scroll });
@@ -9494,12 +9870,24 @@
             // ---- Loot markers — objet mystère ----
             LOOT_POINTS.forEach(loot => {
                 const el = document.createElement('div');
-                el.style.cssText = 'width:28px;height:28px;cursor:default;filter:drop-shadow(0 2px 6px rgba(99,102,241,0.5));';
+                el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
-                el.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <polygon points="14,2 26,9 26,19 14,26 2,19 2,9" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5"/>
-                    <text x="14" y="19" text-anchor="middle" font-size="13" font-weight="bold" fill="#a5b4fc" font-family="sans-serif">?</text>
-                </svg>`;
+                const inner = document.createElement('div');
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-84%);width:54px;height:100px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                const _lIcon = document.createElement('div');
+                _lIcon.style.cssText = 'flex-shrink:0;';
+                _lIcon.innerHTML = "<svg width=\"30\" height=\"30\" viewBox=\"0 0 26 26\" fill=\"none\"><path d=\"M13,2 L24,8 L24,18 L13,24 L2,18 L2,8 Z\" fill=\"url(#di_l)\"/><path d=\"M13,2 L2,8 L2,18 L13,24 Z\" fill=\"rgba(0,0,0,0.15)\"/><path d=\"M13,2 L24,8 L20,6 L12,2 Z\" fill=\"rgba(255,255,255,0.3)\"/><text x=\"13\" y=\"16\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"900\" fill=\"white\" font-family=\"system-ui\" opacity=\"0.9\">?</text><defs><linearGradient id=\"di_l\" x1=\"2\" y1=\"2\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#fce7f3\"/><stop offset=\"50%\" stop-color=\"#ec4899\"/><stop offset=\"100%\" stop-color=\"#9d174d\"/></linearGradient></defs></svg>";
+                const _lPid = 'loot_' + loot.id.replace(/[^a-z0-9]/gi,'');
+                const _lWrap = _buildPoiVisual(_lPid, {
+                    top:    'rgba(249,168,212,0.9)',
+                    mid:    'rgba(236,72,153,0.55)',
+                    bot:    'rgba(190,24,93,0.85)',
+                    glow:   'rgba(236,72,153,0.85)',
+                    disk:   'rgba(249,168,212,0.7)',
+                    stroke: 'rgba(252,207,232,0.9)'
+                }, _lIcon, 28);
+                inner.appendChild(_lWrap);
+                el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([loot.lng, loot.lat]).addTo(map);
                 lootMarkers.push({ marker, el, loot });
@@ -9898,7 +10286,7 @@
             const cond  = MAP_CONDITIONS[condKey] || MAP_CONDITIONS.day;
             const overlayEl = document.getElementById('mapConditionOverlay');
             // Cibler le canvas MapLibre pour le filtre
-            const mapCanvas = document.querySelector('#map canvas:not(#rainCanvas)');
+            const mapCanvas = document.querySelector('.maplibregl-canvas');
 
             if (overlayEl) {
                 overlayEl.style.background = cond.overlay;
@@ -9906,8 +10294,152 @@
             }
             if (mapCanvas) mapCanvas.style.filter = cond.mapFilter || 'none';
 
+            // Ré-appliquer les couleurs des zones de capture après le filtre carte
+            // pour qu'elles restent distinctives quelle que soit la condition météo
+            _applyCaptureLayers(condKey);
+
             if (cond.rain) startRain();
             else stopRain();
+        }
+
+        // Couleurs des zones de capture adaptées à la condition (résistent au filtre CSS)
+        // Correspondance exacte cylindres ↔ zones :
+        // Carte     : cylindre orange    #F97316 / #FB923C nuit
+        // Poudre    : cylindre violet    #A855F7 / #D946EF nuit
+        // Écho      : cylindre vert      #10B981 / #34D399 nuit
+        // Orbe      : cylindre cyan      #06B6D4 / #22D3EE nuit
+        // Parchemin : cylindre ambre     #F59E0B / #FBBF24 nuit
+        // Loot "?"  : cylindre rose      #EC4899 / #F472B6 nuit
+        const _CAPTURE_COLORS = {
+            // [fill_color, fill_opacity, line_color, line_opacity, line_width]
+            // Nuit : couleurs pre-compensées pour contrer brightness(0.45) saturate(0.5) hue-rotate(200deg)
+            // On utilise des couleurs très saturées/lumineuses qui résistent au filtre
+            night: {
+                poi:    ['#FF8C00', 0.45, '#FF8C00', 1.0, 3.5],  // orange → reste orange nuit
+                dust:   ['#CC00FF', 0.45, '#CC00FF', 1.0, 3.5],  // violet vif → reste violet
+                echo:   ['#00FF88', 0.45, '#00FF88', 1.0, 3.5],  // vert vif → reste vert
+                orb:    ['#00E5FF', 0.45, '#00E5FF', 1.0, 3.5],  // cyan vif → reste cyan
+                scroll: ['#FFD700', 0.45, '#FFD700', 1.0, 3.5],  // or vif → reste ambre
+                loot:   ['#FF1493', 0.45, '#FF1493', 1.0, 3.5],  // rose vif → reste rose
+            },
+            day: {
+                poi:    ['#F97316', 0.10, '#F97316', 0.85, 2.0],
+                dust:   ['#A855F7', 0.10, '#A855F7', 0.85, 2.0],
+                echo:   ['#10B981', 0.10, '#10B981', 0.85, 2.0],
+                orb:    ['#06B6D4', 0.10, '#06B6D4', 0.85, 2.0],
+                scroll: ['#F59E0B', 0.10, '#F59E0B', 0.85, 2.0],
+                loot:   ['#EC4899', 0.10, '#EC4899', 0.85, 2.0],
+            },
+        };
+        // dawn/dusk/rain/fog/clear → proches du day mais légèrement plus forts
+        _CAPTURE_COLORS.dawn  = _CAPTURE_COLORS.day;
+        _CAPTURE_COLORS.dusk  = _CAPTURE_COLORS.day;
+        _CAPTURE_COLORS.rain  = _CAPTURE_COLORS.night;
+        _CAPTURE_COLORS.fog   = _CAPTURE_COLORS.night;
+        _CAPTURE_COLORS.clear = _CAPTURE_COLORS.day;
+
+
+        // ── Canvas DOM pour zones de capture — non affecté par le filtre CSS nuit ──
+        let _capCtx = null, _capAnim = null, _capZones = [];
+
+        const _CAP_COLORS = {
+            poi_local:    '#F97316',
+            poi_thematic: '#F59E0B',
+            poi_cooldown: '#9CA3AF',
+            dust:         '#A855F7',
+            echo:         '#10B981',
+            orb:          '#06B6D4',
+            scroll:       '#F59E0B',
+            loot:         '#EC4899',
+        };
+
+        function _capInit() {
+            const cv = document.getElementById('captureCanvas');
+            if (!cv) return;
+            const resize = () => { cv.width = cv.offsetWidth || window.innerWidth; cv.height = cv.offsetHeight || window.innerHeight; };
+            resize();
+            window.addEventListener('resize', resize);
+            _capCtx = cv.getContext('2d');
+        }
+
+        function _capUpdate() {
+            if (!_obDone) { _capZones = []; return; }
+            _capZones = [];
+            const add = (lng, lat, r, type) => _capZones.push({ lng, lat, r, color: _CAP_COLORS[type] || '#ffffff' });
+            POIS.forEach(poi => {
+                const st = getPoiThematicStatus(poi);
+                if (st === 'local' && !collectedCards.includes(poi.localCardId)) add(poi.lng, poi.lat, 50, 'poi_local');
+                else if (st === 'thematic_available') add(poi.lng, poi.lat, 50, 'poi_thematic');
+                else if (st === 'cooldown') add(poi.lng, poi.lat, 50, 'poi_cooldown');
+            });
+            DUST_POINTS.forEach(d => { if (!collectedDustPoints.includes(d.id)) add(d.lng, d.lat, 30, 'dust'); });
+            ECHO_POINTS.forEach(e => { if (!collectedEchoes.includes(e.id)) add(e.lng, e.lat, 30, 'echo'); });
+            ORB_POINTS.forEach(o => { if (!collectedOrbs.includes(o.id)) add(o.lng, o.lat, 30, 'orb'); });
+            SCROLL_POINTS.forEach(s => { if (!collectedScrolls.includes(s.id)) add(s.lng, s.lat, 20, 'scroll'); });
+            LOOT_POINTS.forEach(l => { if (!collectedLoots.includes(l.id)) add(l.lng, l.lat, 20, 'loot'); });
+        }
+
+        function _capDraw() {
+            const cv = document.getElementById('captureCanvas');
+            if (!cv || !_capCtx || !map) { _capAnim = requestAnimationFrame(_capDraw); return; }
+            _capCtx.clearRect(0, 0, cv.width, cv.height);
+            const pitch  = (map.getPitch() || 0) * Math.PI / 180;
+            const scaleY = Math.cos(pitch) * 0.75;
+            _capZones.forEach(z => {
+                const c = map.project([z.lng, z.lat]);
+                const e = map.project([z.lng + z.r / (111320 * Math.cos(z.lat * Math.PI / 180)), z.lat]);
+                const rx = Math.abs(e.x - c.x);
+                if (rx < 1) return;
+                const ry = rx * scaleY;
+                _capCtx.save();
+                _capCtx.translate(c.x, c.y);
+                // Remplissage
+                _capCtx.beginPath(); _capCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+                _capCtx.fillStyle = z.color; _capCtx.globalAlpha = 0.12; _capCtx.fill();
+                // Contour fin
+                _capCtx.beginPath(); _capCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+                _capCtx.strokeStyle = z.color; _capCtx.lineWidth = 1.2; _capCtx.globalAlpha = 0.85; _capCtx.stroke();
+                // Disque central
+                _capCtx.beginPath(); _capCtx.ellipse(0, 0, rx * 0.15, ry * 0.15, 0, 0, Math.PI * 2);
+                _capCtx.fillStyle = z.color; _capCtx.globalAlpha = 0.75; _capCtx.fill();
+                _capCtx.restore();
+            });
+            _capAnim = requestAnimationFrame(_capDraw);
+        }
+
+        function _capStart() {
+            if (_capAnim) cancelAnimationFrame(_capAnim);
+            _capInit(); _capUpdate(); _capDraw();
+        }
+
+        function _applyCaptureLayers(condKey) {
+            if (!map) return;
+            const c = _CAPTURE_COLORS[condKey] || _CAPTURE_COLORS.day;
+            const set = (id, fill, fillOp, line, lineOp, lineW) => {
+                try { if (map.getLayer(id)) {
+                    map.setPaintProperty(id, 'fill-color', fill);
+                    map.setPaintProperty(id, 'fill-opacity', fillOp);
+                }} catch(e){}
+                const sid = id + '-stroke';
+                try { if (map.getLayer(sid)) {
+                    map.setPaintProperty(sid, 'line-color', line);
+                    map.setPaintProperty(sid, 'line-opacity', lineOp);
+                    map.setPaintProperty(sid, 'line-width', lineW);
+                }} catch(e){}
+            };
+            // POI carte — couleur dynamique par statut, on force juste l'opacité
+            try { if (map.getLayer('poi-capture-circles')) {
+                map.setPaintProperty('poi-capture-circles', 'fill-opacity', c.poi[1]);
+            }} catch(e){}
+            try { if (map.getLayer('poi-capture-circles-stroke')) {
+                map.setPaintProperty('poi-capture-circles-stroke', 'line-opacity', c.poi[3]);
+                map.setPaintProperty('poi-capture-circles-stroke', 'line-width',   c.poi[4]);
+            }} catch(e){}
+            set('dust-capture-circles',  c.dust[0],   c.dust[1],   c.dust[2],   c.dust[3],   c.dust[4]);
+            set('echo-capture-circles',  c.echo[0],   c.echo[1],   c.echo[2],   c.echo[3],   c.echo[4]);
+            set('orb-circles',           c.orb[0],    c.orb[1],    c.orb[2],    c.orb[3],    c.orb[4]);
+            set('scroll-circles',        c.scroll[0], c.scroll[1], c.scroll[2], c.scroll[3], c.scroll[4]);
+            set('loot-circles',          (c.loot||c.scroll)[0], (c.loot||c.scroll)[1], (c.loot||c.scroll)[2], (c.loot||c.scroll)[3], (c.loot||c.scroll)[4]);
         }
 
         function startRain() {
@@ -10179,12 +10711,13 @@
                 if (alreadySaved) return;
                 const dist = getDistance(playerPos.lat, playerPos.lng, info.lat, info.lng);
                 const inZone = dist <= INFO_RADIUS;
-                const target = inner || el;
                 if (inZone) {
                     currentNearbyInfo = info;
-                    target.classList.add('in-range');
+                    inner.style.boxShadow = '0 3px 16px rgba(255,200,60,0.9), 0 0 0 2px rgba(255,220,80,0.7)';
+                    inner.style.animation = 'interactGlow 1.4s ease-in-out infinite';
                 } else {
-                    target.classList.remove('in-range');
+                    inner.style.boxShadow = '0 3px 10px rgba(180,140,40,0.5)';
+                    inner.style.animation = '';
                 }
             });
             // Bannière panorama
@@ -10214,18 +10747,18 @@
                     el.style.display = hasLocal ? 'block' : 'none';
                     if (hasLocal) {
                         el.style.filter = '';
-                        circleFeatures.push({ type: 'Feature', properties: { id: poi.id, status: 'local' }, geometry: { type: 'Point', coordinates: [poi.lng, poi.lat] } });
+                        circleFeatures.push({ type: 'Feature', properties: { id: poi.id, status: 'local', lng: poi.lng, lat: poi.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(poi.lng, poi.lat, 50, ISOMETRIC_TILT)] } });
                     }
                 } else if (status === 'thematic_available') {
                     // Carte thématique tirée, à collecter — aura dorée
                     el.style.display = 'block';
                     el.style.filter = 'hue-rotate(40deg) saturate(1.8) brightness(1.1)';
-                    circleFeatures.push({ type: 'Feature', properties: { id: poi.id, status: 'thematic_available' }, geometry: { type: 'Point', coordinates: [poi.lng, poi.lat] } });
+                    circleFeatures.push({ type: 'Feature', properties: { id: poi.id, status: 'thematic_available', lng: poi.lng, lat: poi.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(poi.lng, poi.lat, 50, ISOMETRIC_TILT)] } });
                 } else if (status === 'cooldown') {
                     // Cooldown actif — visible mais atténué
                     el.style.display = 'block';
                     el.style.filter = 'grayscale(0.6) opacity(0.5)';
-                    circleFeatures.push({ type: 'Feature', properties: { id: poi.id, status: 'cooldown' }, geometry: { type: 'Point', coordinates: [poi.lng, poi.lat] } });
+                    circleFeatures.push({ type: 'Feature', properties: { id: poi.id, status: 'cooldown', lng: poi.lng, lat: poi.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(poi.lng, poi.lat, 50, ISOMETRIC_TILT)] } });
                 } else if (status === 'exhausted') {
                     // Pool épuisé — petit marqueur étoilé
                     el.style.display = 'block';
@@ -10241,19 +10774,30 @@
                     type: 'FeatureCollection',
                     features: circleFeatures
                 });
+                // Petit disque concentrique (8m de rayon) — lng/lat stockés dans properties
+                if (map.getSource('poi-dot-source')) {
+                    map.getSource('poi-dot-source').setData({
+                        type: 'FeatureCollection',
+                        features: circleFeatures.map(f => ({
+                            type: 'Feature',
+                            properties: f.properties,
+                            geometry: { type: 'Polygon', coordinates: [_geoEllipse(f.properties.lng, f.properties.lat, 8, ISOMETRIC_TILT)] }
+                        }))
+                    });
+                }
                 // Couleur dynamique par statut
-                map.setPaintProperty('poi-capture-circles', 'circle-color', [
+                map.setPaintProperty('poi-capture-circles', 'fill-color', [
                     'match', ['get', 'status'],
                     'thematic_available', '#F59E0B',
-                    'cooldown', '#9CA3AF',
-                    '#EF4444' // local par défaut
+                    'cooldown', '#9CA3AF', '#F97316'
                 ]);
-                map.setPaintProperty('poi-capture-circles', 'circle-stroke-color', [
-                    'match', ['get', 'status'],
-                    'thematic_available', '#F59E0B',
-                    'cooldown', '#9CA3AF',
-                    '#EF4444'
-                ]);
+                if (map.getLayer('poi-capture-circles-stroke')) {
+                    map.setPaintProperty('poi-capture-circles-stroke', 'line-color', [
+                        'match', ['get', 'status'],
+                        'thematic_available', '#F59E0B',
+                        'cooldown', '#9CA3AF', '#F97316'
+                    ]);
+                }
             }
         }
 
@@ -10269,8 +10813,8 @@
                 map.getSource('dust-circles').setData({
                     type: 'FeatureCollection',
                     features: visible.map(d => ({
-                        type: 'Feature', properties: { id: d.id },
-                        geometry: { type: 'Point', coordinates: [d.lng, d.lat] }
+                        type: 'Feature', properties: { id: d.id, lng: d.lng, lat: d.lat },
+                        geometry: { type: 'Polygon', coordinates: [_geoEllipse(d.lng, d.lat, 30, ISOMETRIC_TILT)] }
                     }))
                 });
             }
@@ -10288,8 +10832,8 @@
                 map.getSource('echo-circles').setData({
                     type: 'FeatureCollection',
                     features: visible.map(e => ({
-                        type: 'Feature', properties: { id: e.id },
-                        geometry: { type: 'Point', coordinates: [e.lng, e.lat] }
+                        type: 'Feature', properties: { id: e.id, lng: e.lng, lat: e.lat },
+                        geometry: { type: 'Polygon', coordinates: [_geoEllipse(e.lng, e.lat, 30, ISOMETRIC_TILT)] }
                     }))
                 });
             }
@@ -10305,7 +10849,7 @@
             if (map.getSource('orb-circles')) {
                 map.getSource('orb-circles').setData({
                     type: 'FeatureCollection',
-                    features: visible.map(o => ({ type: 'Feature', properties: { id: o.id }, geometry: { type: 'Point', coordinates: [o.lng, o.lat] } }))
+                    features: visible.map(o => ({ type: 'Feature', properties: { id: o.id, lng: o.lng, lat: o.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(o.lng, o.lat, 30, ISOMETRIC_TILT)] } }))
                 });
             }
         }
@@ -10321,16 +10865,27 @@
             if (map.getSource('scroll-circles')) {
                 map.getSource('scroll-circles').setData({
                     type: 'FeatureCollection',
-                    features: visible.map(s => ({ type: 'Feature', properties: { id: s.id }, geometry: { type: 'Point', coordinates: [s.lng, s.lat] } }))
+                    features: visible.map(s => ({ type: 'Feature', properties: { id: s.id, lng: s.lng, lat: s.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(s.lng, s.lat, 20, ISOMETRIC_TILT)] } }))
                 });
+                // scroll zones gérées par captureCanvas
             }
         }
 
         function updateLootVisibility() {
             if (!_obDone) return;
+            const visible = [];
             lootMarkers.forEach(({ el, loot }) => {
-                el.style.display = collectedLoots.includes(loot.id) ? 'none' : 'block';
+                const show = !collectedLoots.includes(loot.id);
+                el.style.display = show ? 'block' : 'none';
+                if (show) visible.push(loot);
             });
+            if (map.getSource('loot-circles')) {
+                map.getSource('loot-circles').setData({
+                    type: 'FeatureCollection',
+                    features: visible.map(l => ({ type: 'Feature', properties: { id: l.id, lng: l.lng, lat: l.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(l.lng, l.lat, 20, ISOMETRIC_TILT)] } }))
+                });
+                // loot zones gérées par captureCanvas
+            }
         }
 
         // SVG poudre mémorielle — même icône que sur la carte
@@ -10672,7 +11227,6 @@
                 const t  = ts * 0.001;
                 const p  = _ritualHoldProgress;
 
-                // Progression
                 if (_ritualHoldActive) {
                     _ritualHoldProgress = Math.min(1, _ritualHoldProgress + dt / RITUAL_HOLD_DURATION);
                     const instr = document.getElementById('ritualInstruction');
@@ -10703,7 +11257,6 @@
                 ctx.fillStyle = '#08060f';
                 ctx.fillRect(0, 0, W, H);
 
-                // Phase 1-2 : nébuleuse sphérique diffuse
                 const nebulaAlpha = Math.max(0, 1 - p * 2.2);
                 if (nebulaAlpha > 0) {
                     const sphereR = 110 - p * 30;
@@ -10716,18 +11269,9 @@
                     sg.addColorStop(1,   'rgba(50,20,100,0)');
                     ctx.fillStyle = sg;
                     ctx.beginPath(); ctx.arc(cx, cy, sphereR, 0, Math.PI*2); ctx.fill();
-                    const ox = Math.sin(t * 0.7) * 18, oy = Math.cos(t * 0.5) * 14;
-                    ctx.globalAlpha = (0.35 + p * 0.2) * nebulaAlpha * 0.6;
-                    const sg2 = ctx.createRadialGradient(cx+ox, cy+oy, 0, cx+ox, cy+oy, sphereR*0.8);
-                    sg2.addColorStop(0,   'rgba(150,220,255,0.7)');
-                    sg2.addColorStop(0.5, 'rgba(180,100,240,0.4)');
-                    sg2.addColorStop(1,   'rgba(0,0,0,0)');
-                    ctx.fillStyle = sg2;
-                    ctx.beginPath(); ctx.arc(cx+ox, cy+oy, sphereR*0.8, 0, Math.PI*2); ctx.fill();
                     ctx.restore();
                 }
 
-                // Phase 2→3 : silhouette carte qui émerge
                 const cardEmerge = Math.max(0, Math.min(1, (p - 0.18) / 0.37));
                 if (cardEmerge > 0) {
                     const cW = 68 + cardEmerge * 24;
@@ -10744,21 +11288,6 @@
                     _ritualRoundRect(ctx, cX, cY, cW, cH, cR);
                     ctx.strokeStyle = `rgba(${rgb},${0.2 + cardEmerge * 0.7})`;
                     ctx.lineWidth = 1.5; ctx.stroke();
-                    if (cardEmerge > 0.4) {
-                        const ca = Math.min(1, (cardEmerge - 0.4) / 0.6);
-                        ctx.globalAlpha = ca * 0.7;
-                        ctx.strokeStyle = `rgba(${rgb},0.8)`;
-                        ctx.lineWidth = 1;
-                        const s = 10;
-                        [[cX+4,cY+4],[cX+cW-4,cY+4],[cX+4,cY+cH-4],[cX+cW-4,cY+cH-4]].forEach(([x,y],ci) => {
-                            ctx.beginPath();
-                            if (ci===0){ ctx.moveTo(x+s,y); ctx.lineTo(x,y); ctx.lineTo(x,y+s); }
-                            if (ci===1){ ctx.moveTo(x-s,y); ctx.lineTo(x,y); ctx.lineTo(x,y+s); }
-                            if (ci===2){ ctx.moveTo(x+s,y); ctx.lineTo(x,y); ctx.lineTo(x,y-s); }
-                            if (ci===3){ ctx.moveTo(x-s,y); ctx.lineTo(x,y); ctx.lineTo(x,y-s); }
-                            ctx.stroke();
-                        });
-                    }
                     if (cardEmerge > 0.55) {
                         const ia = Math.min(1, (cardEmerge - 0.55) / 0.45);
                         ctx.globalAlpha = ia * 0.9;
@@ -10779,11 +11308,8 @@
                     ctx.restore();
                 }
 
-                // Phase 4-5 : flash lumineux
                 const flashPhase = Math.max(0, Math.min(1, (p - 0.55) / 0.2));
-                const flashAlpha = flashPhase < 0.5
-                    ? flashPhase * 2 * 0.6
-                    : (1 - flashPhase) * 2 * 0.6;
+                const flashAlpha = flashPhase < 0.5 ? flashPhase * 2 * 0.6 : (1 - flashPhase) * 2 * 0.6;
                 if (flashAlpha > 0.01) {
                     ctx.save();
                     ctx.globalAlpha = flashAlpha;
@@ -10796,7 +11322,6 @@
                     ctx.restore();
                 }
 
-                // Phase 6 : halos concentriques
                 const haloPhase = Math.max(0, Math.min(1, (p - 0.68) / 0.2));
                 if (haloPhase > 0) {
                     ctx.save();
@@ -10812,7 +11337,6 @@
                     ctx.restore();
                 }
 
-                // Particules orbitales
                 parts.forEach(part => {
                     const speedMult = _ritualHoldActive ? 1 + p * 4 : 0.3;
                     part.angle += part.speed * speedMult;
@@ -10835,7 +11359,6 @@
                     ctx.fill();
                 });
 
-                // Phase 7 : sparkles étoiles
                 const sparkPhase = Math.max(0, Math.min(1, (p - 0.78) / 0.2));
                 if (sparkPhase > 0) {
                     sparkles.forEach((sp, i) => {
@@ -10862,20 +11385,6 @@
                     });
                 }
 
-                // Phase 8 : halo de stabilisation final
-                const stabilizePhase = Math.max(0, Math.min(1, (p - 0.88) / 0.12));
-                if (stabilizePhase > 0) {
-                    ctx.save();
-                    ctx.globalAlpha = stabilizePhase * 0.5;
-                    const stg = ctx.createRadialGradient(cx,cy,0,cx,cy,140);
-                    stg.addColorStop(0,   `rgba(${rgb},0.25)`);
-                    stg.addColorStop(0.5, `rgba(${rgb},0.08)`);
-                    stg.addColorStop(1,   'rgba(0,0,0,0)');
-                    ctx.fillStyle = stg; ctx.fillRect(0,0,W,H);
-                    ctx.restore();
-                }
-
-                // Complétion
                 if (p >= 1 && !done) {
                     done = true;
                     ctx.save();
@@ -12008,6 +12517,13 @@
             bagInv.parchemins.push({ id: scroll.id, name: 'Parchemin', desc: "Trouvé près de " + scroll.name + " lors de ton exploration." });
             updateScrollVisibility();
             updateLootVisibility();
+            setTimeout(() => {
+                _capStart();
+                const weather = getSimulatedWeather();
+                const hour = getSimulatedHour();
+                const condKey = weather || (hour >= 22 || hour < 6 ? 'night' : hour >= 6 && hour < 9 ? 'dawn' : hour >= 9 && hour < 19 ? 'day' : 'dusk');
+                _applyCaptureLayers(condKey);
+            }, 500);
             checkNearbyPOI();
             saveProgress();
             // Toast
@@ -12082,7 +12598,7 @@
             const el = document.getElementById('albContent');
             if (!el) return;
             const all = getAllCards();
-            // Onglet Cartes = toutes les cartes (locales + thématiques)
+            // Onglet Cartes = toutes les cartes
             const thematic  = all;
             const collected = thematic.filter(c => collectedCards.includes(c.id));
             const locked    = thematic.filter(c => !collectedCards.includes(c.id));
@@ -15133,10 +15649,10 @@
                 inner.className = 'panneau-marker';
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-50%);';
 
-                // Lettre i italique
-                const span = document.createElement('span');
-                span.className = 'panneau-i';
-                span.textContent = 'i';
+                // Icône stèle SVG
+                const span = document.createElement('div');
+                span.style.cssText = 'display:flex;align-items:center;justify-content:center;';
+                span.innerHTML = "<svg width=\"34\" height=\"36\" viewBox=\"0 0 30 32\" fill=\"none\"><path d=\"M6,4 L24,4 L26,8 L26,24 L24,28 L6,28 L4,24 L4,8 Z\" fill=\"url(#di_pan)\"/><path d=\"M6,4 L4,8 L4,24 L6,28 Z\" fill=\"rgba(0,0,0,0.15)\"/><path d=\"M6,4 L24,4 L26,8 L8,8 Z\" fill=\"rgba(255,255,255,0.2)\"/><line x1=\"9\" y1=\"12\" x2=\"21\" y2=\"12\" stroke=\"rgba(255,255,255,0.5)\" stroke-width=\"1\"/><line x1=\"9\" y1=\"16\" x2=\"21\" y2=\"16\" stroke=\"rgba(255,255,255,0.35)\" stroke-width=\"1\"/><line x1=\"9\" y1=\"20\" x2=\"17\" y2=\"20\" stroke=\"rgba(255,255,255,0.35)\" stroke-width=\"1\"/><rect x=\"12\" y=\"28\" width=\"6\" height=\"3\" fill=\"rgba(80,80,120,0.6)\"/><defs><linearGradient id=\"di_pan\" x1=\"4\" y1=\"4\" x2=\"26\" y2=\"28\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#c7d2fe\"/><stop offset=\"50%\" stop-color=\"#6366f1\"/><stop offset=\"100%\" stop-color=\"#312e81\"/></linearGradient></defs></svg>";
                 inner.appendChild(span);
 
                 // SVG anneau de progression (cercle, en absolute pour ne pas perturber le flex)
@@ -15379,16 +15895,22 @@
                 const el = document.createElement('div');
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:pointer;';
                 el.title = bazar.name;
+                if (!_obDone) { el.dataset.obHidden = 'true'; el.style.display = 'none'; }
+
                 const inner = document.createElement('div');
                 inner.style.cssText = [
-                    'position:absolute','transform:translate(-50%,-50%)',
-                    'width:36px','height:36px','border-radius:50%',
-                    'background:linear-gradient(135deg,#D97706,#B45309)',
-                    'border:2px solid white',
+                    'position:absolute',
+                    'transform:translate(-50%,-50%)',
+                    'width:52px','height:52px',
+                    'border-radius:12px',
+                    'background:linear-gradient(145deg,#7C3F1A,#4A2010)',
+                    'border:2px solid rgba(200,130,50,0.85)',
+                    'box-shadow:0 3px 12px rgba(100,50,10,0.6)',
                     'display:flex','align-items:center','justify-content:center',
-                    'font-size:18px','box-shadow:0 2px 8px rgba(0,0,0,0.3)'
+                    'font-size:26px','cursor:pointer','user-select:none',
+                    'transition:transform 0.15s'
                 ].join(';');
-                inner.textContent = '🛖';
+                inner.innerHTML = "<svg width=\"34\" height=\"30\" viewBox=\"0 0 30 26\" fill=\"none\"><path d=\"M2,10 L15,4 L28,10 L28,20 L15,26 L2,20 Z\" fill=\"url(#di_bz)\"/><path d=\"M2,10 L2,20 L15,26 L15,16 Z\" fill=\"rgba(0,0,0,0.2)\"/><path d=\"M28,10 L28,20 L15,26 L15,16 Z\" fill=\"rgba(0,0,0,0.1)\"/><path d=\"M2,10 L15,4 L28,10 L15,16 Z\" fill=\"url(#di_bzt)\"/><rect x=\"12\" y=\"9\" width=\"6\" height=\"7\" rx=\"1\" fill=\"#92400e\" stroke=\"#d97706\" stroke-width=\"0.8\"/><circle cx=\"15\" cy=\"12.5\" r=\"1.2\" fill=\"#fbbf24\"/><defs><linearGradient id=\"di_bz\" x1=\"2\" y1=\"10\" x2=\"28\" y2=\"26\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#92400e\"/><stop offset=\"100%\" stop-color=\"#451a03\"/></linearGradient><linearGradient id=\"di_bzt\" x1=\"2\" y1=\"4\" x2=\"28\" y2=\"16\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#b45309\"/><stop offset=\"100%\" stop-color=\"#78350f\"/></linearGradient></defs></svg>";
                 el.appendChild(inner);
 
                 el.addEventListener('click', () => {
@@ -15486,19 +16008,25 @@
 
         function initInfoMarkers() {
             INFO_POINTS.forEach(info => {
-                // Même pattern que les POI : wrapper 0×0 + inner centré
-                // → le marqueur ne dérive pas quand on déplace la carte
                 const el = document.createElement('div');
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:pointer;';
                 el.title = info.title;
+                if (!_obDone) { el.dataset.obHidden = 'true'; el.style.display = 'none'; }
 
                 const inner = document.createElement('div');
-                inner.className = 'info-marker';
-                inner.textContent = '🌄';
-                // Centrage absolu sur le point géographique
-                inner.style.position = 'absolute';
-                inner.style.transform = 'translate(-50%, -50%)';
-
+                inner.style.cssText = [
+                    'position:absolute',
+                    'transform:translate(-50%,-50%)',
+                    'width:52px','height:52px',
+                    'border-radius:12px',
+                    'background:linear-gradient(145deg,#FFFBF0,#EED9A0)',
+                    'border:2px solid rgba(255,240,180,0.95)',
+                    'box-shadow:0 3px 10px rgba(180,140,40,0.5)',
+                    'display:flex','align-items:center','justify-content:center',
+                    'font-size:26px','cursor:pointer','user-select:none',
+                    'transition:transform 0.15s'
+                ].join(';');
+                inner.innerHTML = "<svg width=\"34\" height=\"34\" viewBox=\"0 0 30 30\" fill=\"none\"><rect x=\"5\" y=\"3\" width=\"20\" height=\"16\" rx=\"3\" fill=\"url(#di_if)\"/><rect x=\"5\" y=\"3\" width=\"20\" height=\"16\" rx=\"3\" stroke=\"rgba(200,160,60,0.8)\" stroke-width=\"1\"/><path d=\"M5,3 L25,3 L23,2 L7,2 Z\" fill=\"rgba(255,255,255,0.4)\"/><text x=\"15\" y=\"14\" text-anchor=\"middle\" font-size=\"10\" font-weight=\"900\" fill=\"#92400e\" font-family=\"system-ui\">i</text><rect x=\"13\" y=\"19\" width=\"4\" height=\"7\" rx=\"1\" fill=\"#d97706\"/><ellipse cx=\"15\" cy=\"27\" rx=\"5\" ry=\"2\" fill=\"rgba(180,120,30,0.4)\"/><defs><linearGradient id=\"di_if\" x1=\"5\" y1=\"3\" x2=\"25\" y2=\"19\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#fffbf0\"/><stop offset=\"100%\" stop-color=\"#fde68a\"/></linearGradient></defs></svg>";
                 el.appendChild(inner);
 
                 el.addEventListener('click', () => {
@@ -15511,8 +16039,6 @@
                     }
                     openViewfinder(info);
                 });
-
-                if (!_obDone) { el.dataset.obHidden = 'true'; el.style.display = 'none'; }
 
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([info.lng, info.lat])
@@ -17598,55 +18124,39 @@
 
         function drawLandmarks() {
             const ctx = mmCtx;
-            const rx=mmW*.92,ry=mmH*.07,rs=mmW*.030;
-            ctx.save();
-            ctx.beginPath(); ctx.arc(rx,ry,rs*1.1,0,Math.PI*2);
-            ctx.fillStyle='rgba(220,200,150,0.82)'; ctx.fill();
-            ctx.strokeStyle='#1a0b03'; ctx.lineWidth=1.5; ctx.stroke();
-            // 4 fleches cardinales
-            [[0,-1],[1,0],[0,1],[-1,0]].forEach(([dx,dy],i)=>{
-                ctx.beginPath(); ctx.moveTo(rx+dx*rs,ry+dy*rs); ctx.lineTo(rx+dy*rs*.38,ry-dx*rs*.38); ctx.lineTo(rx-dx*rs*.30,ry-dy*rs*.30); ctx.lineTo(rx-dy*rs*.38,ry+dx*rs*.38); ctx.closePath();
-                ctx.fillStyle=i%2===0?'#6a1414':'#d4c888'; ctx.fill(); ctx.strokeStyle='#1a0b03'; ctx.lineWidth=1; ctx.stroke();
-            });
-            ctx.beginPath(); ctx.arc(rx,ry,rs*.20,0,Math.PI*2); ctx.fillStyle='#c8981c'; ctx.fill(); ctx.strokeStyle='#1a0b03'; ctx.lineWidth=1; ctx.stroke();
-            ctx.globalAlpha=.90; ctx.font=`bold ${rs*.70}px Georgia,serif`; ctx.fillStyle='#1a0b03'; ctx.textAlign='center'; ctx.textBaseline='middle';
-            ctx.fillText('N',rx,ry-rs*1.36); ctx.restore();
-            // Labels regions — plus grands et lisibles
-            const labels=[
-                [.36,.05,'Europe'],[.06,.15,'Angleterre'],[.82,.04,'Scandinavie'],
-                [.84,.38,'Asie'],[.88,.66,'Chine'],[.86,.90,'Inde'],
-                [.56,.76,'Grece'],[.56,.90,'Egypte'],[.16,.90,'Maroc']
-            ];
+            // Rose des vents
+            const rx=mmW*.92, ry=mmH*.07, rs=mmW*.024;
             ctx.save(); ctx.globalAlpha=0.55;
-            ctx.font=`bold italic ${mmW*.022}px Georgia,serif`;
-            ctx.fillStyle='rgba(240,230,200,0.9)'; ctx.textAlign='center';
-            ctx.strokeStyle='rgba(10,5,2,0.6)'; ctx.lineWidth=2;
-            labels.forEach(([lx,ly,txt])=>{
-                ctx.strokeText(txt,lx*mmW,ly*mmH);
-                ctx.fillText(txt,lx*mmW,ly*mmH);
+            [[0,-1],[1,0],[0,1],[-1,0]].forEach(([dx,dy],i)=>{
+                ctx.beginPath(); ctx.moveTo(rx+dx*rs,ry+dy*rs); ctx.lineTo(rx+dy*rs*.35,ry-dx*rs*.35); ctx.lineTo(rx-dx*rs*.32,ry-dy*rs*.32); ctx.lineTo(rx-dy*rs*.35,ry+dx*rs*.35); ctx.closePath();
+                ctx.fillStyle=i%2===0?'#8a6030':'#d4b070'; ctx.fill(); ctx.strokeStyle='rgba(100,70,30,.5)'; ctx.lineWidth=.6; ctx.stroke();
             });
+            ctx.beginPath(); ctx.arc(rx,ry,rs*.18,0,Math.PI*2); ctx.fillStyle='#c8a050'; ctx.fill();
+            ctx.globalAlpha=.65; ctx.font=`bold ${rs*.55}px serif`; ctx.fillStyle='#5a3a10'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('N',rx,ry-rs*1.25);
             ctx.restore();
-            ctx.save(); ctx.globalAlpha=.45;
-            ctx.font=`bold italic ${mmW*.020}px Georgia,serif`; ctx.fillStyle='#e8dcc0';
-            ctx.textAlign='center'; ctx.textBaseline='bottom';
-            ctx.strokeStyle='rgba(255,255,255,0.20)'; ctx.lineWidth=2;
-            ctx.strokeText('Carta Memorialis - Saison I',mmW*.5,mmH*.978);
-            ctx.fillText('Carta Memorialis - Saison I',mmW*.5,mmH*.978);
-            ctx.restore();
+            // Titre
+            ctx.save(); ctx.globalAlpha=.38; ctx.font=`italic ${mmW*.026}px serif`; ctx.fillStyle='#7a4e20'; ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('Carta Memorialis · Lyon',mmW*.5,mmH*.975); ctx.restore();
         }
 
         function drawRivers() {
-            const ctx=mmCtx; ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
-            ctx.strokeStyle='rgba(50,100,150,0.45)'; ctx.lineWidth=mmW*.0035;
-            ctx.beginPath(); ctx.moveTo(mmW*.370,mmH*.140); ctx.bezierCurveTo(mmW*.376,mmH*.220,mmW*.368,mmH*.300,mmW*.352,mmH*.360); ctx.stroke();
-            ctx.strokeStyle='rgba(45,90,140,0.38)'; ctx.lineWidth=mmW*.003;
-            ctx.beginPath(); ctx.moveTo(mmW*.420,mmH*.270); ctx.bezierCurveTo(mmW*.500,mmH*.290,mmW*.560,mmH*.320,mmW*.610,mmH*.360); ctx.stroke();
-            ctx.globalAlpha=0.32; ctx.font=`italic ${mmW*.014}px Georgia,serif`; ctx.fillStyle='#c0d8e8'; ctx.textAlign='center';
-            ctx.save(); ctx.translate(mmW*.386,mmH*.240); ctx.rotate(-.22); ctx.fillText('Rhin',0,0); ctx.restore();
-            ctx.save(); ctx.translate(mmW*.510,mmH*.316); ctx.rotate(-.06); ctx.fillText('Danube',0,0); ctx.restore();
+            const ctx = mmCtx;
+            ctx.save(); ctx.lineCap='round';
+            // ── Saône ─────────────────────────────────────────────────
+            const sX=mmW*.370;
+            ctx.fillStyle='rgba(108,148,188,0.52)';
+            ctx.beginPath(); ctx.moveTo(sX-9,0); ctx.bezierCurveTo(sX-7,mmH*.24,sX-5,mmH*.48,sX-6,mmH*.78); ctx.lineTo(sX+8,mmH*.78); ctx.bezierCurveTo(sX+9,mmH*.48,sX+8,mmH*.24,sX+7,0); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle='rgba(68,108,162,0.65)'; ctx.lineWidth=mmW*.003;
+            ctx.beginPath(); ctx.moveTo(sX,0); ctx.bezierCurveTo(sX-2,mmH*.25,sX,mmH*.5,sX-1,mmH*.78); ctx.stroke();
+            ctx.save(); ctx.translate(sX-14,mmH*.40); ctx.rotate(-Math.PI/2); ctx.font=`italic ${mmW*.016}px serif`; ctx.fillStyle='rgba(50,88,148,0.62)'; ctx.textAlign='center'; ctx.fillText('Saône',0,0); ctx.restore();
+            // ── Rhône ─────────────────────────────────────────────────
+            const rX=mmW*.664;
+            ctx.fillStyle='rgba(88,128,178,0.50)';
+            ctx.beginPath(); ctx.moveTo(rX-10,0); ctx.bezierCurveTo(rX-8,mmH*.24,rX-6,mmH*.48,rX-7,mmH*.80); ctx.lineTo(rX+9,mmH*.80); ctx.bezierCurveTo(rX+10,mmH*.48,rX+9,mmH*.24,rX+8,0); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle='rgba(52,92,152,0.62)'; ctx.lineWidth=mmW*.0032;
+            ctx.beginPath(); ctx.moveTo(rX,0); ctx.bezierCurveTo(rX-1,mmH*.25,rX,mmH*.5,rX-1,mmH*.80); ctx.stroke();
+            ctx.save(); ctx.translate(rX-15,mmH*.36); ctx.rotate(-Math.PI/2); ctx.font=`italic ${mmW*.016}px serif`; ctx.fillStyle='rgba(44,82,145,0.62)'; ctx.textAlign='center'; ctx.fillText('Rhône',0,0); ctx.restore();
             ctx.restore();
         }
-
 
         // Lignes reliant les cartes d'une même grappe narrative débloquée/whispée
         function drawNarrativeLinks(allC) {
