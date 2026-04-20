@@ -1505,24 +1505,24 @@
             50%      { opacity: 1; }
         }
         @keyframes poiBounce {
-            0%,100% { transform: translate(-50%,-100%) translateY(0); }
-            50%     { transform: translate(-50%,-100%) translateY(-4px); }
+            0%,100% { transform: translateY(0); }
+            50%     { transform: translateY(-4px); }
         }
-        /* Flottaison subtile pour les petits collectables (transform:translate(-50%,-84%)) */
+        /* Flottaison subtile pour les petits collectables — s'applique à .poi-icon-float */
         @keyframes poiFloatSmall {
-            0%,100% { transform: translate(-50%,-84%) translateY(0); }
-            50%     { transform: translate(-50%,-84%) translateY(-2px); }
+            0%,100% { transform: translateY(0); }
+            50%     { transform: translateY(-2px); }
         }
         /* Flottaison marquée pour les collectables rares */
         @keyframes poiFloatMedium {
-            0%,100% { transform: translate(-50%,-84%) translateY(0); }
-            50%     { transform: translate(-50%,-84%) translateY(-3.5px); }
+            0%,100% { transform: translateY(0); }
+            50%     { transform: translateY(-3.5px); }
         }
         /* Rotation douce + flottaison pour le loot mystère */
         @keyframes poiFloatMystery {
-            0%   { transform: translate(-50%,-84%) translateY(0)    rotate(-2deg); }
-            50%  { transform: translate(-50%,-84%) translateY(-4px) rotate(2deg); }
-            100% { transform: translate(-50%,-84%) translateY(0)    rotate(-2deg); }
+            0%   { transform: translateY(0)    rotate(-2deg); }
+            50%  { transform: translateY(-4px) rotate(2deg); }
+            100% { transform: translateY(0)    rotate(-2deg); }
         }
 
         /* ── POI interactables — pas de bob vertical, juste un léger balancement ── */
@@ -9709,7 +9709,24 @@
             iconEl.style.height = sz + 'px';
             iconEl.style.position = 'relative';
             iconEl.style.zIndex = '2';
-            wrap.appendChild(iconEl);
+            iconEl.style.display = 'flex';
+            iconEl.style.alignItems = 'center';
+            iconEl.style.justifyContent = 'center';
+            // Forcer le SVG/img interne à remplir le conteneur pour un centrage propre
+            const _child = iconEl.firstElementChild;
+            if (_child) {
+                _child.style.width  = '100%';
+                _child.style.height = '100%';
+                _child.style.display = 'block';
+            }
+
+            // L'icône vit dans son propre wrapper animable — cela permet de faire flotter
+            // l'icône sans déplacer le cylindre (qui doit rester fixé au point géographique)
+            const iconFloat = document.createElement('div');
+            iconFloat.className = 'poi-icon-float';
+            iconFloat.style.cssText = 'display:flex;align-items:center;justify-content:center;';
+            iconFloat.appendChild(iconEl);
+            wrap.appendChild(iconFloat);
 
             const svg = document.createElementNS(NS, 'svg');
             svg.setAttribute('viewBox', '0 0 50 ' + H);
@@ -9784,7 +9801,7 @@
                 const inner = document.createElement('div');
                 inner.style.cssText = `
                     position: absolute;
-                    width: 60px; height: 85px;
+                    width: 60px;
                     transform: translate(-50%, -100%);
                     display: flex; flex-direction: column; align-items: center;
                     pointer-events: none;
@@ -9806,7 +9823,7 @@
                     glow:   _collected ? 'rgba(96,165,250,0.8)'   : 'rgba(249,115,22,0.8)',
                     disk:   _collected ? 'rgba(147,197,253,0.7)'  : 'rgba(253,186,116,0.7)',
                     stroke: _collected ? 'rgba(186,230,253,0.9)'  : 'rgba(254,215,170,0.9)'
-                }, _img, 54, 45);
+                }, _img, 54, 75);
                 inner.appendChild(_poiWrap);
                 el.appendChild(inner);
                 el.addEventListener('mouseenter', () => { inner.style.transform = 'translate(-50%,-100%) scale(1.12)'; });
@@ -9819,7 +9836,7 @@
                 poiMarkers.push({ marker, el, inner, poi });
                 // Animation bounce décalée
                 const poiDelay = Math.random() * 1.5;
-                inner.style.animation = `poiBounce 2.5s ease-in-out ${poiDelay}s infinite`;
+                (inner.querySelector('.poi-icon-float') || inner).style.animation = `poiBounce 2.5s ease-in-out ${poiDelay}s infinite`;
                 if (!_obDone) { el.dataset.obHidden='true'; el.style.display='none'; }
             });
 
@@ -9830,7 +9847,7 @@
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
                 const inner = document.createElement('div');
-                inner.style.cssText = 'position:absolute;transform:translate(-50%,-84%);width:54px;height:100px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-100%);width:54px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
                 // Icône cristal SVG
                 const _dustIcon = document.createElement('div');
                 _dustIcon.style.cssText = 'flex-shrink:0;';
@@ -9850,7 +9867,7 @@
                     .setLngLat([dust.lng, dust.lat]).addTo(map);
                 dustMarkers.push({ marker, el, dust });
                 const _dDelay = (Math.random() * 2).toFixed(2);
-                inner.style.animation = 'poiFloatSmall 3s ease-in-out ' + _dDelay + 's infinite';
+                (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatSmall 3s ease-in-out ' + _dDelay + 's infinite';
             });
 
             // ---- Echo markers ----
@@ -9861,7 +9878,7 @@
                 if (!_obDone) el.style.display = 'none';
                 el.title = 'Écho ' + info.name;
                 const inner = document.createElement('div');
-                inner.style.cssText = 'position:absolute;transform:translate(-50%,-84%);width:54px;height:100px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-100%);width:54px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
                 const _echoIcon = document.createElement('div');
                 _echoIcon.style.cssText = 'flex-shrink:0;';
                 const _echoImgMap = {
@@ -9892,7 +9909,7 @@
                     .setLngLat([echo.lng, echo.lat]).addTo(map);
                 echoMarkers.push({ marker, el, echo });
                 const _eDelay = (Math.random() * 2).toFixed(2);
-                inner.style.animation = 'poiFloatSmall 3.2s ease-in-out ' + _eDelay + 's infinite';
+                (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatSmall 3.2s ease-in-out ' + _eDelay + 's infinite';
             });
 
             // ---- Orb markers — orbe mémorielle ----
@@ -9901,7 +9918,7 @@
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
                 const inner = document.createElement('div');
-                inner.style.cssText = 'position:absolute;transform:translate(-50%,-84%);width:54px;height:100px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-100%);width:54px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
                 const _oIcon = document.createElement('div');
                 _oIcon.style.cssText = 'flex-shrink:0;filter:drop-shadow(0 0 6px rgba(99,102,241,0.8));';
                 _oIcon.innerHTML = "<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\"><circle cx=\"12\" cy=\"13\" r=\"10\" fill=\"url(#di_o)\"/><ellipse cx=\"12\" cy=\"13\" rx=\"10\" ry=\"10\" stroke=\"rgba(103,232,249,0.6)\" stroke-width=\"1\"/><ellipse cx=\"9\" cy=\"9\" rx=\"3.5\" ry=\"2.5\" fill=\"rgba(255,255,255,0.35)\" transform=\"rotate(-20 9 9)\"/><circle cx=\"15\" cy=\"16\" r=\"1.2\" fill=\"rgba(255,255,255,0.2)\"/><defs><radialGradient id=\"di_o\" cx=\"38%\" cy=\"35%\" r=\"65%\"><stop offset=\"0%\" stop-color=\"#cffafe\"/><stop offset=\"55%\" stop-color=\"#06b6d4\"/><stop offset=\"100%\" stop-color=\"#164e63\"/></radialGradient></defs></svg>";
@@ -9920,7 +9937,7 @@
                     .setLngLat([orb.lng, orb.lat]).addTo(map);
                 orbMarkers.push({ marker, el, orb });
                 const _oDelay = (Math.random() * 2).toFixed(2);
-                inner.style.animation = 'poiFloatMedium 2.8s ease-in-out ' + _oDelay + 's infinite';
+                (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatMedium 2.8s ease-in-out ' + _oDelay + 's infinite';
             });
 
             // ---- Scroll markers ----
@@ -9929,7 +9946,7 @@
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
                 const inner = document.createElement('div');
-                inner.style.cssText = 'position:absolute;transform:translate(-50%,-84%);width:54px;height:100px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-100%);width:54px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
                 const _sIcon = document.createElement('div');
                 _sIcon.style.cssText = 'flex-shrink:0;';
                 _sIcon.innerHTML = "<svg width=\"28\" height=\"30\" viewBox=\"0 0 24 26\" fill=\"none\"><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#di_s)\"/><rect x=\"2\" y=\"3\" width=\"4\" height=\"20\" rx=\"2\" fill=\"#f59e0b\" stroke=\"#92400e\" stroke-width=\"0.8\"/><rect x=\"18\" y=\"3\" width=\"4\" height=\"20\" rx=\"2\" fill=\"#f59e0b\" stroke=\"#92400e\" stroke-width=\"0.8\"/><line x1=\"8\" y1=\"9\" x2=\"16\" y2=\"9\" stroke=\"#92400e\" stroke-width=\"0.9\" opacity=\"0.6\"/><line x1=\"8\" y1=\"13\" x2=\"16\" y2=\"13\" stroke=\"#92400e\" stroke-width=\"0.9\" opacity=\"0.6\"/><line x1=\"8\" y1=\"17\" x2=\"13\" y2=\"17\" stroke=\"#92400e\" stroke-width=\"0.9\" opacity=\"0.6\"/><path d=\"M4,4 L20,4 L18,3 L6,3 Z\" fill=\"rgba(255,255,255,0.3)\"/><defs><linearGradient id=\"di_s\" x1=\"4\" y1=\"4\" x2=\"20\" y2=\"22\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#fef9c3\"/><stop offset=\"100%\" stop-color=\"#d97706\"/></linearGradient></defs></svg>";
@@ -9948,7 +9965,7 @@
                     .setLngLat([scroll.lng, scroll.lat]).addTo(map);
                 scrollMarkers.push({ marker, el, scroll });
                 const _sDelay = (Math.random() * 2).toFixed(2);
-                inner.style.animation = 'poiFloatSmall 3.1s ease-in-out ' + _sDelay + 's infinite';
+                (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatSmall 3.1s ease-in-out ' + _sDelay + 's infinite';
             });
 
             // ---- Loot markers — objet mystère ----
@@ -9957,7 +9974,7 @@
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
                 const inner = document.createElement('div');
-                inner.style.cssText = 'position:absolute;transform:translate(-50%,-84%);width:54px;height:100px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-100%);width:54px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
                 const _lIcon = document.createElement('div');
                 _lIcon.style.cssText = 'flex-shrink:0;';
                 _lIcon.innerHTML = "<svg width=\"30\" height=\"30\" viewBox=\"0 0 26 26\" fill=\"none\"><path d=\"M13,2 L24,8 L24,18 L13,24 L2,18 L2,8 Z\" fill=\"url(#di_l)\"/><path d=\"M13,2 L2,8 L2,18 L13,24 Z\" fill=\"rgba(0,0,0,0.15)\"/><path d=\"M13,2 L24,8 L20,6 L12,2 Z\" fill=\"rgba(255,255,255,0.3)\"/><text x=\"13\" y=\"16\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"900\" fill=\"white\" font-family=\"system-ui\" opacity=\"0.9\">?</text><defs><linearGradient id=\"di_l\" x1=\"2\" y1=\"2\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#fce7f3\"/><stop offset=\"50%\" stop-color=\"#ec4899\"/><stop offset=\"100%\" stop-color=\"#9d174d\"/></linearGradient></defs></svg>";
@@ -9976,7 +9993,7 @@
                     .setLngLat([loot.lng, loot.lat]).addTo(map);
                 lootMarkers.push({ marker, el, loot });
                 const _lDelay = (Math.random() * 2).toFixed(2);
-                inner.style.animation = 'poiFloatMystery 3.5s ease-in-out ' + _lDelay + 's infinite';
+                (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatMystery 3.5s ease-in-out ' + _lDelay + 's infinite';
             });
 
             // Hide all POI icons and labels to keep the map clean
