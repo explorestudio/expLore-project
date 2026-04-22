@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.explorestudio.twa",
+    "sha256_cert_fingerprints": ["F3:DD:ED:73:7C:1B:E9:8E:7E:38:60:F7:D2:84:83:D0:15:95:19:E8:79:76:A2:D6:76:19:B4:00:CB:A6:16:0A"]
+  }
+}]
