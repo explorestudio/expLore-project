@@ -5413,7 +5413,7 @@
         </style>
 </head>
 <body>
-    <div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#ef4444;color:white;text-align:center;font-size:11px;font-weight:700;padding:3px;pointer-events:none;letter-spacing:1px;">VERSION TEST — 23/04 02:30</div>
+    <div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#ef4444;color:white;text-align:center;font-size:11px;font-weight:700;padding:3px;pointer-events:none;letter-spacing:1px;">VERSION TEST — 23/04 13:30</div>
     <div id="mainApp" class="app-container" style="padding-top:18px;">
         <!-- Top HUD overlay (no header bar, overlaid on map) -->
         <div class="map-hud">
@@ -9283,6 +9283,13 @@
             return 'cooldown';
         }
 
+        // ── Sauvegarde automatique à la fermeture / mise en arrière-plan ──
+        window.addEventListener('beforeunload', () => saveProgress());
+        window.addEventListener('pagehide', () => saveProgress());
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') saveProgress();
+        });
+
         function saveProgress() {
             try {
                 localStorage.setItem('lyon_cards_progress', JSON.stringify({
@@ -10247,7 +10254,7 @@
 
         // Décalage caméra vers le nord pour placer le joueur dans le tiers bas de l'écran
         // ~0.0012° ≈ 130m — ajustable selon le pitch
-        const CAM_NORTH_OFFSET = 0.0012;
+        const CAM_NORTH_OFFSET = 0.0008;
 
         let _cameraMoving = false;
         function updatePlayerOnMap() {
@@ -10972,15 +10979,25 @@
         }
 
         function _hideAllNearbyConsoles() {
-            ['nearbyPOI','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyLoot'].forEach(id => {
+            document.body.dataset.screenOpen = '1';
+            ['nearbyPOI','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyLoot','nearbyBazar','nearbyInfo','nearbyPanneau'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
         }
 
+        function _showNearbyConsoles() {
+            document.body.dataset.screenOpen = '0';
+        }
+
+        function _isAnyScreenOpen() {
+            return document.body.dataset.screenOpen === '1';
+        }
+
         function checkNearbyPOI() {
             // Pendant l'onboarding, ne pas écraser la bannière Elara
             if (!_obDone) return;
+            const _screenBlocked = _isAnyScreenOpen();
             // POI — gestion locale + thématique
             currentNearbyPOI = null;
             currentNearbyThematic = null;
@@ -11002,7 +11019,7 @@
                     if (badge) badge.style.display = 'none';
                     const sub = nearbyDiv.querySelector('.nearby-poi-distance');
                     if (sub) sub.textContent = 'À portée de collecte !';
-                    nearbyDiv.classList.remove('hidden');
+                    if (!_screenBlocked) nearbyDiv.classList.remove('hidden');
 
                 } else if (status === 'thematic_available') {
                     currentNearbyThematic = nearbyPoi;
@@ -11016,7 +11033,7 @@
                     if (badge) badge.style.display = 'inline-block';
                     const sub = nearbyDiv.querySelector('.nearby-poi-distance');
                     if (sub) sub.textContent = '✦ Carte thématique disponible';
-                    nearbyDiv.classList.remove('hidden');
+                    if (!_screenBlocked) nearbyDiv.classList.remove('hidden');
 
                 } else {
                     nearbyDiv.classList.add('hidden');
@@ -11032,7 +11049,7 @@
             );
             currentNearbyDust = nearbyDust;
             const nearbyDustDiv = document.getElementById('nearbyDust');
-            if (nearbyDust) nearbyDustDiv.classList.remove('hidden');
+            if (nearbyDust) { if (!_screenBlocked) nearbyDustDiv.classList.remove('hidden'); }
             else nearbyDustDiv.classList.add('hidden');
 
             // Echo
@@ -11045,7 +11062,7 @@
             if (nearbyEcho) {
                 const info = SUPERTYPES[nearbyEcho.supertype];
                 document.getElementById('echoName').textContent = `${info.symbol} Écho ${info.name}`;
-                nearbyEchoDiv.classList.remove('hidden');
+                if (!_screenBlocked) nearbyEchoDiv.classList.remove('hidden');
             } else {
                 nearbyEchoDiv.classList.add('hidden');
             }
@@ -11057,7 +11074,7 @@
             );
             currentNearbyOrb = nearbyOrb;
             const nearbyOrbDiv = document.getElementById('nearbyOrb');
-            if (nearbyOrb) nearbyOrbDiv.classList.remove('hidden');
+            if (nearbyOrb) { if (!_screenBlocked) nearbyOrbDiv.classList.remove('hidden'); }
             else nearbyOrbDiv.classList.add('hidden');
 
             // Scroll
@@ -11069,7 +11086,7 @@
             const nearbyScrollDiv = document.getElementById('nearbyScroll');
             if (nearbyScroll) {
                 document.getElementById('scrollName').textContent = '📜 ' + nearbyScroll.name;
-                nearbyScrollDiv.classList.remove('hidden');
+                if (!_screenBlocked) nearbyScrollDiv.classList.remove('hidden');
             } else {
                 nearbyScrollDiv.classList.add('hidden');
             }
@@ -11081,7 +11098,7 @@
             );
             currentNearbyLoot = nearbyLoot;
             const nearbyLootDiv = document.getElementById('nearbyLoot');
-            if (nearbyLoot) nearbyLootDiv.classList.remove('hidden');
+            if (nearbyLoot) { if (!_screenBlocked) nearbyLootDiv.classList.remove('hidden'); }
             else nearbyLootDiv.classList.add('hidden');
 
             // Panneaux
@@ -11115,7 +11132,7 @@
             const nearbyInfoDiv = document.getElementById('nearbyInfo');
             if (currentNearbyInfo) {
                 document.getElementById('infoPointName').textContent = currentNearbyInfo.title;
-                nearbyInfoDiv.classList.remove('hidden');
+                if (!_screenBlocked) nearbyInfoDiv.classList.remove('hidden');
             } else {
                 nearbyInfoDiv.classList.add('hidden');
             }
@@ -11336,6 +11353,7 @@
         }
 
         function closeLootReveal() {
+            _showNearbyConsoles();
             const overlay = document.getElementById('lootRevealOverlay');
             overlay.style.opacity       = '0';
             overlay.style.pointerEvents = 'none';
@@ -11861,6 +11879,7 @@
         }
 
         function ritualClose() {
+            _showNearbyConsoles();
             const card = _ritualCard;
             _ritualCard = null;
             if (card) setTimeout(() => _obCheckAfterCollect(card), 400);
@@ -12083,6 +12102,7 @@
             _bagRender();
         }
         function closeBagScreen() {
+            _showNearbyConsoles();
             document.getElementById("bagScreen").classList.remove("show");
         }
         function _bagRender() { _bagTabs(); _bagList(); _bagDetail(null); }
@@ -13000,6 +13020,7 @@
         }
 
         function closeCollections() {
+            _showNearbyConsoles();
             document.getElementById('collectionsPanel').classList.remove('show');
             selectedCollectionId = null;
         }
@@ -15096,6 +15117,7 @@
         }
 
         function closeStudioScreen() {
+            _showNearbyConsoles();
             document.getElementById('studioScreen').classList.remove('show');
             closeStudioTooltip();
         }
@@ -16330,6 +16352,7 @@
         }
 
         function closePanneauScreen() {
+            _showNearbyConsoles();
             document.getElementById('panneauScreen').classList.remove('show');
         }
 
@@ -16512,7 +16535,7 @@
                     }
                 });
                 const nearbyDiv = document.getElementById('nearbyBazar');
-                if (nearest && !document.getElementById('bazarScreen').style.transform.includes('translateY(0)')) {
+                if (nearest && !document.getElementById('bazarScreen').style.transform.includes('translateY(0)') && !_isAnyScreenOpen()) {
                     currentNearbyBazar = nearest;
                     document.getElementById('bazarName').textContent = nearest.name;
                     nearbyDiv.classList.remove('hidden');
@@ -16557,6 +16580,7 @@
         }
 
         function closeBazarScreen() {
+            _showNearbyConsoles();
             const el = document.getElementById('bazarScreen');
             el.style.transform    = 'translateY(100%)';
             el.style.pointerEvents = 'none';
@@ -17938,6 +17962,7 @@
         }
 
         function closeMindmap() {
+            _showNearbyConsoles();
             document.getElementById('mindmapScreen').classList.remove('show');
             if (mmAnimId) { cancelAnimationFrame(mmAnimId); mmAnimId = null; }
             closeFragmentPanel();
