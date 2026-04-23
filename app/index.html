@@ -1774,6 +1774,17 @@
             50%     { transform: translateY(-4px); }
         }
         /* Flottaison subtile pour les petits collectables — s'applique à .poi-icon-float */
+        @keyframes poiTapFeedbackAnim {
+            0%   { opacity:0; transform:translateX(-50%) translateY(-8px); }
+            15%  { opacity:1; transform:translateX(-50%) translateY(0); }
+            70%  { opacity:1; transform:translateX(-50%) translateY(0); }
+            100% { opacity:0; transform:translateX(-50%) translateY(-6px); }
+        }
+        @keyframes poiCollect {
+            0%   { transform: translate(-50%,-62%) scale(1);   opacity: 1; }
+            40%  { transform: translate(-50%,-80%) scale(1.3); opacity: 1; }
+            100% { transform: translate(-50%,-95%) scale(0.5); opacity: 0; }
+        }
         @keyframes poiFloatSmall {
             0%,100% { transform: translateY(0); }
             50%     { transform: translateY(-2px); }
@@ -5402,7 +5413,8 @@
         </style>
 </head>
 <body>
-    <div id="mainApp" class="app-container">
+    <div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#ef4444;color:white;text-align:center;font-size:11px;font-weight:700;padding:3px;pointer-events:none;letter-spacing:1px;">VERSION TEST — 23/04 02:30</div>
+    <div id="mainApp" class="app-container" style="padding-top:18px;">
         <!-- Top HUD overlay (no header bar, overlaid on map) -->
         <div class="map-hud">
             <!-- Avatar + Sac (top-left, groupés) -->
@@ -9043,7 +9055,7 @@
             // SVG cylindre
             const svg = document.createElementNS(NS, 'svg');
             svg.setAttribute('viewBox', '0 0 50 46');
-            svg.style.cssText = 'width:50px;height:46px;margin-top:-5px;overflow:visible;animation:poiStemPulse 1.8s ease-in-out infinite;';
+            svg.style.cssText = 'width:50px;height:46px;margin-top:-5px;overflow:visible;';
 
             const defs = document.createElementNS(NS, 'defs');
 
@@ -9064,50 +9076,39 @@
             defs.appendChild(rg);
 
             // Glow filter
-            const filt = document.createElementNS(NS, 'filter');
-            filt.id = 'glow_' + pid;
-            const blur = document.createElementNS(NS, 'feGaussianBlur'); blur.setAttribute('stdDeviation','2'); blur.setAttribute('result','blur');
-            const merge = document.createElementNS(NS, 'feMerge');
-            const mn1 = document.createElementNS(NS,'feMergeNode'); mn1.setAttribute('in','blur');
-            const mn2 = document.createElementNS(NS,'feMergeNode'); mn2.setAttribute('in','SourceGraphic');
-            merge.appendChild(mn1); merge.appendChild(mn2);
-            filt.appendChild(blur); filt.appendChild(merge);
-            defs.appendChild(filt);
+
             svg.appendChild(defs);
 
             // Corps trapèze
             const body = document.createElementNS(NS, 'path');
             body.setAttribute('d', 'M23,2 L27,2 L29,42 L21,42 Z');
             body.setAttribute('fill', 'url(#cyl_' + pid + ')');
-            body.setAttribute('filter', 'url(#glow_' + pid + ')');
             svg.appendChild(body);
 
             // Bords lumineux
             [[23,2,21,42],[27,2,29,42]].forEach(([x1,y1,x2,y2]) => {
                 const l = document.createElementNS(NS,'line');
                 l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
-                l.setAttribute('stroke', colors.glow); l.setAttribute('stroke-width','1.2');
-                l.setAttribute('filter', 'url(#glow_' + pid + ')');
+                l.setAttribute('stroke', colors.stroke); l.setAttribute('stroke-width','0.8');
                 svg.appendChild(l);
             });
 
             // Ellipse haut
             const eTop = document.createElementNS(NS,'ellipse');
             eTop.setAttribute('cx','25'); eTop.setAttribute('cy','2'); eTop.setAttribute('rx','5'); eTop.setAttribute('ry','2');
-            eTop.setAttribute('fill', colors.top); eTop.setAttribute('filter','url(#glow_' + pid + ')');
+            eTop.setAttribute('fill', colors.top);
             svg.appendChild(eTop);
 
             // Ellipse bas remplie
             const eBotF = document.createElementNS(NS,'ellipse');
             eBotF.setAttribute('cx','25'); eBotF.setAttribute('cy','42'); eBotF.setAttribute('rx','12'); eBotF.setAttribute('ry','4.5');
-            eBotF.setAttribute('fill','url(#disk_' + pid + ')'); eBotF.setAttribute('filter','url(#glow_' + pid + ')');
+            eBotF.setAttribute('fill','url(#disk_' + pid + ')');
             svg.appendChild(eBotF);
 
             // Contour ellipse bas
             const eBotS = document.createElementNS(NS,'ellipse');
             eBotS.setAttribute('cx','25'); eBotS.setAttribute('cy','42'); eBotS.setAttribute('rx','12'); eBotS.setAttribute('ry','4.5');
             eBotS.setAttribute('fill','none'); eBotS.setAttribute('stroke', colors.stroke); eBotS.setAttribute('stroke-width','1.5');
-            eBotS.setAttribute('filter','url(#glow_' + pid + ')');
             svg.appendChild(eBotS);
 
             wrap.appendChild(svg);
@@ -9159,7 +9160,7 @@
             // SVG cylindre
             const svg = document.createElementNS(NS, 'svg');
             svg.setAttribute('viewBox', '0 0 50 46');
-            svg.style.cssText = 'width:50px;height:46px;margin-top:-5px;overflow:visible;animation:poiStemPulse 1.8s ease-in-out infinite;';
+            svg.style.cssText = 'width:50px;height:46px;margin-top:-5px;overflow:visible;';
 
             const defs = document.createElementNS(NS, 'defs');
 
@@ -9180,50 +9181,39 @@
             defs.appendChild(rg);
 
             // Glow filter
-            const filt = document.createElementNS(NS, 'filter');
-            filt.id = 'glow_' + pid;
-            const blur = document.createElementNS(NS, 'feGaussianBlur'); blur.setAttribute('stdDeviation','2'); blur.setAttribute('result','blur');
-            const merge = document.createElementNS(NS, 'feMerge');
-            const mn1 = document.createElementNS(NS,'feMergeNode'); mn1.setAttribute('in','blur');
-            const mn2 = document.createElementNS(NS,'feMergeNode'); mn2.setAttribute('in','SourceGraphic');
-            merge.appendChild(mn1); merge.appendChild(mn2);
-            filt.appendChild(blur); filt.appendChild(merge);
-            defs.appendChild(filt);
+
             svg.appendChild(defs);
 
             // Corps trapèze
             const body = document.createElementNS(NS, 'path');
             body.setAttribute('d', 'M23,2 L27,2 L29,42 L21,42 Z');
             body.setAttribute('fill', 'url(#cyl_' + pid + ')');
-            body.setAttribute('filter', 'url(#glow_' + pid + ')');
             svg.appendChild(body);
 
             // Bords lumineux
             [[23,2,21,42],[27,2,29,42]].forEach(([x1,y1,x2,y2]) => {
                 const l = document.createElementNS(NS,'line');
                 l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
-                l.setAttribute('stroke', colors.glow); l.setAttribute('stroke-width','1.2');
-                l.setAttribute('filter', 'url(#glow_' + pid + ')');
+                l.setAttribute('stroke', colors.stroke); l.setAttribute('stroke-width','0.8');
                 svg.appendChild(l);
             });
 
             // Ellipse haut
             const eTop = document.createElementNS(NS,'ellipse');
             eTop.setAttribute('cx','25'); eTop.setAttribute('cy','2'); eTop.setAttribute('rx','5'); eTop.setAttribute('ry','2');
-            eTop.setAttribute('fill', colors.top); eTop.setAttribute('filter','url(#glow_' + pid + ')');
+            eTop.setAttribute('fill', colors.top);
             svg.appendChild(eTop);
 
             // Ellipse bas remplie
             const eBotF = document.createElementNS(NS,'ellipse');
             eBotF.setAttribute('cx','25'); eBotF.setAttribute('cy','42'); eBotF.setAttribute('rx','12'); eBotF.setAttribute('ry','4.5');
-            eBotF.setAttribute('fill','url(#disk_' + pid + ')'); eBotF.setAttribute('filter','url(#glow_' + pid + ')');
+            eBotF.setAttribute('fill','url(#disk_' + pid + ')');
             svg.appendChild(eBotF);
 
             // Contour ellipse bas
             const eBotS = document.createElementNS(NS,'ellipse');
             eBotS.setAttribute('cx','25'); eBotS.setAttribute('cy','42'); eBotS.setAttribute('rx','12'); eBotS.setAttribute('ry','4.5');
             eBotS.setAttribute('fill','none'); eBotS.setAttribute('stroke', colors.stroke); eBotS.setAttribute('stroke-width','1.5');
-            eBotS.setAttribute('filter','url(#glow_' + pid + ')');
             svg.appendChild(eBotS);
 
             wrap.appendChild(svg);
@@ -9599,15 +9589,7 @@
             playerEl.id = 'playerAvatar';
             playerEl.style.cssText = 'width:36px;height:68px;cursor:default;position:relative;z-index:10;';
             playerEl.innerHTML = `
-                <!-- Halo au sol style DQ Walk -->
-                <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:52px;height:18px;pointer-events:none;">
-                    <div style="position:absolute;inset:0;border-radius:50%;
-                        background:radial-gradient(ellipse,rgba(99,102,241,0.55) 0%,rgba(99,102,241,0) 70%);
-                        animation:haloPulse 2s ease-in-out infinite;"></div>
-                    <div style="position:absolute;inset:1px;border-radius:50%;
-                        border:1.5px dashed rgba(129,140,248,0.8);
-                        animation:haloRotate 3s linear infinite;"></div>
-                </div>
+
                 <svg id="avatarSvg" width="36" height="48" viewBox="0 0 36 48"
                     xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible;
                     filter:drop-shadow(0 3px 0 rgba(0,0,0,0.4)) drop-shadow(0 0 6px rgba(255,255,255,0.25));">
@@ -9660,7 +9642,7 @@
                         <ellipse cx="22.5" cy="13" rx="1.8" ry="1.1" fill="#f87171" opacity="0.35"/>
                     </g>
                 </svg>`;
-            playerMarker = new maplibregl.Marker({ element: playerEl, anchor: 'bottom', offset: [0, 0] })
+            playerMarker = new maplibregl.Marker({ element: playerEl, anchor: 'center', offset: [0, 0] })
                 .setLngLat([playerPos.lng, playerPos.lat])
                 .addTo(map);
 
@@ -9960,17 +9942,13 @@
             map.on('zoom', updateAvatarScale);
 
 
-        // ── Helper : construit le visuel cylindre+tige+disque pour un POI collectable ──
-        // colors: { top, mid, bot, glow, disk, stroke }
-        // iconEl: element DOM à placer en haut (img ou div svg existant)
+        // ── Helper : construit le visuel icône simple pour un POI collectable ──
+        // Cylindre/faisceau supprimé — icône centrée directement sur le point géo
         function _buildPoiVisual(pid, colors, iconEl, iconSize, cylHeight) {
             const sz = iconSize || 52;
-            const H  = cylHeight || 46;  // hauteur du cylindre (variable selon rareté)
-            const NS = 'http://www.w3.org/2000/svg';
-            const bot = H - 4;  // position du disque au sol
 
             const wrap = document.createElement('div');
-            wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;position:relative;';
+            wrap.style.cssText = 'display:flex;align-items:center;justify-content:center;position:relative;';
 
             iconEl.style.width  = sz + 'px';
             iconEl.style.height = sz + 'px';
@@ -9979,7 +9957,6 @@
             iconEl.style.display = 'flex';
             iconEl.style.alignItems = 'center';
             iconEl.style.justifyContent = 'center';
-            // Forcer le SVG/img interne à remplir le conteneur pour un centrage propre
             const _child = iconEl.firstElementChild;
             if (_child) {
                 _child.style.width  = '100%';
@@ -9987,77 +9964,12 @@
                 _child.style.display = 'block';
             }
 
-            // L'icône vit dans son propre wrapper animable — cela permet de faire flotter
-            // l'icône sans déplacer le cylindre (qui doit rester fixé au point géographique)
             const iconFloat = document.createElement('div');
             iconFloat.className = 'poi-icon-float';
             iconFloat.style.cssText = 'display:flex;align-items:center;justify-content:center;';
             iconFloat.appendChild(iconEl);
             wrap.appendChild(iconFloat);
 
-            const svg = document.createElementNS(NS, 'svg');
-            svg.setAttribute('viewBox', '0 0 50 ' + H);
-            svg.style.cssText = 'width:50px;height:' + H + 'px;margin-top:-5px;overflow:visible;animation:poiStemPulse 1.8s ease-in-out infinite;';
-
-            const defs = document.createElementNS(NS, 'defs');
-
-            const lg = document.createElementNS(NS, 'linearGradient');
-            lg.id = 'cyl_' + pid; lg.setAttribute('x1','0%'); lg.setAttribute('y1','0%'); lg.setAttribute('x2','0%'); lg.setAttribute('y2','100%');
-            [['0%','rgba(0,0,0,0)'],['20%',colors.top],['65%',colors.mid],['100%',colors.bot]].forEach(([o,c]) => {
-                const s = document.createElementNS(NS,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); lg.appendChild(s);
-            });
-            defs.appendChild(lg);
-
-            const rg = document.createElementNS(NS, 'radialGradient');
-            rg.id = 'disk_' + pid; rg.setAttribute('cx','50%'); rg.setAttribute('cy','50%'); rg.setAttribute('r','50%');
-            [['0%',colors.disk],['55%',colors.mid],['100%','transparent']].forEach(([o,c]) => {
-                const s = document.createElementNS(NS,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); rg.appendChild(s);
-            });
-            defs.appendChild(rg);
-
-            const filt = document.createElementNS(NS, 'filter');
-            filt.id = 'glow_' + pid;
-            const blur = document.createElementNS(NS, 'feGaussianBlur'); blur.setAttribute('stdDeviation','2'); blur.setAttribute('result','blur');
-            const merge = document.createElementNS(NS, 'feMerge');
-            const mn1 = document.createElementNS(NS,'feMergeNode'); mn1.setAttribute('in','blur');
-            const mn2 = document.createElementNS(NS,'feMergeNode'); mn2.setAttribute('in','SourceGraphic');
-            merge.appendChild(mn1); merge.appendChild(mn2);
-            filt.appendChild(blur); filt.appendChild(merge);
-            defs.appendChild(filt);
-            svg.appendChild(defs);
-
-            // Corps trapèze — hauteur variable
-            const body = document.createElementNS(NS, 'path');
-            body.setAttribute('d', 'M23,2 L27,2 L29,' + bot + ' L21,' + bot + ' Z');
-            body.setAttribute('fill', 'url(#cyl_' + pid + ')');
-            body.setAttribute('filter', 'url(#glow_' + pid + ')');
-            svg.appendChild(body);
-
-            [[23,2,21,bot],[27,2,29,bot]].forEach(([x1,y1,x2,y2]) => {
-                const l = document.createElementNS(NS,'line');
-                l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
-                l.setAttribute('stroke', colors.glow); l.setAttribute('stroke-width','1.2');
-                l.setAttribute('filter', 'url(#glow_' + pid + ')');
-                svg.appendChild(l);
-            });
-
-            const eTop = document.createElementNS(NS,'ellipse');
-            eTop.setAttribute('cx','25'); eTop.setAttribute('cy','2'); eTop.setAttribute('rx','5'); eTop.setAttribute('ry','2');
-            eTop.setAttribute('fill', colors.top); eTop.setAttribute('filter','url(#glow_' + pid + ')');
-            svg.appendChild(eTop);
-
-            const eBotF = document.createElementNS(NS,'ellipse');
-            eBotF.setAttribute('cx','25'); eBotF.setAttribute('cy',bot); eBotF.setAttribute('rx','12'); eBotF.setAttribute('ry','4.5');
-            eBotF.setAttribute('fill','url(#disk_' + pid + ')'); eBotF.setAttribute('filter','url(#glow_' + pid + ')');
-            svg.appendChild(eBotF);
-
-            const eBotS = document.createElementNS(NS,'ellipse');
-            eBotS.setAttribute('cx','25'); eBotS.setAttribute('cy',bot); eBotS.setAttribute('rx','12'); eBotS.setAttribute('ry','4.5');
-            eBotS.setAttribute('fill','none'); eBotS.setAttribute('stroke', colors.stroke); eBotS.setAttribute('stroke-width','1.5');
-            eBotS.setAttribute('filter','url(#glow_' + pid + ')');
-            svg.appendChild(eBotS);
-
-            wrap.appendChild(svg);
             return wrap;
         }
 
@@ -10069,10 +9981,10 @@
                 inner.style.cssText = `
                     position: absolute;
                     width: 60px;
-                    transform: translate(-50%, -100%);
+                    transform: translate(-50%, -50%);
                     display: flex; flex-direction: column; align-items: center;
-                    pointer-events: none;
-                    filter: drop-shadow(0 4px 12px rgba(120,40,220,0.6));
+                    pointer-events: all;
+                    cursor: pointer;
                     transition: transform 0.15s;
                 `;
                 const _collected = collectedCards.includes(poi.localCardId);
@@ -10080,7 +9992,7 @@
                 const _img = document.createElement('img');
                 _img.src = './assets/spiral.png?v=2';
                 _img.draggable = false;
-                _img.style.filter = 'drop-shadow(0 2px 14px rgba(140,40,255,0.9))';
+
                 _img.style.opacity = _collected ? '0.5' : '1';
                 _img.style.borderRadius = '50%';
                 const _poiWrap = _buildPoiVisual(_pid2, {
@@ -10093,8 +10005,19 @@
                 }, _img, 54, 75);
                 inner.appendChild(_poiWrap);
                 el.appendChild(inner);
-                el.addEventListener('mouseenter', () => { inner.style.transform = 'translate(-50%,-100%) scale(1.12)'; });
-                el.addEventListener('mouseleave', () => { inner.style.transform = 'translate(-50%,-100%) scale(1)'; });
+                inner.addEventListener('mouseenter', () => { inner.style.transform = 'translate(-50%,-50%) scale(1.12)'; });
+                inner.addEventListener('mouseleave', () => { inner.style.transform = 'translate(-50%,-50%) scale(1)'; });
+                inner.addEventListener('click', () => {
+                    const inRange = getDistance(playerPos.lat, playerPos.lng, poi.lat, poi.lng) <= COLLECTION_RADIUS;
+                    if (inRange) {
+                        // Ouvre la console de collecte
+                        currentNearbyPOI = poi;
+                        checkNearbyPOI();
+                        document.getElementById('nearbyPOI').classList.remove('hidden');
+                    } else {
+                        _showPoiTapFeedback('too_far', false);
+                    }
+                });
 
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([poi.lng, poi.lat])
@@ -10114,11 +10037,11 @@
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
                 const inner = document.createElement('div');
-                inner.style.cssText = 'position:absolute;transform:translate(-50%,-100%);width:54px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-62%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 // Icône cristal SVG
                 const _dustIcon = document.createElement('div');
                 _dustIcon.style.cssText = 'flex-shrink:0;';
-                _dustIcon.innerHTML = '<img src="./assets/Powder.png?v=1" style="width:38px;height:38px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
+                _dustIcon.innerHTML = '<img src="./assets/Powder.png?v=1" style="width:26px;height:26px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
                 const _dPid = 'dust_' + dust.id.replace(/[^a-z0-9]/gi,'');
                 const _dustWrap = _buildPoiVisual(_dPid, {
                     top:    'rgba(192,132,252,0.9)',
@@ -10127,11 +10050,21 @@
                     glow:   'rgba(192,132,252,0.8)',
                     disk:   'rgba(216,180,254,0.7)',
                     stroke: 'rgba(233,213,255,0.9)'
-                }, _dustIcon, 30, 30);
+                }, _dustIcon, 22, 30);
                 inner.appendChild(_dustWrap);
                 el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([dust.lng, dust.lat]).addTo(map);
+                inner.addEventListener('click', () => {
+                    const inRange = getDistance(playerPos.lat, playerPos.lng, dust.lat, dust.lng) <= DUST_RADIUS;
+                    if (inRange) {
+                        currentNearbyDust = dust;
+                        document.getElementById('nearbyDust').classList.add('hidden');
+                        _animateCollect(inner, () => collectDust());
+                    } else {
+                        _showPoiTapFeedback('too_far', false);
+                    }
+                });
                 dustMarkers.push({ marker, el, dust });
                 const _dDelay = (Math.random() * 2).toFixed(2);
                 (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatSmall 3s ease-in-out ' + _dDelay + 's infinite';
@@ -10145,7 +10078,7 @@
                 if (!_obDone) el.style.display = 'none';
                 el.title = 'Écho ' + info.name;
                 const inner = document.createElement('div');
-                inner.style.cssText = 'position:absolute;transform:translate(-50%,-100%);width:54px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _echoIcon = document.createElement('div');
                 _echoIcon.style.cssText = 'flex-shrink:0;';
                 const _echoImgMap = {
@@ -10174,6 +10107,16 @@
                 el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([echo.lng, echo.lat]).addTo(map);
+                inner.addEventListener('click', () => {
+                    const inRange = getDistance(playerPos.lat, playerPos.lng, echo.lat, echo.lng) <= ECHO_RADIUS;
+                    if (inRange) {
+                        currentNearbyEcho = echo;
+                        document.getElementById('nearbyEcho').classList.add('hidden');
+                        _animateCollect(inner, () => collectEcho());
+                    } else {
+                        _showPoiTapFeedback('too_far', false);
+                    }
+                });
                 echoMarkers.push({ marker, el, echo });
                 const _eDelay = (Math.random() * 2).toFixed(2);
                 (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatSmall 3.2s ease-in-out ' + _eDelay + 's infinite';
@@ -10185,10 +10128,10 @@
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
                 const inner = document.createElement('div');
-                inner.style.cssText = 'position:absolute;transform:translate(-50%,-100%);width:54px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-62%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _oIcon = document.createElement('div');
                 _oIcon.style.cssText = 'flex-shrink:0;filter:drop-shadow(0 0 6px rgba(99,102,241,0.8));';
-                _oIcon.innerHTML = "<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\"><circle cx=\"12\" cy=\"13\" r=\"10\" fill=\"url(#di_o)\"/><ellipse cx=\"12\" cy=\"13\" rx=\"10\" ry=\"10\" stroke=\"rgba(103,232,249,0.6)\" stroke-width=\"1\"/><ellipse cx=\"9\" cy=\"9\" rx=\"3.5\" ry=\"2.5\" fill=\"rgba(255,255,255,0.35)\" transform=\"rotate(-20 9 9)\"/><circle cx=\"15\" cy=\"16\" r=\"1.2\" fill=\"rgba(255,255,255,0.2)\"/><defs><radialGradient id=\"di_o\" cx=\"38%\" cy=\"35%\" r=\"65%\"><stop offset=\"0%\" stop-color=\"#cffafe\"/><stop offset=\"55%\" stop-color=\"#06b6d4\"/><stop offset=\"100%\" stop-color=\"#164e63\"/></radialGradient></defs></svg>";
+                _oIcon.innerHTML = "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\"><circle cx=\"12\" cy=\"13\" r=\"10\" fill=\"url(#di_o)\"/><ellipse cx=\"12\" cy=\"13\" rx=\"10\" ry=\"10\" stroke=\"rgba(103,232,249,0.6)\" stroke-width=\"1\"/><ellipse cx=\"9\" cy=\"9\" rx=\"3.5\" ry=\"2.5\" fill=\"rgba(255,255,255,0.35)\" transform=\"rotate(-20 9 9)\"/><circle cx=\"15\" cy=\"16\" r=\"1.2\" fill=\"rgba(255,255,255,0.2)\"/><defs><radialGradient id=\"di_o\" cx=\"38%\" cy=\"35%\" r=\"65%\"><stop offset=\"0%\" stop-color=\"#cffafe\"/><stop offset=\"55%\" stop-color=\"#06b6d4\"/><stop offset=\"100%\" stop-color=\"#164e63\"/></radialGradient></defs></svg>";
                 const _oPid = 'orb_' + orb.id.replace(/[^a-z0-9]/gi,'');
                 const _oWrap = _buildPoiVisual(_oPid, {
                     top:    'rgba(103,232,249,0.9)',
@@ -10197,11 +10140,21 @@
                     glow:   'rgba(34,211,238,0.85)',
                     disk:   'rgba(103,232,249,0.7)',
                     stroke: 'rgba(164,244,250,0.9)'
-                }, _oIcon, 42, 55);
+                }, _oIcon, 28, 55);
                 inner.appendChild(_oWrap);
                 el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([orb.lng, orb.lat]).addTo(map);
+                inner.addEventListener('click', () => {
+                    const inRange = getDistance(playerPos.lat, playerPos.lng, orb.lat, orb.lng) <= ORB_RADIUS;
+                    if (inRange) {
+                        currentNearbyOrb = orb;
+                        document.getElementById('nearbyOrb').classList.add('hidden');
+                        _animateCollect(inner, () => collectOrb());
+                    } else {
+                        _showPoiTapFeedback('too_far', false);
+                    }
+                });
                 orbMarkers.push({ marker, el, orb });
                 const _oDelay = (Math.random() * 2).toFixed(2);
                 (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatMedium 2.8s ease-in-out ' + _oDelay + 's infinite';
@@ -10213,10 +10166,10 @@
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
                 const inner = document.createElement('div');
-                inner.style.cssText = 'position:absolute;transform:translate(-50%,-100%);width:54px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _sIcon = document.createElement('div');
                 _sIcon.style.cssText = 'flex-shrink:0;';
-                _sIcon.innerHTML = "<svg width=\"28\" height=\"30\" viewBox=\"0 0 24 26\" fill=\"none\"><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#di_s)\"/><rect x=\"2\" y=\"3\" width=\"4\" height=\"20\" rx=\"2\" fill=\"#f59e0b\" stroke=\"#92400e\" stroke-width=\"0.8\"/><rect x=\"18\" y=\"3\" width=\"4\" height=\"20\" rx=\"2\" fill=\"#f59e0b\" stroke=\"#92400e\" stroke-width=\"0.8\"/><line x1=\"8\" y1=\"9\" x2=\"16\" y2=\"9\" stroke=\"#92400e\" stroke-width=\"0.9\" opacity=\"0.6\"/><line x1=\"8\" y1=\"13\" x2=\"16\" y2=\"13\" stroke=\"#92400e\" stroke-width=\"0.9\" opacity=\"0.6\"/><line x1=\"8\" y1=\"17\" x2=\"13\" y2=\"17\" stroke=\"#92400e\" stroke-width=\"0.9\" opacity=\"0.6\"/><path d=\"M4,4 L20,4 L18,3 L6,3 Z\" fill=\"rgba(255,255,255,0.3)\"/><defs><linearGradient id=\"di_s\" x1=\"4\" y1=\"4\" x2=\"20\" y2=\"22\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#fef9c3\"/><stop offset=\"100%\" stop-color=\"#d97706\"/></linearGradient></defs></svg>";
+                _sIcon.innerHTML = '<img src="./assets/ScrollIcon.png" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 5px rgba(180,83,9,0.5));" draggable="false"/>';
                 const _sPid = 'scroll_' + scroll.id.replace(/[^a-z0-9]/gi,'');
                 const _sWrap = _buildPoiVisual(_sPid, {
                     top:    'rgba(251,191,36,0.9)',
@@ -10225,11 +10178,21 @@
                     glow:   'rgba(251,191,36,0.8)',
                     disk:   'rgba(253,230,138,0.7)',
                     stroke: 'rgba(255,245,180,0.9)'
-                }, _sIcon, 34, 40);
+                }, _sIcon, 48, 40);
                 inner.appendChild(_sWrap);
                 el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([scroll.lng, scroll.lat]).addTo(map);
+                inner.addEventListener('click', () => {
+                    const inRange = getDistance(playerPos.lat, playerPos.lng, scroll.lat, scroll.lng) <= SCROLL_RADIUS;
+                    if (inRange) {
+                        currentNearbyScroll = scroll;
+                        document.getElementById('nearbyScroll').classList.add('hidden');
+                        _animateCollect(inner, () => collectScroll());
+                    } else {
+                        _showPoiTapFeedback('too_far', false);
+                    }
+                });
                 scrollMarkers.push({ marker, el, scroll });
                 const _sDelay = (Math.random() * 2).toFixed(2);
                 (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatSmall 3.1s ease-in-out ' + _sDelay + 's infinite';
@@ -10241,10 +10204,10 @@
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
                 const inner = document.createElement('div');
-                inner.style.cssText = 'position:absolute;transform:translate(-50%,-100%);width:54px;pointer-events:none;display:flex;flex-direction:column;align-items:center;';
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _lIcon = document.createElement('div');
                 _lIcon.style.cssText = 'flex-shrink:0;';
-                _lIcon.innerHTML = "<svg width=\"30\" height=\"30\" viewBox=\"0 0 26 26\" fill=\"none\"><path d=\"M13,2 L24,8 L24,18 L13,24 L2,18 L2,8 Z\" fill=\"url(#di_l)\"/><path d=\"M13,2 L2,8 L2,18 L13,24 Z\" fill=\"rgba(0,0,0,0.15)\"/><path d=\"M13,2 L24,8 L20,6 L12,2 Z\" fill=\"rgba(255,255,255,0.3)\"/><text x=\"13\" y=\"16\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"900\" fill=\"white\" font-family=\"system-ui\" opacity=\"0.9\">?</text><defs><linearGradient id=\"di_l\" x1=\"2\" y1=\"2\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#fce7f3\"/><stop offset=\"50%\" stop-color=\"#ec4899\"/><stop offset=\"100%\" stop-color=\"#9d174d\"/></linearGradient></defs></svg>";
+                _lIcon.innerHTML = '<img src="./assets/LootIcon.png" style="width:40px;height:40px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 6px rgba(180,60,0,0.6));" draggable="false"/>';
                 const _lPid = 'loot_' + loot.id.replace(/[^a-z0-9]/gi,'');
                 const _lWrap = _buildPoiVisual(_lPid, {
                     top:    'rgba(249,168,212,0.9)',
@@ -10258,6 +10221,16 @@
                 el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([loot.lng, loot.lat]).addTo(map);
+                inner.addEventListener('click', () => {
+                    const inRange = getDistance(playerPos.lat, playerPos.lng, loot.lat, loot.lng) <= SCROLL_RADIUS;
+                    if (inRange) {
+                        currentNearbyLoot = loot;
+                        document.getElementById('nearbyLoot').classList.add('hidden');
+                        _animateCollect(inner, () => collectLoot());
+                    } else {
+                        _showPoiTapFeedback('too_far', false);
+                    }
+                });
                 lootMarkers.push({ marker, el, loot });
                 const _lDelay = (Math.random() * 2).toFixed(2);
                 (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatMystery 3.5s ease-in-out ' + _lDelay + 's infinite';
@@ -10735,43 +10708,54 @@
         function _capUpdate() {
             if (!_obDone) { _capZones = []; return; }
             _capZones = [];
-            const add = (lng, lat, r, type) => _capZones.push({ lng, lat, r, color: _CAP_COLORS[type] || '#ffffff' });
+            const add = (lng, lat, r, type) => _capZones.push({ lng, lat, r, type, color: _CAP_COLORS[type] || '#ffffff' });
             POIS.forEach(poi => {
                 const st = getPoiThematicStatus(poi);
                 if (st === 'local' && !collectedCards.includes(poi.localCardId)) add(poi.lng, poi.lat, 50, 'poi_local');
                 else if (st === 'thematic_available') add(poi.lng, poi.lat, 50, 'poi_thematic');
                 else if (st === 'cooldown') add(poi.lng, poi.lat, 50, 'poi_cooldown');
             });
-            DUST_POINTS.forEach(d => { if (!collectedDustPoints.includes(d.id)) add(d.lng, d.lat, 30, 'dust'); });
+            DUST_POINTS.forEach(d => { if (!collectedDustPoints.includes(d.id)) add(d.lng, d.lat, 50, 'dust'); });
             ECHO_POINTS.forEach(e => { if (!collectedEchoes.includes(e.id)) add(e.lng, e.lat, 30, 'echo'); });
-            ORB_POINTS.forEach(o => { if (!collectedOrbs.includes(o.id)) add(o.lng, o.lat, 30, 'orb'); });
-            SCROLL_POINTS.forEach(s => { if (!collectedScrolls.includes(s.id)) add(s.lng, s.lat, 20, 'scroll'); });
-            LOOT_POINTS.forEach(l => { if (!collectedLoots.includes(l.id)) add(l.lng, l.lat, 20, 'loot'); });
+            ORB_POINTS.forEach(o => { if (!collectedOrbs.includes(o.id)) add(o.lng, o.lat, 50, 'orb'); });
+            SCROLL_POINTS.forEach(s => { if (!collectedScrolls.includes(s.id)) add(s.lng, s.lat, 50, 'scroll'); });
+            LOOT_POINTS.forEach(l => { if (!collectedLoots.includes(l.id)) add(l.lng, l.lat, 50, 'loot'); });
         }
 
         function _capDraw() {
             const cv = document.getElementById('captureCanvas');
             if (!cv || !_capCtx || !map) { _capAnim = requestAnimationFrame(_capDraw); return; }
             _capCtx.clearRect(0, 0, cv.width, cv.height);
-            const pitch  = (map.getPitch() || 0) * Math.PI / 180;
-            const scaleY = Math.cos(pitch) * 0.75;
+            // Masquer les zones au zoom large pour eviter les overlaps visuels
+            const currentZoom = map.getZoom();
+            const zoneOpacity = Math.max(0, Math.min(1, (currentZoom - 15.5) / 0.8));
+            if (zoneOpacity <= 0) { _capAnim = requestAnimationFrame(_capDraw); return; }
+            // Isometrie coherente : ratio fixe pour vue top-down legerement inclinee
+            const RATIO_Y = 0.38;
+            // Seuils min par type : evite que la zone depasse l icone au zoom large
+            const MIN_RX = { poi_local:32, poi_thematic:32, poi_cooldown:32, dust:20, orb:20, echo:28, scroll:18, loot:18 };
+            // Opacite remplissage par type
+            const FILL_ALPHA = { poi_local:0.10, poi_thematic:0.10, poi_cooldown:0.08, dust:0.13, orb:0.13, echo:0.10, scroll:0.10, loot:0.10 };
             _capZones.forEach(z => {
                 const c = map.project([z.lng, z.lat]);
                 const e = map.project([z.lng + z.r / (111320 * Math.cos(z.lat * Math.PI / 180)), z.lat]);
                 const rx = Math.abs(e.x - c.x);
-                if (rx < 1) return;
-                const ry = rx * scaleY;
+                const minRx = MIN_RX[z.type] || 24;
+                if (rx < minRx) return;
+                const ry = rx * RATIO_Y;
+                const fillAlpha = FILL_ALPHA[z.type] || 0.10;
                 _capCtx.save();
                 _capCtx.translate(c.x, c.y);
-                // Remplissage
+                // Ombre au sol sous l icone (petit disque aplati centre)
+                const sr = Math.min(rx * 0.22, 14);
+                _capCtx.beginPath(); _capCtx.ellipse(0, 0, sr, sr * RATIO_Y, 0, 0, Math.PI * 2);
+                _capCtx.fillStyle = 'rgba(0,0,0,0.18)'; _capCtx.globalAlpha = zoneOpacity; _capCtx.fill();
+                // Remplissage zone
                 _capCtx.beginPath(); _capCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-                _capCtx.fillStyle = z.color; _capCtx.globalAlpha = 0.12; _capCtx.fill();
+                _capCtx.fillStyle = z.color; _capCtx.globalAlpha = fillAlpha * zoneOpacity; _capCtx.fill();
                 // Contour fin
                 _capCtx.beginPath(); _capCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-                _capCtx.strokeStyle = z.color; _capCtx.lineWidth = 1.2; _capCtx.globalAlpha = 0.85; _capCtx.stroke();
-                // Disque central
-                _capCtx.beginPath(); _capCtx.ellipse(0, 0, rx * 0.15, ry * 0.15, 0, 0, Math.PI * 2);
-                _capCtx.fillStyle = z.color; _capCtx.globalAlpha = 0.75; _capCtx.fill();
+                _capCtx.strokeStyle = z.color; _capCtx.lineWidth = 1.2; _capCtx.globalAlpha = 0.80 * zoneOpacity; _capCtx.stroke();
                 _capCtx.restore();
             });
             _capAnim = requestAnimationFrame(_capDraw);
@@ -10949,6 +10933,51 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
 
+        // ── Animation collecte sur icône ──
+        function _animateCollect(inner, onDone) {
+            if (!inner) { if (onDone) onDone(); return; }
+            inner.style.transition = 'none';
+            inner.style.animation = 'poiCollect 0.45s ease forwards';
+            setTimeout(() => { if (onDone) onDone(); }, 450);
+        }
+
+        // ── Feedback tap sur icône POI (style Pokémon GO) ──
+        function _showPoiTapFeedback(type, inRange) {
+            const existing = document.getElementById('poiTapFeedback');
+            if (existing) existing.remove();
+            const el = document.createElement('div');
+            el.id = 'poiTapFeedback';
+            const msgs = {
+                too_far:  { text: 'Rapproche-toi !', icon: '📍', color: 'rgba(239,68,68,0.95)' },
+                poi:      { text: 'Carte à portée !', icon: '✦', color: 'rgba(249,115,22,0.95)' },
+                dust:     { text: 'Poudre à portée !', icon: '✦', color: 'rgba(168,85,247,0.95)' },
+                orb:      { text: 'Orbe à portée !', icon: '✦', color: 'rgba(6,182,212,0.95)' },
+                scroll:   { text: 'Parchemin à portée !', icon: '✦', color: 'rgba(245,158,11,0.95)' },
+                loot:     { text: 'Mystère à portée !', icon: '✦', color: 'rgba(234,88,12,0.95)' },
+            };
+            const m = inRange ? (msgs[type] || msgs.too_far) : msgs.too_far;
+            el.style.cssText = `
+                position:fixed;top:80px;left:50%;transform:translateX(-50%);
+                background:${m.color};color:white;
+                padding:8px 18px;border-radius:20px;
+                font-size:13px;font-weight:700;letter-spacing:0.5px;
+                pointer-events:none;z-index:9999;
+                animation:poiTapFeedbackAnim 1.6s ease forwards;
+                white-space:nowrap;
+                box-shadow:0 4px 12px rgba(0,0,0,0.3);
+            `;
+            el.textContent = m.icon + ' ' + m.text;
+            document.body.appendChild(el);
+            setTimeout(() => { if (el.parentNode) el.remove(); }, 1600);
+        }
+
+        function _hideAllNearbyConsoles() {
+            ['nearbyPOI','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyLoot'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+        }
+
         function checkNearbyPOI() {
             // Pendant l'onboarding, ne pas écraser la bannière Elara
             if (!_obDone) return;
@@ -10965,14 +10994,10 @@
                 const status = getPoiThematicStatus(nearbyPoi);
 
                 if (status === 'local') {
-                    // Carte locale disponible
                     currentNearbyPOI = nearbyPoi;
                     document.getElementById('poiName').textContent = nearbyPoi.name;
                     const btn = nearbyDiv.querySelector('.collect-btn');
-                    if (btn) {
-                        btn.textContent = 'Collecter la carte';
-                        btn.onclick = collectCard;
-                    }
+                    if (btn) { btn.textContent = 'Collecter la carte'; btn.onclick = collectCard; }
                     const badge = document.getElementById('poiThematicBadge');
                     if (badge) badge.style.display = 'none';
                     const sub = nearbyDiv.querySelector('.nearby-poi-distance');
@@ -10980,30 +11005,18 @@
                     nearbyDiv.classList.remove('hidden');
 
                 } else if (status === 'thematic_available') {
-                    // Carte thématique disponible
                     currentNearbyThematic = nearbyPoi;
                     const state = thematicState[nearbyPoi.id];
                     const allCards = Object.values(COLLECTIONS).flatMap(c => c.cards);
                     const card = allCards.find(c => c.id === state.drawnCardId);
                     document.getElementById('poiName').textContent = nearbyPoi.name;
                     const btn = nearbyDiv.querySelector('.collect-btn');
-                    if (btn) {
-                        btn.textContent = card ? `Collecter "${card.name}"` : 'Collecter la carte';
-                        btn.onclick = collectThematicCard;
-                    }
+                    if (btn) { btn.textContent = card ? `Collecter "${card.name}"` : 'Collecter la carte'; btn.onclick = collectThematicCard; }
                     const badge = document.getElementById('poiThematicBadge');
                     if (badge) badge.style.display = 'inline-block';
                     const sub = nearbyDiv.querySelector('.nearby-poi-distance');
                     if (sub) sub.textContent = '✦ Carte thématique disponible';
                     nearbyDiv.classList.remove('hidden');
-
-                } else if (status === 'cooldown') {
-                    // Cooldown actif — silencieux, rien n'est affiché
-                    nearbyDiv.classList.add('hidden');
-
-                } else if (status === 'exhausted') {
-                    // Pool épuisé — silencieux aussi
-                    nearbyDiv.classList.add('hidden');
 
                 } else {
                     nearbyDiv.classList.add('hidden');
@@ -11196,6 +11209,7 @@
                     }))
                 });
             }
+            _capUpdate();
         }
 
         function updateEchoVisibility() {
@@ -11230,6 +11244,7 @@
                     features: visible.map(o => ({ type: 'Feature', properties: { id: o.id, lng: o.lng, lat: o.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(o.lng, o.lat, 30, ISOMETRIC_TILT)] } }))
                 });
             }
+            _capUpdate();
         }
 
         function updateScrollVisibility() {
@@ -11247,6 +11262,7 @@
                 });
                 // scroll zones gérées par captureCanvas
             }
+            _capUpdate();
         }
 
         function updateLootVisibility() {
@@ -11264,6 +11280,7 @@
                 });
                 // loot zones gérées par captureCanvas
             }
+            _capUpdate();
         }
 
         // SVG poudre mémorielle — même icône que sur la carte
@@ -11461,6 +11478,7 @@
         const RITUAL_HOLD_DURATION = 2800;
 
         function openCollectRitual(card) {
+            _hideAllNearbyConsoles();
             _ritualCard = card;
             _ritualHoldProgress = 0;
             _ritualHoldActive = false;
@@ -12058,6 +12076,7 @@
         }
 
         function openBagScreen() {
+            _hideAllNearbyConsoles();
             _obOnOpenBag();
             _bagCat = 0; _bagSel = null;
             document.getElementById("bagScreen").classList.add("show");
@@ -12974,6 +12993,7 @@
         let _seenCardIds = new Set();
 
         function openCollections() {
+            _hideAllNearbyConsoles();
             _obOnOpenCollections();
             document.getElementById('collectionsPanel').classList.add('show');
             albSwitchTab(_albCurrentTab || 'cards');
@@ -15045,6 +15065,7 @@
         }
 
         function openStudioScreen() {
+            _hideAllNearbyConsoles();
             document.getElementById('studioCardName').textContent = selectedCard ? selectedCard.name : '';
             document.getElementById('studioDustCounter').textContent = memorialDust;
             ['mirror','harp','cauldron'].forEach(id => {
@@ -16152,13 +16173,14 @@
                 const halo = document.createElement('div');
                 halo.className = 'interact-halo';
                 halo.style.cssText = `
-                    position:absolute;bottom:-8px;left:50%;
-                    width:80px;height:20px;
+                    position:absolute;bottom:-6px;left:50%;
+                    width:80px;height:80px;
                     background:radial-gradient(ellipse, rgba(165,180,252,0.95) 0%, rgba(99,102,241,0.6) 35%, rgba(67,56,202,0.25) 65%, transparent 85%);
                     border-radius:50%;
+                    transform:translateX(-50%) scaleY(0.38);
                     animation:interactHaloIdle 2.5s ease-in-out infinite;
                     pointer-events:none;
-                    box-shadow:0 0 12px 3px rgba(165,180,252,0.4);
+                    box-shadow:0 0 8px 2px rgba(165,180,252,0.3);
                 `;
                 inner.appendChild(halo);
 
@@ -16246,6 +16268,7 @@
         }
 
         function openPanneauScreen() {
+            _hideAllNearbyConsoles();
             if (!currentNearbyPanneau) return;
             const pan   = currentNearbyPanneau;
             const state = getPanneauState(pan.id);
@@ -16430,14 +16453,14 @@
                     </div>
                     <!-- Halo au sol pulsant (ambre pour bazar) -->
                     <div class="interact-halo" style="
-                        position:absolute;bottom:-4px;left:50%;
-                        width:80px;height:20px;
+                        position:absolute;bottom:-6px;left:50%;
+                        width:80px;height:80px;
                         background:radial-gradient(ellipse, rgba(251,191,36,0.95) 0%, rgba(217,119,6,0.6) 35%, rgba(180,83,9,0.25) 65%, transparent 85%);
                         border-radius:50%;
+                        transform:translateX(-50%) scaleY(0.38);
                         animation:interactHaloIdle 2.5s ease-in-out infinite;
                         pointer-events:none;
-                        transform-origin:center center;
-                        box-shadow:0 0 12px 3px rgba(251,191,36,0.4);
+                        box-shadow:0 0 8px 2px rgba(251,191,36,0.3);
                     "></div>
                 `;
                 el.appendChild(inner);
@@ -16503,6 +16526,7 @@
         }
 
         function openBazarScreen(bazar) {
+            _hideAllNearbyConsoles();
             currentNearbyBazar = bazar || currentNearbyBazar;
             if (!currentNearbyBazar) return;
             if (!currentNearbyBazar.stock) currentNearbyBazar.stock = { pellicules: 3, encre: 3, cassettes: 3 };
@@ -16573,13 +16597,14 @@
                     </div>
                     <!-- Halo au sol pulsant (ivoire pour panorama) -->
                     <div class="interact-halo" style="
-                        position:absolute;bottom:-4px;left:50%;
-                        width:80px;height:20px;
+                        position:absolute;bottom:-6px;left:50%;
+                        width:80px;height:80px;
                         background:radial-gradient(ellipse, rgba(253,224,71,0.95) 0%, rgba(245,158,11,0.55) 35%, rgba(180,120,20,0.25) 65%, transparent 85%);
                         border-radius:50%;
+                        transform:translateX(-50%) scaleY(0.38);
                         animation:interactHaloIdle 2.5s ease-in-out infinite;
                         pointer-events:none;
-                        box-shadow:0 0 12px 3px rgba(253,224,71,0.4);
+                        box-shadow:0 0 8px 2px rgba(253,224,71,0.3);
                     "></div>
                 `;
                 el.appendChild(inner);
@@ -17893,6 +17918,7 @@
 
 
         function openMindmap() {
+            _hideAllNearbyConsoles();
             _obOnOpenMindmap();
             mmScale = 1.0;
             refreshMindmapState();
