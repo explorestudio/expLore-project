@@ -1,22 +1,17 @@
 /* ─────────────────────────────────────────────────────────────
    expLore — Service Worker
-   Stratégie : stale-while-revalidate
-   - Ouverture instantanée depuis le cache (même hors-ligne)
-   - En arrière-plan, vérification/récupération des MAJ
-   - Applique la nouvelle version au prochain lancement
+   Stratégie : network-first
+   - Toujours chercher la version la plus récente sur le réseau
+   - Cache utilisé uniquement si hors-ligne
    ───────────────────────────────────────────────────────────── */
 
-// ⚠️ Incrémenter le numéro à CHAQUE déploiement majeur pour forcer
-// la mise à jour du cache chez les testeurs. Ex: 'v1', 'v2', 'v3'...
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `explore-${CACHE_VERSION}`;
 
-// Ressources indispensables au démarrage
 const PRECACHE_URLS = [
   './',
   './index.html',
   './manifest.json',
-  // Icônes POI
   './assets/spiral.png',
   './assets/BazarIcon.png',
   './assets/PanoramaIcon.png',
@@ -26,10 +21,12 @@ const PRECACHE_URLS = [
   './assets/EchoNatureIcon.png',
   './assets/EchoScienceIcon.png',
   './assets/EchoArtIcon.png',
-  './assets/EchoSocieteIcon.png'
+  './assets/EchoSocieteIcon.png',
+  './assets/ScrollIcon.png',
+  './assets/LootIcon.png'
 ];
 
-// ── Installation : précacher les ressources clés ─────────────
+// ── Installation ─────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -59,7 +56,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// ── Fetch : stale-while-revalidate ───────────────────────────
+// ── Fetch : network-first ────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
@@ -67,7 +64,6 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (!url.protocol.startsWith('http')) return;
 
-  // Ne pas intercepter les tuiles MapLibre/OSM et les APIs externes
   const EXTERNAL_HOSTS = [
     'tile.openstreetmap',
     'api.maptiler',
@@ -81,22 +77,22 @@ self.addEventListener('fetch', (event) => {
   if (EXTERNAL_HOSTS.some((h) => url.host.includes(h))) return;
 
   event.respondWith(
-    caches.match(req).then((cached) => {
-      const fetchPromise = fetch(req)
-        .then((networkResponse) => {
-          if (
-            networkResponse &&
-            networkResponse.status === 200 &&
-            networkResponse.type === 'basic'
-          ) {
-            const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-          }
-          return networkResponse;
-        })
-        .catch(() => cached);
-
-      return cached || fetchPromise;
-    })
+    fetch(req)
+      .then((networkResponse) => {
+        // Mettre en cache la réponse fraîche
+        if (
+          networkResponse &&
+          networkResponse.status === 200 &&
+          networkResponse.type === 'basic'
+        ) {
+          const copy = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        // Hors-ligne : fallback sur le cache
+        return caches.match(req);
+      })
   );
 });
