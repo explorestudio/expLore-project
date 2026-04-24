@@ -5413,7 +5413,7 @@
         </style>
 </head>
 <body>
-    <div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#ef4444;color:white;text-align:center;font-size:11px;font-weight:700;padding:3px;pointer-events:none;letter-spacing:1px;">VERSION TEST — 23/04 22:00</div>
+    <div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#ef4444;color:white;text-align:center;font-size:11px;font-weight:700;padding:3px;pointer-events:none;letter-spacing:1px;">VERSION TEST — 24/04 09:30</div>
     <div id="mainApp" class="app-container" style="padding-top:18px;">
         <!-- Top HUD overlay (no header bar, overlaid on map) -->
         <div class="map-hud">
@@ -9247,6 +9247,7 @@
         // Collecte la carte thématique active du POI courant
         function collectThematicCard() {
             if (!currentNearbyThematic) return;
+            saveProgress();
             const poi = currentNearbyThematic;
             const state = thematicState[poi.id];
             if (!state || !state.drawnCardId || state.collected) return;
@@ -9306,6 +9307,13 @@
                             console.log('[expLore] saveProgress: memorialDust protégé', _existing.memorialDust, '→', memorialDust, 'bloqué');
                             return;
                         }
+                        // Ne jamais rétrograder les collections (cartes, poudre, orbes, etc)
+                        const _existingCards = (_existing.collectedCards || []).length;
+                        const _currentCards  = (collectedCards || []).length;
+                        if (_existingCards > _currentCards && _existing._obDone) {
+                            console.log('[expLore] saveProgress: collections protégées');
+                            return;
+                        }
                     } catch(e) {}
                 }
                 const _saveData = {
@@ -9345,6 +9353,8 @@
                     _obDone,
                     _obAct2Done,
                     _obAct3Done,
+                    seenCardIds: [..._seenCardIds],
+                    cardJournals,
                 };
                 localStorage.setItem('lyon_cards_progress', JSON.stringify(_saveData));
                 console.log('[expLore] Sauvegarde écrite — poudre:', _saveData.memorialDust, 'cartes:', (_saveData.collectedCards||[]).length, '_obDone:', _saveData._obDone);
@@ -9406,6 +9416,8 @@
                 if (d._obDone)    _obDone    = d._obDone;
                 if (d._obAct2Done) _obAct2Done = d._obAct2Done;
                 if (d._obAct3Done) _obAct3Done = d._obAct3Done;
+                if (d.seenCardIds)  _seenCardIds = new Set(d.seenCardIds);
+                if (d.cardJournals) cardJournals = d.cardJournals;
                 console.log('[expLore] loadProgress _obDone après:', _obDone);
             } catch(e) {}
         }
@@ -9542,7 +9554,7 @@
             _appReady = true;
             console.log('[expLore] App prête — _obDone:', _obDone, 'poudre:', memorialDust);
             // Sauvegarde automatique toutes les 10 secondes
-            setInterval(() => { if (_appReady) saveProgress(); }, 10000);
+            setInterval(() => { if (_appReady) saveProgress(); }, 3000);
         }
 
         function initMap() {
@@ -11351,6 +11363,7 @@
 
         function collectLoot() {
             if (!currentNearbyLoot) return;
+            saveProgress();
             const loot = currentNearbyLoot;
             collectedLoots.push(loot.id);
             currentNearbyLoot = null;
@@ -12817,6 +12830,7 @@
 
         function collectCard() {
             if (!currentNearbyPOI) return;
+            saveProgress();
             const poi = currentNearbyPOI;
             const seen = new Set();
             const allCards = Object.values(COLLECTIONS).flatMap(c => c.cards).filter(c => seen.has(c.id) ? false : seen.add(c.id));
@@ -15305,6 +15319,7 @@
             document.getElementById('tooltipName').textContent = `${item.name} ajouté !`;
             document.getElementById('tooltipDesc').textContent = `Nouvel objet ajouté à votre studio. ${item.desc}`;
             tooltip.classList.remove('hidden');
+            saveProgress();
         }
 
         // SVG snippets for buyable items
@@ -15718,6 +15733,7 @@
             return next ? next.xpNeeded - cur.xpNeeded : Infinity;
         }
         function addDust(amount) {
+            saveProgress();
             memorialDust += amount;
             document.getElementById('dustCounter').textContent = memorialDust;
             const el = document.getElementById('studioDustCounter');
