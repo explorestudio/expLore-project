@@ -5413,7 +5413,7 @@
         </style>
 </head>
 <body>
-    <div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#ef4444;color:white;text-align:center;font-size:11px;font-weight:700;padding:3px;pointer-events:none;letter-spacing:1px;">VERSION TEST — 23/04 13:30</div>
+    <div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#ef4444;color:white;text-align:center;font-size:11px;font-weight:700;padding:3px;pointer-events:none;letter-spacing:1px;">VERSION TEST — 23/04 22:00</div>
     <div id="mainApp" class="app-container" style="padding-top:18px;">
         <!-- Top HUD overlay (no header bar, overlaid on map) -->
         <div class="map-hud">
@@ -7117,7 +7117,7 @@
         <!-- ══ ONBOARDING ══ -->
 
         <!-- Acte I : Écran noir -->
-        <div id="onboardingOverlay">
+        <div id="onboardingOverlay" class="hidden">
             <div class="ob-text" id="obText"></div>
             <div class="ob-tap-hint">Appuyer pour continuer</div>
         </div>
@@ -8298,7 +8298,7 @@
             if (map) {
                 ['poi-capture-circles','poi-capture-circles-stroke','poi-dot-fill','poi-dot-stroke','dust-capture-circles','dust-capture-circles-stroke','echo-capture-circles','echo-capture-circles-stroke',
                  'orb-circles','orb-circles-stroke','scroll-circles','scroll-circles-stroke','loot-circles','loot-circles-stroke','info-capture-circles'].forEach(id => {
-                    try { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'hidden'); } catch(e) {}
+                    try { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); } catch(e) {}
                 });
             }
         }
@@ -8418,7 +8418,7 @@
             // Masquer le cercle Elara
             if (map && map.getSource('poi-circles')) {
                 map.getSource('poi-circles').setData({ type: 'FeatureCollection', features: [] });
-                try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'hidden'); } catch(e) {}
+                try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'none'); } catch(e) {}
             }
             vnShow([
                 { speaker: 'Marcus', line: 'Tu le sens ? Ces endroits gardent des traces. Pas les grandes histoires — les petites.' },
@@ -9131,7 +9131,7 @@
                     changed = true;
                 }
             });
-            if (changed) { saveProgress(); updatePOIVisibility(); checkNearbyPOI(); }
+            if (changed) { console.log('[expLore] refreshThematicDraws → save, _obDone=', _obDone, 'poudre=', memorialDust); saveProgress(); updatePOIVisibility(); checkNearbyPOI(); }
         }
 
         // Interval de vérification des cooldowns (toutes les 5s)
@@ -9283,16 +9283,32 @@
             return 'cooldown';
         }
 
-        // ── Sauvegarde automatique à la fermeture / mise en arrière-plan ──
-        window.addEventListener('beforeunload', () => saveProgress());
-        window.addEventListener('pagehide', () => saveProgress());
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') saveProgress();
-        });
+        // ── Sauvegarde automatique ──
+        // Uniquement via setInterval — beforeunload/pagehide/visibilitychange
+        // se déclenchent pendant le rechargement avec des variables réinitialisées
+        let _appReady = false;
 
         function saveProgress() {
             try {
-                localStorage.setItem('lyon_cards_progress', JSON.stringify({
+                // Ne jamais rétrograder _obDone de true à false
+                const _existingRaw = localStorage.getItem('lyon_cards_progress');
+                if (_existingRaw) {
+                    try {
+                        const _existing = JSON.parse(_existingRaw);
+                        if (_existing._obDone === true && !_obDone) {
+                            console.log('[expLore] saveProgress: _obDone protégé (true → false bloqué)');
+                            _obDone = true;
+                            _obAct2Done = true;
+                            _obAct3Done = true;
+                        }
+                        // Ne jamais rétrograder memorialDust ou les collections
+                        if (_existing.memorialDust > memorialDust) {
+                            console.log('[expLore] saveProgress: memorialDust protégé', _existing.memorialDust, '→', memorialDust, 'bloqué');
+                            return;
+                        }
+                    } catch(e) {}
+                }
+                const _saveData = {
                     collectedCards,
                     collectedEchoes,
                     hasSeenMapointTutorial,
@@ -9329,15 +9345,18 @@
                     _obDone,
                     _obAct2Done,
                     _obAct3Done,
-                }));
-            } catch(e) {}
+                };
+                localStorage.setItem('lyon_cards_progress', JSON.stringify(_saveData));
+                console.log('[expLore] Sauvegarde écrite — poudre:', _saveData.memorialDust, 'cartes:', (_saveData.collectedCards||[]).length, '_obDone:', _saveData._obDone);
+            } catch(e) { console.error('[expLore] Erreur saveProgress:', e); }
         }
 
         function loadProgress() {
             try {
                 const raw = localStorage.getItem('lyon_cards_progress');
-                if (!raw) return;
+                if (!raw) { console.log('[expLore] Aucune sauvegarde trouvée'); return; }
                 const d = JSON.parse(raw);
+                console.log('[expLore] Sauvegarde chargée — _obDone:', d._obDone, 'cartes:', (d.collectedCards||[]).length, 'poudre:', d.memorialDust);
                 if (d.collectedCards)        collectedCards      = d.collectedCards;
                 if (d.collectedEchoes)       collectedEchoes     = d.collectedEchoes;
                 if (d.collectedDustPoints)   collectedDustPoints = d.collectedDustPoints;
@@ -9383,9 +9402,11 @@
                 if (d.pendingGrappeLumens)    pendingGrappeLumens = d.pendingGrappeLumens || [];
                 if (d.actorArrivedSet)        actorArrivedSet = new Set(d.actorArrivedSet);
                 if (d.revealedPoints)        revealedPoints = new Set(d.revealedPoints);
+                console.log('[expLore] loadProgress _obDone raw:', d._obDone, typeof d._obDone);
                 if (d._obDone)    _obDone    = d._obDone;
                 if (d._obAct2Done) _obAct2Done = d._obAct2Done;
                 if (d._obAct3Done) _obAct3Done = d._obAct3Done;
+                console.log('[expLore] loadProgress _obDone après:', _obDone);
             } catch(e) {}
         }
 
@@ -9483,11 +9504,15 @@
 
         function initApp() {
             loadProgress();
+            console.log('[expLore] initApp après loadProgress — _obDone:', _obDone, 'poudre:', memorialDust);
             if (!_obDone) {
                 setTimeout(startOnboarding, 800);
             } else {
-                // Tutoriel déjà fait — zones de capture gérées par captureCanvas
-                // (info-capture-circles reste caché)
+                // Tutoriel déjà fait — masquer tous les overlays onboarding
+                document.getElementById('onboardingOverlay').classList.add('hidden');
+                document.getElementById('obSkipBtn').classList.remove('visible');
+                document.getElementById('vnOverlay').classList.remove('show');
+                document.getElementById('obNote').classList.remove('show');
             }
             // Sync UI après chargement
             document.getElementById('dustCounter').textContent = memorialDust;
@@ -9514,6 +9539,10 @@
             updateProgressionHUD();
             updateAvatarMenuXP();
             updateCameraHUD();
+            _appReady = true;
+            console.log('[expLore] App prête — _obDone:', _obDone, 'poudre:', memorialDust);
+            // Sauvegarde automatique toutes les 10 secondes
+            setInterval(() => { if (_appReady) saveProgress(); }, 10000);
         }
 
         function initMap() {
@@ -9941,7 +9970,7 @@
                 checkNearbyPOI();
                 if (!_obDone) {
                     ['poi-capture-circles','poi-capture-circles-stroke','poi-dot-fill','poi-dot-stroke','dust-capture-circles','dust-capture-circles-stroke','echo-capture-circles','echo-capture-circles-stroke','orb-circles','orb-circles-stroke','scroll-circles','scroll-circles-stroke','loot-circles','loot-circles-stroke','info-capture-circles'].forEach(id => {
-                        try { if (map.getLayer(id)) map.setLayoutProperty(id,'visibility','hidden'); } catch(e){}
+                        try { if (map.getLayer(id)) map.setLayoutProperty(id,'visibility','none'); } catch(e){}
                     });
                 }
             }); // end map.on('load')
@@ -10524,7 +10553,7 @@
 
         function resetProgress() {
             if (!confirm('Réinitialiser toute la progression ?')) return;
-            localStorage.removeItem('lyonCardsProgress');
+            localStorage.removeItem('lyon_cards_progress');
             location.reload();
         }
 
@@ -12859,6 +12888,7 @@
 
         function collectDust() {
             if (!currentNearbyDust) return;
+            if (!_obDone) { _obDone = true; _obAct2Done = true; _obAct3Done = true; console.log('[expLore] _obDone forcé à true via collectDust'); }
             collectedDustPoints.push(currentNearbyDust.id);
             const amount = Math.floor(Math.random() * (MAX_DUST_DROP - MIN_DUST_DROP + 1)) + MIN_DUST_DROP;
             memorialDust += amount;
@@ -12939,6 +12969,7 @@
         }
         function collectOrb() {
             if (!currentNearbyOrb) return;
+            if (!_obDone) { _obDone = true; _obAct2Done = true; _obAct3Done = true; }
             collectedOrbs.push(currentNearbyOrb.id);
             bagInv.orbes += 1;
             updateOrbVisibility();
@@ -12954,6 +12985,7 @@
 
         function collectScroll() {
             if (!currentNearbyScroll) return;
+            if (!_obDone) { _obDone = true; _obAct2Done = true; _obAct3Done = true; }
             const scroll = currentNearbyScroll;
             collectedScrolls.push(scroll.id);
             bagInv.parchemins.push({ id: scroll.id, name: 'Parchemin', desc: "Trouvé près de " + scroll.name + " lors de ton exploration." });
@@ -19630,17 +19662,30 @@
     <!-- ═══════════ PWA — Enregistrement Service Worker ═══════════ -->
     <script>
         if ('serviceWorker' in navigator) {
+            // Désinscrire immédiatement tous les SW sur localhost
+            if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                navigator.serviceWorker.getRegistrations().then(regs => {
+                    regs.forEach(reg => { reg.unregister(); console.log('[PWA] SW désinscrit:', reg.scope); });
+                });
+                caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+                console.log('[PWA] Service Worker et cache désactivés sur localhost');
+            }
             window.addEventListener('load', () => {
+                // Ne pas enregistrer sur localhost
+                if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                    return;
+                }
                 navigator.serviceWorker.register('./sw.js')
                     .then((reg) => {
                         console.log('[PWA] Service Worker enregistré', reg.scope);
-                        // Détecter une nouvelle version en arrière-plan
                         reg.addEventListener('updatefound', () => {
                             const newWorker = reg.installing;
                             if (!newWorker) return;
                             newWorker.addEventListener('statechange', () => {
                                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log('[PWA] Nouvelle version disponible — rechargera au prochain lancement');
+                                    // Forcer rechargement immédiat pour appliquer la nouvelle version
+                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                    location.reload();
                                 }
                             });
                         });
