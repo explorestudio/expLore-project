@@ -5413,8 +5413,7 @@
         </style>
 </head>
 <body>
-    <div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#ef4444;color:white;text-align:center;font-size:11px;font-weight:700;padding:3px;pointer-events:none;letter-spacing:1px;">VERSION TEST — 24/04 09:30</div>
-    <div id="mainApp" class="app-container" style="padding-top:18px;">
+    <div id="mainApp" class="app-container">
         <!-- Top HUD overlay (no header bar, overlaid on map) -->
         <div class="map-hud">
             <!-- Avatar + Sac (top-left, groupés) -->
@@ -10089,7 +10088,7 @@
                 // Icône cristal SVG
                 const _dustIcon = document.createElement('div');
                 _dustIcon.style.cssText = 'flex-shrink:0;';
-                _dustIcon.innerHTML = '<img src="./assets/Powder.png?v=1" style="width:26px;height:26px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
+                _dustIcon.innerHTML = '<img src="./assets/Powder.png?v=1" style="width:38px;height:38px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
                 const _dPid = 'dust_' + dust.id.replace(/[^a-z0-9]/gi,'');
                 const _dustWrap = _buildPoiVisual(_dPid, {
                     top:    'rgba(192,132,252,0.9)',
@@ -10098,7 +10097,7 @@
                     glow:   'rgba(192,132,252,0.8)',
                     disk:   'rgba(216,180,254,0.7)',
                     stroke: 'rgba(233,213,255,0.9)'
-                }, _dustIcon, 22, 30);
+                }, _dustIcon, 38, 30);
                 inner.appendChild(_dustWrap);
                 el.appendChild(inner);
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
@@ -11156,16 +11155,10 @@
                 const prompt = inner.querySelector('.tap-prompt');
                 if (inZone) {
                     currentNearbyInfo = info;
-                    if (halo) {
-                        halo.style.background = 'radial-gradient(ellipse, rgba(52,211,153,1) 0%, rgba(16,185,129,0.7) 35%, rgba(5,150,105,0.3) 65%, transparent 85%)'; halo.style.boxShadow = '0 0 16px 4px rgba(52,211,153,0.6)';
-                        halo.style.animation = 'interactHaloReady 1.4s ease-in-out infinite';
-                    }
+                    if (halo) { halo.style.borderColor = 'rgba(52,211,153,0.9)'; halo.style.boxShadow = '0 0 6px 2px rgba(52,211,153,0.4)'; halo.style.background = 'transparent'; }
                     if (prompt) prompt.classList.add('show');
                 } else {
-                    if (halo) {
-                        halo.style.background = 'radial-gradient(ellipse, rgba(253,224,71,0.95) 0%, rgba(245,158,11,0.55) 35%, rgba(180,120,20,0.25) 65%, transparent 85%)'; halo.style.boxShadow = '0 0 12px 3px rgba(253,224,71,0.4)';
-                        halo.style.animation = 'interactHaloIdle 2.5s ease-in-out infinite';
-                    }
+                    if (halo) { halo.style.borderColor = 'rgba(245,158,11,0.7)'; halo.style.boxShadow = ''; halo.style.background = 'transparent'; }
                     if (prompt) prompt.classList.remove('show');
                 }
             });
@@ -16235,24 +16228,21 @@
 
                 // Icône stèle avec léger balancement
                 const span = document.createElement('div');
-                span.style.cssText = 'display:flex;align-items:center;justify-content:center;animation:interactSway 4s ease-in-out infinite;transform-origin:center bottom;';
-                span.innerHTML = '<img src="./assets/PanelInfoIcon.png?v=2" style="width:68px;height:68px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5));" draggable="false"/>';
+                span.style.cssText = 'display:flex;align-items:center;justify-content:center;';
+                span.innerHTML = '<img src="./assets/PanelInfoIcon.png?v=2" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5));" draggable="false"/>';
                 inner.appendChild(span);
 
                 // Halo au sol pulsant (indigo pour panneau)
                 const halo = document.createElement('div');
                 halo.className = 'interact-halo';
-                halo.style.cssText = `
-                    position:absolute;bottom:-6px;left:50%;
-                    width:80px;height:80px;
-                    background:radial-gradient(ellipse, rgba(165,180,252,0.95) 0%, rgba(99,102,241,0.6) 35%, rgba(67,56,202,0.25) 65%, transparent 85%);
-                    border-radius:50%;
-                    transform:translateX(-50%) scaleY(0.38);
-                    animation:interactHaloIdle 2.5s ease-in-out infinite;
-                    pointer-events:none;
-                    box-shadow:0 0 8px 2px rgba(165,180,252,0.3);
-                `;
+                halo.style.cssText = 'position:absolute;bottom:-4px;left:50%;width:52px;height:52px;border:1.5px solid rgba(165,180,252,0.7);border-radius:50%;transform:translateX(-50%) scaleY(0.38);pointer-events:none;background:transparent;';
                 inner.appendChild(halo);
+
+                // Nom du lieu
+                const nameLabel = document.createElement('div');
+                nameLabel.style.cssText = 'margin-top:3px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.8);letter-spacing:0.3px;white-space:nowrap;pointer-events:none;';
+                nameLabel.textContent = pan.name || pan.title || '';
+                inner.appendChild(nameLabel);
 
                 // SVG anneau de progression (cercle, en absolute pour ne pas perturber le flex)
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -16312,17 +16302,11 @@
                 if (inZone) {
                     currentNearbyPanneau = pan;
                     inner.classList.add('in-range');
-                    if (halo) {
-                        halo.style.background = 'radial-gradient(ellipse, rgba(52,211,153,1) 0%, rgba(16,185,129,0.7) 35%, rgba(5,150,105,0.3) 65%, transparent 85%)'; halo.style.boxShadow = '0 0 16px 4px rgba(52,211,153,0.6)';
-                        halo.style.animation = 'interactHaloReady 1.4s ease-in-out infinite';
-                    }
+                    if (halo) { halo.style.borderColor = 'rgba(52,211,153,0.9)'; halo.style.boxShadow = '0 0 6px 2px rgba(52,211,153,0.4)'; halo.style.background = 'transparent'; }
                     if (prompt) prompt.classList.add('show');
                 } else {
                     inner.classList.remove('in-range');
-                    if (halo) {
-                        halo.style.background = 'radial-gradient(ellipse, rgba(165,180,252,0.95) 0%, rgba(99,102,241,0.6) 35%, rgba(67,56,202,0.25) 65%, transparent 85%)'; halo.style.boxShadow = '0 0 12px 3px rgba(165,180,252,0.4)';
-                        halo.style.animation = 'interactHaloIdle 2.5s ease-in-out infinite';
-                    }
+                    if (halo) { halo.style.borderColor = 'rgba(165,180,252,0.7)'; halo.style.boxShadow = ''; halo.style.background = 'transparent'; }
                     if (prompt) prompt.classList.remove('show');
                 }
             });
@@ -16514,25 +16498,20 @@
                 const inner = document.createElement('div');
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-90%);display:flex;flex-direction:column;align-items:center;cursor:pointer;pointer-events:auto;';
                 inner.innerHTML = `
-                    <!-- Prompt TAP à portée -->
                     <div class="tap-prompt">TAP ›</div>
-                    <!-- Icône avec léger balancement -->
-                    <div style="animation:interactSway 3.5s ease-in-out infinite;transform-origin:center bottom;">
-                        <img src="./assets/BazarIcon.png?v=2"
-                            style="width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5));pointer-events:none;"
-                            draggable="false"/>
-                    </div>
-                    <!-- Halo au sol pulsant (ambre pour bazar) -->
+                    <img src="./assets/BazarIcon.png?v=2"
+                        style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.4));pointer-events:none;"
+                        draggable="false"/>
                     <div class="interact-halo" style="
-                        position:absolute;bottom:-6px;left:50%;
-                        width:80px;height:80px;
-                        background:radial-gradient(ellipse, rgba(251,191,36,0.95) 0%, rgba(217,119,6,0.6) 35%, rgba(180,83,9,0.25) 65%, transparent 85%);
+                        position:absolute;bottom:-4px;left:50%;
+                        width:52px;height:52px;
+                        border:1.5px solid rgba(251,191,36,0.7);
                         border-radius:50%;
                         transform:translateX(-50%) scaleY(0.38);
-                        animation:interactHaloIdle 2.5s ease-in-out infinite;
                         pointer-events:none;
-                        box-shadow:0 0 8px 2px rgba(251,191,36,0.3);
+                        background:transparent;
                     "></div>
+                    <div style="margin-top:3px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.8);letter-spacing:0.3px;white-space:nowrap;pointer-events:none;">${bazar.name}</div>
                 `;
                 el.appendChild(inner);
 
@@ -16570,14 +16549,16 @@
                     const prompt = inner.querySelector('.tap-prompt');
                     if (inZone) {
                         if (halo) {
-                            halo.style.background = 'radial-gradient(ellipse, rgba(52,211,153,1) 0%, rgba(16,185,129,0.7) 35%, rgba(5,150,105,0.3) 65%, transparent 85%)'; halo.style.boxShadow = '0 0 16px 4px rgba(52,211,153,0.6)';
-                            halo.style.animation = 'interactHaloReady 1.4s ease-in-out infinite';
+                            halo.style.borderColor = 'rgba(52,211,153,0.9)';
+                            halo.style.boxShadow = '0 0 6px 2px rgba(52,211,153,0.4)';
+                            halo.style.animation = '';
                         }
                         if (prompt) prompt.classList.add('show');
                     } else {
                         if (halo) {
-                            halo.style.background = 'radial-gradient(ellipse, rgba(251,191,36,0.95) 0%, rgba(217,119,6,0.6) 35%, rgba(180,83,9,0.25) 65%, transparent 85%)'; halo.style.boxShadow = '0 0 12px 3px rgba(251,191,36,0.4)';
-                            halo.style.animation = 'interactHaloIdle 2.5s ease-in-out infinite';
+                            halo.style.borderColor = 'rgba(251,191,36,0.7)';
+                            halo.style.boxShadow = '';
+                            halo.style.animation = '';
                         }
                         if (prompt) prompt.classList.remove('show');
                     }
@@ -16662,28 +16643,23 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-90%);display:flex;flex-direction:column;align-items:center;cursor:pointer;pointer-events:auto;';
                 inner.innerHTML = `
                     <div class="tap-prompt">TAP ›</div>
-                    <div style="animation:interactSway 3.8s ease-in-out infinite;transform-origin:center bottom;">
-                        <img src="./assets/PanoramaIcon.png?v=2"
-                            style="width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5));pointer-events:none;"
-                            draggable="false"/>
-                    </div>
-                    <!-- Halo au sol pulsant (ivoire pour panorama) -->
+                    <img src="./assets/PanoramaIcon.png?v=2"
+                        style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.4));pointer-events:none;"
+                        draggable="false"/>
                     <div class="interact-halo" style="
-                        position:absolute;bottom:-6px;left:50%;
-                        width:80px;height:80px;
-                        background:radial-gradient(ellipse, rgba(253,224,71,0.95) 0%, rgba(245,158,11,0.55) 35%, rgba(180,120,20,0.25) 65%, transparent 85%);
+                        position:absolute;bottom:-4px;left:50%;
+                        width:52px;height:52px;
+                        border:1.5px solid rgba(245,158,11,0.7);
                         border-radius:50%;
                         transform:translateX(-50%) scaleY(0.38);
-                        animation:interactHaloIdle 2.5s ease-in-out infinite;
                         pointer-events:none;
-                        box-shadow:0 0 8px 2px rgba(253,224,71,0.3);
+                        background:transparent;
                     "></div>
+                    <div style="margin-top:3px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.8);letter-spacing:0.3px;white-space:nowrap;pointer-events:none;">${info.title}</div>
                 `;
                 el.appendChild(inner);
 
                 el.addEventListener('click', () => {
-                    const already = museumCollection.some(m => m.infoId === info.id);
-                    if (already) return;
                     const dist = getDistance(playerPos.lat, playerPos.lng, info.lat, info.lng);
                     if (dist > INFO_RADIUS) {
                         showInfoTooFarToast(info.title);
@@ -16740,6 +16716,7 @@
         let vfZoomHideTimer = null;
 
         function openViewfinderFromNearby() {
+            _hideAllNearbyConsoles();
             if (currentNearbyInfo) openViewfinder(currentNearbyInfo);
         }
 
@@ -16863,6 +16840,7 @@
         function closeViewfinder() {
             document.getElementById('viewfinderScreen').classList.remove('show');
             currentViewfinderInfo = null;
+            _showNearbyConsoles();
         }
 
         function openInfoFromViewfinder() {
@@ -16952,6 +16930,7 @@
         function closeInfoScreen() {
             document.getElementById('infoScreen').classList.remove('show');
             currentInfoPoint = null;
+            _showNearbyConsoles();
         }
 
         function saveToMuseum() {
