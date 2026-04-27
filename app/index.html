@@ -162,6 +162,300 @@
         }
 
         /* Dust counter top-right */
+        .hud-quest-compass {
+            position: absolute;
+            top: 70px;
+            left: 12px;
+            background: rgba(20,15,40,0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            padding: 6px 10px 6px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 30;
+            max-width: 180px;
+        }
+        .hqc-arrow {
+            width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+            filter: drop-shadow(0 0 4px var(--hqc-color, rgba(217,119,6,0.6)));
+        }
+        .hqc-info { flex: 1; min-width: 0; }
+        .hqc-title {
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+        .hqc-distance {
+            color: rgba(255,255,255,0.65);
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 1px;
+        }
+
+        .hud-quest-journal {
+            position: absolute;
+            top: 64px;
+            right: 12px;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(6px);
+            border-radius: 50%;
+            border: none;
+            padding: 9px;
+            width: 40px; height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+            cursor: pointer;
+            z-index: 30;
+        }
+        .hud-quest-journal.hidden { display: none; }
+        .hud-qj-count {
+            position: absolute;
+            top: -4px; right: -4px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            border-radius: 999px;
+            min-width: 16px; height: 16px;
+            padding: 0 4px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        #btnMemorial { position: relative; }
+        /* Bandeau "Vue planification" */
+        .planning-banner {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            background: rgba(20,15,40,0.78);
+            backdrop-filter: blur(8px);
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            z-index: 40;
+            opacity: 0;
+            animation: pbAppear 1.6s ease forwards;
+        }
+        body.planning-mode .planning-banner { display: block; }
+        @keyframes pbAppear {
+            0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+            10%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            70%  { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -56%); }
+        }
+
+        /* Mode planification : on cache poudre/écho/orbes/parchemins/loots */
+        body.planning-mode .maplibregl-marker.dust-marker,
+        body.planning-mode .maplibregl-marker.echo-marker,
+        body.planning-mode .maplibregl-marker.orb-marker,
+        body.planning-mode .maplibregl-marker.scroll-marker,
+        body.planning-mode .maplibregl-marker.loot-marker {
+            display: none !important;
+        }
+
+        /* Épingle de quête active sur la mappe */
+        .quest-pin {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: auto;
+            cursor: pointer;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+        }
+        .quest-pin-marker {
+            width: 36px; height: 36px;
+            border-radius: 50% 50% 50% 0;
+            background: var(--qp-color, #d97706);
+            border: 2.5px solid #fff;
+            transform: rotate(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.2), 0 0 20px var(--qp-glow, rgba(217,119,6,0.5));
+            animation: questPinPulse 2.2s ease-in-out infinite;
+        }
+        .quest-pin-marker::before {
+            content: '!';
+            transform: rotate(45deg);
+            color: #fff;
+            font-weight: 800;
+            font-size: 18px;
+            font-family: serif;
+        }
+        @keyframes questPinPulse {
+            0%,100% { box-shadow: 0 0 0 2px rgba(0,0,0,0.2), 0 0 12px var(--qp-glow, rgba(217,119,6,0.5)); }
+            50%     { box-shadow: 0 0 0 2px rgba(0,0,0,0.2), 0 0 28px var(--qp-glow, rgba(217,119,6,0.9)); }
+        }
+        .quest-pin-label {
+            margin-top: 6px;
+            background: rgba(20,15,40,0.92);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 8px;
+            white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.15);
+            backdrop-filter: blur(4px);
+        }
+
+        .vault-notif-dot {
+            position: absolute;
+            top: 6px; right: 10px;
+            width: 10px; height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px #1f2937, 0 0 12px rgba(239,68,68,0.7);
+            animation: vaultPulse 1.4s ease-in-out infinite;
+            z-index: 5;
+            pointer-events: none;
+        }
+        @keyframes vaultPulse {
+            0%,100% { transform: scale(1); opacity: 0.95; }
+            50%     { transform: scale(1.25); opacity: 1; }
+        }
+
+        /* Quest Journal Panel */
+        .quest-journal-panel {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 280;
+            display: none;
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding: 60px 12px 12px 12px;
+            backdrop-filter: blur(2px);
+        }
+        .quest-journal-panel.show { display: flex; }
+        .qj-card {
+            width: 100%; max-width: 360px;
+            background: linear-gradient(180deg, #fefdfa 0%, #f3ebd8 100%);
+            border: 1px solid rgba(120,90,40,0.3);
+            border-radius: 14px;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+            max-height: 75vh;
+            display: flex; flex-direction: column;
+            position: relative;
+            animation: qjSlideIn 0.25s ease-out;
+        }
+        @keyframes qjSlideIn {
+            from { transform: translateX(20px); opacity: 0; }
+            to   { transform: translateX(0); opacity: 1; }
+        }
+        .qj-close {
+            position: absolute; top: 10px; right: 10px;
+            background: #2a1f10; color: #fefdfa; border: none;
+            width: 28px; height: 28px; border-radius: 50%;
+            font-size: 13px; cursor: pointer; z-index: 5;
+        }
+        .qj-header {
+            padding: 14px 18px 10px;
+            border-bottom: 1px solid rgba(120,90,40,0.2);
+        }
+        .qj-title {
+            font-size: 16px; font-weight: 800;
+            color: #2a1f10;
+            font-family: serif;
+        }
+        .qj-subtitle {
+            font-size: 11px; color: rgba(80,60,30,0.65);
+            margin-top: 2px;
+        }
+        .qj-body {
+            padding: 12px 14px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .qj-empty {
+            padding: 30px 16px; text-align: center;
+            color: rgba(80,60,30,0.55);
+            font-size: 12px; font-style: italic;
+        }
+        .qj-quest {
+            background: rgba(255,255,255,0.6);
+            border: 1px solid rgba(120,90,40,0.15);
+            border-radius: 10px;
+            padding: 11px 12px;
+            margin-bottom: 10px;
+        }
+        .qj-quest-grappe {
+            font-size: 9px; font-weight: 800; letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--qj-color, #6b7280);
+            margin-bottom: 4px;
+        }
+        .qj-quest-title {
+            font-size: 13px; font-weight: 700;
+            color: #2a1f10;
+            margin-bottom: 6px;
+        }
+        .qj-quest-indice {
+            font-size: 11.5px; color: #4a3a1f;
+            font-style: italic;
+            line-height: 1.45;
+            margin-bottom: 6px;
+        }
+        .qj-quest-place {
+            font-size: 11px; font-weight: 600;
+            color: #92400e;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .qj-quest-action {
+            margin-top: 8px;
+            display: flex; gap: 6px;
+        }
+        .qj-quest-btn {
+            flex: 1;
+            padding: 6px 10px;
+            border: none; border-radius: 6px;
+            font-size: 11px; font-weight: 700;
+            cursor: pointer;
+            background: rgba(120,90,40,0.12);
+            color: #2a1f10;
+        }
+        .qj-quest-btn.primary {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            color: #fff;
+        }
+
+        .hud-version {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.45);
+            color: rgba(255,255,255,0.7);
+            font-size: 9px;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 999px;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.08);
+            pointer-events: none;
+            z-index: 25;
+        }
+
         .hud-dust {
             background: rgba(255,255,255,0.92);
             backdrop-filter: blur(6px);
@@ -4823,6 +5117,247 @@
         }
 
         /* Modale substory (réutilisée) */
+        /* ── Modale Quête Grappe ── */
+        .grappe-quest-modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 350;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+            overflow: hidden;
+        }
+        .grappe-quest-modal.show { display: flex; }
+        .grappe-quest-card {
+            width: 100%; max-width: 480px;
+            background: linear-gradient(180deg, #1a0f2e 0%, #0f0820 100%);
+            border-top: 2px solid var(--gq-color, rgba(255,200,80,0.5));
+            border-radius: 18px 18px 0 0;
+            box-shadow: 0 -8px 30px rgba(0,0,0,0.6);
+            height: 88vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            animation: gqSlideUp 0.32s ease-out;
+        }
+        @keyframes gqSlideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .grappe-quest-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #fff;
+            width: 32px; height: 32px; border-radius: 50%;
+            font-size: 14px; cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .grappe-quest-header {
+            padding: 18px 50px 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex: 0 0 auto;
+            position: relative;
+        }
+        .grappe-quest-title {
+            font-size: 18px; font-weight: 800; color: #fff;
+            letter-spacing: 0.3px;
+        }
+        .grappe-quest-subtitle {
+            font-size: 12px; color: rgba(255,255,255,0.55);
+            margin-top: 4px;
+        }
+        .grappe-quest-body {
+            padding: 14px 16px 40px;
+            flex: 1 1 auto;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+        .gq-etape {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 14px 14px 12px;
+            margin-bottom: 12px;
+        }
+        .gq-etape.completed { opacity: 0.65; }
+        .gq-etape.active { border-color: rgba(255,200,40,0.5); background: rgba(255,200,40,0.06); }
+        .gq-etape.available { border-color: rgba(52,211,153,0.5); background: rgba(52,211,153,0.05); }
+        .gq-etape-head {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px;
+        }
+        .gq-etape-title {
+            font-size: 14px; font-weight: 700; color: #fff;
+        }
+        .gq-etape-status {
+            font-size: 10px; padding: 3px 8px; border-radius: 8px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .gq-status-locked { background: rgba(120,120,120,0.2); color: rgba(255,255,255,0.4); }
+        .gq-status-available { background: rgba(52,211,153,0.25); color: rgb(110,255,180); }
+        .gq-status-active { background: rgba(255,200,40,0.25); color: rgb(255,220,80); }
+        .gq-status-completed { background: rgba(180,160,255,0.25); color: rgb(200,180,255); }
+
+        .gq-section-label {
+            font-size: 10px; font-weight: 700; letter-spacing: 1px;
+            color: rgba(255,255,255,0.4); text-transform: uppercase;
+            margin: 10px 0 6px;
+        }
+        .gq-prereq-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+        .gq-prereq {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-size: 11px; color: rgba(255,255,255,0.85);
+            cursor: pointer; transition: all 0.15s;
+        }
+        .gq-prereq:hover { background: rgba(255,255,255,0.08); }
+        .gq-prereq.met { border-color: rgba(52,211,153,0.5); background: rgba(52,211,153,0.08); }
+        .gq-prereq.missing-card { opacity: 0.5; }
+        .gq-prereq-icon { width: 18px; height: 18px; border-radius: 4px; background: #555; flex-shrink: 0; }
+        .gq-prereq-name { font-weight: 600; }
+        .gq-prereq-level {
+            font-size: 9px; padding: 2px 5px; border-radius: 4px;
+            background: rgba(255,255,255,0.1); margin-left: 2px;
+        }
+        .gq-prereq.met .gq-prereq-level { background: rgba(52,211,153,0.3); color: rgb(180,255,210); }
+
+        .gq-objectif {
+            font-size: 13px; color: rgba(255,230,180,0.95);
+            font-style: italic; line-height: 1.5;
+            padding: 10px 12px;
+            background: rgba(255,200,40,0.05);
+            border-left: 2px solid rgba(255,200,40,0.4);
+            border-radius: 0 6px 6px 0;
+        }
+        .gq-objectif-place {
+            font-size: 11px; color: rgba(255,200,80,0.7);
+            margin-top: 6px;
+        }
+        .gq-action-btn {
+            width: 100%;
+            padding: 10px 12px;
+            border: none; border-radius: 9px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #fff; font-weight: 700; font-size: 13px;
+            cursor: pointer;
+            margin-top: 10px;
+            letter-spacing: 0.3px;
+        }
+        .gq-action-btn.complete { background: linear-gradient(135deg, #10b981, #059669); }
+        .gq-action-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #555; }
+
+        .gq-reward {
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+        .gq-reward-case {
+            width: 38px; height: 50px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.05);
+            border: 1px dashed rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 9px; color: rgba(255,255,255,0.4);
+        }
+        .gq-reward-case.unlocked {
+            background: linear-gradient(135deg, rgba(255,200,40,0.2), rgba(217,119,6,0.15));
+            border: 1px solid rgba(255,200,40,0.5);
+            color: rgba(255,230,150,0.95);
+        }
+
+        .gq-bd-btn {
+            width: 100%;
+            margin-top: 14px;
+            padding: 11px;
+            background: rgba(180,160,255,0.12);
+            border: 1px solid rgba(180,160,255,0.4);
+            border-radius: 9px;
+            color: rgb(220,210,255);
+            font-weight: 700; font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* ── Modale BD ── */
+        .grappe-bd-modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 360;
+            display: none;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .grappe-bd-modal.show { display: flex; }
+        .grappe-bd-card {
+            background: linear-gradient(180deg, #f5f0e0 0%, #e8dcc0 100%);
+            border-radius: 14px;
+            padding: 36px 20px 22px;
+            max-width: 460px; width: 100%;
+            max-height: 88vh; overflow-y: auto;
+            position: relative;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+        }
+        .grappe-bd-close {
+            position: absolute; top: 10px; right: 12px;
+            background: #2a1f10; color: #f5f0e0; border: none;
+            width: 30px; height: 30px; border-radius: 50%;
+            font-size: 14px; cursor: pointer;
+        }
+        .grappe-bd-title {
+            text-align: center; font-size: 18px; font-weight: 800;
+            color: #2a1f10; margin-bottom: 18px;
+            font-family: serif;
+        }
+        .grappe-bd-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .gq-bd-case {
+            aspect-ratio: 3/4;
+            border-radius: 6px;
+            padding: 10px;
+            border: 2px solid #2a1f10;
+            background: #fff;
+            display: flex; flex-direction: column;
+            font-size: 10.5px; line-height: 1.35;
+            color: #2a1f10;
+            box-shadow: 2px 2px 0 #2a1f10;
+        }
+        .gq-bd-case.is-new {
+            animation: bdCaseReveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 4px 4px 0 #2a1f10, 0 0 30px rgba(255,200,40,0.6);
+            border-color: #d97706;
+        }
+        @keyframes bdCaseReveal {
+            0%   { transform: scale(0.6) rotate(-3deg); opacity: 0; }
+            60%  { transform: scale(1.08) rotate(1deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0); }
+        }
+        .gq-bd-case.locked {
+            background: repeating-linear-gradient(45deg, #d4c8a8, #d4c8a8 6px, #c4b898 6px, #c4b898 12px);
+            color: rgba(42,31,16,0.3);
+            border-style: dashed;
+        }
+        .gq-bd-case-title {
+            font-weight: 800; font-size: 11px;
+            margin-bottom: 6px;
+            text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .gq-bd-case-text {
+            flex: 1; font-style: italic;
+        }
+
         .substory-modal {
             position: absolute; inset: 0; z-index: 300;
             background: rgba(0,0,0,0.7); display: flex;
@@ -5469,7 +6004,7 @@
                     </svg>
                     <span class="action-bar-lbl">Collection</span>
                 </button>
-                <button class="action-bar-btn" id="btnMemorial" onclick="openMindmap()" title="La Voûte">
+                <button class="action-bar-btn" id="btnMemorial" onclick="openMindmap()" title="La Voûte"><span class="vault-notif-dot" id="vaultNotifDot" style="display:none;"></span>
                     <!-- Noeuds / La Voûte -->
                     <svg width="26" height="26" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <line x1="22" y1="22" x2="6"  y2="22" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round"/>
@@ -5512,11 +6047,51 @@
                 </button>
             </div>
 
+            <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
+            <div class="hud-version" id="hudVersion">v0.2 · 25/04 18:00</div>
+
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
                 <svg width="22" height="22" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="19" rx="9" ry="3" fill="#c084fc" opacity="0.7"/><path d="M5,18 Q7,10 12,7 Q17,10 19,18 Z" fill="#a855f7"/><circle cx="9" cy="14" r="1.2" fill="rgba(255,255,255,0.7)"/><circle cx="13" cy="11" r="1" fill="rgba(255,255,255,0.6)"/><circle cx="15" cy="15" r="0.9" fill="rgba(255,255,255,0.5)"/></svg>
                 <span id="dustCounter">0</span>
             </div>
+
+            <!-- Boussole de quête (sous le bandeau version) -->
+            <div class="hud-quest-compass" id="hudQuestCompass" onclick="openQuestJournal()" style="display:none;">
+                <div class="hqc-arrow" id="hqcArrow">
+                    <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2 L18 14 L12 11 L6 14 Z" fill="#fff" stroke="#1f2937" stroke-width="1.5" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="hqc-info">
+                    <div class="hqc-title" id="hqcTitle">Quête</div>
+                    <div class="hqc-distance" id="hqcDistance">— m</div>
+                </div>
+            </div>
+
+            <!-- Journal de quête (sous le compteur poudre) -->
+            <button class="hud-quest-journal" id="hudQuestJournal" onclick="openQuestJournal()" title="Journal de quête">
+                <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#1f2937" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4V4z"/>
+                    <path d="M8 8h8M8 12h8M8 16h5"/>
+                </svg>
+                <span class="hud-qj-count" id="hudQjCount" style="display:none;"></span>
+            </button>
+
+            <!-- Panneau Journal de Quête -->
+            <div class="quest-journal-panel" id="questJournalPanel" onclick="handleQuestJournalBackdrop(event)">
+                <div class="qj-card">
+                    <button class="qj-close" onclick="closeQuestJournal()">✕</button>
+                    <div class="qj-header">
+                        <div class="qj-title">Journal de quête</div>
+                        <div class="qj-subtitle" id="qjSubtitle">Tes objectifs en cours</div>
+                    </div>
+                    <div class="qj-body" id="qjBody"></div>
+                </div>
+            </div>
+
+            <!-- Bandeau temporaire en mode planification -->
+            <div class="planning-banner" id="planningBanner">🗺️ VUE PLANIFICATION — pan & zoom activés</div>
 
             <!-- Bouton switch vue isométrique -->
             <button class="map-view-toggle" id="viewToggleBtn"
@@ -5654,6 +6229,9 @@
                     <button onclick="testUnlockGrappeCards()" class="test-action-btn">🃏 Débloquer cartes (grappe)</button>
                     <button onclick="testUnlockGrappeEntries()" class="test-action-btn">📖 Débloquer entrées carnet (grappe)</button>
                     <button onclick="testQueueGrappeLumens()" class="test-action-btn">✨ Éclairer hidden points (grappe)</button>
+                    <button onclick="testLevelUpGrappeCards()" class="test-action-btn">⭐ Cartes grappe LV3 (test quête)</button>
+                    <button onclick="testCompleteAllGrappeQuests()" class="test-action-btn">🏆 Terminer toutes étapes grappe</button>
+                    <button onclick="testForceCompleteCurrentQuest()" class="test-action-btn">⚡ Forcer validation quête active</button>
                     <button onclick="resetProgress()" class="test-action-btn test-action-btn--danger">⚠️ Réinitialiser la progression</button>
                 </div>
 
@@ -7050,6 +7628,29 @@
             <!-- Barre des grappes narratives -->
             <div class="grappe-bar" id="grappeBar">
                 <!-- remplie dynamiquement par renderGrappeBar() -->
+            </div>
+
+            <!-- Modale Quête Grappe (Acteurs / Quête / Reward / BD) -->
+            <div class="grappe-quest-modal" id="grappeQuestModal" onclick="handleGrappeQuestBackdrop(event)">
+                <div class="grappe-quest-card">
+                    <div class="grappe-quest-header">
+                        <button class="grappe-quest-close" onclick="closeGrappeQuestModal()">✕</button>
+                        <div class="grappe-quest-title" id="grappeQuestTitle"></div>
+                        <div class="grappe-quest-subtitle" id="grappeQuestSubtitle"></div>
+                    </div>
+                    <div class="grappe-quest-body" id="grappeQuestBody">
+                        <!-- Rempli par renderGrappeQuestModal() -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modale BD plein écran -->
+            <div class="grappe-bd-modal" id="grappeBDModal" onclick="handleGrappeBDBackdrop(event)">
+                <div class="grappe-bd-card">
+                    <button class="grappe-bd-close" onclick="closeGrappeBDModal()">✕</button>
+                    <div class="grappe-bd-title" id="grappeBDTitle"></div>
+                    <div class="grappe-bd-grid" id="grappeBDGrid"></div>
+                </div>
             </div>
 
             <!-- Modale substory complète -->
@@ -9307,10 +9908,11 @@
                             return;
                         }
                         // Ne jamais rétrograder les collections (cartes, poudre, orbes, etc)
+                        // Sauf si la régression est intentionnelle (reset, test) — alors on log mais on continue
                         const _existingCards = (_existing.collectedCards || []).length;
                         const _currentCards  = (collectedCards || []).length;
-                        if (_existingCards > _currentCards && _existing._obDone) {
-                            console.log('[expLore] saveProgress: collections protégées');
+                        if (_existingCards > _currentCards && _existing._obDone && _currentCards === 0) {
+                            console.log('[expLore] saveProgress: collections protégées (régression à 0)');
                             return;
                         }
                     } catch(e) {}
@@ -9354,6 +9956,8 @@
                     _obAct3Done,
                     seenCardIds: [..._seenCardIds],
                     cardJournals,
+                    grappeQuestState,
+                    grappeBDUnlocked,
                 };
                 localStorage.setItem('lyon_cards_progress', JSON.stringify(_saveData));
                 console.log('[expLore] Sauvegarde écrite — poudre:', _saveData.memorialDust, 'cartes:', (_saveData.collectedCards||[]).length, '_obDone:', _saveData._obDone);
@@ -9417,6 +10021,8 @@
                 if (d._obAct3Done) _obAct3Done = d._obAct3Done;
                 if (d.seenCardIds)  _seenCardIds = new Set(d.seenCardIds);
                 if (d.cardJournals) cardJournals = d.cardJournals;
+                if (d.grappeQuestState) grappeQuestState = d.grappeQuestState;
+                if (d.grappeBDUnlocked) grappeBDUnlocked = d.grappeBDUnlocked;
                 console.log('[expLore] loadProgress _obDone après:', _obDone);
             } catch(e) {}
         }
@@ -9552,8 +10158,13 @@
             updateCameraHUD();
             _appReady = true;
             console.log('[expLore] App prête — _obDone:', _obDone, 'poudre:', memorialDust);
-            // Sauvegarde automatique toutes les 10 secondes
+            // Sauvegarde automatique
             setInterval(() => { if (_appReady) saveProgress(); }, 3000);
+            // Mise à jour du journal de quête
+            setInterval(() => { if (_appReady) { updateQuestJournalBadge(); updateQuestCompass(); } }, 2000);
+            setInterval(() => { if (_appReady) updateQuestCompass(); }, 500);
+            updateQuestJournalBadge();
+            updateQuestCompass();
         }
 
         function initMap() {
@@ -10535,6 +11146,81 @@
             showToast('🃏 ' + added + ' carte(s) débloquée(s) — grappe "Les passeurs" complète');
         }
 
+        function testLevelUpGrappeCards() {
+            // Toutes les cartes utilisées par les 4 grappes
+            const ids = [
+                // passeurs
+                'tc_imprimerie','tc_gutenberg','tc_bibliotheque','tc_ibn_battuta','card18','card1',
+                // mesure_monde
+                'tc_microscope','tc_darwin','tc_linne','tc_marie_curie','card15','tc_herbier',
+                // memoire_formes
+                'tc_masque','tc_commedia','card4','tc_moliere','card2',
+                // pouvoir_lieux
+                'tc_cabinet','tc_academie','card17','card21','card12'
+            ];
+            let entriesAdded = 0;
+            ids.forEach(id => {
+                if (!collectedCards.includes(id)) collectedCards.push(id);
+                if (!cardLevels[id]) cardLevels[id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
+                cardLevels[id].level = 3;
+                cardLevels[id].experience = 9999;
+                cardLevels[id].dustSpent = 9999;
+                // Marquer toutes les entrées heart comme heartsDone
+                if (!cardLevels[id].heartsDone) cardLevels[id].heartsDone = {0:[],1:[],2:[]};
+                // Générer les entrées carnet pour tous les niveaux
+                const dialogues = (CARD_DIALOGUES[id] || []).filter(d => d.heart && d.entry);
+                if (!cardJournalEntries[id]) cardJournalEntries[id] = [];
+                dialogues.forEach((d, i) => {
+                    const lvl = d.level !== undefined ? d.level : 0;
+                    if (!cardLevels[id].heartsDone[lvl]) cardLevels[id].heartsDone[lvl] = [];
+                    if (!cardLevels[id].heartsDone[lvl].includes(i)) cardLevels[id].heartsDone[lvl].push(i);
+                    if (!cardJournalEntries[id].some(e => e.text === d.entry.text)) {
+                        cardJournalEntries[id].push({
+                            date: d.entry.date,
+                            text: d.entry.text,
+                            photo: d.entry.photo || null,
+                            audio: d.entry.audio || null,
+                            level: lvl,
+                            _available: true,
+                            _revealed: true
+                        });
+                        entriesAdded++;
+                    }
+                });
+            });
+            saveProgress();
+            showToast('⭐ Cartes grappe LV3 + ' + entriesAdded + ' entrées carnet');
+        }
+
+        // Force la validation de la première quête active trouvée (test sans GPS)
+        function testForceCompleteCurrentQuest() {
+            for (const [gid, grappe] of Object.entries(GRAPPE_QUESTS)) {
+                for (const etape of grappe.quete.etapes) {
+                    const status = _getEtapeStatus(gid, etape);
+                    if (status === 'active') {
+                        _completeQuestEtape(gid, etape.id);
+                        return;
+                    }
+                }
+            }
+            showToast('Aucune quête active à valider');
+        }
+
+        function testCompleteAllGrappeQuests() {
+            Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
+                grappeQuestState[gid] = {};
+                grappeBDUnlocked[gid] = [];
+                grappe.quete.etapes.forEach(e => {
+                    grappeQuestState[gid][e.id] = 'completed';
+                    (e.rewardCases || []).forEach(c => {
+                        if (!grappeBDUnlocked[gid].includes(c)) grappeBDUnlocked[gid].push(c);
+                    });
+                });
+            });
+            saveProgress();
+            showToast('🏆 Toutes étapes de toutes les grappes terminées');
+        }
+
         function testUnlockGrappeEntries() {
             const ids = ['tc_gutenberg','tc_imprimerie','tc_bibliotheque','tc_ibn_battuta'];
             let count = 0;
@@ -11035,6 +11721,9 @@
         }
 
         function checkNearbyPOI() {
+            // Vérifier aussi les objectifs de quêtes actives
+            try { checkActiveQuestGeofencing(); } catch(e) { console.error('checkActiveQuestGeofencing', e); }
+
             // Pendant l'onboarding, ne pas écraser la bannière Elara
             if (!_obDone) return;
             const _screenBlocked = _isAnyScreenOpen();
@@ -12836,7 +13525,7 @@
         // ── Switch vue isométrique : Zoom In ↔ Zoom Out ──
         const MAP_VIEW = {
             close: { pitch: 50, zoom: 17, label: '🔭', desc: 'Vue proche',   camOffset: 0.0012 },
-            far:   { pitch: 35, zoom: 15, label: '🗺️', desc: 'Vue ensemble', camOffset: 0 }
+            far:   { pitch: 0,  zoom: 13.5, label: '🗺️', desc: 'Vue ensemble', camOffset: 0 }
         };
         let _mapViewMode = 'close';
 
@@ -12883,13 +13572,38 @@
                 center:  [playerPos.lng, playerPos.lat + toggleOffset],
                 pitch:   v.pitch,
                 zoom:    v.zoom,
-                duration: 500,
+                duration: 600,
                 easing: t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t
             });
             if (btn) {
                 btn.textContent = v.label;
                 btn.classList.toggle('zoomed-out', _mapViewMode === 'far');
                 btn.title = v.desc;
+            }
+            // Mode planification
+            const isPlanning = _mapViewMode === 'far';
+            document.body.classList.toggle('planning-mode', isPlanning);
+            // Activer le pan & zoom en mode planning, les désactiver autrement
+            if (isPlanning) {
+                map.dragPan.enable();
+                map.scrollZoom.enable();
+                map.touchZoomRotate.enable();
+                map.doubleClickZoom.enable();
+            } else {
+                map.dragPan.disable();
+                map.scrollZoom.disable();
+                map.touchZoomRotate.disable();
+                map.doubleClickZoom.disable();
+            }
+            updateQuestMarkers();
+            // Re-trigger l'animation du bandeau
+            if (isPlanning) {
+                const banner = document.getElementById('planningBanner');
+                if (banner) {
+                    banner.style.animation = 'none';
+                    void banner.offsetWidth;
+                    banner.style.animation = '';
+                }
             }
         }
 
@@ -13534,6 +14248,15 @@
 
         function closeCardDetail() {
             document.getElementById('cardDetailView').classList.remove('show');
+            // Si on était venu depuis une modale grappe, la rouvrir au retour
+            if (window._reopenGrappeQuestModalId) {
+                const id = window._reopenGrappeQuestModalId;
+                window._reopenGrappeQuestModalId = null;
+                _cardDetailSource = null;
+                selectedCard = null;
+                setTimeout(() => openGrappeQuestModal(id), 80);
+                return;
+            }
             const src = _cardDetailSource;
             _cardDetailSource = null;
             selectedCard = null;
@@ -17738,14 +18461,427 @@
 
 
         const MM_ACTORS = {
+            // ── Grappe passeurs (vert) ──
             tc_gutenberg:    { idleEntryIndex: 0, triggerHiddenPoint: 'hp1', moveTo: { x: 0.50, y: 0.55 } },
             tc_bibliotheque: { idleEntryIndex: 0, triggerHiddenPoint: 'hp5', moveTo: { x: 0.86, y: 0.22 } },
             tc_ibn_battuta:  { idleEntryIndex: 0, triggerHiddenPoint: 'hp3', moveTo: { x: 0.72, y: 0.48 } },
             tc_imprimerie:   { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            card18:          { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            card1:           { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+
+            // ── Grappe mesure_monde (bleu) ──
+            tc_microscope:   { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            tc_linne:        { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            tc_darwin:       { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            tc_marie_curie:  { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            tc_herbier:      { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            card15:          { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+
+            // ── Grappe memoire_formes (rose) ──
+            tc_masque:       { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            tc_commedia:     { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            tc_moliere:      { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            card4:           { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            card2:           { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+
+            // ── Grappe pouvoir_lieux (orange) ──
+            tc_cabinet:      { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            tc_academie:     { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            card17:          { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            card21:          { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
+            card12:          { idleEntryIndex: 0, triggerHiddenPoint: null,  moveTo: null },
         };
         let actorArrivedSet  = new Set();
         let activeActorMoves = [];
         let pendingGrappeLumens = [];
+
+        // ════════════════════════════════════════════════════════
+        // STRUCTURE DE QUÊTES PAR GRAPPE
+        // Une grappe = une planche BD + une quête à plusieurs étapes
+        // Chaque étape a ses propres prérequis (cartes à un niveau donné)
+        // Étape résolue = une ou plusieurs cases de BD débloquées
+        // ════════════════════════════════════════════════════════
+        const GRAPPE_QUESTS = {
+            passeurs: {
+                title: 'Les passeurs',
+                color: '#34d399',
+                bd: {
+                    totalCases: 5,
+                    cases: [
+                        { id: 'p_case1', title: 'Le scriptorium', text: 'Au IXe siècle, dans les monastères, un seul livre coûte la vie d\'un moine. Le savoir est gardé, recopié à la main, jalousement protégé.' },
+                        { id: 'p_case2', title: 'Mayence, 1450', text: 'Un orfèvre allemand assemble caractères mobiles et presse à vis. Gutenberg ne le sait pas encore : il vient de briser le monopole du savoir.' },
+                        { id: 'p_case3', title: 'Tanger, 1325', text: 'Un jeune juriste prend la route. Ibn Battuta parcourra 120 000 kilomètres en trente ans, traversant trois continents pour voir et raconter.' },
+                        { id: 'p_case4', title: 'Lyon, capitale du livre', text: 'Au XVIe siècle, Lyon devient la deuxième ville d\'Europe pour l\'imprimerie. Les presses tournent jour et nuit. Le savoir n\'a plus de frontières.' },
+                        { id: 'p_case5', title: 'La Bibliothèque', text: 'Aujourd\'hui à Lyon, la Bibliothèque municipale conserve plus de 3 millions de documents. Les passeurs continuent leur œuvre — la mémoire trouve toujours un chemin.' },
+                    ]
+                },
+                quete: {
+                    titre: 'Sur les traces des passeurs',
+                    etapes: [
+                        {
+                            id: 'p_e1',
+                            titre: 'L\'origine du savoir',
+                            indice: 'Avant Gutenberg, le savoir vivait derrière les murs. Trouve un lieu lyonnais où des moines copiaient autrefois.',
+                            prerequis: [{ cardId: 'tc_imprimerie', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7619, lng: 4.8275, rayon: 80, nom: 'Primatiale Saint-Jean' },
+                            rewardCases: ['p_case1'],
+                        },
+                        {
+                            id: 'p_e2',
+                            titre: 'L\'invention décisive',
+                            indice: 'Une presse a tout changé. Cherche dans le quartier où Lyon a brillé pour l\'imprimerie au XVIe siècle.',
+                            prerequis: [{ cardId: 'tc_gutenberg', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7644, lng: 4.8266, rayon: 80, nom: 'Quartier Saint-Jean (Vieux Lyon)' },
+                            rewardCases: ['p_case2'],
+                        },
+                        {
+                            id: 'p_e3',
+                            titre: 'Le voyageur',
+                            indice: 'Certains préfèrent voir plutôt que lire. Trouve un point de vue d\'où Lyon se contemple.',
+                            prerequis: [{ cardId: 'tc_ibn_battuta', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7621, lng: 4.8222, rayon: 80, nom: 'Esplanade de Fourvière' },
+                            rewardCases: ['p_case3'],
+                        },
+                        {
+                            id: 'p_e4',
+                            titre: 'Lyon imprimeuse',
+                            indice: 'Au XVIe siècle, on imprimait ici plus que partout. Cherche une rue qui porte encore la mémoire des imprimeurs.',
+                            prerequis: [
+                                { cardId: 'card18', minLevel: 2 },
+                                { cardId: 'tc_imprimerie', minLevel: 3 }
+                            ],
+                            objectifGeo: { lat: 45.7639, lng: 4.8293, rayon: 80, nom: 'Rue Mercière' },
+                            rewardCases: ['p_case4'],
+                        },
+                        {
+                            id: 'p_e5',
+                            titre: 'La mémoire vivante',
+                            indice: 'Aujourd\'hui encore, la chaîne continue. Trouve le grand bâtiment qui conserve la mémoire de la ville.',
+                            prerequis: [
+                                { cardId: 'tc_bibliotheque', minLevel: 3 },
+                                { cardId: 'card1', minLevel: 2 }
+                            ],
+                            objectifGeo: { lat: 45.7484, lng: 4.8500, rayon: 80, nom: 'Bibliothèque municipale Part-Dieu' },
+                            rewardCases: ['p_case5'],
+                        },
+                    ]
+                }
+            },
+            mesure_monde: {
+                title: 'La mesure du monde',
+                color: '#38bdf8',
+                bd: {
+                    totalCases: 5,
+                    cases: [
+                        { id: 'mm_case1', title: 'Le microscope', text: 'Au XVIIe siècle, une lentille de verre rend visible l\'invisible. Un grain de poivre devient un monde, une goutte d\'eau devient un océan grouillant. La nature avait des secrets : on les ouvre.' },
+                        { id: 'mm_case2', title: 'Linné nomme', text: 'Au XVIIIe siècle, un Suédois entreprend de donner un nom à chaque être vivant. Système binaire, latin universel : Homo sapiens. Le vivant entre dans une grammaire commune.' },
+                        { id: 'mm_case3', title: 'Darwin comprend', text: 'Cinq ans à bord du Beagle, des décennies de doute. Puis l\'évidence : les espèces ne sont pas fixes, elles dérivent. Le vivant a une histoire.' },
+                        { id: 'mm_case4', title: 'Marie Curie traverse', text: 'Du polonium au radium, l\'invisible n\'est plus une métaphore. Les atomes parlent. Deux Nobel — et une fille, Irène, qui en aura un troisième.' },
+                        { id: 'mm_case5', title: 'Lyon mesure le ciel', text: 'L\'horloge astronomique de Saint-Jean tourne depuis le XIVe siècle. Elle ne donne pas seulement l\'heure : elle dit la position du soleil, de la lune, des saints. Une cathédrale qui calcule l\'univers.' },
+                    ]
+                },
+                quete: {
+                    titre: 'Observer, mesurer, comprendre',
+                    etapes: [
+                        {
+                            id: 'mm_e1',
+                            titre: 'L\'instrument fondateur',
+                            indice: 'Un instrument du XIXe siècle a permis à un chercheur lyonnais de voir l\'invisible. Cherche dans un musée scientifique de Lyon.',
+                            prerequis: [{ cardId: 'tc_microscope', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7615, lng: 4.8359, rayon: 80, nom: 'Musée des Confluences' },
+                            rewardCases: ['mm_case1'],
+                        },
+                        {
+                            id: 'mm_e2',
+                            titre: 'Le système des noms',
+                            indice: 'Linné a nommé. Lyon catalogue. Trouve un jardin où les plantes portent encore leurs noms latins.',
+                            prerequis: [{ cardId: 'tc_linne', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7716, lng: 4.8526, rayon: 80, nom: 'Parc de la Tête d\'Or' },
+                            rewardCases: ['mm_case2'],
+                        },
+                        {
+                            id: 'mm_e3',
+                            titre: 'L\'évolution prouvée',
+                            indice: 'Darwin a observé. Lyon conserve. Trouve l\'endroit qui montre la diversité du vivant.',
+                            prerequis: [{ cardId: 'tc_darwin', minLevel: 3 }],
+                            objectifGeo: { lat: 45.7712, lng: 4.8534, rayon: 80, nom: 'Jardin botanique' },
+                            rewardCases: ['mm_case3'],
+                        },
+                        {
+                            id: 'mm_e4',
+                            titre: 'La radioactivité',
+                            indice: 'Une scientifique a brisé les frontières. Cherche un lieu lyonnais qui célèbre les femmes de science.',
+                            prerequis: [
+                                { cardId: 'tc_marie_curie', minLevel: 2 },
+                                { cardId: 'tc_herbier', minLevel: 2 }
+                            ],
+                            objectifGeo: { lat: 45.7402, lng: 4.8316, rayon: 80, nom: 'Université Lyon 1' },
+                            rewardCases: ['mm_case4'],
+                        },
+                        {
+                            id: 'mm_e5',
+                            titre: 'Le ciel mesuré',
+                            indice: 'Une horloge médiévale calcule encore les astres. Trouve-la dans la primatiale.',
+                            prerequis: [{ cardId: 'card15', minLevel: 3 }],
+                            objectifGeo: { lat: 45.7619, lng: 4.8275, rayon: 80, nom: 'Primatiale Saint-Jean' },
+                            rewardCases: ['mm_case5'],
+                        },
+                    ]
+                }
+            },
+            memoire_formes: {
+                title: 'La mémoire des formes',
+                color: '#f472b6',
+                bd: {
+                    totalCases: 5,
+                    cases: [
+                        { id: 'mf_case1', title: 'Le masque', text: 'Avant les mots, le masque. Un visage de bois pour cacher le sien — et révéler cent autres. La Commedia dell\'arte parcourt l\'Italie, puis l\'Europe. Polichinelle, Arlequin, Pantalon : on les reconnaît avant qu\'ils parlent.' },
+                        { id: 'mf_case2', title: 'Guignol naît à Lyon', text: 'Au XIXe siècle, un canut sans travail invente un personnage. Guignol parle lyonnais, frappe les notables, fait rire les enfants. Une marionnette devient un symbole de la ville.' },
+                        { id: 'mf_case3', title: 'Molière défie', text: 'Le théâtre du XVIIe siècle pouvait tuer. Molière fait rire de Tartuffe — l\'Église l\'attaque. Il continue. Le rire est une arme.' },
+                        { id: 'mf_case4', title: 'L\'image en mouvement', text: '1895, Lyon. Les Frères Lumière filment leurs ouvriers sortant de l\'usine. Premier film de l\'histoire. L\'image n\'est plus figée — elle vit, elle se souvient en mouvement.' },
+                        { id: 'mf_case5', title: 'L\'imprimerie multiplie', text: 'Avant Gutenberg, une forme se transmet par la main. Après lui, par la presse. Les visages, les costumes, les gestes du théâtre se répandent en Europe. La forme devient multiple.' },
+                    ]
+                },
+                quete: {
+                    titre: 'Représenter, jouer, transmettre',
+                    etapes: [
+                        {
+                            id: 'mf_e1',
+                            titre: 'Au pays des masques',
+                            indice: 'Un musée lyonnais expose les visages de la Commedia. Va le trouver.',
+                            prerequis: [{ cardId: 'tc_masque', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7651, lng: 4.8269, rayon: 80, nom: 'Musée des Marionnettes du Monde' },
+                            rewardCases: ['mf_case1'],
+                        },
+                        {
+                            id: 'mf_e2',
+                            titre: 'Guignol chez lui',
+                            indice: 'Un théâtre du Vieux Lyon donne encore des représentations de Guignol. Va le voir.',
+                            prerequis: [
+                                { cardId: 'tc_commedia', minLevel: 2 },
+                                { cardId: 'card4', minLevel: 2 }
+                            ],
+                            objectifGeo: { lat: 45.7649, lng: 4.8265, rayon: 80, nom: 'Théâtre Le Guignol de Lyon' },
+                            rewardCases: ['mf_case2'],
+                        },
+                        {
+                            id: 'mf_e3',
+                            titre: 'L\'esprit français',
+                            indice: 'Un théâtre national porte la mémoire du grand siècle. Cherche-le près de la presqu\'île.',
+                            prerequis: [{ cardId: 'tc_moliere', minLevel: 3 }],
+                            objectifGeo: { lat: 45.7672, lng: 4.8324, rayon: 80, nom: 'Théâtre des Célestins' },
+                            rewardCases: ['mf_case3'],
+                        },
+                        {
+                            id: 'mf_e4',
+                            titre: 'Là où le cinéma est né',
+                            indice: 'Une usine lyonnaise a vu naître le cinéma. Va à l\'endroit même.',
+                            prerequis: [{ cardId: 'card2', minLevel: 3 }],
+                            objectifGeo: { lat: 45.7438, lng: 4.8731, rayon: 80, nom: 'Institut Lumière' },
+                            rewardCases: ['mf_case4'],
+                        },
+                        {
+                            id: 'mf_e5',
+                            titre: 'La forme imprimée',
+                            indice: 'Un musée lyonnais conserve les presses qui ont diffusé la forme. Trouve-le.',
+                            prerequis: [{ cardId: 'tc_imprimerie', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7651, lng: 4.8294, rayon: 80, nom: 'Musée de l\'Imprimerie' },
+                            rewardCases: ['mf_case5'],
+                        },
+                    ]
+                }
+            },
+            pouvoir_lieux: {
+                title: 'Le pouvoir des lieux',
+                color: '#fb923c',
+                bd: {
+                    totalCases: 5,
+                    cases: [
+                        { id: 'pl_case1', title: 'Le cabinet', text: 'Au XVIe siècle, un prince rassemble dans sa salle des merveilles : corne de licorne, mâchoire de géant, automate qui joue de l\'orgue. Tout est vrai pour celui qui regarde. Le cabinet de curiosités est le premier musée du monde.' },
+                        { id: 'pl_case2', title: 'Alexandrie brûle', text: 'La plus grande bibliothèque de l\'Antiquité disparaît en flammes. Plus tard d\'autres brûleront — Sarajevo, Bagdad. Mais à chaque fois, ailleurs, des moines, des érudits, des copistes recommencent. La mémoire ne meurt pas dans un seul incendie.' },
+                        { id: 'pl_case3', title: 'L\'Académie mesure', text: 'Colbert fonde l\'Académie des Sciences en 1666. Elle décide de mesurer la Terre — et se trompe d\'un sixième. Elle se corrige. C\'est ainsi que la science avance : par erreur reconnue, puis corrigée.' },
+                        { id: 'pl_case4', title: 'Lyon collectionne', text: 'Au XIXe siècle, Lyon ouvre son Jardin des Curiosités. Au XXIe, le Musée des Confluences. La même obsession : rassembler le monde dans un lieu pour qu\'il ne se perde pas.' },
+                        { id: 'pl_case5', title: 'La pierre se souvient', text: 'Lyon est une ville romaine. Les vestiges sont partout — sous les pavés, dans les murs des maisons. Une pierre romaine soutient encore une cuisine du XXIe siècle. Le passé est un matériau de construction.' },
+                    ]
+                },
+                quete: {
+                    titre: 'Garder, classer, exposer',
+                    etapes: [
+                        {
+                            id: 'pl_e1',
+                            titre: 'Les premières curiosités',
+                            indice: 'Un musée lyonnais conserve l\'esprit des cabinets de curiosités. Trouve-le.',
+                            prerequis: [{ cardId: 'tc_cabinet', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7615, lng: 4.8359, rayon: 80, nom: 'Musée des Confluences' },
+                            rewardCases: ['pl_case1'],
+                        },
+                        {
+                            id: 'pl_e2',
+                            titre: 'L\'abri de la mémoire',
+                            indice: 'La grande bibliothèque de Lyon. Va à l\'endroit où les livres ne meurent pas.',
+                            prerequis: [{ cardId: 'tc_bibliotheque', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7484, lng: 4.8500, rayon: 80, nom: 'Bibliothèque municipale Part-Dieu' },
+                            rewardCases: ['pl_case2'],
+                        },
+                        {
+                            id: 'pl_e3',
+                            titre: 'L\'institution savante',
+                            indice: 'Lyon a son Académie. Trouve son siège historique.',
+                            prerequis: [
+                                { cardId: 'tc_academie', minLevel: 3 },
+                                { cardId: 'card17', minLevel: 2 }
+                            ],
+                            objectifGeo: { lat: 45.7656, lng: 4.8338, rayon: 80, nom: 'Palais Saint-Pierre' },
+                            rewardCases: ['pl_case3'],
+                        },
+                        {
+                            id: 'pl_e4',
+                            titre: 'Où les fleuves se rejoignent',
+                            indice: 'À la pointe sud de Lyon, deux fleuves se rencontrent. Va à l\'endroit où ils se mêlent.',
+                            prerequis: [{ cardId: 'card21', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7325, lng: 4.8186, rayon: 100, nom: 'Confluence Rhône-Saône' },
+                            rewardCases: ['pl_case4'],
+                        },
+                        {
+                            id: 'pl_e5',
+                            titre: 'La Rome lyonnaise',
+                            indice: 'Avant Lyon, Lugdunum. Trouve les vestiges du théâtre antique.',
+                            prerequis: [{ cardId: 'card12', minLevel: 3 }],
+                            objectifGeo: { lat: 45.7600, lng: 4.8202, rayon: 80, nom: 'Théâtre Antique de Fourvière' },
+                            rewardCases: ['pl_case5'],
+                        },
+                    ]
+                }
+            }
+        };
+
+        // État des quêtes par étape : 'locked' | 'available' | 'active' | 'completed'
+        // Stocké dans grappeQuestState[grappeId][etapeId] = état
+        let grappeQuestState = {};
+        // Cases BD débloquées : grappeBDUnlocked[grappeId] = Set des caseIds
+        let grappeBDUnlocked = {};
+
+        // ── Helpers quête ──
+        function _getEtapeStatus(grappeId, etape) {
+            if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
+            const stored = grappeQuestState[grappeId][etape.id];
+            if (stored === 'completed') return 'completed';
+            if (stored === 'active') return 'active';
+            // Vérifier prérequis
+            const allMet = etape.prerequis.every(req => {
+                if (!collectedCards.includes(req.cardId)) return false;
+                const cl = cardLevels[req.cardId];
+                return cl && cl.level >= req.minLevel;
+            });
+            return allMet ? 'available' : 'locked';
+        }
+
+        function _getCardLevelDisplay(cardId) {
+            if (!collectedCards.includes(cardId)) return { has: false, level: 0 };
+            const cl = cardLevels[cardId];
+            return { has: true, level: (cl?.level || 0) };
+        }
+
+        function _acceptQuestEtape(grappeId, etapeId) {
+            if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
+            grappeQuestState[grappeId][etapeId] = 'active';
+            saveProgress();
+            renderGrappeQuestModal(grappeId);
+            updateQuestMarkers();
+            showToast('🗺️ Quête acceptée — direction le terrain');
+        }
+
+        function _completeQuestEtape(grappeId, etapeId) {
+            const grappe = GRAPPE_QUESTS[grappeId];
+            if (!grappe) return;
+            const etape = grappe.quete.etapes.find(e => e.id === etapeId);
+            if (!etape) return;
+            if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
+            grappeQuestState[grappeId][etapeId] = 'completed';
+
+            // Marquer les cases BD comme "à animer" (mais pas encore débloquées)
+            // Elles seront débloquées à la fin de l'animation de déplacement
+            const newCaseIds = etape.rewardCases || [];
+            window._pendingBDReveal = {
+                grappeId,
+                caseIds: newCaseIds,
+                triggeredAt: Date.now()
+            };
+
+            // Déclencher le déplacement de l'acteur principal (premier prérequis avec moveTo)
+            // ou faute de mieux, déplacer le premier acteur prérequis vers une position d'arrivée
+            let actorMoved = false;
+            (etape.prerequis || []).forEach(req => {
+                const cfg = MM_ACTORS[req.cardId];
+                if (!cfg || actorArrivedSet.has(req.cardId)) return;
+                // Trouver baseX/baseY de la carte
+                let baseX = null, baseY = null;
+                for (const geo of GEO_ZONES) {
+                    const slot = geo.cards.find(c => c.id === req.cardId);
+                    if (slot) { baseX = slot.x * mmW; baseY = slot.y * mmH; break; }
+                }
+                if (baseX === null) return;
+                // Définir une destination — soit le moveTo configuré, soit un déplacement local
+                let toX, toY;
+                if (cfg.moveTo) {
+                    toX = cfg.moveTo.x * mmW;
+                    toY = cfg.moveTo.y * mmH - 28;
+                } else {
+                    // Pas de moveTo défini : petit déplacement local lié à l'objectif géo
+                    // On place l'acteur à une position relative au baseX/baseY
+                    const angle = (etape.id.charCodeAt(etape.id.length-1) % 8) * Math.PI / 4;
+                    toX = baseX + Math.cos(angle) * 70;
+                    toY = baseY + Math.sin(angle) * 50 - 18;
+                }
+                if (!activeActorMoves.some(m => m.cardId === req.cardId)) {
+                    activeActorMoves.push({
+                        cardId: req.cardId,
+                        fromX: baseX + 14, fromY: baseY - 18,
+                        toX, toY,
+                        startT: Date.now(), duration: 4000, done: false,
+                        onComplete: () => {
+                            // Débloquer les cases BD à l'arrivée
+                            if (!grappeBDUnlocked[grappeId]) grappeBDUnlocked[grappeId] = [];
+                            newCaseIds.forEach(caseId => {
+                                if (!grappeBDUnlocked[grappeId].includes(caseId)) {
+                                    grappeBDUnlocked[grappeId].push(caseId);
+                                }
+                            });
+                            saveProgress();
+                            // Ouvrir la BD automatiquement avec animation sur la nouvelle case
+                            setTimeout(() => {
+                                openGrappeBDModal(grappeId, newCaseIds);
+                            }, 400);
+                        }
+                    });
+                    actorMoved = true;
+                }
+            });
+
+            // Si aucun acteur n'a pu être déplacé, débloquer immédiatement
+            if (!actorMoved) {
+                if (!grappeBDUnlocked[grappeId]) grappeBDUnlocked[grappeId] = [];
+                newCaseIds.forEach(caseId => {
+                    if (!grappeBDUnlocked[grappeId].includes(caseId)) {
+                        grappeBDUnlocked[grappeId].push(caseId);
+                    }
+                });
+                saveProgress();
+                setTimeout(() => openGrappeBDModal(grappeId, newCaseIds), 400);
+            } else {
+                saveProgress();
+            }
+
+            // Fermer la modale grappe pour laisser place à l'animation sur la voûte
+            closeGrappeQuestModal();
+            // S'assurer que la voûte est ouverte pour voir l'animation
+            const mmScreen = document.getElementById('mindmapScreen');
+            if (mmScreen && !mmScreen.classList.contains('show')) {
+                openMindmap();
+            }
+            showToast('✨ Étape accomplie — regarde ta voûte');
+        }
+
 
         // ── État ──
         let mindmapState = {
@@ -17969,6 +19105,7 @@
 
 
         function openMindmap() {
+            clearVaultNotification();
             _hideAllNearbyConsoles();
             _obOnOpenMindmap();
             mmScale = 1.0;
@@ -18024,6 +19161,534 @@
         }
 
         // ── Barre des grappes ──
+        // ════════════════════════════════════════════════════════
+        // MODALES QUÊTE GRAPPE & BD
+        // ════════════════════════════════════════════════════════
+
+        let _currentGrappeQuestId = null;
+
+        // ════════════════════════════════════════════════════════
+        // JOURNAL DE QUÊTE & NOTIFICATIONS VOÛTE
+        // ════════════════════════════════════════════════════════
+
+        // Récupère toutes les quêtes actives ou disponibles, triées par grappe
+        function _getActiveQuests() {
+            const list = [];
+            Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
+                grappe.quete.etapes.forEach(etape => {
+                    const status = _getEtapeStatus(gid, etape);
+                    // Le journal n'affiche que les quêtes ACCEPTÉES (active)
+                    if (status === 'active') {
+                        list.push({ grappeId: gid, grappe, etape, status });
+                    }
+                });
+            });
+            return list;
+        }
+
+        function openQuestJournal() {
+            const panel = document.getElementById('questJournalPanel');
+            renderQuestJournal();
+            panel.classList.add('show');
+            // Effacer la pastille notif sur le bouton journal (vu)
+            document.getElementById('hudQjCount').style.display = 'none';
+        }
+
+        function closeQuestJournal() {
+            document.getElementById('questJournalPanel').classList.remove('show');
+        }
+
+        function handleQuestJournalBackdrop(e) {
+            if (e.target.id === 'questJournalPanel') closeQuestJournal();
+        }
+
+        function renderQuestJournal() {
+            const body = document.getElementById('qjBody');
+            const subtitle = document.getElementById('qjSubtitle');
+            const list = _getActiveQuests();
+
+            if (list.length === 0) {
+                subtitle.textContent = 'Aucune quête en cours pour le moment';
+                body.innerHTML = '<div class="qj-empty">📜<br><br>Approfondis tes cartes dans la Voûte pour débloquer de nouvelles quêtes.</div>';
+                return;
+            }
+
+            const activeCount = list.filter(q => q.status === 'active').length;
+            subtitle.textContent = list.length + ' quête(s) — ' + activeCount + ' en cours';
+
+            body.innerHTML = '';
+            list.forEach(({ grappeId, grappe, etape, status }) => {
+                const el = document.createElement('div');
+                el.className = 'qj-quest';
+                el.style.setProperty('--qj-color', grappe.color);
+                el.innerHTML = `
+                    <div class="qj-quest-grappe">${grappe.title}</div>
+                    <div class="qj-quest-title">${etape.titre}</div>
+                    <div class="qj-quest-indice">${etape.indice}</div>
+                    <div class="qj-quest-place">📍 ${etape.objectifGeo?.nom || 'Lieu à découvrir'}</div>
+                    <div class="qj-quest-action"></div>
+                `;
+                const actions = el.querySelector('.qj-quest-action');
+                if (status === 'available') {
+                    const btn = document.createElement('button');
+                    btn.className = 'qj-quest-btn primary';
+                    btn.textContent = 'Accepter';
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        _acceptQuestEtape(grappeId, etape.id);
+                        renderQuestJournal();
+                    };
+                    actions.appendChild(btn);
+                }
+                if (status === 'active') {
+                    let onSite = false;
+                    if (playerPos && etape.objectifGeo) {
+                        const dist = getDistance(playerPos.lat, playerPos.lng, etape.objectifGeo.lat, etape.objectifGeo.lng);
+                        const radius = etape.objectifGeo.rayon || 80;
+                        onSite = dist <= radius;
+                    }
+                    const btn = document.createElement('button');
+                    btn.className = 'qj-quest-btn primary';
+                    if (onSite) {
+                        btn.textContent = 'Valider ✓';
+                        btn.onclick = (e) => {
+                            e.stopPropagation();
+                            closeQuestJournal();
+                            _completeQuestEtape(grappeId, etape.id);
+                        };
+                    } else {
+                        btn.textContent = 'Va sur place';
+                        btn.disabled = true;
+                        btn.style.opacity = '0.55';
+                        btn.style.cursor = 'not-allowed';
+                    }
+                    actions.appendChild(btn);
+                }
+                const detailBtn = document.createElement('button');
+                detailBtn.className = 'qj-quest-btn';
+                detailBtn.textContent = 'Voir grappe';
+                detailBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    closeQuestJournal();
+                    openMindmap();
+                    setTimeout(() => openGrappeQuestModal(grappeId), 200);
+                };
+                actions.appendChild(detailBtn);
+
+                body.appendChild(el);
+            });
+        }
+
+        // Set des étapes déjà notifiées (pour ne pas redéclencher la notif voûte)
+        let _notifiedAvailable = new Set();
+
+        // Met à jour la pastille du bouton journal et la notif voûte
+        function updateQuestJournalBadge() {
+            const list = _getActiveQuests();
+            const count = list.length;
+            const btn = document.getElementById('hudQuestJournal');
+            const cnt = document.getElementById('hudQjCount');
+            if (!btn || !cnt) return;
+            btn.classList.remove('hidden');
+            if (count > 0) {
+                cnt.textContent = count;
+                cnt.style.display = 'flex';
+            } else {
+                cnt.style.display = 'none';
+            }
+            // Détecter les nouvelles étapes "available" et déclencher la notif voûte
+            list.forEach(q => {
+                if (q.status === 'available') {
+                    const key = q.grappeId + ':' + q.etape.id;
+                    if (!_notifiedAvailable.has(key)) {
+                        _notifiedAvailable.add(key);
+                        showVaultNotification();
+                    }
+                }
+            });
+        }
+
+        // Tag les markers DOM avec une classe pour pouvoir les masquer en mode planning
+        function _tagMarkerClasses() {
+            (dustMarkers || []).forEach(m => { if (m.el) m.el.classList.add('dust-marker'); });
+            (echoMarkers || []).forEach(m => { if (m.el) m.el.classList.add('echo-marker'); });
+            (orbMarkers || []).forEach(m => { if (m.el) m.el.classList.add('orb-marker'); });
+            (scrollMarkers || []).forEach(m => { if (m.el) m.el.classList.add('scroll-marker'); });
+            (lootMarkers || []).forEach(m => { if (m.el) m.el.classList.add('loot-marker'); });
+        }
+
+        // Crée/met à jour les épingles de quêtes actives sur la mappe
+        let _questPinMarkers = [];
+        function updateQuestMarkers() {
+            // Supprimer les anciens
+            _questPinMarkers.forEach(m => { try { m.marker.remove(); } catch(e){} });
+            _questPinMarkers = [];
+
+            // Tag les markers de ressources si pas encore fait
+            _tagMarkerClasses();
+
+            // Si on n'est pas en mode planning, ne rien afficher
+            if (_mapViewMode !== 'far') return;
+            if (!map) return;
+
+            // Récupérer toutes les quêtes actives (status === 'active')
+            const list = [];
+            Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
+                grappe.quete.etapes.forEach(etape => {
+                    const status = _getEtapeStatus(gid, etape);
+                    if (status === 'active' && etape.objectifGeo) {
+                        list.push({ grappeId: gid, grappe, etape });
+                    }
+                });
+            });
+
+            // Créer une épingle pour chaque
+            list.forEach(({ grappeId, grappe, etape }) => {
+                const el = document.createElement('div');
+                el.className = 'quest-pin';
+                el.style.setProperty('--qp-color', grappe.color);
+                // Calcul d'une couleur glow plus claire
+                el.style.setProperty('--qp-glow', grappe.color + 'cc');
+                el.innerHTML = `
+                    <div class="quest-pin-marker"></div>
+                    <div class="quest-pin-label">${etape.titre}</div>
+                `;
+                el.addEventListener('click', () => {
+                    showToast('📍 ' + etape.objectifGeo.nom + ' — ' + etape.titre);
+                });
+                const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+                    .setLngLat([etape.objectifGeo.lng, etape.objectifGeo.lat])
+                    .addTo(map);
+                _questPinMarkers.push({ marker, el });
+            });
+        }
+
+        // Vérifie si le joueur est sur un objectif de quête active
+        // Si oui, déclenche _completeQuestEtape automatiquement
+        function checkActiveQuestGeofencing() {
+            if (!playerPos) return;
+            Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
+                grappe.quete.etapes.forEach(etape => {
+                    const status = _getEtapeStatus(gid, etape);
+                    if (status !== 'active') return;
+                    if (!etape.objectifGeo) return;
+                    const dist = getDistance(
+                        playerPos.lat, playerPos.lng,
+                        etape.objectifGeo.lat, etape.objectifGeo.lng
+                    );
+                    const radius = etape.objectifGeo.rayon || 80;
+                    if (dist <= radius) {
+                        // Marquer pour ne pas redéclencher
+                        const key = gid + ':' + etape.id;
+                        if (!window._geofencedTriggered) window._geofencedTriggered = new Set();
+                        if (window._geofencedTriggered.has(key)) return;
+                        window._geofencedTriggered.add(key);
+                        // Déclencher la complétion
+                        showToast('✨ Tu es au bon endroit — quelque chose se trace dans ta voûte');
+                        setTimeout(() => _completeQuestEtape(gid, etape.id), 800);
+                    }
+                });
+            });
+        }
+
+        // Met à jour la boussole : pointe vers la quête active la plus proche
+        function updateQuestCompass() {
+            const compass = document.getElementById('hudQuestCompass');
+            if (!compass) return;
+            if (!playerPos) { compass.style.display = 'none'; return; }
+
+            let nearest = null;
+            let nearestDist = Infinity;
+            Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
+                grappe.quete.etapes.forEach(etape => {
+                    const status = _getEtapeStatus(gid, etape);
+                    if (status !== 'active') return;
+                    if (!etape.objectifGeo) return;
+                    const dist = getDistance(playerPos.lat, playerPos.lng, etape.objectifGeo.lat, etape.objectifGeo.lng);
+                    if (dist < nearestDist) {
+                        nearestDist = dist;
+                        nearest = { grappe, etape, dist };
+                    }
+                });
+            });
+
+            if (!nearest) { compass.style.display = 'none'; return; }
+            compass.style.display = 'flex';
+            compass.style.setProperty('--hqc-color', nearest.grappe.color);
+
+            document.getElementById('hqcTitle').textContent = nearest.etape.titre;
+
+            let distStr;
+            if (nearest.dist < 1000) {
+                distStr = Math.round(nearest.dist) + ' m';
+            } else {
+                distStr = (nearest.dist / 1000).toFixed(1) + ' km';
+            }
+            document.getElementById('hqcDistance').textContent = distStr;
+
+            // Bearing
+            const lat1 = playerPos.lat * Math.PI / 180;
+            const lat2 = nearest.etape.objectifGeo.lat * Math.PI / 180;
+            const dLng = (nearest.etape.objectifGeo.lng - playerPos.lng) * Math.PI / 180;
+            const y = Math.sin(dLng) * Math.cos(lat2);
+            const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+            const bearing = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+
+            let displayAngle = bearing;
+            if (map && typeof map.getBearing === 'function') {
+                displayAngle = bearing - map.getBearing();
+            }
+            document.getElementById('hqcArrow').style.transform = 'rotate(' + displayAngle + 'deg)';
+        }
+
+        function showVaultNotification() {
+            const dot = document.getElementById('vaultNotifDot');
+            if (dot) dot.style.display = 'block';
+        }
+
+        function clearVaultNotification() {
+            const dot = document.getElementById('vaultNotifDot');
+            if (dot) dot.style.display = 'none';
+        }
+
+        function openGrappeQuestModal(grappeId) {
+            const grappe = GRAPPE_QUESTS[grappeId];
+            if (!grappe) {
+                showToast('Cette grappe n\'a pas encore de quête');
+                return;
+            }
+            const modal = document.getElementById('grappeQuestModal');
+            // Anti double-open
+            if (modal.classList.contains('show') && _currentGrappeQuestId === grappeId) return;
+            _currentGrappeQuestId = grappeId;
+            const card = modal.querySelector('.grappe-quest-card');
+            const body = document.getElementById('grappeQuestBody');
+            card.style.setProperty('--gq-color', grappe.color);
+            // Reset scroll du body (le seul scrollable)
+            body.scrollTop = 0;
+            modal.classList.add('show');
+            renderGrappeQuestModal(grappeId);
+            // Garantir scroll=0 après render
+            body.scrollTop = 0;
+            requestAnimationFrame(() => { body.scrollTop = 0; });
+        }
+
+        function closeGrappeQuestModal() {
+            document.getElementById('grappeQuestModal').classList.remove('show');
+            _currentGrappeQuestId = null;
+        }
+
+        function handleGrappeQuestBackdrop(e) {
+            if (e.target.id === 'grappeQuestModal') closeGrappeQuestModal();
+        }
+
+        function renderGrappeQuestModal(grappeId) {
+            const grappe = GRAPPE_QUESTS[grappeId];
+            if (!grappe) return;
+
+            document.getElementById('grappeQuestTitle').textContent = grappe.title;
+            const totalEtapes = grappe.quete.etapes.length;
+            const completedCount = grappe.quete.etapes.filter(e => _getEtapeStatus(grappeId, e) === 'completed').length;
+            document.getElementById('grappeQuestSubtitle').textContent = grappe.quete.titre + ' · ' + completedCount + '/' + totalEtapes + ' étapes';
+
+            const body = document.getElementById('grappeQuestBody');
+            body.innerHTML = '';
+
+            grappe.quete.etapes.forEach((etape, idx) => {
+                const status = _getEtapeStatus(grappeId, etape);
+                const etapeEl = document.createElement('div');
+                etapeEl.className = 'gq-etape ' + status;
+
+                // Header : titre + statut
+                const head = document.createElement('div');
+                head.className = 'gq-etape-head';
+                const title = document.createElement('div');
+                title.className = 'gq-etape-title';
+                title.textContent = (idx + 1) + '. ' + etape.titre;
+                const statusEl = document.createElement('div');
+                statusEl.className = 'gq-etape-status gq-status-' + status;
+                statusEl.textContent = ({
+                    locked: '🔒 Verrouillé',
+                    available: '✓ Disponible',
+                    active: '⚡ En cours',
+                    completed: '✓ Terminé'
+                })[status];
+                head.appendChild(title);
+                head.appendChild(statusEl);
+                etapeEl.appendChild(head);
+
+                // Prérequis
+                const prereqLabel = document.createElement('div');
+                prereqLabel.className = 'gq-section-label';
+                prereqLabel.textContent = 'Prérequis';
+                etapeEl.appendChild(prereqLabel);
+
+                const prereqList = document.createElement('div');
+                prereqList.className = 'gq-prereq-list';
+                const _allCardsLocal = Object.values(COLLECTIONS).flatMap(c => c.cards);
+                etape.prerequis.forEach(req => {
+                    const card = _allCardsLocal.find(c => c.id === req.cardId);
+                    const cardName = card ? card.name : req.cardId;
+                    const cardState = _getCardLevelDisplay(req.cardId);
+                    const isMet = cardState.has && cardState.level >= req.minLevel;
+
+                    const reqEl = document.createElement('div');
+                    reqEl.className = 'gq-prereq';
+                    if (isMet) reqEl.classList.add('met');
+                    if (!cardState.has) reqEl.classList.add('missing-card');
+
+                    const icon = document.createElement('div');
+                    icon.className = 'gq-prereq-icon';
+                    if (card) {
+                        icon.style.background = card.imageUrl ? `url(${card.imageUrl}) center/cover` : '#666';
+                    }
+                    reqEl.appendChild(icon);
+
+                    const name = document.createElement('span');
+                    name.className = 'gq-prereq-name';
+                    name.textContent = cardState.has ? cardName : '???';
+                    reqEl.appendChild(name);
+
+                    const lvl = document.createElement('span');
+                    lvl.className = 'gq-prereq-level';
+                    lvl.textContent = 'LV' + req.minLevel + (cardState.has ? ' (' + cardState.level + ')' : '');
+                    reqEl.appendChild(lvl);
+
+                    if (cardState.has) {
+                        reqEl.addEventListener('click', () => {
+                            const c = Object.values(COLLECTIONS).flatMap(cc => cc.cards).find(c => c.id === req.cardId);
+                            if (c) {
+                                window._reopenGrappeQuestModalId = grappeId;
+                                document.getElementById('grappeQuestModal').classList.remove('show');
+                                openCardDetail(c, 'mindmap');
+                            }
+                        });
+                    }
+                    prereqList.appendChild(reqEl);
+                });
+                etapeEl.appendChild(prereqList);
+
+                // Objectif (si available, active ou completed)
+                if (status !== 'locked') {
+                    const objLabel = document.createElement('div');
+                    objLabel.className = 'gq-section-label';
+                    objLabel.textContent = 'Objectif sur le terrain';
+                    etapeEl.appendChild(objLabel);
+
+                    const obj = document.createElement('div');
+                    obj.className = 'gq-objectif';
+                    obj.textContent = etape.indice;
+                    if (etape.objectifGeo?.nom) {
+                        const place = document.createElement('div');
+                        place.className = 'gq-objectif-place';
+                        place.textContent = '📍 ' + etape.objectifGeo.nom;
+                        obj.appendChild(place);
+                    }
+                    etapeEl.appendChild(obj);
+                }
+
+                // Reward
+                const rewardLabel = document.createElement('div');
+                rewardLabel.className = 'gq-section-label';
+                rewardLabel.textContent = 'Récompense';
+                etapeEl.appendChild(rewardLabel);
+
+                const rewardEl = document.createElement('div');
+                rewardEl.className = 'gq-reward';
+                (etape.rewardCases || []).forEach(caseId => {
+                    const isUnlocked = (grappeBDUnlocked[grappeId] || []).includes(caseId);
+                    const caseEl = document.createElement('div');
+                    caseEl.className = 'gq-reward-case' + (isUnlocked ? ' unlocked' : '');
+                    caseEl.textContent = isUnlocked ? '✓' : 'BD';
+                    rewardEl.appendChild(caseEl);
+                });
+                etapeEl.appendChild(rewardEl);
+
+                // Bouton d'action
+                if (status === 'available') {
+                    const btn = document.createElement('button');
+                    btn.className = 'gq-action-btn';
+                    btn.textContent = 'Accepter la quête';
+                    btn.onclick = () => _acceptQuestEtape(grappeId, etape.id);
+                    etapeEl.appendChild(btn);
+                } else if (status === 'active') {
+                    // Vérifier si le joueur est dans la zone de l'objectif
+                    let onSite = false;
+                    if (playerPos && etape.objectifGeo) {
+                        const dist = getDistance(playerPos.lat, playerPos.lng, etape.objectifGeo.lat, etape.objectifGeo.lng);
+                        const radius = etape.objectifGeo.rayon || 80;
+                        onSite = dist <= radius;
+                    }
+                    const btn = document.createElement('button');
+                    btn.className = 'gq-action-btn complete';
+                    if (onSite) {
+                        btn.textContent = 'Valider — tu es sur place ✓';
+                        btn.onclick = () => _completeQuestEtape(grappeId, etape.id);
+                    } else {
+                        btn.textContent = 'Va sur place pour valider';
+                        btn.disabled = true;
+                        btn.style.opacity = '0.55';
+                        btn.style.cursor = 'not-allowed';
+                    }
+                    etapeEl.appendChild(btn);
+                }
+
+                body.appendChild(etapeEl);
+            });
+
+            // Bouton BD globale
+            const bdBtn = document.createElement('button');
+            bdBtn.className = 'gq-bd-btn';
+            const unlockedCount = (grappeBDUnlocked[grappeId] || []).length;
+            bdBtn.textContent = '📖 Consulter la planche BD (' + unlockedCount + '/' + grappe.bd.totalCases + ')';
+            bdBtn.onclick = () => openGrappeBDModal(grappeId);
+            body.appendChild(bdBtn);
+        }
+
+        function openGrappeBDModal(grappeId, newlyRevealedIds) {
+            const grappe = GRAPPE_QUESTS[grappeId];
+            if (!grappe) return;
+            document.getElementById('grappeBDTitle').textContent = grappe.title + ' — Planche';
+            const grid = document.getElementById('grappeBDGrid');
+            grid.innerHTML = '';
+            const unlocked = grappeBDUnlocked[grappeId] || [];
+            const newSet = new Set(newlyRevealedIds || []);
+            grappe.bd.cases.forEach(c => {
+                const isUnlocked = unlocked.includes(c.id);
+                const isNew = newSet.has(c.id);
+                const el = document.createElement('div');
+                el.className = 'gq-bd-case' + (isUnlocked ? '' : ' locked') + (isNew ? ' is-new' : '');
+                if (isUnlocked) {
+                    el.innerHTML = '<div class="gq-bd-case-title">' + c.title + '</div><div class="gq-bd-case-text"></div>';
+                } else {
+                    el.innerHTML = '<div class="gq-bd-case-title">???</div><div class="gq-bd-case-text">Case verrouillée</div>';
+                }
+                grid.appendChild(el);
+                // Si nouvelle case : animer l'écriture du texte
+                if (isNew && isUnlocked) {
+                    const textEl = el.querySelector('.gq-bd-case-text');
+                    const fullText = c.text;
+                    let i = 0;
+                    const typeInterval = setInterval(() => {
+                        i++;
+                        textEl.textContent = fullText.slice(0, i);
+                        if (i >= fullText.length) clearInterval(typeInterval);
+                    }, 18);
+                } else if (isUnlocked) {
+                    el.querySelector('.gq-bd-case-text').textContent = c.text;
+                }
+            });
+            document.getElementById('grappeBDModal').classList.add('show');
+        }
+
+        function closeGrappeBDModal() {
+            document.getElementById('grappeBDModal').classList.remove('show');
+        }
+
+        function handleGrappeBDBackdrop(e) {
+            if (e.target.id === 'grappeBDModal') closeGrappeBDModal();
+        }
+
         function renderGrappeBar() {
             const bar = document.getElementById('grappeBar');
             if (!bar) return;
@@ -18054,9 +19719,17 @@
                 chip.appendChild(label);
                 chip.appendChild(badge);
 
-                if (isUnlocked || isWhispered) {
-                    chip.addEventListener('click', () => showFragmentForZone(zone));
-                }
+                // Tap : si une quête de grappe existe, ouvrir la nouvelle modale
+                // Sinon retomber sur l'ancien comportement (fragments)
+                chip.addEventListener('click', () => {
+                    if (GRAPPE_QUESTS[zone.id]) {
+                        openGrappeQuestModal(zone.id);
+                    } else if (isUnlocked || isWhispered) {
+                        showFragmentForZone(zone);
+                    } else {
+                        showToast('Cette grappe n\'est pas encore débloquée');
+                    }
+                });
                 bar.appendChild(chip);
             });
 
@@ -18251,15 +19924,54 @@
             });
         }
 
-        function _isActorIdle(cardId) {
-            const cfg = MM_ACTORS[cardId];
-            if (!cfg || !collectedCards.includes(cardId)) return false;
-            const target = (CARD_DIALOGUES[cardId] || []).filter(d => d.heart && d.entry)[cfg.idleEntryIndex];
-            if (!target) return false;
-            return (cardJournalEntries[cardId] || []).some(e => e.text === target.entry.text);
+        // Compte les entrées heart par niveau (total, dévoilées) pour une carte
+        function _getCardJournalProgress(cardId) {
+            const dialogues = (CARD_DIALOGUES[cardId] || []).filter(d => d.heart && d.entry);
+            const journalEntries = cardJournalEntries[cardId] || [];
+            const isUnveiled = (target) => journalEntries.some(e => e.text === target.entry.text);
+            const result = { 0: { total: 0, done: 0 }, 1: { total: 0, done: 0 }, 2: { total: 0, done: 0 } };
+            dialogues.forEach(d => {
+                const lvl = d.level !== undefined ? d.level : 0;
+                if (!result[lvl]) result[lvl] = { total: 0, done: 0 };
+                result[lvl].total++;
+                if (isUnveiled(d)) result[lvl].done++;
+            });
+            return result;
         }
 
-        function _drawActorAt(x, y, state) {
+        // La carte est prête si son niveau atteint celui requis dans au moins
+        // une étape de quête de grappe
+        function _isCardReadyForQuest(cardId) {
+            if (!collectedCards.includes(cardId)) return false;
+            const cl = cardLevels[cardId];
+            const lvl = cl?.level || 0;
+            for (const grappe of Object.values(GRAPPE_QUESTS)) {
+                for (const etape of (grappe.quete?.etapes || [])) {
+                    for (const req of (etape.prerequis || [])) {
+                        if (req.cardId === cardId && lvl >= req.minLevel) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // État actuel de l'acteur dans la Voûte (pour rendu visuel)
+        // 'awakened' : carte collectée mais pas prête (icône carte fixe + jauge)
+        // 'ready'    : seuil atteint (acteur sorti + quête au-dessus)
+        // 'arrived'  : quête accomplie (acteur à destination + BD)
+        function _getActorState(cardId) {
+            if (!collectedCards.includes(cardId)) return null;
+            if (actorArrivedSet.has(cardId)) return 'arrived';
+            if (_isCardReadyForQuest(cardId)) return 'ready';
+            return 'awakened';
+        }
+
+        // Compatibilité ancienne fonction
+        function _isActorIdle(cardId) {
+            return _isCardReadyForQuest(cardId);
+        }
+
+        function _drawActorAt(x, y, state, type) {
             const t = mmTime;
             mmCtx.save();
             mmCtx.translate(x, y);
@@ -18270,16 +19982,119 @@
             const fill   = state === 'moved' ? 'rgba(255,230,80,0.95)' : 'rgba(210,220,255,0.95)';
             const stroke = state === 'moved' ? 'rgba(255,200,40,1)'    : 'rgba(180,190,255,1)';
             const dark   = 'rgba(8,10,28,0.90)';
-            mmCtx.beginPath(); mmCtx.arc(0,-14,5.5,0,Math.PI*2); mmCtx.fillStyle=dark; mmCtx.fill();
-            mmCtx.beginPath(); mmCtx.arc(0,-14,4.2,0,Math.PI*2); mmCtx.fillStyle=fill; mmCtx.fill();
             mmCtx.lineCap='round';
-            [[3.5,dark],[1.6,stroke]].forEach(([lw,col]) => {
-                mmCtx.lineWidth=lw; mmCtx.strokeStyle=col;
-                mmCtx.beginPath(); mmCtx.moveTo(0,-9);  mmCtx.lineTo(0,-2);  mmCtx.stroke();
-                mmCtx.beginPath(); mmCtx.moveTo(-4,-7); mmCtx.lineTo(4,-7);  mmCtx.stroke();
-                mmCtx.beginPath(); mmCtx.moveTo(0,-2);  mmCtx.lineTo(-3,4);  mmCtx.stroke();
-                mmCtx.beginPath(); mmCtx.moveTo(0,-2);  mmCtx.lineTo(3,4);   mmCtx.stroke();
-            });
+
+            // Détection souple : un type peut être 'Lieu/Concept', 'Objet/Concept', etc.
+            const t_str = (type || '').toLowerCase();
+            const isLieu = t_str.includes('lieu');
+            const isObjet = t_str.includes('objet') || t_str.includes('concept');
+            // Type 'Lieu' : petit drapeau
+            if (isLieu) {
+                // Mât
+                [[3.5,dark],[1.6,stroke]].forEach(([lw,col]) => {
+                    mmCtx.lineWidth=lw; mmCtx.strokeStyle=col;
+                    mmCtx.beginPath(); mmCtx.moveTo(0,4); mmCtx.lineTo(0,-14); mmCtx.stroke();
+                });
+                // Drapeau (triangle)
+                mmCtx.beginPath();
+                mmCtx.moveTo(0, -14);
+                mmCtx.lineTo(8, -11);
+                mmCtx.lineTo(0, -8);
+                mmCtx.closePath();
+                mmCtx.fillStyle = dark; mmCtx.fill();
+                mmCtx.beginPath();
+                mmCtx.moveTo(1, -13);
+                mmCtx.lineTo(6.5, -11);
+                mmCtx.lineTo(1, -9);
+                mmCtx.closePath();
+                mmCtx.fillStyle = fill; mmCtx.fill();
+            }
+            // Type 'Objet' / 'Concept' : losange (pierre précieuse)
+            else if (isObjet) {
+                mmCtx.beginPath();
+                mmCtx.moveTo(0,-12);
+                mmCtx.lineTo(6,-6);
+                mmCtx.lineTo(0,2);
+                mmCtx.lineTo(-6,-6);
+                mmCtx.closePath();
+                mmCtx.fillStyle = dark;
+                mmCtx.lineWidth = 3.5; mmCtx.strokeStyle = dark; mmCtx.stroke();
+                mmCtx.fill();
+                mmCtx.beginPath();
+                mmCtx.moveTo(0,-10);
+                mmCtx.lineTo(4.5,-6);
+                mmCtx.lineTo(0,0);
+                mmCtx.lineTo(-4.5,-6);
+                mmCtx.closePath();
+                mmCtx.fillStyle = fill; mmCtx.fill();
+                // Reflet
+                mmCtx.beginPath();
+                mmCtx.moveTo(-1,-8);
+                mmCtx.lineTo(1.5,-6);
+                mmCtx.lineTo(-1,-3);
+                mmCtx.closePath();
+                mmCtx.fillStyle = 'rgba(255,255,255,0.5)';
+                mmCtx.fill();
+            }
+            // Type 'Personnage' (par défaut) : stick figure
+            else {
+                mmCtx.beginPath(); mmCtx.arc(0,-14,5.5,0,Math.PI*2); mmCtx.fillStyle=dark; mmCtx.fill();
+                mmCtx.beginPath(); mmCtx.arc(0,-14,4.2,0,Math.PI*2); mmCtx.fillStyle=fill; mmCtx.fill();
+                [[3.5,dark],[1.6,stroke]].forEach(([lw,col]) => {
+                    mmCtx.lineWidth=lw; mmCtx.strokeStyle=col;
+                    mmCtx.beginPath(); mmCtx.moveTo(0,-9);  mmCtx.lineTo(0,-2);  mmCtx.stroke();
+                    mmCtx.beginPath(); mmCtx.moveTo(-4,-7); mmCtx.lineTo(4,-7);  mmCtx.stroke();
+                    mmCtx.beginPath(); mmCtx.moveTo(0,-2);  mmCtx.lineTo(-3,4);  mmCtx.stroke();
+                    mmCtx.beginPath(); mmCtx.moveTo(0,-2);  mmCtx.lineTo(3,4);   mmCtx.stroke();
+                });
+            }
+            mmCtx.restore();
+        }
+
+        // Dessine la jauge de progression au-dessus de l'icône carte (état 'awakened')
+        function _drawJournalProgress(x, y, doneCount, totalCount) {
+            mmCtx.save();
+            // Mini-livre stylisé
+            const bookY = y - 30;
+            mmCtx.fillStyle = 'rgba(180,140,90,0.85)';
+            mmCtx.strokeStyle = 'rgba(60,40,20,0.9)';
+            mmCtx.lineWidth = 1;
+            mmCtx.fillRect(x - 6, bookY - 4, 12, 8);
+            mmCtx.strokeRect(x - 6, bookY - 4, 12, 8);
+            mmCtx.beginPath();
+            mmCtx.moveTo(x, bookY - 4);
+            mmCtx.lineTo(x, bookY + 4);
+            mmCtx.stroke();
+            // Texte X/Y
+            mmCtx.font = 'bold 10px sans-serif';
+            mmCtx.textAlign = 'center';
+            mmCtx.fillStyle = 'rgba(10,10,30,0.85)';
+            mmCtx.fillText(doneCount + '/' + totalCount, x + 1, bookY - 8);
+            mmCtx.fillStyle = 'rgba(255,230,150,1)';
+            mmCtx.fillText(doneCount + '/' + totalCount, x, bookY - 9);
+            mmCtx.restore();
+        }
+
+        // Dessine l'icône de quête au-dessus de l'acteur (état 'ready')
+        function _drawQuestIcon(x, y) {
+            const t = mmTime;
+            const bob = Math.sin(t * 2.2) * 2;
+            mmCtx.save();
+            mmCtx.translate(x, y - 28 + bob);
+            // Cercle de fond
+            mmCtx.beginPath();
+            mmCtx.arc(0, 0, 9, 0, Math.PI * 2);
+            mmCtx.fillStyle = 'rgba(255,200,40,0.95)';
+            mmCtx.fill();
+            mmCtx.strokeStyle = 'rgba(120,60,0,1)';
+            mmCtx.lineWidth = 1.5;
+            mmCtx.stroke();
+            // Point d'exclamation
+            mmCtx.fillStyle = 'rgba(60,30,0,1)';
+            mmCtx.font = 'bold 13px serif';
+            mmCtx.textAlign = 'center';
+            mmCtx.textBaseline = 'middle';
+            mmCtx.fillText('!', 0, 1);
             mmCtx.restore();
         }
 
@@ -18290,10 +20105,14 @@
                     m.done = true;
                     actorArrivedSet.add(m.cardId);
                     saveProgress();
+                    if (typeof m.onComplete === 'function') {
+                        try { m.onComplete(); } catch(e) { console.error('actor onComplete error', e); }
+                    }
                 }
             });
             Object.entries(MM_ACTORS).forEach(([cardId, cfg]) => {
-                if (!_isActorIdle(cardId)) return;
+                const state = _getActorState(cardId);
+                if (!state) return; // carte non collectée
                 let baseX = null, baseY = null;
                 for (const geo of GEO_ZONES) {
                     const slot = geo.cards.find(c => c.id === cardId);
@@ -18301,27 +20120,38 @@
                 }
                 if (baseX === null) return;
                 const idleX = baseX + 14, idleY = baseY - 18;
-                const move  = activeActorMoves.find(m => m.cardId === cardId);
+
+                if (state === 'awakened') {
+                    // Carte collectée mais pas prête : pas d'indicateur visuel sur la voûte
+                    return;
+                }
+
+                // ready / arrived : acteur visible
+                const move = activeActorMoves.find(m => m.cardId === cardId);
                 if (move && !move.done) {
                     const t    = Math.min(1, (now - move.startT) / move.duration);
                     const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
                     const cx   = move.fromX + (move.toX - move.fromX) * ease;
                     const cy   = move.fromY + (move.toY - move.fromY) * ease;
-                    _drawActorAt(cx, cy, 'idle');
+                    const _card = Object.values(COLLECTIONS).flatMap(cc => cc.cards).find(c => c.id === cardId);
+                    _drawActorAt(cx, cy, 'idle', _card?.type);
                     mmCtx.save();
                     mmCtx.globalAlpha=0.15; mmCtx.setLineDash([2,6]);
                     mmCtx.strokeStyle='rgba(255,255,200,1)'; mmCtx.lineWidth=1;
                     mmCtx.beginPath(); mmCtx.moveTo(idleX,idleY); mmCtx.lineTo(cx,cy); mmCtx.stroke();
                     mmCtx.setLineDash([]); mmCtx.restore();
-                } else if (actorArrivedSet.has(cardId) && cfg.moveTo) {
+                } else if (state === 'arrived' && cfg.moveTo) {
                     const tx = cfg.moveTo.x * mmW, ty = cfg.moveTo.y * mmH - 28;
-                    _drawActorAt(tx, ty, 'moved');
+                    const _card = Object.values(COLLECTIONS).flatMap(cc => cc.cards).find(c => c.id === cardId);
+                    _drawActorAt(tx, ty, 'moved', _card?.type);
                     mmCtx.save();
                     mmCtx.setLineDash([3,5]); mmCtx.strokeStyle='rgba(255,255,200,0.18)'; mmCtx.lineWidth=1;
                     mmCtx.beginPath(); mmCtx.moveTo(idleX,idleY); mmCtx.lineTo(tx,ty); mmCtx.stroke();
                     mmCtx.setLineDash([]); mmCtx.restore();
-                } else {
-                    _drawActorAt(idleX, idleY, 'idle');
+                } else if (state === 'ready') {
+                    // Acteur sorti, juste à côté de la carte
+                    const _card = Object.values(COLLECTIONS).flatMap(cc => cc.cards).find(c => c.id === cardId);
+                    _drawActorAt(idleX, idleY, 'idle', _card?.type);
                 }
             });
         }
