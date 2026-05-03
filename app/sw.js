@@ -3,28 +3,51 @@
    Stratégie : network-first
    - Toujours chercher la version la plus récente sur le réseau
    - Cache utilisé uniquement si hors-ligne
-   ───────────────────────────────────────────────────────────── */
+   ─────────────────────────────────────────────────────────────
+   À INCRÉMENTER à chaque mise à jour des assets
+   (sinon les utilisateurs garderont les anciennes images en cache) */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `explore-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
   './',
   './index.html',
   './manifest.json',
+  // Icônes UI principales
   './assets/spiral.png',
+  './assets/Powder.png',
+  './assets/parchemin.png',
+  './assets/LootIcon.png',
   './assets/BazarIcon.png',
   './assets/PanoramaIcon.png',
   './assets/PanelInfoIcon.png',
-  './assets/Powder.png',
+  // Icônes ressources carnet (ajoutées en v3)
+  './assets/Icon Cassette.png',
+  './assets/Icon Pellicule.png',
+  './assets/Icon Encre.png',
+  // Échos par supertype
   './assets/EchoHistoireIcon.png',
   './assets/EchoNatureIcon.png',
   './assets/EchoScienceIcon.png',
   './assets/EchoArtIcon.png',
   './assets/EchoSocieteIcon.png',
-  './assets/ScrollIcon.png',
-  './assets/LootIcon.png'
+  // Personnages et illustrations
+  './assets/Marcus.png',
+  './assets/Gardienne.png',
+  './assets/passant.png',
+  './assets/familypic.png',
+  './assets/Tasse-cafe.png',
+  './assets/cantine.png',
+  './assets/voiture.png'
 ];
+
+// ── Message handler ─────────────────────────────────────────────
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
 
 // ── Installation ─────────────────────────────────────────────
 self.addEventListener('install', (event) => {
@@ -64,6 +87,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (!url.protocol.startsWith('http')) return;
 
+  // Hôtes externes : pas de cache, on les laisse passer
   const EXTERNAL_HOSTS = [
     'tile.openstreetmap',
     'api.maptiler',
