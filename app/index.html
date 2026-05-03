@@ -281,6 +281,8 @@
             pointer-events: auto;
             cursor: pointer;
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+            z-index: 50;
+            position: relative;
         }
         .quest-pin-marker {
             width: 36px; height: 36px;
@@ -317,6 +319,29 @@
             white-space: nowrap;
             border: 1px solid rgba(255,255,255,0.15);
             backdrop-filter: blur(4px);
+        }
+        /* Variante mode zoom : pin plus petit pour ne pas encombrer */
+        .quest-pin.small .quest-pin-marker {
+            width: 28px; height: 28px;
+            border-width: 2px;
+        }
+        .quest-pin.small .quest-pin-marker::before {
+            font-size: 14px;
+        }
+        /* Quête sélectionnée : effet visuel renforcé */
+        .quest-pin.selected .quest-pin-marker {
+            border-color: #fcd34d;
+            box-shadow: 0 0 0 3px rgba(252,211,77,0.5), 0 0 25px var(--qp-glow, rgba(217,119,6,0.9));
+            animation: questPinSelectedPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes questPinSelectedPulse {
+            0%,100% { box-shadow: 0 0 0 3px rgba(252,211,77,0.5), 0 0 16px var(--qp-glow, rgba(217,119,6,0.6)); }
+            50%     { box-shadow: 0 0 0 4px rgba(252,211,77,0.7), 0 0 36px var(--qp-glow, rgba(217,119,6,1)); }
+        }
+        .quest-pin.selected .quest-pin-label {
+            background: rgba(252,211,77,0.95);
+            color: #2a1f10;
+            border-color: #d97706;
         }
 
         .vault-notif-dot {
@@ -5118,6 +5143,7 @@
 
         /* Modale substory (réutilisée) */
         /* ── Modale Quête Grappe ── */
+        /* ── Modal grappe : layout flex robuste ── */
         .grappe-quest-modal {
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.75);
@@ -5126,63 +5152,84 @@
             align-items: flex-end;
             justify-content: center;
             backdrop-filter: blur(3px);
-            overflow: hidden;
         }
         .grappe-quest-modal.show { display: flex; }
         .grappe-quest-card {
-            width: 100%; max-width: 480px;
+            width: 100%;
+            max-width: 480px;
             background: linear-gradient(180deg, #1a0f2e 0%, #0f0820 100%);
             border-top: 2px solid var(--gq-color, rgba(255,200,80,0.5));
             border-radius: 18px 18px 0 0;
             box-shadow: 0 -8px 30px rgba(0,0,0,0.6);
+            /* Hauteur fixe : 88% de la viewport (avec fallback dvh pour mobile) */
             height: 88vh;
+            height: 88dvh;
+            max-height: 88vh;
+            max-height: 88dvh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            position: relative;
             animation: gqSlideUp 0.32s ease-out;
         }
         @keyframes gqSlideUp {
             from { transform: translateY(100%); }
             to { transform: translateY(0); }
         }
-        .grappe-quest-close {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.12);
+        /* Header : bloc fixe en haut, titre + croix sur la même ligne */
+        .grappe-quest-header {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px 16px 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: linear-gradient(180deg, #1a0f2e 0%, rgba(26,15,46,0.95) 100%);
+        }
+        .grappe-quest-header-text {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .grappe-quest-title {
+            font-size: 18px;
+            font-weight: 800;
             color: #fff;
-            width: 32px; height: 32px; border-radius: 50%;
-            font-size: 14px; cursor: pointer;
-            z-index: 10;
+            letter-spacing: 0.3px;
+            line-height: 1.25;
+        }
+        .grappe-quest-subtitle {
+            font-size: 12px;
+            color: rgba(255,255,255,0.55);
+            margin-top: 4px;
+        }
+        .grappe-quest-close {
+            flex: 0 0 auto;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: #fff;
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            font-size: 15px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 0;
+            margin-top: 2px;
         }
-        .grappe-quest-header {
-            padding: 18px 50px 12px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            flex: 0 0 auto;
-            position: relative;
-        }
-        .grappe-quest-title {
-            font-size: 18px; font-weight: 800; color: #fff;
-            letter-spacing: 0.3px;
-        }
-        .grappe-quest-subtitle {
-            font-size: 12px; color: rgba(255,255,255,0.55);
-            margin-top: 4px;
-        }
+        .grappe-quest-close:active { background: rgba(255,255,255,0.22); }
+        /* Body scrollable : prend tout le reste de la hauteur */
         .grappe-quest-body {
-            padding: 14px 16px 40px;
             flex: 1 1 auto;
+            min-height: 0;
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
+            padding: 16px 16px 80px;
+            scrollbar-width: thin;
         }
+        .grappe-quest-body > .gq-etape:first-child { margin-top: 0; }
         .gq-etape {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.08);
@@ -5256,6 +5303,20 @@
             cursor: pointer;
             margin-top: 10px;
             letter-spacing: 0.3px;
+        }
+        .gq-action-btn.secondary {
+            background: rgba(255,255,255,0.06);
+            color: #e5e7eb;
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+        .gq-action-btn.secondary:active {
+            background: rgba(255,255,255,0.10);
+        }
+        .gq-action-btn.selected {
+            background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+            color: #422006;
+            border: 1px solid #fcd34d;
+            box-shadow: 0 0 0 2px rgba(252,211,77,0.3), 0 4px 12px rgba(217,119,6,0.4);
         }
         .gq-action-btn.complete { background: linear-gradient(135deg, #10b981, #059669); }
         .gq-action-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #555; }
@@ -6456,6 +6517,16 @@
                     </div>
                 </div>
                 <button onclick="collectDust()" class="collect-btn" style="background: #A855F7;">Collecter la poudre</button>
+            </div>
+
+            <div id="nearbyCarnetResource" class="nearby-poi hidden" style="background: #FEF3C7; border-color: #D97706;">
+                <div class="nearby-poi-header">
+                    <div>
+                        <div class="nearby-poi-name" id="carnetResourceName" style="color: #92400E;">📼 Ressource de carnet</div>
+                        <div class="nearby-poi-distance" style="color: #B45309;">À portée de collecte!</div>
+                    </div>
+                </div>
+                <button onclick="collectCarnetResource()" class="collect-btn" style="background: #D97706;">Collecter</button>
             </div>
 
             <div id="nearbyEcho" class="nearby-poi hidden" style="background: #F3E8FF; border-color: #A855F7;">
@@ -7767,9 +7838,11 @@
             <div class="grappe-quest-modal" id="grappeQuestModal" onclick="handleGrappeQuestBackdrop(event)">
                 <div class="grappe-quest-card">
                     <div class="grappe-quest-header">
-                        <button class="grappe-quest-close" onclick="closeGrappeQuestModal()">✕</button>
-                        <div class="grappe-quest-title" id="grappeQuestTitle"></div>
-                        <div class="grappe-quest-subtitle" id="grappeQuestSubtitle"></div>
+                        <div class="grappe-quest-header-text">
+                            <div class="grappe-quest-title" id="grappeQuestTitle"></div>
+                            <div class="grappe-quest-subtitle" id="grappeQuestSubtitle"></div>
+                        </div>
+                        <button class="grappe-quest-close" onclick="closeGrappeQuestModal()" aria-label="Fermer">✕</button>
                     </div>
                     <div class="grappe-quest-body" id="grappeQuestBody">
                         <!-- Rempli par renderGrappeQuestModal() -->
@@ -8720,6 +8793,54 @@
             { id: 'orb6',  lat: 45.7580, lng: 4.8240 },
         ];
 
+        // ── Points ressources carnet (cassette / pellicule / encre) ──
+        // Le type est attribué à la collecte (aléatoire à chaque respawn)
+        const CARNET_RESOURCE_POINTS = [
+            // Presqu'île
+            { id: 'carnet_r1',  lat: 45.7670, lng: 4.8330 },
+            { id: 'carnet_r2',  lat: 45.7615, lng: 4.8345 },
+            { id: 'carnet_r3',  lat: 45.7588, lng: 4.8338 },
+            { id: 'carnet_r4',  lat: 45.7548, lng: 4.8328 },
+            // Vieux Lyon
+            { id: 'carnet_r5',  lat: 45.7650, lng: 4.8270 },
+            { id: 'carnet_r6',  lat: 45.7625, lng: 4.8285 },
+            { id: 'carnet_r7',  lat: 45.7600, lng: 4.8260 },
+            // Croix-Rousse
+            { id: 'carnet_r8',  lat: 45.7745, lng: 4.8295 },
+            { id: 'carnet_r9',  lat: 45.7720, lng: 4.8270 },
+            { id: 'carnet_r10', lat: 45.7770, lng: 4.8330 },
+            // Part-Dieu / 3e
+            { id: 'carnet_r11', lat: 45.7600, lng: 4.8550 },
+            { id: 'carnet_r12', lat: 45.7560, lng: 4.8480 },
+            { id: 'carnet_r13', lat: 45.7530, lng: 4.8400 },
+            // Confluence / 7e
+            { id: 'carnet_r14', lat: 45.7390, lng: 4.8230 },
+            { id: 'carnet_r15', lat: 45.7440, lng: 4.8260 },
+            // Tête d'Or / 6e
+            { id: 'carnet_r16', lat: 45.7720, lng: 4.8540 },
+            { id: 'carnet_r17', lat: 45.7745, lng: 4.8480 },
+            // Fourvière
+            { id: 'carnet_r18', lat: 45.7625, lng: 4.8210 },
+        ];
+        const CARNET_RESOURCE_RADIUS = 25;
+        // Types possibles ; à chaque collecte on tire au sort
+        const CARNET_RESOURCE_TYPES = [
+            { key: 'pellicules', label: 'pellicule', emoji: '🎞️', image: './assets/Icon Pellicule.png', color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
+            { key: 'cassettes',  label: 'cassette',  emoji: '📼', image: './assets/Icon Cassette.png',  color: { top: 'rgba(196,181,253,0.95)', mid: 'rgba(139,92,246,0.55)', bot: 'rgba(91,33,182,0.85)', glow: 'rgba(196,181,253,0.8)', disk: 'rgba(237,233,254,0.7)', stroke: 'rgba(245,243,255,0.9)' } },
+            { key: 'encre',      label: 'encre',     emoji: '🖋️', image: './assets/Icon Encre.png',     color: { top: 'rgba(146,64,14,0.95)', mid: 'rgba(120,53,15,0.55)', bot: 'rgba(67,20,7,0.85)', glow: 'rgba(217,119,6,0.6)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(245,158,11,0.9)' } },
+        ];
+        // Mémorise les ressources collectées (pour respawn ou pas)
+        let collectedCarnetResources = []; // ids déjà collectées
+        // Mémorise le type tiré pour chaque point (pour cohérence visuelle entre frames)
+        let _carnetResourceTypeMap = {};
+        function _getCarnetResourceType(id) {
+            if (!_carnetResourceTypeMap[id]) {
+                const t = CARNET_RESOURCE_TYPES[Math.floor(Math.random() * CARNET_RESOURCE_TYPES.length)];
+                _carnetResourceTypeMap[id] = t.key;
+            }
+            return CARNET_RESOURCE_TYPES.find(t => t.key === _carnetResourceTypeMap[id]);
+        }
+
         const SCROLL_POINTS = [
             { id: 'scroll1', lat: 45.7635, lng: 4.8265, name: 'Chronique de Fourvière' },
             { id: 'scroll2', lat: 45.7655, lng: 4.8325, name: 'Mémoires du Vieux-Lyon' },
@@ -9188,9 +9309,11 @@
 
         function startOnboarding() {
             if (_obDone) return;
-            document.getElementById('onboardingOverlay').classList.remove('hidden');
+            // L'Acte I "Il existait un Grand Livre" a été remplacé par la cinématique BD.
+            // On enchaîne directement sur la note manuscrite de Marcus (Acte II).
+            document.getElementById('onboardingOverlay').classList.add('hidden');
             document.getElementById('obSkipBtn').classList.add('visible');
-            _obRunAct1(0);
+            _obShowMarcusNote();
         }
 
         function _obSkipTutorial() {
@@ -9266,8 +9389,9 @@
             infoMarkers.forEach(({ el }) => { el.dataset.obHidden = 'true'; el.style.display = 'none'; });
             panneauMarkers.forEach(({ el }) => { el.dataset.obHidden = 'true'; el.style.display = 'none'; });
             bazarMarkers.forEach(({ el }) => { el.dataset.obHidden = 'true'; el.style.display = 'none'; });
+            (typeof carnetResourceMarkers !== 'undefined' ? carnetResourceMarkers : []).forEach(({ el }) => { if(el) { el.dataset.obHidden = 'true'; el.style.display = 'none'; } });
             ['nearbyPOI','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll',
-             'nearbyInfo','nearbyPanneau','nearbyBazar'].forEach(id => {
+             'nearbyInfo','nearbyPanneau','nearbyBazar','nearbyCarnetResource'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) { el.dataset.obHidden = 'true'; el.classList.add('hidden'); }
             });
@@ -10334,6 +10458,8 @@
                     cardJournals,
                     grappeQuestState,
                     grappeBDUnlocked,
+                    collectedCarnetResources,
+                    _carnetResourceTypeMap,
                 };
                 localStorage.setItem('lyon_cards_progress', JSON.stringify(_saveData));
                 console.log('[expLore] Sauvegarde écrite — poudre:', _saveData.memorialDust, 'cartes:', (_saveData.collectedCards||[]).length, '_obDone:', _saveData._obDone);
@@ -10399,6 +10525,8 @@
                 if (d.cardJournals) cardJournals = d.cardJournals;
                 if (d.grappeQuestState) grappeQuestState = d.grappeQuestState;
                 if (d.grappeBDUnlocked) grappeBDUnlocked = d.grappeBDUnlocked;
+                if (Array.isArray(d.collectedCarnetResources)) collectedCarnetResources = d.collectedCarnetResources;
+                if (d._carnetResourceTypeMap) _carnetResourceTypeMap = d._carnetResourceTypeMap;
                 console.log('[expLore] loadProgress _obDone après:', _obDone);
             } catch(e) {}
         }
@@ -10443,6 +10571,8 @@
         let playerMarker = null;
         let poiMarkers = [];
         let dustMarkers = [];
+        let carnetResourceMarkers = [];
+        let currentNearbyCarnetResource = null;
         let echoMarkers = [];
         let orbMarkers = [];
         let scrollMarkers = [];
@@ -11104,6 +11234,39 @@
                 (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatSmall 3s ease-in-out ' + _dDelay + 's infinite';
             });
 
+            // ---- Carnet resource markers (cassettes/pellicules/encre) ----
+            CARNET_RESOURCE_POINTS.forEach(pt => {
+                if (collectedCarnetResources.includes(pt.id)) return;
+                const type = _getCarnetResourceType(pt.id);
+                const el = document.createElement('div');
+                el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
+                if (!_obDone) el.style.display = 'none';
+                const inner = document.createElement('div');
+                inner.style.cssText = 'position:absolute;transform:translate(-50%,-62%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+                const _crIcon = document.createElement('div');
+                _crIcon.style.cssText = 'flex-shrink:0;width:40px;height:40px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));';
+                _crIcon.innerHTML = '<img src="' + type.image + '" style="width:100%;height:100%;object-fit:contain;pointer-events:none;" draggable="false"/>';
+                const _crPid = 'carnetres_' + pt.id.replace(/[^a-z0-9]/gi,'');
+                const _crWrap = _buildPoiVisual(_crPid, type.color, _crIcon, 36, 28);
+                inner.appendChild(_crWrap);
+                el.appendChild(inner);
+                const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+                    .setLngLat([pt.lng, pt.lat]).addTo(map);
+                inner.addEventListener('click', () => {
+                    const inRange = getDistance(playerPos.lat, playerPos.lng, pt.lat, pt.lng) <= CARNET_RESOURCE_RADIUS;
+                    if (inRange) {
+                        currentNearbyCarnetResource = pt;
+                        document.getElementById('nearbyCarnetResource').classList.add('hidden');
+                        _animateCollect(inner, () => collectCarnetResource());
+                    } else {
+                        _showPoiTapFeedback('too_far', false);
+                    }
+                });
+                carnetResourceMarkers.push({ marker, el, pt, type });
+                const _crDelay = (Math.random() * 2).toFixed(2);
+                (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatSmall 3s ease-in-out ' + _crDelay + 's infinite';
+            });
+
             // ---- Echo markers ----
             ECHO_POINTS.forEach(echo => {
                 const info = SUPERTYPES[echo.supertype];
@@ -11203,7 +11366,7 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _sIcon = document.createElement('div');
                 _sIcon.style.cssText = 'flex-shrink:0;';
-                _sIcon.innerHTML = '<img src="./assets/ScrollIcon.png" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 5px rgba(180,83,9,0.5));" draggable="false"/>';
+                _sIcon.innerHTML = '<img src="./assets/parchemin.png" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 5px rgba(180,83,9,0.5));" draggable="false"/>';
                 const _sPid = 'scroll_' + scroll.id.replace(/[^a-z0-9]/gi,'');
                 const _sWrap = _buildPoiVisual(_sPid, {
                     top:    'rgba(251,191,36,0.9)',
@@ -12124,7 +12287,7 @@
 
         function _hideAllNearbyConsoles() {
             document.body.dataset.screenOpen = '1';
-            ['nearbyPOI','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyLoot','nearbyBazar','nearbyInfo','nearbyPanneau'].forEach(id => {
+            ['nearbyPOI','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyLoot','nearbyBazar','nearbyInfo','nearbyPanneau','nearbyCarnetResource'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
@@ -12132,11 +12295,49 @@
 
         function _showNearbyConsoles() {
             document.body.dataset.screenOpen = '0';
+            // Réinitialiser l'état edge-trigger pour permettre la réaffichage des consoles
+            // si le joueur est encore dans une zone à portée
+            if (typeof _poiEntered === 'object') {
+                Object.keys(_poiEntered).forEach(k => { _poiEntered[k] = null; });
+            }
         }
 
         function _isAnyScreenOpen() {
             return document.body.dataset.screenOpen === '1';
         }
+
+        // ── Edge-trigger pour les consoles de POI ──
+        // Chaque type mémorise le dernier id "à portée" pour ne déclencher la console
+        // qu'au moment de l'ENTRÉE dans la zone (et pas tant qu'on y reste)
+        // Et : si le joueur ferme la console (cf hideNearbyXXX), on marque comme "déjà vu"
+        const _poiEntered = {
+            poi: null, dust: null, echo: null, orb: null,
+            scroll: null, loot: null, info: null, bazar: null, carnetResource: null
+        };
+        const _poiDismissed = {
+            poi: new Set(), dust: new Set(), echo: new Set(), orb: new Set(),
+            scroll: new Set(), loot: new Set(), info: new Set(), bazar: new Set(), carnetResource: new Set()
+        };
+        // Helper : un POI doit-il afficher sa console ?
+        // Oui si on vient d'entrer (l'id a changé) ET qu'on n'a pas dismissed cette session
+        function _shouldShowPoiConsole(type, currentId) {
+            if (!currentId) {
+                _poiEntered[type] = null;
+                return false;
+            }
+            // Si on vient d'entrer dans une nouvelle zone
+            if (_poiEntered[type] !== currentId) {
+                _poiEntered[type] = currentId;
+                _poiDismissed[type].delete(currentId); // reset dismissed pour cette nouvelle entrée
+                return true;
+            }
+            // On est encore dans la même zone — afficher seulement si pas dismissed
+            return !_poiDismissed[type].has(currentId);
+        }
+        // Marquer un POI comme "vu et fermé" (la console disparaît jusqu'à ce qu'on resorte/rentre)
+        window._dismissPoiConsole = function(type, id) {
+            if (id) _poiDismissed[type].add(id);
+        };
 
         function checkNearbyPOI() {
             // Vérifier aussi les objectifs de quêtes actives
@@ -12157,6 +12358,7 @@
             if (nearbyPoi) {
                 const status = getPoiThematicStatus(nearbyPoi);
 
+                const showConsole = _shouldShowPoiConsole('poi', nearbyPoi.id) && !_screenBlocked;
                 if (status === 'local') {
                     currentNearbyPOI = nearbyPoi;
                     document.getElementById('poiName').textContent = nearbyPoi.name;
@@ -12166,7 +12368,8 @@
                     if (badge) badge.style.display = 'none';
                     const sub = nearbyDiv.querySelector('.nearby-poi-distance');
                     if (sub) sub.textContent = 'À portée de collecte !';
-                    if (!_screenBlocked) nearbyDiv.classList.remove('hidden');
+                    if (showConsole) nearbyDiv.classList.remove('hidden');
+                    else if (_screenBlocked) nearbyDiv.classList.add('hidden');
 
                 } else if (status === 'thematic_available') {
                     currentNearbyThematic = nearbyPoi;
@@ -12180,13 +12383,16 @@
                     if (badge) badge.style.display = 'inline-block';
                     const sub = nearbyDiv.querySelector('.nearby-poi-distance');
                     if (sub) sub.textContent = '✦ Carte thématique disponible';
-                    if (!_screenBlocked) nearbyDiv.classList.remove('hidden');
+                    if (showConsole) nearbyDiv.classList.remove('hidden');
+                    else if (_screenBlocked) nearbyDiv.classList.add('hidden');
 
                 } else {
                     nearbyDiv.classList.add('hidden');
+                    _shouldShowPoiConsole('poi', null);
                 }
             } else {
                 nearbyDiv.classList.add('hidden');
+                _shouldShowPoiConsole('poi', null);
             }
 
             // Dust
@@ -12196,8 +12402,14 @@
             );
             currentNearbyDust = nearbyDust;
             const nearbyDustDiv = document.getElementById('nearbyDust');
-            if (nearbyDust) { if (!_screenBlocked) nearbyDustDiv.classList.remove('hidden'); }
-            else nearbyDustDiv.classList.add('hidden');
+            if (nearbyDust) {
+                const show = _shouldShowPoiConsole('dust', nearbyDust.id) && !_screenBlocked;
+                if (show) nearbyDustDiv.classList.remove('hidden');
+                else if (_screenBlocked) nearbyDustDiv.classList.add('hidden');
+            } else {
+                nearbyDustDiv.classList.add('hidden');
+                _shouldShowPoiConsole('dust', null);
+            }
 
             // Echo
             const nearbyEcho = ECHO_POINTS.find(e =>
@@ -12209,9 +12421,12 @@
             if (nearbyEcho) {
                 const info = SUPERTYPES[nearbyEcho.supertype];
                 document.getElementById('echoName').textContent = `${info.symbol} Écho ${info.name}`;
-                if (!_screenBlocked) nearbyEchoDiv.classList.remove('hidden');
+                const show = _shouldShowPoiConsole('echo', nearbyEcho.id) && !_screenBlocked;
+                if (show) nearbyEchoDiv.classList.remove('hidden');
+                else if (_screenBlocked) nearbyEchoDiv.classList.add('hidden');
             } else {
                 nearbyEchoDiv.classList.add('hidden');
+                _shouldShowPoiConsole('echo', null);
             }
 
             // Orb
@@ -12221,8 +12436,14 @@
             );
             currentNearbyOrb = nearbyOrb;
             const nearbyOrbDiv = document.getElementById('nearbyOrb');
-            if (nearbyOrb) { if (!_screenBlocked) nearbyOrbDiv.classList.remove('hidden'); }
-            else nearbyOrbDiv.classList.add('hidden');
+            if (nearbyOrb) {
+                const show = _shouldShowPoiConsole('orb', nearbyOrb.id) && !_screenBlocked;
+                if (show) nearbyOrbDiv.classList.remove('hidden');
+                else if (_screenBlocked) nearbyOrbDiv.classList.add('hidden');
+            } else {
+                nearbyOrbDiv.classList.add('hidden');
+                _shouldShowPoiConsole('orb', null);
+            }
 
             // Scroll
             const nearbyScroll = SCROLL_POINTS.find(s =>
@@ -12233,9 +12454,12 @@
             const nearbyScrollDiv = document.getElementById('nearbyScroll');
             if (nearbyScroll) {
                 document.getElementById('scrollName').textContent = '📜 ' + nearbyScroll.name;
-                if (!_screenBlocked) nearbyScrollDiv.classList.remove('hidden');
+                const show = _shouldShowPoiConsole('scroll', nearbyScroll.id) && !_screenBlocked;
+                if (show) nearbyScrollDiv.classList.remove('hidden');
+                else if (_screenBlocked) nearbyScrollDiv.classList.add('hidden');
             } else {
                 nearbyScrollDiv.classList.add('hidden');
+                _shouldShowPoiConsole('scroll', null);
             }
 
             // Loot mystère
@@ -12245,8 +12469,32 @@
             );
             currentNearbyLoot = nearbyLoot;
             const nearbyLootDiv = document.getElementById('nearbyLoot');
-            if (nearbyLoot) { if (!_screenBlocked) nearbyLootDiv.classList.remove('hidden'); }
-            else nearbyLootDiv.classList.add('hidden');
+            if (nearbyLoot) {
+                const show = _shouldShowPoiConsole('loot', nearbyLoot.id) && !_screenBlocked;
+                if (show) nearbyLootDiv.classList.remove('hidden');
+                else if (_screenBlocked) nearbyLootDiv.classList.add('hidden');
+            } else {
+                nearbyLootDiv.classList.add('hidden');
+                _shouldShowPoiConsole('loot', null);
+            }
+
+            // Carnet resource (cassette / pellicule / encre)
+            const nearbyCR = CARNET_RESOURCE_POINTS.find(pt =>
+                !collectedCarnetResources.includes(pt.id) &&
+                getDistance(playerPos.lat, playerPos.lng, pt.lat, pt.lng) <= CARNET_RESOURCE_RADIUS
+            );
+            currentNearbyCarnetResource = nearbyCR;
+            const nearbyCRDiv = document.getElementById('nearbyCarnetResource');
+            if (nearbyCR) {
+                const type = _getCarnetResourceType(nearbyCR.id);
+                document.getElementById('carnetResourceName').innerHTML = '<img src="' + type.image + '" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:6px;display:inline-block;" draggable="false"/>' + type.label.charAt(0).toUpperCase() + type.label.slice(1);
+                const show = _shouldShowPoiConsole('carnetResource', nearbyCR.id) && !_screenBlocked;
+                if (show) nearbyCRDiv.classList.remove('hidden');
+                else if (_screenBlocked) nearbyCRDiv.classList.add('hidden');
+            } else {
+                nearbyCRDiv.classList.add('hidden');
+                _shouldShowPoiConsole('carnetResource', null);
+            }
 
             // Panneaux
             checkNearbyPanneau();
@@ -12273,9 +12521,12 @@
             const nearbyInfoDiv = document.getElementById('nearbyInfo');
             if (currentNearbyInfo) {
                 document.getElementById('infoPointName').textContent = currentNearbyInfo.title;
-                if (!_screenBlocked) nearbyInfoDiv.classList.remove('hidden');
+                const show = _shouldShowPoiConsole('info', currentNearbyInfo.id) && !_screenBlocked;
+                if (show) nearbyInfoDiv.classList.remove('hidden');
+                else if (_screenBlocked) nearbyInfoDiv.classList.add('hidden');
             } else {
                 nearbyInfoDiv.classList.add('hidden');
+                _shouldShowPoiConsole('info', null);
             }
             stackNearbyPanels();
         }
@@ -14023,6 +14274,29 @@
                     banner.style.animation = '';
                 }
             }
+        }
+
+        function collectCarnetResource() {
+            if (!currentNearbyCarnetResource) return;
+            const pt = currentNearbyCarnetResource;
+            const type = _getCarnetResourceType(pt.id);
+            // Ajout 1 ressource au sac
+            bagInv[type.key] = (bagInv[type.key] || 0) + 1;
+            // Marquer comme collecté
+            if (!collectedCarnetResources.includes(pt.id)) collectedCarnetResources.push(pt.id);
+            // Retirer le marker visuel
+            const idx = carnetResourceMarkers.findIndex(m => m.pt.id === pt.id);
+            if (idx >= 0) {
+                try { carnetResourceMarkers[idx].marker.remove(); } catch(e) {}
+                carnetResourceMarkers.splice(idx, 1);
+            }
+            currentNearbyCarnetResource = null;
+            document.getElementById('nearbyCarnetResource').classList.add('hidden');
+            // Update HUD pellicules si nécessaire
+            if (type.key === 'pellicules') updateCameraHUD();
+            saveProgress();
+            // Toast
+            showToast(type.emoji + ' +1 ' + type.label);
         }
 
         function collectDust() {
@@ -17705,15 +17979,18 @@
                     }
                 });
                 const nearbyDiv = document.getElementById('nearbyBazar');
-                if (nearest && !document.getElementById('bazarScreen').style.transform.includes('translateY(0)') && !_isAnyScreenOpen()) {
+                const bazarScreenOpen = document.getElementById('bazarScreen').style.transform.includes('translateY(0)');
+                if (nearest) {
                     currentNearbyBazar = nearest;
                     document.getElementById('bazarName').textContent = nearest.name;
-                    nearbyDiv.classList.remove('hidden');
-                } else if (!nearest) {
+                    // Edge-trigger : afficher la console seulement à l'entrée dans la zone
+                    const show = _shouldShowPoiConsole('bazar', nearest.id) && !bazarScreenOpen && !_isAnyScreenOpen();
+                    if (show) nearbyDiv.classList.remove('hidden');
+                    else if (_isAnyScreenOpen() || bazarScreenOpen) nearbyDiv.classList.add('hidden');
+                } else {
                     nearbyDiv.classList.add('hidden');
-                    if (!document.getElementById('bazarScreen').style.transform.includes('translateY(0)')) {
-                        currentNearbyBazar = null;
-                    }
+                    _shouldShowPoiConsole('bazar', null);
+                    if (!bazarScreenOpen) currentNearbyBazar = null;
                 }
             }, 800);
         }
@@ -19292,6 +19569,12 @@
 
             // Fermer la modale grappe pour laisser place à l'animation sur la voûte
             closeGrappeQuestModal();
+            // Retirer le pin de la quête complétée et nettoyer la sélection si c'était cette quête
+            if (window._selectedQuestKey === (grappeId + ':' + etapeId)) {
+                window._selectedQuestKey = null;
+            }
+            updateQuestMarkers();
+            updateQuestCompass();
             // S'assurer que la voûte est ouverte pour voir l'animation
             const mmScreen = document.getElementById('mindmapScreen');
             if (mmScreen && !mmScreen.classList.contains('show')) {
@@ -19635,12 +19918,25 @@
             subtitle.textContent = list.length + ' quête(s) — ' + activeCount + ' en cours';
 
             body.innerHTML = '';
+            // Si pas de quête sélectionnée, sélectionner automatiquement la première active
+            const activeList = list.filter(q => q.status === 'active');
+            if (activeList.length > 0) {
+                const currentSelected = window._selectedQuestKey;
+                const stillExists = activeList.some(q => (q.grappeId + ':' + q.etape.id) === currentSelected);
+                if (!stillExists) {
+                    window._selectedQuestKey = activeList[0].grappeId + ':' + activeList[0].etape.id;
+                    updateQuestMarkers();
+                }
+            }
             list.forEach(({ grappeId, grappe, etape, status }) => {
+                const questKey = grappeId + ':' + etape.id;
+                const isSelected = (window._selectedQuestKey === questKey) && status === 'active';
                 const el = document.createElement('div');
-                el.className = 'qj-quest';
+                el.className = 'qj-quest' + (isSelected ? ' selected' : '');
                 el.style.setProperty('--qj-color', grappe.color);
+                const selectedBadge = isSelected ? '<span class="qj-selected-badge">▸ suivie</span>' : '';
                 el.innerHTML = `
-                    <div class="qj-quest-grappe">${grappe.title}</div>
+                    <div class="qj-quest-grappe">${grappe.title}${selectedBadge}</div>
                     <div class="qj-quest-title">${etape.titre}</div>
                     <div class="qj-quest-indice">${etape.indice}</div>
                     <div class="qj-quest-place">📍 ${etape.objectifGeo?.nom || 'Lieu à découvrir'}</div>
@@ -19681,6 +19977,20 @@
                         btn.style.cursor = 'not-allowed';
                     }
                     actions.appendChild(btn);
+                }
+                // Bouton "Suivre cette quête" si active et pas déjà sélectionnée
+                if (status === 'active' && !isSelected) {
+                    const followBtn = document.createElement('button');
+                    followBtn.className = 'qj-quest-btn';
+                    followBtn.textContent = '▸ Suivre';
+                    followBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        window._selectedQuestKey = questKey;
+                        updateQuestMarkers();
+                        updateQuestCompass();
+                        renderQuestJournal();
+                    };
+                    actions.appendChild(followBtn);
                 }
                 const detailBtn = document.createElement('button');
                 detailBtn.className = 'qj-quest-btn';
@@ -19745,9 +20055,11 @@
             // Tag les markers de ressources si pas encore fait
             _tagMarkerClasses();
 
-            // Si on n'est pas en mode planning, ne rien afficher
-            if (_mapViewMode !== 'far') return;
             if (!map) return;
+
+            // Les pins sont affichés dans les deux modes (zoom et planning)
+            // Style plus discret en mode zoom (close), plus visible en mode planning (far)
+            const isPlanning = (_mapViewMode === 'far');
 
             // Récupérer toutes les quêtes actives (status === 'active')
             const list = [];
@@ -19763,21 +20075,36 @@
             // Créer une épingle pour chaque
             list.forEach(({ grappeId, grappe, etape }) => {
                 const el = document.createElement('div');
-                el.className = 'quest-pin';
+                el.className = 'quest-pin' + (isPlanning ? ' large' : ' small');
+                // Marquer la quête sélectionnée pour que le compass la pointe
+                const isSelected = (window._selectedQuestKey === (grappeId + ':' + etape.id));
+                if (isSelected) el.classList.add('selected');
                 el.style.setProperty('--qp-color', grappe.color);
-                // Calcul d'une couleur glow plus claire
                 el.style.setProperty('--qp-glow', grappe.color + 'cc');
-                el.innerHTML = `
-                    <div class="quest-pin-marker"></div>
-                    <div class="quest-pin-label">${etape.titre}</div>
-                `;
+                if (isPlanning) {
+                    el.innerHTML = `
+                        <div class="quest-pin-marker"></div>
+                        <div class="quest-pin-label">${etape.titre}</div>
+                    `;
+                } else {
+                    // Mode zoom : juste l'épingle, sans label (pour ne pas encombrer)
+                    el.innerHTML = `<div class="quest-pin-marker"></div>`;
+                }
                 el.addEventListener('click', () => {
                     showToast('📍 ' + etape.objectifGeo.nom + ' — ' + etape.titre);
                 });
                 const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
                     .setLngLat([etape.objectifGeo.lng, etape.objectifGeo.lat])
                     .addTo(map);
-                _questPinMarkers.push({ marker, el });
+                // Forcer le marker au-dessus des autres POI
+                try {
+                    const wrap = marker.getElement();
+                    if (wrap && wrap.parentElement) {
+                        wrap.style.zIndex = '500';
+                        wrap.parentElement.style.zIndex = '500';
+                    }
+                } catch(e){}
+                _questPinMarkers.push({ marker, el, grappeId, etapeId: etape.id });
             });
         }
 
@@ -19815,21 +20142,39 @@
             if (!compass) return;
             if (!playerPos) { compass.style.display = 'none'; return; }
 
-            let nearest = null;
-            let nearestDist = Infinity;
-            Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
-                grappe.quete.etapes.forEach(etape => {
-                    const status = _getEtapeStatus(gid, etape);
-                    if (status !== 'active') return;
-                    if (!etape.objectifGeo) return;
-                    const dist = getDistance(playerPos.lat, playerPos.lng, etape.objectifGeo.lat, etape.objectifGeo.lng);
-                    if (dist < nearestDist) {
-                        nearestDist = dist;
-                        nearest = { grappe, etape, dist };
-                    }
-                });
-            });
+            // Si une quête est sélectionnée, on pointe vers elle
+            // Sinon, on pointe vers la plus proche
+            let target = null;
+            const selectedKey = window._selectedQuestKey;
 
+            if (selectedKey) {
+                const [gid, eid] = selectedKey.split(':');
+                const grappe = GRAPPE_QUESTS[gid];
+                const etape = grappe?.quete?.etapes?.find(e => e.id === eid);
+                if (grappe && etape && etape.objectifGeo && _getEtapeStatus(gid, etape) === 'active') {
+                    const dist = getDistance(playerPos.lat, playerPos.lng, etape.objectifGeo.lat, etape.objectifGeo.lng);
+                    target = { grappe, etape, dist };
+                }
+            }
+
+            // Fallback : la plus proche si rien de sélectionné ou si la sélection n'est plus valide
+            if (!target) {
+                let nearestDist = Infinity;
+                Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
+                    grappe.quete.etapes.forEach(etape => {
+                        const status = _getEtapeStatus(gid, etape);
+                        if (status !== 'active') return;
+                        if (!etape.objectifGeo) return;
+                        const dist = getDistance(playerPos.lat, playerPos.lng, etape.objectifGeo.lat, etape.objectifGeo.lng);
+                        if (dist < nearestDist) {
+                            nearestDist = dist;
+                            target = { grappe, etape, dist };
+                        }
+                    });
+                });
+            }
+
+            const nearest = target;
             if (!nearest) { compass.style.display = 'none'; return; }
             compass.style.display = 'flex';
             compass.style.setProperty('--hqc-color', nearest.grappe.color);
@@ -20037,6 +20382,28 @@
                         const radius = etape.objectifGeo.rayon || 80;
                         onSite = dist <= radius;
                     }
+
+                    // Bouton de sélection / suivi (boussole + pin doré)
+                    const questKey = grappeId + ':' + etape.id;
+                    const isSelected = (window._selectedQuestKey === questKey);
+                    const followBtn = document.createElement('button');
+                    followBtn.className = 'gq-action-btn' + (isSelected ? ' selected' : ' secondary');
+                    followBtn.style.marginBottom = '8px';
+                    followBtn.textContent = isSelected ? '★ Quête suivie' : '▸ Suivre cette quête';
+                    followBtn.onclick = () => {
+                        if (isSelected) {
+                            window._selectedQuestKey = null;
+                        } else {
+                            window._selectedQuestKey = questKey;
+                        }
+                        try { saveProgress(); } catch(e){}
+                        renderGrappeQuestModal(grappeId);
+                        try { updateQuestMarkers(); } catch(e){}
+                        try { updateQuestCompass(); } catch(e){}
+                        try { renderQuestJournal(); } catch(e){}
+                    };
+                    etapeEl.appendChild(followBtn);
+
                     const btn = document.createElement('button');
                     btn.className = 'gq-action-btn complete';
                     if (onSite) {
