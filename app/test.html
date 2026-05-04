@@ -6349,7 +6349,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.11 · 03/05 — énergie variable + UX invitative</div>
+            <div class="hud-version" id="hudVersion">v0.12 · 03/05 — fix énergie 9/6/3</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -15778,13 +15778,14 @@
         // ─────────────────────────────────────────────────────────────
         // SYSTÈME D'ÉNERGIE / MATURATION DES CARTES
         // La capacité d'énergie dépend du niveau de la carte :
-        //   Niveau 0/1 : 9 doses (les couches superficielles s'éveillent vite)
-        //   Niveau 2   : 6 doses (la mémoire commence à résister)
-        //   Niveau 3   : 3 doses (les couches profondes demandent de la patience)
+        //   Niveau 0 : 9 doses (les couches superficielles s'éveillent vite)
+        //   Niveau 1 : 6 doses (la mémoire commence à résister)
+        //   Niveau 2 : 3 doses (les couches profondes demandent de la patience)
+        //   Niveau 3 : MAX, plus de progression possible
         // Récupération : 1 cran toutes les 2h. L'orbe peut bypasser
         // le repos pour restaurer l'énergie complètement.
         // ─────────────────────────────────────────────────────────────
-        const CARD_ENERGY_BY_LEVEL = [9, 9, 6, 3]; // index = niveau (0..3+)
+        const CARD_ENERGY_BY_LEVEL = [9, 6, 3, 3]; // index = niveau (0..3)
         const CARD_ENERGY_RECOVERY_MS = 2 * 60 * 60 * 1000; // 2h par cran
         // En mémoire, indexé par cardId : { value: 0..max, lastTickAt: timestamp }
         let cardEnergy = {};
