@@ -264,7 +264,16 @@
             100% { opacity: 0; transform: translate(-50%, -56%); }
         }
 
-        /* Mode planification : tous les POI restent visibles */
+        /* Mode planification : on cache les ressources de collecte courante.
+           Restent visibles : cartes, bazars, panoramas, points d'info, pins de quête. */
+        body.planning-mode .maplibregl-marker.dust-marker,
+        body.planning-mode .maplibregl-marker.echo-marker,
+        body.planning-mode .maplibregl-marker.orb-marker,
+        body.planning-mode .maplibregl-marker.scroll-marker,
+        body.planning-mode .maplibregl-marker.loot-marker,
+        body.planning-mode .maplibregl-marker.carnet-resource-marker {
+            display: none !important;
+        }
 
         /* Épingle de quête active sur la mappe */
         .quest-pin {
@@ -6237,7 +6246,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.6 · 03/05 — fix scroll modal + tous POI au dezoom</div>
+            <div class="hud-version" id="hudVersion">v0.7 · 03/05 — vue planif épurée + scroll modal</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -20049,6 +20058,7 @@
             (orbMarkers || []).forEach(m => { if (m.el) m.el.classList.add('orb-marker'); });
             (scrollMarkers || []).forEach(m => { if (m.el) m.el.classList.add('scroll-marker'); });
             (lootMarkers || []).forEach(m => { if (m.el) m.el.classList.add('loot-marker'); });
+            (typeof carnetResourceMarkers !== 'undefined' ? carnetResourceMarkers : []).forEach(m => { if (m.el) m.el.classList.add('carnet-resource-marker'); });
         }
 
         // Crée/met à jour les épingles de quêtes actives sur la mappe
