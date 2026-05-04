@@ -6241,7 +6241,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.3 · 03/05 — icônes carnet</div>
+            <div class="hud-version" id="hudVersion">v0.4 · 03/05 — bugfixes onboarding/pins</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -7935,11 +7935,6 @@
             <button class="intro-bd-start" id="introBDStart" onclick="finishIntroBD()" style="display:none;">Commencer l'aventure</button>
         </div>
 
-        <div id="onboardingOverlay" class="hidden">
-            <div class="ob-text" id="obText"></div>
-            <div class="ob-tap-hint">Appuyer pour continuer</div>
-        </div>
-
         <!-- Note manuscrite Marcus -->
         <div id="obNote">
             <div class="ob-note-inner">
@@ -9291,7 +9286,27 @@
         }
 
         function skipIntroBD() {
-            finishIntroBD();
+            // Skip = désactive la BD ET tout le tutoriel (Marcus, hints contextuels, etc.)
+            const cinema = document.getElementById('introBDCinematic');
+            if (cinema) {
+                cinema.style.transition = 'opacity 0.6s ease';
+                cinema.style.opacity = '0';
+                setTimeout(() => {
+                    cinema.classList.add('hidden');
+                    cinema.style.opacity = '';
+                    cinema.style.transition = '';
+                }, 600);
+            }
+            // Marquer tout l'onboarding comme terminé
+            _obDone = true;
+            _obAct2Done = true;
+            _obAct3Done = true;
+            if (typeof _obScreenSeen === 'object') {
+                ['collections','bag','journal','mindmap','carddetail'].forEach(k => { _obScreenSeen[k] = true; });
+            }
+            saveProgress();
+            // Restaurer la mappe normale
+            if (typeof _obRestoreAllPOI === 'function') _obRestoreAllPOI();
         }
 
         function finishIntroBD() {
@@ -9311,8 +9326,10 @@
             if (_obDone) return;
             // L'Acte I "Il existait un Grand Livre" a été remplacé par la cinématique BD.
             // On enchaîne directement sur la note manuscrite de Marcus (Acte II).
-            document.getElementById('onboardingOverlay').classList.add('hidden');
-            document.getElementById('obSkipBtn').classList.add('visible');
+            const ov = document.getElementById('onboardingOverlay');
+            if (ov) ov.classList.add('hidden');
+            const sb = document.getElementById('obSkipBtn');
+            if (sb) sb.classList.add('visible');
             _obShowMarcusNote();
         }
 
@@ -9322,20 +9339,24 @@
             if (window._obTutorialMarker) { window._obTutorialMarker.remove(); window._obTutorialMarker = null; }
             _obRemoveHighlight();
 
-            // Masquer tous les overlays onboarding
-            document.getElementById('onboardingOverlay').classList.add('hidden');
-            document.getElementById('obNote').classList.remove('show');
-            document.getElementById('vnOverlay').classList.remove('show');
-            document.getElementById('obSkipBtn').classList.remove('visible');
+            // Masquer tous les overlays onboarding (avec sécurités si supprimés)
+            const ov = document.getElementById('onboardingOverlay'); if (ov) ov.classList.add('hidden');
+            const note = document.getElementById('obNote'); if (note) note.classList.remove('show');
+            const vn = document.getElementById('vnOverlay'); if (vn) vn.classList.remove('show');
+            const sb = document.getElementById('obSkipBtn'); if (sb) sb.classList.remove('visible');
 
             // Fermer fiche carte si ouverte par l'onboarding
-            document.getElementById('cardDetailView').classList.remove('show');
-            document.getElementById('journalScreen').classList.remove('show');
+            const cd = document.getElementById('cardDetailView'); if (cd) cd.classList.remove('show');
+            const js = document.getElementById('journalScreen'); if (js) js.classList.remove('show');
 
             // Restaurer les POIs et terminer
             _obDone = true;
             _obAct2Done = true;
             _obAct3Done = true;
+            // Marquer tous les écrans comme déjà vus pour éviter tout hint contextuel a posteriori
+            if (typeof _obScreenSeen === 'object') {
+                ['collections','bag','journal','mindmap','carddetail'].forEach(k => { _obScreenSeen[k] = true; });
+            }
             saveProgress();
             _obRestoreAllPOI();
         }
@@ -9562,6 +9583,8 @@
         const _obScreenSeen = {};
 
         function _obContextualHint(screenKey, lines) {
+            // Si l'onboarding a été passé/terminé, on ne montre plus aucun hint contextuel
+            if (_obDone) return;
             if (_obScreenSeen[screenKey]) return;
             _obScreenSeen[screenKey] = true;
             // Petit délai pour laisser l'écran s'ouvrir visuellement
@@ -12291,6 +12314,8 @@
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
+            // Cacher aussi les pins de quête (ils flottent au-dessus de la mappe)
+            if (typeof _hideQuestPins === 'function') _hideQuestPins();
         }
 
         function _showNearbyConsoles() {
@@ -12300,6 +12325,8 @@
             if (typeof _poiEntered === 'object') {
                 Object.keys(_poiEntered).forEach(k => { _poiEntered[k] = null; });
             }
+            // Réafficher les pins de quête
+            if (typeof _showQuestPins === 'function') _showQuestPins();
         }
 
         function _isAnyScreenOpen() {
@@ -20106,6 +20133,20 @@
                 } catch(e){}
                 _questPinMarkers.push({ marker, el, grappeId, etapeId: etape.id });
             });
+            // Si un écran est ouvert, cacher les pins
+            if (typeof _isAnyScreenOpen === 'function' && _isAnyScreenOpen()) {
+                _questPinMarkers.forEach(m => { if (m.el) m.el.style.display = 'none'; });
+            }
+        }
+
+        // Helpers pour cacher/montrer les pins de quête en synchro avec les écrans
+        function _hideQuestPins() {
+            if (typeof _questPinMarkers === 'undefined') return;
+            _questPinMarkers.forEach(m => { if (m.el) m.el.style.display = 'none'; });
+        }
+        function _showQuestPins() {
+            if (typeof _questPinMarkers === 'undefined') return;
+            _questPinMarkers.forEach(m => { if (m.el) m.el.style.display = ''; });
         }
 
         // Vérifie si le joueur est sur un objectif de quête active
