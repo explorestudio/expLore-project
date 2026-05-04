@@ -3432,38 +3432,267 @@
         .levelup-reward-name { font-size: 13px; font-weight: 700; color: white; }
         .levelup-reward-type { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 1px; }
 
-        /* Skins dans l'onglet carte */
-        .skins-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            padding: 4px 0;
+        /* ══════════════════════════════════════════
+           NOUVELLE STRUCTURE : Onglets verticaux à gauche
+           ══════════════════════════════════════════ */
+        .card-panel-layout {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
         }
-        .skin-item {
-            border-radius: 12px; overflow: hidden;
-            border: 2px solid rgba(0,0,0,0.08);
-            cursor: pointer; transition: border-color 0.2s, transform 0.15s;
+        .card-vtabs {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 10px 6px 10px 8px;
+            background: #f3f4f6;
+            border-right: 1px solid #e5e7eb;
+            width: 70px;
+        }
+        .card-vtab {
+            background: #e5e7eb;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 6px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.18s;
+            text-align: center;
+            min-height: 40px;
+        }
+        .card-vtab:hover { background: #d1d5db; }
+        .card-vtab.active {
+            background: #F97316;
+            color: white;
+            box-shadow: 0 2px 6px rgba(249,115,22,0.4);
+        }
+        .card-vtab-content {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 12px 14px;
             position: relative;
         }
-        .skin-item.active { border-color: #1D4ED8; }
-        .skin-item.locked { opacity: 0.45; cursor: default; filter: grayscale(0.5); }
-        .skin-preview {
-            height: 70px; width: 100%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px;
+        .card-vtab-pane {
+            display: none;
         }
-        .skin-label {
-            background: #f8fafc; padding: 6px 8px;
-            font-size: 10px; font-weight: 700; color: #374151;
+        .card-vtab-pane.active {
+            display: block;
+        }
+
+        /* ══ Onglet "Carte" : bloc niveau + orbes/carnet ══ */
+        .card-tab-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .card-orbes-display {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+            border: 1px solid #67e8f9;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #0891b2;
+        }
+        .card-orbes-display svg {
+            flex-shrink: 0;
+        }
+        .card-orbes-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #0e7490;
+            opacity: 0.85;
+        }
+        .card-orbes-count {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0891b2;
+        }
+
+        /* Bouton carnet : icône emoji par défaut, PNG de fond si dispo */
+        .card-carnet-btn {
+            flex-shrink: 0;
+            background: white;
+            border: 2px solid #fcd34d;
+            border-radius: 10px;
+            width: 46px;
+            height: 46px;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s, box-shadow 0.18s;
+            position: relative;
+            background-size: 80% 80%;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .card-carnet-icon {
+            font-size: 24px;
+            line-height: 1;
+            transition: opacity 0.2s;
+        }
+        /* Quand le PNG est chargé, on l'utilise comme background et on masque l'emoji */
+        .card-carnet-btn.has-png {
+            background-image: url('./assets/Carnet.png');
+        }
+        .card-carnet-btn.has-png .card-carnet-icon {
+            opacity: 0;
+        }
+        .card-carnet-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(252, 211, 77, 0.4);
+        }
+        .card-carnet-btn:active { transform: scale(0.95); }
+
+        /* Pulse quand une nouvelle entrée carnet est disponible */
+        .card-carnet-btn.has-new {
+            animation: carnetPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes carnetPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.6);
+                border-color: #fcd34d;
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 0 6px rgba(251, 191, 36, 0);
+                border-color: #f59e0b;
+                transform: scale(1.06);
+            }
+        }
+
+        /* ══ Onglet "Skins" : carrousel ══ */
+        .skins-carousel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px 0;
+        }
+        .skins-carousel-stage {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 130px;
+            user-select: none;
+            touch-action: pan-y;
+        }
+        .skins-carousel-track {
+            width: 130px;
+            height: 130px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+            transition: background 0.3s, transform 0.18s;
+            position: relative;
+            overflow: hidden;
+        }
+        .skins-carousel-track.locked {
+            filter: grayscale(0.85) brightness(0.7);
+        }
+        .skins-carousel-track .skin-lock-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.45);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            gap: 4px;
+        }
+        .skins-carousel-arrow {
+            background: rgba(255,255,255,0.92);
+            border: 1.5px solid #e5e7eb;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #4b5563;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+            transition: transform 0.12s, background 0.15s;
+            flex-shrink: 0;
+        }
+        .skins-carousel-arrow:hover { background: white; transform: scale(1.1); }
+        .skins-carousel-arrow:active { transform: scale(0.92); }
+        .skins-carousel-arrow.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .skins-carousel-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-top: 12px;
             text-align: center;
         }
-        .skin-locked-badge {
-            position: absolute; top: 5px; right: 5px;
-            background: rgba(0,0,0,0.5); color: white;
-            font-size: 10px; border-radius: 6px; padding: 1px 5px;
+        .skins-carousel-status {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 3px;
+            text-align: center;
         }
-        .skin-active-badge {
-            position: absolute; top: 5px; right: 5px;
-            background: #1D4ED8; color: white;
-            font-size: 9px; font-weight: 700; border-radius: 6px; padding: 1px 5px;
+        .skins-carousel-status.active-status { color: #059669; font-weight: 700; }
+        .skins-carousel-dots {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            justify-content: center;
+        }
+        .skins-carousel-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #d1d5db;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .skins-carousel-dot.active {
+            background: #1f2937;
+            transform: scale(1.35);
+        }
+        .skins-carousel-apply {
+            margin-top: 12px;
+            background: linear-gradient(135deg, #1D4ED8, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 18px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.12s, box-shadow 0.18s;
+        }
+        .skins-carousel-apply:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(29,78,216,0.35); }
+        .skins-carousel-apply:active { transform: translateY(0); }
+        .skins-carousel-apply:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.7;
         }
 
         /* HUD XP bar */
@@ -6349,7 +6578,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.12 · 03/05 — fix énergie 9/6/3</div>
+            <div class="hud-version" id="hudVersion">v0.13.2 · 05/05 — hotfix carnet : préchargement PNG sans onerror DOM</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -6918,62 +7147,98 @@
                         </div>
                     </div>
 
-                    <!-- ── Zone basse : panneau onglets + contenu ─ -->
+                    <!-- ── Zone basse : onglets verticaux à gauche + contenu ─ -->
                     <div class="card-info-panel" id="cardInfoPanel">
-                        <div class="card-panel-header">
-                            <!-- Bloc niveau + donner poudre + compteur poudre -->
-                            <div class="card-level-block">
-                                <div class="card-level-row">
-                                    <div class="card-level-info">
-                                        <span class="card-level-label" id="cardLevelDisplay">Niveau 1</span>
-                                        <span class="card-level-label" id="cardExpDisplay">0/10 ✦</span>
-                                    </div>
-                                    <div style="display:flex;align-items:center;gap:5px;background:#f3f0ff;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;color:#7c3aed;flex-shrink:0;margin-left:auto;">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="19" rx="9" ry="3" fill="#c084fc" opacity="0.7"/><path d="M5,18 Q7,10 12,7 Q17,10 19,18 Z" fill="#a855f7"/></svg>
-                                        <span id="cardDetailDustCounter">0</span>
-                                    </div>
-                                </div>
-                                <div class="card-exp-bar">
-                                    <div class="card-exp-fill" id="cardExpBar" style="width: 0%"></div>
-                                </div>
-                                <!-- Jauge d'énergie de la carte (capacité variable selon le niveau) -->
-                                <div class="card-energy-row" id="cardEnergyRow">
-                                    <div class="card-energy-smiley" id="cardEnergySmiley">😊</div>
-                                    <div class="card-energy-bars" id="cardEnergyBars">
-                                        <!-- Barres générées dynamiquement par updateCardLevelDisplay -->
-                                    </div>
-                                    <div class="card-energy-label" id="cardEnergyLabel">disposée</div>
-                                </div>
-                                <!-- Petit texte d'invitation contextuel (visible quand la carte est épuisée) -->
-                                <div class="card-rest-hint" id="cardRestHint" style="display:none;"></div>
-                                <button id="addExpBtn" class="card-level-up-btn" onclick="addExperience()" disabled>
-                                    Ajouter 50 poudre (+EXP)
-                                </button>
-                            </div>
-                            <div id="cardStoryLink" style="display:none;margin:8px 0 0;font-size:11.5px;color:rgba(80,60,140,0.85);gap:5px;align-items:center;padding:6px 10px;background:rgba(109,40,217,0.08);border-radius:8px;border-left:2px solid rgba(167,139,250,0.5);"></div>
-                        </div>
-
-                        <div class="card-tabs card-panel-tabs" style="border-radius:0; margin-top:4px;">
-                            <button class="card-tab active" onclick="switchTab('general', event)">Général</button>
-                            <button class="card-tab" onclick="switchTab('skins', event)">Skins</button>
-                            <button class="card-tab journal-tab" onclick="openJournalScreen()" id="journalTabBtn">
-                                <span id="journalTabIcon">📖</span> Carnet
-                                <span class="notification-badge hidden" id="journalNotification" style="display:none!important;"></span>
-                            </button>
-                        </div>
-
-                        <div class="card-panel-scroll">
-                            <div id="generalTab" class="tab-content active">
-                                <div class="info-row"><span class="info-label">Naissance</span><span class="info-value">7 novembre 1867</span></div>
-                                <div class="info-row"><span class="info-label">Décès</span><span class="info-value">4 juillet 1934</span></div>
-                                <div class="info-row"><span class="info-label">Nationalité</span><span class="info-value">Polonaise, Française</span></div>
-                                <div class="info-row"><span class="info-label">Conjoint</span><span class="info-value">Pierre Curie</span></div>
-                                <p style="margin-top:12px; padding:0 16px 16px; color:#4b5563; font-size:13px; line-height:1.6;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                        <div class="card-panel-layout">
+                            <!-- Colonne onglets verticaux -->
+                            <div class="card-vtabs">
+                                <button class="card-vtab active" id="vtabCarte" onclick="switchTab('card', event)">Carte</button>
+                                <button class="card-vtab" id="vtabSkins" onclick="switchTab('skins', event)">Skins</button>
+                                <button class="card-vtab" id="vtabGeneral" onclick="switchTab('general', event)">Général</button>
                             </div>
 
-                            <div id="skinsTab" class="tab-content">
-                                <h3 style="margin-bottom:12px; color:#1f2937; font-size:14px;">Apparences disponibles</h3>
-                                <div class="skins-grid" id="skinsGrid"></div>
+                            <!-- Contenu droit -->
+                            <div class="card-vtab-content">
+                                <!-- ── Pane CARTE : niveau, XP, énergie, poudre, orbes, carnet ── -->
+                                <div class="card-vtab-pane active" id="cardPaneCard">
+                                    <div class="card-level-block">
+                                        <div class="card-level-row">
+                                            <div class="card-level-info">
+                                                <span class="card-level-label" id="cardLevelDisplay">Niveau 1</span>
+                                                <span class="card-level-label" id="cardExpDisplay">0/10 ✦</span>
+                                            </div>
+                                            <div style="display:flex;align-items:center;gap:5px;background:#f3f0ff;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;color:#7c3aed;flex-shrink:0;margin-left:auto;">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="19" rx="9" ry="3" fill="#c084fc" opacity="0.7"/><path d="M5,18 Q7,10 12,7 Q17,10 19,18 Z" fill="#a855f7"/></svg>
+                                                <span id="cardDetailDustCounter">0</span>
+                                            </div>
+                                        </div>
+                                        <div class="card-exp-bar">
+                                            <div class="card-exp-fill" id="cardExpBar" style="width: 0%"></div>
+                                        </div>
+                                        <!-- Jauge d'énergie de la carte (capacité variable selon le niveau) -->
+                                        <div class="card-energy-row" id="cardEnergyRow">
+                                            <div class="card-energy-smiley" id="cardEnergySmiley">😊</div>
+                                            <div class="card-energy-bars" id="cardEnergyBars">
+                                                <!-- Barres générées dynamiquement par updateCardLevelDisplay -->
+                                            </div>
+                                            <div class="card-energy-label" id="cardEnergyLabel">disposée</div>
+                                        </div>
+                                        <!-- Petit texte d'invitation contextuel (visible quand la carte est épuisée) -->
+                                        <div class="card-rest-hint" id="cardRestHint" style="display:none;"></div>
+                                        <button id="addExpBtn" class="card-level-up-btn" onclick="addExperience()" disabled>
+                                            Ajouter 50 poudre (+EXP)
+                                        </button>
+
+                                        <!-- Ligne orbes + bouton carnet -->
+                                        <div class="card-tab-actions-row">
+                                            <div class="card-orbes-display" title="Orbes de mémoire disponibles">
+                                                <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#06b6d4" opacity="0.25"/><circle cx="12" cy="12" r="6" fill="#22d3ee"/><circle cx="10" cy="10" r="2" fill="#cffafe" opacity="0.85"/></svg>
+                                                <div style="display:flex;flex-direction:column;line-height:1.15;">
+                                                    <span class="card-orbes-label">Orbes disponibles</span>
+                                                    <span class="card-orbes-count" id="cardDetailOrbesCounter">0</span>
+                                                </div>
+                                            </div>
+                                            <button class="card-carnet-btn" id="journalTabBtn" onclick="openJournalScreen()" title="Ouvrir le carnet de la carte">
+                                                <span class="card-carnet-icon" id="cardCarnetIcon">📖</span>
+                                                <span class="notification-badge hidden" id="journalNotification" style="display:none!important;"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="cardStoryLink" style="display:none;margin:8px 0 0;font-size:11.5px;color:rgba(80,60,140,0.85);gap:5px;align-items:center;padding:6px 10px;background:rgba(109,40,217,0.08);border-radius:8px;border-left:2px solid rgba(167,139,250,0.5);"></div>
+                                </div>
+
+                                <!-- ── Pane SKINS : carrousel ── -->
+                                <div class="card-vtab-pane" id="cardPaneSkins">
+                                    <div class="skins-carousel" id="skinsCarousel">
+                                        <div class="skins-carousel-stage">
+                                            <button class="skins-carousel-arrow" id="skinPrevBtn" onclick="skinCarouselPrev()">‹</button>
+                                            <div class="skins-carousel-track" id="skinTrack">
+                                                <span id="skinTrackEmoji">✨</span>
+                                            </div>
+                                            <button class="skins-carousel-arrow" id="skinNextBtn" onclick="skinCarouselNext()">›</button>
+                                        </div>
+                                        <div class="skins-carousel-name" id="skinName">Défaut</div>
+                                        <div class="skins-carousel-status" id="skinStatus">Actif</div>
+                                        <div class="skins-carousel-dots" id="skinDots"></div>
+                                        <button class="skins-carousel-apply" id="skinApplyBtn" onclick="skinCarouselApply()">Appliquer</button>
+                                    </div>
+                                </div>
+
+                                <!-- ── Pane GÉNÉRAL : infos statiques ── -->
+                                <div class="card-vtab-pane" id="cardPaneGeneral">
+                                    <div id="generalTab" class="tab-content active" style="display:block;padding:0;">
+                                        <div class="info-row"><span class="info-label">Naissance</span><span class="info-value">7 novembre 1867</span></div>
+                                        <div class="info-row"><span class="info-label">Décès</span><span class="info-value">4 juillet 1934</span></div>
+                                        <div class="info-row"><span class="info-label">Nationalité</span><span class="info-value">Polonaise, Française</span></div>
+                                        <div class="info-row"><span class="info-label">Conjoint</span><span class="info-value">Pierre Curie</span></div>
+                                        <p style="margin-top:12px; padding:0 4px; color:#4b5563; font-size:13px; line-height:1.6;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Compatibilité JS : ancien skinsTab caché (renderSkinsTab legacy) -->
+                                <div id="skinsTab" class="tab-content" style="display:none;">
+                                    <div class="skins-grid" id="skinsGrid"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -13856,7 +14121,7 @@
                 const bht = document.getElementById('journalBioHeaderType');
                 if (bhn) bhn.textContent = card.name;
                 if (bht) bht.textContent = card.type || '';
-                document.getElementById('journalTabBtn').classList.remove('journal-tab-blink');
+                document.getElementById('journalTabBtn').classList.remove('journal-tab-blink', 'has-new');
                 restoreJournalState(card.id);
                 renderJournalBio();
                 // Fermer le sac
@@ -14052,7 +14317,7 @@
                 const bht = document.getElementById('journalBioHeaderType');
                 if (bhn) bhn.textContent = card.name;
                 if (bht) bht.textContent = card.type || '';
-                document.getElementById('journalTabBtn').classList.remove('journal-tab-blink');
+                document.getElementById('journalTabBtn').classList.remove('journal-tab-blink', 'has-new');
                 restoreJournalState(card.id);
                 renderJournalBio();
                 document.getElementById('journalScreen').classList.add('show');
@@ -15054,6 +15319,8 @@
                 applyCurrentSkinToFrame();
             }
             document.getElementById('cardDetailDustCounter').textContent = memorialDust;
+            const _orbesEl1 = document.getElementById('cardDetailOrbesCounter');
+            if (_orbesEl1) _orbesEl1.textContent = (bagInv.orbes || 0);
             // Lien histoire dans le détail
             const cardStoryEl = document.getElementById('cardStoryLink');
             if (cardStoryEl) {
@@ -15069,7 +15336,9 @@
                 }
             }
             updateCardLevelDisplay();
-            switchTabProgrammatically('general');
+            // Recaler l'index du carrousel skins sur le skin actif de la nouvelle carte
+            try { _skinCarouselIndex = _findActiveSkinIndex(); } catch(e) { _skinCarouselIndex = 0; }
+            switchTabProgrammatically('card');
             // Relancer l'animation d'entrée
             const inner = document.querySelector('.card-detail-inner');
             if (inner) {
@@ -15100,6 +15369,8 @@
         }
 
         function closeCardDetail() {
+            // Annuler tout preview de skin non validé avant de quitter
+            try { _cancelSkinPreviewIfAny(); } catch(e) {}
             document.getElementById('cardDetailView').classList.remove('show');
             // Si on était venu depuis une modale grappe, la rouvrir au retour
             if (window._reopenGrappeQuestModalId) {
@@ -15148,12 +15419,32 @@
 
         // Met à jour le clignotement du bouton Carnet :
         // clignote UNIQUEMENT si la carte sélectionnée a des entrées non révélées
+        function updateCardDetailOrbesDisplay() {
+            const el = document.getElementById('cardDetailOrbesCounter');
+            if (el) el.textContent = (bagInv.orbes || 0);
+        }
+
+        // Précharge le PNG du carnet une seule fois ; si dispo, on bascule en background-image
+        (function _preloadCarnetIcon(){
+            try {
+                const img = new Image();
+                img.onload = function() {
+                    const btn = document.getElementById('journalTabBtn');
+                    if (btn) btn.classList.add('has-png');
+                };
+                img.onerror = function() { /* silencieux : on garde l'emoji */ };
+                img.src = './assets/Carnet.png';
+            } catch(e) { /* fallback emoji par défaut, rien à faire */ }
+        })();
+
         function updateJournalBlink() {
             const btn = document.getElementById('journalTabBtn');
             if (!btn) return;
             const cardId = selectedCard ? selectedCard.id : null;
             const entries = cardId ? (cardJournalEntries[cardId] || []) : [];
             const hasUnrevealed = entries.some(e => e._revealed === false && e._available !== false);
+            // Nouveau bouton PNG : classe 'has-new' (legacy : 'journal-tab-blink' conservée pour compat)
+            btn.classList.toggle('has-new', hasUnrevealed);
             btn.classList.toggle('journal-tab-blink', hasUnrevealed);
         }
 
@@ -16076,7 +16367,7 @@
                 const bht = document.getElementById('journalBioHeaderType');
                 if (bhn) bhn.textContent = selectedCard.name;
                 if (bht) bht.textContent = selectedCard.type;
-                document.getElementById('journalTabBtn').classList.remove('journal-tab-blink');
+                document.getElementById('journalTabBtn').classList.remove('journal-tab-blink', 'has-new');
                 journalEl.classList.add('show');
                 renderEchoInventory();
             }
@@ -16598,23 +16889,56 @@
         }
 
         function switchTab(tabName, e) {
+            // Si on quitte l'onglet skins sans avoir validé, on annule le preview
+            if (currentTab === 'skins' && tabName !== 'skins') {
+                _cancelSkinPreviewIfAny();
+            }
             currentTab = tabName;
-            document.querySelectorAll('.card-tab:not(.journal-tab):not(.studio-tab)').forEach(t => t.classList.remove('active'));
-            if (e && e.target) e.target.classList.add('active');
+            // Onglets verticaux gauche
+            document.querySelectorAll('.card-vtab').forEach(t => t.classList.remove('active'));
+            const vtabMap = { card: 'vtabCarte', skins: 'vtabSkins', general: 'vtabGeneral' };
+            const vtabId = vtabMap[tabName];
+            if (vtabId) {
+                const vtab = document.getElementById(vtabId);
+                if (vtab) vtab.classList.add('active');
+            }
+            // Panes
+            document.querySelectorAll('.card-vtab-pane').forEach(c => c.classList.remove('active'));
+            const paneMap = { card: 'cardPaneCard', skins: 'cardPaneSkins', general: 'cardPaneGeneral' };
+            const paneId = paneMap[tabName];
+            if (paneId) {
+                const pane = document.getElementById(paneId);
+                if (pane) pane.classList.add('active');
+            }
+            // Compatibilité legacy (anciens IDs)
+            const legacyMap = { general: 'generalTab', skins: 'skinsTab' };
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            const map2 = { general: 'generalTab', skins: 'skinsTab' };
-            if (map2[tabName]) document.getElementById(map2[tabName]).classList.add('active');
+            if (legacyMap[tabName]) {
+                const el = document.getElementById(legacyMap[tabName]);
+                if (el) el.classList.add('active');
+            }
             if (tabName === 'skins') renderSkinsTab();
         }
 
         function switchTabProgrammatically(tabName) {
             currentTab = tabName;
-            const tabs = document.querySelectorAll('.card-tab:not(.journal-tab):not(.studio-tab)');
-            tabs.forEach(t => t.classList.remove('active'));
-            if (tabs[0]) tabs[0].classList.add('active');
+            document.querySelectorAll('.card-vtab').forEach(t => t.classList.remove('active'));
+            const vtabMap = { card: 'vtabCarte', skins: 'vtabSkins', general: 'vtabGeneral' };
+            const vtabId = vtabMap[tabName] || 'vtabCarte';
+            const vtab = document.getElementById(vtabId);
+            if (vtab) vtab.classList.add('active');
+            document.querySelectorAll('.card-vtab-pane').forEach(c => c.classList.remove('active'));
+            const paneMap = { card: 'cardPaneCard', skins: 'cardPaneSkins', general: 'cardPaneGeneral' };
+            const paneId = paneMap[tabName] || 'cardPaneCard';
+            const pane = document.getElementById(paneId);
+            if (pane) pane.classList.add('active');
+            // Compat legacy
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            const map2 = { general: 'generalTab', skins: 'skinsTab' };
-            if (map2[tabName]) document.getElementById(map2[tabName]).classList.add('active');
+            const legacyMap = { general: 'generalTab', skins: 'skinsTab' };
+            if (legacyMap[tabName]) {
+                const el = document.getElementById(legacyMap[tabName]);
+                if (el) el.classList.add('active');
+            }
         }
 
         // ==================== JOURNAL ====================
@@ -16638,7 +16962,7 @@
             const bht = document.getElementById('journalBioHeaderType');
             if (bhn) bhn.textContent = selectedCard.name;
             if (bht) bht.textContent = selectedCard.type;
-            document.getElementById('journalTabBtn').classList.remove('journal-tab-blink');
+            document.getElementById('journalTabBtn').classList.remove('journal-tab-blink', 'has-new');
             window._journalSessionDelta = 0; // Reset delta de session
             restoreJournalState(selectedCard.id, maxLevel);
             document.getElementById('journalScreen').classList.add('show');
@@ -17664,26 +17988,214 @@
             renderSkinsTab();
             applyCurrentSkinToFrame();
         }
+        // ── État interne du carrousel skins ──
+        let _skinCarouselIndex = 0;
+        let _skinCarouselTouchStartX = null;
+        let _skinCarouselSwipeBound = false;
+
+        function _getOrderedSkins() {
+            // Renvoie les skins dans l'ordre du tableau, sans filtre
+            return CARD_SKINS.slice();
+        }
+
+        function _findActiveSkinIndex() {
+            const activeSkinId = (selectedCard && cardSkins[selectedCard.id]) || 'default';
+            const arr = _getOrderedSkins();
+            const i = arr.findIndex(s => s.id === activeSkinId);
+            return i >= 0 ? i : 0;
+        }
+
         function renderSkinsTab() {
-            const grid = document.getElementById('skinsGrid');
-            if (!grid) return;
-            grid.innerHTML = '';
-            CARD_SKINS.forEach(skin => {
-                const unlocked = unlockedSkins.has(skin.id);
-                const isActive = ((selectedCard && cardSkins[selectedCard.id]) || 'default') === skin.id;
-                const item = document.createElement('div');
-                item.className = 'skin-item' + (isActive ? ' active' : '') + (!unlocked ? ' locked' : '');
-                const grad = `linear-gradient(135deg,${skin.paletteGrad[0]},${skin.paletteGrad[1]})`;
-                const palierNode = skin.palier ? BATTLEPASS_NODES.find(n => n.palier === skin.palier) : null;
-                item.innerHTML = `
-                    <div class="skin-preview" style="background:${grad}">${skin.emoji}</div>
-                    <div class="skin-label">${skin.name}</div>
-                    ${isActive ? '<div class="skin-active-badge">Actif</div>' : ''}
-                    ${!unlocked && palierNode ? `<div class="skin-locked-badge">Palier ${skin.palier}</div>` : ''}
-                `;
-                if (unlocked && !isActive) item.onclick = () => applySkinToCard(skin.id);
-                grid.appendChild(item);
-            });
+            // Si on rentre dans l'onglet skins, recadrer sur le skin actif courant
+            if (typeof _skinCarouselIndex !== 'number') _skinCarouselIndex = 0;
+            const arr = _getOrderedSkins();
+            // Si l'index courant pointe vers un skin qui n'existe plus, recaler sur l'actif
+            if (_skinCarouselIndex >= arr.length || _skinCarouselIndex < 0) {
+                _skinCarouselIndex = _findActiveSkinIndex();
+            }
+            _renderSkinCarouselFrame();
+            _bindSkinSwipeOnce();
+        }
+
+        function _renderSkinCarouselFrame() {
+            const arr = _getOrderedSkins();
+            if (!arr.length) return;
+            const skin = arr[_skinCarouselIndex];
+            const unlocked = unlockedSkins.has(skin.id);
+            const activeId = (selectedCard && cardSkins[selectedCard.id]) || 'default';
+            const isActive = skin.id === activeId;
+
+            const track = document.getElementById('skinTrack');
+            const emoji = document.getElementById('skinTrackEmoji');
+            const name = document.getElementById('skinName');
+            const status = document.getElementById('skinStatus');
+            const dots = document.getElementById('skinDots');
+            const prevBtn = document.getElementById('skinPrevBtn');
+            const nextBtn = document.getElementById('skinNextBtn');
+            const applyBtn = document.getElementById('skinApplyBtn');
+            if (!track) return;
+
+            // Track : gradient + emoji + lock overlay si verrouillé
+            const grad = `linear-gradient(135deg,${skin.paletteGrad[0]},${skin.paletteGrad[1]})`;
+            track.style.background = grad;
+            track.classList.toggle('locked', !unlocked);
+            // Reset overlay
+            const oldOverlay = track.querySelector('.skin-lock-overlay');
+            if (oldOverlay) oldOverlay.remove();
+            if (emoji) emoji.textContent = skin.emoji || '✨';
+            if (!unlocked) {
+                const overlay = document.createElement('div');
+                overlay.className = 'skin-lock-overlay';
+                const palierTxt = skin.palier ? ('Palier ' + skin.palier) : 'Verrouillé';
+                overlay.innerHTML = `<div style="font-size:18px;">🔒</div><div>${palierTxt}</div>`;
+                track.appendChild(overlay);
+            }
+
+            // Nom + statut
+            if (name) name.textContent = skin.name || '—';
+            if (status) {
+                if (!unlocked) {
+                    status.textContent = skin.palier ? ('Débloqué au palier ' + skin.palier) : 'Verrouillé';
+                    status.classList.remove('active-status');
+                } else if (isActive) {
+                    status.textContent = '✓ Actif';
+                    status.classList.add('active-status');
+                } else {
+                    status.textContent = 'Aperçu';
+                    status.classList.remove('active-status');
+                }
+            }
+
+            // Bouton "Appliquer" : visible uniquement si débloqué et pas déjà actif
+            if (applyBtn) {
+                if (!unlocked) {
+                    applyBtn.style.display = 'none';
+                } else if (isActive) {
+                    applyBtn.style.display = 'none';
+                } else {
+                    applyBtn.style.display = '';
+                    applyBtn.disabled = false;
+                    applyBtn.textContent = 'Appliquer';
+                }
+            }
+
+            // Flèches : disabled si bornes
+            if (prevBtn) prevBtn.classList.toggle('disabled', _skinCarouselIndex <= 0);
+            if (nextBtn) nextBtn.classList.toggle('disabled', _skinCarouselIndex >= arr.length - 1);
+
+            // Dots
+            if (dots) {
+                dots.innerHTML = '';
+                arr.forEach((s, i) => {
+                    const d = document.createElement('div');
+                    d.className = 'skins-carousel-dot' + (i === _skinCarouselIndex ? ' active' : '');
+                    d.title = s.name;
+                    d.onclick = () => skinCarouselGoTo(i);
+                    dots.appendChild(d);
+                });
+            }
+
+            // Synchroniser l'aperçu sur la carte du haut (preview live)
+            // Si déverrouillé : on applique visuellement le skin sélectionné (sans sauvegarder)
+            // Si verrouillé : on revient au skin actif (pas de preview verrouillé)
+            if (unlocked) {
+                _previewSkinOnFrame(skin.id);
+            } else {
+                _previewSkinOnFrame(activeId);
+            }
+        }
+
+        function _previewSkinOnFrame(skinId) {
+            // Variante non-sauvegardée d'applyCurrentSkinToFrame : applique le visuel mais ne touche pas cardSkins
+            const skin = CARD_SKINS.find(s => s.id === skinId) || CARD_SKINS[0];
+            if (!skin) return;
+            // Reproduit la logique d'applyCurrentSkinToFrame côté visuel uniquement
+            const frame = document.querySelector('#cardDetailView .card-frame');
+            if (!frame) return;
+            // applyCurrentSkinToFrame applique le skin sur l'élément ; on délègue en truquant temporairement cardSkins
+            if (!selectedCard) return;
+            const prev = cardSkins[selectedCard.id];
+            cardSkins[selectedCard.id] = skinId;
+            try { applyCurrentSkinToFrame(); } catch(e) {}
+            // On ne sauvegarde pas : on remet la valeur précédente après le rendu visuel...
+            // ATTENTION : applyCurrentSkinToFrame() lit cardSkins de façon synchrone, donc le rendu est fait.
+            // On peut restaurer l'état logique si on ne veut pas que le preview "tienne".
+            // Choix produit : on garde la valeur en mémoire pendant la nav, mais on ne saveProgress() pas.
+            // Si l'utilisateur ne valide pas, on remet l'ancien à la fermeture/changement d'onglet (voir below).
+            _skinPreviewActive = true;
+            _skinPreviewOriginalId = (prev !== undefined) ? prev : null;
+        }
+
+        // Mémoire pour annuler le preview si l'utilisateur ne valide pas
+        let _skinPreviewActive = false;
+        let _skinPreviewOriginalId = null;
+
+        function _cancelSkinPreviewIfAny() {
+            if (!_skinPreviewActive) return;
+            if (!selectedCard) { _skinPreviewActive = false; return; }
+            // Restaurer
+            if (_skinPreviewOriginalId === null) {
+                delete cardSkins[selectedCard.id];
+            } else {
+                cardSkins[selectedCard.id] = _skinPreviewOriginalId;
+            }
+            try { applyCurrentSkinToFrame(); } catch(e) {}
+            _skinPreviewActive = false;
+            _skinPreviewOriginalId = null;
+        }
+
+        function skinCarouselPrev() {
+            if (_skinCarouselIndex > 0) {
+                _skinCarouselIndex--;
+                _renderSkinCarouselFrame();
+            }
+        }
+        function skinCarouselNext() {
+            const arr = _getOrderedSkins();
+            if (_skinCarouselIndex < arr.length - 1) {
+                _skinCarouselIndex++;
+                _renderSkinCarouselFrame();
+            }
+        }
+        function skinCarouselGoTo(i) {
+            const arr = _getOrderedSkins();
+            if (i < 0 || i >= arr.length) return;
+            _skinCarouselIndex = i;
+            _renderSkinCarouselFrame();
+        }
+        function skinCarouselApply() {
+            const arr = _getOrderedSkins();
+            const skin = arr[_skinCarouselIndex];
+            if (!skin) return;
+            if (!unlockedSkins.has(skin.id)) return;
+            if (!selectedCard) return;
+            cardSkins[selectedCard.id] = skin.id;
+            saveProgress();
+            // Le preview devient l'état officiel
+            _skinPreviewActive = false;
+            _skinPreviewOriginalId = null;
+            applyCurrentSkinToFrame();
+            _renderSkinCarouselFrame();
+        }
+
+        function _bindSkinSwipeOnce() {
+            if (_skinCarouselSwipeBound) return;
+            const stage = document.querySelector('#cardPaneSkins .skins-carousel-stage');
+            if (!stage) return;
+            stage.addEventListener('touchstart', (e) => {
+                if (e.touches && e.touches.length === 1) _skinCarouselTouchStartX = e.touches[0].clientX;
+            }, { passive: true });
+            stage.addEventListener('touchend', (e) => {
+                if (_skinCarouselTouchStartX === null) return;
+                const endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : null;
+                if (endX === null) { _skinCarouselTouchStartX = null; return; }
+                const dx = endX - _skinCarouselTouchStartX;
+                _skinCarouselTouchStartX = null;
+                const THRESHOLD = 40;
+                if (dx > THRESHOLD) skinCarouselPrev();
+                else if (dx < -THRESHOLD) skinCarouselNext();
+            }, { passive: true });
+            _skinCarouselSwipeBound = true;
         }
 
         // ── Battlepass : distribuer les récompenses débloquées ──
