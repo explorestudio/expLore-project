@@ -1715,6 +1715,109 @@
             transition: width 0.3s ease;
         }
 
+        /* Jauge d'énergie de la carte (3 paliers + smiley) */
+        .card-energy-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 6px 0 10px;
+            padding: 6px 10px;
+            background: linear-gradient(90deg, rgba(167,139,250,0.08) 0%, rgba(244,114,182,0.05) 100%);
+            border-radius: 8px;
+            border: 1px solid rgba(167,139,250,0.18);
+        }
+        .card-energy-smiley {
+            font-size: 18px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .card-energy-bars {
+            display: flex;
+            gap: 3px;
+            flex: 1;
+        }
+        .card-energy-bar {
+            flex: 1;
+            height: 8px;
+            border-radius: 3px;
+            background: rgba(0,0,0,0.10);
+            transition: background 0.4s ease, opacity 0.4s ease;
+            min-width: 4px;
+        }
+        .card-energy-bar.filled {
+            background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+            box-shadow: 0 0 6px rgba(52,211,153,0.45);
+        }
+        .card-energy-bar.tired {
+            background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+            box-shadow: 0 0 6px rgba(251,191,36,0.4);
+        }
+        .card-energy-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(80,60,140,0.75);
+            text-transform: lowercase;
+            flex-shrink: 0;
+            letter-spacing: 0.2px;
+        }
+        /* Texte invitatif visible quand la carte se repose */
+        .card-rest-hint {
+            font-size: 12px;
+            font-style: italic;
+            color: rgba(80,60,140,0.7);
+            text-align: center;
+            padding: 8px 12px 4px;
+            line-height: 1.45;
+        }
+        .card-rest-hint .card-rest-timer {
+            display: block;
+            margin-top: 2px;
+            font-size: 10.5px;
+            font-style: normal;
+            color: rgba(80,60,140,0.45);
+            letter-spacing: 0.3px;
+        }
+        .card-level-up-btn.btn-rest {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            cursor: default;
+        }
+        .card-level-up-btn.btn-orb {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        /* Animation : utilisation d'une orbe pour restaurer l'énergie */
+        @keyframes energyBurstGlow {
+            0%   { box-shadow: 0 0 0 rgba(251,191,36,0); }
+            30%  { box-shadow: 0 0 24px rgba(251,191,36,0.7), 0 0 48px rgba(251,191,36,0.3); }
+            100% { box-shadow: 0 0 0 rgba(251,191,36,0); }
+        }
+        .card-energy-row.energy-burst {
+            animation: energyBurstGlow 1.2s ease-out;
+        }
+        @keyframes energyBarPop {
+            0%   { transform: scaleY(1); filter: brightness(1); }
+            40%  { transform: scaleY(1.6); filter: brightness(1.7); }
+            100% { transform: scaleY(1); filter: brightness(1); }
+        }
+        .card-energy-bar.energy-bar-pop {
+            animation: energyBarPop 0.5s ease-out;
+        }
+        /* Particule lumineuse qui jaillit */
+        @keyframes orbBurstFloat {
+            0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+            20%  { opacity: 1; }
+            100% { transform: translate(-50%, -180%) scale(1.4); opacity: 0; }
+        }
+        .orb-burst-particle {
+            position: fixed;
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(254,243,199,0.95) 0%, rgba(251,191,36,0.7) 50%, rgba(217,119,6,0) 100%);
+            pointer-events: none;
+            z-index: 10000;
+            animation: orbBurstFloat 1s ease-out forwards;
+        }
+
         .card-level-up-btn {
             width: 100%;
             background: linear-gradient(135deg, #A855F7 0%, #7C3AED 100%);
@@ -6246,7 +6349,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.7 · 03/05 — vue planif épurée + scroll modal</div>
+            <div class="hud-version" id="hudVersion">v0.11 · 03/05 — énergie variable + UX invitative</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -6431,6 +6534,8 @@
                     <button onclick="testCompleteAllGrappeQuests()" class="test-action-btn">🏆 Terminer toutes étapes grappe</button>
                     <button onclick="testForceCompleteCurrentQuest()" class="test-action-btn">⚡ Forcer validation quête active</button>
                     <button onclick="startIntroBD()" class="test-action-btn">🎬 Rejouer cinématique BD</button>
+                    <button onclick="testRefillCardEnergy()" class="test-action-btn">⚡ Restaurer énergie toutes cartes</button>
+                    <button onclick="testFastForwardCardEnergy()" class="test-action-btn">⏩ +2h sur énergie cartes</button>
                     <button onclick="resetProgress()" class="test-action-btn test-action-btn--danger">⚠️ Réinitialiser la progression</button>
                 </div>
 
@@ -6831,6 +6936,16 @@
                                 <div class="card-exp-bar">
                                     <div class="card-exp-fill" id="cardExpBar" style="width: 0%"></div>
                                 </div>
+                                <!-- Jauge d'énergie de la carte (capacité variable selon le niveau) -->
+                                <div class="card-energy-row" id="cardEnergyRow">
+                                    <div class="card-energy-smiley" id="cardEnergySmiley">😊</div>
+                                    <div class="card-energy-bars" id="cardEnergyBars">
+                                        <!-- Barres générées dynamiquement par updateCardLevelDisplay -->
+                                    </div>
+                                    <div class="card-energy-label" id="cardEnergyLabel">disposée</div>
+                                </div>
+                                <!-- Petit texte d'invitation contextuel (visible quand la carte est épuisée) -->
+                                <div class="card-rest-hint" id="cardRestHint" style="display:none;"></div>
                                 <button id="addExpBtn" class="card-level-up-btn" onclick="addExperience()" disabled>
                                     Ajouter 50 poudre (+EXP)
                                 </button>
@@ -10471,6 +10586,7 @@
                     grappeBDUnlocked,
                     collectedCarnetResources,
                     _carnetResourceTypeMap,
+                    cardEnergy,
                 };
                 localStorage.setItem('lyon_cards_progress', JSON.stringify(_saveData));
                 console.log('[expLore] Sauvegarde écrite — poudre:', _saveData.memorialDust, 'cartes:', (_saveData.collectedCards||[]).length, '_obDone:', _saveData._obDone);
@@ -10538,6 +10654,7 @@
                 if (d.grappeBDUnlocked) grappeBDUnlocked = d.grappeBDUnlocked;
                 if (Array.isArray(d.collectedCarnetResources)) collectedCarnetResources = d.collectedCarnetResources;
                 if (d._carnetResourceTypeMap) _carnetResourceTypeMap = d._carnetResourceTypeMap;
+                if (d.cardEnergy) cardEnergy = d.cardEnergy;
                 console.log('[expLore] loadProgress _obDone après:', _obDone);
             } catch(e) {}
         }
@@ -11669,6 +11786,26 @@
             saveProgress();
             refreshTestState();
             showToast('✨ +' + n + ' poudre ajoutée');
+        }
+
+        function testRefillCardEnergy() {
+            cardEnergy = {};
+            saveProgress();
+            if (selectedCard) updateCardLevelDisplay();
+            showToast('⚡ Énergie restaurée pour toutes les cartes');
+        }
+
+        function testFastForwardCardEnergy() {
+            // Avance le lastTickAt de 2h pour toutes les cartes (simule 2h écoulées)
+            const shift = 2 * 60 * 60 * 1000;
+            Object.keys(cardEnergy).forEach(id => {
+                if (cardEnergy[id] && cardEnergy[id].lastTickAt) {
+                    cardEnergy[id].lastTickAt -= shift;
+                }
+            });
+            saveProgress();
+            if (selectedCard) updateCardLevelDisplay();
+            showToast('⏩ +2h écoulées sur l\'énergie des cartes');
         }
 
         // Place suffisamment de lumens pour éclairer toute la la voûte
@@ -14946,6 +15083,15 @@
             updateJournalBlink();
             // Couche 4 — déclencheur passif
             setTimeout(() => _triggerPassiveDialogue(card), 600);
+            // Rafraîchir périodiquement la jauge d'énergie / le timer de repos
+            if (window._cardEnergyTimer) { clearInterval(window._cardEnergyTimer); }
+            window._cardEnergyTimer = setInterval(() => {
+                if (document.getElementById('cardDetailView').classList.contains('show')) {
+                    updateCardLevelDisplay();
+                } else {
+                    clearInterval(window._cardEnergyTimer); window._cardEnergyTimer = null;
+                }
+            }, 30000); // toutes les 30s suffit
         }
 
         function handleCardDetailBackdropClick(e) {
@@ -15019,7 +15165,46 @@
             const gemEl = document.getElementById('cardRarityGemFlavor');
             if (cl.level >= MAX_LEVEL) gemEl.classList.add('gem-max');
             else gemEl.classList.remove('gem-max');
+
+            // ── Mise à jour de la jauge d'énergie ──
+            const energyState = getCardEnergyState(selectedCard.id);
+            const energyMax = getCardEnergyMax(selectedCard.id);
+            const energyRow = document.getElementById('cardEnergyRow');
+            const restHint = document.getElementById('cardRestHint');
+            if (energyRow) {
+                const smiley = document.getElementById('cardEnergySmiley');
+                const label = document.getElementById('cardEnergyLabel');
+                const barsContainer = document.getElementById('cardEnergyBars');
+                if (smiley) smiley.textContent = getEnergySmiley(energyState.value, energyMax);
+                if (label) label.textContent = getEnergyLabel(energyState.value, energyMax);
+                // Re-créer les barres si le nombre a changé (changement de niveau de carte)
+                if (barsContainer && barsContainer.children.length !== energyMax) {
+                    barsContainer.innerHTML = '';
+                    for (let i = 0; i < energyMax; i++) {
+                        const bar = document.createElement('div');
+                        bar.className = 'card-energy-bar';
+                        barsContainer.appendChild(bar);
+                    }
+                }
+                // Mettre à jour l'état "filled / tired" de chaque barre
+                if (barsContainer) {
+                    const bars = barsContainer.querySelectorAll('.card-energy-bar');
+                    const ratio = energyMax > 0 ? energyState.value / energyMax : 0;
+                    bars.forEach((bar, i) => {
+                        bar.classList.remove('filled', 'tired');
+                        if (i < energyState.value) {
+                            // Rouge/jaune quand presque épuisée (ratio < 0.3)
+                            bar.classList.add(ratio < 0.3 ? 'tired' : 'filled');
+                        }
+                    });
+                }
+            }
+
             const btn = document.getElementById('addExpBtn');
+            btn.classList.remove('btn-rest', 'btn-orb');
+            // Hint caché par défaut
+            if (restHint) { restHint.style.display = 'none'; restHint.innerHTML = ''; }
+
             if (cl.level >= MAX_LEVEL) {
                 document.getElementById('cardExpDisplay').textContent = 'MAX';
                 document.getElementById('cardExpBar').style.width = '100%';
@@ -15035,7 +15220,6 @@
                 const cardEntries = cardJournalEntries[selectedCard.id] || [];
                 const levelEntries = cardEntries.filter(e => e.level === cl.level);
                 const allRevealed = levelEntries.length === 0 || levelEntries.every(e => e._revealed);
-                const hasOrb = bagInv.orbes > 0;
 
                 if (!allRevealed) {
                     btn.disabled = true;
@@ -15043,21 +15227,49 @@
                     const unrevealed = levelEntries.filter(e => !e._revealed).length;
                     btn.textContent = `📖 ${unrevealed} entrée${unrevealed > 1 ? 's' : ''} à dévoiler avant de progresser`;
                 } else {
-                    btn.disabled = !hasOrb;
-                    btn.onclick = hasOrb ? () => { placeOrbe(); } : null;
-                    btn.textContent = hasOrb
-                        ? '🔮 Place un orbe pour progresser'
-                        : '🔮 Aucun orbe disponible';
+                    btn.disabled = false;
+                    btn.onclick = () => { placeOrbe(); };
+                    btn.textContent = '✨ Sceller le chapitre';
                 }
             } else {
                 const cfg = RARITY_CONFIG[selectedCard.rarity] || RARITY_CONFIG.common;
                 const increment = cfg.increment || 20;
                 const canAdd = memorialDust >= increment;
-                btn.disabled = !canAdd;
-                btn.onclick = canAdd ? addExperience : null;
-                btn.textContent = canAdd
-                    ? `💜 Donner de la poudre`
-                    : `💜 Poudre insuffisante (${memorialDust}/${increment})`;
+
+                // Si la carte est épuisée → mode orbe + invitation discrète
+                if (energyState.value <= 0) {
+                    const hasOrb = bagInv.orbes > 0;
+                    const timeLeft = getCardEnergyTimeLeft(selectedCard.id);
+
+                    // Texte d'invitation discret au lieu d'un mur temporel
+                    if (restHint) {
+                        restHint.style.display = 'block';
+                        if (hasOrb) {
+                            restHint.innerHTML = 'La mémoire infuse. Reviens plus tard ou ravive-la avec une orbe.<span class="card-rest-timer">elle reviendra à elle dans ' + formatTimeLeft(timeLeft) + '</span>';
+                        } else {
+                            restHint.innerHTML = 'La mémoire infuse. Tu peux explorer ailleurs en attendant.<span class="card-rest-timer">elle reviendra à elle dans ' + formatTimeLeft(timeLeft) + '</span>';
+                        }
+                    }
+
+                    // Bouton : si orbe disponible, on l'utilise. Sinon, désactivé mais pas culpabilisant
+                    if (hasOrb) {
+                        btn.disabled = false;
+                        btn.onclick = useOrbOnCard;
+                        btn.classList.add('btn-orb');
+                        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-right:6px;" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="orbBtnGrad" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#fde68a"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#92400e"/></radialGradient></defs><circle cx="12" cy="12" r="9" fill="url(#orbBtnGrad)"/><circle cx="9" cy="9" r="2.5" fill="rgba(255,255,255,0.6)"/></svg>Utiliser une orbe';
+                    } else {
+                        btn.disabled = true;
+                        btn.onclick = null;
+                        btn.classList.add('btn-rest');
+                        btn.textContent = '✨ Aucune orbe disponible';
+                    }
+                } else {
+                    btn.disabled = !canAdd;
+                    btn.onclick = canAdd ? addExperience : null;
+                    btn.textContent = canAdd
+                        ? `💜 Donner de la poudre`
+                        : `💜 Poudre insuffisante (${memorialDust}/${increment})`;
+                }
             }
         }
 
@@ -15563,6 +15775,110 @@
             }
         }
 
+        // ─────────────────────────────────────────────────────────────
+        // SYSTÈME D'ÉNERGIE / MATURATION DES CARTES
+        // La capacité d'énergie dépend du niveau de la carte :
+        //   Niveau 0/1 : 9 doses (les couches superficielles s'éveillent vite)
+        //   Niveau 2   : 6 doses (la mémoire commence à résister)
+        //   Niveau 3   : 3 doses (les couches profondes demandent de la patience)
+        // Récupération : 1 cran toutes les 2h. L'orbe peut bypasser
+        // le repos pour restaurer l'énergie complètement.
+        // ─────────────────────────────────────────────────────────────
+        const CARD_ENERGY_BY_LEVEL = [9, 9, 6, 3]; // index = niveau (0..3+)
+        const CARD_ENERGY_RECOVERY_MS = 2 * 60 * 60 * 1000; // 2h par cran
+        // En mémoire, indexé par cardId : { value: 0..max, lastTickAt: timestamp }
+        let cardEnergy = {};
+
+        // Capacité max d'une carte selon son niveau actuel
+        function getCardEnergyMax(cardId) {
+            const cl = cardLevels[cardId];
+            const lvl = cl ? cl.level : 0;
+            return CARD_ENERGY_BY_LEVEL[Math.min(lvl, CARD_ENERGY_BY_LEVEL.length - 1)];
+        }
+
+        // Calcule l'énergie réelle d'une carte (en intégrant la régénération depuis lastTickAt)
+        function getCardEnergyState(cardId) {
+            const max = getCardEnergyMax(cardId);
+            if (!cardEnergy[cardId]) {
+                cardEnergy[cardId] = { value: max, lastTickAt: Date.now() };
+            }
+            const e = cardEnergy[cardId];
+            // Si la capacité a augmenté (level-up), on restaure au max
+            // Si elle a diminué (cas anormal), on cap au max
+            if (e.value > max) e.value = max;
+            // Régénération depuis lastTickAt
+            const now = Date.now();
+            if (e.value < max) {
+                const elapsed = now - e.lastTickAt;
+                const ticks = Math.floor(elapsed / CARD_ENERGY_RECOVERY_MS);
+                if (ticks > 0) {
+                    e.value = Math.min(max, e.value + ticks);
+                    e.lastTickAt = e.lastTickAt + ticks * CARD_ENERGY_RECOVERY_MS;
+                    if (e.value >= max) {
+                        e.lastTickAt = now;
+                    }
+                }
+            } else {
+                e.lastTickAt = now;
+            }
+            return e;
+        }
+
+        // Consomme 1 cran d'énergie (appelé après chaque dépense de poudre)
+        function consumeCardEnergy(cardId) {
+            const e = getCardEnergyState(cardId);
+            const max = getCardEnergyMax(cardId);
+            if (e.value <= 0) return false;
+            // Si on était plein avant : on commence le cycle de repos maintenant
+            if (e.value === max) e.lastTickAt = Date.now();
+            e.value -= 1;
+            return true;
+        }
+
+        // Restaure l'énergie complètement (utilisation d'une orbe)
+        function restoreCardEnergy(cardId) {
+            const max = getCardEnergyMax(cardId);
+            cardEnergy[cardId] = { value: max, lastTickAt: Date.now() };
+        }
+
+        // Renvoie le temps restant en ms avant le prochain cran de récupération
+        function getCardEnergyTimeLeft(cardId) {
+            const e = getCardEnergyState(cardId);
+            const max = getCardEnergyMax(cardId);
+            if (e.value >= max) return 0;
+            const elapsed = Date.now() - e.lastTickAt;
+            return Math.max(0, CARD_ENERGY_RECOVERY_MS - elapsed);
+        }
+
+        // Format "1h 23min" lisible
+        function formatTimeLeft(ms) {
+            if (ms <= 0) return '';
+            const totalMin = Math.ceil(ms / 60000);
+            const h = Math.floor(totalMin / 60);
+            const m = totalMin % 60;
+            if (h === 0) return m + ' min';
+            if (m === 0) return h + 'h';
+            return h + 'h ' + m + 'min';
+        }
+
+        // Smileys par palier (proportion 0..1 de l'énergie restante)
+        function getEnergySmiley(value, max) {
+            const ratio = max > 0 ? value / max : 0;
+            if (ratio >= 0.85) return '😊'; // disposée
+            if (ratio >= 0.55) return '🙂'; // attentive
+            if (ratio >= 0.20) return '😐'; // fatiguée
+            if (value > 0)     return '😪'; // presque épuisée
+            return '😴'; // infuse
+        }
+        function getEnergyLabel(value, max) {
+            const ratio = max > 0 ? value / max : 0;
+            if (ratio >= 0.85) return 'disposée';
+            if (ratio >= 0.55) return 'attentive';
+            if (ratio >= 0.20) return 'fatiguée';
+            if (value > 0)     return 'somnolente';
+            return 'infuse';
+        }
+
         function addExperience() {
             if (!selectedCard || dustBlocked) return;
             const cl = cardLevels[selectedCard.id];
@@ -15570,12 +15886,21 @@
             const needed = getExpNeeded(selectedCard, cl.level);
             if (cl.experience >= needed) return;
 
+            // Vérifier l'énergie de la carte
+            const energy = getCardEnergyState(selectedCard.id);
+            if (energy.value <= 0) {
+                showToast('😴 Cette carte a besoin de repos');
+                return;
+            }
+
             // Incrément selon rareté
             const cfg = RARITY_CONFIG[selectedCard.rarity] || RARITY_CONFIG.common;
             const increment = cfg.increment || 20;
             if (memorialDust < increment) return;
 
             memorialDust -= increment;
+            // Consommer 1 cran d'énergie
+            consumeCardEnergy(selectedCard.id);
             document.getElementById('dustCounter').textContent = memorialDust;
             document.getElementById('cardDetailDustCounter').textContent = memorialDust;
             cl.dustSpent = (cl.dustSpent || 0) + increment;
@@ -15593,6 +15918,83 @@
             updateCardLevelDisplay();
             saveProgress();
         }
+
+        // Utiliser une orbe pour restaurer l'énergie de la carte sélectionnée
+        function useOrbOnCard() {
+            if (!selectedCard) return;
+            if (!bagInv.orbes || bagInv.orbes <= 0) {
+                showToast('Aucune orbe disponible');
+                return;
+            }
+            const energy = getCardEnergyState(selectedCard.id);
+            const max = getCardEnergyMax(selectedCard.id);
+            if (energy.value >= max) {
+                showToast('La carte est déjà disposée');
+                return;
+            }
+            bagInv.orbes -= 1;
+            restoreCardEnergy(selectedCard.id);
+            saveProgress();
+
+            // ── Animation visuelle : barres qui se remplissent en cascade ──
+            const energyRow = document.getElementById('cardEnergyRow');
+            const bars = document.getElementById('cardEnergyBars').querySelectorAll('.card-energy-bar');
+            const smiley = document.getElementById('cardEnergySmiley');
+            const label = document.getElementById('cardEnergyLabel');
+            const btn = document.getElementById('addExpBtn');
+            const restHint = document.getElementById('cardRestHint');
+
+            // Reset visuel des barres
+            bars.forEach(bar => bar.classList.remove('filled', 'tired'));
+            // Désactiver le bouton pendant l'animation
+            if (btn) { btn.disabled = true; btn.style.pointerEvents = 'none'; }
+            // Cacher le hint pendant l'anim
+            if (restHint) restHint.style.display = 'none';
+
+            // Halo sur la ligne d'énergie
+            if (energyRow) {
+                energyRow.classList.remove('energy-burst');
+                void energyRow.offsetWidth; // reflow
+                energyRow.classList.add('energy-burst');
+            }
+
+            // Petite particule lumineuse au-dessus de la jauge
+            _spawnOrbBurstParticle(energyRow);
+
+            // Remplir les barres en cascade — délai par barre adapté au nombre
+            const barCount = bars.length;
+            const stepDelay = Math.max(60, Math.min(220, 600 / barCount)); // entre 60 et 220ms par barre
+            bars.forEach((bar, i) => {
+                setTimeout(() => {
+                    bar.classList.add('filled');
+                    bar.classList.add('energy-bar-pop');
+                    setTimeout(() => bar.classList.remove('energy-bar-pop'), 500);
+                }, 120 + i * stepDelay);
+            });
+
+            // À la fin, mettre à jour smiley/label/bouton via update normal
+            const totalAnim = 120 + barCount * stepDelay + 200;
+            setTimeout(() => {
+                if (smiley) smiley.textContent = getEnergySmiley(max, max);
+                if (label) label.textContent = getEnergyLabel(max, max);
+                if (energyRow) energyRow.classList.remove('energy-burst');
+                if (btn) btn.style.pointerEvents = '';
+                updateCardLevelDisplay();
+                showToast('✨ Orbe utilisée — la carte se ravive');
+            }, totalAnim);
+        }
+
+        // Petite particule lumineuse qui jaillit lors de l'utilisation d'une orbe
+        function _spawnOrbBurstParticle(anchorEl) {
+            if (!anchorEl) return;
+            const rect = anchorEl.getBoundingClientRect();
+            const particle = document.createElement('div');
+            particle.className = 'orb-burst-particle';
+            particle.style.left = (rect.left + rect.width / 2) + 'px';
+            particle.style.top = (rect.top + rect.height / 2) + 'px';
+            document.body.appendChild(particle);
+            setTimeout(() => { try { particle.remove(); } catch(e){} }, 1100);
+        }
         function showMilestoneEffect() {
             // Effet visuel "réplique bleue" - animation subtile
             const cardFrame = document.querySelector('.card-frame');
@@ -15605,15 +16007,14 @@
         }
 
         function placeOrbe() {
+            // ── Sceller le chapitre : ne consomme plus d'orbe.
+            // L'orbe est désormais réservée au bypass de la maturation des cartes.
             if (!selectedCard) return;
             const cl = cardLevels[selectedCard.id];
             if (cl.level >= MAX_LEVEL) return;
             const needed = getExpNeeded(selectedCard, cl.level);
             if (cl.experience < needed) return;   // XP pas encore au max
-            if (bagInv.orbes <= 0) return;          // pas d'orbe
 
-            // Consommer l'orbe
-            bagInv.orbes--;
             const levelBefore = cl.level;
 
             // Level up
