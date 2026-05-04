@@ -264,14 +264,7 @@
             100% { opacity: 0; transform: translate(-50%, -56%); }
         }
 
-        /* Mode planification : on cache poudre/écho/orbes/parchemins/loots */
-        body.planning-mode .maplibregl-marker.dust-marker,
-        body.planning-mode .maplibregl-marker.echo-marker,
-        body.planning-mode .maplibregl-marker.orb-marker,
-        body.planning-mode .maplibregl-marker.scroll-marker,
-        body.planning-mode .maplibregl-marker.loot-marker {
-            display: none !important;
-        }
+        /* Mode planification : tous les POI restent visibles */
 
         /* Épingle de quête active sur la mappe */
         .quest-pin {
@@ -5143,39 +5136,42 @@
 
         /* Modale substory (réutilisée) */
         /* ── Modale Quête Grappe ── */
-        /* ── Modal grappe : layout flex robuste ── */
+        /* ── Modal grappe : refonte avec layout absolu robuste ── */
         .grappe-quest-modal {
-            position: fixed; inset: 0;
+            position: fixed;
+            inset: 0;
             background: rgba(0,0,0,0.75);
             z-index: 350;
             display: none;
-            align-items: flex-end;
-            justify-content: center;
             backdrop-filter: blur(3px);
         }
-        .grappe-quest-modal.show { display: flex; }
+        .grappe-quest-modal.show { display: block; }
         .grappe-quest-card {
+            /* Plutôt que de dépendre de flex+vh, on fixe la card en absolu sur 88% du bas */
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 0;
             width: 100%;
             max-width: 480px;
+            top: 12%;  /* 12% de marge en haut, donc 88% de hauteur, sans dépendre de vh */
             background: linear-gradient(180deg, #1a0f2e 0%, #0f0820 100%);
             border-top: 2px solid var(--gq-color, rgba(255,200,80,0.5));
             border-radius: 18px 18px 0 0;
             box-shadow: 0 -8px 30px rgba(0,0,0,0.6);
-            /* Hauteur fixe : 88% de la viewport (avec fallback dvh pour mobile) */
-            height: 88vh;
-            height: 88dvh;
-            max-height: 88vh;
-            max-height: 88dvh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             animation: gqSlideUp 0.32s ease-out;
         }
-        @keyframes gqSlideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
+        .grappe-quest-modal.show .grappe-quest-card {
+            transform: translateX(-50%);
         }
-        /* Header : bloc fixe en haut, titre + croix sur la même ligne */
+        @keyframes gqSlideUp {
+            from { transform: translate(-50%, 100%); }
+            to { transform: translate(-50%, 0); }
+        }
+        /* Header : bloc fixe en haut */
         .grappe-quest-header {
             flex: 0 0 auto;
             display: flex;
@@ -6241,7 +6237,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.5 · 03/05 — fix tutoriel + skip</div>
+            <div class="hud-version" id="hudVersion">v0.6 · 03/05 — fix scroll modal + tous POI au dezoom</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
