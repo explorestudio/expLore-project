@@ -6241,7 +6241,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.4 · 03/05 — bugfixes onboarding/pins</div>
+            <div class="hud-version" id="hudVersion">v0.5 · 03/05 — fix tutoriel + skip</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -7935,6 +7935,11 @@
             <button class="intro-bd-start" id="introBDStart" onclick="finishIntroBD()" style="display:none;">Commencer l'aventure</button>
         </div>
 
+        <div id="onboardingOverlay" class="hidden">
+            <div class="ob-text" id="obText"></div>
+            <div class="ob-tap-hint">Appuyer pour continuer</div>
+        </div>
+
         <!-- Note manuscrite Marcus -->
         <div id="obNote">
             <div class="ob-note-inner">
@@ -9286,27 +9291,7 @@
         }
 
         function skipIntroBD() {
-            // Skip = désactive la BD ET tout le tutoriel (Marcus, hints contextuels, etc.)
-            const cinema = document.getElementById('introBDCinematic');
-            if (cinema) {
-                cinema.style.transition = 'opacity 0.6s ease';
-                cinema.style.opacity = '0';
-                setTimeout(() => {
-                    cinema.classList.add('hidden');
-                    cinema.style.opacity = '';
-                    cinema.style.transition = '';
-                }, 600);
-            }
-            // Marquer tout l'onboarding comme terminé
-            _obDone = true;
-            _obAct2Done = true;
-            _obAct3Done = true;
-            if (typeof _obScreenSeen === 'object') {
-                ['collections','bag','journal','mindmap','carddetail'].forEach(k => { _obScreenSeen[k] = true; });
-            }
-            saveProgress();
-            // Restaurer la mappe normale
-            if (typeof _obRestoreAllPOI === 'function') _obRestoreAllPOI();
+            finishIntroBD();
         }
 
         function finishIntroBD() {
@@ -9326,10 +9311,8 @@
             if (_obDone) return;
             // L'Acte I "Il existait un Grand Livre" a été remplacé par la cinématique BD.
             // On enchaîne directement sur la note manuscrite de Marcus (Acte II).
-            const ov = document.getElementById('onboardingOverlay');
-            if (ov) ov.classList.add('hidden');
-            const sb = document.getElementById('obSkipBtn');
-            if (sb) sb.classList.add('visible');
+            document.getElementById('onboardingOverlay').classList.add('hidden');
+            document.getElementById('obSkipBtn').classList.add('visible');
             _obShowMarcusNote();
         }
 
@@ -9339,15 +9322,15 @@
             if (window._obTutorialMarker) { window._obTutorialMarker.remove(); window._obTutorialMarker = null; }
             _obRemoveHighlight();
 
-            // Masquer tous les overlays onboarding (avec sécurités si supprimés)
-            const ov = document.getElementById('onboardingOverlay'); if (ov) ov.classList.add('hidden');
-            const note = document.getElementById('obNote'); if (note) note.classList.remove('show');
-            const vn = document.getElementById('vnOverlay'); if (vn) vn.classList.remove('show');
-            const sb = document.getElementById('obSkipBtn'); if (sb) sb.classList.remove('visible');
+            // Masquer tous les overlays onboarding
+            document.getElementById('onboardingOverlay').classList.add('hidden');
+            document.getElementById('obNote').classList.remove('show');
+            document.getElementById('vnOverlay').classList.remove('show');
+            document.getElementById('obSkipBtn').classList.remove('visible');
 
             // Fermer fiche carte si ouverte par l'onboarding
-            const cd = document.getElementById('cardDetailView'); if (cd) cd.classList.remove('show');
-            const js = document.getElementById('journalScreen'); if (js) js.classList.remove('show');
+            document.getElementById('cardDetailView').classList.remove('show');
+            document.getElementById('journalScreen').classList.remove('show');
 
             // Restaurer les POIs et terminer
             _obDone = true;
