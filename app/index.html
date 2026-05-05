@@ -6627,7 +6627,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.14.3 · 05/05 — fix visibilité markers cassette/pellicule/encre</div>
+            <div class="hud-version" id="hudVersion">v0.14.4 · 05/05 — zones capture carnet + fix URL espaces (APK)</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -9865,7 +9865,7 @@
             });
             if (map) {
                 ['poi-capture-circles','poi-capture-circles-stroke','poi-dot-fill','poi-dot-stroke','dust-capture-circles','dust-capture-circles-stroke','echo-capture-circles','echo-capture-circles-stroke',
-                 'orb-circles','orb-circles-stroke','scroll-circles','scroll-circles-stroke','loot-circles','loot-circles-stroke','info-capture-circles'].forEach(id => {
+                 'orb-circles','orb-circles-stroke','scroll-circles','scroll-circles-stroke','loot-circles','loot-circles-stroke','info-capture-circles','carnet-resource-circles','carnet-resource-circles-stroke'].forEach(id => {
                     try { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); } catch(e) {}
                 });
             }
@@ -11531,6 +11531,26 @@
                     paint: { 'line-color': '#EC4899', 'line-opacity': 0.85, 'line-width': 2 }
                 });
 
+                // Carnet resource circles (cassettes/pellicules/encre) — rayon CARNET_RESOURCE_RADIUS (25m)
+                map.addSource('carnet-resource-circles', {
+                    type: 'geojson',
+                    data: { type: 'FeatureCollection', features: CARNET_RESOURCE_POINTS.map(pt => ({ type: 'Feature', properties: { id: pt.id, lng: pt.lng, lat: pt.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(pt.lng, pt.lat, CARNET_RESOURCE_RADIUS, ISOMETRIC_TILT)] } })) }
+                });
+                map.addLayer({
+                    id: 'carnet-resource-circles',
+                    type: 'fill',
+                    source: 'carnet-resource-circles',
+                    layout: { visibility: 'none' },
+                    paint: { 'fill-color': '#F59E0B', 'fill-opacity': 0.09 }
+                });
+                map.addLayer({
+                    id: 'carnet-resource-circles-stroke',
+                    type: 'line',
+                    source: 'carnet-resource-circles',
+                    layout: { visibility: 'none' },
+                    paint: { 'line-color': '#F59E0B', 'line-opacity': 0.80, 'line-width': 2 }
+                });
+
                 map.addSource('info-circles', {
                 type: 'geojson',
                 data: { type: 'FeatureCollection', features: [] }
@@ -11578,7 +11598,7 @@
                 updateInfoVisibility();
                 checkNearbyPOI();
                 if (!_obDone) {
-                    ['poi-capture-circles','poi-capture-circles-stroke','poi-dot-fill','poi-dot-stroke','dust-capture-circles','dust-capture-circles-stroke','echo-capture-circles','echo-capture-circles-stroke','orb-circles','orb-circles-stroke','scroll-circles','scroll-circles-stroke','loot-circles','loot-circles-stroke','info-capture-circles'].forEach(id => {
+                    ['poi-capture-circles','poi-capture-circles-stroke','poi-dot-fill','poi-dot-stroke','dust-capture-circles','dust-capture-circles-stroke','echo-capture-circles','echo-capture-circles-stroke','orb-circles','orb-circles-stroke','scroll-circles','scroll-circles-stroke','loot-circles','loot-circles-stroke','info-capture-circles','carnet-resource-circles','carnet-resource-circles-stroke'].forEach(id => {
                         try { if (map.getLayer(id)) map.setLayoutProperty(id,'visibility','none'); } catch(e){}
                     });
                 } else {
@@ -11738,7 +11758,7 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-62%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _crIcon = document.createElement('div');
                 _crIcon.style.cssText = 'flex-shrink:0;width:40px;height:40px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));';
-                _crIcon.innerHTML = '<img src="' + type.image + '" style="width:100%;height:100%;object-fit:contain;pointer-events:none;" draggable="false"/>';
+                _crIcon.innerHTML = '<img src="' + encodeURI(type.image) + '" alt="' + (type.label || 'ressource') + '" style="width:100%;height:100%;object-fit:contain;pointer-events:none;" draggable="false" onerror="this.style.display=\'none\';"/>';
                 const _crPid = 'carnetres_' + pt.id.replace(/[^a-z0-9]/gi,'');
                 const _crWrap = _buildPoiVisual(_crPid, type.color, _crIcon, 36, 28);
                 inner.appendChild(_crWrap);
@@ -12513,14 +12533,15 @@
         let _capCtx = null, _capAnim = null, _capZones = [];
 
         const _CAP_COLORS = {
-            poi_local:    '#F97316',
-            poi_thematic: '#F59E0B',
-            poi_cooldown: '#9CA3AF',
-            dust:         '#A855F7',
-            echo:         '#10B981',
-            orb:          '#06B6D4',
-            scroll:       '#F59E0B',
-            loot:         '#EC4899',
+            poi_local:        '#F97316',
+            poi_thematic:     '#F59E0B',
+            poi_cooldown:     '#9CA3AF',
+            dust:             '#A855F7',
+            echo:             '#10B981',
+            orb:              '#06B6D4',
+            scroll:           '#F59E0B',
+            loot:             '#EC4899',
+            carnet_resource:  '#F59E0B',
         };
 
         function _capInit() {
@@ -12547,6 +12568,7 @@
             ORB_POINTS.forEach(o => { if (!collectedOrbs.includes(o.id)) add(o.lng, o.lat, 50, 'orb'); });
             SCROLL_POINTS.forEach(s => { if (!collectedScrolls.includes(s.id)) add(s.lng, s.lat, 50, 'scroll'); });
             LOOT_POINTS.forEach(l => { if (!collectedLoots.includes(l.id)) add(l.lng, l.lat, 50, 'loot'); });
+            CARNET_RESOURCE_POINTS.forEach(pt => { if (!collectedCarnetResources.includes(pt.id)) add(pt.lng, pt.lat, CARNET_RESOURCE_RADIUS, 'carnet_resource'); });
         }
 
         function _capDraw() {
@@ -12560,9 +12582,9 @@
             // Isometrie coherente : ratio fixe pour vue top-down legerement inclinee
             const RATIO_Y = 0.38;
             // Seuils min par type : evite que la zone depasse l icone au zoom large
-            const MIN_RX = { poi_local:32, poi_thematic:32, poi_cooldown:32, dust:20, orb:20, echo:28, scroll:18, loot:18 };
+            const MIN_RX = { poi_local:32, poi_thematic:32, poi_cooldown:32, dust:20, orb:20, echo:28, scroll:18, loot:18, carnet_resource:18 };
             // Opacite remplissage par type
-            const FILL_ALPHA = { poi_local:0.10, poi_thematic:0.10, poi_cooldown:0.08, dust:0.13, orb:0.13, echo:0.10, scroll:0.10, loot:0.10 };
+            const FILL_ALPHA = { poi_local:0.10, poi_thematic:0.10, poi_cooldown:0.08, dust:0.13, orb:0.13, echo:0.10, scroll:0.10, loot:0.10, carnet_resource:0.11 };
             _capZones.forEach(z => {
                 const c = map.project([z.lng, z.lat]);
                 const e = map.project([z.lng + z.r / (111320 * Math.cos(z.lat * Math.PI / 180)), z.lat]);
@@ -13036,7 +13058,7 @@
             const nearbyCRDiv = document.getElementById('nearbyCarnetResource');
             if (nearbyCR) {
                 const type = _getCarnetResourceType(nearbyCR.id);
-                document.getElementById('carnetResourceName').innerHTML = '<img src="' + type.image + '" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:6px;display:inline-block;" draggable="false"/>' + type.label.charAt(0).toUpperCase() + type.label.slice(1);
+                document.getElementById('carnetResourceName').innerHTML = '<img src="' + encodeURI(type.image) + '" alt="' + (type.label || 'ressource') + '" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:6px;display:inline-block;" draggable="false" onerror="this.style.display=\'none\';"/>' + type.label.charAt(0).toUpperCase() + type.label.slice(1);
                 const show = _shouldShowPoiConsole('carnetResource', nearbyCR.id) && !_screenBlocked;
                 if (show) nearbyCRDiv.classList.remove('hidden');
                 else if (_screenBlocked) nearbyCRDiv.classList.add('hidden');
