@@ -3520,7 +3520,7 @@
             color: #0891b2;
         }
 
-        /* Bouton carnet : icône emoji par défaut, PNG de fond si dispo */
+        /* Bouton carnet : icône emoji par défaut, PNG appliqué dans le span si dispo */
         .card-carnet-btn {
             flex-shrink: 0;
             background: white;
@@ -3535,21 +3535,26 @@
             justify-content: center;
             transition: transform 0.15s, box-shadow 0.18s;
             position: relative;
-            background-size: 80% 80%;
-            background-position: center;
-            background-repeat: no-repeat;
+            overflow: visible;
         }
         .card-carnet-icon {
             font-size: 24px;
             line-height: 1;
-            transition: opacity 0.2s;
+            width: 80%;
+            height: 80%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: contain;
+            transition: transform 0.2s;
         }
-        /* Quand le PNG est chargé, on l'utilise comme background et on masque l'emoji */
-        .card-carnet-btn.has-png {
-            background-image: url('./assets/Carnet.png');
-        }
+        /* Quand le PNG est chargé, on l'applique sur le span et on masque le texte emoji */
         .card-carnet-btn.has-png .card-carnet-icon {
-            opacity: 0;
+            background-image: url('./assets/Carnet.png');
+            color: transparent;
+            text-shadow: none;
         }
         .card-carnet-btn:hover {
             transform: scale(1.05);
@@ -3558,27 +3563,27 @@
         .card-carnet-btn:active { transform: scale(0.95); }
 
         /* Pulse quand une nouvelle entrée carnet est disponible :
-           halo via pseudo-élément ::after pour ne pas perturber le rendu de l'icône */
-        .card-carnet-btn.has-new::after {
-            content: '';
-            position: absolute;
-            inset: -3px;
-            border-radius: 13px;
-            border: 2px solid #fbbf24;
-            pointer-events: none;
-            animation: carnetPulseHalo 1.4s ease-in-out infinite;
+           - L'icône (le span) pulse en taille pour attirer le regard
+           - Un halo doré scintille AUTOUR du bouton via box-shadow (pas par-dessus) */
+        .card-carnet-btn.has-new {
+            animation: carnetBtnHalo 1.4s ease-in-out infinite;
         }
-        @keyframes carnetPulseHalo {
+        .card-carnet-btn.has-new .card-carnet-icon {
+            animation: carnetIconPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes carnetBtnHalo {
             0%, 100% {
-                opacity: 0.9;
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.5);
+                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
+                border-color: #fcd34d;
             }
             50% {
-                opacity: 0;
-                transform: scale(1.18);
-                box-shadow: 0 0 0 8px rgba(251, 191, 36, 0);
+                box-shadow: 0 0 0 7px rgba(251, 191, 36, 0);
+                border-color: #f59e0b;
             }
+        }
+        @keyframes carnetIconPulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.18); }
         }
 
         /* ══ Onglet "Skins" : carrousel ══ */
@@ -6585,7 +6590,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.13.3 · 05/05 — icônes poudre PNG unifiées + fix pulse carnet</div>
+            <div class="hud-version" id="hudVersion">v0.13.4 · 05/05 — fix pulse carnet (icône scale + halo périphérique)</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
