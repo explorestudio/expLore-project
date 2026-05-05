@@ -7216,9 +7216,15 @@
                                                 <span class="card-level-label" id="cardLevelDisplay">Niveau 1</span>
                                                 <span class="card-level-label" id="cardExpDisplay">0/10 ✦</span>
                                             </div>
-                                            <div style="display:flex;align-items:center;gap:5px;background:#f3f0ff;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;color:#7c3aed;flex-shrink:0;margin-left:auto;">
-                                                <img src="./assets/Powder.png" alt="poudre" style="width:16px;height:16px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
-                                                <span id="cardDetailDustCounter">0</span>
+                                            <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+                                                <div style="display:flex;align-items:center;gap:5px;background:#f3f0ff;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;color:#7c3aed;flex-shrink:0;">
+                                                    <img src="./assets/Powder.png" alt="poudre" style="width:16px;height:16px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
+                                                    <span id="cardDetailDustCounter">0</span>
+                                                </div>
+                                                <button class="card-carnet-btn" id="journalTabBtn" onclick="openJournalScreen()" title="Ouvrir le carnet de la carte">
+                                                    <span class="card-carnet-icon" id="cardCarnetIcon">📖</span>
+                                                    <span class="notification-badge hidden" id="journalNotification" style="display:none!important;"></span>
+                                                </button>
                                             </div>
                                         </div>
                                         <div class="card-exp-bar">
@@ -7238,8 +7244,8 @@
                                             Ajouter 50 poudre (+EXP)
                                         </button>
 
-                                        <!-- Ligne orbes + bouton carnet -->
-                                        <div class="card-tab-actions-row">
+                                        <!-- Ligne orbes (seules) -->
+                                        <div class="card-tab-actions-row" style="margin-top:6px;">
                                             <div class="card-orbes-display" title="Orbes de mémoire disponibles">
                                                 <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#06b6d4" opacity="0.25"/><circle cx="12" cy="12" r="6" fill="#22d3ee"/><circle cx="10" cy="10" r="2" fill="#cffafe" opacity="0.85"/></svg>
                                                 <div style="display:flex;flex-direction:column;line-height:1.15;">
@@ -7247,10 +7253,6 @@
                                                     <span class="card-orbes-count" id="cardDetailOrbesCounter">0</span>
                                                 </div>
                                             </div>
-                                            <button class="card-carnet-btn" id="journalTabBtn" onclick="openJournalScreen()" title="Ouvrir le carnet de la carte">
-                                                <span class="card-carnet-icon" id="cardCarnetIcon">📖</span>
-                                                <span class="notification-badge hidden" id="journalNotification" style="display:none!important;"></span>
-                                            </button>
                                         </div>
                                     </div>
                                     <div id="cardStoryLink" style="display:none;margin:8px 0 0;font-size:11.5px;color:rgba(80,60,140,0.85);gap:5px;align-items:center;padding:6px 10px;background:rgba(109,40,217,0.08);border-radius:8px;border-left:2px solid rgba(167,139,250,0.5);"></div>
@@ -16425,6 +16427,7 @@
                 if (energyRow) energyRow.classList.remove('energy-burst');
                 if (btn) btn.style.pointerEvents = '';
                 updateCardLevelDisplay();
+                updateCardDetailOrbesDisplay();
                 showToast('✨ Orbe utilisée — la carte se ravive');
             }, totalAnim);
         }
@@ -16841,14 +16844,10 @@
                         var unrevealed2 = lvlEntries2.filter(e => !e._revealed).length;
                         slotTitle = unrevealed2 + ' entrée' + (unrevealed2 > 1 ? 's' : '') + ' à dévoiler';
                         slotSub = 'Révèle toutes les entrées du chapitre pour progresser';
-                    } else if (xpFull && hasOrb) {
-                        slotCls = 'ready'; orbIco = '🔮';
+                    } else if (xpFull) {
+                        slotCls = 'ready'; orbIco = '✨';
                         slotTitle = 'Sceller ce chapitre';
-                        slotSub = bagInv.orbes + ' orbe' + (bagInv.orbes > 1 ? 's' : '') + ' disponible · Tap pour progresser';
-                    } else if (xpFull && !hasOrb) {
-                        slotCls = 'no-orb'; orbIco = '○';
-                        slotTitle = 'Aucun orbe disponible';
-                        slotSub = 'Trouve un orbe pour débloquer le niveau suivant';
+                        slotSub = 'Tap pour progresser';
                     } else {
                         slotCls = 'no-orb'; orbIco = '○';
                         slotTitle = 'XP insuffisante';
