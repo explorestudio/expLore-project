@@ -3312,6 +3312,43 @@
         .prog-xp-fill { height: 100%; background: linear-gradient(90deg, #6D28D9 0%, #A855F7 60%, #C084FC 100%); border-radius: 5px; transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
 
         .prog-tabs { display: flex; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(139,92,246,0.15); flex-shrink: 0; }
+        /* Encart distance — sobre, dans le registre lore exploration */
+        .prog-distance-card {
+            flex-shrink: 0;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(30, 16, 53, 0.6) 0%, rgba(22, 12, 40, 0.6) 100%);
+            border-bottom: 1px solid rgba(139, 92, 246, 0.15);
+        }
+        .prog-distance-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: rgba(196, 181, 253, 0.7);
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .prog-distance-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+        .prog-distance-cell {
+            text-align: center;
+            padding: 6px 4px;
+        }
+        .prog-distance-value {
+            font-size: 15px;
+            font-weight: 800;
+            color: #e9d5ff;
+            line-height: 1.1;
+        }
+        .prog-distance-label {
+            font-size: 9.5px;
+            color: rgba(196, 181, 253, 0.55);
+            margin-top: 3px;
+            font-style: italic;
+        }
         .prog-tab { flex: 1; background: none; border: none; padding: 11px 4px; font-size: 12px; font-weight: 700; color: rgba(167,139,250,0.5); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; letter-spacing: 0.3px; }
         .prog-tab.active { color: #C084FC; border-bottom-color: #A855F7; }
         .prog-body { flex: 1; overflow-y: auto; }
@@ -6590,7 +6627,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.13.4 · 05/05 — fix pulse carnet (icône scale + halo périphérique)</div>
+            <div class="hud-version" id="hudVersion">v0.14.2 · 05/05 — +6 points carnet + 8 paliers orbes battlepass (logarithmique)</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -7448,6 +7485,24 @@
             <div class="prog-tabs">
                 <button class="prog-tab active" id="progTabBP" onclick="switchProgTab('battlepass')">🗺️ Parcours</button>
                 <button class="prog-tab" id="progTabAchiev" onclick="switchProgTab('achievements')">🏆 Succès</button>
+            </div>
+            <!-- Petit encart "Tes pas dans Lyon" — discret, sobre, registre exploration -->
+            <div class="prog-distance-card" id="progDistanceCard">
+                <div class="prog-distance-title">Tes pas dans Lyon</div>
+                <div class="prog-distance-grid">
+                    <div class="prog-distance-cell">
+                        <div class="prog-distance-value" id="progDistToday">0 m</div>
+                        <div class="prog-distance-label">arpentés aujourd'hui</div>
+                    </div>
+                    <div class="prog-distance-cell">
+                        <div class="prog-distance-value" id="progDistWeek">0 m</div>
+                        <div class="prog-distance-label">cette semaine</div>
+                    </div>
+                    <div class="prog-distance-cell">
+                        <div class="prog-distance-value" id="progDistTotal">0 m</div>
+                        <div class="prog-distance-label">au total dans la cité</div>
+                    </div>
+                </div>
             </div>
             <div class="prog-body">
                 <div id="progPaneBP" class="battlepass-track">
@@ -9218,6 +9273,18 @@
             { id: 'carnet_r17', lat: 45.7745, lng: 4.8480 },
             // Fourvière
             { id: 'carnet_r18', lat: 45.7625, lng: 4.8210 },
+            // ── Densification (v0.14.2) ──
+            // Bellecour / Cordeliers (Presqu'île centre — coeur touristique)
+            { id: 'carnet_r19', lat: 45.7580, lng: 4.8320 },
+            { id: 'carnet_r20', lat: 45.7665, lng: 4.8355 },
+            // Guillotière / 7e
+            { id: 'carnet_r21', lat: 45.7510, lng: 4.8420 },
+            // Brotteaux / 6e
+            { id: 'carnet_r22', lat: 45.7700, lng: 4.8485 },
+            // Saint-Just / 5e (montée)
+            { id: 'carnet_r23', lat: 45.7575, lng: 4.8195 },
+            // Monplaisir / 8e (lien Frères Lumière)
+            { id: 'carnet_r24', lat: 45.7445, lng: 4.8645 },
         ];
         const CARNET_RESOURCE_RADIUS = 25;
         // Types possibles ; à chaque collecte on tire au sort
@@ -12651,6 +12718,8 @@
             joystickInterval = setInterval(() => {
                 if (!joystickActive || gpsActive) return;
                 const speed = MOVE_SPEED * _walkSpeed;
+                const prevLat = playerPos.lat;
+                const prevLng = playerPos.lng;
                 playerPos = {
                     lat: playerPos.lat + joystickDirection.y * speed,
                     lng: playerPos.lng + joystickDirection.x * speed
@@ -12659,7 +12728,37 @@
                     updatePlayerOnMap();
                 }
                 checkNearbyPOI();
+                // Tracker distance — calcul Haversine entre la position avant et après le tick
+                _trackDistanceFromJoystick(prevLat, prevLng, playerPos.lat, playerPos.lng);
             }, 50);
+        }
+
+        // Incrémente les compteurs distance pour un déplacement joystick (pas de filtres anti-cheat)
+        function _trackDistanceFromJoystick(lat1, lng1, lat2, lng2) {
+            try {
+                const distM = _haversineMeters(lat1, lng1, lat2, lng2);
+                if (distM <= 0) return;
+                _resetDistanceCountersIfNewPeriod();
+                playerStats.distance_total = (playerStats.distance_total || 0) + distM;
+                playerStats.distance_today = (playerStats.distance_today || 0) + distM;
+                playerStats.distance_week  = (playerStats.distance_week  || 0) + distM;
+                _markOutingDay();
+                if (typeof updateStat === 'function') {
+                    updateStat('distance_total', playerStats.distance_total);
+                    updateStat('outings_days', playerStats.outings_days);
+                }
+                // Sauvegarde tous les ~50m
+                if (!_DIST._saveCounter) _DIST._saveCounter = 0;
+                _DIST._saveCounter += distM;
+                if (_DIST._saveCounter >= 50) {
+                    _DIST._saveCounter = 0;
+                    if (typeof saveProgress === 'function') saveProgress();
+                }
+                // Refresh UI si l'écran progression est ouvert
+                if (typeof refreshProgDistanceUI === 'function') refreshProgDistanceUI();
+            } catch(e) {
+                console.error('[distance/joystick] erreur:', e);
+            }
         }
 
         // ==================== NEARBY CHECKS ====================
@@ -17728,10 +17827,221 @@
             }
         }
 
+        // ==================== DISTANCE TRACKER (GPS Haversine + filtres) ====================
+        // Suit la distance parcourue par le joueur via le watchPosition existant.
+        // Filtres : 5m min, 15 km/h max par tronçon, accuracy < 50m. Détection mode véhicule.
+        const _DIST = {
+            MIN_MOVE_M: 5,                  // ignore les positions < 5m (bruit GPS statique)
+            MAX_SEGMENT_KMH: 15,            // tronçon individuel : marche rapide / vélo cool
+            MAX_ACCURACY_M: 50,             // ignore les positions trop incertaines
+            // Détection véhicule (moyenne mobile)
+            VEHICLE_AVG_KMH_TRIGGER: 12,    // si moy 60s > 12 km/h soutenu → véhicule
+            VEHICLE_RECOVER_KMH: 8,         // si moy 30s < 8 km/h → on reprend
+            VEHICLE_TRIGGER_WINDOW_MS: 60000,
+            VEHICLE_RECOVER_WINDOW_MS: 30000,
+            // Fenêtre des segments récents pour calculer la moyenne mobile
+            HISTORY_WINDOW_MS: 60000
+        };
+        // État du tracker (en mémoire uniquement, pas persisté)
+        let _distLastLat = null;
+        let _distLastLng = null;
+        let _distLastTs = null;
+        let _distVehicleMode = false;
+        let _distVehicleToastShown = false;
+        // Historique des derniers segments : { ts, distM, dtMs, kmh }
+        let _distHistory = [];
+
+        // Distance entre deux points GPS (formule de Haversine, en mètres)
+        function _haversineMeters(lat1, lng1, lat2, lng2) {
+            const R = 6371000;
+            const toRad = d => d * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
+            const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+            return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+        }
+
+        // Clé de semaine ISO (lundi = début) : "2025-W18"
+        function _isoWeekKey(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNum = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return d.getUTCFullYear() + '-W' + String(weekNum).padStart(2, '0');
+        }
+
+        // Reset des compteurs quotidien/hebdo si on a changé de jour ou de semaine
+        function _resetDistanceCountersIfNewPeriod() {
+            const now = new Date();
+            const today = now.toISOString().slice(0, 10); // "YYYY-MM-DD"
+            const weekKey = _isoWeekKey(now);
+            let changed = false;
+            if (playerStats._lastDistDay !== today) {
+                playerStats.distance_today = 0;
+                playerStats._lastDistDay = today;
+                changed = true;
+            }
+            if (playerStats._lastDistWeekKey !== weekKey) {
+                playerStats.distance_week = 0;
+                playerStats._lastDistWeekKey = weekKey;
+                changed = true;
+            }
+            return changed;
+        }
+
+        // Marque que le joueur est sorti aujourd'hui (pour achievement "Nomade")
+        function _markOutingDay() {
+            const today = new Date().toISOString().slice(0, 10);
+            if (!playerStats._outingsDays) playerStats._outingsDays = [];
+            if (playerStats._outingsDays.indexOf(today) === -1) {
+                playerStats._outingsDays.push(today);
+                // On garde max 30 jours pour éviter que le tableau grossisse
+                if (playerStats._outingsDays.length > 30) {
+                    playerStats._outingsDays = playerStats._outingsDays.slice(-30);
+                }
+                playerStats.outings_days = playerStats._outingsDays.length;
+            }
+        }
+
+        // Calcule la vitesse moyenne (km/h) sur les derniers `windowMs` millisecondes
+        function _avgSpeedKmh(windowMs) {
+            const now = Date.now();
+            const recent = _distHistory.filter(s => (now - s.ts) <= windowMs);
+            if (!recent.length) return 0;
+            const totalDist = recent.reduce((acc, s) => acc + s.distM, 0);
+            const totalDt = recent.reduce((acc, s) => acc + s.dtMs, 0);
+            if (totalDt <= 0) return 0;
+            return (totalDist / 1000) / (totalDt / 3600000);
+        }
+
+        // Affiche un toast discret quand le mode véhicule est détecté/levé
+        function _showVehicleToast(activated) {
+            if (typeof showToast === 'function') {
+                showToast(activated ? '🚗 Mode véhicule détecté — distance non comptée' : '🚶 Mode marche repris — distance comptée');
+            }
+        }
+
+        // Point d'entrée appelé depuis le watchPosition
+        function _trackDistanceFromGps(position) {
+            try {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const acc = position.coords.accuracy;
+                const ts = position.timestamp || Date.now();
+
+                // Reset périodes (jour/semaine) si nécessaire
+                _resetDistanceCountersIfNewPeriod();
+
+                // Filtre 1 : précision GPS
+                if (acc != null && acc > _DIST.MAX_ACCURACY_M) {
+                    // Position trop incertaine, on ne se base pas dessus mais on garde la dernière connue
+                    return;
+                }
+
+                // Premier point : on initialise et on sort
+                if (_distLastLat === null) {
+                    _distLastLat = lat;
+                    _distLastLng = lng;
+                    _distLastTs = ts;
+                    return;
+                }
+
+                const distM = _haversineMeters(_distLastLat, _distLastLng, lat, lng);
+                const dtMs = Math.max(1, ts - _distLastTs);
+                const kmh = (distM / 1000) / (dtMs / 3600000);
+
+                // Filtre 2 : mouvement minimum (anti-bruit GPS quand on est immobile)
+                if (distM < _DIST.MIN_MOVE_M) {
+                    // On ne met PAS à jour _distLastLat/Lng pour éviter d'accumuler du bruit
+                    // mais on actualise le timestamp pour ne pas créer un fake delta énorme la prochaine fois
+                    _distLastTs = ts;
+                    return;
+                }
+
+                // Filtre 3 : vitesse instantanée max (anti-saut GPS / anti-cheat tronçon)
+                if (kmh > _DIST.MAX_SEGMENT_KMH) {
+                    // Tronçon trop rapide : on resync sur la nouvelle position SANS compter
+                    _distLastLat = lat;
+                    _distLastLng = lng;
+                    _distLastTs = ts;
+                    return;
+                }
+
+                // Ajout à l'historique pour calcul de moyennes mobiles
+                _distHistory.push({ ts, distM, dtMs, kmh });
+                // Purge l'historique > fenêtre
+                const cutoff = ts - _DIST.HISTORY_WINDOW_MS;
+                _distHistory = _distHistory.filter(s => s.ts >= cutoff);
+
+                // Détection mode véhicule (moyennes mobiles)
+                const avg60 = _avgSpeedKmh(_DIST.VEHICLE_TRIGGER_WINDOW_MS);
+                const avg30 = _avgSpeedKmh(_DIST.VEHICLE_RECOVER_WINDOW_MS);
+                if (!_distVehicleMode && avg60 > _DIST.VEHICLE_AVG_KMH_TRIGGER) {
+                    _distVehicleMode = true;
+                    if (!_distVehicleToastShown) { _showVehicleToast(true); _distVehicleToastShown = true; }
+                } else if (_distVehicleMode && avg30 < _DIST.VEHICLE_RECOVER_KMH) {
+                    _distVehicleMode = false;
+                    _distVehicleToastShown = false;
+                    _showVehicleToast(false);
+                }
+
+                // Si on est en mode véhicule, on resync sans compter
+                if (_distVehicleMode) {
+                    _distLastLat = lat;
+                    _distLastLng = lng;
+                    _distLastTs = ts;
+                    return;
+                }
+
+                // ✓ Tronçon valide : on incrémente les compteurs
+                playerStats.distance_total = (playerStats.distance_total || 0) + distM;
+                playerStats.distance_today = (playerStats.distance_today || 0) + distM;
+                playerStats.distance_week  = (playerStats.distance_week  || 0) + distM;
+
+                // Marquer le jour de sortie
+                _markOutingDay();
+
+                // Mise à jour de la position de référence
+                _distLastLat = lat;
+                _distLastLng = lng;
+                _distLastTs = ts;
+
+                // Notifier les achievements (utilise updateStat existant)
+                if (typeof updateStat === 'function') {
+                    // Update des stats Distance — total en MÈTRES (pour les seuils 1000, 10000, 50000…)
+                    updateStat('distance_total', playerStats.distance_total);
+                    updateStat('outings_days', playerStats.outings_days);
+                }
+
+                // Sauvegarde occasionnelle (tous les 50m parcourus environ)
+                if (!_DIST._saveCounter) _DIST._saveCounter = 0;
+                _DIST._saveCounter += distM;
+                if (_DIST._saveCounter >= 50) {
+                    _DIST._saveCounter = 0;
+                    if (typeof saveProgress === 'function') saveProgress();
+                }
+
+                // Mise à jour de l'affichage si l'écran de progression est ouvert
+                if (typeof refreshProgDistanceUI === 'function') refreshProgDistanceUI();
+            } catch(e) {
+                console.error('[distance] erreur tracker:', e);
+            }
+        }
+
+        // Format helper : mètres → "X m" ou "X.YY km"
+        function formatDistance(m) {
+            if (!m || m < 1) return '0 m';
+            if (m < 1000) return Math.round(m) + ' m';
+            return (m / 1000).toFixed(2).replace('.', ',') + ' km';
+        }
+
         // ==================== GPS ====================
 
         function startGPS() {
             if (!('geolocation' in navigator)) return;
+            // Initialise la période courante (jour/semaine) au démarrage
+            _resetDistanceCountersIfNewPeriod();
             gpsWatchId = navigator.geolocation.watchPosition(
                 (position) => {
                     playerPos = { lat: position.coords.latitude, lng: position.coords.longitude };
@@ -17739,6 +18049,8 @@
                         updatePlayerOnMap();
                     }
                     checkNearbyPOI();
+                    // Tracker de distance (filtres + anti-cheat véhicule)
+                    _trackDistanceFromGps(position);
                 },
                 (error) => { console.error('Erreur GPS:', error); gpsActive = false; },
                 { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
@@ -17779,58 +18091,74 @@
               rewardFn: () => { giveCamera(); } },
             { palier:2,  icon:'💜', name:'+50 Poudre',                     type:'Poudre mémorielle',   xpRequired:50,
               rewardFn: () => addDust(50) },
-            { palier:3,  icon:'🎴', name:'Carte bonus : Guignol',           type:'Carte rare',           xpRequired:120 },
-            { palier:4,  icon:'💜', name:'+100 Poudre',                     type:'Poudre mémorielle',   xpRequired:220,
+            { palier:3,  icon:'🔮', name:'+3 Orbes de mémoire',           type:'Orbes',                xpRequired:85,
+              rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+3; saveProgress(); showToast('🔮 +3 orbes de mémoire'); } },
+            { palier:4,  icon:'🎴', name:'Carte bonus : Guignol',           type:'Carte rare',           xpRequired:120 },
+            { palier:5,  icon:'💜', name:'+100 Poudre',                     type:'Poudre mémorielle',   xpRequired:220,
               rewardFn: () => addDust(100) },
-            { palier:5,  icon:'🎨', name:'Skin Aurora',                     type:'Skin de carte',        xpRequired:350,
+            { palier:6,  icon:'🎨', name:'Skin Aurora',                     type:'Skin de carte',        xpRequired:350,
               rewardFn: () => unlockSkin('aurora') },
-            { palier:6,  icon:'⭐', name:'Badge Flâneur',                   type:'Titre spécial',        xpRequired:500,  milestone:true },
-            { palier:7,  icon:'💜', name:'+150 Poudre',                     type:'Poudre mémorielle',   xpRequired:680,
+            { palier:7,  icon:'🔮', name:'+3 Orbes de mémoire',           type:'Orbes',                xpRequired:425,
+              rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+3; saveProgress(); showToast('🔮 +3 orbes de mémoire'); } },
+            { palier:8,  icon:'⭐', name:'Badge Flâneur',                   type:'Titre spécial',        xpRequired:500,  milestone:true },
+            { palier:9,  icon:'💜', name:'+150 Poudre',                     type:'Poudre mémorielle',   xpRequired:680,
               rewardFn: () => addDust(150) },
-            { palier:8,  icon:'🎞️', name:'+5 pellicules',                   type:'Fournitures',          xpRequired:880,
+            { palier:10, icon:'🎞️', name:'+5 pellicules',                   type:'Fournitures',          xpRequired:880,
               rewardFn: () => addFilm(5) },
-            { palier:9,  icon:'⚙️',  name:'Cadre Fer',                        type:'Cadre musée',          xpRequired:1100,
+            { palier:11, icon:'⚙️',  name:'Cadre Fer',                        type:'Cadre musée',          xpRequired:1100,
               rewardFn: () => unlockFrame('fer') },
-            { palier:10, icon:'💜', name:'+200 Poudre',                     type:'Poudre mémorielle',   xpRequired:1350,
+            { palier:12, icon:'🔮', name:'+2 Orbes de mémoire',           type:'Orbes',                xpRequired:1225,
+              rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+2; saveProgress(); showToast('🔮 +2 orbes de mémoire'); } },
+            { palier:13, icon:'💜', name:'+200 Poudre',                     type:'Poudre mémorielle',   xpRequired:1350,
               rewardFn: () => addDust(200) },
-            { palier:11, icon:'🦁', name:'Titre : Gardien de Fourvière',    type:'Titre spécial',        xpRequired:1620, milestone:true,
+            { palier:14, icon:'🦁', name:'Titre : Gardien de Fourvière',    type:'Titre spécial',        xpRequired:1620, milestone:true,
               rewardFn: () => addDust(350) },
-            { palier:12, icon:'🖋️', name:'+5 encres',                       type:'Fournitures',          xpRequired:1920,
+            { palier:15, icon:'🖋️', name:'+5 encres',                       type:'Fournitures',          xpRequired:1920,
               rewardFn: () => { bagInv.encre = (bagInv.encre||0)+5; saveProgress(); showToast('🖋️ +5 encres'); } },
-            { palier:13, icon:'📼', name:'+5 cassettes',                    type:'Fournitures',          xpRequired:2250,
+            { palier:16, icon:'📼', name:'+5 cassettes',                    type:'Fournitures',          xpRequired:2250,
               rewardFn: () => { bagInv.cassettes = (bagInv.cassettes||0)+5; saveProgress(); showToast('📼 +5 cassettes'); } },
-            { palier:14, icon:'🎞️', name:'+8 pellicules',                   type:'Fournitures',          xpRequired:2600,
+            { palier:17, icon:'🔮', name:'+2 Orbes de mémoire',           type:'Orbes',                xpRequired:2425,
+              rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+2; saveProgress(); showToast('🔮 +2 orbes de mémoire'); } },
+            { palier:18, icon:'🎞️', name:'+8 pellicules',                   type:'Fournitures',          xpRequired:2600,
               rewardFn: () => addFilm(8) },
-            { palier:15, icon:'🎨', name:'Skin Crépuscule',                 type:'Skin de carte',        xpRequired:3000,
+            { palier:19, icon:'🎨', name:'Skin Crépuscule',                 type:'Skin de carte',        xpRequired:3000,
               rewardFn: () => unlockSkin('crepuscule') },
-            { palier:16, icon:'👑', name:'Titre : Passeur de Mémoire',      type:'Titre légendaire',     xpRequired:3420, milestone:true },
-            { palier:17, icon:'💜', name:'+300 Poudre',                     type:'Poudre mémorielle',   xpRequired:3870,
+            { palier:20, icon:'👑', name:'Titre : Passeur de Mémoire',      type:'Titre légendaire',     xpRequired:3420, milestone:true },
+            { palier:21, icon:'💜', name:'+300 Poudre',                     type:'Poudre mémorielle',   xpRequired:3870,
               rewardFn: () => addDust(300) },
-            { palier:18, icon:'🔶', name:'Cadre Cuivre',                      type:'Cadre musée',          xpRequired:4350,
+            { palier:22, icon:'🔮', name:'+1 Orbe de mémoire',            type:'Orbes',                xpRequired:4110,
+              rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+1; saveProgress(); showToast('🔮 +1 orbe de mémoire'); } },
+            { palier:23, icon:'🔶', name:'Cadre Cuivre',                      type:'Cadre musée',          xpRequired:4350,
               rewardFn: () => unlockFrame('cuivre') },
-            { palier:19, icon:'🎨', name:'Skin Sépia',                      type:'Skin de carte',        xpRequired:4860,
+            { palier:24, icon:'🎨', name:'Skin Sépia',                      type:'Skin de carte',        xpRequired:4860,
               rewardFn: () => unlockSkin('sepia') },
-            { palier:20, icon:'🖋️', name:'+8 encres',                       type:'Fournitures',          xpRequired:5400,
+            { palier:25, icon:'🖋️', name:'+8 encres',                       type:'Fournitures',          xpRequired:5400,
               rewardFn: () => { bagInv.encre = (bagInv.encre||0)+8; saveProgress(); showToast('🖋️ +8 encres'); } },
-            { palier:21, icon:'🪙', name:'Cadre Argent',                      type:'Cadre musée',          xpRequired:5970, milestone:true,
+            { palier:26, icon:'🪙', name:'Cadre Argent',                      type:'Cadre musée',          xpRequired:5970, milestone:true,
               rewardFn: () => unlockFrame('argent') },
-            { palier:22, icon:'🎨', name:'Skin Nebula',                     type:'Skin de carte',        xpRequired:6570,
+            { palier:27, icon:'🔮', name:'+1 Orbe de mémoire',            type:'Orbes',                xpRequired:6270,
+              rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+1; saveProgress(); showToast('🔮 +1 orbe de mémoire'); } },
+            { palier:28, icon:'🎨', name:'Skin Nebula',                     type:'Skin de carte',        xpRequired:6570,
               rewardFn: () => unlockSkin('nebula') },
-            { palier:23, icon:'📼', name:'+8 cassettes',                    type:'Fournitures',          xpRequired:7200,
+            { palier:29, icon:'📼', name:'+8 cassettes',                    type:'Fournitures',          xpRequired:7200,
               rewardFn: () => { bagInv.cassettes = (bagInv.cassettes||0)+8; saveProgress(); showToast('📼 +8 cassettes'); } },
-            { palier:24, icon:'💜', name:'+800 Poudre',                     type:'Poudre mémorielle',   xpRequired:7860,
+            { palier:30, icon:'💜', name:'+800 Poudre',                     type:'Poudre mémorielle',   xpRequired:7860,
               rewardFn: () => addDust(800) },
-            { palier:25, icon:'🎞️', name:'+12 pellicules',                  type:'Fournitures',          xpRequired:8550,
+            { palier:31, icon:'🎞️', name:'+12 pellicules',                  type:'Fournitures',          xpRequired:8550,
               rewardFn: () => addFilm(12) },
-            { palier:26, icon:'👑', name:'Avatar : Gardien des Étoiles',    type:'Avatar légendaire',    xpRequired:9270, milestone:true },
-            { palier:27, icon:'💜', name:'+600 Poudre',                     type:'Poudre mémorielle',   xpRequired:10020,
+            { palier:32, icon:'🔮', name:'+1 Orbe de mémoire',            type:'Orbes',                xpRequired:8910,
+              rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+1; saveProgress(); showToast('🔮 +1 orbe de mémoire'); } },
+            { palier:33, icon:'👑', name:'Avatar : Gardien des Étoiles',    type:'Avatar légendaire',    xpRequired:9270, milestone:true },
+            { palier:34, icon:'💜', name:'+600 Poudre',                     type:'Poudre mémorielle',   xpRequired:10020,
               rewardFn: () => addDust(600) },
-            { palier:28, icon:'🎨', name:'Skin Lyon Antique',               type:'Skin légendaire',      xpRequired:10800,
+            { palier:35, icon:'🎨', name:'Skin Lyon Antique',               type:'Skin légendaire',      xpRequired:10800,
               rewardFn: () => unlockSkin('lyon_antique') },
-            { palier:29, icon:'🎴', name:'Carte Secrète : ???',             type:'Mystère',              xpRequired:11610 },
-            { palier:30, icon:'👑', name:'Cadre Or',                          type:'Cadre légendaire',     xpRequired:12450, milestone:true,
+            { palier:36, icon:'🎴', name:'Carte Secrète : ???',             type:'Mystère',              xpRequired:11610 },
+            { palier:37, icon:'👑', name:'Cadre Or',                          type:'Cadre légendaire',     xpRequired:12450, milestone:true,
               rewardFn: () => unlockFrame('or') },
-            { palier:31, icon:'👑', name:'Titre : Légende de Lyon',         type:'Titre ultime',         xpRequired:13320, milestone:true },
+            { palier:38, icon:'🔮', name:'+1 Orbe de mémoire',            type:'Orbes',                xpRequired:12880,
+              rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+1; saveProgress(); showToast('🔮 +1 orbe de mémoire'); } },
+            { palier:39, icon:'👑', name:'Titre : Légende de Lyon',         type:'Titre ultime',         xpRequired:13320, milestone:true },
         ];
 
         const ACHIEVEMENTS_DATA = [
@@ -17849,6 +18177,11 @@
             { id:'ach_collection', cat:'Collectionneur', icon:'📦', name:'Passion Cartes',   desc:'Compléter une collection entière',     xpReward:250, goal:1,   stat:'collections_done' },
             { id:'ach_legendary',  cat:'Collectionneur', icon:'🌟', name:'Légendaire !',     desc:'Collecter une carte légendaire',       xpReward:100, goal:1,   stat:'legendary_cards' },
             { id:'ach_all_types',  cat:'Collectionneur', icon:'🌈', name:'Touche-à-tout',    desc:'Collecter une carte de chaque supertype', xpReward:150, goal:5, stat:'supertypes_collected' },
+            // ── Achievements Explorer (distance & sorties) ──
+            { id:'ach_dist_1km',   cat:'Explorateur', icon:'👣', name:'Premiers pas',         desc:'Parcourir 1 km dans Lyon',          xpReward:20,  goal:1000,  stat:'distance_total' },
+            { id:'ach_dist_10km',  cat:'Explorateur', icon:'🚶', name:'Marcheur',             desc:'Parcourir 10 km dans Lyon',         xpReward:50,  goal:10000, stat:'distance_total' },
+            { id:'ach_dist_50km',  cat:'Explorateur', icon:'🏛️', name:'Lyon en grand',         desc:'Parcourir 50 km dans Lyon',         xpReward:200, goal:50000, stat:'distance_total' },
+            { id:'ach_outings3',   cat:'Explorateur', icon:'📅', name:'Nomade',               desc:'Sortir explorer sur 3 jours différents', xpReward:50,  goal:3, stat:'outings_days' },
         ];
 
         // ── State ──
@@ -17856,7 +18189,12 @@
         let playerTotalXP = 0;
         let playerLevel = 1;
         let achievementsState = {};
-        let playerStats = { cards:0, echoes:0, echoes_placed:0, dust_total:0, dust_spent:0, card_levels:0, max_level_cards:0, collections_done:0, legendary_cards:0, supertypes_collected:0 };
+        let playerStats = { cards:0, echoes:0, echoes_placed:0, dust_total:0, dust_spent:0, card_levels:0, max_level_cards:0, collections_done:0, legendary_cards:0, supertypes_collected:0,
+            // Distance parcourue (en mètres) — calculée via GPS Haversine, filtres anti-bruit/véhicule
+            distance_total: 0, distance_today: 0, distance_week: 0,
+            _lastDistDay: null, _lastDistWeekKey: null, _lastDistWeekDay: null,
+            // Nb de jours différents où le joueur est sorti (pour achievement Nomade)
+            outings_days: 0, _outingsDays: [] };
 
         // ── Appareil photo ──
         let hasCamera   = false;
@@ -18366,10 +18704,23 @@
         }
 
         // ── Progression Screen ──
+        function refreshProgDistanceUI() {
+            try {
+                _resetDistanceCountersIfNewPeriod();
+                const tEl = document.getElementById('progDistToday');
+                const wEl = document.getElementById('progDistWeek');
+                const aEl = document.getElementById('progDistTotal');
+                if (tEl) tEl.textContent = formatDistance(playerStats.distance_today || 0);
+                if (wEl) wEl.textContent = formatDistance(playerStats.distance_week  || 0);
+                if (aEl) aEl.textContent = formatDistance(playerStats.distance_total || 0);
+            } catch(e) {}
+        }
+
         function openProgressionScreen() {
             renderProgPlayerCard();
             renderBattlepassNodes();
             renderAchievementsList();
+            refreshProgDistanceUI();
             switchProgTab('battlepass');
             document.getElementById('progressionScreen').classList.add('show');
         }
