@@ -3557,20 +3557,27 @@
         }
         .card-carnet-btn:active { transform: scale(0.95); }
 
-        /* Pulse quand une nouvelle entrée carnet est disponible */
-        .card-carnet-btn.has-new {
-            animation: carnetPulse 1.4s ease-in-out infinite;
+        /* Pulse quand une nouvelle entrée carnet est disponible :
+           halo via pseudo-élément ::after pour ne pas perturber le rendu de l'icône */
+        .card-carnet-btn.has-new::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 13px;
+            border: 2px solid #fbbf24;
+            pointer-events: none;
+            animation: carnetPulseHalo 1.4s ease-in-out infinite;
         }
-        @keyframes carnetPulse {
+        @keyframes carnetPulseHalo {
             0%, 100% {
-                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.6);
-                border-color: #fcd34d;
+                opacity: 0.9;
                 transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.5);
             }
             50% {
-                box-shadow: 0 0 0 6px rgba(251, 191, 36, 0);
-                border-color: #f59e0b;
-                transform: scale(1.06);
+                opacity: 0;
+                transform: scale(1.18);
+                box-shadow: 0 0 0 8px rgba(251, 191, 36, 0);
             }
         }
 
@@ -6578,11 +6585,11 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.13.2 · 05/05 — hotfix carnet : préchargement PNG sans onerror DOM</div>
+            <div class="hud-version" id="hudVersion">v0.13.3 · 05/05 — icônes poudre PNG unifiées + fix pulse carnet</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
-                <svg width="22" height="22" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="19" rx="9" ry="3" fill="#c084fc" opacity="0.7"/><path d="M5,18 Q7,10 12,7 Q17,10 19,18 Z" fill="#a855f7"/><circle cx="9" cy="14" r="1.2" fill="rgba(255,255,255,0.7)"/><circle cx="13" cy="11" r="1" fill="rgba(255,255,255,0.6)"/><circle cx="15" cy="15" r="0.9" fill="rgba(255,255,255,0.5)"/></svg>
+                <img src="./assets/Powder.png" alt="poudre" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
                 <span id="dustCounter">0</span>
             </div>
 
@@ -6851,7 +6858,7 @@
             <div id="nearbyDust" class="nearby-poi hidden" style="background: #F3E8FF; border-color: #A855F7;">
                 <div class="nearby-poi-header">
                     <div>
-                        <div class="nearby-poi-name" style="color: #7C3AED;"><svg width="22" height="22" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="19" rx="9" ry="3" fill="#c084fc" opacity="0.7"/><path d="M5,18 Q7,10 12,7 Q17,10 19,18 Z" fill="#a855f7"/><circle cx="9" cy="14" r="1.2" fill="rgba(255,255,255,0.7)"/><circle cx="13" cy="11" r="1" fill="rgba(255,255,255,0.6)"/><circle cx="15" cy="15" r="0.9" fill="rgba(255,255,255,0.5)"/></svg> Poudre mémorielle</div>
+                        <div class="nearby-poi-name" style="color: #7C3AED;"><img src="./assets/Powder.png" alt="poudre" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> Poudre mémorielle</div>
                         <div class="nearby-poi-distance" style="color: #9333EA;">À portée de collecte!</div>
                     </div>
                 </div>
@@ -7168,7 +7175,7 @@
                                                 <span class="card-level-label" id="cardExpDisplay">0/10 ✦</span>
                                             </div>
                                             <div style="display:flex;align-items:center;gap:5px;background:#f3f0ff;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;color:#7c3aed;flex-shrink:0;margin-left:auto;">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="19" rx="9" ry="3" fill="#c084fc" opacity="0.7"/><path d="M5,18 Q7,10 12,7 Q17,10 19,18 Z" fill="#a855f7"/></svg>
+                                                <img src="./assets/Powder.png" alt="poudre" style="width:16px;height:16px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
                                                 <span id="cardDetailDustCounter">0</span>
                                             </div>
                                         </div>
@@ -7458,7 +7465,7 @@
                     <span class="studio-card-name" id="studioCardName"></span>
                 </div>
                 <div class="studio-dust-display">
-                    <svg width="22" height="22" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="19" rx="9" ry="3" fill="#c084fc" opacity="0.7"/><path d="M5,18 Q7,10 12,7 Q17,10 19,18 Z" fill="#a855f7"/><circle cx="9" cy="14" r="1.2" fill="rgba(255,255,255,0.7)"/><circle cx="13" cy="11" r="1" fill="rgba(255,255,255,0.6)"/><circle cx="15" cy="15" r="0.9" fill="rgba(255,255,255,0.5)"/></svg>
+                    <img src="./assets/Powder.png" alt="poudre" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
                     <span id="studioDustCounter">0</span>
                 </div>
             </div>
@@ -13109,14 +13116,13 @@
             _capUpdate();
         }
 
-        // SVG poudre mémorielle — même icône que sur la carte
-        const DUST_SVG_ICON = `<svg width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 10px rgba(168,85,247,0.8))">
-            <ellipse cx="12" cy="19" rx="9" ry="3" fill="#c084fc" opacity="0.7"/>
-            <path d="M5,18 Q7,10 12,7 Q17,10 19,18 Z" fill="#a855f7"/>
-            <circle cx="9" cy="14" r="1.2" fill="rgba(255,255,255,0.7)"/>
-            <circle cx="13" cy="11" r="1" fill="rgba(255,255,255,0.6)"/>
-            <circle cx="15" cy="15" r="0.9" fill="rgba(255,255,255,0.5)"/>
-        </svg>`;
+        // Icône poudre mémorielle — PNG centralisé (./assets/Powder.png)
+        function dustIconHtml(size) {
+            const s = size || 22;
+            return `<img src="./assets/Powder.png" alt="poudre" style="width:${s}px;height:${s}px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">`;
+        }
+        // Variante "halo" pour les écrans de récompense (avec drop-shadow violet)
+        const DUST_SVG_ICON = `<img src="./assets/Powder.png" alt="poudre" style="width:64px;height:64px;object-fit:contain;display:inline-block;filter:drop-shadow(0 0 10px rgba(168,85,247,0.8));pointer-events:none;" draggable="false">`;
 
         // Table de loot — pondérée
         const LOOT_TABLE = [
@@ -14742,7 +14748,7 @@
                 'display:flex','align-items:center','gap:8px',
                 'animation:filmToastAnim 2.8s ease forwards'
             ].join(';');
-            toast.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="19" rx="9" ry="3" fill="#c084fc" opacity="0.7"/><path d="M5,18 Q7,10 12,7 Q17,10 19,18 Z" fill="#a855f7"/><circle cx="9" cy="14" r="1.2" fill="rgba(255,255,255,0.7)"/><circle cx="13" cy="11" r="1" fill="rgba(255,255,255,0.6)"/><circle cx="15" cy="15" r="0.9" fill="rgba(255,255,255,0.5)"/></svg><span>+${amount} poudre mémorielle</span>`;
+            toast.innerHTML = `${dustIconHtml(20)}<span>+${amount} poudre mémorielle</span>`;
             document.body.appendChild(toast);
             setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
         }
