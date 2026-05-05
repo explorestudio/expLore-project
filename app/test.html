@@ -6627,7 +6627,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.14.2 · 05/05 — +6 points carnet + 8 paliers orbes battlepass (logarithmique)</div>
+            <div class="hud-version" id="hudVersion">v0.14.3 · 05/05 — fix visibilité markers cassette/pellicule/encre</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -9957,6 +9957,15 @@
                 el.removeAttribute('data-ob-hidden');
                 el.style.display = '';
             });
+            // Filet de sécurité : forcer la visibilité des markers carnet ressource
+            // (au cas où ils auraient été cachés sans le flag data-ob-hidden dans une vieille build)
+            if (typeof carnetResourceMarkers !== 'undefined') {
+                carnetResourceMarkers.forEach(({ el }) => {
+                    if (el && el.style.display === 'none') {
+                        el.style.display = '';
+                    }
+                });
+            }
             if (map) {
                 // Zones de capture gérées par captureCanvas — info-capture-circles reste caché
             }
@@ -11572,6 +11581,18 @@
                     ['poi-capture-circles','poi-capture-circles-stroke','poi-dot-fill','poi-dot-stroke','dust-capture-circles','dust-capture-circles-stroke','echo-capture-circles','echo-capture-circles-stroke','orb-circles','orb-circles-stroke','scroll-circles','scroll-circles-stroke','loot-circles','loot-circles-stroke','info-capture-circles'].forEach(id => {
                         try { if (map.getLayer(id)) map.setLayoutProperty(id,'visibility','none'); } catch(e){}
                     });
+                } else {
+                    // Onboarding déjà terminé (save existant) : on s'assure que les markers carnet
+                    // ressource sont bien visibles, même si une vieille build les avait cachés sans flag
+                    setTimeout(() => {
+                        if (typeof carnetResourceMarkers !== 'undefined') {
+                            carnetResourceMarkers.forEach(({ el }) => {
+                                if (el && el.style.display === 'none' && !el.dataset.obHidden) {
+                                    el.style.display = '';
+                                }
+                            });
+                        }
+                    }, 100);
                 }
             }); // end map.on('load')
 
@@ -11712,7 +11733,7 @@
                 const type = _getCarnetResourceType(pt.id);
                 const el = document.createElement('div');
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
-                if (!_obDone) el.style.display = 'none';
+                if (!_obDone) { el.dataset.obHidden = 'true'; el.style.display = 'none'; }
                 const inner = document.createElement('div');
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-62%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _crIcon = document.createElement('div');
