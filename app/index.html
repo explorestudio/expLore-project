@@ -6628,7 +6628,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.15.0 · 05/05 — layout panneau restauré + UI ressources alignée</div>
+            <div class="hud-version" id="hudVersion">v0.15.1 · 06/05 — fix cassettes/pellicules/encre : icône, zone sol, reload</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11129,6 +11129,7 @@
             if (typeof _capUpdate === 'function') _capUpdate();
             updateScrollVisibility();
             updateLootVisibility();
+            updateCarnetResourceVisibility();
             setTimeout(() => {
                 _capStart();
                 const weather = getSimulatedWeather();
@@ -13241,6 +13242,39 @@
             _capUpdate();
         }
 
+        function updateCarnetResourceVisibility() {
+            if (!_obDone) return;
+            const visible = [];
+            carnetResourceMarkers.forEach(({ el, pt, type: _oldType }) => {
+                const collected = collectedCarnetResources.includes(pt.id);
+                if (collected) {
+                    el.style.display = 'none';
+                    return;
+                }
+                // Recalculer le type avec le map restauré par loadProgress
+                const type = _getCarnetResourceType(pt.id);
+                // Mettre à jour l'icône si elle diffère (tirage pre-load)
+                const img = el.querySelector('img');
+                if (img && img.src !== encodeURI(type.image) && !img.src.endsWith(encodeURI(type.image).replace(/^.*\//, ''))) {
+                    img.src = encodeURI(type.image);
+                    img.alt = type.label || 'ressource';
+                }
+                el.style.display = 'block';
+                visible.push(pt);
+            });
+            if (map.getSource('carnet-resource-circles')) {
+                map.getSource('carnet-resource-circles').setData({
+                    type: 'FeatureCollection',
+                    features: visible.map(pt => ({
+                        type: 'Feature',
+                        properties: { id: pt.id, lng: pt.lng, lat: pt.lat },
+                        geometry: { type: 'Polygon', coordinates: [_geoEllipse(pt.lng, pt.lat, CARNET_RESOURCE_RADIUS, ISOMETRIC_TILT)] }
+                    }))
+                });
+            }
+            if (typeof _capUpdate === 'function') _capUpdate();
+        }
+
         function updateLootVisibility() {
             if (!_obDone) return;
             const visible = [];
@@ -14860,6 +14894,7 @@
             document.getElementById('nearbyCarnetResource').classList.add('hidden');
             // Update HUD pellicules si nécessaire
             if (type.key === 'pellicules') updateCameraHUD();
+            updateCarnetResourceVisibility();
             saveProgress();
             // Toast
             showToast(type.emoji + ' +1 ' + type.label);
