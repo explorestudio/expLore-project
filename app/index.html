@@ -6706,6 +6706,29 @@
         .v2-media.completed .v2-media-frame { fill: rgba(40,28,15,0.92); stroke: #f0c674; stroke-width: 2; }
         .v2-media.completed .v2-media-num-circle { fill: rgba(15,12,18,0.95); stroke: #f0c674; }
 
+        /* SCINTILLEMENT — média dont les prérequis sont OK mais la quête pas encore prise.
+           Incite le joueur à cliquer pour découvrir/accepter la quête. Plus marqué que le pulse "non consulté". */
+        .v2-media.available .v2-media-frame {
+            animation: v2MediaAvailableShimmer 1.4s ease-in-out infinite;
+        }
+        @keyframes v2MediaAvailableShimmer {
+            0%, 100% { stroke-width: 1.6; filter: drop-shadow(0 0 1px #d9a441); }
+            50%      { stroke-width: 3.2; filter: drop-shadow(0 0 8px #d9a441) drop-shadow(0 0 3px #ffe6a0); }
+        }
+        /* L'icône ▶ de l'état available scintille aussi légèrement */
+        .v2-media.available .v2-media-icon {
+            animation: v2MediaIconShimmer 1.4s ease-in-out infinite;
+        }
+        @keyframes v2MediaIconShimmer {
+            0%, 100% { opacity: 0.7; }
+            50%      { opacity: 1; }
+        }
+        /* SABLIER — média dont la quête est acceptée et en cours (statique, juste bien visible) */
+        .v2-media.active .v2-media-icon {
+            fill: #4dd0c1;
+            opacity: 0.95;
+        }
+
         /* Pulse léger sur les médias non consultés (jamais cliqués ou statut changé depuis) */
         .v2-media.unconsulted .v2-media-frame {
             animation: v2MediaUnconsultedPulse 1.8s ease-in-out infinite;
@@ -6720,6 +6743,10 @@
         @keyframes v2MediaUnconsultedPulseStrong {
             0%, 100% { stroke-width: 2; }
             50% { stroke-width: 3; filter: drop-shadow(0 0 6px #f0c674); }
+        }
+        /* Si un média est à la fois available ET unconsulted, le scintillement available prime */
+        .v2-media.available.unconsulted .v2-media-frame {
+            animation: v2MediaAvailableShimmer 1.4s ease-in-out infinite;
         }
 
         /* Fils */
@@ -7151,7 +7178,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.21.0 · Respawn POI ressources (cooldown 3 min par défaut, contrôle test)</div>
+            <div class="hud-version" id="hudVersion">v0.24.0 · Pin centré + relance lumens au retour sur l'Explorium</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -7493,6 +7520,17 @@
                     </div>
                 </div>
                 <button onclick="collectLoot()" class="collect-btn" style="background: #6366f1;">Ramasser</button>
+            </div>
+
+            <!-- Console de validation d'une étape de quête (au contact) -->
+            <div id="nearbyQuest" class="nearby-poi hidden" style="background:#14121A; border-color:#d9a441;">
+                <div class="nearby-poi-header">
+                    <div>
+                        <div class="nearby-poi-name" id="nearbyQuestName" style="color:#f0d9a8;">✦ Quête</div>
+                        <div class="nearby-poi-distance" id="nearbyQuestDesc" style="color:#d9a441;">Tu es à l'endroit recherché</div>
+                    </div>
+                </div>
+                <button onclick="validateNearbyQuest()" class="collect-btn" id="nearbyQuestBtn" style="background:#d9a441; color:#1a1410;">Valider la quête</button>
             </div>
 
             <!-- Overlay révélation objet mystère -->
@@ -11170,7 +11208,7 @@
         }
 
         function stackNearbyPanels() {
-            const ids = ['nearbyPOI','nearbyInfo','nearbyPanneau','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyBazar','nearbyLoot'];
+            const ids = ['nearbyQuest','nearbyPOI','nearbyInfo','nearbyPanneau','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyBazar','nearbyLoot'];
             const gap = 8;
             const base = 20;
             let currentBottom = base;
@@ -12191,6 +12229,50 @@
                     source: 'loot-circles',
                     layout: { visibility: 'none' },
                     paint: { 'line-color': '#EC4899', 'line-opacity': 0.85, 'line-width': 2 }
+                });
+
+                // Quest step circles — zone iso au sol pour les étapes de quête actives.
+                // Source dynamique (peuplée par updateQuestZones selon les quêtes 'active').
+                // La couleur vient de la grappe (propriété 'color' par feature).
+                map.addSource('quest-circles', {
+                    type: 'geojson',
+                    data: { type: 'FeatureCollection', features: [] }
+                });
+                map.addLayer({
+                    id: 'quest-circles',
+                    type: 'fill',
+                    source: 'quest-circles',
+                    paint: {
+                        'fill-color': ['get', 'color'],
+                        'fill-opacity': 0.14
+                    }
+                });
+                map.addLayer({
+                    id: 'quest-circles-stroke',
+                    type: 'line',
+                    source: 'quest-circles',
+                    paint: {
+                        'line-color': ['get', 'color'],
+                        'line-opacity': 0.9,
+                        'line-width': 2.5
+                    }
+                });
+                // Petit disque central : matérialise le centre exact de la zone (point GPS)
+                map.addSource('quest-dot', {
+                    type: 'geojson',
+                    data: { type: 'FeatureCollection', features: [] }
+                });
+                map.addLayer({
+                    id: 'quest-dot-fill',
+                    type: 'fill',
+                    source: 'quest-dot',
+                    paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.55 }
+                });
+                map.addLayer({
+                    id: 'quest-dot-stroke',
+                    type: 'line',
+                    source: 'quest-dot',
+                    paint: { 'line-color': ['get', 'color'], 'line-opacity': 1, 'line-width': 1.5 }
                 });
 
                 // Carnet resource circles (cassettes/pellicules/encre) — rayon CARNET_RESOURCE_RADIUS (25m)
@@ -16269,6 +16351,8 @@
             } else if (src === 'voutV2') {
                 // V2 reste visible derrière, refresh au cas où l'état a changé
                 if (typeof v2RefreshIfOpen === 'function') v2RefreshIfOpen();
+                // Si des lumens ont été gagnés (level up de carte), lancer la séquence cinématique
+                if (typeof v2OnReturnToExplorium === 'function') v2OnReturnToExplorium();
             } else if (src === 'collections') {
                 // Rétablir les interactions sur la collection (toujours visible en fond)
                 const panel = document.getElementById('collectionsPanel');
@@ -22137,7 +22221,41 @@
 
         // Crée/met à jour les épingles de quêtes actives sur la mappe
         let _questPinMarkers = [];
+        // Peuple la source 'quest-circles' avec les zones iso des étapes actives
+        function updateQuestZones() {
+            if (!map || !map.getSource) return;
+            const src = map.getSource('quest-circles');
+            if (!src) return;
+            const features = [];
+            const dotFeatures = [];
+            Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
+                grappe.quete.etapes.forEach(etape => {
+                    const status = _getEtapeStatus(gid, etape);
+                    if (status === 'active' && etape.objectifGeo) {
+                        const r = etape.objectifGeo.rayon || 50;
+                        const color = grappe.color || '#F59E0B';
+                        features.push({
+                            type: 'Feature',
+                            properties: { id: gid + ':' + etape.id, color },
+                            geometry: { type: 'Polygon', coordinates: [_geoEllipse(etape.objectifGeo.lng, etape.objectifGeo.lat, r, ISOMETRIC_TILT)] }
+                        });
+                        // Disque central ~8m pour matérialiser le centre exact
+                        dotFeatures.push({
+                            type: 'Feature',
+                            properties: { id: gid + ':' + etape.id, color },
+                            geometry: { type: 'Polygon', coordinates: [_geoEllipse(etape.objectifGeo.lng, etape.objectifGeo.lat, 8, ISOMETRIC_TILT)] }
+                        });
+                    }
+                });
+            });
+            try { src.setData({ type: 'FeatureCollection', features }); } catch(e) {}
+            const dotSrc = map.getSource('quest-dot');
+            if (dotSrc) { try { dotSrc.setData({ type: 'FeatureCollection', features: dotFeatures }); } catch(e) {} }
+        }
+
         function updateQuestMarkers() {
+            // Mettre à jour les zones iso au sol en parallèle des épingles
+            updateQuestZones();
             // Supprimer les anciens
             _questPinMarkers.forEach(m => { try { m.marker.remove(); } catch(e){} });
             _questPinMarkers = [];
@@ -22183,7 +22301,7 @@
                 el.addEventListener('click', () => {
                     showToast('📍 ' + etape.objectifGeo.nom + ' — ' + etape.titre);
                 });
-                const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+                const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([etape.objectifGeo.lng, etape.objectifGeo.lat])
                     .addTo(map);
                 // Forcer le marker au-dessus des autres POI
@@ -22215,7 +22333,12 @@
         // Vérifie si le joueur est sur un objectif de quête active
         // Si oui, déclenche _completeQuestEtape automatiquement
         function checkActiveQuestGeofencing() {
-            if (!playerPos) return;
+            if (!playerPos) {
+                _hideNearbyQuestConsole();
+                return;
+            }
+            // Chercher l'étape active la plus proche dans laquelle le joueur se trouve
+            let inZone = null;
             Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
                 grappe.quete.etapes.forEach(etape => {
                     const status = _getEtapeStatus(gid, etape);
@@ -22225,19 +22348,49 @@
                         playerPos.lat, playerPos.lng,
                         etape.objectifGeo.lat, etape.objectifGeo.lng
                     );
-                    const radius = etape.objectifGeo.rayon || 80;
+                    const radius = etape.objectifGeo.rayon || 50;
                     if (dist <= radius) {
-                        // Marquer pour ne pas redéclencher
-                        const key = gid + ':' + etape.id;
-                        if (!window._geofencedTriggered) window._geofencedTriggered = new Set();
-                        if (window._geofencedTriggered.has(key)) return;
-                        window._geofencedTriggered.add(key);
-                        // Déclencher la complétion
-                        showToast('✨ Tu es au bon endroit — quelque chose se trace dans ton Explorium');
-                        setTimeout(() => _completeQuestEtape(gid, etape.id), 800);
+                        if (!inZone || dist < inZone.dist) {
+                            inZone = { gid, grappe, etape, dist };
+                        }
                     }
                 });
             });
+
+            if (inZone && !(_isAnyScreenOpen && _isAnyScreenOpen())) {
+                // Ouvrir la console de validation (au lieu de valider automatiquement)
+                _showNearbyQuestConsole(inZone.gid, inZone.grappe, inZone.etape);
+            } else {
+                _hideNearbyQuestConsole();
+            }
+        }
+
+        let _currentNearbyQuest = null;
+        function _showNearbyQuestConsole(gid, grappe, etape) {
+            _currentNearbyQuest = { gid, etapeId: etape.id };
+            const div = document.getElementById('nearbyQuest');
+            if (!div) return;
+            const nameEl = document.getElementById('nearbyQuestName');
+            const descEl = document.getElementById('nearbyQuestDesc');
+            const btn = document.getElementById('nearbyQuestBtn');
+            if (nameEl) nameEl.textContent = '✦ ' + (etape.titre || 'Quête');
+            if (descEl) descEl.textContent = etape.objectifGeo?.nom || 'Tu es à l\'endroit recherché';
+            // Couleur de la grappe sur le bouton + bordure
+            if (btn) btn.style.background = grappe.color || '#d9a441';
+            div.style.borderColor = grappe.color || '#d9a441';
+            div.classList.remove('hidden');
+        }
+        function _hideNearbyQuestConsole() {
+            _currentNearbyQuest = null;
+            const div = document.getElementById('nearbyQuest');
+            if (div) div.classList.add('hidden');
+        }
+        function validateNearbyQuest() {
+            if (!_currentNearbyQuest) return;
+            const { gid, etapeId } = _currentNearbyQuest;
+            _hideNearbyQuestConsole();
+            // Flux habituel : complétion → Explorium + fresque
+            _completeQuestEtape(gid, etapeId);
         }
 
         // Met à jour la boussole : pointe vers la quête active la plus proche
@@ -25778,6 +25931,39 @@
             }
         }
 
+        // Appelée à la fermeture d'un écran qui pouvait être ouvert PAR-DESSUS l'Explorium
+        // (fiche carte, fresque, modale grappe). Si on revient à l'Explorium au premier plan
+        // et qu'il y a des lumens en attente, on lance la séquence cinématique.
+        function v2OnReturnToExplorium() {
+            const screen = document.getElementById('voutV2Screen');
+            if (!screen || !screen.classList.contains('show')) return;
+            // Vérifier qu'aucun écran enfant n'est encore ouvert au-dessus de l'Explorium
+            const fresque = document.getElementById('fresqueModal');
+            const grappeModal = document.getElementById('grappeQuestModal');
+            const cardDetail = document.getElementById('cardDetailView');
+            const fresqueOpen = fresque && fresque.classList.contains('show');
+            const grappeOpen = grappeModal && grappeModal.classList.contains('show');
+            const cardOpen = cardDetail && cardDetail.classList.contains('show');
+            if (fresqueOpen || grappeOpen || cardOpen) return;
+            // Si la séquence est explicitement suppressée (post-validation gère son propre timing), on attend
+            if (window._v2SuppressLumenSequence) return;
+            // Sync au cas où de nouveaux lumens ont été gagnés, puis lancer la séquence si pending
+            if (typeof v2SyncLumensFromV1 === 'function') v2SyncLumensFromV1();
+            if (v2PendingLumens.length > 0 && !v2LumenSequencePlaying) {
+                setTimeout(() => {
+                    // Re-vérifier juste avant de lancer (l'état a pu changer pendant le délai)
+                    const sc = document.getElementById('voutV2Screen');
+                    if (sc && sc.classList.contains('show')
+                        && !(document.getElementById('fresqueModal')?.classList.contains('show'))
+                        && !(document.getElementById('grappeQuestModal')?.classList.contains('show'))
+                        && !(document.getElementById('cardDetailView')?.classList.contains('show'))
+                        && v2PendingLumens.length > 0 && !v2LumenSequencePlaying) {
+                        v2PlayPendingLumensSequence();
+                    }
+                }, 400);
+            }
+        }
+
         // ═══════════════════════════════════════════════════════════
         // FRESQUE — diapositive de tableaux narratifs
         // Remplace l'ancienne BD. Chaque tableau = un média/étape de la grappe.
@@ -25876,15 +26062,18 @@
 
         function closeFresqueModal() {
             document.getElementById('fresqueModal').classList.remove('show');
-            // Si on était en mode post-validation : maintenant qu'on a fini de regarder la fresque,
-            // on peut lancer la séquence cinématique des lumens en attente.
+            // Cas post-validation : la séquence avait été suppressée le temps de regarder la fresque.
             if (window._v2SuppressLumenSequence) {
                 window._v2SuppressLumenSequence = false;
                 const v2 = document.getElementById('voutV2Screen');
                 if (v2 && v2.classList.contains('show') && v2PendingLumens.length > 0) {
                     setTimeout(() => v2PlayPendingLumensSequence(), 350);
                 }
+                return;
             }
+            // Cas normal : fresque fermée hors post-validation. Si des lumens sont en attente
+            // (gagnés pendant la consultation), on les lance au retour à l'Explorium.
+            if (typeof v2OnReturnToExplorium === 'function') v2OnReturnToExplorium();
         }
 
         function fresqueGoTo(idx) {
