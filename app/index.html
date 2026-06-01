@@ -1558,6 +1558,8 @@
             position: relative;
             padding: 16px;
             padding-top: 90px;
+            gap: 10px;
+            box-sizing: border-box;
         }
 
         @media (max-width: 480px) {
@@ -1589,7 +1591,17 @@
             .card-art-title.title-medium { font-size: 13px; }
         }
 
-        .card-art-placeholder { font-size: 80px; }
+        .card-art-placeholder {
+            font-size: 80px;
+            flex: 1 1 auto;
+            min-height: 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 8px;
+        }
 
         @media (max-width: 480px) {
             .card-art-placeholder { font-size: 60px; }
@@ -1609,13 +1621,17 @@
             margin-top: auto;
             min-height: 56px;
             padding: 10px 12px;
-            background: rgba(249, 250, 251, 0.75);
+            background: rgba(249, 250, 251, 0.92);
             border-radius: 10px;
             border-top: 1px solid rgba(107, 114, 128, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
+            width: 100%;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            overflow: visible;
         }
         .card-flavor-text {
             font-family: Georgia, serif;
@@ -7178,7 +7194,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.33.0 · Bouton Passer active Bellecour (état fin de tuto) + GPS : gpsActive au 1er fix réel, joystick masqué en mode GPS, erreurs transitoires non bloquantes</div>
+            <div class="hud-version" id="hudVersion">v0.34.0 · GPS : positions fraîches (maximumAge 0) + filtres distance assouplis (acc 100m, move 3m) + panneau diagnostic (?gpsdebug) ; UI fiche : zone incipit non tronquée</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -19039,9 +19055,9 @@
         // Suit la distance parcourue par le joueur via le watchPosition existant.
         // Filtres : 5m min, 15 km/h max par tronçon, accuracy < 50m. Détection mode véhicule.
         const _DIST = {
-            MIN_MOVE_M: 5,                  // ignore les positions < 5m (bruit GPS statique)
+            MIN_MOVE_M: 3,                  // ignore les positions < 3m (bruit GPS statique)
             MAX_SEGMENT_KMH: 15,            // tronçon individuel : marche rapide / vélo cool
-            MAX_ACCURACY_M: 50,             // ignore les positions trop incertaines
+            MAX_ACCURACY_M: 100,            // ignore les positions trop incertaines (urbain dense / intérieur = souvent 30-80m)
             // Détection véhicule (moyenne mobile)
             VEHICLE_AVG_KMH_TRIGGER: 12,    // si moy 60s > 12 km/h soutenu → véhicule
             VEHICLE_RECOVER_KMH: 8,         // si moy 30s < 8 km/h → on reprend
@@ -19280,9 +19296,12 @@
                     checkNearbyPOI();
                     // Tracker de distance (filtres + anti-cheat véhicule)
                     _trackDistanceFromGps(position);
+                    // Diagnostic temps réel (activable via _gpsDebug)
+                    _gpsDebugUpdate(position);
                 },
                 (error) => {
                     console.error('Erreur GPS:', error);
+                    _gpsDebugError(error);
                     // Ne repasser en mode joystick que si la permission est refusée,
                     // ou si le GPS n'a jamais été établi. Les erreurs transitoires
                     // (timeout ponctuel, position indisponible) ne coupent pas le mode GPS.
@@ -19291,8 +19310,44 @@
                         _updateJoystickVisibility();
                     }
                 },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 2000 }
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
             );
+        }
+
+        // ── Diagnostic GPS ────────────────────────────────────────────────
+        // Affiche un petit panneau en bas d'écran avec le détail des fix reçus.
+        // Activer : taper _gpsDebug=true dans la console, ou ?gpsdebug dans l'URL.
+        let _gpsDebug = (typeof location !== 'undefined' && /[?&]gpsdebug/.test(location.search));
+        let _gpsFixCount = 0;
+        function _gpsDebugPanel() {
+            let p = document.getElementById('gpsDebugPanel');
+            if (!p) {
+                p = document.createElement('div');
+                p.id = 'gpsDebugPanel';
+                p.style.cssText = [
+                    'position:fixed','left:8px','bottom:8px','z-index:99999',
+                    'background:rgba(0,0,0,0.82)','color:#0f0','font:11px/1.4 monospace',
+                    'padding:8px 10px','border-radius:8px','max-width:90vw',
+                    'pointer-events:none','white-space:pre'
+                ].join(';');
+                document.body.appendChild(p);
+            }
+            return p;
+        }
+        function _gpsDebugUpdate(position) {
+            if (!_gpsDebug) return;
+            _gpsFixCount++;
+            const c = position.coords;
+            _gpsDebugPanel().textContent =
+                'GPS fix #' + _gpsFixCount +
+                '\nlat ' + c.latitude.toFixed(6) + '  lng ' + c.longitude.toFixed(6) +
+                '\naccuracy ' + Math.round(c.accuracy) + ' m' +
+                '\ndist_today ' + Math.round(playerStats.distance_today || 0) + ' m' +
+                '\nveh ' + (_distVehicleMode ? 'oui' : 'non');
+        }
+        function _gpsDebugError(error) {
+            if (!_gpsDebug) return;
+            _gpsDebugPanel().textContent = 'GPS ERREUR code ' + error.code + '\n' + (error.message || '');
         }
 
         // ==================== PROGRESSION SYSTEM ====================
