@@ -1432,7 +1432,8 @@
 
         /* ── Zone haute : la carte ─────────────────────────────────── */
         .card-stage {
-            flex-shrink: 0;
+            flex: 1 1 auto;
+            min-height: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1445,9 +1446,9 @@
 
         /* ── Zone basse : onglets ancrés + contenu scrollable ──────── */
         .card-info-panel {
-            flex: 0 1 auto;
+            flex: 0 0 auto;
             min-height: 0;
-            max-height: 100%;
+            max-height: 60%;
             display: flex;
             flex-direction: column;
             background: white;
@@ -1513,6 +1514,10 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.35);
             position: relative;
             min-height: 420px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
         }
 
         @media (max-width: 360px) {
@@ -1551,11 +1556,12 @@
             background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
             border-radius: 12px;
             min-height: 390px;
+            flex: 1 1 auto;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            margin-bottom: 16px;
+            margin-bottom: 0;
             position: relative;
             padding: 16px;
             padding-top: 90px;
@@ -7196,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.35.0 · Reset par URL (?reset) + diagnostic GPS visible au démarrage ; UI fiche : panneau bas épouse le contenu (fini le grand blanc)</div>
+            <div class="hud-version" id="hudVersion">v0.36.0 · UI fiche : la carte s'allonge pour occuper l'espace (zone d'art flex:1), panneau bas collé en bas (max 60%, scroll cartes riches)</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
