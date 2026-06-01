@@ -1445,8 +1445,9 @@
 
         /* ── Zone basse : onglets ancrés + contenu scrollable ──────── */
         .card-info-panel {
-            flex: 1;
+            flex: 0 1 auto;
             min-height: 0;
+            max-height: 100%;
             display: flex;
             flex-direction: column;
             background: white;
@@ -3526,6 +3527,7 @@
         .card-vtab-content {
             flex: 1;
             min-height: 0;
+            max-height: 100%;
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
@@ -7194,7 +7196,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.34.0 · GPS : positions fraîches (maximumAge 0) + filtres distance assouplis (acc 100m, move 3m) + panneau diagnostic (?gpsdebug) ; UI fiche : zone incipit non tronquée</div>
+            <div class="hud-version" id="hudVersion">v0.35.0 · Reset par URL (?reset) + diagnostic GPS visible au démarrage ; UI fiche : panneau bas épouse le contenu (fini le grand blanc)</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -12141,6 +12143,26 @@
         }
 
         window.addEventListener('load', () => {
+            // Reset rapide par URL : ouvrir …/app/?reset efface toute la sauvegarde
+            // (utile pour retester le tuto sans passer par le menu, même bloqué dedans).
+            if (/[?&]reset\b/.test(location.search)) {
+                try { localStorage.clear(); } catch(e) {}
+                try { sessionStorage.clear(); } catch(e) {}
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(()=>{});
+                }
+                if ('caches' in window) {
+                    caches.keys().then(ks => ks.forEach(k => caches.delete(k))).catch(()=>{});
+                }
+                // Recharger sans le paramètre reset après un court délai (laisse le temps au clear)
+                setTimeout(() => {
+                    const u = new URL(location.href);
+                    u.searchParams.delete('reset');
+                    u.searchParams.set('_r', Date.now());
+                    location.replace(u.toString());
+                }, 250);
+                return; // ne pas démarrer l'app : on recharge proprement
+            }
             startApp();
             setTimeout(() => {
                 initJoystick();
@@ -19272,7 +19294,11 @@
         }
 
         function startGPS() {
-            if (!('geolocation' in navigator)) return;
+            if (!('geolocation' in navigator)) {
+                if (_gpsDebug) _gpsDebugPanel().textContent = 'GPS indisponible : navigator.geolocation absent';
+                return;
+            }
+            if (_gpsDebug) _gpsDebugPanel().textContent = 'GPS : démarrage, en attente du 1er fix…';
             // Initialise la période courante (jour/semaine) au démarrage
             _resetDistanceCountersIfNewPeriod();
             gpsWatchId = navigator.geolocation.watchPosition(
