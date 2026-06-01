@@ -7178,7 +7178,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.24.0 · Pin centré + relance lumens au retour sur l'Explorium</div>
+            <div class="hud-version" id="hudVersion">v0.33.0 · Bouton Passer active Bellecour (état fin de tuto) + GPS : gpsActive au 1er fix réel, joystick masqué en mode GPS, erreurs transitoires non bloquantes</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10129,28 +10129,14 @@
         const OB_TUTORIAL_CARD = {
             id: 'ob_tutorial_card',
             cardKind: 'lore',
-            name: 'Le Passant',
-            type: 'Personnage',
+            name: 'Les clefs de la ville',
+            type: 'Objet',
             rarity: 'rare',
             supertype: 'histoire',
-            incipit: 'Je ne pensais pas que quelqu\'un s\'arrêterait.',
-            clue: 'Un fragment discret, presque dissous. Il a attendu longtemps.',
+            incipit: 'Trois clefs pour une ville. Et pas une porte à ouvrir.',
+            clue: 'Un présent d\'apparat, offert puis presque oublié. Il en manque deux.',
             clueIcon: '✦',
             collections: [],
-            echoEntries: {
-                'ob_tutorial_card_0_1': {
-                    titre: 'Ce qu\'on ne dit pas',
-                    texte: 'Je me demande si elle savait que je l\'aimais. Je ne le lui ai jamais dit directement — dans notre génération on ne disait pas ces choses-là.\n\nOn le montrait autrement. En restant. En préparant le café. En regardant par la fenêtre sans avoir besoin de remplir le silence.\n\nPeut-être que c\'est suffisant. Peut-être que non.\n\nJe ne saurai jamais ce qu\'elle pensait le dimanche matin.'
-                },
-                'ob_tutorial_card_1_1': {
-                    titre: 'Les gens qu\'on oublie de remercier',
-                    texte: 'Mme Fortier savait le prénom de tout le monde. Elle savait aussi quand quelqu\'un n\'allait pas bien — elle posait une enveloppe, elle ne posait pas de questions.\n\nJe ne lui ai jamais dit merci. Pas une seule fois en douze ans.\n\nJe crois qu\'on fait ça — on prend pour acquis les gens qui font attention aux autres. Comme si ça leur venait naturellement et que ça ne leur coûtait rien.\n\nÇa coûte quelque chose. J\'aurais dû le lui dire.'
-                },
-                'ob_tutorial_card_2_1': {
-                    titre: 'Ce que j\'ai essayé de refaire',
-                    texte: 'Des années après, j\'ai essayé de réparer une paire de chaussures. Les miennes. Je me souvenais vaguement du geste — tenir le cuir d\'une certaine façon, appuyer là.\n\nÇa n\'a pas marché. J\'ai abîmé la semelle.\n\nMon père aurait su. Il m\'aurait montré si je lui avais demandé. Mais on ne demande pas ces choses-là quand on est jeune — on croit qu\'il y aura le temps.\n\nJe crois que c\'est ça, ce qu\'on perd vraiment quand quelqu\'un part. Pas les grandes choses. Les petits gestes qu\'on n\'a jamais pris la peine d\'apprendre.'
-                }
-            },
             art: './assets/passant.png',
         }
         let _obDone        = false;
@@ -10401,10 +10387,12 @@
         function startOnboarding() {
             if (_obDone) return;
             // L'Acte I "Il existait un Grand Livre" a été remplacé par la cinématique BD.
-            // On enchaîne directement sur la note manuscrite de Marcus (Acte II).
+            // Plus de lettre manuscrite : le joueur n'a rien "reçu". On enchaîne directement
+            // sur le marqueur tutoriel, la jeune fille oriente le joueur en voix vive.
             document.getElementById('onboardingOverlay').classList.add('hidden');
             document.getElementById('obSkipBtn').classList.add('visible');
-            _obShowMarcusNote();
+            _obHideAllMarkers();
+            _obSpawnTutorialMarker();
         }
 
         function _obSkipTutorial() {
@@ -10427,12 +10415,32 @@
             _obDone = true;
             _obAct2Done = true;
             _obAct3Done = true;
+            if (typeof _obGuide === 'object') { _obGuide.active = false; }
+            if (typeof _obGuideStopLoop === 'function') _obGuideStopLoop();
+            try { _obRemoveHighlight(); } catch(e) {}
+            // Activer le RDV Bellecour pour arriver à l'état de fin de tuto :
+            // quête dans le journal + épingle carte + boussole.
+            if (typeof _obActivateBellecourQuest === 'function') _obActivateBellecourQuest();
             // Marquer tous les écrans comme déjà vus pour éviter tout hint contextuel a posteriori
             if (typeof _obScreenSeen === 'object') {
                 ['collections','bag','journal','mindmap','carddetail'].forEach(k => { _obScreenSeen[k] = true; });
             }
             saveProgress();
             _obRestoreAllPOI();
+        }
+
+        // Active la quête "RDV Bellecour" : entrée dans le journal de quête,
+        // épingle sur la carte et boussole HUD. Idempotent.
+        function _obActivateBellecourQuest() {
+            try {
+                if (typeof grappeQuestState !== 'object') return;
+                if (!grappeQuestState.tutoriel) grappeQuestState.tutoriel = {};
+                grappeQuestState.tutoriel.t_bellecour = 'active';
+                window._selectedQuestKey = 'tutoriel:t_bellecour';
+                if (typeof updateQuestMarkers === 'function') updateQuestMarkers();
+                if (typeof updateQuestCompass === 'function') updateQuestCompass();
+                if (typeof updateQuestJournalBadge === 'function') updateQuestJournalBadge();
+            } catch (e) { console.warn('[expLore] activation RDV Bellecour échouée', e); }
         }
 
         function _obRunAct1(idx) {
@@ -10529,9 +10537,19 @@
                 window._obTutorialMarker = marker;
             }
 
+            // Zone de capture visible en permanence dès l'apparition du marqueur
+            // (et non plus seulement quand le joueur s'approche).
+            if (map && map.getSource('poi-circles')) {
+                map.getSource('poi-circles').setData({
+                    type: 'FeatureCollection',
+                    features: [{ type: 'Feature', properties: { id: 'ob_elara', status: 'local', lng: _obSpawnLng, lat: _obSpawnLat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(_obSpawnLng, _obSpawnLat, 50, ISOMETRIC_TILT)] } }]
+                });
+                try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'visible'); } catch(e) {}
+            }
+
             // Dialogue initial
             setTimeout(() => {
-                vnShow([{ speaker: 'Marcus', line: 'Il y a quelque chose là-bas. Pas un lieu, pas un monument — quelque chose de plus discret. Approche-toi.' }], null);
+                vnShow([{ speaker: 'La jeune fille', line: 'Il y a quelque chose là-bas. Pas un lieu, pas un monument — quelque chose de plus discret. Approche-toi.' }], null);
             }, 1200);
 
             // Surveiller la proximité — quand dans la zone, afficher la bannière nearby
@@ -10549,7 +10567,7 @@
         // Afficher la bannière nearby pour Elara
         function _obShowEllaraNearby() {
             const nearbyDiv = document.getElementById('nearbyPOI');
-            document.getElementById('poiName').textContent = 'Le Passant';
+            document.getElementById('poiName').textContent = 'Les clefs de la ville';
             const badge = document.getElementById('poiThematicBadge');
             if (badge) badge.style.display = 'none';
             const sub = nearbyDiv.querySelector('.nearby-poi-distance');
@@ -10625,9 +10643,9 @@
                 try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'none'); } catch(e) {}
             }
             vnShow([
-                { speaker: 'Marcus', line: 'Tu le sens ? Ces endroits gardent des traces. Pas les grandes histoires — les petites.' },
-                { speaker: 'Marcus', line: 'Les gens qui étaient là sans qu\'on pense à les noter.' },
-                { speaker: 'Marcus', line: 'Essaie de le cristalliser.' },
+                { speaker: 'La jeune fille', line: 'Tu le sens ? Ces endroits gardent des traces. Pas les grandes histoires — les petites.' },
+                { speaker: 'La jeune fille', line: 'Les gens qui étaient là sans qu\'on pense à les noter.' },
+                { speaker: 'La jeune fille', line: 'Essaie de le cristalliser.' },
             ], () => {
                 if (!cardLevels[OB_TUTORIAL_CARD.id]) {
                     cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
@@ -10643,16 +10661,11 @@
 
             if (!_obAct2Done && card.id === OB_TUTORIAL_CARD.id) {
                 _obAct2Done = true;
-                _obDone = true;
-                _obAct3Done = true;
                 saveProgress();
                 _obRestoreAllPOI();
-                vnShow([
-                    { speaker: 'Marcus', line: 'Ça a marché.' },
-                    { speaker: 'Marcus', line: 'Je ne savais pas si tu pouvais. Certaines personnes voient ces fragments. D\'autres passent à côté toute leur vie sans rien remarquer.' },
-                    { speaker: 'Marcus', line: 'Garde-le. On se recroisera.' },
-                ], null);
-                document.getElementById('obSkipBtn').classList.remove('visible');
+                // Le tuto NE se termine PLUS à la collecte : on enchaîne sur le parcours
+                // guidé (Collection → poudre → carnet/triplet → énergie/orbe → niveau → adieu).
+                setTimeout(() => _obGuideStart(), 400);
             }
         }
 
@@ -10676,38 +10689,376 @@
 
         // Appelé depuis openCollections()
         function _obOnOpenCollections() {
+            if (_obGuide.active) { _obGuideEvent('collections'); _obGuideRefresh(); return; }
             _obContextualHint('collections', [
-                { speaker: 'Marcus', line: 'Tes cartes s\'organisent ici. Des groupes se forment — des ensembles qui racontent quelque chose de plus grand que chaque fragment.' },
+                { speaker: 'La jeune fille', line: 'Tes cartes s\'organisent ici. Des groupes se forment — des ensembles qui racontent quelque chose de plus grand que chaque fragment.' },
             ]);
         }
 
         // Appelé depuis openBagScreen()
         function _obOnOpenBag() {
             _obContextualHint('bag', [
-                { speaker: 'Marcus', line: 'La poudre, les échos, les orbes. Tout ce que tu accumules en explorant.' },
+                { speaker: 'La jeune fille', line: 'La poudre, les échos, les orbes. Tout ce que tu accumules en explorant.' },
             ]);
         }
 
         // Appelé depuis openJournalScreen()
         function _obOnOpenJournal() {
+            if (_obGuide.active) { _obGuideEvent('journal'); _obGuideRefresh(); return; }
             _obContextualHint('journal', [
-                { speaker: 'Marcus', line: 'Les fragments que tu réveilles laissent des traces. Certaines te surprendront.' },
+                { speaker: 'La jeune fille', line: 'Les fragments que tu réveilles laissent des traces. Certaines te surprendront.' },
             ]);
         }
 
         // Appelé depuis openMindmap()
         function _obOnOpenMindmap() {
+            if (_obGuide.active) { _obGuideRefresh(); return; }
             _obContextualHint('mindmap', [
-                { speaker: 'Marcus', line: 'L\'Explorium. Il est vide pour l\'instant.' },
-                { speaker: 'Marcus', line: 'Certains fragments que tu collecteras s\'y inscriront — ceux qui appartiennent à quelque chose de plus grand.' },
+                { speaker: 'La jeune fille', line: 'L\'Explorium. Il est vide pour l\'instant.' },
+                { speaker: 'La jeune fille', line: 'Certains fragments que tu collecteras s\'y inscriront — ceux qui appartiennent à quelque chose de plus grand.' },
             ]);
         }
 
         // Appelé depuis openCardDetail()
         function _obOnOpenCardDetail() {
+            if (_obGuide.active) { _obGuideEvent('carddetail'); _obGuideRefresh(); return; }
             _obContextualHint('carddetail', [
-                { speaker: 'Marcus', line: 'La poudre mémorielle réveille ce qui s\'était tu. Essaie.' },
+                { speaker: 'La jeune fille', line: 'La poudre mémorielle réveille ce qui s\'était tu. Essaie.' },
             ]);
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        // PARCOURS GUIDÉ POST-COLLECTE — la jeune fille guide le joueur à
+        // travers Collection → poudre → carnet (triplet encre/pellicule/
+        // cassette) → énergie qui infuse → orbe → passage de niveau → adieu.
+        // Machine à états pilotée par _obGuideEvent(event).
+        // ════════════════════════════════════════════════════════════════
+        let _obGuide = { active: false, step: null };
+
+        function _obGuideRing(selector) {
+            setTimeout(() => { try { _obRingOnly(selector); } catch(e) {} }, 60);
+        }
+        function _obGuideClearRing() { try { _obRemoveHighlight(); } catch(e) {} }
+
+        // ── Anneau de guidage : boucle de réconciliation continue ────────
+        // Un seul anneau, recalé en permanence sur la cible vivante de l'étape
+        // courante. Il n'existe QUE si cette cible est réellement visible et au
+        // premier plan ; il disparaît dès qu'un autre écran passe devant, que la
+        // cible sort du champ, ou que l'étape change. Aucune logique d'écran à
+        // énumérer : on se fie à la visibilité réelle du DOM.
+
+        // Étape → sélecteur unique de la cible à entourer (null = aucun anneau).
+        const _OB_STEP_RING = {
+            go_collections: '#btnCollections',
+            go_card:        '.alb-card.alb-collected',
+            feed1:          '#addExpBtn',
+            journal1:       '#journalTabBtn',
+            lesson:         null,
+            feed2:          '#addExpBtn',
+            orb:            '#addExpBtn',
+            feed3:          '#addExpBtn',
+            reveal_rest:    null,
+            seal:           '#addExpBtn',
+        };
+
+        let _obRingSelector = null;   // sélecteur actuellement entouré
+        let _obGuideTimer   = null;   // handle de la boucle
+
+        // L'élément est-il réellement visible ET au premier plan (non recouvert) ?
+        function _obElementVisible(el) {
+            if (!el || !el.getBoundingClientRect) return false;
+            if (el.offsetParent === null && getComputedStyle(el).position !== 'fixed') return false;
+            const r = el.getBoundingClientRect();
+            if (r.width < 3 || r.height < 3) return false;
+            if (r.bottom < 0 || r.top > window.innerHeight || r.right < 0 || r.left > window.innerWidth) return false;
+            // Au-dessus de la pile ? (l'anneau est pointer-events:none, il n'interfère pas)
+            const cx = Math.round(r.left + r.width / 2);
+            const cy = Math.round(r.top + r.height / 2);
+            let top = document.elementFromPoint(cx, cy);
+            while (top) { if (top === el) return true; top = top.parentElement; }
+            return false;
+        }
+
+        // Crée ou repositionne l'anneau #obHighlightRing autour d'un élément.
+        function _obRingPlace(el) {
+            const app = document.getElementById('mainApp');
+            if (!app) return;
+            const rect = el.getBoundingClientRect();
+            const appRect = app.getBoundingClientRect();
+            const pad = 8;
+            const x = rect.left - appRect.left - pad;
+            const y = rect.top  - appRect.top  - pad;
+            const w = rect.width  + pad * 2;
+            const h = rect.height + pad * 2;
+            let ring = document.getElementById('obHighlightRing');
+            if (!ring) {
+                ring = document.createElement('div');
+                ring.id = 'obHighlightRing';
+                ring.style.cssText = [
+                    'position:absolute','border-radius:10px',
+                    'border:2px solid rgba(139,92,246,0.9)',
+                    'pointer-events:none','z-index:9002',
+                    'animation:obMarkerPulse 1.5s ease-in-out infinite'
+                ].join(';');
+                app.appendChild(ring);
+            }
+            ring.style.left   = x + 'px';
+            ring.style.top    = y + 'px';
+            ring.style.width  = w + 'px';
+            ring.style.height = h + 'px';
+        }
+
+        // Filet de sécurité : aligne le guide sur l'état réel du jeu, pour qu'il
+        // ne puisse jamais rester bloqué derrière le joueur (qui peut tout faire
+        // dans n'importe quel ordre). Tourne à chaque tick.
+        function _obGuideSync() {
+            if (!_obGuide.active) return;
+            const card = OB_TUTORIAL_CARD;
+            const cl = (typeof cardLevels === 'object') ? cardLevels[card.id] : null;
+            if (!cl) return;
+            // Ne pas agir tant qu'un overlay bloquant est affiché (dialogue VN ou
+            // synthèse de scellement) : on laisse l'événement 'sealed' faire la
+            // transition propre une fois la synthèse fermée.
+            const vn = document.getElementById('vnOverlay');
+            const synth = document.getElementById('orbSynthOverlay');
+            const blocked = (vn && vn.classList.contains('show')) || (synth && synth.classList.contains('show'));
+            // 1) La carte est montée de niveau → le chapitre a été scellé : on termine
+            //    (backstop si l'événement 'sealed' n'a pas été capté à la bonne étape).
+            if (cl.level >= 1) {
+                if (blocked) return;
+                _obGuideFinish();
+                return;
+            }
+            if (blocked) return;
+            // 2) XP au max alors que le guide est encore dans une étape de nourrissage
+            //    → router vers "dévoiler / sceller".
+            const needed = getExpNeeded(card, cl.level);
+            if (cl.experience >= needed) {
+                const feeding = ['feed1', 'journal1', 'lesson', 'feed2', 'orb', 'feed3'];
+                if (feeding.indexOf(_obGuide.step) !== -1) { _obAfterXpFull(); }
+            }
+        }
+
+        // Un tick de réconciliation : décide s'il faut un anneau, où, et le recale.
+        function _obGuideTick() {
+            if (!_obGuide.active) { _obGuideClearRing(); _obRingSelector = null; return; }
+            _obGuideSync();
+            if (!_obGuide.active) { _obGuideClearRing(); _obRingSelector = null; return; }
+            const selector = _OB_STEP_RING[_obGuide.step] || null;
+            // Pas d'anneau pendant un dialogue VN.
+            const vn = document.getElementById('vnOverlay');
+            const vnUp = vn && vn.classList.contains('show');
+            let el = (selector && !vnUp) ? document.querySelector(selector) : null;
+            if (el && !_obElementVisible(el)) el = null;
+            if (!el) {
+                if (_obRingSelector !== null) { _obGuideClearRing(); _obRingSelector = null; }
+                return;
+            }
+            _obRingPlace(el);
+            _obRingSelector = selector;
+        }
+
+        // Rafraîchissement immédiat (appelé après chaque transition / ouverture d'écran).
+        function _obGuideRefresh() { _obGuideTick(); }
+
+        // Démarre / arrête la boucle continue.
+        function _obGuideStartLoop() {
+            if (_obGuideTimer) return;
+            _obGuideTimer = setInterval(_obGuideTick, 220);
+        }
+        function _obGuideStopLoop() {
+            if (_obGuideTimer) { clearInterval(_obGuideTimer); _obGuideTimer = null; }
+            _obGuideClearRing();
+            _obRingSelector = null;
+        }
+
+        // Révèle une entrée carnet gratuitement (cadeau de la jeune fille — aucun coût d'encre)
+        function _obRevealEntryFree(cardId, entryId) {
+            const entries = cardJournalEntries[cardId];
+            if (!entries) return;
+            const entry = entries.find(e => e.id === entryId);
+            if (!entry || entry._revealed) return;
+            entry._revealed = true;
+            entry._isNew = true;
+            saveProgress();
+            if (document.getElementById('journalScreen').classList.contains('show')) {
+                renderJournalBio();
+                setTimeout(() => { try { animateLastJournalEntry(); } catch(e) {} }, 250);
+            }
+            if (typeof updateJournalBlink === 'function') updateJournalBlink();
+            if (selectedCard && selectedCard.id === cardId && typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
+        }
+
+        // Toutes les entrées du niveau courant de la carte tuto sont-elles révélées ?
+        function _obAllTutorialEntriesRevealed() {
+            const cl = cardLevels[OB_TUTORIAL_CARD.id];
+            const lvl = cl ? cl.level : 0;
+            const entries = (cardJournalEntries[OB_TUTORIAL_CARD.id] || []).filter(e => e.level === lvl);
+            return entries.length > 0 && entries.every(e => e._revealed);
+        }
+
+        // Démarrage — appelé à la fermeture du rituel de collecte
+        function _obGuideStart() {
+            _obGuide.active = true;
+            _obGuide.step = 'go_collections';
+            document.getElementById('obSkipBtn').classList.add('visible');
+            _obGuideStartLoop();
+            vnShow([
+                { speaker: 'La jeune fille', line: 'Tu l\'as recueillie. Mais une carte qu\'on vient de réveiller a presque tout oublié — il faut lui rendre sa mémoire.' },
+                { speaker: 'La jeune fille', line: 'Ouvre ta Collection. Elle t\'y attend, désormais.' },
+            ], () => _obGuideRefresh());
+        }
+
+        // Transition partagée : on vient d'ouvrir la fiche carte → invite à la nourrir.
+        function _obGuideEnterFeed1() {
+            _obGuide.step = 'feed1';
+            vnShow([
+                { speaker: 'La jeune fille', line: 'Pour qu\'une carte se souvienne, il lui faut de la poudre mémorielle. Donne-lui-en — et regarde ce qui remonte.' },
+            ], () => _obGuideRefresh());
+        }
+
+        // Fin du tuto : adieu de la jeune fille + activation du RDV Bellecour.
+        // Appelable depuis n'importe quelle étape (scellement), idempotent.
+        function _obGuideFinish() {
+            if (!_obGuide.active) return;
+            _obGuide.active = false;
+            _obGuide.step = null;
+            _obGuideStopLoop();
+            vnShow([
+                { speaker: 'La jeune fille', line: 'Voilà. Ce chapitre ne s\'oubliera plus. C\'est ça, être archéologue de la mémoire.' },
+                { speaker: 'La jeune fille', line: 'Je dois partir, maintenant — j\'ai mes propres voix à retrouver, ailleurs.' },
+                { speaker: 'La jeune fille', line: 'Avant ça, une direction : va place Bellecour. Là-bas, des voix se cherchent. Quand tu en croiseras une, quelque chose s\'ouvrira.' },
+                { speaker: 'La jeune fille', line: 'Tu retrouveras ce rendez-vous dans ton journal, et un repère t\'attend sur la carte. À toi, désormais.' },
+            ], () => {
+                _obDone = true;
+                _obAct3Done = true;
+                document.getElementById('obSkipBtn').classList.remove('visible');
+                _obActivateBellecourQuest();
+                saveProgress();
+            });
+        }
+
+        // XP au max : router vers "dévoiler les pages restantes" ou directement "sceller".
+        function _obAfterXpFull() {
+            if (_obAllTutorialEntriesRevealed()) {
+                _obGuide.step = 'seal';
+                vnShow([
+                    { speaker: 'La jeune fille', line: 'Le chapitre est plein, et toutes ses pages dévoilées. Scelle-le — qu\'il prenne racine.' },
+                ], () => _obGuideRefresh());
+            } else {
+                _obGuide.step = 'reveal_rest';
+                vnShow([
+                    { speaker: 'La jeune fille', line: 'Le chapitre est plein — mais des pages restent voilées : une image, un son.' },
+                    { speaker: 'La jeune fille', line: 'Ouvre le carnet et dévoile-les toi-même, à la pellicule et à la cassette. Ensuite seulement tu pourras sceller.' },
+                ], () => _obGuideRefresh());
+            }
+        }
+
+        // Dispatcher d'événements du parcours guidé
+        function _obGuideEvent(ev) {
+            if (!_obGuide.active) return;
+
+            // Scellement = fin du tuto, quelle que soit l'étape où le guide se trouve.
+            // (Le joueur peut sceller par un chemin que le guide n'a pas anticipé.)
+            if (ev === 'sealed') { _obGuideFinish(); return; }
+
+            switch (_obGuide.step) {
+
+                case 'go_collections':
+                    if (ev === 'collections') {
+                        _obGuide.step = 'go_card';
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'La voilà. Muette, pour l\'instant. Ouvre-la.' },
+                        ], () => _obGuideRefresh());
+                    } else if (ev === 'carddetail') {
+                        // Le joueur a ouvert la carte directement (via le toast) — on enchaîne.
+                        _obGuideEnterFeed1();
+                    }
+                    break;
+
+                case 'go_card':
+                    if (ev === 'carddetail') {
+                        _obGuideEnterFeed1();
+                    }
+                    break;
+
+                case 'feed1':
+                    if (ev === 'entry_unlocked') {
+                        _obGuide.step = 'journal1';
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'Tu l\'as réveillée. Une page s\'est inscrite dans son carnet — il t\'appelle.' },
+                        ], () => _obGuideRefresh());
+                    } else if (ev === 'xp_full') {
+                        _obAfterXpFull();
+                    }
+                    break;
+
+                case 'journal1':
+                    if (ev === 'journal') {
+                        _obGuide.step = 'lesson';
+                        _obGuideClearRing();
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'Cette première page est voilée. Cette fois, c\'est moi qui l\'écris pour toi — avec mon encre.' },
+                        ], () => {
+                            _obRevealEntryFree(OB_TUTORIAL_CARD.id, OB_TUTORIAL_CARD.id + '_0_0');
+                            setTimeout(() => {
+                                vnShow([
+                                    { speaker: 'La jeune fille', line: 'Les voix laissent trois sortes de traces : des mots, des images, des sons.' },
+                                    { speaker: 'La jeune fille', line: 'L\'encre révèle les mots. La pellicule, les images. La cassette, les sons. Tu en as quelques-unes — sers-t\'en.' },
+                                    { speaker: 'La jeune fille', line: 'Reviens à la carte et continue à la nourrir, puis dévoile toi-même les pages qui s\'ouvriront.' },
+                                ], () => {
+                                    _obGuide.step = 'feed2';
+                                    _obGuideRefresh();
+                                });
+                            }, 700);
+                        });
+                    } else if (ev === 'xp_full') {
+                        _obAfterXpFull();
+                    }
+                    break;
+
+                case 'feed2':
+                    if (ev === 'energy_empty') {
+                        _obGuide.step = 'orb';
+                        if (typeof bagInv === 'object') bagInv.orbes = (bagInv.orbes || 0) + 1;
+                        if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
+                            { speaker: 'La jeune fille', line: 'Mais tiens — prends cette orbe mémorielle. Elle lui rend toute son énergie d\'un coup. Utilise-la.' },
+                        ], () => _obGuideRefresh());
+                    } else if (ev === 'xp_full') {
+                        _obAfterXpFull();
+                    }
+                    break;
+
+                case 'orb':
+                    if (ev === 'orb_used') {
+                        _obGuide.step = 'feed3';
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'Elle revit. Continue — mène ce premier chapitre à son terme.' },
+                        ], () => _obGuideRefresh());
+                    } else if (ev === 'xp_full') {
+                        _obAfterXpFull();
+                    }
+                    break;
+
+                case 'feed3':
+                    if (ev === 'xp_full') {
+                        _obAfterXpFull();
+                    }
+                    break;
+
+                case 'reveal_rest':
+                    if (ev === 'all_revealed') {
+                        _obGuide.step = 'seal';
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, scelle-le.' },
+                        ], () => _obGuideRefresh());
+                    }
+                    break;
+
+                // 'seal' : le scellement est géré en tête de fonction (ev === 'sealed').
+            }
         }
 
         // ── Highlight d'un élément avec trou dans l'overlay ──
@@ -10806,16 +11157,16 @@
             openMindmap();
             setTimeout(() => {
                 vnShow([
-                    { speaker: 'Marcus', line: 'Une carte thématique. Je n\'en avais pas vu depuis...' },
-                    { speaker: 'Marcus', line: 'Ce n\'est pas n\'importe qui qui peut les voir. Encore moins les récupérer.' },
-                    { speaker: 'Marcus', line: 'Le Grand Livre nous a parlé. À toi — et à travers toi, à moi.' },
-                    { speaker: 'Marcus', line: 'Tu es archéologue de la mémoire. Je ne sais pas pourquoi toi. Mais c\'est ce que tu es.' },
+                    { speaker: 'La jeune fille', line: 'Une carte thématique. Je n\'en avais pas vu depuis...' },
+                    { speaker: 'La jeune fille', line: 'Ce n\'est pas n\'importe qui qui peut les voir. Encore moins les récupérer.' },
+                    { speaker: 'La jeune fille', line: 'Le Grand Livre nous a parlé. À toi — et à travers toi, à moi.' },
+                    { speaker: 'La jeune fille', line: 'Tu es archéologue de la mémoire. Je ne sais pas pourquoi toi. Mais c\'est ce que tu es.' },
                     { speaker: 'La Gardienne', line: 'Marcus a raison. Et tort en même temps.' },
                     { speaker: 'La Gardienne', line: 'Tu n\'es pas archéologue parce que tu en es capable. Tu en es capable parce que tu regardes encore.' },
                     { speaker: 'La Gardienne', line: 'Le Grand Livre ne choisit pas des héros. Il remarque ceux qui regardent.' },
                     { speaker: 'La Gardienne', line: 'Et maintenant qu\'il t\'a remarqué — eux aussi.' },
-                    { speaker: 'Marcus', line: 'Ils ont détecté la collecte. Je leur ai dit que tu étais avec nous. Pour l\'instant, tu es protégé.' },
-                    { speaker: 'Marcus', line: 'Mais ils regardent maintenant.' },
+                    { speaker: 'La jeune fille', line: 'Ils ont détecté la collecte. Je leur ai dit que tu étais avec nous. Pour l\'instant, tu es protégé.' },
+                    { speaker: 'La jeune fille', line: 'Mais ils regardent maintenant.' },
                     { speaker: 'La Gardienne', line: 'Les cartes locales ouvrent les lieux. Dans ces lieux se cachent les fragments thématiques — ceux qui reconstruisent le Grand Livre.' },
                     { speaker: 'La Gardienne', line: 'Explore. Je serai là quand tu auras reconstitué quelque chose d\'important. Pas avant.' },
                 ], () => closeMindmap());
@@ -10982,32 +11333,10 @@
 
             // ── LE PASSANT (Tutoriel lore, Histoire) ──
             ob_tutorial_card: [
-                // Niveau 0 — toujours disponibles
-                { text: "Je pensais pas que quelqu'un s'arrêterait.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
-                { text: "Le dimanche matin, je fais toujours le même café. Même heure, même tasse. C'est bête, mais ça m'aide à me souvenir que la journée commence.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
-                { text: "Y'a des rituels qu'on garde pas pour soi. On les garde pour quelqu'un qui est plus là. On continue parce qu'on sait plus comment arrêter.", heart: true, level: 0,
-                  entry: { date: "Un dimanche ordinaire", text: "Certains rituels ne nous appartiennent plus vraiment. On les continue pour quelqu'un d'autre — pour ne pas laisser disparaître la preuve qu'ils ont existé. C'est une forme de fidélité qu'on ne nomme jamais, parce que la nommer, ce serait admettre qu'elle ne sert plus à rien.", photo: "./assets/Tasse-cafe.png", audio: "[Audio placeholder]" }
-                },
-                { text: "Ma femme avait le visage flou sur presque toutes les photos. Elle bougeait toujours au mauvais moment. Maintenant j'aime ça. Ça lui ressemble.", heart: true, level: 0,
-                  entry: { date: "Une photo retrouvée", text: "On garde les photos floues pour les mêmes raisons qu'on garde les gens imparfaits — parce que c'est eux. La netteté, c'est ce qu'on voudrait que les autres soient. Le flou, c'est ce qu'ils sont vraiment, et ce qu'on aime sans pouvoir l'expliquer.", photo: "./assets/familypic.png", audio: "[Audio placeholder]" }
-                },
-                // Niveau 1 — disponibles après level up
-                { text: "J'ai travaillé trente ans dans la même usine. Le bruit, les collègues, le réfectoire. On savait tous que ça durerait pas. On faisait semblant.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
-                { text: "Les gens qui oublient, c'est pas des ingrats. C'est juste qu'ils ont continué à avancer. L'oubli, c'est souvent une question de vitesse.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
-                { text: "La cantine de l'usine. On était deux cents à manger en même temps, serrés comme des sardines. Et pourtant on se connaissait. Maintenant je mange seul et je connais personne.", heart: true, level: 1,
-                  entry: { date: "Les années d'usine, Gerland", text: "Il y a des lieux où on appartient à quelque chose sans l'avoir choisi. Une table commune, une heure fixe, le même bruit autour. Ce n'est pas de l'amitié — c'est quelque chose d'antérieur à l'amitié. Un tissu. Quand il se défait, on réalise qu'on ne savait même pas qu'il existait.", photo: "./assets/cantine.png", audio: "[Audio placeholder]" }
-                },
-                { text: "Le jour où ma fille a eu son permis, elle m'a emmené faire un tour. Elle conduisait trop vite, j'ai rien dit. Elle était tellement fière.", heart: true, level: 1,
-                  entry: { date: "Un soir de novembre", text: "Il y a des moments où on comprend qu'on est en train de devenir moins nécessaire. Ce n'est pas une perte — c'est la preuve qu'on a bien fait son travail. Mais comprendre ça et ne pas avoir mal en même temps, c'est peut-être la chose la plus difficile qu'on demande aux gens qui aiment.", photo: "./assets/voiture.png", audio: "[Audio placeholder]" }
-                },
-                // Niveau 2 — disponibles après second level up
-                { text: "Ma fille m'a proposé de venir vivre avec elle à Villeurbanne. J'ai dit non. Elle comprend pas. Elle comprendrait si elle avait vécu quelque part vraiment.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
-                { text: "Les gens qui partent pensent qu'on peut recommencer ailleurs. C'est vrai. Mais ce qu'on recommence, c'est plus pareil. C'est une copie.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
-                { text: "J'ai gardé les clés de tous les appartements de mes voisins partis. Au cas où ils reviendraient. Ça fait longtemps que j'attends.", heart: true, level: 2,
-                  entry: { date: "Saint-Jean, aujourd'hui", text: "Bernard conserve un trousseau de sept clés. Aucun des anciens voisins n'est jamais revenu. Il ne les a pas rendues non plus. Ce geste dit quelque chose sur la fidélité — ou peut-être sur le refus d'accepter que certaines choses sont finies. La mémoire fonctionne parfois comme un trousseau : on garde des clés de portes qui n'existent plus.", photo: "[Photo placeholder]", audio: "[Audio placeholder]" }
-                },
-                { text: "Si je meurs ici, au moins j'aurai pas eu à faire mes cartons. C'est pas si peu.", heart: true, level: 2,
-                  entry: { date: "Réflexion tardive", text: "Il y a une forme d'humour dans la façon dont Bernard parle de la mort — comme si elle était une solution administrative acceptable. Ce qu'il ne dit pas directement : il a peur d'oublier. Pas d'être oublié. D'oublier lui-même les visages, les voix, l'ordre exact des choses. Rester ici, c'est lutter contre ça.", photo: "[Photo placeholder]", audio: "[Audio placeholder]" }
+                // Entrée carnet unique — texte de la jeune fille (validé). Débloquée à la collecte.
+                // Les 8 autres paliers (rare = 3 paliers × 3 chapitres) restent en placeholders auto.
+                { text: "Trois clefs, et pas une serrure.", heart: true, level: 0,
+                  entry: { date: "Les clefs qui n'ouvrent rien", text: "Les Clefs de la Ville de Lyon. Elles étaient trois, en bronze doré sur un plat d'argent, offertes à Napoléon en 1805 quand il est venu ici. Le plus étrange, c'est qu'elles n'ouvrent rien : juste une façon de dire « voilà notre ville ». Deux ont été perdues. Il en reste une, aujourd'hui, au musée Gadagne — une clef seule, et un plat qui se souvient des deux autres.", photo: null, audio: null }
                 }
             ],
 
@@ -15841,6 +16170,7 @@
             _showNearbyConsoles();
             document.getElementById('collectionsPanel').classList.remove('show');
             selectedCollectionId = null;
+            if (typeof _obGuide === 'object' && _obGuide.active) setTimeout(() => _obGuideRefresh(), 120);
         }
 
         let _albCurrentTab = 'cards';
@@ -16328,6 +16658,7 @@
             // Annuler tout preview de skin non validé avant de quitter
             try { _cancelSkinPreviewIfAny(); } catch(e) {}
             document.getElementById('cardDetailView').classList.remove('show');
+            if (typeof _obGuide === 'object' && _obGuide.active) setTimeout(() => _obGuideRefresh(), 120);
             // Si on était venu depuis une modale grappe, la rouvrir au retour
             if (window._reopenGrappeQuestModalId) {
                 const id = window._reopenGrappeQuestModalId;
@@ -16759,6 +17090,9 @@
                     unlockJournalEntry(cardId, level, entry);
                     dustBlocked = false;
                     _triggerLayer2(cardId, entry._type || 'text');
+                    if (typeof _obGuide === 'object' && _obGuide.active && cardId === OB_TUTORIAL_CARD.id) {
+                        setTimeout(() => _obGuideEvent('entry_unlocked'), 300);
+                    }
                 }, 200);
             }
         }
@@ -16850,7 +17184,7 @@
                 entry.photo && (entry.photo.startsWith('data:') || entry.photo.startsWith('http')) ? 'visual' :
                 entry.audio && (entry.audio.startsWith('data:') || entry.audio.startsWith('http')) ? 'audio' : 'text'
             );
-            cardJournalEntries[cardId].push({ ...entry, level, _isNew: true, _available: true, _revealed: false, _type: entryType });
+            cardJournalEntries[cardId].push({ ...entry, level, _isNew: true, _available: true, _revealed: entry._revealed === true, _type: entryType });
             saveProgress();
             // Badge carnet
             updateJournalBlink();
@@ -16895,6 +17229,11 @@
             _cdState(cardId).revealedCount = (cardJournalEntries[cardId] || []).filter(e => e._revealed).length;
             // Retirer le blink si plus d'entrées non révélées
             updateJournalBlink();
+
+            // ── Accroche parcours guidé : toutes les entrées tuto révélées ? ──
+            if (typeof _obGuide === 'object' && _obGuide.active && cardId === OB_TUTORIAL_CARD.id && _obAllTutorialEntriesRevealed()) {
+                setTimeout(() => _obGuideEvent('all_revealed'), 450);
+            }
         }
 
         // Lignes de couche 2 — réaction au souvenir selon type d'entrée
@@ -17170,6 +17509,17 @@
 
             updateCardLevelDisplay();
             saveProgress();
+
+            // ── Accroches parcours guidé (carte tuto) ──
+            if (typeof _obGuide === 'object' && _obGuide.active && selectedCard.id === OB_TUTORIAL_CARD.id) {
+                const _needed = getExpNeeded(selectedCard, cl.level);
+                const _en = getCardEnergyState(selectedCard.id);
+                if (cl.experience >= _needed) {
+                    setTimeout(() => _obGuideEvent('xp_full'), 550);
+                } else if (_en.value <= 0) {
+                    setTimeout(() => _obGuideEvent('energy_empty'), 550);
+                }
+            }
         }
 
         // Utiliser une orbe pour restaurer l'énergie de la carte sélectionnée
@@ -17235,6 +17585,9 @@
                 updateCardLevelDisplay();
                 updateCardDetailOrbesDisplay();
                 showToast('✨ Orbe utilisée — la carte se ravive');
+                if (typeof _obGuide === 'object' && _obGuide.active && selectedCard && selectedCard.id === OB_TUTORIAL_CARD.id) {
+                    _obGuideEvent('orb_used');
+                }
             }, totalAnim);
         }
 
@@ -17315,6 +17668,12 @@
         function orbSynthClose() {
             const overlay = document.getElementById('orbSynthOverlay');
             overlay.classList.remove('show');
+
+            // ── Accroche parcours guidé : chapitre scellé → adieu de la jeune fille ──
+            if (typeof _obGuide === 'object' && _obGuide.active && selectedCard && selectedCard.id === OB_TUTORIAL_CARD.id) {
+                setTimeout(() => _obGuideEvent('sealed'), 350);
+                return;
+            }
 
             const sealedLvl = selectedCard ? (cardLevels[selectedCard.id].level - 1) : undefined;
             const journalEl = document.getElementById('journalScreen');
@@ -17973,6 +18332,7 @@
 
         function closeJournalScreen() {
             document.getElementById('journalScreen').classList.remove('show');
+            if (typeof _obGuide === 'object' && _obGuide.active) setTimeout(() => _obGuideRefresh(), 120);
 
             // Capturer le delta avant de réinitialiser
             const delta = window._journalSessionDelta || 0;
@@ -18886,6 +19246,15 @@
 
         // ==================== GPS ====================
 
+        let _gpsEstablished = false;
+
+        // Affiche/masque le joystick selon l'état GPS : invisible dès que le GPS
+        // réel pilote le personnage, visible sinon.
+        function _updateJoystickVisibility() {
+            const jc = document.querySelector('.joystick-container');
+            if (jc) jc.style.display = gpsActive ? 'none' : '';
+        }
+
         function startGPS() {
             if (!('geolocation' in navigator)) return;
             // Initialise la période courante (jour/semaine) au démarrage
@@ -18893,6 +19262,18 @@
             gpsWatchId = navigator.geolocation.watchPosition(
                 (position) => {
                     playerPos = { lat: position.coords.latitude, lng: position.coords.longitude };
+                    // Le GPS ne devient "actif" qu'au PREMIER point réel reçu :
+                    // tant qu'aucun fix n'est arrivé, le joystick reste utilisable
+                    // (évite l'état "joystick coupé + personnage figé").
+                    if (!gpsActive) {
+                        gpsActive = true;
+                        _gpsEstablished = true;
+                        _updateJoystickVisibility();
+                        // Recentrer la carte sur la position réelle au 1er fix,
+                        // pour que les déplacements suivants soient visibles.
+                        if (map) { try { map.jumpTo({ center: [playerPos.lng, playerPos.lat] }); } catch(e) {} }
+                    }
+                    _cameraMoving = false; // défensif : la caméra suit toujours le joueur
                     if (playerMarker && map) {
                         updatePlayerOnMap();
                     }
@@ -18900,10 +19281,18 @@
                     // Tracker de distance (filtres + anti-cheat véhicule)
                     _trackDistanceFromGps(position);
                 },
-                (error) => { console.error('Erreur GPS:', error); gpsActive = false; },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                (error) => {
+                    console.error('Erreur GPS:', error);
+                    // Ne repasser en mode joystick que si la permission est refusée,
+                    // ou si le GPS n'a jamais été établi. Les erreurs transitoires
+                    // (timeout ponctuel, position indisponible) ne coupent pas le mode GPS.
+                    if (error.code === error.PERMISSION_DENIED || !_gpsEstablished) {
+                        gpsActive = false;
+                        _updateJoystickVisibility();
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 2000 }
             );
-            gpsActive = true;
         }
 
         // ==================== PROGRESSION SYSTEM ====================
@@ -21336,6 +21725,31 @@
         // Étape résolue = une ou plusieurs cases de BD débloquées
         // ════════════════════════════════════════════════════════
         const GRAPPE_QUESTS = {
+            tutoriel: {
+                title: 'Les premiers pas',
+                color: '#A78BFA',
+                bd: {
+                    totalCases: 1,
+                    cases: [
+                        { id: 'tuto_case1', title: 'La direction de la jeune fille', text: 'Elle t\'a tout montré, puis elle est repartie retrouver ses propres voix. Avant de disparaître, elle t\'a laissé un cap : place Bellecour, là où les voix de la ville se cherchent les unes les autres.' },
+                    ]
+                },
+                quete: {
+                    titre: 'La direction de la jeune fille',
+                    etapes: [
+                        {
+                            id: 't_bellecour',
+                            titre: 'Le rendez-vous de Bellecour',
+                            indice: 'La jeune fille t\'a indiqué la place Bellecour. Rends-toi là-bas : une voix t\'y attend, et quelque chose s\'ouvrira.',
+                            // Prérequis sentinelle (jamais rempli) → l\'étape reste verrouillée
+                            // jusqu\'à ce que le tuto la force en \'active\' à la fin du parcours guidé.
+                            prerequis: [{ cardId: '__tuto_lock__', minLevel: 1 }],
+                            objectifGeo: { lat: 45.7578, lng: 4.8320, rayon: 80, nom: 'Place Bellecour' },
+                            rewardCases: ['tuto_case1'],
+                        },
+                    ]
+                }
+            },
             passeurs: {
                 title: 'Les passeurs',
                 color: '#34d399',
@@ -24645,11 +25059,20 @@
         })();
 
         // 3) Hook getAllCards pour exclure ces pseudo-cartes (elles ne sont PAS dans le Sac)
+        //    et inclure la carte tutoriel (Les clefs de la ville) afin qu'elle apparaisse
+        //    dans la Collection une fois collectée.
         (function v2HookGetAllCards() {
             if (typeof getAllCards !== 'function') return;
             const orig = window.getAllCards;
             window.getAllCards = function() {
-                return orig.call(this).filter(c => !c || !c._v2WorldActor);
+                const list = orig.call(this).filter(c => !c || !c._v2WorldActor);
+                if (typeof OB_TUTORIAL_CARD !== 'undefined'
+                    && typeof collectedCards !== 'undefined'
+                    && collectedCards.includes(OB_TUTORIAL_CARD.id)
+                    && !list.some(c => c && c.id === OB_TUTORIAL_CARD.id)) {
+                    list.push({ ...OB_TUTORIAL_CARD, image: OB_TUTORIAL_CARD.image || OB_TUTORIAL_CARD.art });
+                }
+                return list;
             };
         })();
 
