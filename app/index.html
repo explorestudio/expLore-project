@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.36.0 · UI fiche : la carte s'allonge pour occuper l'espace (zone d'art flex:1), panneau bas collé en bas (max 60%, scroll cartes riches)</div>
+            <div class="hud-version" id="hudVersion">v0.37.0 · GPS : polling getCurrentPosition (contournement watchPosition figé en TWA) + compteurs distance protégés tant que la sauvegarde n'est pas chargée</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11932,7 +11932,7 @@
         function loadProgress() {
             try {
                 const raw = localStorage.getItem('lyon_cards_progress');
-                if (!raw) { console.log('[expLore] Aucune sauvegarde trouvée'); return; }
+                if (!raw) { console.log('[expLore] Aucune sauvegarde trouvée'); _progressLoaded = true; return; }
                 const d = JSON.parse(raw);
                 console.log('[expLore] Sauvegarde chargée — _obDone:', d._obDone, 'cartes:', (d.collectedCards||[]).length, 'poudre:', d.memorialDust);
                 if (d.collectedCards)        collectedCards      = d.collectedCards;
@@ -11995,7 +11995,8 @@
                 if (d.poiCollectedKind && typeof d.poiCollectedKind === 'object') poiCollectedKind = d.poiCollectedKind;
                 if (typeof d.poiCooldownMs === 'number' && d.poiCooldownMs > 0) poiCooldownMs = d.poiCooldownMs;
                 console.log('[expLore] loadProgress _obDone après:', _obDone);
-            } catch(e) {}
+                _progressLoaded = true;
+            } catch(e) { _progressLoaded = true; }
         }
 
         function _resetProgressLegacyUnused() {
@@ -12132,6 +12133,7 @@
         let selectedCard = null;
 
         let gpsWatchId = null;
+        let _progressLoaded = false;
         let gpsActive = false;
 
         let joystickActive = false;
@@ -19095,8 +19097,7 @@
             HISTORY_WINDOW_MS: 60000
         };
         // État du tracker (en mémoire uniquement, pas persisté)
-        let _distLastLat = null;
-        let _distLastLng = null;
+        let _distLastLat = null;        let _distLastLng = null;
         let _distLastTs = null;
         let _distVehicleMode = false;
         let _distVehicleToastShown = false;
@@ -19125,6 +19126,12 @@
 
         // Reset des compteurs quotidien/hebdo si on a changé de jour ou de semaine
         function _resetDistanceCountersIfNewPeriod() {
+            // Ne rien faire tant que la sauvegarde n'est pas chargée : sinon on risque
+            // de remettre les compteurs à zéro sur l'objet par défaut, avant que
+            // loadProgress() ait restauré les vraies valeurs (ordre non déterministe
+            // entre startGPS et map 'load'). C'était la cause des compteurs qui
+            // chutaient (50 → 13 → 0) à la réouverture de l'app.
+            if (!_progressLoaded) return false;
             const now = new Date();
             const today = now.toISOString().slice(0, 10); // "YYYY-MM-DD"
             const weekKey = _isoWeekKey(now);
@@ -19299,6 +19306,44 @@
             if (jc) jc.style.display = gpsActive ? 'none' : '';
         }
 
+        // Traite un point GPS (commun à watchPosition et au polling getCurrentPosition).
+        function _onGpsFix(position) {
+            const newLat = position.coords.latitude;
+            const newLng = position.coords.longitude;
+            // Ignore un point strictement identique au précédent (évite double comptage
+            // quand watchPosition et le polling livrent la même position).
+            if (_lastFixLat === newLat && _lastFixLng === newLng) {
+                _gpsDebugUpdate(position);
+                return;
+            }
+            _lastFixLat = newLat;
+            _lastFixLng = newLng;
+            playerPos = { lat: newLat, lng: newLng };
+            if (!gpsActive) {
+                gpsActive = true;
+                _gpsEstablished = true;
+                _updateJoystickVisibility();
+                if (map) { try { map.jumpTo({ center: [playerPos.lng, playerPos.lat] }); } catch(e) {} }
+            }
+            _cameraMoving = false;
+            if (playerMarker && map) updatePlayerOnMap();
+            checkNearbyPOI();
+            _trackDistanceFromGps(position);
+            _gpsDebugUpdate(position);
+        }
+
+        function _onGpsError(error) {
+            console.error('Erreur GPS:', error);
+            _gpsDebugError(error);
+            if (error.code === error.PERMISSION_DENIED || !_gpsEstablished) {
+                gpsActive = false;
+                _updateJoystickVisibility();
+            }
+        }
+
+        let _lastFixLat = null, _lastFixLng = null;
+        let _gpsPollInterval = null;
+
         function startGPS() {
             if (!('geolocation' in navigator)) {
                 if (_gpsDebug) _gpsDebugPanel().textContent = 'GPS indisponible : navigator.geolocation absent';
@@ -19307,43 +19352,26 @@
             if (_gpsDebug) _gpsDebugPanel().textContent = 'GPS : démarrage, en attente du 1er fix…';
             // Initialise la période courante (jour/semaine) au démarrage
             _resetDistanceCountersIfNewPeriod();
+
+            // 1) watchPosition (fonctionne bien dans le navigateur)
             gpsWatchId = navigator.geolocation.watchPosition(
-                (position) => {
-                    playerPos = { lat: position.coords.latitude, lng: position.coords.longitude };
-                    // Le GPS ne devient "actif" qu'au PREMIER point réel reçu :
-                    // tant qu'aucun fix n'est arrivé, le joystick reste utilisable
-                    // (évite l'état "joystick coupé + personnage figé").
-                    if (!gpsActive) {
-                        gpsActive = true;
-                        _gpsEstablished = true;
-                        _updateJoystickVisibility();
-                        // Recentrer la carte sur la position réelle au 1er fix,
-                        // pour que les déplacements suivants soient visibles.
-                        if (map) { try { map.jumpTo({ center: [playerPos.lng, playerPos.lat] }); } catch(e) {} }
-                    }
-                    _cameraMoving = false; // défensif : la caméra suit toujours le joueur
-                    if (playerMarker && map) {
-                        updatePlayerOnMap();
-                    }
-                    checkNearbyPOI();
-                    // Tracker de distance (filtres + anti-cheat véhicule)
-                    _trackDistanceFromGps(position);
-                    // Diagnostic temps réel (activable via _gpsDebug)
-                    _gpsDebugUpdate(position);
-                },
-                (error) => {
-                    console.error('Erreur GPS:', error);
-                    _gpsDebugError(error);
-                    // Ne repasser en mode joystick que si la permission est refusée,
-                    // ou si le GPS n'a jamais été établi. Les erreurs transitoires
-                    // (timeout ponctuel, position indisponible) ne coupent pas le mode GPS.
-                    if (error.code === error.PERMISSION_DENIED || !_gpsEstablished) {
-                        gpsActive = false;
-                        _updateJoystickVisibility();
-                    }
-                },
+                _onGpsFix,
+                _onGpsError,
                 { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
             );
+
+            // 2) Polling getCurrentPosition toutes les 3 s.
+            //    Contournement d'un bug connu : dans un TWA Android, watchPosition ne
+            //    livre souvent QU'UNE seule position et ne se met plus à jour quand on
+            //    bouge. getCurrentPosition appelé en boucle, lui, fonctionne.
+            if (_gpsPollInterval) clearInterval(_gpsPollInterval);
+            _gpsPollInterval = setInterval(() => {
+                navigator.geolocation.getCurrentPosition(
+                    _onGpsFix,
+                    _onGpsError,
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            }, 3000);
         }
 
         // ── Diagnostic GPS ────────────────────────────────────────────────
