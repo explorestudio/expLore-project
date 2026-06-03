@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.37.0 · GPS : polling getCurrentPosition (contournement watchPosition figé en TWA) + compteurs distance protégés tant que la sauvegarde n'est pas chargée</div>
+            <div class="hud-version" id="hudVersion">v0.38.0 · GPS : polling avec cache court (maximumAge 4s) pour flux régulier au 1er plan + horodatage dans le diagnostic</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -19364,12 +19364,15 @@
             //    Contournement d'un bug connu : dans un TWA Android, watchPosition ne
             //    livre souvent QU'UNE seule position et ne se met plus à jour quand on
             //    bouge. getCurrentPosition appelé en boucle, lui, fonctionne.
+            //    maximumAge: 4000 → le système peut renvoyer une position récente
+            //    immédiatement à chaque cycle, au lieu d'attendre un fix neuf qui
+            //    n'arrive parfois qu'au réveil de l'app (réduire/rouvrir).
             if (_gpsPollInterval) clearInterval(_gpsPollInterval);
             _gpsPollInterval = setInterval(() => {
                 navigator.geolocation.getCurrentPosition(
                     _onGpsFix,
                     _onGpsError,
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 4000 }
                 );
             }, 3000);
         }
@@ -19398,8 +19401,12 @@
             if (!_gpsDebug) return;
             _gpsFixCount++;
             const c = position.coords;
+            const t = new Date();
+            const hh = String(t.getHours()).padStart(2,'0') + ':' +
+                       String(t.getMinutes()).padStart(2,'0') + ':' +
+                       String(t.getSeconds()).padStart(2,'0');
             _gpsDebugPanel().textContent =
-                'GPS fix #' + _gpsFixCount +
+                'GPS fix #' + _gpsFixCount + '  @' + hh +
                 '\nlat ' + c.latitude.toFixed(6) + '  lng ' + c.longitude.toFixed(6) +
                 '\naccuracy ' + Math.round(c.accuracy) + ' m' +
                 '\ndist_today ' + Math.round(playerStats.distance_today || 0) + ' m' +
