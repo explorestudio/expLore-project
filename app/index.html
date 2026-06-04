@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.39.0 · Diagnostic GPS activable depuis le panneau de test (menu avatar → Actions) — accessible dans l'APK sans URL</div>
+            <div class="hud-version" id="hudVersion">v0.40.0 · GPS : acquisition en deux temps (haute précision → repli basse précision sur timeout) ; timeout ne coupe plus le GPS — corrige le code 3 en APK/intérieur</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -19336,7 +19336,10 @@
         function _onGpsError(error) {
             console.error('Erreur GPS:', error);
             _gpsDebugError(error);
-            if (error.code === error.PERMISSION_DENIED || !_gpsEstablished) {
+            // On ne repasse en joystick QUE si la permission est explicitement refusée.
+            // Un timeout (code 3) ou une position indisponible (code 2) sont transitoires
+            // — fréquents en TWA/intérieur — et ne doivent pas désactiver le GPS.
+            if (error.code === error.PERMISSION_DENIED) {
                 gpsActive = false;
                 _updateJoystickVisibility();
             }
@@ -19344,6 +19347,31 @@
 
         let _lastFixLat = null, _lastFixLng = null;
         let _gpsPollInterval = null;
+
+        // Acquisition d'un point en DEUX TEMPS :
+        //  1) haute précision (GPS satellite) — idéal en extérieur ;
+        //  2) si timeout/indisponible (fréquent en intérieur ou en TWA),
+        //     repli automatique sur la basse précision (réseau/Wi-Fi), rapide
+        //     et qui aboutit presque toujours.
+        function _gpsRequestOnce() {
+            if (!('geolocation' in navigator)) return;
+            navigator.geolocation.getCurrentPosition(
+                _onGpsFix,
+                (err) => {
+                    if (err.code === 3 || err.code === 2) {
+                        // Timeout ou position indisponible → on retente en basse précision
+                        navigator.geolocation.getCurrentPosition(
+                            _onGpsFix,
+                            _onGpsError,
+                            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+                        );
+                    } else {
+                        _onGpsError(err);
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 12000, maximumAge: 8000 }
+            );
+        }
 
         function startGPS() {
             if (!('geolocation' in navigator)) {
@@ -19354,28 +19382,14 @@
             // Initialise la période courante (jour/semaine) au démarrage
             _resetDistanceCountersIfNewPeriod();
 
-            // 1) watchPosition (fonctionne bien dans le navigateur)
-            gpsWatchId = navigator.geolocation.watchPosition(
-                _onGpsFix,
-                _onGpsError,
-                { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-            );
+            // Premier point tout de suite (sans attendre le 1er tick de l'intervalle).
+            _gpsRequestOnce();
 
-            // 2) Polling getCurrentPosition toutes les 3 s.
-            //    Contournement d'un bug connu : dans un TWA Android, watchPosition ne
-            //    livre souvent QU'UNE seule position et ne se met plus à jour quand on
-            //    bouge. getCurrentPosition appelé en boucle, lui, fonctionne.
-            //    maximumAge: 4000 → le système peut renvoyer une position récente
-            //    immédiatement à chaque cycle, au lieu d'attendre un fix neuf qui
-            //    n'arrive parfois qu'au réveil de l'app (réduire/rouvrir).
+            // Polling toutes les 3 s — contournement du bug TWA où watchPosition
+            // se fige après un seul point. Chaque cycle tente haute précision puis
+            // bascule en basse précision si ça traîne.
             if (_gpsPollInterval) clearInterval(_gpsPollInterval);
-            _gpsPollInterval = setInterval(() => {
-                navigator.geolocation.getCurrentPosition(
-                    _onGpsFix,
-                    _onGpsError,
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 4000 }
-                );
-            }, 3000);
+            _gpsPollInterval = setInterval(_gpsRequestOnce, 3000);
         }
 
         // ── Diagnostic GPS ────────────────────────────────────────────────
