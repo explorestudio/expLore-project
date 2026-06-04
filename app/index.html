@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.38.0 · GPS : polling avec cache court (maximumAge 4s) pour flux régulier au 1er plan + horodatage dans le diagnostic</div>
+            <div class="hud-version" id="hudVersion">v0.39.0 · Diagnostic GPS activable depuis le panneau de test (menu avatar → Actions) — accessible dans l'APK sans URL</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -7389,6 +7389,7 @@
                     <button onclick="startIntroBD()" class="test-action-btn">🎬 Rejouer cinématique BD</button>
                     <button onclick="testRefillCardEnergy()" class="test-action-btn">⚡ Restaurer énergie toutes cartes</button>
                     <button onclick="testFastForwardCardEnergy()" class="test-action-btn">⏩ +2h sur énergie cartes</button>
+                    <button onclick="toggleGpsDebug()" class="test-action-btn">📡 Diagnostic GPS (afficher/masquer)</button>
                     <button onclick="resetProgress()" class="test-action-btn test-action-btn--danger">⚠️ Réinitialiser la progression</button>
                 </div>
 
@@ -19415,6 +19416,27 @@
         function _gpsDebugError(error) {
             if (!_gpsDebug) return;
             _gpsDebugPanel().textContent = 'GPS ERREUR code ' + error.code + '\n' + (error.message || '');
+        }
+
+        // Active/désactive le panneau de diagnostic GPS depuis l'intérieur de l'app
+        // (utile dans l'APK où l'on ne peut pas ajouter ?gpsdebug à l'URL).
+        function toggleGpsDebug() {
+            _gpsDebug = !_gpsDebug;
+            if (_gpsDebug) {
+                const now = new Date();
+                const hh = String(now.getHours()).padStart(2,'0') + ':' +
+                           String(now.getMinutes()).padStart(2,'0') + ':' +
+                           String(now.getSeconds()).padStart(2,'0');
+                _gpsDebugPanel().textContent =
+                    'Diagnostic GPS activé @' + hh +
+                    '\ngpsActive : ' + (gpsActive ? 'oui' : 'non') +
+                    '\nen attente d\'un point…';
+                showToast('📡 Diagnostic GPS affiché');
+            } else {
+                const p = document.getElementById('gpsDebugPanel');
+                if (p) p.remove();
+                showToast('Diagnostic GPS masqué');
+            }
         }
 
         // ==================== PROGRESSION SYSTEM ====================
