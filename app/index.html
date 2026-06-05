@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.40.0 · GPS : acquisition en deux temps (haute précision → repli basse précision sur timeout) ; timeout ne coupe plus le GPS — corrige le code 3 en APK/intérieur</div>
+            <div class="hud-version" id="hudVersion">v0.42.0 · GPS : plancher de zone morte relevé à 10m (couvre les dérives de 5-7m même quand la précision rapportée est bonne)</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -19086,7 +19086,8 @@
         // Suit la distance parcourue par le joueur via le watchPosition existant.
         // Filtres : 5m min, 15 km/h max par tronçon, accuracy < 50m. Détection mode véhicule.
         const _DIST = {
-            MIN_MOVE_M: 3,                  // ignore les positions < 3m (bruit GPS statique)
+            MIN_MOVE_M: 10,                 // plancher : ignore tout déplacement < 10m (couvre la dérive GPS à l'arrêt, y compris quand la précision rapportée est "bonne")
+            ACCURACY_MOVE_FACTOR: 0.5,      // zone morte = max(MIN_MOVE_M, accuracy × ce facteur)
             MAX_SEGMENT_KMH: 15,            // tronçon individuel : marche rapide / vélo cool
             MAX_ACCURACY_M: 100,            // ignore les positions trop incertaines (urbain dense / intérieur = souvent 30-80m)
             // Détection véhicule (moyenne mobile)
@@ -19311,12 +19312,29 @@
         function _onGpsFix(position) {
             const newLat = position.coords.latitude;
             const newLng = position.coords.longitude;
+            const acc = position.coords.accuracy;
             // Ignore un point strictement identique au précédent (évite double comptage
-            // quand watchPosition et le polling livrent la même position).
+            // quand plusieurs requêtes livrent la même position).
             if (_lastFixLat === newLat && _lastFixLng === newLng) {
                 _gpsDebugUpdate(position);
                 return;
             }
+
+            // Zone morte anti-drift : une fois la position établie, on ne bouge ni le
+            // perso ni le compteur tant que le déplacement reste dans la marge
+            // d'incertitude GPS. Le seuil grandit avec l'imprécision (intérieur =
+            // grande incertitude → grande zone morte ; extérieur = petit seuil).
+            // L'ancre (playerPos) ne se met à jour que sur un déplacement crédible,
+            // donc le bruit autour d'un point fixe ne s'accumule jamais.
+            if (gpsActive && playerPos) {
+                const moved = _haversineMeters(playerPos.lat, playerPos.lng, newLat, newLng);
+                const deadzone = Math.max(_DIST.MIN_MOVE_M, (acc || 0) * _DIST.ACCURACY_MOVE_FACTOR);
+                if (moved < deadzone) {
+                    _gpsDebugUpdate(position);
+                    return; // jitter : on reste sur place
+                }
+            }
+
             _lastFixLat = newLat;
             _lastFixLng = newLng;
             playerPos = { lat: newLat, lng: newLng };
