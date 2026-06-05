@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.42.0 · GPS : plancher de zone morte relevé à 10m (couvre les dérives de 5-7m même quand la précision rapportée est bonne)</div>
+            <div class="hud-version" id="hudVersion">v0.43.0 · GPS : boucle d'acquisition séquentielle (une requête à la fois) — évite l'empilement de requêtes qui causait des timeouts (code 3)</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -19371,23 +19371,36 @@
         //  2) si timeout/indisponible (fréquent en intérieur ou en TWA),
         //     repli automatique sur la basse précision (réseau/Wi-Fi), rapide
         //     et qui aboutit presque toujours.
-        function _gpsRequestOnce() {
-            if (!('geolocation' in navigator)) return;
+        // Boucle d'acquisition NON empilante : on attend la fin d'une requête
+        // (succès OU échec, y compris le repli basse précision) avant de
+        // programmer la suivante 3 s plus tard. Évite d'avoir 8-9 requêtes GPS
+        // concurrentes qui se gênent et partent toutes en timeout (code 3).
+        let _gpsLoopActive = false;
+
+        function _gpsScheduleNext() {
+            if (!_gpsLoopActive) return;
+            setTimeout(_gpsLoopTick, 3000);
+        }
+
+        function _gpsLoopTick() {
+            if (!_gpsLoopActive || !('geolocation' in navigator)) return;
             navigator.geolocation.getCurrentPosition(
-                _onGpsFix,
+                (pos) => { _onGpsFix(pos); _gpsScheduleNext(); },
                 (err) => {
                     if (err.code === 3 || err.code === 2) {
-                        // Timeout ou position indisponible → on retente en basse précision
+                        // Timeout / indisponible en haute précision → repli basse précision
+                        // (réseau/Wi-Fi), qui aboutit presque toujours, même en intérieur.
                         navigator.geolocation.getCurrentPosition(
-                            _onGpsFix,
-                            _onGpsError,
-                            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+                            (pos) => { _onGpsFix(pos); _gpsScheduleNext(); },
+                            (err2) => { _onGpsError(err2); _gpsScheduleNext(); },
+                            { enableHighAccuracy: false, timeout: 12000, maximumAge: 60000 }
                         );
                     } else {
                         _onGpsError(err);
+                        _gpsScheduleNext();
                     }
                 },
-                { enableHighAccuracy: true, timeout: 12000, maximumAge: 8000 }
+                { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
             );
         }
 
@@ -19399,15 +19412,10 @@
             if (_gpsDebug) _gpsDebugPanel().textContent = 'GPS : démarrage, en attente du 1er fix…';
             // Initialise la période courante (jour/semaine) au démarrage
             _resetDistanceCountersIfNewPeriod();
-
-            // Premier point tout de suite (sans attendre le 1er tick de l'intervalle).
-            _gpsRequestOnce();
-
-            // Polling toutes les 3 s — contournement du bug TWA où watchPosition
-            // se fige après un seul point. Chaque cycle tente haute précision puis
-            // bascule en basse précision si ça traîne.
-            if (_gpsPollInterval) clearInterval(_gpsPollInterval);
-            _gpsPollInterval = setInterval(_gpsRequestOnce, 3000);
+            // Démarre la boucle séquentielle (et nettoie un éventuel ancien intervalle)
+            if (_gpsPollInterval) { clearInterval(_gpsPollInterval); _gpsPollInterval = null; }
+            _gpsLoopActive = true;
+            _gpsLoopTick();
         }
 
         // ── Diagnostic GPS ────────────────────────────────────────────────
