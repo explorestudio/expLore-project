@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.44.0 · GPS : retour à l'acquisition v0.40 qui marchait + correctif de dérive conservé (zone morte 10m). Annule la réécriture v0.43 injustifiée.</div>
+            <div class="hud-version" id="hudVersion">v0.45.0 · GPS : seuil de zone morte réglable en direct depuis le panneau de test (±2 m, persistant) + affiché dans le diagnostic</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -7390,6 +7390,8 @@
                     <button onclick="testRefillCardEnergy()" class="test-action-btn">⚡ Restaurer énergie toutes cartes</button>
                     <button onclick="testFastForwardCardEnergy()" class="test-action-btn">⏩ +2h sur énergie cartes</button>
                     <button onclick="toggleGpsDebug()" class="test-action-btn">📡 Diagnostic GPS (afficher/masquer)</button>
+                    <button onclick="adjustGpsThreshold(-2)" class="test-action-btn">➖ Seuil GPS −2 m</button>
+                    <button onclick="adjustGpsThreshold(2)" class="test-action-btn">➕ Seuil GPS +2 m</button>
                     <button onclick="resetProgress()" class="test-action-btn test-action-btn--danger">⚠️ Réinitialiser la progression</button>
                 </div>
 
@@ -19400,6 +19402,11 @@
                 return;
             }
             if (_gpsDebug) _gpsDebugPanel().textContent = 'GPS : démarrage, en attente du 1er fix…';
+            // Recharge un seuil de zone morte réglé lors d'une session précédente
+            try {
+                const _saved = parseInt(localStorage.getItem('explore_gps_threshold'), 10);
+                if (!isNaN(_saved) && _saved >= 2 && _saved <= 60) _DIST.MIN_MOVE_M = _saved;
+            } catch(e) {}
             // Initialise la période courante (jour/semaine) au démarrage
             _resetDistanceCountersIfNewPeriod();
             // Premier point tout de suite, puis polling toutes les 3 s.
@@ -19441,11 +19448,22 @@
                 '\nlat ' + c.latitude.toFixed(6) + '  lng ' + c.longitude.toFixed(6) +
                 '\naccuracy ' + Math.round(c.accuracy) + ' m' +
                 '\ndist_today ' + Math.round(playerStats.distance_today || 0) + ' m' +
-                '\nveh ' + (_distVehicleMode ? 'oui' : 'non');
+                '\nseuil ' + _DIST.MIN_MOVE_M + ' m  ·  veh ' + (_distVehicleMode ? 'oui' : 'non');
         }
         function _gpsDebugError(error) {
             if (!_gpsDebug) return;
             _gpsDebugPanel().textContent = 'GPS ERREUR code ' + error.code + '\n' + (error.message || '');
+        }
+
+        // Règle le seuil de zone morte GPS en direct (plancher MIN_MOVE_M).
+        // Permet de trouver la bonne valeur sur le terrain sans rebuild.
+        function adjustGpsThreshold(delta) {
+            _DIST.MIN_MOVE_M = Math.max(2, Math.min(60, _DIST.MIN_MOVE_M + delta));
+            try { localStorage.setItem('explore_gps_threshold', String(_DIST.MIN_MOVE_M)); } catch(e) {}
+            showToast('Seuil GPS : ' + _DIST.MIN_MOVE_M + ' m');
+            if (_gpsDebug && document.getElementById('gpsDebugPanel')) {
+                _gpsDebugPanel().textContent = 'Seuil GPS réglé à ' + _DIST.MIN_MOVE_M + ' m\n(zone morte = max(seuil, accuracy × 0,5))';
+            }
         }
 
         // Active/désactive le panneau de diagnostic GPS depuis l'intérieur de l'app
