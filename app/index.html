@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.45.0 · GPS : seuil de zone morte réglable en direct depuis le panneau de test (±2 m, persistant) + affiché dans le diagnostic</div>
+            <div class="hud-version" id="hudVersion">v0.46.0 · GPS : glissement animé du perso entre les points (fini la téléportation) + orientation gauche/droite + relevés toutes les 2s. Joystick reste direct.</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -13082,8 +13082,68 @@
         const CAM_NORTH_OFFSET = 0.0008;
 
         let _cameraMoving = false;
+        // ===== Animation de glissement du personnage (style Maps) =====
+        // Les points GPS arrivent par paliers (zone morte anti-dérive) ; pour éviter
+        // l'effet "téléportation", on fait GLISSER le marqueur de sa position
+        // affichée vers la nouvelle position validée, sur une durée ~= l'intervalle
+        // de relevé. La détection de distance reste par paliers (inchangée).
+        const _GPS_INTERVAL_MS = 2000;          // fréquence des relevés GPS
+        const _ANIM_DURATION_MS = 1800;         // un peu < intervalle : arrive avant le point suivant
+        let _animRAF = null;
+        let _animFrom = null;                   // {lat,lng} position affichée de départ
+        let _animTo = null;                     // {lat,lng} position cible
+        let _animStart = 0;
+        let _dispLat = null, _dispLng = null;   // position actuellement AFFICHÉE (interpolée)
+
+        function _setAvatarFacing(deltaLng) {
+            // Personnage humanoïde : on le retourne gauche/droite (pas de rotation).
+            const el = document.getElementById('avatarSvg');
+            if (!el) return;
+            if (deltaLng > 1e-7) el.style.transform = 'scaleX(1)';        // vers l'est → regarde à droite
+            else if (deltaLng < -1e-7) el.style.transform = 'scaleX(-1)'; // vers l'ouest → regarde à gauche
+            // (déplacement purement N/S : on garde l'orientation précédente)
+        }
+
+        function _animateMarkerTo(targetLat, targetLng) {
+            if (!playerMarker || !map) return;
+            // Point de départ = position actuellement affichée (ou la cible si 1er placement)
+            const fromLat = (_dispLat != null) ? _dispLat : targetLat;
+            const fromLng = (_dispLng != null) ? _dispLng : targetLng;
+            _setAvatarFacing(targetLng - fromLng);
+            _animFrom = { lat: fromLat, lng: fromLng };
+            _animTo = { lat: targetLat, lng: targetLng };
+            _animStart = performance.now();
+            if (_animRAF) cancelAnimationFrame(_animRAF);
+            const step = (now) => {
+                let t = (now - _animStart) / _ANIM_DURATION_MS;
+                if (t > 1) t = 1;
+                // easing doux (easeOutQuad) pour un glissement naturel
+                const e = 1 - (1 - t) * (1 - t);
+                _dispLat = _animFrom.lat + (_animTo.lat - _animFrom.lat) * e;
+                _dispLng = _animFrom.lng + (_animTo.lng - _animFrom.lng) * e;
+                playerMarker.setLngLat([_dispLng, _dispLat]);
+                // La caméra suit la position interpolée (glissement continu)
+                if (!_cameraMoving) {
+                    const offset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
+                    map.easeTo({
+                        center: [_dispLng, _dispLat + offset],
+                        duration: 0,
+                        easing: x => x
+                    });
+                }
+                if (t < 1) { _animRAF = requestAnimationFrame(step); }
+                else { _animRAF = null; }
+            };
+            _animRAF = requestAnimationFrame(step);
+        }
+
+        // Déplacement DIRECT du perso (joystick/clavier : points très rapprochés,
+        // pas d'animation sinon le perso traîne). Maintient _dispLat/_dispLng à jour
+        // pour que le glissement GPS reparte de la bonne position si le GPS prend le relais.
         function updatePlayerOnMap() {
             if (!map || !playerMarker) return;
+            _dispLat = playerPos.lat;
+            _dispLng = playerPos.lng;
             playerMarker.setLngLat([playerPos.lng, playerPos.lat]);
             if (_cameraMoving) return;
             _cameraMoving = true;
@@ -13097,6 +13157,22 @@
                 easing: t => t
             });
             setTimeout(() => { _cameraMoving = false; }, 100);
+        }
+
+        // Déplacement ANIMÉ du perso (relevés GPS espacés : on glisse au lieu de sauter).
+        function updatePlayerOnMapSmooth() {
+            if (!map || !playerMarker) return;
+            // Premier placement : on pose direct (évite un glissement depuis Lyon).
+            if (_dispLat == null) {
+                _dispLat = playerPos.lat;
+                _dispLng = playerPos.lng;
+                playerMarker.setLngLat([playerPos.lng, playerPos.lat]);
+                const offset0 = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
+                const pitch0 = _mapViewMode === 'far' ? MAP_VIEW.far.pitch : ISOMETRIC_TILT;
+                map.easeTo({ center: [playerPos.lng, playerPos.lat + offset0], pitch: pitch0, bearing: ISOMETRIC_HEADING, duration: 120, easing: t => t });
+                return;
+            }
+            _animateMarkerTo(playerPos.lat, playerPos.lng);
         }
 
 
@@ -19347,7 +19423,7 @@
                 if (map) { try { map.jumpTo({ center: [playerPos.lng, playerPos.lat] }); } catch(e) {} }
             }
             _cameraMoving = false;
-            if (playerMarker && map) updatePlayerOnMap();
+            if (playerMarker && map) updatePlayerOnMapSmooth();
             checkNearbyPOI();
             _trackDistanceFromGps(position);
             _gpsDebugUpdate(position);
@@ -19412,7 +19488,7 @@
             // Premier point tout de suite, puis polling toutes les 3 s.
             _gpsRequestOnce();
             if (_gpsPollInterval) clearInterval(_gpsPollInterval);
-            _gpsPollInterval = setInterval(_gpsRequestOnce, 3000);
+            _gpsPollInterval = setInterval(_gpsRequestOnce, _GPS_INTERVAL_MS);
         }
 
         // ── Diagnostic GPS ────────────────────────────────────────────────
