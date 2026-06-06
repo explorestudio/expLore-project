@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.47.0 · Tutoriel : la carte « Les clefs de la ville » est désormais acquise même si on passe le tuto (présente, consultable, améliorable)</div>
+            <div class="hud-version" id="hudVersion">v0.48.0 · Reset : la réinitialisation efface vraiment tout (blocage de l'autosave pendant le reset — l'état n'est plus réécrit juste après l'effacement)</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11867,8 +11867,10 @@
         // Uniquement via setInterval — beforeunload/pagehide/visibilitychange
         // se déclenchent pendant le rechargement avec des variables réinitialisées
         let _appReady = false;
+        let _resetting = false;   // true pendant un reset : bloque toute sauvegarde
 
         function saveProgress() {
+            if (_resetting) return;  // un reset est en cours : ne rien réécrire dans le storage
             try {
                 // Ne jamais rétrograder _obDone de true à false
                 const _existingRaw = localStorage.getItem('lyon_cards_progress');
@@ -13549,6 +13551,10 @@
 
         async function resetProgress() {
             if (!confirm('Réinitialiser toute la progression ?\n(Effacera : sauvegarde, cache, service worker)')) return;
+            // Bloque immédiatement toute sauvegarde (autosave 3s, ticks, handlers) :
+            // sinon l'état encore en mémoire (cartes, niveaux…) serait réécrit dans le
+            // localStorage juste après l'effacement, et le reset semblerait sans effet.
+            _resetting = true;
             try {
                 // 1. Clear localStorage (toutes les clés possibles)
                 try { localStorage.clear(); } catch(e) { console.warn('localStorage.clear', e); }
