@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.46.0 · GPS : glissement animé du perso entre les points (fini la téléportation) + orientation gauche/droite + relevés toutes les 2s. Joystick reste direct.</div>
+            <div class="hud-version" id="hudVersion">v0.47.0 · Tutoriel : la carte « Les clefs de la ville » est désormais acquise même si on passe le tuto (présente, consultable, améliorable)</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10439,6 +10439,15 @@
             document.getElementById('journalScreen').classList.remove('show');
 
             // Restaurer les POIs et terminer
+            // Donner la carte tutoriel même si elle n'a pas été collectée pendant le
+            // tuto passé : elle doit être présente dans la collection, consultable et
+            // améliorable (même état que si elle avait été cristallisée).
+            if (typeof OB_TUTORIAL_CARD === 'object' && OB_TUTORIAL_CARD) {
+                if (!cardLevels[OB_TUTORIAL_CARD.id]) {
+                    cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
+                }
+                if (!collectedCards.includes(OB_TUTORIAL_CARD.id)) collectedCards.push(OB_TUTORIAL_CARD.id);
+            }
             _obDone = true;
             _obAct2Done = true;
             _obAct3Done = true;
@@ -10960,6 +10969,14 @@
                 _obDone = true;
                 _obAct3Done = true;
                 document.getElementById('obSkipBtn').classList.remove('visible');
+                // Filet de sécurité : garantir que la carte tutoriel est bien possédée
+                // (présente, consultable, améliorable), quel que soit le chemin suivi.
+                if (typeof OB_TUTORIAL_CARD === 'object' && OB_TUTORIAL_CARD) {
+                    if (!cardLevels[OB_TUTORIAL_CARD.id]) {
+                        cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
+                    }
+                    if (!collectedCards.includes(OB_TUTORIAL_CARD.id)) collectedCards.push(OB_TUTORIAL_CARD.id);
+                }
                 _obActivateBellecourQuest();
                 saveProgress();
             });
