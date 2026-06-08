@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.48.0 · Reset : la réinitialisation efface vraiment tout (blocage de l'autosave pendant le reset — l'état n'est plus réécrit juste après l'effacement)</div>
+            <div class="hud-version" id="hudVersion">v0.49.0 · GPS : mouvement continu façon Waze (prédiction/dead reckoning) — le perso avance entre les points puis se recale ; vitesse décroît à l'arrêt</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -13107,60 +13107,100 @@
         // affichée vers la nouvelle position validée, sur une durée ~= l'intervalle
         // de relevé. La détection de distance reste par paliers (inchangée).
         const _GPS_INTERVAL_MS = 2000;          // fréquence des relevés GPS
-        const _ANIM_DURATION_MS = 1800;         // un peu < intervalle : arrive avant le point suivant
-        let _animRAF = null;
-        let _animFrom = null;                   // {lat,lng} position affichée de départ
-        let _animTo = null;                     // {lat,lng} position cible
-        let _animStart = 0;
-        let _dispLat = null, _dispLng = null;   // position actuellement AFFICHÉE (interpolée)
+        let _dispLat = null, _dispLng = null;   // position actuellement AFFICHÉE
+
+        // ===== Moteur de prédiction continu (dead reckoning, style Waze) =====
+        // Entre deux points GPS, on continue de faire avancer le perso dans sa
+        // dernière direction/vitesse estimée, puis on recale en douceur à chaque
+        // nouveau point. Résultat : mouvement continu, pas de "stop-and-go".
+        const _PRED_MAX_EXTRAPOLATE_MS = 3000;  // plafond : ne pas prédire au-delà de 3s sans point neuf
+        const _PRED_SMOOTH_TAU = 200;           // réactivité du recalage (ms) — petit = vif
+        const _PRED_VEL_DECAY_TAU = 2200;       // décroissance vitesse quand on s'arrête (ms)
+        const _PRED_MAX_SPEED = 5.0e-8;         // plafond vitesse en deg/ms (~5 m/s, course)
+        let _velLat = 0, _velLng = 0;           // vitesse estimée (deg/ms)
+        let _predBaseLat = null, _predBaseLng = null, _predBaseTime = 0;
+        let _predRAF = null, _predLastFrame = 0;
 
         function _setAvatarFacing(deltaLng) {
-            // Personnage humanoïde : on le retourne gauche/droite (pas de rotation).
             const el = document.getElementById('avatarSvg');
             if (!el) return;
-            if (deltaLng > 1e-7) el.style.transform = 'scaleX(1)';        // vers l'est → regarde à droite
-            else if (deltaLng < -1e-7) el.style.transform = 'scaleX(-1)'; // vers l'ouest → regarde à gauche
-            // (déplacement purement N/S : on garde l'orientation précédente)
+            if (deltaLng > 1e-9) el.style.transform = 'scaleX(1)';        // est → regarde à droite
+            else if (deltaLng < -1e-9) el.style.transform = 'scaleX(-1)'; // ouest → regarde à gauche
         }
 
-        function _animateMarkerTo(targetLat, targetLng) {
-            if (!playerMarker || !map) return;
-            // Point de départ = position actuellement affichée (ou la cible si 1er placement)
-            const fromLat = (_dispLat != null) ? _dispLat : targetLat;
-            const fromLng = (_dispLng != null) ? _dispLng : targetLng;
-            _setAvatarFacing(targetLng - fromLng);
-            _animFrom = { lat: fromLat, lng: fromLng };
-            _animTo = { lat: targetLat, lng: targetLng };
-            _animStart = performance.now();
-            if (_animRAF) cancelAnimationFrame(_animRAF);
-            const step = (now) => {
-                let t = (now - _animStart) / _ANIM_DURATION_MS;
-                if (t > 1) t = 1;
-                // easing doux (easeOutQuad) pour un glissement naturel
-                const e = 1 - (1 - t) * (1 - t);
-                _dispLat = _animFrom.lat + (_animTo.lat - _animFrom.lat) * e;
-                _dispLng = _animFrom.lng + (_animTo.lng - _animFrom.lng) * e;
-                playerMarker.setLngLat([_dispLng, _dispLat]);
-                // La caméra suit la position interpolée (glissement continu)
-                if (!_cameraMoving) {
-                    const offset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
-                    map.easeTo({
-                        center: [_dispLng, _dispLat + offset],
-                        duration: 0,
-                        easing: x => x
-                    });
-                }
-                if (t < 1) { _animRAF = requestAnimationFrame(step); }
-                else { _animRAF = null; }
-            };
-            _animRAF = requestAnimationFrame(step);
+        function _clampSpeed() {
+            const sp = Math.hypot(_velLat, _velLng);
+            if (sp > _PRED_MAX_SPEED) {
+                const k = _PRED_MAX_SPEED / sp;
+                _velLat *= k; _velLng *= k;
+            }
+        }
+
+        // Appelée à chaque NOUVEAU point GPS validé : met à jour vitesse + base de prédiction.
+        function _predOnFix(newLat, newLng) {
+            const now = performance.now();
+            if (_predBaseTime && now > _predBaseTime) {
+                const dt = now - _predBaseTime;
+                const vLat = (newLat - _predBaseLat) / dt;
+                const vLng = (newLng - _predBaseLng) / dt;
+                // Lissage de la vitesse (réduit le bruit) : mélange ancienne/nouvelle.
+                _velLat = _velLat * 0.45 + vLat * 0.55;
+                _velLng = _velLng * 0.45 + vLng * 0.55;
+                _clampSpeed();
+            }
+            _predBaseLat = newLat; _predBaseLng = newLng; _predBaseTime = now;
+            if (_dispLat == null) { _dispLat = newLat; _dispLng = newLng; }
+            _predStartLoop();
+        }
+
+        function _predStartLoop() {
+            if (_predRAF) return;
+            _predLastFrame = performance.now();
+            _predRAF = requestAnimationFrame(_predTick);
+        }
+        function _predStopLoop() {
+            if (_predRAF) { cancelAnimationFrame(_predRAF); _predRAF = null; }
+        }
+
+        function _predTick(now) {
+            if (!playerMarker || !map || _predBaseLat == null) { _predRAF = null; return; }
+            const frameDt = Math.min(now - _predLastFrame, 100);
+            _predLastFrame = now;
+
+            // Décroissance de la vitesse : si aucun point neuf n'arrive (arrêt),
+            // la prédiction s'éteint doucement au lieu de filer tout droit.
+            const decay = Math.exp(-frameDt / _PRED_VEL_DECAY_TAU);
+            _velLat *= decay; _velLng *= decay;
+
+            // Cible extrapolée = dernière position réelle + vitesse × temps écoulé (plafonné).
+            const elapsed = Math.min(now - _predBaseTime, _PRED_MAX_EXTRAPOLATE_MS);
+            const goalLat = _predBaseLat + _velLat * elapsed;
+            const goalLng = _predBaseLng + _velLng * elapsed;
+
+            // Recalage doux de la position affichée vers la cible extrapolée.
+            const lerp = 1 - Math.exp(-frameDt / _PRED_SMOOTH_TAU);
+            const prevLng = _dispLng;
+            _dispLat += (goalLat - _dispLat) * lerp;
+            _dispLng += (goalLng - _dispLng) * lerp;
+
+            _setAvatarFacing(_dispLng - prevLng);
+            playerMarker.setLngLat([_dispLng, _dispLat]);
+            if (!_cameraMoving) {
+                const offset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
+                map.easeTo({ center: [_dispLng, _dispLat + offset], duration: 0, easing: x => x });
+            }
+            _predRAF = requestAnimationFrame(_predTick);
         }
 
         // Déplacement DIRECT du perso (joystick/clavier : points très rapprochés,
         // pas d'animation sinon le perso traîne). Maintient _dispLat/_dispLng à jour
-        // pour que le glissement GPS reparte de la bonne position si le GPS prend le relais.
+        // pour que la prédiction GPS reparte de la bonne position si le GPS prend le relais.
         function updatePlayerOnMap() {
             if (!map || !playerMarker) return;
+            // Déplacement direct (joystick/clavier) : on coupe la prédiction GPS
+            // pour éviter tout conflit, et on remet la vitesse à zéro.
+            _predStopLoop();
+            _velLat = 0; _velLng = 0; _predBaseTime = 0;
             _dispLat = playerPos.lat;
             _dispLng = playerPos.lng;
             playerMarker.setLngLat([playerPos.lng, playerPos.lat]);
@@ -13178,7 +13218,7 @@
             setTimeout(() => { _cameraMoving = false; }, 100);
         }
 
-        // Déplacement ANIMÉ du perso (relevés GPS espacés : on glisse au lieu de sauter).
+        // Déplacement ANIMÉ du perso (relevés GPS espacés : prédiction continue).
         function updatePlayerOnMapSmooth() {
             if (!map || !playerMarker) return;
             // Premier placement : on pose direct (évite un glissement depuis Lyon).
@@ -13189,9 +13229,10 @@
                 const offset0 = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
                 const pitch0 = _mapViewMode === 'far' ? MAP_VIEW.far.pitch : ISOMETRIC_TILT;
                 map.easeTo({ center: [playerPos.lng, playerPos.lat + offset0], pitch: pitch0, bearing: ISOMETRIC_HEADING, duration: 120, easing: t => t });
+                _predBaseLat = playerPos.lat; _predBaseLng = playerPos.lng; _predBaseTime = performance.now();
                 return;
             }
-            _animateMarkerTo(playerPos.lat, playerPos.lng);
+            _predOnFix(playerPos.lat, playerPos.lng);
         }
 
 
