@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.50.0 · GPS : la prédiction reçoit chaque point (zone morte retirée de l'affichage) → mouvement continu, fini le stop-and-go. Distance filtrée séparément.</div>
+            <div class="hud-version" id="hudVersion">v0.51.0 · GPS : filtre de Kalman (position+vitesse, pondéré par l'accuracy) remplace zone morte + prédiction maison — lissage et prédiction unifiés, façon Maps</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -13109,98 +13109,121 @@
         const _GPS_INTERVAL_MS = 2000;          // fréquence des relevés GPS
         let _dispLat = null, _dispLng = null;   // position actuellement AFFICHÉE
 
-        // ===== Moteur de prédiction continu (dead reckoning, style Waze) =====
-        // Entre deux points GPS, on continue de faire avancer le perso dans sa
-        // dernière direction/vitesse estimée, puis on recale en douceur à chaque
-        // nouveau point. Résultat : mouvement continu, pas de "stop-and-go".
-        const _PRED_MAX_EXTRAPOLATE_MS = 3000;  // plafond : ne pas prédire au-delà de 3s sans point neuf
-        const _PRED_SMOOTH_TAU = 200;           // réactivité du recalage (ms) — petit = vif
-        const _PRED_VEL_DECAY_TAU = 2200;       // décroissance vitesse quand on s'arrête (ms)
-        const _PRED_MAX_SPEED = 5.0e-8;         // plafond vitesse en deg/ms (~5 m/s, course)
-        let _velLat = 0, _velLng = 0;           // vitesse estimée (deg/ms)
-        let _predBaseLat = null, _predBaseLng = null, _predBaseTime = 0;
-        let _predRAF = null, _predLastFrame = 0;
+        // ===================== FILTRE DE KALMAN (style Maps) =====================
+        // Modèle à vitesse constante, 1D par axe, en MÈTRES (origine = 1er point).
+        // - L'accuracy du GPS sert de bruit de mesure : un point imprécis pèse moins.
+        // - L'état contient position ET vitesse → le filtre lisse le bruit ET fournit
+        //   une vitesse pour extrapoler l'affichage entre deux points (mouvement continu).
+        // Ça remplace l'ancienne zone morte d'affichage + la prédiction maison.
+        const _KAL_Q = 3.0;            // bruit de process (m²/s³) : souplesse du modèle. ↑ = plus réactif/nerveux, ↓ = plus lisse/inerte
+        const _KAL_MAX_EXTRAPOLATE_MS = 2500; // plafond d'extrapolation d'affichage sans point neuf
+        const _EARTH_M_PER_DEG = 111320;
 
-        function _setAvatarFacing(deltaLng) {
+        function _KalmanCV(q) { this.q = q; this.x = 0; this.v = 0; this.P = [[1,0],[0,1]]; this.ready = false; }
+        _KalmanCV.prototype.reset = function(x0) { this.x = x0; this.v = 0; this.P = [[1,0],[0,1]]; this.ready = true; };
+        _KalmanCV.prototype.predict = function(dt) {   // dt en secondes
+            if (!this.ready || dt <= 0) return;
+            this.x += this.v * dt;
+            const P = this.P, p00=P[0][0], p01=P[0][1], p10=P[1][0], p11=P[1][1];
+            // P = F P Fᵀ + Q, avec F=[[1,dt],[0,1]] et Q = bruit d'accélération discret
+            const dt2=dt*dt, dt3=dt2*dt, dt4=dt2*dt2, q=this.q;
+            this.P = [
+                [ p00 + dt*(p10+p01) + dt2*p11 + q*dt4/4, p01 + dt*p11 + q*dt3/2 ],
+                [ p10 + dt*p11 + q*dt3/2,                 p11 + q*dt2 ]
+            ];
+        };
+        _KalmanCV.prototype.update = function(z, r) {  // z mesure (m), r variance mesure (m²)
+            if (!this.ready) { this.reset(z); return; }
+            const P = this.P, S = P[0][0] + r;
+            const k0 = P[0][0]/S, k1 = P[1][0]/S, y = z - this.x;
+            this.x += k0*y; this.v += k1*y;
+            const p00=P[0][0], p01=P[0][1], p10=P[1][0], p11=P[1][1];
+            this.P = [ [(1-k0)*p00, (1-k0)*p01], [p10 - k1*p00, p11 - k1*p01] ];
+        };
+
+        let _kalE = new _KalmanCV(_KAL_Q);   // est (m)
+        let _kalN = new _KalmanCV(_KAL_Q);   // nord (m)
+        let _kalRefLat = null, _kalRefLng = null, _kalCosRef = 1;
+        let _kalLastUpdateT = 0, _kalRAF = null;
+
+        function _llToM(lat, lng) {
+            return {
+                e: (lng - _kalRefLng) * _EARTH_M_PER_DEG * _kalCosRef,
+                n: (lat - _kalRefLat) * _EARTH_M_PER_DEG
+            };
+        }
+        function _mToLL(e, n) {
+            return {
+                lat: _kalRefLat + n / _EARTH_M_PER_DEG,
+                lng: _kalRefLng + e / (_EARTH_M_PER_DEG * _kalCosRef)
+            };
+        }
+
+        function _setAvatarFacing(deltaE) {
             const el = document.getElementById('avatarSvg');
             if (!el) return;
-            if (deltaLng > 1e-9) el.style.transform = 'scaleX(1)';        // est → regarde à droite
-            else if (deltaLng < -1e-9) el.style.transform = 'scaleX(-1)'; // ouest → regarde à gauche
+            if (deltaE > 0.01) el.style.transform = 'scaleX(1)';        // est → regarde à droite
+            else if (deltaE < -0.01) el.style.transform = 'scaleX(-1)'; // ouest → regarde à gauche
         }
 
-        function _clampSpeed() {
-            const sp = Math.hypot(_velLat, _velLng);
-            if (sp > _PRED_MAX_SPEED) {
-                const k = _PRED_MAX_SPEED / sp;
-                _velLat *= k; _velLng *= k;
-            }
-        }
-
-        // Appelée à chaque NOUVEAU point GPS validé : met à jour vitesse + base de prédiction.
-        function _predOnFix(newLat, newLng) {
+        // Appelée à chaque point GPS : recale le filtre (predict jusqu'à maintenant + update).
+        function _kalmanOnFix(lat, lng, accuracy) {
             const now = performance.now();
-            if (_predBaseTime && now > _predBaseTime) {
-                const dt = now - _predBaseTime;
-                const vLat = (newLat - _predBaseLat) / dt;
-                const vLng = (newLng - _predBaseLng) / dt;
-                // Lissage de la vitesse (réduit le bruit) : mélange ancienne/nouvelle.
-                _velLat = _velLat * 0.45 + vLat * 0.55;
-                _velLng = _velLng * 0.45 + vLng * 0.55;
-                _clampSpeed();
+            if (_kalRefLat == null) {
+                _kalRefLat = lat; _kalRefLng = lng;
+                _kalCosRef = Math.cos(lat * Math.PI / 180);
             }
-            _predBaseLat = newLat; _predBaseLng = newLng; _predBaseTime = now;
-            if (_dispLat == null) { _dispLat = newLat; _dispLng = newLng; }
-            _predStartLoop();
+            const m = _llToM(lat, lng);
+            if (!_kalE.ready) {
+                _kalE.reset(m.e); _kalN.reset(m.n);
+            } else {
+                const dt = Math.max(0, (now - _kalLastUpdateT) / 1000);
+                _kalE.predict(dt); _kalN.predict(dt);
+                const r = Math.max(1, (accuracy || 15)) ** 2;   // variance de mesure = accuracy²
+                _kalE.update(m.e, r); _kalN.update(m.n, r);
+            }
+            _kalLastUpdateT = now;
+            if (_dispLat == null) { const ll=_mToLL(_kalE.x,_kalN.x); _dispLat=ll.lat; _dispLng=ll.lng; }
+            _kalStartLoop();
         }
 
-        function _predStartLoop() {
-            if (_predRAF) return;
-            _predLastFrame = performance.now();
-            _predRAF = requestAnimationFrame(_predTick);
-        }
-        function _predStopLoop() {
-            if (_predRAF) { cancelAnimationFrame(_predRAF); _predRAF = null; }
-        }
+        function _kalStartLoop() { if (!_kalRAF) _kalRAF = requestAnimationFrame(_kalTick); }
+        function _kalStopLoop() { if (_kalRAF) { cancelAnimationFrame(_kalRAF); _kalRAF = null; } }
 
-        function _predTick(now) {
-            if (!playerMarker || !map || _predBaseLat == null) { _predRAF = null; return; }
-            const frameDt = Math.min(now - _predLastFrame, 100);
-            _predLastFrame = now;
-
-            // Décroissance de la vitesse : si aucun point neuf n'arrive (arrêt),
-            // la prédiction s'éteint doucement au lieu de filer tout droit.
-            const decay = Math.exp(-frameDt / _PRED_VEL_DECAY_TAU);
-            _velLat *= decay; _velLng *= decay;
-
-            // Cible extrapolée = dernière position réelle + vitesse × temps écoulé (plafonné).
-            const elapsed = Math.min(now - _predBaseTime, _PRED_MAX_EXTRAPOLATE_MS);
-            const goalLat = _predBaseLat + _velLat * elapsed;
-            const goalLng = _predBaseLng + _velLng * elapsed;
-
-            // Recalage doux de la position affichée vers la cible extrapolée.
-            const lerp = 1 - Math.exp(-frameDt / _PRED_SMOOTH_TAU);
+        function _kalTick(now) {
+            if (!playerMarker || !map || !_kalE.ready) { _kalRAF = null; return; }
+            // Affichage = position filtrée + extrapolation par la vitesse estimée
+            // (plafonnée pour ne pas filer si le GPS tarde).
+            const dtDisp = Math.min(Math.max(0, (now - _kalLastUpdateT) / 1000), _KAL_MAX_EXTRAPOLATE_MS / 1000);
+            const e = _kalE.x + _kalE.v * dtDisp;
+            const n = _kalN.x + _kalN.v * dtDisp;
+            const ll = _mToLL(e, n);
             const prevLng = _dispLng;
-            _dispLat += (goalLat - _dispLat) * lerp;
-            _dispLng += (goalLng - _dispLng) * lerp;
-
+            _dispLat = ll.lat; _dispLng = ll.lng;
             _setAvatarFacing(_dispLng - prevLng);
             playerMarker.setLngLat([_dispLng, _dispLat]);
             if (!_cameraMoving) {
                 const offset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
                 map.easeTo({ center: [_dispLng, _dispLat + offset], duration: 0, easing: x => x });
             }
-            _predRAF = requestAnimationFrame(_predTick);
+            _kalRAF = requestAnimationFrame(_kalTick);
+        }
+
+        // Réinitialise le filtre (au passage joystick → GPS, pour repartir propre).
+        function _kalmanReset() {
+            _kalStopLoop();
+            _kalE = new _KalmanCV(_KAL_Q); _kalN = new _KalmanCV(_KAL_Q);
+            _kalRefLat = null; _kalRefLng = null; _kalCosRef = 1; _kalLastUpdateT = 0;
         }
 
         // Déplacement DIRECT du perso (joystick/clavier : points très rapprochés,
         // pas d'animation sinon le perso traîne). Maintient _dispLat/_dispLng à jour
-        // pour que la prédiction GPS reparte de la bonne position si le GPS prend le relais.
+        // pour que le filtre GPS reparte de la bonne position si le GPS prend le relais.
         function updatePlayerOnMap() {
             if (!map || !playerMarker) return;
-            // Déplacement direct (joystick/clavier) : on coupe la prédiction GPS
-            // pour éviter tout conflit, et on remet la vitesse à zéro.
-            _predStopLoop();
-            _velLat = 0; _velLng = 0; _predBaseTime = 0;
+            // Déplacement direct (joystick/clavier) : on coupe le filtre GPS pour
+            // éviter tout conflit (il repartira propre si le GPS reprend la main).
+            _kalmanReset();
             _dispLat = playerPos.lat;
             _dispLng = playerPos.lng;
             playerMarker.setLngLat([playerPos.lng, playerPos.lat]);
@@ -13218,10 +13241,11 @@
             setTimeout(() => { _cameraMoving = false; }, 100);
         }
 
-        // Déplacement ANIMÉ du perso (relevés GPS espacés : prédiction continue).
+        // Déplacement via GPS : on alimente le filtre de Kalman (lissage + prédiction).
         function updatePlayerOnMapSmooth() {
             if (!map || !playerMarker) return;
-            // Premier placement : on pose direct (évite un glissement depuis Lyon).
+            // Premier placement : on pose direct (évite un glissement depuis Lyon),
+            // on cale la caméra (pitch isométrique), puis le filtre prend le relais.
             if (_dispLat == null) {
                 _dispLat = playerPos.lat;
                 _dispLng = playerPos.lng;
@@ -13229,10 +13253,8 @@
                 const offset0 = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
                 const pitch0 = _mapViewMode === 'far' ? MAP_VIEW.far.pitch : ISOMETRIC_TILT;
                 map.easeTo({ center: [playerPos.lng, playerPos.lat + offset0], pitch: pitch0, bearing: ISOMETRIC_HEADING, duration: 120, easing: t => t });
-                _predBaseLat = playerPos.lat; _predBaseLng = playerPos.lng; _predBaseTime = performance.now();
-                return;
             }
-            _predOnFix(playerPos.lat, playerPos.lng);
+            _kalmanOnFix(playerPos.lat, playerPos.lng, _lastFixAccuracy);
         }
 
 
@@ -19470,6 +19492,7 @@
 
             _lastFixLat = newLat;
             _lastFixLng = newLng;
+            _lastFixAccuracy = (acc != null ? acc : 15);
             playerPos = { lat: newLat, lng: newLng };
             if (!gpsActive) {
                 gpsActive = true;
@@ -19497,6 +19520,7 @@
         }
 
         let _lastFixLat = null, _lastFixLng = null;
+        let _lastFixAccuracy = 15;
         let _gpsPollInterval = null;
 
         // Acquisition d'un point en DEUX TEMPS :
