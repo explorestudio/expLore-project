@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.51.0 · GPS : filtre de Kalman (position+vitesse, pondéré par l'accuracy) remplace zone morte + prédiction maison — lissage et prédiction unifiés, façon Maps</div>
+            <div class="hud-version" id="hudVersion">v0.52.0 · Parcours "Lyon, ville du livre" : 5 cartes (Louise Labé, Gryphe, Dolet, la presse, la Bibliothèque) + POI qui apparaissent à la validation du rendez-vous Bellecour</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -9192,6 +9192,30 @@
                 ]
             },
 
+            ville_du_livre: {
+                id: 'ville_du_livre',
+                name: 'Lyon, ville du livre',
+                type: 'thématique',
+                description: 'L\'imprimerie lyonnaise du XVIe siècle : maîtres, martyrs et voix nouvelles',
+                cards: [
+                    { id: 'card_louise_labe', cardKind: 'local', collections: ["ville_du_livre"], name: 'Louise Labé', type: 'Personnage', poiId: 'bellecordiere', rarity: 'rare', supertype: 'arts',
+                      clue: 'Cherche la rue qui porte son nom, juste au nord de la grande place.', clueIcon: '🪶',
+                      incipit: 'On a dit qu\'une femme ne pouvait écrire ainsi — que je n\'existais pas. Mes vers, eux, n\'ont jamais douté.' },
+                    { id: 'card_gryphe', cardKind: 'local', collections: ["ville_du_livre"], name: 'Sébastien Gryphe', type: 'Personnage', poiId: 'gryphe', rarity: 'rare', supertype: 'societe', supertype2: 'histoire',
+                      clue: 'Dans le Vieux-Lyon, cherche l\'ombre des vieux ateliers près de Saint-Jean.', clueIcon: '🦅',
+                      incipit: 'J\'ai donné à la France ses lettres penchées et à Lyon ses plus beaux livres. Le reste n\'est que poussière d\'encre.' },
+                    { id: 'card_dolet', cardKind: 'local', collections: ["ville_du_livre"], name: 'Étienne Dolet', type: 'Personnage', poiId: 'dolet', rarity: 'rare', supertype: 'societe', supertype2: 'histoire',
+                      clue: 'Descends rue Mercière, là où une hache servait jadis d\'enseigne.', clueIcon: '🪓',
+                      incipit: 'Trois mots de trop dans une traduction, et l\'on m\'a déclaré hérétique. Vivre libre, c\'était vivre.' },
+                    { id: 'card_presse_doloire', cardKind: 'local', collections: ["ville_du_livre"], name: 'La presse de la Doloire', type: 'Objet', poiId: 'presse_doloire', rarity: 'common', supertype: 'science', supertype2: 'societe',
+                      clue: 'Cherche l\'atelier rue Mercière où l\'on tirait les feuilles une à une.', clueIcon: '🗜️',
+                      incipit: 'Avant moi, copier un livre prenait des mois. Avec moi, cent feuilles par jour. Je n\'ai pas changé le monde — je l\'ai multiplié.' },
+                    { id: 'card_bibliotheque', cardKind: 'local', collections: ["ville_du_livre"], name: 'La Bibliothèque de Lyon', type: 'Lieu', poiId: 'bibliotheque', rarity: 'rare', supertype: 'histoire', supertype2: 'societe',
+                      clue: 'Trouve le grand bâtiment qui garde, aujourd\'hui encore, la mémoire de la ville.', clueIcon: '📚',
+                      incipit: 'Ce qui a survécu au feu, à la censure et à l\'oubli finit souvent ici. Je suis la dernière demeure des voix qu\'on a voulu taire.' },
+                ]
+            },
+
             thematiques_s1: {
                 name: 'Cartes Thématiques — Saison 1',
                 icon: '⋆',
@@ -9259,6 +9283,21 @@
         const POIS = [
             // localCardId = carte ancrée dans Lyon
             // thematicPool = cartes universelles liées au THÈME du lieu (pas à Lyon)
+
+            // ── Parcours "Lyon, ville du livre" ──
+            // gated: 'ville_du_livre' → cachés tant que le rendez-vous Bellecour n'est
+            // pas validé. Coordonnées à ajuster librement (David teste au joystick).
+            { id: 'bellecordiere',   name: 'Rue Bellecordière',         lat: 45.7586, lng: 4.8340,
+              localCardId: 'card_louise_labe', thematicPool: [], gated: 'ville_du_livre' },
+            { id: 'gryphe',          name: 'Vieux-Lyon (Saint-Jean)',   lat: 45.7628, lng: 4.8266,
+              localCardId: 'card_gryphe', thematicPool: [], gated: 'ville_du_livre' },
+            { id: 'dolet',           name: 'Rue Mercière (Dolet)',      lat: 45.7637, lng: 4.8294,
+              localCardId: 'card_dolet', thematicPool: [], gated: 'ville_du_livre' },
+            { id: 'presse_doloire',  name: 'Rue Mercière (la Doloire)', lat: 45.7632, lng: 4.8297,
+              localCardId: 'card_presse_doloire', thematicPool: [], gated: 'ville_du_livre' },
+            { id: 'bibliotheque',    name: 'Bibliothèque de Lyon',      lat: 45.7607, lng: 4.8559,
+              localCardId: 'card_bibliotheque', thematicPool: [], gated: 'ville_du_livre' },
+
             { id: 'fourviere',        name: 'Basilique de Fourvière',    lat: 45.7624, lng: 4.8227,
             localCardId: 'card11',
             thematicPool: ['tc_masque','tc_commedia','tc_cabinet','tc_bibliotheque'] },
@@ -10167,6 +10206,7 @@
             art: './assets/passant.png',
         }
         let _obDone        = false;
+        let _villeDuLivreUnlocked = false;  // true quand le rendez-vous Bellecour est validé → POI du parcours visibles
         let _obAct2Done    = false;
         let _obAct3Done    = false;
         let _obSpawnLat    = 0;
@@ -11935,6 +11975,7 @@
                     _obDone,
                     _obAct2Done,
                     _obAct3Done,
+                    _villeDuLivreUnlocked,
                     seenCardIds: [..._seenCardIds],
                     cardJournals,
                     grappeQuestState,
@@ -12006,6 +12047,7 @@
                 if (d._obDone)    _obDone    = d._obDone;
                 if (d._obAct2Done) _obAct2Done = d._obAct2Done;
                 if (d._obAct3Done) _obAct3Done = d._obAct3Done;
+                if (d._villeDuLivreUnlocked) _villeDuLivreUnlocked = d._villeDuLivreUnlocked;
                 if (d.seenCardIds)  _seenCardIds = new Set(d.seenCardIds);
                 if (d.cardJournals) cardJournals = d.cardJournals;
                 if (d.grappeQuestState) grappeQuestState = d.grappeQuestState;
@@ -14406,6 +14448,12 @@
             const circleFeatures = [];
 
             poiMarkers.forEach(({ marker, el, poi }) => {
+                // POI de parcours verrouillé (ex. "ville du livre") : caché tant que
+                // le déclencheur (validation Bellecour) n'a pas eu lieu.
+                if (poi.gated === 'ville_du_livre' && !_villeDuLivreUnlocked) {
+                    el.style.display = 'none';
+                    return;
+                }
                 const status = getPoiThematicStatus(poi);
 
                 if (status === 'local') {
@@ -22393,6 +22441,14 @@
             if (!etape) return;
             if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
             grappeQuestState[grappeId][etapeId] = 'completed';
+
+            // Validation du rendez-vous Bellecour → ouverture du parcours "Lyon, ville
+            // du livre" : les POI du parcours deviennent visibles et collectables.
+            if (etapeId === 't_bellecour' && !_villeDuLivreUnlocked) {
+                _villeDuLivreUnlocked = true;
+                if (typeof updatePOIVisibility === 'function') updatePOIVisibility();
+                showToast('📖 Un parcours s\'ouvre : Lyon, ville du livre');
+            }
 
             // Pastille "nouveau" : l'étape change d'état → notification Explorium
             if (typeof showVaultNotification === 'function') showVaultNotification();
