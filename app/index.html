@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.49.0 · GPS : mouvement continu façon Waze (prédiction/dead reckoning) — le perso avance entre les points puis se recale ; vitesse décroît à l'arrêt</div>
+            <div class="hud-version" id="hudVersion">v0.50.0 · GPS : la prédiction reçoit chaque point (zone morte retirée de l'affichage) → mouvement continu, fini le stop-and-go. Distance filtrée séparément.</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -19462,20 +19462,11 @@
                 return;
             }
 
-            // Zone morte anti-drift : une fois la position établie, on ne bouge ni le
-            // perso ni le compteur tant que le déplacement reste dans la marge
-            // d'incertitude GPS. Le seuil grandit avec l'imprécision (intérieur =
-            // grande incertitude → grande zone morte ; extérieur = petit seuil).
-            // L'ancre (playerPos) ne se met à jour que sur un déplacement crédible,
-            // donc le bruit autour d'un point fixe ne s'accumule jamais.
-            if (gpsActive && playerPos) {
-                const moved = _haversineMeters(playerPos.lat, playerPos.lng, newLat, newLng);
-                const deadzone = Math.max(_DIST.MIN_MOVE_M, (acc || 0) * _DIST.ACCURACY_MOVE_FACTOR);
-                if (moved < deadzone) {
-                    _gpsDebugUpdate(position);
-                    return; // jitter : on reste sur place
-                }
-            }
+            // NB : on ne filtre PLUS l'affichage par une zone morte ici. Le marqueur
+            // suit chaque point (toutes les 2 s) pour que la prédiction reste nourrie
+            // et le mouvement continu. La dérive à l'arrêt est absorbée par le lissage
+            // du prédicteur, et la DISTANCE est filtrée séparément dans
+            // _trackDistanceFromGps (ancre + seuil + vitesse) → pas de distance fantôme.
 
             _lastFixLat = newLat;
             _lastFixLng = newLng;
