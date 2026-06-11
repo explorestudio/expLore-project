@@ -7202,7 +7202,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.52.0 · Parcours "Lyon, ville du livre" : 5 cartes (Louise Labé, Gryphe, Dolet, la presse, la Bibliothèque) + POI qui apparaissent à la validation du rendez-vous Bellecour</div>
+            <div class="hud-version" id="hudVersion">v0.53.0 · GPS : réactivité du filtre relevée + réglable en direct (boutons ⚡/🌊 dans le panneau de test, persistant). Position fausse = limite GPS sans map-matching.</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -7392,6 +7392,8 @@
                     <button onclick="toggleGpsDebug()" class="test-action-btn">📡 Diagnostic GPS (afficher/masquer)</button>
                     <button onclick="adjustGpsThreshold(-2)" class="test-action-btn">➖ Seuil GPS −2 m</button>
                     <button onclick="adjustGpsThreshold(2)" class="test-action-btn">➕ Seuil GPS +2 m</button>
+                    <button onclick="adjustKalmanReactivity(1.4)" class="test-action-btn">⚡ GPS + réactif</button>
+                    <button onclick="adjustKalmanReactivity(1/1.4)" class="test-action-btn">🌊 GPS + lisse</button>
                     <button onclick="resetProgress()" class="test-action-btn test-action-btn--danger">⚠️ Réinitialiser la progression</button>
                 </div>
 
@@ -13157,7 +13159,7 @@
         // - L'état contient position ET vitesse → le filtre lisse le bruit ET fournit
         //   une vitesse pour extrapoler l'affichage entre deux points (mouvement continu).
         // Ça remplace l'ancienne zone morte d'affichage + la prédiction maison.
-        const _KAL_Q = 3.0;            // bruit de process (m²/s³) : souplesse du modèle. ↑ = plus réactif/nerveux, ↓ = plus lisse/inerte
+        let _KAL_Q = 12.0;            // bruit de process : réactivité du filtre. ↑ = plus réactif/nerveux, ↓ = plus lisse/inerte. Réglable en direct via le panneau de test.
         const _KAL_MAX_EXTRAPOLATE_MS = 2500; // plafond d'extrapolation d'affichage sans point neuf
         const _EARTH_M_PER_DEG = 111320;
 
@@ -13249,6 +13251,14 @@
                 map.easeTo({ center: [_dispLng, _dispLat + offset], duration: 0, easing: x => x });
             }
             _kalRAF = requestAnimationFrame(_kalTick);
+        }
+
+        // Réglage en direct de la réactivité du filtre GPS (sur le terrain, sans rebuild).
+        function adjustKalmanReactivity(factor) {
+            _KAL_Q = Math.max(1, Math.min(80, _KAL_Q * factor));
+            _kalE.q = _KAL_Q; _kalN.q = _KAL_Q;
+            try { localStorage.setItem('explore_kal_q', String(_KAL_Q)); } catch(e) {}
+            showToast('Réactivité GPS : ' + _KAL_Q.toFixed(1) + (factor > 1 ? ' (+ réactif)' : ' (+ lisse)'));
         }
 
         // Réinitialise le filtre (au passage joystick → GPS, pour repartir propre).
@@ -19609,6 +19619,11 @@
             try {
                 const _saved = parseInt(localStorage.getItem('explore_gps_threshold'), 10);
                 if (!isNaN(_saved) && _saved >= 2 && _saved <= 60) _DIST.MIN_MOVE_M = _saved;
+            } catch(e) {}
+            // Recharge la réactivité du filtre de Kalman réglée précédemment
+            try {
+                const _q = parseFloat(localStorage.getItem('explore_kal_q'));
+                if (!isNaN(_q) && _q >= 1 && _q <= 80) { _KAL_Q = _q; _kalE.q = _q; _kalN.q = _q; }
             } catch(e) {}
             // Initialise la période courante (jour/semaine) au démarrage
             _resetDistanceCountersIfNewPeriod();
