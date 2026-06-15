@@ -55,6 +55,9 @@
   .cell .dlt{position:absolute;top:2px;right:3px;font-size:9px;font-weight:800;font-variant-numeric:tabular-nums}
   .cell.placeable{cursor:pointer}
   .cell.valid{box-shadow:0 0 0 2px var(--ochre),0 0 12px rgba(192,138,46,.5)}
+  .cell.target{box-shadow:0 0 0 3px var(--blue,#3a6ea5),0 0 14px rgba(58,110,165,.7);cursor:pointer;animation:tpulse 1s ease-in-out infinite}
+  .cell.aura-source{outline:2px dashed var(--blue,#3a6ea5);outline-offset:-4px}
+  @keyframes tpulse{0%,100%{box-shadow:0 0 0 3px var(--blue,#3a6ea5),0 0 6px rgba(58,110,165,.4)}50%{box-shadow:0 0 0 3px var(--blue,#3a6ea5),0 0 16px rgba(58,110,165,.85)}}
   .cell.placed.is-perso{border-color:#8f8573;border-radius:10px;background:var(--paper2)}
   .cell .card-mini{display:flex;flex-direction:column;align-items:center;line-height:1.05}
   .cell .card-mini .ic{font-size:23px}
@@ -171,7 +174,8 @@
     <div class="gen-row" id="gen-row" style="display:none">
       <select id="gendiff" class="gen-select">
         <option value="standard">Standard · combinaison requise</option>
-        <option value="corse">Corsé · ≥3 tours</option>
+        <option value="serre">Serré · peu de solutions</option>
+        <option value="tension">Tension · 2 jauges opposées</option>
       </select>
       <button class="btn" id="regen">🎲 Régénérer</button>
     </div>
@@ -190,7 +194,7 @@ const GENERIC_KEYS = ['oubli','doute','discorde'];
 /* ============================ DONNÉES : 3 PUZZLES ============================ */
 const PUZZLES = [
 {
-  id:'merciere', title:'Rue Mercière', perTurn:2,
+  id:'merciere', title:'Rue Mercière', perTurn:2, areaAuras:true,
   scene:'Rue Mercière, sous la censure',
   sub:'Lyon, 1546. L’encre sèche mal et l’on brûle sous les fenêtres des imprimeurs. Apaise les trois forces qui rongent la rue.',
   law:{ text:'La chape — tant que la Censure reste à 4 ou plus, chaque geste d’apaisement est diminué de 1 (la peur émousse les efforts).',
@@ -232,7 +236,7 @@ const PUZZLES = [
   fragment:'« On disait qu’une femme ne pouvait écrire ainsi. Quelqu’un, pourtant, accepta de l’imprimer. »',
 },
 {
-  id:'croixrousse', title:'Croix-Rousse', perTurn:2,
+  id:'croixrousse', title:'Croix-Rousse', perTurn:2, areaAuras:true,
   scene:'La Croix-Rousse, la fabrique',
   sub:'Sur les pentes, les canuts tissent dans le froid. Fais refluer la Misère et lève la Solidarité — le terrain monte en escalier.',
   law:{ text:'L’entraide — à la fin du tour, si la Solidarité atteint 5 ou plus, la Misère reflue d’elle-même (Misère −1).',
@@ -271,7 +275,7 @@ const PUZZLES = [
   fragment:'« Vivre en travaillant ou mourir en combattant. La pente a sa mémoire, et elle ne plie pas. »',
 },
 {
-  id:'celestins', title:'Les Célestins', perTurn:2,
+  id:'celestins', title:'Les Célestins', perTurn:2, areaAuras:true,
   scene:'Les Célestins, soir de première',
   sub:'La salle se remplit, les comédiens tremblent. Fais tomber le Trac et monter la Ferveur — la scène a la forme d’un plateau.',
   law:{ text:'L’avant-première — tant que la Ferveur reste sous 4, le trac s’emballe (les foyers de Trac poussent deux fois plus fort).',
@@ -310,7 +314,7 @@ const PUZZLES = [
   fragment:'« Le rideau se lève toujours sur un silence. Ce soir-là, le silence a applaudi. »',
 },
 {
-  id:'collector', title:'Le Collector', perTurn:2,
+  id:'collector', title:'Le Collector', perTurn:2, areaAuras:true,
   scene:'Vieux Lyon, la ronde du Collector',
   sub:'Dans les traboules, un Collector patrouille pour enfermer la mémoire, et une rumeur essaime. Fais tomber l’Oubli et la Discorde.',
   law:{ text:'La rumeur nourrit l’oubli — à la fin du tour, si la Discorde atteint 4, l’Oubli +1.',
@@ -360,76 +364,115 @@ const GEN_GB=[{key:'oubli',nm:'Oubli'},{key:'doute',nm:'Doute'},{key:'discorde',
 const GEN_FN={oubli:['L’oubli','La lacune','Le silence'],doute:['La rumeur','Le soupçon','La défiance'],discorde:['La querelle','La cabale','La fronde']};
 const GEN_DN={oubli:['Le témoin','La gardienne','Le passeur'],doute:['Le savant','La preuve','Le notaire'],discorde:['Le médiateur','Le pacte','La conciliatrice']};
 const GEN_DIFFS={
-  standard:{label:'Standard (combinaison requise)', sMin:9,sMax:11,Fmin:2,Fmax:3,nd:[2,3],minTurns:0},
-  corse:   {label:'Corsé (≥3 tours)',               sMin:13,sMax:16,Fmin:3,Fmax:4,nd:[2,3],minTurns:3},
+  standard:{label:'Standard · combinaison requise', gauges:1, sMin:9,sMax:11,Fmin:2,Fmax:3,nd:[1,2], minTurns:2},
+  serre:   {label:'Serré · peu de solutions',       gauges:1, sMin:9,sMax:11,Fmin:2,Fmax:3,nd:[1,2], minTurns:2, maxOpenings:6},
+  tension: {label:'Tension · 2 jauges opposées',     gauges:2, sMin:8,sMax:9, Fmin:2,Fmax:3,nd:[1,1], minTurns:2},
 };
+const GEN_UPN={solidarite:'Solidarité',ferveur:'Ferveur',entraide:'Entraide'};
+const GEN_SUP=['Le métier','La fabrique','L’atelier','La confrérie','Le chœur'];
 // --- construit un candidat jouable (schéma complet) depuis une graine + difficulté ---
 function genCandidate(seed,d){
   const rng=mulberry32(seed);const ri=(a,b)=>a+Math.floor(rng()*(b-a+1));const pk=a=>a[Math.floor(rng()*a.length)];
-  const g=pk(GEN_GB);                                  // une seule jauge => combinaisons lisibles
-  const start=ri(d.sMin,d.sMax);const danger=start+ri(3,5),target=2;
+  const twoG = d.gauges===2;
+  const gA=pk(GEN_GB);                                 // jauge « menace » (à faire baisser)
+  let gB=null; if(twoG){ const upk=pk(['solidarite','ferveur','entraide']); gB={key:upk,nm:GEN_UPN[upk]}; }
+  const startA=ri(d.sMin,d.sMax);const dangerA=startA+ri(3,5),targetA=2;
+  const startB= twoG?ri(1,2):0; const targetB= twoG?ri(4,5):0; const dangerB=0;
   const F=ri(d.Fmin,d.Fmax);
   const ROWS_=5,COLS_=5;const map=[];for(let r=0;r<ROWS_;r++)map.push('.'.repeat(COLS_).split(''));
   const legend={};const used=new Set();
   const free=()=>{let r,c,k,gg=0;do{r=ri(0,ROWS_-1);c=ri(0,COLS_-1);k=r+','+c;gg++;}while(used.has(k)&&gg<60);used.add(k);return[r,c];};
   for(let i=0;i<F;i++){const[r,c]=free();const ch=String.fromCharCode(70+i);map[r][c]=ch;
-    legend[ch]={type:'foyer',gauge:g.key,delta:1,ent:'🔥',label:pk(GEN_FN[g.key])};}
+    legend[ch]={type:'foyer',gauge:gA.key,delta:1,ent:'🔥',label:pk(GEN_FN[gA.key])};}
   if(rng()<0.5){const[r,c]=free();map[r][c]='M';legend['M']={type:'memoire'};}
   const nDirect=ri(d.nd[0],d.nd[1]);const dot=[];let id=0;
-  for(let i=0;i<nDirect;i++)dot.push({id:'d'+id++,name:pk(GEN_DN[g.key]),role:'Symbole',type:'Personnage',sup:'histoire',ic:'🎯',ef:g.nm+' −3',portee:'Sa case',effect:{[g.key]:-3},amplifiable:true});
-  dot.push({id:'inv'+id++,name:'L’archiviste',role:'Influenceur',type:'Personnage',sup:'histoire',ic:'🔄',ef:g.nm+' −1 · son aura INVERSE un foyer adjacent',portee:'Sa case + aura (inverse)',aura:'invert',amplifiable:true,effect:{[g.key]:-1}});
-  dot.push({id:'amp'+id++,name:'La passeuse',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'➕',ef:'Son aura ×2 l’effet des cartes et éléments adjacents',portee:'Aura (×2)',aura:'amplify'});
-  dot.push({id:'calm'+id++,name:'Le scellé',role:'Switch',type:'Objet',sup:'société',ic:'🔒',ef:'Greffé sur un personnage : annule tous les foyers adjacents',portee:'Sur un personnage',grantsAura:'calm'});
+  for(let i=0;i<nDirect;i++)dot.push({id:'d'+id++,name:pk(GEN_DN[gA.key]),role:'Symbole',type:'Personnage',sup:'histoire',ic:'🎯',ef:gA.nm+' −3',portee:'Sa case',effect:{[gA.key]:-3},amplifiable:true});
+  if(twoG){ const nSup=ri(1,2); for(let i=0;i<nSup;i++)
+    dot.push({id:'sup'+id++,name:pk(GEN_SUP),role:'Soutien',type:'Personnage',sup:'société',ic:'🤝',ef:gB.nm+' +3',portee:'Sa case',effect:{[gB.key]:3},amplifiable:true}); }
+  dot.push({id:'inv'+id++,name:'L’archiviste',role:'Influenceur',type:'Personnage',sup:'histoire',ic:'🔄',ef:gA.nm+' −1 · son aura INVERSE un foyer adjacent',portee:'Sa case + aura (inverse)',aura:'invert',amplifiable:true,effect:{[gA.key]:-1}});
+  dot.push({id:'amp'+id++,name:'La passeuse',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'➕',ef:'Son aura ×2 l’effet d’UNE carte ou d’un foyer adjacent (à toi de choisir le camp)',portee:'Aura ciblée (×2)',aura:'amplify'});
+  dot.push({id:'calm'+id++,name:'Le scellé',role:'Switch',type:'Objet',sup:'société',ic:'🔒',ef:'Greffé sur un personnage : annule un foyer adjacent',portee:'Sur un personnage',grantsAura:'calm'});
+  const gauges=[{key:gA.key,nm:gA.nm,start:startA,mode:'down',target:targetA,danger:dangerA,dispMax:dangerA}];
+  if(twoG) gauges.push({key:gB.key,nm:gB.nm,start:startB,mode:'up',target:targetB,danger:dangerB,dispMax:targetB+1});
   return {id:'gen',_gen:true,seed,title:'🎲 Procédural',perTurn:2,scene:'Un lieu commun de Lyon',
-    law:{text:'Aucune loi particulière ici — c’est un lieu commun.'},
-    gauges:[{key:g.key,nm:g.nm,start,mode:'down',target,danger,dispMax:danger}],
-    map:map.map(r=>r.join('')),legend,dotation:dot,fragment:'« Un lieu sans nom se souvient aussi. »'};
+    law:{text: twoG?('Deux forces s’opposent : faire retomber '+gA.nm+' et faire monter '+gB.nm+', avec les mêmes tours.'):'Aucune loi particulière ici — c’est un lieu commun.'},
+    gauges, map:map.map(r=>r.join('')),legend,dotation:dot,fragment:'« Un lieu sans nom se souvient aussi. »'};
 }
-// --- solveur borné : DFS complet mémoïsé. Renvoie {win, turns}. directOnly = stratégie « cartes directes seules ». ---
+// --- solveur CIBLÉ : un coup d'aura branche sur le choix de la cible. Renvoie {win,turns} et, hors minOnly, {openings}. ---
 function genSolve(P,opt){ opt=opt||{};
   const R=P.map.length,C=P.map[0].length;const gm={};P.gauges.forEach(x=>gm[x.key]=x);
   const inb=(r,c)=>r>=0&&r<R&&c>=0&&c<C;const ortho=(r,c)=>[[r-1,c],[r+1,c],[r,c-1],[r,c+1]].filter(([a,b])=>inb(a,b));
-  const isEl=cl=>cl&&cl.type==='foyer';const clamp=(k,v)=>Math.max(0,Math.min((gm[k].danger||10)+2,v));
-  const clone=st=>({g:{...st.g},grid:st.grid.map(ro=>ro.map(x=>({...x,card:x.card?{...x.card}:null}))),hand:st.hand.slice(),left:st.left,turn:st.turn});
-  const auraAt=(gr,r,c,t)=>ortho(r,c).some(([a,b])=>{const oc=gr[a][b].card;return oc&&(oc.aura===t||oc.grantedAura===t);});
-  const ampF=(gr,r,c)=>{let f=1;ortho(r,c).forEach(([a,b])=>{const oc=gr[a][b].card;if(oc&&(oc.aura==='amplify'||oc.grantedAura==='amplify'))f=Math.max(f,oc.auraFactor||2);});return f;};
+  const clamp=(k,v)=>Math.max(0,Math.min((gm[k].dispMax||10)+2,v));
+  const auraHits=(o,r,c)=>o.auraTargetRC&&o.auraTargetRC.r===r&&o.auraTargetRC.c===c;
+  const auraAt=(gr,r,c,t)=>ortho(r,c).some(([a,b])=>{const o=gr[a][b].card;return o&&(o.aura===t||o.grantedAura===t)&&auraHits(o,r,c);});
+  const ampF=(gr,r,c)=>{let f=1;ortho(r,c).forEach(([a,b])=>{const o=gr[a][b].card;if(o&&(o.aura==='amplify'||o.grantedAura==='amplify')&&auraHits(o,r,c))f=Math.max(f,o.auraFactor||2);});return f;};
   const elD=(gr,cl,r,c)=>{let v=cl.delta;if(auraAt(gr,r,c,'calm'))return 0;if(auraAt(gr,r,c,'invert'))v=-v;const f=ampF(gr,r,c);if(f>1)v*=f;return v;};
-  const vcells=(st,card)=>{const o=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=st.grid[r][c];if(card.type==='Objet'){if(cl.card&&cl.card.type==='Personnage'&&(card.special||card.grantsAura))o.push([r,c]);}else if((cl.type==='empty'||cl.type==='memoire')&&!cl.card)o.push([r,c]);}return o;};
-  function repDirect(st){const out=[],seen=new Set();for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=st.grid[r][c];if((cl.type==='empty'||cl.type==='memoire')&&!cl.card){const k=ortho(r,c).map(([a,b])=>{const oc=st.grid[a][b].card;return oc?(oc.aura||oc.grantedAura||'p'):'';}).sort().join(',');if(!seen.has(k)){seen.add(k);out.push([r,c]);}}}return out;}
-  function apply(st,card,r,c){const cl=st.grid[r][c];if(card.type==='Objet'){const h=cl.card;if(card.grantsAura)h.grantedAura=card.grantsAura;}else{const f=card.amplifiable?ampF(st.grid,r,c):1;if(card.effect)for(const k in card.effect)st.g[k]=clamp(k,st.g[k]+card.effect[k]*f);if(card.aura==='amplify')ortho(r,c).forEach(([a,b])=>{const oc=st.grid[a][b].card;if(oc&&oc.effect&&oc.amplifiable)for(const k in oc.effect)st.g[k]=clamp(k,st.g[k]+oc.effect[k]);});cl.card=card;}st.hand=st.hand.filter(x=>x.id!==card.id);st.left--;}
-  function endTurn(st){for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=st.grid[r][c];if(isEl(cl)){const d=elD(st.grid,cl,r,c);if(d)st.g[cl.gauge]=clamp(cl.gauge,st.g[cl.gauge]+d);}}st.turn++;st.left=P.perTurn;}
-  const met=g=>P.gauges.every(x=>g[x.key]<=x.target);
-  let init={g:{},grid:[],hand:P.dotation.filter(c=>opt.directOnly?(c.type==='Personnage'&&c.effect&&!c.aura):true).map(c=>({...c})),left:P.perTurn,turn:1};
-  P.gauges.forEach(x=>init.g[x.key]=x.start);
-  for(let r=0;r<R;r++){const row=[];for(let c=0;c<C;c++){const ch=P.map[r][c];row.push(ch==='.'?{type:'empty',card:null}:ch===' '?{type:'void'}:Object.assign({card:null},JSON.parse(JSON.stringify(P.legend[ch]))));}init.grid.push(row);}
-  const MAXT=opt.maxTurns||7,CAP=opt.nodeCap||40000;let best=Infinity,nodes=0;const seen=new Set();
-  function dfs(st){
-    if(met(st.g)){best=Math.min(best,st.turn);return;}
-    if(st.turn>MAXT||nodes>CAP)return;nodes++;
-    const sig=st.turn+'|'+st.left+'|'+JSON.stringify(st.g)+'|'+st.hand.map(c=>c.id).sort().join(',');
-    if(seen.has(sig))return;seen.add(sig);
-    if(st.left>0){
-      for(const card of st.hand){const cells=(card.type==='Personnage'&&card.effect&&!card.aura)?repDirect(st):vcells(st,card);
-        for(const[r,c]of cells){const s2=clone(st);apply(s2,card,r,c);dfs(s2);if(best<=st.turn)return;}}
+  const nsig=(gr,r,c)=>ortho(r,c).map(([a,b])=>{const x=gr[a][b];return x.card?('c'+(x.card.aura||x.card.grantedAura||(x.card.effect?'d':'p'))):(x.type==='foyer'?'F':x.type[0]);}).sort().join('');
+  function mk(){const grid=[];for(let r=0;r<R;r++){const row=[];for(let c=0;c<C;c++){const ch=P.map[r][c];const sp=ch==='.'||ch===' '?null:P.legend[ch];
+      row.push(ch===' '?{type:'void'}:(!sp||sp.type==='memoire')?{type:'empty',card:null}:{type:'foyer',gauge:sp.gauge,delta:sp.delta,card:null});}grid.push(row);}
+    const g={};P.gauges.forEach(x=>g[x.key]=x.start);
+    return {g,grid,hand:P.dotation.filter(c=>opt.directOnly?(c.type==='Personnage'&&c.effect&&!c.aura):true).map(c=>({...c})),left:P.perTurn,turn:1};}
+  const clone=s=>({g:{...s.g},grid:s.grid.map(ro=>ro.map(x=>({...x,card:x.card?{...x.card}:null}))),hand:s.hand.slice(),left:s.left,turn:s.turn});
+  function moves(st){const out=[];
+    for(const card of st.hand){
+      const cells=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=st.grid[r][c];
+        const ok=card.type==='Objet'?(cl.card&&cl.card.type==='Personnage'&&(card.special||card.grantsAura)):((cl.type==='empty')&&!cl.card);
+        if(ok)cells.push([r,c]);}
+      const rep=[];const seen=new Set();for(const[r,c]of cells){const k=nsig(st.grid,r,c);if(!seen.has(k)){seen.add(k);rep.push([r,c]);}}
+      for(const[r,c]of rep){
+        const auraType=card.type==='Objet'?card.grantsAura:card.aura;
+        if(!auraType){ out.push({sig:card.id.replace(/[0-9]/g,'')+'@'+nsig(st.grid,r,c),do(s){if(card.effect)for(const k in card.effect)s.g[k]=clamp(k,s.g[k]+card.effect[k]*ampF(s.grid,r,c));s.grid[r][c].card={...card};s.hand=s.hand.filter(x=>x.id!==card.id);s.left--;}}); }
+        else { let elig=ortho(r,c).filter(([a,b])=>{const cl=st.grid[a][b];if(auraType==='amplify')return (cl.card&&cl.card.effect&&cl.card.amplifiable)||cl.type==='foyer';return cl.type==='foyer';});
+          // dédup des cibles ÉQUIVALENTES (deux foyers identiques = même décision)
+          const tsig=(a,b)=>{const cl=st.grid[a][b];return cl.type==='foyer'?('F'+cl.gauge+'_'+cl.delta+'_'+(auraAt(st.grid,a,b,'invert')?'i':'')+(auraAt(st.grid,a,b,'calm')?'c':'')+ampF(st.grid,a,b)):('C'+JSON.stringify(cl.card.effect));};
+          { const sn=new Set();elig=elig.filter(([a,b])=>{const k=tsig(a,b);if(sn.has(k))return false;sn.add(k);return true;}); }
+          if(!elig.length){ out.push({sig:card.id.replace(/[0-9]/g,'')+'@'+nsig(st.grid,r,c)+'>0',do(s){if(card.type!=='Objet'){if(card.effect)for(const k in card.effect)s.g[k]=clamp(k,s.g[k]+card.effect[k]);s.grid[r][c].card={...card};}s.hand=s.hand.filter(x=>x.id!==card.id);s.left--;}}); }
+          else for(const[tr,tc]of elig){ out.push({sig:card.id.replace(/[0-9]/g,'')+'@'+nsig(st.grid,r,c)+'>'+nsig(st.grid,tr,tc),do(s){
+            if(card.type==='Objet'){const h=s.grid[r][c].card;h.grantedAura=card.grantsAura;h.auraTargetRC={r:tr,c:tc};}
+            else{if(card.effect)for(const k in card.effect)s.g[k]=clamp(k,s.g[k]+card.effect[k]);s.grid[r][c].card={...card,auraTargetRC:{r:tr,c:tc}};}
+            if(auraType==='amplify'){const tg=s.grid[tr][tc];if(tg.card&&tg.card.effect&&tg.card.amplifiable){for(const k in tg.card.effect)s.g[k]=clamp(k,s.g[k]+tg.card.effect[k]*(2-1));}}
+            s.hand=s.hand.filter(x=>x.id!==card.id);s.left--;}}); }
+        }
+      }
     }
-    if(st.left<P.perTurn){const s2=clone(st);endTurn(s2);dfs(s2);}    // option : finir le tour
-  }
-  dfs(init);return {win:best<Infinity,turns:best};
+    return out;}
+  function endTurn(s){for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=s.grid[r][c];if(cl.type==='foyer'){const d=elD(s.grid,cl,r,c);if(d)s.g[cl.gauge]=clamp(cl.gauge,s.g[cl.gauge]+d);}}s.turn++;s.left=P.perTurn;}
+  const met=g=>P.gauges.every(x=>x.mode==='up'?g[x.key]>=x.target:g[x.key]<=x.target);
+  const lost=g=>P.gauges.some(x=>x.mode==='up'?g[x.key]<=x.danger:g[x.key]>=x.danger);
+  const MAXT=opt.maxTurns||6,CAP=opt.nodeCap||60000;let nodes=0;
+  const gsig=st=>st.turn+'|'+st.left+'|'+JSON.stringify(st.g)+'|'+st.hand.map(c=>c.id).sort()+'|'+st.grid.map(ro=>ro.map(x=>x.card?(x.card.id+(x.card.auraTargetRC?'@'+x.card.auraTargetRC.r+x.card.auraTargetRC.c:'')):'.').join('')).join('/');
+  let best=Infinity;{const seen=new Set();(function dfs(st){if(met(st.g)){best=Math.min(best,st.turn);return;}if(lost(st.g)||st.turn>MAXT||nodes>CAP)return;nodes++;const sg=gsig(st);if(seen.has(sg))return;seen.add(sg);if(st.left>0)for(const m of moves(st)){const s2=clone(st);m.do(s2);dfs(s2);if(best<=st.turn)return;}if(st.left<P.perTurn){const s2=clone(st);endTurn(s2);dfs(s2);}})(mk());}
+  if(best===Infinity)return {win:false};
+  if(opt.minOnly)return {win:true,turns:best};
+  // compter les ouvertures gagnantes distinctes, arrêt anticipé à maxCount+1
+  const cap=(opt.maxCount||8)+1;const init=mk();let win=0;const probe=opt.probeCap||10000;
+  for(const m of moves(init)){const s2=clone(init);m.do(s2);nodes=0;const seen=new Set();let ok=false;
+    (function dfs(st){if(ok)return;if(met(st.g)){ok=true;return;}if(lost(st.g)||st.turn>best||nodes>probe)return;nodes++;const sg=gsig(st);if(seen.has(sg))return;seen.add(sg);if(st.left>0)for(const mm of moves(st)){const s3=clone(st);mm.do(s3);dfs(s3);if(ok)return;}if(st.left<P.perTurn){const s3=clone(st);endTurn(s3);dfs(s3);}})(s2);
+    if(ok){win++;if(win>=cap)break;}}
+  return {win:true,turns:best,openings:win};
 }
-// passe le filtre de difficulté ?
+// passe le filtre de difficulté ? (solvable + directes seules insuffisantes + éventuellement peu d'ouvertures)
 function genPasses(P,d){
-  const full=genSolve(P,{maxTurns:7,nodeCap:25000}); if(!full.win) return false;       // solvable ?
-  const directAll=genSolve(P,{directOnly:true,maxTurns:7,nodeCap:20000});               // directes SEULES suffisent ?
-  if(directAll.win) return false;                                                       // oui => trivial, on rejette
-  if(d.minTurns && full.turns<d.minTurns) return false;                                 // assez long ?
-  P._minTurns=full.turns; return true;
+  const full=genSolve(P,{maxTurns:6,nodeCap:40000,minOnly:true}); if(!full.win) return false;
+  const directAll=genSolve(P,{directOnly:true,maxTurns:6,nodeCap:25000,minOnly:true}); if(directAll.win) return false;
+  if(full.turns < (d.minTurns||2)) return false;
+  P._minTurns=full.turns; P._openings=null;
+  if(d.maxOpenings){ const a=genSolve(P,{maxTurns:6,nodeCap:40000,maxCount:d.maxOpenings,probeCap:10000}); if(a.openings>d.maxOpenings) return false; P._openings=a.openings; }
+  return true;
 }
 let genDiffName='standard';
 function genBuild(){
   const d=GEN_DIFFS[genDiffName]; let P=null;
-  for(let i=0;i<300;i++){ const seed=(Math.random()*1e9)|0; const cand=genCandidate(seed,d); if(genPasses(cand,d)){P=cand;break;} }
-  if(!P){ P=genCandidate((Math.random()*1e9)|0,d); genSolve(P); P._minTurns='?'; }   // repli (rare)
-  P.sub='Scène générée (graine '+P.seed+'). Garantie vérifiée par solveur : les cartes directes seules ne suffisent pas (il faut combiner — inverser un foyer, amplifier, annuler), solution optimale en '+P._minTurns+' tour(s).';
+  const tries = d.maxOpenings?70 : (d.gauges===2?50:120);
+  for(let i=0;i<tries;i++){ const seed=(Math.random()*1e9)|0; const cand=genCandidate(seed,d); if(genPasses(cand,d)){P=cand;break;} }
+  if(!P){ // repli : un niveau solvable, non-trivial, ≥2 tours (sans le cap d'ouvertures)
+    for(let i=0;i<50;i++){ const cand=genCandidate((Math.random()*1e9)|0,d);
+      const f=genSolve(cand,{maxTurns:6,nodeCap:40000,minOnly:true}); if(!f.win||f.turns<2) continue;
+      const dd=genSolve(cand,{directOnly:true,maxTurns:6,nodeCap:25000,minOnly:true}); if(dd.win) continue;
+      P=cand; P._minTurns=f.turns; P._openings=null; break; } }
+  if(!P){ P=genCandidate((Math.random()*1e9)|0,d); const f=genSolve(P,{maxTurns:6,nodeCap:40000,minOnly:true}); P._minTurns=f.win?f.turns:'?'; P._openings=null; }
+  const twoG=P.gauges.length>1;
+  P.sub='Scène générée (graine '+P.seed+') · auras CIBLÉES'+(twoG?(' · 2 jauges en tension ('+P.gauges[0].nm+' ↓ / '+P.gauges[1].nm+' ↑)'):'')+'. Vérifié par solveur : les cartes directes seules ne suffisent pas, solution en '+P._minTurns+' tour(s)'+(P._openings?(' · '+P._openings+' ouverture(s) gagnante(s) — choix serré'):'')+'.';
   return P;
 }
 function genConstrained(){
@@ -439,7 +482,7 @@ function genConstrained(){
 }
 
 /* ============================ ÉTAT ============================ */
-let P, gauges, gMeta, grid, ROWS, COLS, hand, sel, turn, left, finished, memoireGrabbed, logEntries;
+let P, gauges, gMeta, grid, ROWS, COLS, hand, sel, turn, left, finished, memoireGrabbed, logEntries, pendingTarget;
 
 function loadPuzzle(idx){
   P = PUZZLES[idx];
@@ -457,7 +500,7 @@ function loadPuzzle(idx){
     grid.push(row);
   }
   hand = P.dotation.map(c=>Object.assign({},c));   // clone (équipement par partie)
-  sel=null; turn=1; left=P.perTurn; finished=false; memoireGrabbed=false; logEntries=[];
+  sel=null; turn=1; left=P.perTurn; finished=false; memoireGrabbed=false; logEntries=[]; pendingTarget=null;
   reconcileAspects();
   pushLog('La scène s’ouvre.');
   document.getElementById('overlay').classList.remove('show');
@@ -478,14 +521,48 @@ function ortho(r,c){ return [{r:r-1,c},{r:r+1,c},{r,c:c-1},{r,c:c+1}].filter(p=>
 function isElement(cell){ return cell && cell.type==='foyer'; }
 // un foyer/aspect est favorable s'il pousse la jauge vers son but
 function favorable(cell){ const m=gMeta[cell.gauge]; return m.mode==='down' ? cell.delta<0 : cell.delta>0; }
+// une source d'aura adjacente affecte-t-elle (r,c) ? En zone (areaAuras) : tous les voisins. Sinon : seulement sa cible choisie.
+function auraHits(oc,r,c){ if(P.areaAuras) return true; return !!(oc.auraTargetRC && oc.auraTargetRC.r===r && oc.auraTargetRC.c===c); }
 function auraAt(r,c,type){ return ortho(r,c).some(p=>{ const oc=grid[p.r][p.c].card;
-  return oc && !oc.suspended && (oc.aura===type||oc.grantedAura===type); }); }
+  return oc && !oc.suspended && (oc.aura===type||oc.grantedAura===type) && auraHits(oc,r,c); }); }
 // force de l'aura d'amplification couvrant (r,c) : 2 par défaut, 4 si l'amplificateur est lui-même doublé (objet)
 function amplifyFactorAt(r,c){ let f=1;
   ortho(r,c).forEach(p=>{ const oc=grid[p.r][p.c].card;
-    if(oc&&!oc.suspended&&(oc.aura==='amplify'||oc.grantedAura==='amplify')) f=Math.max(f, oc.auraFactor||2); });
+    if(oc&&!oc.suspended&&(oc.aura==='amplify'||oc.grantedAura==='amplify')&&auraHits(oc,r,c)) f=Math.max(f, oc.auraFactor||2); });
   return f; }
 function clampG(key,v){ const m=gMeta[key]; return Math.max(0, Math.min((m.dispMax||10)+2, v)); }
+
+// ---- AURAS CIBLÉES : cibles éligibles d'une aura posée en (r,c) ----
+function auraTargetCells(r,c,type){
+  return ortho(r,c).filter(p=>{ const cl=grid[p.r][p.c];
+    if(type==='amplify') return (cl.card&&cl.card.effect&&cl.card.amplifiable) || cl.type==='foyer' || cl.type==='aspect';
+    return cl.type==='foyer' || cl.type==='aspect';   // invert / calm visent un élément
+  }).map(p=>({r:p.r,c:p.c}));
+}
+function enterPendingTarget(r,c,type,card){
+  const elig=auraTargetCells(r,c,type);
+  if(!elig.length){ pushLog(`<b>${card.name}</b> — aucune cible adjacente : l’aura reste sans effet.`); return; }
+  pendingTarget={r,c,type,card,elig};
+  renderAll();
+  document.getElementById('inspector').innerHTML='<div class="insp-row"><b>Cible l’aura</b> — touche une case surlignée pour choisir ce que «&nbsp;'+card.name+'&nbsp;» va '+(type==='amplify'?'amplifier (×'+(card.auraFactor||2)+')':type==='invert'?'inverser':'annuler')+'.</div>';
+}
+function bindAuraTarget(tr,tc){
+  if(!pendingTarget) return;
+  const {r,c,type,card,elig}=pendingTarget;
+  if(!elig.some(p=>p.r===tr&&p.c===tc)) return;
+  card.auraTargetRC={r:tr,c:tc};
+  const tgt=grid[tr][tc];
+  if(type==='amplify' && tgt.card && tgt.card.effect && tgt.card.amplifiable){
+    const f=(card.auraFactor||2); const parts=[];
+    for(const g in tgt.card.effect){ const extra=tgt.card.effect[g]*(f-1); gauges[g]=clampG(g,gauges[g]+extra); parts.push(`${gMeta[g].nm} ${extra>0?'+':''}${extra}`); }
+    pushLog(`<b>${card.name}</b> amplifie ${tgt.card.name} ×${f} : ${parts.join(', ')}.`);
+  } else {
+    const tname = tgt.label || (tgt.card&&tgt.card.name) || 'la cible';
+    pushLog(`<b>${card.name}</b> ${type==='amplify'?'amplifie':type==='invert'?'inverse':'annule'} ${tname}.`);
+  }
+  pendingTarget=null; reconcileAspects(); renderAll(); checkState();
+  document.getElementById('inspector').innerHTML='<div class="insp-row insp-empty">Touche une carte ou une case pour voir ses propriétés.</div>';
+}
 
 // capture spatiale : une entité mobile encore hostile suspend l'aura des personnages qu'elle jouxte
 function recomputeCapture(){
@@ -534,7 +611,7 @@ function computeEffects(card,r,c){
   const f = card.amplifiable ? amplifyFactorAt(r,c) : 1;
   if(card.effect){
     for(const g in card.effect) eff.push({g,d:card.effect[g]*f,why:f>1?('×'+f+' aura'):''}); }
-  if(card.aura==='amplify'){ // poser un amplificateur double l'effet des cartes déjà adjacentes
+  if(card.aura==='amplify' && P.areaAuras){ // EN ZONE : poser un amplificateur double l'effet des cartes déjà adjacentes
     nb.forEach(p=>{ const oc=grid[p.r][p.c].card;
       if(oc&&oc.effect&&oc.amplifiable) for(const g in oc.effect) eff.push({g,d:oc.effect[g],why:oc.name+' amplifié'}); }); }
   if(P.law.modifyEffect) eff=eff.map(e=>P.law.modifyEffect(e,gauges));
@@ -581,11 +658,14 @@ function renderGauges(){ const el=document.getElementById('gauges'); el.innerHTM
 function renderGrid(){ const el=document.getElementById('grid'); el.innerHTML='';
   el.style.gridTemplateColumns=`repeat(${COLS},68px)`;
   el.style.gridTemplateRows=`repeat(${ROWS},68px)`;
-  const valid = sel?validCells(sel):[];
+  const valid = (sel&&!pendingTarget)?validCells(sel):[];
+  const targets = pendingTarget?pendingTarget.elig:[];
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
     const cell=grid[r][c]; const div=document.createElement('div'); div.className='cell';
     if(cell.type==='void'){ div.className='cell void'; el.appendChild(div); continue; }
     const isValid=valid.some(p=>p.r===r&&p.c===c); if(isValid) div.classList.add('valid');
+    const isTarget=targets.some(p=>p.r===r&&p.c===c); if(isTarget) div.classList.add('target');
+    if(pendingTarget && pendingTarget.r===r && pendingTarget.c===c) div.classList.add('aura-source');
     const ampHere=auraAt(r,c,'amplify');
     const k=auraKindAt(r,c); if(k) div.classList.add('aura-'+k);
 
@@ -617,7 +697,8 @@ function renderGrid(){ const el=document.getElementById('grid'); el.innerHTML=''
       div.innerHTML = memoireGrabbed?`<span class="ent">📖</span><span class="lbl">exhumée</span>`:`<span class="ent">▦</span><span class="lbl">mémoire</span>`;
     }
     if(isValid){ div.classList.add('placeable'); div.onmouseenter=()=>showPreview(r,c); div.onmouseleave=clearPreview; }
-    div.onclick=()=>{ if(sel&&isValid) placeAt(r,c); else inspectCell(r,c); };
+    div.onclick=()=>{ if(pendingTarget){ if(isTarget) bindAuraTarget(r,c); }
+                      else if(sel&&isValid) placeAt(r,c); else inspectCell(r,c); };
     el.appendChild(div);
   }
 }
@@ -635,7 +716,7 @@ function renderLog(){ const el=document.getElementById('log'); el.innerHTML='';
 function renderValidate(){ document.getElementById('validate').disabled=!objectiveMet(); }
 
 /* ============================ INSPECTEUR ============================ */
-function selectCard(card){ if(finished) return; sel=(sel&&sel.id===card.id)?null:card; inspectCard(card); renderHand(); renderGrid(); }
+function selectCard(card){ if(finished||pendingTarget) return; sel=(sel&&sel.id===card.id)?null:card; inspectCard(card); renderHand(); renderGrid(); }
 function inspectCard(card){ const el=document.getElementById('inspector');
   const badge=card.type==='Objet'?'<span class="tbadge objet">Objet</span>':'<span class="tbadge perso">Personnage</span>';
   el.innerHTML=`<div class="insp-head"><span class="insp-ic">${card.ic}</span><div><div class="insp-nm">${card.name}</div>${badge} <span class="insp-sup">${card.sup||''}</span></div></div>
@@ -681,12 +762,20 @@ function inspectCell(r,c){ const cell=grid[r][c],el=document.getElementById('ins
 
 /* ============================ JEU ============================ */
 function validCells(card){ const out=[];
+  const targeted = !P.areaAuras;
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
     if(card.type==='Objet'){
-      const onPerso = cell.card && cell.card.type==='Personnage' && (card.special||card.grantsAura);
+      let onPerso = cell.card && cell.card.type==='Personnage' && (card.special||card.grantsAura);
+      // un objet qui ACCORDE une aura (ciblé) n'est utile que si le personnage a une cible adjacente
+      if(onPerso && targeted && card.grantsAura && !auraTargetCells(r,c,card.grantsAura).length) onPerso=false;
       const onElem  = (cell.type==='foyer'||cell.type==='aspect') && card.elementMod;
       if(onPerso||onElem) out.push({r,c});
-    } else { if((cell.type==='empty'||cell.type==='memoire') && !cell.card) out.push({r,c}); }
+    } else {
+      if((cell.type==='empty'||cell.type==='memoire') && !cell.card){
+        if(targeted && card.aura && !auraTargetCells(r,c,card.aura).length) continue;  // aura ciblée sans cible : pose inutile
+        out.push({r,c});
+      }
+    }
   }
   return out;
 }
@@ -704,7 +793,7 @@ function showPreview(r,c){ if(!sel) return;
 function clearPreview(){ renderGauges(); }
 
 function placeAt(r,c){
-  if(finished||!sel||left<=0) return;
+  if(finished||!sel||left<=0||pendingTarget) return;
   const card=sel;
   if(card.type==='Objet'){
     const cell=grid[r][c];
@@ -735,7 +824,10 @@ function placeAt(r,c){
       if(!did) pushLog(`<b>${card.name}</b> greffée sur ${host.name} (rien à répéter).`);
     }
     else if(card.grantsAura){ host.grantedAura=card.grantsAura;
-      pushLog(`<b>${card.name}</b> greffé sur ${host.name} · aura « ${card.grantsAura} » accordée.`); }
+      pushLog(`<b>${card.name}</b> greffé sur ${host.name} · aura « ${card.grantsAura} » accordée.`);
+      hand=hand.filter(x=>x.id!==card.id); sel=null; left--;
+      if(!P.areaAuras){ enterPendingTarget(r,c,card.grantsAura,host); reconcileAspects(); renderAll(); checkState(); return; }
+      reconcileAspects(); renderAll(); checkState(); return; }
     else pushLog(`<b>${card.name}</b> greffée sur ${host.name}.`);
     hand=hand.filter(x=>x.id!==card.id); sel=null; left--; reconcileAspects(); renderAll(); checkState(); return;
   }
@@ -747,11 +839,12 @@ function placeAt(r,c){
   pushLog(`<b>${card.name}</b> posé · ${parts.length?parts.join(', '):'pas d’effet direct'}${memText}`);
   hand=hand.filter(x=>x.id!==card.id); sel=null; left--;
   if(card.bonusPlace){ left+=card.bonusPlace; pushLog(`${card.name} accorde un placement supplémentaire ce tour (+${card.bonusPlace}).`); }
+  if(card.aura && !P.areaAuras){ enterPendingTarget(r,c,card.aura,grid[r][c].card); reconcileAspects(); renderAll(); checkState(); return; }
   reconcileAspects(); renderAll(); checkState();
 }
 
 function endTurn(){
-  if(finished) return;
+  if(finished||pendingTarget) return;
   // 1) réveils éventuels
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
     if(isElement(cell)&&cell.dormant&&cell.wakeWhen&&condMet(cell.wakeWhen)){ cell.dormant=false;
@@ -796,7 +889,7 @@ function checkState(){ renderValidate();
     if(g.mode==='up'&&v<=g.danger) return lose(g.nm+' s’est éteinte : plus rien ne tient.'); }
   if(hand.length===0&&!objectiveMet()) return lose('Dotation épuisée sans avoir rétabli la scène.');
 }
-function validate(){ if(objectiveMet()) win(); }
+function validate(){ if(pendingTarget) return; if(objectiveMet()) win(); }
 function win(){ finished=true; const m=document.getElementById('modal');
   const frag = memoireGrabbed?`<div class="frag">${P.fragment}</div><p>Scène rétablie <b>et mémoire exhumée</b>. Complétion totale.</p>`
     :`<p>Scène rétablie. La <b>mémoire enfouie</b> est restée scellée — reviens mieux équipé pour l’exhumer.</p>`;
