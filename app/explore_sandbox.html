@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>expLore — Bac à sable</title>
+<style>
+  :root{
+    --ink:#15171e; --ink2:#1e2129; --paper:#e9e3d4; --paper2:#ddd5c2;
+    --line:#2c3340; --sanguine:#b5341f; --ochre:#c08a2e; --sage:#5f7a4f;
+    --muted:#8a8576; --paperink:#2a2620; --blue:#5f6f7a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--ink);color:var(--paper);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  body{padding:16px;max-width:1140px;margin:0 auto}
+  header{margin-bottom:10px}
+  h1{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .tabs{display:flex;gap:6px;margin:10px 0}
+  .tab{background:var(--ink2);border:1px solid var(--line);color:#cdc7b6;border-radius:6px 6px 0 0;
+    padding:7px 12px;font-size:12.5px;cursor:pointer;font-family:inherit}
+  .tab.active{background:var(--paper);color:var(--paperink);font-weight:700;border-color:var(--paper)}
+  .scene{font-size:24px;font-style:italic;font-family:"Iowan Old Style",Palatino,Georgia,serif;margin-top:4px}
+  .sub{font-size:13px;color:#c8c2b2;margin-top:4px;max-width:780px;line-height:1.5}
+  .law{margin-top:8px;font-size:12.5px;color:#e7d9b0;background:rgba(181,52,31,.12);
+    border:1px solid rgba(181,52,31,.4);border-left:3px solid var(--sanguine);border-radius:5px;
+    padding:7px 11px;max-width:780px;line-height:1.5}
+  .law-tag{display:inline-block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sanguine);font-weight:700;margin-right:8px}
+
+  .layout{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  .board-area{display:flex;gap:16px;align-items:flex-start}
+  .gauges-v{display:flex;gap:12px;padding-top:4px}
+  .gauge-v{display:flex;flex-direction:column;align-items:center;width:46px}
+  .gauge-v .vval{font-variant-numeric:tabular-nums;font-size:15px;font-weight:700;margin-bottom:4px}
+  .gauge-v .vok{color:var(--sage);margin-left:2px;font-size:13px}
+  .gauge-v .vbar{position:relative;width:20px;height:200px;background:var(--ink2);border:1px solid var(--line);
+    border-radius:5px;overflow:hidden;display:flex;flex-direction:column-reverse}
+  .gauge-v .vfill{width:100%;background:var(--sanguine);transition:height .35s cubic-bezier(.2,.7,.2,1)}
+  .gauge-v.ok .vfill{background:var(--sage)}
+  .gauge-v .vtarget{position:absolute;left:0;right:0;background:rgba(95,122,79,.20)}
+  .gauge-v .vline{position:absolute;left:-2px;right:-2px;height:0;border-top:2px solid #e9e3d4;
+    box-shadow:0 0 0 1px rgba(0,0,0,.5);z-index:3}
+  .gauge-v .vprev{font-size:10px;color:var(--ochre);font-variant-numeric:tabular-nums;height:13px;margin-top:3px}
+  .gauge-v .vnm{font-size:10px;margin-top:2px;text-align:center;color:#cdc7b6;line-height:1.15}
+  .gauge-v .vbut{font-size:10px;color:var(--sage);font-weight:700;margin-top:2px}
+  .gauge-v .vkind{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+
+  .forme{display:inline-block;background:#0e1014;padding:10px;border:1px solid var(--line);border-radius:6px}
+  .grid{display:grid;gap:6px}
+  .cell{background:var(--paper);border-radius:3px;position:relative;display:flex;align-items:center;justify-content:center;
+    border:1px solid #c9c1ad;width:68px;height:68px}
+  .cell.void{background:transparent;border:none}
+  .cell .ent{font-size:25px}
+  .cell .lbl{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:7.5px;color:#6b6657;text-transform:uppercase;letter-spacing:.02em}
+  .cell .dlt{position:absolute;top:2px;right:3px;font-size:9px;font-weight:800;font-variant-numeric:tabular-nums}
+  .cell.placeable{cursor:pointer}
+  .cell.valid{box-shadow:0 0 0 2px var(--ochre),0 0 12px rgba(192,138,46,.5)}
+  .cell.placed.is-perso{border-color:#8f8573;border-radius:10px;background:var(--paper2)}
+  .cell .card-mini{display:flex;flex-direction:column;align-items:center;line-height:1.05}
+  .cell .card-mini .ic{font-size:23px}
+  .cell .card-mini .cn{font-size:8px;color:var(--paperink);font-weight:700;margin-top:1px;text-align:center}
+  .cell .x2-badge{position:absolute;top:2px;left:3px;font-size:9px;font-weight:800;color:#7a4a00;background:var(--ochre);border-radius:3px;padding:0 3px}
+  .cell .aspect-tag{position:absolute;top:2px;left:2px;font-size:7px;letter-spacing:.02em;color:#6b6657;text-transform:uppercase}
+  .cell .equip-badge{position:absolute;bottom:1px;right:2px;font-size:13px;background:var(--blue);border-radius:50%;
+    width:18px;height:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+  /* éléments de terrain */
+  .cell.good{box-shadow:inset 0 0 0 2px rgba(95,122,79,.7)}
+  .cell.good .ent{color:var(--sage)}
+  .cell.bad{box-shadow:inset 0 0 0 2px rgba(181,52,31,.65)}
+  .cell.bad .ent{color:var(--sanguine)}
+  .cell.aspect{border-style:dashed;border-width:2px}
+  .cell.dormant{filter:grayscale(.6) opacity(.6)}
+  .cell.suspended{filter:grayscale(.7) opacity(.55)}
+  .cell .mark{position:absolute;top:2px;left:3px;font-size:11px;color:var(--ink)}
+  .cell.memoire{background:repeating-linear-gradient(90deg,#cfc6ae,#cfc6ae 4px,#c3b99e 4px,#c3b99e 8px)}
+  .cell.memoire .ent{color:#9a7321}
+  /* surcouche aura */
+  .cell.aura-amplify{box-shadow:inset 0 0 0 3px rgba(192,138,46,.7)}
+  .cell.aura-invert{box-shadow:inset 0 0 0 3px rgba(95,122,79,.85)}
+  .cell.aura-calm{box-shadow:inset 0 0 0 3px rgba(138,133,118,.7)}
+  .cell.aura-calm .ent{filter:grayscale(1) opacity(.55)}
+
+  .legend{display:flex;flex-wrap:wrap;gap:5px 16px;margin-top:10px;font-size:11px;color:var(--muted);max-width:560px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #c9c1ad}
+  .legend i.f{box-shadow:inset 0 0 0 2px var(--sanguine);background:var(--paper)}
+  .legend i.g{box-shadow:inset 0 0 0 2px var(--sage);background:var(--paper)}
+  .gen-row{display:flex;gap:6px;margin-top:8px;align-items:stretch}
+  .gen-row .btn{flex:1;margin:0}
+  .gen-select{flex:1;background:var(--panel-2,#2a2722);color:var(--ink,#f0e9da);border:1px solid #4a443a;border-radius:6px;padding:6px 8px;font:inherit;font-size:12.5px}
+  .legend i.m{background:repeating-linear-gradient(90deg,#cfc6ae,#cfc6ae 3px,#c3b99e 3px,#c3b99e 6px)}
+
+  .princ{margin-top:9px;font-size:11px;color:var(--muted);line-height:1.5;max-width:560px;border-top:1px solid var(--line);padding-top:8px}
+  .inspector{margin-top:10px;background:#0e1014;border:1px solid var(--line);border-radius:7px;padding:11px 13px;font-size:12.5px;color:#cdc7b6;min-height:78px}
+  .insp-head{display:flex;gap:10px;align-items:center;margin-bottom:7px}
+  .insp-ic{font-size:25px}
+  .insp-nm{font-family:Georgia,serif;font-size:15px;color:var(--paper);font-style:italic}
+  .insp-sup{font-size:10.5px;color:var(--muted)}
+  .insp-row{line-height:1.5;margin-top:3px}
+  .insp-row b{color:var(--ochre);font-weight:600;margin-right:5px;font-size:10.5px;letter-spacing:.03em;text-transform:uppercase}
+  .insp-empty{color:var(--muted);font-style:italic}
+  .tbadge{display:inline-block;font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:3px;font-weight:700}
+  .tbadge.perso{background:#9c7b3e;color:#fff}.tbadge.objet{background:var(--blue);color:#fff}
+  .tbadge.foyer{background:var(--sanguine);color:#fff}.tbadge.elem{background:var(--sage);color:#fff}.tbadge.mem{background:var(--ochre);color:#3a2e12}
+
+  .side{background:var(--ink2);border:1px solid var(--line);border-radius:8px;padding:13px}
+  .side h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;font-weight:600}
+  .turninfo{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:10px;color:#cdc7b6}
+  .turninfo b{color:var(--paper)}
+  .hand{display:flex;flex-direction:column;gap:7px}
+  .card{background:var(--paper);color:var(--paperink);border-radius:6px;padding:8px 10px;cursor:pointer;
+    border:1px solid #c9c1ad;display:flex;gap:9px;align-items:flex-start;transition:transform .08s}
+  .card.t-perso{border-left:4px solid #9c7b3e}
+  .card.t-objet{border-left:4px solid var(--blue);border-radius:4px;background:#e3e6ea}
+  .card .role .chip{display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:1px 5px;border-radius:3px;color:#fff;margin-right:4px}
+  .card .role .chip-p{background:#9c7b3e}
+  .card .role .chip-o{background:var(--blue)}
+  .card:hover{transform:translateY(-1px)}
+  .card.sel{box-shadow:0 0 0 2px var(--sanguine)}
+  .card .ic{font-size:21px;line-height:1}
+  .card .cn{font-weight:700;font-size:12.5px;font-family:Georgia,serif}
+  .card .role{font-size:9.5px;color:#7a6f57;text-transform:uppercase;letter-spacing:.05em;margin:1px 0 3px}
+  .card .ef{font-size:11px;color:#3a352b;line-height:1.35}
+  .btn{width:100%;margin-top:9px;background:var(--ink);color:var(--paper);border:1px solid var(--line);border-radius:6px;padding:9px;font-size:12.5px;cursor:pointer;font-family:inherit}
+  .btn:hover{border-color:var(--ochre)}
+  .btn.primary{background:var(--sage);border-color:var(--sage);color:#0e1014;font-weight:700}
+  .btn.primary:disabled{background:#3a4034;border-color:#3a4034;color:#6f7568;cursor:not-allowed}
+  .btn-row{display:flex;gap:8px}.btn-row .btn{margin-top:8px}
+  .log{margin-top:13px;background:#0e1014;border:1px solid var(--line);border-radius:6px;padding:10px;font-size:11.5px;line-height:1.5;height:120px;overflow-y:auto;color:#b8b2a2}
+  .log .e{margin-bottom:4px;padding-bottom:4px;border-bottom:1px dotted #232831}
+  .log .e b{color:var(--ochre)}.log .e.law{color:var(--sanguine)}
+
+  .overlay{position:fixed;inset:0;background:rgba(10,11,14,.86);display:none;align-items:center;justify-content:center;z-index:50}
+  .overlay.show{display:flex}
+  .modal{background:var(--paper);color:var(--paperink);max-width:430px;padding:26px 28px;border-radius:10px;text-align:center}
+  .modal h3{font-family:Georgia,serif;font-size:23px;font-style:italic;margin-bottom:10px}
+  .modal p{font-size:14px;line-height:1.55;margin-bottom:8px}
+  .modal .frag{font-style:italic;color:#5a5444;border-left:3px solid var(--ochre);padding-left:12px;text-align:left;margin:13px 0;font-size:13.5px}
+  .modal .btn{background:var(--ink);color:var(--paper);max-width:220px;margin:8px auto 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>expLore · bac à sable de design</h1>
+  <div class="tabs" id="tabs"></div>
+  <div class="scene" id="scene"></div>
+  <div class="sub" id="sub"></div>
+  <div class="law" id="law"></div>
+</header>
+
+<div class="layout">
+  <div class="main">
+    <div class="board-area">
+      <div class="gauges-v" id="gauges"></div>
+      <div class="forme"><div class="grid" id="grid"></div></div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="princ">Principes communs (toutes scènes) : les <b>foyers</b> (cerclés de rouge) poussent leur jauge chaque tour ; les <b>éléments statiques</b> font de même (verts s'ils t'aident, rouges sinon). Une <b>aura</b> agit sur les cartes ET les éléments de sa zone : amplifier (×2), inverser (change le signe), annuler (0). Les <b>objets</b> se posent sur un personnage pour l'augmenter.</div>
+    <div class="inspector" id="inspector"><div class="insp-row insp-empty">Touche une carte ou une case pour voir ses propriétés.</div></div>
+  </div>
+
+  <div class="side">
+    <h2>Ta dotation</h2>
+    <div class="turninfo"><span>Tour <b id="turn">1</b></span><span>Placements restants : <b id="left">2</b></span></div>
+    <div class="hand" id="hand"></div>
+    <button class="btn" id="endturn">Fin du tour</button>
+    <div class="btn-row">
+      <button class="btn primary" id="validate" disabled>Valider la scène</button>
+      <button class="btn" id="reset">Recommencer</button>
+    </div>
+    <div class="gen-row" id="gen-row" style="display:none">
+      <select id="gendiff" class="gen-select">
+        <option value="standard">Standard · combinaison requise</option>
+        <option value="corse">Corsé · ≥3 tours</option>
+      </select>
+      <button class="btn" id="regen">🎲 Régénérer</button>
+    </div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+
+<script>
+"use strict";
+
+// Jauges GÉNÉRIQUES (communes à beaucoup de lieux) — permettent des cartes « directes » réutilisables partout.
+const GENERIC_KEYS = ['oubli','doute','discorde'];
+
+/* ============================ DONNÉES : 3 PUZZLES ============================ */
+const PUZZLES = [
+{
+  id:'merciere', title:'Rue Mercière', perTurn:2,
+  scene:'Rue Mercière, sous la censure',
+  sub:'Lyon, 1546. L’encre sèche mal et l’on brûle sous les fenêtres des imprimeurs. Apaise les trois forces qui rongent la rue.',
+  law:{ text:'La chape — tant que la Censure reste à 4 ou plus, chaque geste d’apaisement est diminué de 1 (la peur émousse les efforts).',
+        modifyEffect:(eff,g)=> (eff.d<0 && g.censure>=4) ? Object.assign({},eff,{d:eff.d+1, why:(eff.why?eff.why+', ':'')+'chape −1'}) : eff },
+  gauges:[
+    {key:'oubli',nm:'Oubli',start:7,mode:'down',target:3,danger:10,dispMax:10},
+    {key:'censure',nm:'Censure',start:6,mode:'down',target:3,danger:10,dispMax:10},
+    {key:'doute',nm:'Doute',start:5,mode:'down',target:3,danger:10,dispMax:10},
+  ],
+  map:[
+    '..O..',
+    '.....',
+    'C...D',
+    '.....',
+    '....M',
+  ],
+  legend:{
+    'O':{type:'foyer',gauge:'oubli',delta:1,ent:'🌫️',label:'Oubli'},
+    'C':{type:'foyer',gauge:'censure',delta:1,ent:'⛓️',label:'Censure'},
+    'D':{type:'foyer',gauge:'doute',delta:1,ent:'❓',label:'Doute'},
+    'M':{type:'memoire'},
+  },
+  dotation:[
+    {id:'gryphe',name:'Sébastien Gryphe',role:'Influenceur',type:'Personnage',sup:'société · histoire',ic:'🦅',
+     ef:'Doute −2 · son aura INVERSE un foyer/élément adjacent',portee:'Sa case + aura (inverse)',effect:{doute:-2},amplifiable:true,aura:'invert'},
+    {id:'dolet',name:'Étienne Dolet',role:'Symbole',type:'Personnage',sup:'société · histoire',ic:'🪓',
+     ef:'Censure −3',portee:'Sa case',effect:{censure:-3},amplifiable:true},
+    {id:'louise',name:'Louise Labé',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'🪶',
+     ef:'Son aura ×2 l’effet des cartes ET des éléments adjacents',portee:'Aura (×2)',aura:'amplify'},
+    {id:'copiste',name:'Le copiste',role:'Symbole',type:'Personnage',sup:'société',ic:'✒️',
+     ef:'Oubli −3',portee:'Sa case',effect:{oubli:-3},amplifiable:true},
+    {id:'presse',name:'La presse de la Doloire',role:'Propagateur',type:'Objet',sup:'science · société',ic:'🗜️',
+     ef:'Greffée sur un personnage : répète son effet',portee:'Sur un personnage',special:'propagate'},
+    {id:'privilege',name:'Le privilège du Roi',role:'Switch',type:'Objet',sup:'société',ic:'📜',
+     ef:'Greffé sur un personnage : il peut annuler un foyer adjacent',portee:'Sur un personnage (aura d’annulation)',grantsAura:'calm'},
+    {id:'apprenti',name:'L’apprenti',role:'Relais',type:'Personnage',sup:'société',ic:'🧒',
+     ef:'Oubli −1 · en se posant, accorde un placement supplémentaire ce tour',portee:'Sa case (+1 placement)',effect:{oubli:-1},amplifiable:true,bonusPlace:1},
+  ],
+  fragment:'« On disait qu’une femme ne pouvait écrire ainsi. Quelqu’un, pourtant, accepta de l’imprimer. »',
+},
+{
+  id:'croixrousse', title:'Croix-Rousse', perTurn:2,
+  scene:'La Croix-Rousse, la fabrique',
+  sub:'Sur les pentes, les canuts tissent dans le froid. Fais refluer la Misère et lève la Solidarité — le terrain monte en escalier.',
+  law:{ text:'L’entraide — à la fin du tour, si la Solidarité atteint 5 ou plus, la Misère reflue d’elle-même (Misère −1).',
+        onTurnEnd:(g,log)=>{ if(g.solidarite>=5){ g.misere=Math.max(0,g.misere-1); log('<b>Loi du lieu</b> — l’entraide reflue : Misère −1'); } } },
+  gauges:[
+    {key:'misere',nm:'Misère',start:2,mode:'down',target:2,danger:10,dispMax:10},
+    {key:'solidarite',nm:'Solidarité',start:2,mode:'up',target:5,danger:0,dispMax:8},
+  ],
+  map:[
+    'F..   ',
+    '.....x',
+    '..s...',
+    '  ....',
+    '   ..M',
+  ],
+  legend:{
+    'F':{type:'foyer',gauge:'misere',delta:1,ent:'🏭',label:'Misère'},
+    'x':{type:'aspect',gauge:'misere',delta:3,ent:'💰',label:'La dette'},
+    's':{type:'foyer',gauge:'solidarite',delta:1,ent:'🧵',label:'Le métier'},
+    'M':{type:'memoire'},
+  },
+  dotation:[
+    {id:'chef',name:'Le chef d’atelier',role:'Symbole',type:'Personnage',sup:'société',ic:'🧑‍🏭',
+     ef:'Misère −3',portee:'Sa case',effect:{misere:-3},amplifiable:true},
+    {id:'canut',name:'Le canut',role:'Symbole',type:'Personnage',sup:'société · arts',ic:'🕯️',
+     ef:'Solidarité +2',portee:'Sa case',effect:{solidarite:2},amplifiable:true},
+    {id:'crieur',name:'Le crieur public',role:'Influenceur',type:'Personnage',sup:'société',ic:'📣',
+     ef:'Solidarité +1 · son aura INVERSE un élément adjacent (retourne une dette en soutien)',portee:'Sa case + aura (inverse)',effect:{solidarite:1},amplifiable:true,aura:'invert'},
+    {id:'mutuelle',name:'La Mutuelle',role:'Amplificateur',type:'Personnage',sup:'société',ic:'🤝',
+     ef:'Son aura ×2 l’effet des cartes ET des éléments adjacents',portee:'Aura (×2)',aura:'amplify'},
+    {id:'bistanclaque',name:'Le métier (bistanclaque)',role:'Propagateur',type:'Objet',sup:'science',ic:'🪡',
+     ef:'Greffé sur un personnage : répète son effet',portee:'Sur un personnage',special:'propagate'},
+    {id:'petition',name:'La pétition',role:'Switch',type:'Objet',sup:'société',ic:'📜',
+     ef:'Greffée sur un personnage : il peut annuler un foyer adjacent',portee:'Sur un personnage (aura d’annulation)',grantsAura:'calm'},
+  ],
+  fragment:'« Vivre en travaillant ou mourir en combattant. La pente a sa mémoire, et elle ne plie pas. »',
+},
+{
+  id:'celestins', title:'Les Célestins', perTurn:2,
+  scene:'Les Célestins, soir de première',
+  sub:'La salle se remplit, les comédiens tremblent. Fais tomber le Trac et monter la Ferveur — la scène a la forme d’un plateau.',
+  law:{ text:'L’avant-première — tant que la Ferveur reste sous 4, le trac s’emballe (les foyers de Trac poussent deux fois plus fort).',
+        elementMult:(cell,g)=> (cell.gauge==='trac' && g.ferveur<4) ? 2 : 1 },
+  gauges:[
+    {key:'trac',nm:'Trac',start:4,mode:'down',target:2,danger:10,dispMax:10},
+    {key:'ferveur',nm:'Ferveur',start:2,mode:'up',target:6,danger:0,dispMax:8},
+  ],
+  map:[
+    ' ..... ',
+    '.......',
+    '.R...s.',
+    ' ..O.. ',
+    '   M   ',
+  ],
+  legend:{
+    'O':{type:'foyer',gauge:'trac',delta:1,ent:'🎭',label:'Trac'},
+    'R':{type:'foyer',gauge:'trac',delta:2,ent:'🗣️',label:'Rumeur',dormant:true,wakeWhen:{gauge:'ferveur',op:'gte',value:4},flavor:'la rumeur enfle quand la salle s’échauffe'},
+    's':{type:'foyer',gauge:'ferveur',delta:1,ent:'👏',label:'Les habitués'},
+    'M':{type:'memoire'},
+  },
+  dotation:[
+    {id:'souffleur',name:'Le souffleur',role:'Symbole',type:'Personnage',sup:'arts',ic:'🤫',
+     ef:'Trac −2',portee:'Sa case',effect:{trac:-2},amplifiable:true},
+    {id:'comedien',name:'Le comédien',role:'Symbole',type:'Personnage',sup:'arts',ic:'🎩',
+     ef:'Ferveur +2',portee:'Sa case',effect:{ferveur:2},amplifiable:true},
+    {id:'diva',name:'La diva',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'🌹',
+     ef:'Son aura ×2 l’effet des cartes ET des éléments adjacents',portee:'Aura (×2)',aura:'amplify'},
+    {id:'regisseur',name:'Le régisseur',role:'Switch',type:'Personnage',sup:'science · société',ic:'🎚️',
+     ef:'Trac −1 · son aura ANNULE un foyer adjacent',portee:'Sa case + aura (annule)',effect:{trac:-1},amplifiable:true,aura:'calm'},
+    {id:'ovation',name:'L’ovation',role:'Propagateur',type:'Objet',sup:'société',ic:'📣',
+     ef:'Greffée sur un personnage : répète son effet',portee:'Sur un personnage',special:'propagate'},
+    {id:'rideau',name:'Le rideau',role:'Influenceur',type:'Objet',sup:'arts',ic:'🎬',
+     ef:'Greffé sur un personnage : il peut INVERSER un foyer adjacent',portee:'Sur un personnage (aura d’inversion)',grantsAura:'invert'},
+  ],
+  fragment:'« Le rideau se lève toujours sur un silence. Ce soir-là, le silence a applaudi. »',
+},
+{
+  id:'collector', title:'Le Collector', perTurn:2,
+  scene:'Vieux Lyon, la ronde du Collector',
+  sub:'Dans les traboules, un Collector patrouille pour enfermer la mémoire, et une rumeur essaime. Fais tomber l’Oubli et la Discorde.',
+  law:{ text:'La rumeur nourrit l’oubli — à la fin du tour, si la Discorde atteint 4, l’Oubli +1.',
+        onTurnEnd:(g,log)=>{ if(g.discorde>=4){ g.oubli=g.oubli+1; log('<b>Loi du lieu</b> — la rumeur nourrit l’oubli : Oubli +1'); } } },
+  gauges:[
+    {key:'oubli',nm:'Oubli',start:5,mode:'down',target:2,danger:10,dispMax:10},
+    {key:'discorde',nm:'Discorde',start:4,mode:'down',target:2,danger:10,dispMax:10},
+  ],
+  map:[
+    'K.....',
+    '......',
+    '..G...',
+    '......',
+    '.....M',
+  ],
+  legend:{
+    'K':{type:'foyer',gauge:'oubli',delta:1,ent:'🕴️',label:'Le Collector',captures:true,move:{path:[[0,0],[0,1],[0,2],[0,3],[0,2],[0,1]],pi:0}},
+    'G':{type:'foyer',gauge:'discorde',delta:1,ent:'🗣️',label:'La rumeur-mère',spawn:{gauge:'discorde',delta:1,cap:2,ent:'🗯️',label:'Rumeur'}},
+    'M':{type:'memoire'},
+  },
+  dotation:[
+    {id:'temoin',name:'Le témoin',role:'Symbole',type:'Personnage',sup:'histoire',ic:'👵',
+     ef:'Oubli −2',portee:'Sa case',effect:{oubli:-2},amplifiable:true},
+    {id:'conteur',name:'Le conteur',role:'Symbole',type:'Personnage',sup:'arts',ic:'📖',
+     ef:'Discorde −2',portee:'Sa case',effect:{discorde:-2},amplifiable:true},
+    {id:'archiviste',name:'L’archiviste',role:'Influenceur',type:'Personnage',sup:'histoire',ic:'🗄️',
+     ef:'Oubli −1 · son aura INVERSE un foyer adjacent (et stoppe ses essaimages)',portee:'Sa case + aura (inverse)',effect:{oubli:-1},amplifiable:true,aura:'invert'},
+    {id:'passeuse',name:'La passeuse',role:'Amplificateur',type:'Personnage',sup:'société',ic:'🔑',
+     ef:'Son aura ×2 l’effet des cartes ET des éléments adjacents',portee:'Aura (×2)',aura:'amplify'},
+    {id:'plaque',name:'La plaque commémorative',role:'Modificateur',type:'Objet',sup:'histoire',ic:'🪧',
+     ef:'S’appose sur un FOYER : inverse son effet en permanence (utile sur une entité qui se déplace)',portee:'Sur un foyer/aspect',elementMod:'invertPerm'},
+    {id:'scelle',name:'Le scellé',role:'Switch',type:'Objet',sup:'société',ic:'🔒',
+     ef:'Greffé sur un personnage : son aura annule TOUS les foyers/aspects qui lui sont adjacents',portee:'Sur un personnage (aura d’annulation, toutes cases adjacentes)',grantsAura:'calm'},
+  ],
+  fragment:'« Il rangeait nos souvenirs dans ses vitrines, pour lui seul. On a rouvert les volets. »',
+},
+];
+
+/* ============================ GÉNÉRATEUR-TESTEUR PROCÉDURAL ============================
+   On ne sait pas générer « intéressant », mais on sait générer puis FILTRER sur des
+   propriétés mesurables. Ici : (1) solvable, (2) les cartes directes seules NE suffisent
+   PAS à finir en un tour, (3) la solution optimale exige ≥ N tours. Un solveur borné (DFS
+   complet, mémoïsé) mesure ces propriétés ; on re-tire la graine jusqu'à satisfaction. */
+const HAND_COUNT = PUZZLES.length;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+const GEN_GB=[{key:'oubli',nm:'Oubli'},{key:'doute',nm:'Doute'},{key:'discorde',nm:'Discorde'}];
+const GEN_FN={oubli:['L’oubli','La lacune','Le silence'],doute:['La rumeur','Le soupçon','La défiance'],discorde:['La querelle','La cabale','La fronde']};
+const GEN_DN={oubli:['Le témoin','La gardienne','Le passeur'],doute:['Le savant','La preuve','Le notaire'],discorde:['Le médiateur','Le pacte','La conciliatrice']};
+const GEN_DIFFS={
+  standard:{label:'Standard (combinaison requise)', sMin:9,sMax:11,Fmin:2,Fmax:3,nd:[2,3],minTurns:0},
+  corse:   {label:'Corsé (≥3 tours)',               sMin:13,sMax:16,Fmin:3,Fmax:4,nd:[2,3],minTurns:3},
+};
+// --- construit un candidat jouable (schéma complet) depuis une graine + difficulté ---
+function genCandidate(seed,d){
+  const rng=mulberry32(seed);const ri=(a,b)=>a+Math.floor(rng()*(b-a+1));const pk=a=>a[Math.floor(rng()*a.length)];
+  const g=pk(GEN_GB);                                  // une seule jauge => combinaisons lisibles
+  const start=ri(d.sMin,d.sMax);const danger=start+ri(3,5),target=2;
+  const F=ri(d.Fmin,d.Fmax);
+  const ROWS_=5,COLS_=5;const map=[];for(let r=0;r<ROWS_;r++)map.push('.'.repeat(COLS_).split(''));
+  const legend={};const used=new Set();
+  const free=()=>{let r,c,k,gg=0;do{r=ri(0,ROWS_-1);c=ri(0,COLS_-1);k=r+','+c;gg++;}while(used.has(k)&&gg<60);used.add(k);return[r,c];};
+  for(let i=0;i<F;i++){const[r,c]=free();const ch=String.fromCharCode(70+i);map[r][c]=ch;
+    legend[ch]={type:'foyer',gauge:g.key,delta:1,ent:'🔥',label:pk(GEN_FN[g.key])};}
+  if(rng()<0.5){const[r,c]=free();map[r][c]='M';legend['M']={type:'memoire'};}
+  const nDirect=ri(d.nd[0],d.nd[1]);const dot=[];let id=0;
+  for(let i=0;i<nDirect;i++)dot.push({id:'d'+id++,name:pk(GEN_DN[g.key]),role:'Symbole',type:'Personnage',sup:'histoire',ic:'🎯',ef:g.nm+' −3',portee:'Sa case',effect:{[g.key]:-3},amplifiable:true});
+  dot.push({id:'inv'+id++,name:'L’archiviste',role:'Influenceur',type:'Personnage',sup:'histoire',ic:'🔄',ef:g.nm+' −1 · son aura INVERSE un foyer adjacent',portee:'Sa case + aura (inverse)',aura:'invert',amplifiable:true,effect:{[g.key]:-1}});
+  dot.push({id:'amp'+id++,name:'La passeuse',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'➕',ef:'Son aura ×2 l’effet des cartes et éléments adjacents',portee:'Aura (×2)',aura:'amplify'});
+  dot.push({id:'calm'+id++,name:'Le scellé',role:'Switch',type:'Objet',sup:'société',ic:'🔒',ef:'Greffé sur un personnage : annule tous les foyers adjacents',portee:'Sur un personnage',grantsAura:'calm'});
+  return {id:'gen',_gen:true,seed,title:'🎲 Procédural',perTurn:2,scene:'Un lieu commun de Lyon',
+    law:{text:'Aucune loi particulière ici — c’est un lieu commun.'},
+    gauges:[{key:g.key,nm:g.nm,start,mode:'down',target,danger,dispMax:danger}],
+    map:map.map(r=>r.join('')),legend,dotation:dot,fragment:'« Un lieu sans nom se souvient aussi. »'};
+}
+// --- solveur borné : DFS complet mémoïsé. Renvoie {win, turns}. directOnly = stratégie « cartes directes seules ». ---
+function genSolve(P,opt){ opt=opt||{};
+  const R=P.map.length,C=P.map[0].length;const gm={};P.gauges.forEach(x=>gm[x.key]=x);
+  const inb=(r,c)=>r>=0&&r<R&&c>=0&&c<C;const ortho=(r,c)=>[[r-1,c],[r+1,c],[r,c-1],[r,c+1]].filter(([a,b])=>inb(a,b));
+  const isEl=cl=>cl&&cl.type==='foyer';const clamp=(k,v)=>Math.max(0,Math.min((gm[k].danger||10)+2,v));
+  const clone=st=>({g:{...st.g},grid:st.grid.map(ro=>ro.map(x=>({...x,card:x.card?{...x.card}:null}))),hand:st.hand.slice(),left:st.left,turn:st.turn});
+  const auraAt=(gr,r,c,t)=>ortho(r,c).some(([a,b])=>{const oc=gr[a][b].card;return oc&&(oc.aura===t||oc.grantedAura===t);});
+  const ampF=(gr,r,c)=>{let f=1;ortho(r,c).forEach(([a,b])=>{const oc=gr[a][b].card;if(oc&&(oc.aura==='amplify'||oc.grantedAura==='amplify'))f=Math.max(f,oc.auraFactor||2);});return f;};
+  const elD=(gr,cl,r,c)=>{let v=cl.delta;if(auraAt(gr,r,c,'calm'))return 0;if(auraAt(gr,r,c,'invert'))v=-v;const f=ampF(gr,r,c);if(f>1)v*=f;return v;};
+  const vcells=(st,card)=>{const o=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=st.grid[r][c];if(card.type==='Objet'){if(cl.card&&cl.card.type==='Personnage'&&(card.special||card.grantsAura))o.push([r,c]);}else if((cl.type==='empty'||cl.type==='memoire')&&!cl.card)o.push([r,c]);}return o;};
+  function repDirect(st){const out=[],seen=new Set();for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=st.grid[r][c];if((cl.type==='empty'||cl.type==='memoire')&&!cl.card){const k=ortho(r,c).map(([a,b])=>{const oc=st.grid[a][b].card;return oc?(oc.aura||oc.grantedAura||'p'):'';}).sort().join(',');if(!seen.has(k)){seen.add(k);out.push([r,c]);}}}return out;}
+  function apply(st,card,r,c){const cl=st.grid[r][c];if(card.type==='Objet'){const h=cl.card;if(card.grantsAura)h.grantedAura=card.grantsAura;}else{const f=card.amplifiable?ampF(st.grid,r,c):1;if(card.effect)for(const k in card.effect)st.g[k]=clamp(k,st.g[k]+card.effect[k]*f);if(card.aura==='amplify')ortho(r,c).forEach(([a,b])=>{const oc=st.grid[a][b].card;if(oc&&oc.effect&&oc.amplifiable)for(const k in oc.effect)st.g[k]=clamp(k,st.g[k]+oc.effect[k]);});cl.card=card;}st.hand=st.hand.filter(x=>x.id!==card.id);st.left--;}
+  function endTurn(st){for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=st.grid[r][c];if(isEl(cl)){const d=elD(st.grid,cl,r,c);if(d)st.g[cl.gauge]=clamp(cl.gauge,st.g[cl.gauge]+d);}}st.turn++;st.left=P.perTurn;}
+  const met=g=>P.gauges.every(x=>g[x.key]<=x.target);
+  let init={g:{},grid:[],hand:P.dotation.filter(c=>opt.directOnly?(c.type==='Personnage'&&c.effect&&!c.aura):true).map(c=>({...c})),left:P.perTurn,turn:1};
+  P.gauges.forEach(x=>init.g[x.key]=x.start);
+  for(let r=0;r<R;r++){const row=[];for(let c=0;c<C;c++){const ch=P.map[r][c];row.push(ch==='.'?{type:'empty',card:null}:ch===' '?{type:'void'}:Object.assign({card:null},JSON.parse(JSON.stringify(P.legend[ch]))));}init.grid.push(row);}
+  const MAXT=opt.maxTurns||7,CAP=opt.nodeCap||40000;let best=Infinity,nodes=0;const seen=new Set();
+  function dfs(st){
+    if(met(st.g)){best=Math.min(best,st.turn);return;}
+    if(st.turn>MAXT||nodes>CAP)return;nodes++;
+    const sig=st.turn+'|'+st.left+'|'+JSON.stringify(st.g)+'|'+st.hand.map(c=>c.id).sort().join(',');
+    if(seen.has(sig))return;seen.add(sig);
+    if(st.left>0){
+      for(const card of st.hand){const cells=(card.type==='Personnage'&&card.effect&&!card.aura)?repDirect(st):vcells(st,card);
+        for(const[r,c]of cells){const s2=clone(st);apply(s2,card,r,c);dfs(s2);if(best<=st.turn)return;}}
+    }
+    if(st.left<P.perTurn){const s2=clone(st);endTurn(s2);dfs(s2);}    // option : finir le tour
+  }
+  dfs(init);return {win:best<Infinity,turns:best};
+}
+// passe le filtre de difficulté ?
+function genPasses(P,d){
+  const full=genSolve(P,{maxTurns:7,nodeCap:25000}); if(!full.win) return false;       // solvable ?
+  const directAll=genSolve(P,{directOnly:true,maxTurns:7,nodeCap:20000});               // directes SEULES suffisent ?
+  if(directAll.win) return false;                                                       // oui => trivial, on rejette
+  if(d.minTurns && full.turns<d.minTurns) return false;                                 // assez long ?
+  P._minTurns=full.turns; return true;
+}
+let genDiffName='standard';
+function genBuild(){
+  const d=GEN_DIFFS[genDiffName]; let P=null;
+  for(let i=0;i<300;i++){ const seed=(Math.random()*1e9)|0; const cand=genCandidate(seed,d); if(genPasses(cand,d)){P=cand;break;} }
+  if(!P){ P=genCandidate((Math.random()*1e9)|0,d); genSolve(P); P._minTurns='?'; }   // repli (rare)
+  P.sub='Scène générée (graine '+P.seed+'). Garantie vérifiée par solveur : les cartes directes seules ne suffisent pas (il faut combiner — inverser un foyer, amplifier, annuler), solution optimale en '+P._minTurns+' tour(s).';
+  return P;
+}
+function genConstrained(){
+  const P=genBuild();
+  if(PUZZLES.length===HAND_COUNT) PUZZLES.push(P); else PUZZLES[HAND_COUNT]=P;
+  loadPuzzle(HAND_COUNT);
+}
+
+/* ============================ ÉTAT ============================ */
+let P, gauges, gMeta, grid, ROWS, COLS, hand, sel, turn, left, finished, memoireGrabbed, logEntries;
+
+function loadPuzzle(idx){
+  P = PUZZLES[idx];
+  gMeta = {}; gauges = {};
+  P.gauges.forEach(g=>{ gMeta[g.key]=g; gauges[g.key]=g.start; });
+  ROWS = P.map.length; COLS = P.map[0].length;
+  grid = [];
+  for(let r=0;r<ROWS;r++){ const row=[]; const line=P.map[r];
+    for(let c=0;c<COLS;c++){ const ch=line[c]||' ';
+      if(ch===' ') row.push({type:'void'});
+      else if(ch==='.') row.push({type:'empty',card:null});
+      else { const spec=P.legend[ch];
+        row.push(Object.assign({card:null},JSON.parse(JSON.stringify(spec)))); }
+    }
+    grid.push(row);
+  }
+  hand = P.dotation.map(c=>Object.assign({},c));   // clone (équipement par partie)
+  sel=null; turn=1; left=P.perTurn; finished=false; memoireGrabbed=false; logEntries=[];
+  reconcileAspects();
+  pushLog('La scène s’ouvre.');
+  document.getElementById('overlay').classList.remove('show');
+  renderTabs(idx); renderHeader(); renderAll();
+  document.getElementById('gen-row').style.display = P._gen ? 'flex' : 'none';
+  document.getElementById('inspector').innerHTML='<div class="insp-row insp-empty">Touche une carte ou une case pour voir ses propriétés.</div>';
+}
+
+/* ============================ HELPERS ============================ */
+function inb(r,c){ return r>=0&&r<ROWS&&c>=0&&c<COLS; }
+function cellAt(r,c){ return inb(r,c)?grid[r][c]:null; }
+const _OPTXT={gte:'≥',lte:'≤',gt:'>',lt:'<',eq:'='};
+function condMet(cond){ const v=gauges[cond.gauge];
+  switch(cond.op){case'gte':return v>=cond.value;case'lte':return v<=cond.value;
+    case'gt':return v>cond.value;case'lt':return v<cond.value;case'eq':return v===cond.value;} return false; }
+function condText(cond){ return (gMeta[cond.gauge]?gMeta[cond.gauge].nm:cond.gauge)+' '+(_OPTXT[cond.op]||cond.op)+' '+cond.value; }
+function ortho(r,c){ return [{r:r-1,c},{r:r+1,c},{r,c:c-1},{r,c:c+1}].filter(p=>inb(p.r,p.c)); }
+function isElement(cell){ return cell && cell.type==='foyer'; }
+// un foyer/aspect est favorable s'il pousse la jauge vers son but
+function favorable(cell){ const m=gMeta[cell.gauge]; return m.mode==='down' ? cell.delta<0 : cell.delta>0; }
+function auraAt(r,c,type){ return ortho(r,c).some(p=>{ const oc=grid[p.r][p.c].card;
+  return oc && !oc.suspended && (oc.aura===type||oc.grantedAura===type); }); }
+// force de l'aura d'amplification couvrant (r,c) : 2 par défaut, 4 si l'amplificateur est lui-même doublé (objet)
+function amplifyFactorAt(r,c){ let f=1;
+  ortho(r,c).forEach(p=>{ const oc=grid[p.r][p.c].card;
+    if(oc&&!oc.suspended&&(oc.aura==='amplify'||oc.grantedAura==='amplify')) f=Math.max(f, oc.auraFactor||2); });
+  return f; }
+function clampG(key,v){ const m=gMeta[key]; return Math.max(0, Math.min((m.dispMax||10)+2, v)); }
+
+// capture spatiale : une entité mobile encore hostile suspend l'aura des personnages qu'elle jouxte
+function recomputeCapture(){
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cl=grid[r][c]; if(cl.card) cl.card.suspended=false; }
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+    if(isElement(cell)&&cell.captures&&!cell.dormant&&!favorable(cell)){
+      ortho(r,c).forEach(p=>{ const oc=grid[p.r][p.c].card; if(oc) oc.suspended=true; }); } }
+}
+function auraKindAt(r,c){
+  if(auraAt(r,c,'calm')) return 'calm';
+  if(auraAt(r,c,'invert')) return 'invert';
+  if(auraAt(r,c,'amplify')) return 'amplify';
+  return null;
+}
+
+// delta effectif d'un élément ce tour. Auras CUMULATIVES, ordre : annuler > inverser > amplifier
+function elementDelta(cell,r,c){
+  if(cell.dormant) return 0;
+  let d = cell.delta * (P.law.elementMult?P.law.elementMult(cell,gauges):1);
+  if(auraAt(r,c,'calm')) return 0;
+  if(auraAt(r,c,'invert')) d = -d;
+  { const f=amplifyFactorAt(r,c); if(f>1) d=d*f; }
+  return d;
+}
+// contribution d'un aspect STATIQUE (ne se répète pas : appliqué une fois, réconcilié si une aura change)
+function aspectContribution(cell,r,c){
+  if(auraAt(r,c,'calm')) return 0;
+  let d = cell.delta;
+  if(auraAt(r,c,'invert')) d = -d;
+  { const f=amplifyFactorAt(r,c); if(f>1) d=d*f; }
+  return d;
+}
+function reconcileAspects(){
+  recomputeCapture();
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+    if(cell.type!=='aspect') continue;
+    if(cell.applied===undefined) cell.applied=0;
+    const want=aspectContribution(cell,r,c);
+    if(want!==cell.applied){ gauges[cell.gauge]=clampG(cell.gauge,gauges[cell.gauge]+(want-cell.applied)); cell.applied=want; }
+  }
+}
+
+// effets d'une pose de personnage (effet propre amplifié + loi + rétro-amplification)
+function computeEffects(card,r,c){
+  let eff=[]; const nb=ortho(r,c);
+  const f = card.amplifiable ? amplifyFactorAt(r,c) : 1;
+  if(card.effect){
+    for(const g in card.effect) eff.push({g,d:card.effect[g]*f,why:f>1?('×'+f+' aura'):''}); }
+  if(card.aura==='amplify'){ // poser un amplificateur double l'effet des cartes déjà adjacentes
+    nb.forEach(p=>{ const oc=grid[p.r][p.c].card;
+      if(oc&&oc.effect&&oc.amplifiable) for(const g in oc.effect) eff.push({g,d:oc.effect[g],why:oc.name+' amplifié'}); }); }
+  if(P.law.modifyEffect) eff=eff.map(e=>P.law.modifyEffect(e,gauges));
+  return eff;
+}
+
+/* ============================ RENDU ============================ */
+function renderTabs(idx){ const el=document.getElementById('tabs'); el.innerHTML='';
+  PUZZLES.forEach((p,i)=>{ const b=document.createElement('div'); b.className='tab'+(i===idx?' active':'');
+    b.textContent=(i+1)+'. '+p.title; b.onclick=()=>loadPuzzle(i); el.appendChild(b); }); }
+
+function renderHeader(){ document.getElementById('scene').textContent=P.scene;
+  document.getElementById('sub').textContent=P.sub;
+  document.getElementById('law').innerHTML='<span class="law-tag">Loi du lieu</span>'+P.law.text;
+  // légende contextuelle
+  const lg=document.getElementById('legend'); let h='';
+  const has=(f)=>Object.values(P.legend).some(f);
+  if(has(s=>s.type==='foyer')) h+='<span><i class="f"></i> Foyer — avance chaque tour (vert s’il t’aide, rouge sinon)</span>';
+  if(has(s=>s.type==='aspect')) h+='<span><i class="asp"></i> Aspect statique — contribue une fois, à inverser/annuler</span>';
+  if(has(s=>s.move)) h+='<span>↪ se déplace chaque tour</span>';
+  if(has(s=>s.spawn)) h+='<span>✦ invoque des entités</span>';
+  if(has(s=>s.type==='memoire')) h+='<span><i class="m"></i> Mémoire enfouie — l’exhumer coûte un placement</span>';
+  lg.innerHTML=h;
+}
+
+function renderAll(){ renderGauges(); renderGrid(); renderHand(); renderTurn(); renderLog(); renderValidate(); }
+
+function renderGauges(){ const el=document.getElementById('gauges'); el.innerHTML='';
+  P.gauges.forEach(g=>{ const v=gauges[g.key]; const ok=g.mode==='down'?v<=g.target:v>=g.target;
+    const max=g.dispMax||10; const pct=Math.max(0,Math.min(100,v/max*100));
+    const linePos=Math.max(0,Math.min(100,g.target/max*100));
+    const d=document.createElement('div'); d.className='gauge-v'+(ok?' ok':''); d.dataset.k=g.key;
+    const tb = g.mode==='down' ? `bottom:0;height:${linePos}%` : `top:0;height:${100-linePos}%`;
+    const arrow = g.mode==='down'?'≤':'≥';
+    d.innerHTML=`<div class="vval">${v}${ok?'<span class="vok">✓</span>':''}</div>
+      <div class="vbar"><div class="vtarget" style="${tb}"></div><div class="vfill" style="height:${pct}%"></div><div class="vline" style="bottom:${linePos}%"></div></div>
+      <div class="vprev">&nbsp;</div>
+      <div class="vnm">${g.nm}</div>
+      <div class="vbut">but ${arrow} ${g.target}</div>
+      <div class="vkind">${GENERIC_KEYS.includes(g.key)?'commune':'propre'}</div>`;
+    el.appendChild(d); });
+}
+
+function renderGrid(){ const el=document.getElementById('grid'); el.innerHTML='';
+  el.style.gridTemplateColumns=`repeat(${COLS},68px)`;
+  el.style.gridTemplateRows=`repeat(${ROWS},68px)`;
+  const valid = sel?validCells(sel):[];
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const cell=grid[r][c]; const div=document.createElement('div'); div.className='cell';
+    if(cell.type==='void'){ div.className='cell void'; el.appendChild(div); continue; }
+    const isValid=valid.some(p=>p.r===r&&p.c===c); if(isValid) div.classList.add('valid');
+    const ampHere=auraAt(r,c,'amplify');
+    const k=auraKindAt(r,c); if(k) div.classList.add('aura-'+k);
+
+    if(cell.card){
+      div.classList.add('placed','is-perso'); if(cell.card.suspended) div.classList.add('suspended');
+      const x2=(cell.card.amplifiable&&ampHere)?'<span class="x2-badge">×2</span>':'';
+      const eq=(cell.card.equips||[]).map(o=>`<span class="equip-badge">${o.ic}</span>`).join('')+(cell.card.suspended?'<span class="equip-badge">🔒</span>':'');
+      div.innerHTML=`<div class="card-mini"><span class="ic">${cell.card.ic}</span><span class="cn">${cell.card.name}</span></div>${x2}${eq}`;
+    } else if(cell.type==='foyer'){
+      const d=elementDelta(cell,r,c);
+      const fav = cell.dormant ? favorable(cell) : (d!==0 ? (gMeta[cell.gauge].mode==='down'?d<0:d>0) : favorable(cell));
+      div.classList.add(cell.dormant?'dormant':(fav?'good':'bad'));
+      const marks=(cell.move?'<span class="mark">↪</span>':'')+(cell.spawn?'<span class="mark">✦</span>':'');
+      const eq=(cell.equips||[]).map(o=>`<span class="equip-badge">${o.ic}</span>`).join('');
+      const dlt = cell.dormant
+        ? `<span class="dlt" style="color:#8a8576">${cell.delta>0?'+':''}${cell.delta} dort</span>`
+        : `<span class="dlt" style="color:${fav?'var(--sage)':'var(--sanguine)'}">${d>0?'+':''}${d}/t</span>`;
+      div.innerHTML=`<span class="ent">${cell.ent}</span><span class="lbl">${cell.label}</span>${dlt}${marks}${eq}`;
+    } else if(cell.type==='aspect'){
+      const d=aspectContribution(cell,r,c);
+      const fav = (gMeta[cell.gauge].mode==='down') ? (d<0) : (d>0);
+      div.classList.add('aspect', fav?'good':'bad');
+      const eq=(cell.equips||[]).map(o=>`<span class="equip-badge">${o.ic}</span>`).join('');
+      div.innerHTML=`<span class="ent">${cell.ent}</span><span class="lbl">${cell.label}</span>`+
+        `<span class="dlt" style="color:${fav?'var(--sage)':'var(--sanguine)'}">${d>0?'+':''}${d}</span>`+
+        `<span class="aspect-tag">statique</span>${eq}`;
+    } else if(cell.type==='memoire'){
+      div.classList.add('memoire');
+      div.innerHTML = memoireGrabbed?`<span class="ent">📖</span><span class="lbl">exhumée</span>`:`<span class="ent">▦</span><span class="lbl">mémoire</span>`;
+    }
+    if(isValid){ div.classList.add('placeable'); div.onmouseenter=()=>showPreview(r,c); div.onmouseleave=clearPreview; }
+    div.onclick=()=>{ if(sel&&isValid) placeAt(r,c); else inspectCell(r,c); };
+    el.appendChild(div);
+  }
+}
+
+function renderHand(){ const el=document.getElementById('hand'); el.innerHTML='';
+  hand.forEach(card=>{ const d=document.createElement('div');
+    d.className='card '+(card.type==='Objet'?'t-objet':'t-perso')+(sel&&sel.id===card.id?' sel':'');
+    d.innerHTML=`<span class="ic">${card.ic}</span><div class="body"><div class="cn">${card.name}</div><div class="role"><span class="chip ${card.type==='Objet'?'chip-o':'chip-p'}">${card.type}</span> ${card.role}</div><div class="ef">${card.ef}</div></div>`;
+    d.onclick=()=>selectCard(card); el.appendChild(d); });
+  if(hand.length===0) el.innerHTML='<div class="ef" style="color:#8a8576;font-size:12px">Dotation épuisée.</div>';
+}
+function renderTurn(){ document.getElementById('turn').textContent=turn; document.getElementById('left').textContent=left; }
+function renderLog(){ const el=document.getElementById('log'); el.innerHTML='';
+  logEntries.slice(-40).reverse().forEach(e=>{ const d=document.createElement('div'); d.className='e'+(e.law?' law':''); d.innerHTML=e.t; el.appendChild(d); }); }
+function renderValidate(){ document.getElementById('validate').disabled=!objectiveMet(); }
+
+/* ============================ INSPECTEUR ============================ */
+function selectCard(card){ if(finished) return; sel=(sel&&sel.id===card.id)?null:card; inspectCard(card); renderHand(); renderGrid(); }
+function inspectCard(card){ const el=document.getElementById('inspector');
+  const badge=card.type==='Objet'?'<span class="tbadge objet">Objet</span>':'<span class="tbadge perso">Personnage</span>';
+  el.innerHTML=`<div class="insp-head"><span class="insp-ic">${card.ic}</span><div><div class="insp-nm">${card.name}</div>${badge} <span class="insp-sup">${card.sup||''}</span></div></div>
+    <div class="insp-row"><b>Verbe</b> ${card.role}</div>
+    <div class="insp-row"><b>Effet</b> ${card.ef}</div>
+    <div class="insp-row"><b>Zone d’action</b> ${card.portee||'—'}</div>`;
+}
+function inspectCell(r,c){ const cell=grid[r][c],el=document.getElementById('inspector');
+  if(!cell||cell.type==='void') return;
+  if(cell.card){ inspectCard(cell.card); return; }
+  if(cell.type==='foyer'||cell.type==='aspect'){
+    const nm=gMeta[cell.gauge].nm;
+    const d = cell.type==='aspect'?aspectContribution(cell,r,c):elementDelta(cell,r,c);
+    const k=auraKindAt(r,c);
+    const fav = cell.type==='aspect' ? ((gMeta[cell.gauge].mode==='down')?d<0:d>0) : favorable(cell);
+    let state;
+    if(cell.type==='aspect'){
+      state = (k==='calm'?'<b>annulé</b> : ne contribue plus.'
+        : k==='invert'?'<b style="color:var(--sage)">inversé</b> : contribue désormais '+(d>0?'+':'')+d+' à '+nm+'.'
+        : k==='amplify'?'<b style="color:var(--ochre)">amplifié</b> : contribue '+(d>0?'+':'')+d+' à '+nm+'.'
+        : 'aspect <b>statique</b> : contribue '+(d>0?'+':'')+d+' à '+nm+' une fois (ne se répète pas).');
+    } else {
+      state = cell.dormant
+        ? '<b>dormant</b> — une fois éveillé, poussera '+nm+' '+(cell.delta>0?'+':'')+cell.delta+'/tour. S’éveille quand <b>'+condText(cell.wakeWhen)+'</b>.'+(cell.flavor?' <span style="color:var(--muted)">('+cell.flavor+')</span>':'')
+        : k==='calm'?'<b>annulé</b> par une aura : ne pousse plus.'
+        : 'pousse <b>'+nm+' '+(d>0?'+':'')+d+'</b> à chaque fin de tour'+(k==='invert'?' (inversé)':k==='amplify'?' (amplifié)':'')+'.';
+    }
+    const moves = cell.move?'<div class="insp-row"><b>Déplacement</b> patrouille d’une case par tour (trajet fixe).'+(cell.captures?' Tant qu’il est hostile, il <b>capture</b> les personnages qu’il jouxte : leur aura est suspendue. Le convertir (objet) le neutralise.':'')+'</div>':'';
+    const spawns = cell.spawn?'<div class="insp-row"><b>Spawn</b> invoque «&nbsp;'+cell.spawn.label+'&nbsp;» ('+(gMeta[cell.spawn.gauge]?gMeta[cell.spawn.gauge].nm:cell.spawn.gauge)+' '+(cell.spawn.delta>0?'+':'')+cell.spawn.delta+'/tour) dans une case voisine'+(cell.spawn.when?', quand '+condText(cell.spawn.when):'')+', jusqu’à '+cell.spawn.cap+' fois. Annule-le pour stopper.</div>':'';
+    const equip = (cell.equips&&cell.equips.length)?'<div class="insp-row"><b>Objet</b> '+cell.equips.map(o=>o.name).join(', ')+' apposé(s) : modification permanente.</div>':'';
+    const tag = cell.type==='aspect'?'Aspect statique':(fav?'Foyer favorable':'Foyer défavorable');
+    el.innerHTML=`<div class="insp-head"><span class="insp-ic">${cell.ent}</span><div><div class="insp-nm">${cell.label}</div>
+        <span class="tbadge ${fav?'elem':'foyer'}">${tag}</span></div></div>
+      <div class="insp-row">${state}</div>${moves}${spawns}${equip}
+      <div class="insp-row"><b>Agir</b> Une aura adjacente l'inverse, l'amplifie ou l'annule (effets cumulés) ; un objet « modificateur » peut l'altérer en permanence.</div>`;
+  } else if(cell.type==='memoire'){
+    el.innerHTML=`<div class="insp-head"><span class="insp-ic">${memoireGrabbed?'📖':'▦'}</span><div><div class="insp-nm">Mémoire enfouie</div><span class="tbadge mem">Mémoire</span></div></div>
+      <div class="insp-row">${memoireGrabbed?'Déjà exhumée.':'Y poser une carte l’exhume (fragment d’histoire), mais coûte un placement.'}</div>`;
+  } else {
+    el.innerHTML=`<div class="insp-row insp-empty">Case libre. ${sel?'Pose «&nbsp;'+sel.name+'&nbsp;» ici.':'Sélectionne une carte.'}</div>`;
+  }
+}
+
+/* ============================ JEU ============================ */
+function validCells(card){ const out=[];
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+    if(card.type==='Objet'){
+      const onPerso = cell.card && cell.card.type==='Personnage' && (card.special||card.grantsAura);
+      const onElem  = (cell.type==='foyer'||cell.type==='aspect') && card.elementMod;
+      if(onPerso||onElem) out.push({r,c});
+    } else { if((cell.type==='empty'||cell.type==='memoire') && !cell.card) out.push({r,c}); }
+  }
+  return out;
+}
+
+function showPreview(r,c){ if(!sel) return;
+  let eff=[];
+  if(sel.type==='Objet'){ const host=grid[r][c].card;
+    if(host&&sel.special==='propagate'&&host.effect){ const amp=host.amplifiable&&auraAt(r,c,'amplify');
+      for(const g in host.effect) eff.push({g,d:host.effect[g]*(amp?2:1)}); } }
+  else eff=computeEffects(sel,r,c);
+  document.querySelectorAll('.gauge-v').forEach(gEl=>{ const key=gEl.dataset.k;
+    const sum=eff.filter(e=>e.g===key).reduce((a,e)=>a+e.d,0); const prev=gEl.querySelector('.vprev');
+    if(sum!==0){ prev.textContent=`→ ${clampG(key,gauges[key]+sum)} (${sum>0?'+':''}${sum})`; } else prev.innerHTML='&nbsp;'; });
+}
+function clearPreview(){ renderGauges(); }
+
+function placeAt(r,c){
+  if(finished||!sel||left<=0) return;
+  const card=sel;
+  if(card.type==='Objet'){
+    const cell=grid[r][c];
+    // a) greffe sur un ÉLÉMENT (foyer/aspect) pour le modifier (cumulable)
+    if((cell.type==='foyer'||cell.type==='aspect') && card.elementMod){
+      (cell.equips=cell.equips||[]).push(card);
+      if(card.elementMod==='invertPerm'){ cell.delta=-cell.delta;
+        pushLog(`<b>${card.name}</b> apposé sur ${cell.label} : son effet est inversé en permanence (${gMeta[cell.gauge].nm} ${cell.delta>0?'+':''}${cell.delta}/tour).`); }
+      else if(card.elementMod==='neutralizePerm'){ cell.delta=0; cell.disabled=true;
+        pushLog(`<b>${card.name}</b> apposé sur ${cell.label} : il est neutralisé définitivement.`); }
+      hand=hand.filter(x=>x.id!==card.id); sel=null; left--; reconcileAspects(); renderAll(); checkState(); return;
+    }
+    // b) greffe sur un PERSONNAGE pour l'augmenter (cumulable)
+    const host=cell.card; if(!host||host.type!=='Personnage') return;
+    (host.equips=host.equips||[]).push(card); const parts=[];
+    if(card.special==='propagate'){
+      let did=false;
+      if(host.effect){ const f=host.amplifiable?amplifyFactorAt(r,c):1;
+        for(const g in host.effect){ const d=host.effect[g]*f; gauges[g]=clampG(g,gauges[g]+d); parts.push(`${gMeta[g].nm} ${d>0?'+':''}${d}`); }
+        pushLog(`<b>${card.name}</b> greffée sur ${host.name} · effet répété ⛓️ : ${parts.join(', ')}`); did=true; }
+      if(host.aura==='amplify'||host.grantedAura==='amplify'){
+        const oldF=host.auraFactor||2; host.auraFactor=oldF*2; const newF=host.auraFactor;
+        // double l'amplification ET la ré-applique aux cartes amplifiables déjà adjacentes
+        const bumped=[];
+        ortho(r,c).forEach(p=>{ const oc=grid[p.r][p.c].card;
+          if(oc&&oc.effect&&oc.amplifiable&&!oc.suspended) for(const g in oc.effect){ const extra=oc.effect[g]*(newF-oldF); gauges[g]=clampG(g,gauges[g]+extra); bumped.push(`${oc.name} ${gMeta[g].nm} ${extra>0?'+':''}${extra}`); } });
+        pushLog(`<b>${card.name}</b> double l’amplification de ${host.name} → ×${newF}.`+(bumped.length?` Renforce : ${bumped.join(', ')}.`:'')); did=true; }
+      if(!did) pushLog(`<b>${card.name}</b> greffée sur ${host.name} (rien à répéter).`);
+    }
+    else if(card.grantsAura){ host.grantedAura=card.grantsAura;
+      pushLog(`<b>${card.name}</b> greffé sur ${host.name} · aura « ${card.grantsAura} » accordée.`); }
+    else pushLog(`<b>${card.name}</b> greffée sur ${host.name}.`);
+    hand=hand.filter(x=>x.id!==card.id); sel=null; left--; reconcileAspects(); renderAll(); checkState(); return;
+  }
+  const eff=computeEffects(card,r,c); grid[r][c].card=card; const parts=[];
+  eff.forEach(e=>{ gauges[e.g]=clampG(e.g,gauges[e.g]+e.d);
+    parts.push(`${gMeta[e.g].nm} ${e.d>0?'+':''}${e.d}${e.why?' <i>('+e.why+')</i>':''}`); });
+  let memText='';
+  if(grid[r][c].type==='memoire'&&!memoireGrabbed){ memoireGrabbed=true; memText=' — <b>mémoire exhumée</b>'; }
+  pushLog(`<b>${card.name}</b> posé · ${parts.length?parts.join(', '):'pas d’effet direct'}${memText}`);
+  hand=hand.filter(x=>x.id!==card.id); sel=null; left--;
+  if(card.bonusPlace){ left+=card.bonusPlace; pushLog(`${card.name} accorde un placement supplémentaire ce tour (+${card.bonusPlace}).`); }
+  reconcileAspects(); renderAll(); checkState();
+}
+
+function endTurn(){
+  if(finished) return;
+  // 1) réveils éventuels
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+    if(isElement(cell)&&cell.dormant&&cell.wakeWhen&&condMet(cell.wakeWhen)){ cell.dormant=false;
+      pushLog(`<b>Réveil</b> — ${cell.label} s’éveille (${condText(cell.wakeWhen)}) : pousse désormais ${gMeta[cell.gauge].nm} ${cell.delta>0?'+':''}${cell.delta}/tour.`,true); } }
+  // 2) résolution des éléments
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+    if(!isElement(cell)||cell.dormant) continue;
+    const d=elementDelta(cell,r,c); if(d===0){ pushLog(`${cell.label} neutralisé : aucune poussée.`); continue; }
+    gauges[cell.gauge]=clampG(cell.gauge,gauges[cell.gauge]+d);
+    pushLog(`${cell.label} → ${gMeta[cell.gauge].nm} ${d>0?'+':''}${d}`, d>0&&(cell.type==='foyer'||cell.good===false));
+  }
+  // 3) loi du lieu (couplage)
+  if(P.law.onTurnEnd) P.law.onTurnEnd(gauges,(t)=>pushLog(t,true));
+  // 4) spawn : certains foyers essaiment (plafonné, gelé s'ils sont annulés)
+  const spawners=[];
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+    if(isElement(cell)&&cell.spawn&&!cell.dormant) spawners.push({cell,r,c}); }
+  spawners.forEach(({cell,r,c})=>{ const sp=cell.spawn; sp.count=sp.count||0;
+    if(auraAt(r,c,'calm')) return;                       // annulé → n'essaime pas
+    if(sp.when && !condMet(sp.when)) return;
+    if(sp.count>=sp.cap) return;
+    const slot=ortho(r,c).find(p=>grid[p.r][p.c].type==='empty'&&!grid[p.r][p.c].card);
+    if(slot){ sp.count++; grid[slot.r][slot.c]={type:'foyer',gauge:sp.gauge,delta:sp.delta,ent:sp.ent,label:sp.label,card:null};
+      pushLog(`<b>${cell.label}</b> essaime : ${sp.label} apparaît (${gMeta[sp.gauge].nm} ${sp.delta>0?'+':''}${sp.delta}/tour).`,true); } });
+  // 5) déplacement : certaines entités patrouillent
+  const movers=[];
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+    if(isElement(cell)&&cell.move) movers.push({cell,r,c}); }
+  movers.forEach(({cell,r,c})=>{ const path=cell.move.path; let pi=(cell.move.pi||0);
+    pi=(pi+1)%path.length; const [nr,nc]=path[pi]; const dest=grid[nr][nc];
+    if(dest && dest.type==='empty' && !dest.card){ cell.move.pi=pi;
+      grid[nr][nc]=cell; grid[r][c]={type:'empty',card:null};
+      pushLog(`${cell.label} se déplace.`); } });
+  reconcileAspects();
+  turn++; left=P.perTurn; sel=null; renderAll(); checkState();
+}
+
+function objectiveMet(){ return P.gauges.every(g=> g.mode==='down'?gauges[g.key]<=g.target:gauges[g.key]>=g.target); }
+function checkState(){ renderValidate();
+  for(const g of P.gauges){ const v=gauges[g.key];
+    if(g.mode==='down'&&v>=g.danger) return lose(g.nm+' a débordé : le récit s’effondre.');
+    if(g.mode==='up'&&v<=g.danger) return lose(g.nm+' s’est éteinte : plus rien ne tient.'); }
+  if(hand.length===0&&!objectiveMet()) return lose('Dotation épuisée sans avoir rétabli la scène.');
+}
+function validate(){ if(objectiveMet()) win(); }
+function win(){ finished=true; const m=document.getElementById('modal');
+  const frag = memoireGrabbed?`<div class="frag">${P.fragment}</div><p>Scène rétablie <b>et mémoire exhumée</b>. Complétion totale.</p>`
+    :`<p>Scène rétablie. La <b>mémoire enfouie</b> est restée scellée — reviens mieux équipé pour l’exhumer.</p>`;
+  m.innerHTML=`<h3>La rue se souvient</h3>${frag}<button class="btn" onclick="loadPuzzle(PUZZLES.indexOf(P))">Rejouer</button>`;
+  document.getElementById('overlay').classList.add('show'); }
+function lose(reason){ finished=true; const m=document.getElementById('modal');
+  m.innerHTML=`<h3>Le silence l’emporte</h3><p>${reason}</p>
+    <p style="color:#7a6f57;font-size:12.5px">Pense aux auras : inverser un foyer (puis l’amplifier) le retourne en ta faveur ; annuler stoppe net ; et les objets se greffent sur tes personnages.</p>
+    <button class="btn" onclick="loadPuzzle(PUZZLES.indexOf(P))">Recommencer</button>`;
+  document.getElementById('overlay').classList.add('show'); }
+
+function pushLog(t,law){ logEntries.push({t,law:!!law}); }
+
+document.getElementById('endturn').onclick=endTurn;
+document.getElementById('validate').onclick=validate;
+document.getElementById('reset').onclick=()=>loadPuzzle(PUZZLES.indexOf(P));
+document.getElementById('gendiff').onchange=(e)=>{ genDiffName=e.target.value; genConstrained(); };
+document.getElementById('regen').onclick=()=>genConstrained();
+
+PUZZLES.push(genBuild());   // 5e onglet : lieu procédural sous contraintes
+loadPuzzle(0);
+</script>
+</body>
+</html>
