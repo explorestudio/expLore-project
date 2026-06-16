@@ -53,11 +53,12 @@
   .cell .ent{font-size:25px}
   .cell .lbl{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:7.5px;color:#6b6657;text-transform:uppercase;letter-spacing:.02em}
   .cell .dlt{position:absolute;top:2px;right:3px;font-size:9px;font-weight:800;font-variant-numeric:tabular-nums}
+  .cell .persist-dlt{top:auto;bottom:2px;left:3px;right:auto;background:rgba(245,239,225,.85);padding:0 3px;border-radius:3px}
   .cell.placeable{cursor:pointer}
   .cell.valid{box-shadow:0 0 0 2px var(--ochre),0 0 12px rgba(192,138,46,.5)}
-  .cell.target{box-shadow:0 0 0 3px var(--blue,#3a6ea5),0 0 14px rgba(58,110,165,.7);cursor:pointer;animation:tpulse 1s ease-in-out infinite}
+  .cell.target{box-shadow:0 0 0 3px var(--blue,#3a6ea5),0 0 14px rgba(58,110,165,.8);cursor:pointer;animation:tpulse .7s ease-in-out infinite;background:linear-gradient(rgba(58,110,165,.10),rgba(58,110,165,.10))}
   .cell.aura-source{outline:2px dashed var(--blue,#3a6ea5);outline-offset:-4px}
-  @keyframes tpulse{0%,100%{box-shadow:0 0 0 3px var(--blue,#3a6ea5),0 0 6px rgba(58,110,165,.4)}50%{box-shadow:0 0 0 3px var(--blue,#3a6ea5),0 0 16px rgba(58,110,165,.85)}}
+  @keyframes tpulse{0%,100%{box-shadow:0 0 0 3px var(--blue,#3a6ea5),0 0 3px rgba(58,110,165,.3)}50%{box-shadow:0 0 0 4px var(--blue,#3a6ea5),0 0 22px rgba(58,110,165,1)}}
   .cell.placed.is-perso{border-color:#8f8573;border-radius:10px;background:var(--paper2)}
   .cell .card-mini{display:flex;flex-direction:column;align-items:center;line-height:1.05}
   .cell .card-mini .ic{font-size:23px}
@@ -88,9 +89,10 @@
   .legend i{width:13px;height:13px;border-radius:3px;display:inline-block;border:1px solid #c9c1ad}
   .legend i.f{box-shadow:inset 0 0 0 2px var(--sanguine);background:var(--paper)}
   .legend i.g{box-shadow:inset 0 0 0 2px var(--sage);background:var(--paper)}
-  .gen-row{display:flex;gap:6px;margin-top:8px;align-items:stretch}
-  .gen-row .btn{flex:1;margin:0}
-  .gen-select{flex:1;background:var(--panel-2,#2a2722);color:var(--ink,#f0e9da);border:1px solid #4a443a;border-radius:6px;padding:6px 8px;font:inherit;font-size:12.5px}
+  .gen-row{display:flex;gap:6px;margin-top:8px;align-items:stretch;width:100%}
+  .gen-row .btn{flex:1 1 0;margin:0;min-width:0;white-space:nowrap}
+  .gen-select{flex:2 1 0;background:var(--ink2);color:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;font-size:12.5px;min-width:0;cursor:pointer}
+  .gen-select option{background:var(--ink2);color:var(--paper)}
   .legend i.m{background:repeating-linear-gradient(90deg,#cfc6ae,#cfc6ae 3px,#c3b99e 3px,#c3b99e 6px)}
 
   .princ{margin-top:9px;font-size:11px;color:var(--muted);line-height:1.5;max-width:560px;border-top:1px solid var(--line);padding-top:8px}
@@ -173,9 +175,10 @@
     </div>
     <div class="gen-row" id="gen-row" style="display:none">
       <select id="gendiff" class="gen-select">
-        <option value="standard">Standard · combinaison requise</option>
+        <option value="standard">Standard · 3 jauges, multi-fronts</option>
         <option value="serre">Serré · peu de solutions</option>
-        <option value="tension">Tension · 2 jauges opposées</option>
+        <option value="reactif">Réactif · pièges qui s’éveillent</option>
+        <option value="dynamique">Dynamique · terrain vivant</option>
       </select>
       <button class="btn" id="regen">🎲 Régénérer</button>
     </div>
@@ -364,39 +367,95 @@ const GEN_GB=[{key:'oubli',nm:'Oubli'},{key:'doute',nm:'Doute'},{key:'discorde',
 const GEN_FN={oubli:['L’oubli','La lacune','Le silence'],doute:['La rumeur','Le soupçon','La défiance'],discorde:['La querelle','La cabale','La fronde']};
 const GEN_DN={oubli:['Le témoin','La gardienne','Le passeur'],doute:['Le savant','La preuve','Le notaire'],discorde:['Le médiateur','Le pacte','La conciliatrice']};
 const GEN_DIFFS={
-  standard:{label:'Standard · combinaison requise', gauges:1, sMin:9,sMax:11,Fmin:2,Fmax:3,nd:[1,2], minTurns:2},
-  serre:   {label:'Serré · peu de solutions',       gauges:1, sMin:9,sMax:11,Fmin:2,Fmax:3,nd:[1,2], minTurns:2, maxOpenings:6},
-  tension: {label:'Tension · 2 jauges opposées',     gauges:2, sMin:8,sMax:9, Fmin:2,Fmax:3,nd:[1,1], minTurns:2},
+  standard: {label:'Standard · 3 jauges, multi-fronts',     gauges:3, sMin:7,sMax:9, Fmin:3,Fmax:4, nd:[1,1], minTurns:3, reactiveProb:0.3},
+  serre:    {label:'Serré · peu de solutions',              gauges:3, sMin:7,sMax:9, Fmin:3,Fmax:4, nd:[1,1], minTurns:3, reactiveProb:0.3, maxOpenings:6},
+  reactif:  {label:'Réactif · des pièges qui s’éveillent',   gauges:3, sMin:7,sMax:9, Fmin:3,Fmax:4, nd:[1,1], minTurns:3, reactiveProb:0.6},
+  dynamique:{label:'Dynamique · terrain vivant',            gauges:3, sMin:7,sMax:9, Fmin:3,Fmax:4, nd:[1,1], minTurns:3, dynamic:'any', reactiveProb:0.2},
 };
 const GEN_UPN={solidarite:'Solidarité',ferveur:'Ferveur',entraide:'Entraide'};
 const GEN_SUP=['Le métier','La fabrique','L’atelier','La confrérie','Le chœur'];
 // --- construit un candidat jouable (schéma complet) depuis une graine + difficulté ---
 function genCandidate(seed,d){
   const rng=mulberry32(seed);const ri=(a,b)=>a+Math.floor(rng()*(b-a+1));const pk=a=>a[Math.floor(rng()*a.length)];
-  const twoG = d.gauges===2;
-  const gA=pk(GEN_GB);                                 // jauge « menace » (à faire baisser)
-  let gB=null; if(twoG){ const upk=pk(['solidarite','ferveur','entraide']); gB={key:upk,nm:GEN_UPN[upk]}; }
-  const startA=ri(d.sMin,d.sMax);const dangerA=startA+ri(3,5),targetA=2;
-  const startB= twoG?ri(1,2):0; const targetB= twoG?ri(4,5):0; const dangerB=0;
-  const F=ri(d.Fmin,d.Fmax);
+  const nG = d.gauges||1;
+  // ---- jauges : nG ∈ {1,2,3}. 1 = une menace. 2 = menace + valeur. 3 = deux menaces distinctes + une valeur. ----
+  const menaceKeys=GEN_GB.slice().sort(()=>rng()-0.5);
+  const valeurKeys=['solidarite','ferveur','entraide'].sort(()=>rng()-0.5);
+  const gaugeList=[];
+  // au moins 1 menace
+  const m1=menaceKeys[0]; gaugeList.push({key:m1.key,nm:m1.nm,mode:'down',start:ri(d.sMin,d.sMax),target:2,role:'menace'});
+  if(nG>=3){ const m2=menaceKeys[1]; gaugeList.push({key:m2.key,nm:m2.nm,mode:'down',start:ri(d.sMin,d.sMax),target:2,role:'menace'}); }
+  if(nG>=2){ const v=valeurKeys[0]; gaugeList.push({key:v,nm:GEN_UPN[v],mode:'up',start:ri(1,2),target:ri(4,5),role:'valeur'}); }
+  // danger : pour 'down' on monte (start+3..5) ; pour 'up' on tombe à 0 ; dispMax pour l'affichage
+  gaugeList.forEach(g=>{ if(g.mode==='down'){g.danger=g.start+ri(3,5);g.dispMax=g.danger;} else {g.danger=0;g.dispMax=g.target+1;} });
+  const menaceGauges=gaugeList.filter(g=>g.role==='menace');
+  const valeurGauge=gaugeList.find(g=>g.role==='valeur')||null;
+  // ---- terrain ----
   const ROWS_=5,COLS_=5;const map=[];for(let r=0;r<ROWS_;r++)map.push('.'.repeat(COLS_).split(''));
   const legend={};const used=new Set();
   const free=()=>{let r,c,k,gg=0;do{r=ri(0,ROWS_-1);c=ri(0,COLS_-1);k=r+','+c;gg++;}while(used.has(k)&&gg<60);used.add(k);return[r,c];};
+  // foyers répartis sur les menaces (un par menace au minimum, puis tirage aléatoire)
+  const F=ri(d.Fmin,d.Fmax);const foyersSpec=[];
+  for(let i=0;i<F;i++){const gM = menaceGauges[i % menaceGauges.length];foyersSpec.push({gauge:gM.key,nm:gM.nm,delta:1});}
+  // shuffler pour ne pas avoir le premier toujours sur la même jauge
+  for(let i=foyersSpec.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[foyersSpec[i],foyersSpec[j]]=[foyersSpec[j],foyersSpec[i]];}
   for(let i=0;i<F;i++){const[r,c]=free();const ch=String.fromCharCode(70+i);map[r][c]=ch;
-    legend[ch]={type:'foyer',gauge:gA.key,delta:1,ent:'🔥',label:pk(GEN_FN[gA.key])};}
-  if(rng()<0.5){const[r,c]=free();map[r][c]='M';legend['M']={type:'memoire'};}
-  const nDirect=ri(d.nd[0],d.nd[1]);const dot=[];let id=0;
-  for(let i=0;i<nDirect;i++)dot.push({id:'d'+id++,name:pk(GEN_DN[gA.key]),role:'Symbole',type:'Personnage',sup:'histoire',ic:'🎯',ef:gA.nm+' −3',portee:'Sa case',effect:{[gA.key]:-3},amplifiable:true});
-  if(twoG){ const nSup=ri(1,2); for(let i=0;i<nSup;i++)
-    dot.push({id:'sup'+id++,name:pk(GEN_SUP),role:'Soutien',type:'Personnage',sup:'société',ic:'🤝',ef:gB.nm+' +3',portee:'Sa case',effect:{[gB.key]:3},amplifiable:true}); }
-  dot.push({id:'inv'+id++,name:'L’archiviste',role:'Influenceur',type:'Personnage',sup:'histoire',ic:'🔄',ef:gA.nm+' −1 · son aura INVERSE un foyer adjacent',portee:'Sa case + aura (inverse)',aura:'invert',amplifiable:true,effect:{[gA.key]:-1}});
-  dot.push({id:'amp'+id++,name:'La passeuse',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'➕',ef:'Son aura ×2 l’effet d’UNE carte ou d’un foyer adjacent (à toi de choisir le camp)',portee:'Aura ciblée (×2)',aura:'amplify'});
-  dot.push({id:'calm'+id++,name:'Le scellé',role:'Switch',type:'Objet',sup:'société',ic:'🔒',ef:'Greffé sur un personnage : annule un foyer adjacent',portee:'Sur un personnage',grantsAura:'calm'});
-  const gauges=[{key:gA.key,nm:gA.nm,start:startA,mode:'down',target:targetA,danger:dangerA,dispMax:dangerA}];
-  if(twoG) gauges.push({key:gB.key,nm:gB.nm,start:startB,mode:'up',target:targetB,danger:dangerB,dispMax:targetB+1});
+    legend[ch]={type:'foyer',gauge:foyersSpec[i].gauge,delta:1,ent:'🔥',label:pk(GEN_FN[foyersSpec[i].gauge])};}
+  // RÉACTIFS : un ou plusieurs foyers deviennent réactifs (frappent une fois au contact puis inertes) — proba selon palier
+  if(d.reactiveProb){
+    for(let i=0;i<F;i++){ if(rng()<d.reactiveProb){const ch=String.fromCharCode(70+i);const fL=legend[ch];
+      const targetG = pk(menaceGauges).key;
+      fL.reactOnPlace={gauge:targetG, delta:ri(3,4)};
+      fL.ent='⚡';fL.label=pk(['L’endormi','La sentinelle','Le piège','Le grief']);
+      fL.delta=0; // le réactif normalement ne tick pas (sinon double peine) ; le burst remplace le tick
+    } }
+  }
+  // BLOCKERS : 1-3 voids dispersés
+  const nVoids = d.dynamic? ri(1,2) : ri(2,3);
+  for(let i=0;i<nVoids;i++){const[r,c]=free();map[r][c]=' ';}
+  // FOYER DYNAMIQUE : selon palier, un des foyers reçoit move OU spawn OU captures (et n'est PAS réactif)
+  if(d.dynamic){
+    let fch=null;for(let i=0;i<F;i++){const ch=String.fromCharCode(70+i);if(legend[ch]&&!legend[ch].reactOnPlace){fch=ch;break;}}
+    if(fch){
+      const fpos=(()=>{for(let r=0;r<ROWS_;r++)for(let c=0;c<COLS_;c++)if(map[r][c]===fch)return[r,c];})();
+      const flavor=d.dynamic==='any'?pk(['move','spawn','captures']):d.dynamic;
+      const fL=legend[fch];
+      if(flavor==='move'){
+        const path=[fpos.slice()];const used2=new Set([fpos[0]+','+fpos[1]]);
+        let cur=fpos;const want=ri(3,5);for(let k=0;k<want-1;k++){
+          const adj=[[cur[0]-1,cur[1]],[cur[0]+1,cur[1]],[cur[0],cur[1]-1],[cur[0],cur[1]+1]].filter(([a,b])=>a>=0&&a<ROWS_&&b>=0&&b<COLS_&&map[a][b]==='.'&&!used2.has(a+','+b));
+          if(!adj.length)break;const nx=adj[Math.floor(rng()*adj.length)];path.push(nx);used2.add(nx[0]+','+nx[1]);cur=nx;}
+        const full=path.concat(path.slice(1,-1).reverse());
+        fL.move={path:full,pi:0};fL.ent='🕴️';fL.label='Le rôdeur';
+      } else if(flavor==='spawn'){
+        fL.spawn={gauge:fL.gauge,delta:1,cap:2,ent:'🗯️',label:'Écho'};fL.ent='🗣️';fL.label=pk(['La rumeur-mère','Le foyer-mère','La source']);
+      } else if(flavor==='captures'){
+        fL.captures=true;fL.ent='🕵️';fL.label=pk(['Le veilleur','Le suspicieux','L’inquisiteur']);
+      }
+    }
+  }
+  if(rng()<0.4){const[r,c]=free();map[r][c]='M';legend['M']={type:'memoire'};}
+  // ---- dotation : un direct par menace, un soutien par valeur, et les universels ----
+  const dot=[];let id=0;
+  menaceGauges.forEach(g=>{
+    const nd=ri(d.nd[0],d.nd[1]);
+    for(let i=0;i<nd;i++)dot.push({id:'d'+g.key[0]+(id++),name:pk(GEN_DN[g.key]),role:'Symbole',type:'Personnage',sup:'histoire',ic:'🎯',ef:g.nm+' −2 à la pose, puis −1/tour tant que présent',portee:'Sa case (effet persistant)',effect:{[g.key]:-2},effectPersist:{[g.key]:-1},amplifiable:true});
+  });
+  if(valeurGauge){
+    const nSup=ri(1,2);
+    for(let i=0;i<nSup;i++)dot.push({id:'sup'+(id++),name:pk(GEN_SUP),role:'Soutien',type:'Personnage',sup:'société',ic:'🤝',ef:valeurGauge.nm+' +2 à la pose, puis +1/tour tant que présent',portee:'Sa case (effet persistant)',effect:{[valeurGauge.key]:2},effectPersist:{[valeurGauge.key]:1},amplifiable:true});
+  }
+  if(rng()<0.7) dot.push({id:'cop'+(id++),name:pk(['Le copiste','La greffière','Le doublure']),role:'Copiste',type:'Personnage',sup:'arts',ic:'📜',ef:'À la pose : applique les effets de tous les personnages adjacents (la valeur dépend du voisinage)',portee:'Sa case (positionnel)',copyAdjacent:true});
+  dot.push({id:'inv'+(id++),name:'L’archiviste',role:'Influenceur',type:'Personnage',sup:'histoire',ic:'🔄',ef:'Son aura INVERSE un foyer adjacent (et l’amp ciblé sur lui double l’inversion)',portee:'Aura ciblée (inverse)',aura:'invert'});
+  dot.push({id:'amp'+(id++),name:'La passeuse',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'➕',ef:'Son aura ×2 l’effet d’UNE carte ou d’un foyer adjacent (à toi de choisir le camp)',portee:'Aura ciblée (×2)',aura:'amplify'});
+  dot.push({id:'calm'+(id++),name:'Le scellé',role:'Switch',type:'Objet',sup:'société',ic:'🔒',ef:'Greffé sur un personnage : annule un foyer adjacent',portee:'Sur un personnage',grantsAura:'calm'});
+  // ---- objet final ----
+  const gauges=gaugeList.map(g=>({key:g.key,nm:g.nm,start:g.start,mode:g.mode,target:g.target,danger:g.danger,dispMax:g.dispMax}));
+  const lawText = nG===3 ? ('Trois forces : faire retomber '+menaceGauges.map(g=>g.nm).join(' et ')+', et faire monter '+valeurGauge.nm+'.')
+                : nG===2 ? ('Deux forces s’opposent : faire retomber '+menaceGauges[0].nm+' et faire monter '+valeurGauge.nm+'.')
+                          : 'Aucune loi particulière ici — c’est un lieu commun.';
   return {id:'gen',_gen:true,seed,title:'🎲 Procédural',perTurn:2,scene:'Un lieu commun de Lyon',
-    law:{text: twoG?('Deux forces s’opposent : faire retomber '+gA.nm+' et faire monter '+gB.nm+', avec les mêmes tours.'):'Aucune loi particulière ici — c’est un lieu commun.'},
-    gauges, map:map.map(r=>r.join('')),legend,dotation:dot,fragment:'« Un lieu sans nom se souvient aussi. »'};
+    law:{text:lawText}, gauges, map:map.map(r=>r.join('')),legend,dotation:dot,fragment:'« Un lieu sans nom se souvient aussi. »'};
 }
 // --- solveur CIBLÉ : un coup d'aura branche sur le choix de la cible. Renvoie {win,turns} et, hors minOnly, {openings}. ---
 function genSolve(P,opt){ opt=opt||{};
@@ -404,15 +463,24 @@ function genSolve(P,opt){ opt=opt||{};
   const inb=(r,c)=>r>=0&&r<R&&c>=0&&c<C;const ortho=(r,c)=>[[r-1,c],[r+1,c],[r,c-1],[r,c+1]].filter(([a,b])=>inb(a,b));
   const clamp=(k,v)=>Math.max(0,Math.min((gm[k].dispMax||10)+2,v));
   const auraHits=(o,r,c)=>o.auraTargetRC&&o.auraTargetRC.r===r&&o.auraTargetRC.c===c;
-  const auraAt=(gr,r,c,t)=>ortho(r,c).some(([a,b])=>{const o=gr[a][b].card;return o&&(o.aura===t||o.grantedAura===t)&&auraHits(o,r,c);});
-  const ampF=(gr,r,c)=>{let f=1;ortho(r,c).forEach(([a,b])=>{const o=gr[a][b].card;if(o&&(o.aura==='amplify'||o.grantedAura==='amplify')&&auraHits(o,r,c))f=Math.max(f,o.auraFactor||2);});return f;};
-  const elD=(gr,cl,r,c)=>{let v=cl.delta;if(auraAt(gr,r,c,'calm'))return 0;if(auraAt(gr,r,c,'invert'))v=-v;const f=ampF(gr,r,c);if(f>1)v*=f;return v;};
+  const auraAt=(gr,r,c,t)=>ortho(r,c).some(([a,b])=>{const o=gr[a][b].card;return o&&!o.suspended&&(o.aura===t||o.grantedAura===t)&&auraHits(o,r,c);});
+  const ampF=(gr,r,c)=>{let f=1;ortho(r,c).forEach(([a,b])=>{const o=gr[a][b].card;if(o&&!o.suspended&&(o.aura==='amplify'||o.grantedAura==='amplify')&&auraHits(o,r,c))f=Math.max(f,o.auraFactor||2);});return f;};
+  const invS=(gr,r,c)=>{let s=0;ortho(r,c).forEach(([a,b])=>{const o=gr[a][b].card;if(!o||o.suspended)return;if(!((o.aura==='invert'||o.grantedAura==='invert')&&auraHits(o,r,c)))return;let str=1;ortho(a,b).forEach(([c1,d1])=>{const o2=gr[c1][d1].card;if(o2&&!o2.suspended&&(o2.aura==='amplify'||o2.grantedAura==='amplify')&&o2.auraTargetRC&&o2.auraTargetRC.r===a&&o2.auraTargetRC.c===b)str=Math.max(str,o2.auraFactor||2);});s=Math.max(s,str);});return s;};
+  const elD=(gr,cl,r,c)=>{let v=cl.delta;if(auraAt(gr,r,c,'calm'))return 0;const i=invS(gr,r,c);if(i>0)v=-v*i;const f=ampF(gr,r,c);if(f>1)v*=f;return v;};
   const nsig=(gr,r,c)=>ortho(r,c).map(([a,b])=>{const x=gr[a][b];return x.card?('c'+(x.card.aura||x.card.grantedAura||(x.card.effect?'d':'p'))):(x.type==='foyer'?'F':x.type[0]);}).sort().join('');
   function mk(){const grid=[];for(let r=0;r<R;r++){const row=[];for(let c=0;c<C;c++){const ch=P.map[r][c];const sp=ch==='.'||ch===' '?null:P.legend[ch];
-      row.push(ch===' '?{type:'void'}:(!sp||sp.type==='memoire')?{type:'empty',card:null}:{type:'foyer',gauge:sp.gauge,delta:sp.delta,card:null});}grid.push(row);}
+      row.push(ch===' '?{type:'void'}:(!sp||sp.type==='memoire')?{type:'empty',card:null}:
+        {type:'foyer',gauge:sp.gauge,delta:sp.delta,
+         move: sp.move?{path:sp.move.path.map(p=>p.slice()), pi:sp.move.pi||0}:null,
+         spawn: sp.spawn?{gauge:sp.spawn.gauge,delta:sp.spawn.delta,cap:sp.spawn.cap,count:0}:null,
+         captures: !!sp.captures,
+         reactOnPlace: sp.reactOnPlace?{gauge:sp.reactOnPlace.gauge,delta:sp.reactOnPlace.delta}:null,
+         reacted:false, card:null});}grid.push(row);}
     const g={};P.gauges.forEach(x=>g[x.key]=x.start);
     return {g,grid,hand:P.dotation.filter(c=>opt.directOnly?(c.type==='Personnage'&&c.effect&&!c.aura):true).map(c=>({...c})),left:P.perTurn,turn:1};}
-  const clone=s=>({g:{...s.g},grid:s.grid.map(ro=>ro.map(x=>({...x,card:x.card?{...x.card}:null}))),hand:s.hand.slice(),left:s.left,turn:s.turn});
+  const clone=s=>({g:{...s.g},grid:s.grid.map(ro=>ro.map(x=>{const y={...x};if(x.card)y.card={...x.card};if(x.move)y.move={path:x.move.path,pi:x.move.pi};if(x.spawn)y.spawn={...x.spawn};if(x.reactOnPlace)y.reactOnPlace={...x.reactOnPlace};return y;})),hand:s.hand.slice(),left:s.left,turn:s.turn});
+  // déclencher les foyers réactifs adjacents à (r,c) : frappent une fois puis deviennent inertes
+  const triggerReactives=(s,r,c)=>{ortho(r,c).forEach(([a,b])=>{const cl=s.grid[a][b];if(cl&&cl.type==='foyer'&&cl.reactOnPlace&&!cl.reacted){const ro=cl.reactOnPlace;s.g[ro.gauge]=clamp(ro.gauge,s.g[ro.gauge]+ro.delta);cl.reacted=true;cl.delta=0;cl.reactOnPlace=null;}});};
   function moves(st){const out=[];
     for(const card of st.hand){
       const cells=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=st.grid[r][c];
@@ -421,26 +489,55 @@ function genSolve(P,opt){ opt=opt||{};
       const rep=[];const seen=new Set();for(const[r,c]of cells){const k=nsig(st.grid,r,c);if(!seen.has(k)){seen.add(k);rep.push([r,c]);}}
       for(const[r,c]of rep){
         const auraType=card.type==='Objet'?card.grantsAura:card.aura;
-        if(!auraType){ out.push({sig:card.id.replace(/[0-9]/g,'')+'@'+nsig(st.grid,r,c),do(s){if(card.effect)for(const k in card.effect)s.g[k]=clamp(k,s.g[k]+card.effect[k]*ampF(s.grid,r,c));s.grid[r][c].card={...card};s.hand=s.hand.filter(x=>x.id!==card.id);s.left--;}}); }
+        if(!auraType){ out.push({sig:card.id.replace(/[0-9]/g,'')+'@'+nsig(st.grid,r,c),do(s){
+          if(card.effect)for(const k in card.effect)s.g[k]=clamp(k,s.g[k]+card.effect[k]*ampF(s.grid,r,c));
+          if(card.copyAdjacent)ortho(r,c).forEach(([a,b])=>{const oc=s.grid[a][b].card;if(oc&&oc.type==='Personnage'&&oc.effect&&!oc.suspended)for(const k in oc.effect)s.g[k]=clamp(k,s.g[k]+oc.effect[k]);});
+          s.grid[r][c].card={...card};s.hand=s.hand.filter(x=>x.id!==card.id);s.left--;
+          if(card.type==='Personnage')triggerReactives(s,r,c);}}); }
         else { let elig=ortho(r,c).filter(([a,b])=>{const cl=st.grid[a][b];if(auraType==='amplify')return (cl.card&&cl.card.effect&&cl.card.amplifiable)||cl.type==='foyer';return cl.type==='foyer';});
           // dédup des cibles ÉQUIVALENTES (deux foyers identiques = même décision)
           const tsig=(a,b)=>{const cl=st.grid[a][b];return cl.type==='foyer'?('F'+cl.gauge+'_'+cl.delta+'_'+(auraAt(st.grid,a,b,'invert')?'i':'')+(auraAt(st.grid,a,b,'calm')?'c':'')+ampF(st.grid,a,b)):('C'+JSON.stringify(cl.card.effect));};
           { const sn=new Set();elig=elig.filter(([a,b])=>{const k=tsig(a,b);if(sn.has(k))return false;sn.add(k);return true;}); }
-          if(!elig.length){ out.push({sig:card.id.replace(/[0-9]/g,'')+'@'+nsig(st.grid,r,c)+'>0',do(s){if(card.type!=='Objet'){if(card.effect)for(const k in card.effect)s.g[k]=clamp(k,s.g[k]+card.effect[k]);s.grid[r][c].card={...card};}s.hand=s.hand.filter(x=>x.id!==card.id);s.left--;}}); }
+          if(!elig.length){ out.push({sig:card.id.replace(/[0-9]/g,'')+'@'+nsig(st.grid,r,c)+'>0',do(s){if(card.type!=='Objet'){if(card.effect)for(const k in card.effect)s.g[k]=clamp(k,s.g[k]+card.effect[k]);s.grid[r][c].card={...card};triggerReactives(s,r,c);}s.hand=s.hand.filter(x=>x.id!==card.id);s.left--;}}); }
           else for(const[tr,tc]of elig){ out.push({sig:card.id.replace(/[0-9]/g,'')+'@'+nsig(st.grid,r,c)+'>'+nsig(st.grid,tr,tc),do(s){
             if(card.type==='Objet'){const h=s.grid[r][c].card;h.grantedAura=card.grantsAura;h.auraTargetRC={r:tr,c:tc};}
-            else{if(card.effect)for(const k in card.effect)s.g[k]=clamp(k,s.g[k]+card.effect[k]);s.grid[r][c].card={...card,auraTargetRC:{r:tr,c:tc}};}
+            else{if(card.effect)for(const k in card.effect)s.g[k]=clamp(k,s.g[k]+card.effect[k]);s.grid[r][c].card={...card,auraTargetRC:{r:tr,c:tc}};triggerReactives(s,r,c);}
             if(auraType==='amplify'){const tg=s.grid[tr][tc];if(tg.card&&tg.card.effect&&tg.card.amplifiable){for(const k in tg.card.effect)s.g[k]=clamp(k,s.g[k]+tg.card.effect[k]*(2-1));}}
             s.hand=s.hand.filter(x=>x.id!==card.id);s.left--;}}); }
         }
       }
     }
     return out;}
-  function endTurn(s){for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=s.grid[r][c];if(cl.type==='foyer'){const d=elD(s.grid,cl,r,c);if(d)s.g[cl.gauge]=clamp(cl.gauge,s.g[cl.gauge]+d);}}s.turn++;s.left=P.perTurn;}
+  function endTurn(s){
+    // 0) capture : un foyer captures non inversé suspend les cartes adjacentes
+    for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=s.grid[r][c];if(cl.card)cl.card.suspended=false;}
+    for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=s.grid[r][c];
+      if(cl.type==='foyer'&&cl.captures&&!auraAt(s.grid,r,c,'invert')){
+        ortho(r,c).forEach(([a,b])=>{const oc=s.grid[a][b].card;if(oc)oc.suspended=true;});}}
+    // 1) tick foyers (delta effectif)
+    for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=s.grid[r][c];if(cl.type==='foyer'){const d=elD(s.grid,cl,r,c);if(d)s.g[cl.gauge]=clamp(cl.gauge,s.g[cl.gauge]+d);}}
+    // 1bis) persistance des personnages — non amplifiée (la persistance est un courant ; amplifier reste un éclat ponctuel)
+    for(let r=0;r<R;r++)for(let c=0;c<C;c++){const oc=s.grid[r][c].card;if(!oc||!oc.effectPersist||oc.suspended)continue;
+      for(const g in oc.effectPersist)s.g[g]=clamp(g,s.g[g]+oc.effectPersist[g]);}
+    // 2) spawn (plafonné, gelé si annulé)
+    const spawners=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=s.grid[r][c];if(cl.type==='foyer'&&cl.spawn)spawners.push([cl,r,c]);}
+    for(const[cl,r,c]of spawners){if(auraAt(s.grid,r,c,'calm'))continue;if(cl.spawn.count>=cl.spawn.cap)continue;
+      const slot=ortho(r,c).find(([a,b])=>{const c2=s.grid[a][b];return c2.type==='empty'&&!c2.card;});
+      if(slot){cl.spawn.count++;s.grid[slot[0]][slot[1]]={type:'foyer',gauge:cl.spawn.gauge,delta:cl.spawn.delta,card:null};}}
+    // 3) mouvement (path, si destination libre)
+    const movers=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=s.grid[r][c];if(cl.type==='foyer'&&cl.move)movers.push([cl,r,c]);}
+    for(const[cl,r,c]of movers){const path=cl.move.path;let pi=(cl.move.pi||0);pi=(pi+1)%path.length;const[nr,nc]=path[pi];const dest=s.grid[nr][nc];
+      if(dest&&dest.type==='empty'&&!dest.card){cl.move.pi=pi;s.grid[nr][nc]=cl;s.grid[r][c]={type:'empty',card:null};}}
+    s.turn++;s.left=P.perTurn;
+  }
   const met=g=>P.gauges.every(x=>x.mode==='up'?g[x.key]>=x.target:g[x.key]<=x.target);
   const lost=g=>P.gauges.some(x=>x.mode==='up'?g[x.key]<=x.danger:g[x.key]>=x.danger);
   const MAXT=opt.maxTurns||6,CAP=opt.nodeCap||60000;let nodes=0;
-  const gsig=st=>st.turn+'|'+st.left+'|'+JSON.stringify(st.g)+'|'+st.hand.map(c=>c.id).sort()+'|'+st.grid.map(ro=>ro.map(x=>x.card?(x.card.id+(x.card.auraTargetRC?'@'+x.card.auraTargetRC.r+x.card.auraTargetRC.c:'')):'.').join('')).join('/');
+  const gsig=st=>st.turn+'|'+st.left+'|'+JSON.stringify(st.g)+'|'+st.hand.map(c=>c.id).sort()+'|'+st.grid.map(ro=>ro.map(x=>{
+    if(x.type==='foyer')return 'F'+x.gauge[0]+x.delta+(x.move?'m'+x.move.pi:'')+(x.spawn?'s'+x.spawn.count:'')+(x.captures?'k':'')+(x.reactOnPlace?'R':'')+(x.reacted?'r':'')+(x.card?'+'+x.card.id+(x.card.auraTargetRC?'@'+x.card.auraTargetRC.r+x.card.auraTargetRC.c:'')+(x.card.suspended?'!':''):'');
+    if(x.type==='empty')return x.card?(x.card.id+(x.card.auraTargetRC?'@'+x.card.auraTargetRC.r+x.card.auraTargetRC.c:'')+(x.card.suspended?'!':'')):'.';
+    return x.type[0];
+  }).join(',')).join('/');
   let best=Infinity;{const seen=new Set();(function dfs(st){if(met(st.g)){best=Math.min(best,st.turn);return;}if(lost(st.g)||st.turn>MAXT||nodes>CAP)return;nodes++;const sg=gsig(st);if(seen.has(sg))return;seen.add(sg);if(st.left>0)for(const m of moves(st)){const s2=clone(st);m.do(s2);dfs(s2);if(best<=st.turn)return;}if(st.left<P.perTurn){const s2=clone(st);endTurn(s2);dfs(s2);}})(mk());}
   if(best===Infinity)return {win:false};
   if(opt.minOnly)return {win:true,turns:best};
@@ -453,26 +550,31 @@ function genSolve(P,opt){ opt=opt||{};
 }
 // passe le filtre de difficulté ? (solvable + directes seules insuffisantes + éventuellement peu d'ouvertures)
 function genPasses(P,d){
-  const full=genSolve(P,{maxTurns:6,nodeCap:40000,minOnly:true}); if(!full.win) return false;
-  const directAll=genSolve(P,{directOnly:true,maxTurns:6,nodeCap:25000,minOnly:true}); if(directAll.win) return false;
+  const full=genSolve(P,{maxTurns:7,nodeCap:50000,minOnly:true}); if(!full.win) return false;
+  const directAll=genSolve(P,{directOnly:true,maxTurns:7,nodeCap:25000,minOnly:true}); if(directAll.win) return false;
   if(full.turns < (d.minTurns||2)) return false;
   P._minTurns=full.turns; P._openings=null;
-  if(d.maxOpenings){ const a=genSolve(P,{maxTurns:6,nodeCap:40000,maxCount:d.maxOpenings,probeCap:10000}); if(a.openings>d.maxOpenings) return false; P._openings=a.openings; }
+  if(d.maxOpenings){ const a=genSolve(P,{maxTurns:7,nodeCap:40000,maxCount:d.maxOpenings,probeCap:8000}); if(a.openings>d.maxOpenings) return false; P._openings=a.openings; }
   return true;
 }
 let genDiffName='standard';
 function genBuild(){
   const d=GEN_DIFFS[genDiffName]; let P=null;
-  const tries = d.maxOpenings?70 : (d.gauges===2?50:120);
+  const tries = d.maxOpenings?40 : (d.dynamic?50:80);
   for(let i=0;i<tries;i++){ const seed=(Math.random()*1e9)|0; const cand=genCandidate(seed,d); if(genPasses(cand,d)){P=cand;break;} }
-  if(!P){ // repli : un niveau solvable, non-trivial, ≥2 tours (sans le cap d'ouvertures)
-    for(let i=0;i<50;i++){ const cand=genCandidate((Math.random()*1e9)|0,d);
-      const f=genSolve(cand,{maxTurns:6,nodeCap:40000,minOnly:true}); if(!f.win||f.turns<2) continue;
-      const dd=genSolve(cand,{directOnly:true,maxTurns:6,nodeCap:25000,minOnly:true}); if(dd.win) continue;
+  if(!P){ // repli : un niveau solvable, non-trivial, ≥minTurns (sans cap d'ouvertures)
+    for(let i=0;i<40;i++){ const cand=genCandidate((Math.random()*1e9)|0,d);
+      const f=genSolve(cand,{maxTurns:7,nodeCap:50000,minOnly:true}); if(!f.win||f.turns<(d.minTurns||2)) continue;
+      const dd=genSolve(cand,{directOnly:true,maxTurns:7,nodeCap:25000,minOnly:true}); if(dd.win) continue;
       P=cand; P._minTurns=f.turns; P._openings=null; break; } }
-  if(!P){ P=genCandidate((Math.random()*1e9)|0,d); const f=genSolve(P,{maxTurns:6,nodeCap:40000,minOnly:true}); P._minTurns=f.win?f.turns:'?'; P._openings=null; }
-  const twoG=P.gauges.length>1;
-  P.sub='Scène générée (graine '+P.seed+') · auras CIBLÉES'+(twoG?(' · 2 jauges en tension ('+P.gauges[0].nm+' ↓ / '+P.gauges[1].nm+' ↑)'):'')+'. Vérifié par solveur : les cartes directes seules ne suffisent pas, solution en '+P._minTurns+' tour(s)'+(P._openings?(' · '+P._openings+' ouverture(s) gagnante(s) — choix serré'):'')+'.';
+  if(!P){ P=genCandidate((Math.random()*1e9)|0,d); const f=genSolve(P,{maxTurns:7,nodeCap:50000,minOnly:true}); P._minTurns=f.win?f.turns:'?'; P._openings=null; }
+  // sous-titre adapté : jauges, mécaniques dynamiques, réactifs
+  const gDesc = P.gauges.map(g=>g.nm+(g.mode==='up'?' ↑':' ↓')).join(' · ');
+  const dynas=[];const reactifs=[];
+  for(const k in P.legend){const e=P.legend[k];if(e.move)dynas.push('un foyer mobile');if(e.spawn)dynas.push('un foyer essaimant');if(e.captures)dynas.push('un foyer capturant');if(e.reactOnPlace)reactifs.push(e.label||'piège');}
+  const dynStr = dynas.length?(' · '+dynas.join(', ')):'';
+  const reactStr = reactifs.length?(' · '+reactifs.length+' piège'+(reactifs.length>1?'s':'')+' réactif'+(reactifs.length>1?'s':'')):'';
+  P.sub='Scène générée (graine '+P.seed+') · auras ciblées · '+gDesc+dynStr+reactStr+'. Vérifié par solveur : les cartes directes seules ne suffisent pas, solution en '+P._minTurns+' tour(s)'+(P._openings?(' · '+P._openings+' ouverture(s) gagnante(s) — choix serré'):'')+'.';
   return P;
 }
 function genConstrained(){
@@ -530,6 +632,19 @@ function amplifyFactorAt(r,c){ let f=1;
   ortho(r,c).forEach(p=>{ const oc=grid[p.r][p.c].card;
     if(oc&&!oc.suspended&&(oc.aura==='amplify'||oc.grantedAura==='amplify')&&auraHits(oc,r,c)) f=Math.max(f, oc.auraFactor||2); });
   return f; }
+// force d'INVERSION couvrant (r,c) : 0 = pas d'inverseur ; 1 = inverseur ; 2+ = inverseur lui-même amplifié par un amp adjacent qui le cible
+function invertStrengthAt(r,c){ let s=0;
+  ortho(r,c).forEach(p=>{ const oc=grid[p.r][p.c].card;
+    if(!oc||oc.suspended) return;
+    if(!((oc.aura==='invert'||oc.grantedAura==='invert')&&auraHits(oc,r,c))) return;
+    let strength=1;
+    // est-ce que cet inverseur est lui-même amplifié par un amp adjacent qui le cible ?
+    ortho(p.r,p.c).forEach(q=>{ const o2=grid[q.r][q.c].card;
+      if(o2&&!o2.suspended&&(o2.aura==='amplify'||o2.grantedAura==='amplify')&&o2.auraTargetRC&&o2.auraTargetRC.r===p.r&&o2.auraTargetRC.c===p.c) strength=Math.max(strength, o2.auraFactor||2);
+    });
+    s=Math.max(s, strength);
+  });
+  return s; }
 function clampG(key,v){ const m=gMeta[key]; return Math.max(0, Math.min((m.dispMax||10)+2, v)); }
 
 // ---- AURAS CIBLÉES : cibles éligibles d'une aura posée en (r,c) ----
@@ -583,7 +698,7 @@ function elementDelta(cell,r,c){
   if(cell.dormant) return 0;
   let d = cell.delta * (P.law.elementMult?P.law.elementMult(cell,gauges):1);
   if(auraAt(r,c,'calm')) return 0;
-  if(auraAt(r,c,'invert')) d = -d;
+  const invS=invertStrengthAt(r,c); if(invS>0) d = -d * invS;
   { const f=amplifyFactorAt(r,c); if(f>1) d=d*f; }
   return d;
 }
@@ -591,7 +706,7 @@ function elementDelta(cell,r,c){
 function aspectContribution(cell,r,c){
   if(auraAt(r,c,'calm')) return 0;
   let d = cell.delta;
-  if(auraAt(r,c,'invert')) d = -d;
+  const invS=invertStrengthAt(r,c); if(invS>0) d = -d * invS;
   { const f=amplifyFactorAt(r,c); if(f>1) d=d*f; }
   return d;
 }
@@ -614,6 +729,9 @@ function computeEffects(card,r,c){
   if(card.aura==='amplify' && P.areaAuras){ // EN ZONE : poser un amplificateur double l'effet des cartes déjà adjacentes
     nb.forEach(p=>{ const oc=grid[p.r][p.c].card;
       if(oc&&oc.effect&&oc.amplifiable) for(const g in oc.effect) eff.push({g,d:oc.effect[g],why:oc.name+' amplifié'}); }); }
+  if(card.copyAdjacent){ // COPISTE : à la pose, copie les effets des personnages adjacents
+    nb.forEach(p=>{ const oc=grid[p.r][p.c].card;
+      if(oc&&oc.type==='Personnage'&&oc.effect&&!oc.suspended) for(const g in oc.effect) eff.push({g,d:oc.effect[g],why:'copié sur '+oc.name}); }); }
   if(P.law.modifyEffect) eff=eff.map(e=>P.law.modifyEffect(e,gauges));
   return eff;
 }
@@ -673,7 +791,13 @@ function renderGrid(){ const el=document.getElementById('grid'); el.innerHTML=''
       div.classList.add('placed','is-perso'); if(cell.card.suspended) div.classList.add('suspended');
       const x2=(cell.card.amplifiable&&ampHere)?'<span class="x2-badge">×2</span>':'';
       const eq=(cell.card.equips||[]).map(o=>`<span class="equip-badge">${o.ic}</span>`).join('')+(cell.card.suspended?'<span class="equip-badge">🔒</span>':'');
-      div.innerHTML=`<div class="card-mini"><span class="ic">${cell.card.ic}</span><span class="cn">${cell.card.name}</span></div>${x2}${eq}`;
+      // badge de persistance : effet par tour si la carte en a un
+      let persistBadge='';
+      if(cell.card.effectPersist&&!cell.card.suspended){
+        const parts=[];for(const g in cell.card.effectPersist){const d=cell.card.effectPersist[g];const fav=(gMeta[g].mode==='down')?d<0:d>0;parts.push(`<span style="color:${fav?'var(--sage)':'var(--sanguine)'}">${d>0?'+':''}${d}/t</span>`);}
+        persistBadge=`<span class="dlt persist-dlt">${parts.join(' ')}</span>`;
+      }
+      div.innerHTML=`<div class="card-mini"><span class="ic">${cell.card.ic}</span><span class="cn">${cell.card.name}</span></div>${persistBadge}${x2}${eq}`;
     } else if(cell.type==='foyer'){
       const d=elementDelta(cell,r,c);
       const fav = cell.dormant ? favorable(cell) : (d!==0 ? (gMeta[cell.gauge].mode==='down'?d<0:d>0) : favorable(cell));
@@ -839,6 +963,14 @@ function placeAt(r,c){
   pushLog(`<b>${card.name}</b> posé · ${parts.length?parts.join(', '):'pas d’effet direct'}${memText}`);
   hand=hand.filter(x=>x.id!==card.id); sel=null; left--;
   if(card.bonusPlace){ left+=card.bonusPlace; pushLog(`${card.name} accorde un placement supplémentaire ce tour (+${card.bonusPlace}).`); }
+  // RÉACTIFS : un foyer adjacent avec reactOnPlace pas encore déclenché se réveille au contact, frappe une fois puis devient inerte
+  ortho(r,c).forEach(p=>{ const cl=grid[p.r][p.c];
+    if(cl&&cl.type==='foyer'&&cl.reactOnPlace&&!cl.reacted){
+      const ro=cl.reactOnPlace; gauges[ro.gauge]=clampG(ro.gauge, gauges[ro.gauge]+ro.delta);
+      cl.reacted=true; cl.delta=0; cl.reactOnPlace=null;
+      pushLog(`<b>⚡ ${cl.label||'Réactif'}</b> se réveille au contact de ${card.name} : ${gMeta[ro.gauge].nm} ${ro.delta>0?'+':''}${ro.delta} — puis devient inerte.`, true);
+    }
+  });
   if(card.aura && !P.areaAuras){ enterPendingTarget(r,c,card.aura,grid[r][c].card); reconcileAspects(); renderAll(); checkState(); return; }
   reconcileAspects(); renderAll(); checkState();
 }
@@ -855,6 +987,14 @@ function endTurn(){
     const d=elementDelta(cell,r,c); if(d===0){ pushLog(`${cell.label} neutralisé : aucune poussée.`); continue; }
     gauges[cell.gauge]=clampG(cell.gauge,gauges[cell.gauge]+d);
     pushLog(`${cell.label} → ${gMeta[cell.gauge].nm} ${d>0?'+':''}${d}`, d>0&&(cell.type==='foyer'||cell.good===false));
+  }
+  // 2bis) persistance des personnages — chaque carte avec effectPersist applique son effet (non amplifié : la persistance est un courant, pas un éclat)
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+    const oc=cell.card; if(!oc||!oc.effectPersist||oc.suspended) continue;
+    const parts=[];
+    for(const g in oc.effectPersist){ const d=oc.effectPersist[g];
+      gauges[g]=clampG(g,gauges[g]+d); parts.push(`${gMeta[g].nm} ${d>0?'+':''}${d}`); }
+    if(parts.length) pushLog(`${oc.name} poursuit son effet : ${parts.join(', ')}`);
   }
   // 3) loi du lieu (couplage)
   if(P.law.onTurnEnd) P.law.onTurnEnd(gauges,(t)=>pushLog(t,true));
@@ -887,7 +1027,7 @@ function checkState(){ renderValidate();
   for(const g of P.gauges){ const v=gauges[g.key];
     if(g.mode==='down'&&v>=g.danger) return lose(g.nm+' a débordé : le récit s’effondre.');
     if(g.mode==='up'&&v<=g.danger) return lose(g.nm+' s’est éteinte : plus rien ne tient.'); }
-  if(hand.length===0&&!objectiveMet()) return lose('Dotation épuisée sans avoir rétabli la scène.');
+  // (dotation épuisée n'est plus une défaite : les cartes persistantes continuent à agir, le joueur peut attendre que les conditions de victoire soient atteintes ou subir le danger)
 }
 function validate(){ if(pendingTarget) return; if(objectiveMet()) win(); }
 function win(){ finished=true; const m=document.getElementById('modal');
