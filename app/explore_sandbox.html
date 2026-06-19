@@ -40,6 +40,7 @@
   .gauge-v .vtarget{position:absolute;left:0;right:0;background:rgba(95,122,79,.20)}
   .gauge-v .vline{position:absolute;left:-2px;right:-2px;height:0;border-top:2px solid #e9e3d4;
     box-shadow:0 0 0 1px rgba(0,0,0,.5);z-index:3}
+  .gauge-v .vpred{font-size:10px;font-variant-numeric:tabular-nums;font-weight:600;height:13px;margin-top:4px;text-align:center}
   .gauge-v .vprev{font-size:10px;color:var(--ochre);font-variant-numeric:tabular-nums;height:13px;margin-top:3px}
   .gauge-v .vnm{font-size:10px;margin-top:2px;text-align:center;color:#cdc7b6;line-height:1.15}
   .gauge-v .vbut{font-size:10px;color:var(--sage);font-weight:700;margin-top:2px}
@@ -57,6 +58,9 @@
   .cell.placeable{cursor:pointer}
   .cell.valid{box-shadow:0 0 0 2px var(--ochre),0 0 12px rgba(192,138,46,.5)}
   .cell.target{box-shadow:0 0 0 3px var(--blue,#3a6ea5),0 0 14px rgba(58,110,165,.8);cursor:pointer;animation:tpulse .7s ease-in-out infinite;background:linear-gradient(rgba(58,110,165,.10),rgba(58,110,165,.10))}
+  .cell .ghost{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:22px;opacity:.5;pointer-events:none;z-index:5;filter:blur(.3px);animation:ghostFade 1.1s ease-in-out infinite}
+  .cell .ghost .ghost-lbl{font-size:8px;letter-spacing:.04em;opacity:.85;margin-top:1px;font-style:italic}
+  @keyframes ghostFade{0%,100%{opacity:.35;transform:scale(.95)}50%{opacity:.7;transform:scale(1)}}
   .cell.aura-source{outline:2px dashed var(--blue,#3a6ea5);outline-offset:-4px}
   @keyframes tpulse{0%,100%{box-shadow:0 0 0 3px var(--blue,#3a6ea5),0 0 3px rgba(58,110,165,.3)}50%{box-shadow:0 0 0 4px var(--blue,#3a6ea5),0 0 22px rgba(58,110,165,1)}}
   .cell.placed.is-perso{border-color:#8f8573;border-radius:10px;background:var(--paper2)}
@@ -106,7 +110,7 @@
   .insp-empty{color:var(--muted);font-style:italic}
   .tbadge{display:inline-block;font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:3px;font-weight:700}
   .tbadge.perso{background:#9c7b3e;color:#fff}.tbadge.objet{background:var(--blue);color:#fff}
-  .tbadge.foyer{background:var(--sanguine);color:#fff}.tbadge.elem{background:var(--sage);color:#fff}.tbadge.mem{background:var(--ochre);color:#3a2e12}
+  .tbadge.foyer{background:var(--sanguine);color:#fff}.tbadge.elem{background:var(--sage);color:#fff}.tbadge.mem{background:var(--ochre);color:#3a2e12}.tbadge.piege{background:#7a3a3a;color:#fff;border:1px solid #a85c5c}.tbadge.inerte{background:#5a554a;color:#cdc7b6}
 
   .side{background:var(--ink2);border:1px solid var(--line);border-radius:8px;padding:13px}
   .side h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;font-weight:600}
@@ -118,14 +122,50 @@
   .card.t-perso{border-left:4px solid #9c7b3e}
   .card.t-objet{border-left:4px solid var(--blue);border-radius:4px;background:#e3e6ea}
   .card .role .chip{display:inline-block;font-size:8.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:1px 5px;border-radius:3px;color:#fff;margin-right:4px}
+  .cell .sup-tag{position:absolute;bottom:2px;right:3px;display:flex;gap:1px;pointer-events:none}
+  .lang-btn{float:right;width:40px;padding:3px 0;font-size:11px;background:var(--ink2);color:var(--paper);border:1px solid var(--line);border-radius:4px;cursor:pointer;font-family:inherit;letter-spacing:.04em}
+  .lang-btn:hover{background:#3a3530;border-color:var(--ochre)}
+  .sup-pip{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:2px;vertical-align:-1px;border:1px solid rgba(0,0,0,.35);box-shadow:0 0 0 1px rgba(255,255,255,.1) inset}
+  /* Drag & drop */
+  .card{cursor:grab}
+  .card:active{cursor:grabbing}
+  .card.dragging{opacity:.4;transform:scale(.95);transition:transform .1s,opacity .1s}
+  .cell.drag-over.placeable{background:rgba(212,150,90,.25);box-shadow:0 0 0 3px var(--ochre),0 0 16px rgba(212,150,90,.45) inset;transform:scale(1.05);transition:all .1s ease}
+  .hand-hint{font-size:10.5px;color:var(--muted);font-style:italic;margin:-2px 0 6px;letter-spacing:.02em;line-height:1.3}
+  /* ============================ CARD MODAL ============================ */
+  .card-modal-bg{position:fixed;inset:0;background:rgba(15,12,10,.45);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:200;display:none;align-items:center;justify-content:center;animation:fadeIn .18s ease;padding:24px;pointer-events:none}
+  .card-modal-bg.show{display:flex}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes cardIn{from{opacity:0;transform:translateY(12px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+  .card-detail{pointer-events:auto;width:300px;max-width:90vw;background:linear-gradient(180deg,var(--paper) 0%,#ebe2cd 100%);border-radius:14px;border:5px solid var(--sup-color,#5c4a30);box-shadow:0 14px 44px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.12) inset;display:flex;flex-direction:column;overflow:hidden;animation:cardIn .25s cubic-bezier(.2,.7,.2,1);position:relative;cursor:pointer}
+  /* Personnage vs Objet : forme différente */
+  .card-detail.t-perso{}
+  .card-detail.t-objet{border-radius:14px 14px 14px 14px;clip-path:polygon(8% 0,92% 0,100% 8%,100% 92%,92% 100%,8% 100%,0 92%,0 8%);border-width:5px}
+  .card-detail .cd-header{padding:14px 16px 10px;border-bottom:1px solid rgba(0,0,0,.12);background:linear-gradient(180deg,var(--sup-tint,rgba(0,0,0,.04)) 0%,transparent 100%)}
+  .card-detail .cd-name{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:22px;font-weight:600;color:#15171e;line-height:1.15;letter-spacing:.01em}
+  .card-detail .cd-meta{font-size:11px;color:#5c4a30;margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .card-detail .cd-meta .cd-chip{background:rgba(0,0,0,.06);padding:1px 6px;border-radius:3px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:9.5px}
+  .card-detail .cd-meta .cd-sup{display:flex;align-items:center;gap:3px;font-style:italic;color:#5c2d1f;margin-left:auto}
+  .card-detail .cd-art{flex:0 0 130px;display:flex;align-items:center;justify-content:center;font-size:78px;background:linear-gradient(135deg,var(--sup-tint,rgba(0,0,0,.04)) 0%,transparent 60%);position:relative}
+  .card-detail .cd-art::before{content:'';position:absolute;inset:8px;border:1px dashed rgba(92,45,31,.18);border-radius:8px;pointer-events:none}
+  .card-detail.t-objet .cd-art{font-size:62px}
+  .card-detail .cd-description{padding:14px 16px;font-size:13px;line-height:1.5;color:#2a2520;flex:1;min-height:90px}
+  .card-detail .cd-description .kw{font-weight:700;color:#5c2d1f;border-bottom:1px dotted #5c2d1f;cursor:help}
+  .card-detail .cd-footer{padding:8px 16px;border-top:1px solid rgba(0,0,0,.12);font-size:10.5px;color:#5c2d1f;font-style:italic;letter-spacing:.02em;text-align:center;background:rgba(0,0,0,.03)}
+  .card-detail .cd-close-hint{position:absolute;top:-26px;right:0;font-size:10px;color:rgba(240,233,218,.7);letter-spacing:.04em;text-transform:uppercase}
   .card .role .chip-p{background:#9c7b3e}
   .card .role .chip-o{background:var(--blue)}
+  .card .role .chip-sup{background:transparent;color:#5c2d1f;border:1px solid #5c2d1f;font-style:italic;letter-spacing:.02em}
+  .card .role .chip-sup-text{font-size:9.5px;color:#5c2d1f;margin-left:4px;display:inline-flex;align-items:center;gap:1px}
+  .card .role .chip-sup-text i{margin-left:2px;font-style:italic;letter-spacing:.02em}
   .card:hover{transform:translateY(-1px)}
   .card.sel{box-shadow:0 0 0 2px var(--sanguine)}
   .card .ic{font-size:21px;line-height:1}
   .card .cn{font-weight:700;font-size:12.5px;font-family:Georgia,serif}
   .card .role{font-size:9.5px;color:#7a6f57;text-transform:uppercase;letter-spacing:.05em;margin:1px 0 3px}
   .card .ef{font-size:11px;color:#3a352b;line-height:1.35}
+  .kw{font-weight:700;color:#5c2d1f;border-bottom:1px dotted #5c2d1f;cursor:help;text-decoration:none}
+  .kw:hover{color:var(--sanguine);border-bottom-color:var(--sanguine);background:rgba(140,53,42,.06)}
   .btn{width:100%;margin-top:9px;background:var(--ink);color:var(--paper);border:1px solid var(--line);border-radius:6px;padding:9px;font-size:12.5px;cursor:pointer;font-family:inherit}
   .btn:hover{border-color:var(--ochre)}
   .btn.primary{background:var(--sage);border-color:var(--sage);color:#0e1014;font-weight:700}
@@ -146,7 +186,7 @@
 </head>
 <body>
 <header>
-  <h1>expLore · bac à sable de design</h1>
+  <h1><span data-i18n="expLore · bac à sable de design">expLore · bac à sable de design</span> <button class="lang-btn" id="lang-toggle">EN</button></h1>
   <div class="tabs" id="tabs"></div>
   <div class="scene" id="scene"></div>
   <div class="sub" id="sub"></div>
@@ -160,33 +200,35 @@
       <div class="forme"><div class="grid" id="grid"></div></div>
     </div>
     <div class="legend" id="legend"></div>
-    <div class="princ">Principes communs (toutes scènes) : les <b>foyers</b> (cerclés de rouge) poussent leur jauge chaque tour ; les <b>éléments statiques</b> font de même (verts s'ils t'aident, rouges sinon). Une <b>aura</b> agit sur les cartes ET les éléments de sa zone : amplifier (×2), inverser (change le signe), annuler (0). Les <b>objets</b> se posent sur un personnage pour l'augmenter.</div>
-    <div class="inspector" id="inspector"><div class="insp-row insp-empty">Touche une carte ou une case pour voir ses propriétés.</div></div>
+    <div class="princ" data-i18n-html="Principes communs (toutes scènes) : les <b>foyers</b> (cerclés de rouge) poussent leur jauge chaque tour ; les <b>éléments statiques</b> font de même (verts s’ils t’aident, rouges sinon). Une <b>aura</b> agit sur les cartes ET les éléments de sa zone : amplifier (×2), inverser (change le signe), annuler (0). Les <b>objets</b> se posent sur un personnage pour l’augmenter.">Principes communs (toutes scènes) : les <b>foyers</b> (cerclés de rouge) poussent leur jauge chaque tour ; les <b>éléments statiques</b> font de même (verts s'ils t'aident, rouges sinon). Une <b>aura</b> agit sur les cartes ET les éléments de sa zone : amplifier (×2), inverser (change le signe), annuler (0). Les <b>objets</b> se posent sur un personnage pour l'augmenter.</div>
+    <div class="inspector" id="inspector"><div class="insp-row insp-empty" data-i18n="Touche une carte ou une case pour voir ses propriétés.">Touche une carte ou une case pour voir ses propriétés.</div></div>
   </div>
 
   <div class="side">
-    <h2>Ta dotation</h2>
-    <div class="turninfo"><span>Tour <b id="turn">1</b></span><span>Placements restants : <b id="left">2</b></span></div>
+    <h2 data-i18n="Ta dotation">Ta dotation</h2>
+    <div class="hand-hint" data-i18n="Clic = sélectionner · double-clic = détail · glisser = poser">Clic = sélectionner · double-clic = détail · glisser = poser</div>
+    <div class="turninfo"><span><span data-i18n="Tour">Tour</span> <b id="turn">1</b></span><span><span data-i18n="Placements restants :">Placements restants :</span> <b id="left">2</b></span></div>
     <div class="hand" id="hand"></div>
-    <button class="btn" id="endturn">Fin du tour</button>
+    <button class="btn" id="endturn" data-i18n="Fin du tour">Fin du tour</button>
     <div class="btn-row">
-      <button class="btn primary" id="validate" disabled>Valider la scène</button>
-      <button class="btn" id="reset">Recommencer</button>
+      <button class="btn primary" id="validate" data-i18n="Valider la scène" disabled>Valider la scène</button>
+      <button class="btn" id="reset" data-i18n="Recommencer">Recommencer</button>
     </div>
     <div class="gen-row" id="gen-row" style="display:none">
       <select id="gendiff" class="gen-select">
-        <option value="standard">Standard · 3 jauges, multi-fronts</option>
-        <option value="serre">Serré · peu de solutions</option>
-        <option value="reactif">Réactif · pièges qui s’éveillent</option>
-        <option value="dynamique">Dynamique · terrain vivant</option>
+        <option value="standard" data-i18n="Standard · 3 jauges, multi-fronts">Standard · 3 jauges, multi-fronts</option>
+        <option value="serre" data-i18n="Serré · peu de solutions">Serré · peu de solutions</option>
+        <option value="reactif" data-i18n="Réactif · pièges qui s’éveillent">Réactif · pièges qui s’éveillent</option>
+        <option value="dynamique" data-i18n="Dynamique · terrain vivant">Dynamique · terrain vivant</option>
       </select>
-      <button class="btn" id="regen">🎲 Régénérer</button>
+      <button class="btn" id="regen" data-i18n="🎲 Régénérer">🎲 Régénérer</button>
     </div>
     <div class="log" id="log"></div>
   </div>
 </div>
 
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="card-modal-bg" id="card-modal"><div class="card-detail" id="card-detail"></div></div>
 
 <script>
 "use strict";
@@ -221,20 +263,20 @@ const PUZZLES = [
     'M':{type:'memoire'},
   },
   dotation:[
-    {id:'gryphe',name:'Sébastien Gryphe',role:'Influenceur',type:'Personnage',sup:'société · histoire',ic:'🦅',
-     ef:'Doute −2 · son aura INVERSE un foyer/élément adjacent',portee:'Sa case + aura (inverse)',effect:{doute:-2},amplifiable:true,aura:'invert'},
-    {id:'dolet',name:'Étienne Dolet',role:'Symbole',type:'Personnage',sup:'société · histoire',ic:'🪓',
-     ef:'Censure −3',portee:'Sa case',effect:{censure:-3},amplifiable:true},
+    {id:'gryphe',name:'Sébastien Gryphe',role:'Influenceur',type:'Personnage',sup:'science · histoire',ic:'🦅',
+     ef:'**À la pose** : −2 Doute. **Aura d’inversion ciblée** : inverse un foyer/élément voisin choisi.',portee:'Sa case + aura (inverse)',effect:{doute:-2},amplifiable:true,aura:'invert'},
+    {id:'dolet',name:'Étienne Dolet',role:'Symbole',type:'Personnage',sup:'science · histoire',ic:'🪓',
+     ef:'**À la pose** : −3 Censure.',portee:'Sa case',effect:{censure:-3},amplifiable:true},
     {id:'louise',name:'Louise Labé',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'🪶',
-     ef:'Son aura ×2 l’effet des cartes ET des éléments adjacents',portee:'Aura (×2)',aura:'amplify'},
-    {id:'copiste',name:'Le copiste',role:'Symbole',type:'Personnage',sup:'société',ic:'✒️',
-     ef:'Oubli −3',portee:'Sa case',effect:{oubli:-3},amplifiable:true},
+     ef:'**Aura d’amplification (zone)** : ×2 l’effet des cartes ET des éléments voisins.',portee:'Aura (×2)',aura:'amplify'},
+    {id:'copiste',name:'Le copiste',role:'Symbole',type:'Personnage',sup:'société · histoire',ic:'✒️',
+     ef:'**À la pose** : −3 Oubli.',portee:'Sa case',effect:{oubli:-3},amplifiable:true},
     {id:'presse',name:'La presse de la Doloire',role:'Propagateur',type:'Objet',sup:'science · société',ic:'🗜️',
-     ef:'Greffée sur un personnage : répète son effet',portee:'Sur un personnage',special:'propagate'},
-    {id:'privilege',name:'Le privilège du Roi',role:'Switch',type:'Objet',sup:'société',ic:'📜',
-     ef:'Greffé sur un personnage : il peut annuler un foyer adjacent',portee:'Sur un personnage (aura d’annulation)',grantsAura:'calm'},
+     ef:'**Greffe** sur un personnage : répète son effet à la pose.',portee:'Sur un personnage',special:'propagate'},
+    {id:'privilege',name:'Le privilège du Roi',role:'Switch',type:'Objet',sup:'science · société',ic:'📜',
+     ef:'**Greffe** sur un personnage : lui confère **Aura d’annulation ciblée**.',portee:'Sur un personnage (aura d’annulation)',grantsAura:'calm'},
     {id:'apprenti',name:'L’apprenti',role:'Relais',type:'Personnage',sup:'société',ic:'🧒',
-     ef:'Oubli −1 · en se posant, accorde un placement supplémentaire ce tour',portee:'Sa case (+1 placement)',effect:{oubli:-1},amplifiable:true,bonusPlace:1},
+     ef:'**À la pose** : −1 Oubli et **+1 placement** ce tour.',portee:'Sa case (+1 placement)',effect:{oubli:-1},amplifiable:true,bonusPlace:1},
   ],
   fragment:'« On disait qu’une femme ne pouvait écrire ainsi. Quelqu’un, pourtant, accepta de l’imprimer. »',
 },
@@ -262,18 +304,20 @@ const PUZZLES = [
     'M':{type:'memoire'},
   },
   dotation:[
-    {id:'chef',name:'Le chef d’atelier',role:'Symbole',type:'Personnage',sup:'société',ic:'🧑‍🏭',
-     ef:'Misère −3',portee:'Sa case',effect:{misere:-3},amplifiable:true},
+    {id:'chef',name:'Le chef d’atelier',role:'Symbole',type:'Personnage',sup:'science · société',ic:'🧑‍🏭',
+     ef:'**À la pose** : −3 Misère.',portee:'Sa case',effect:{misere:-3},amplifiable:true},
     {id:'canut',name:'Le canut',role:'Symbole',type:'Personnage',sup:'société · arts',ic:'🕯️',
-     ef:'Solidarité +2',portee:'Sa case',effect:{solidarite:2},amplifiable:true},
-    {id:'crieur',name:'Le crieur public',role:'Influenceur',type:'Personnage',sup:'société',ic:'📣',
-     ef:'Solidarité +1 · son aura INVERSE un élément adjacent (retourne une dette en soutien)',portee:'Sa case + aura (inverse)',effect:{solidarite:1},amplifiable:true,aura:'invert'},
-    {id:'mutuelle',name:'La Mutuelle',role:'Amplificateur',type:'Personnage',sup:'société',ic:'🤝',
-     ef:'Son aura ×2 l’effet des cartes ET des éléments adjacents',portee:'Aura (×2)',aura:'amplify'},
+     ef:'**À la pose** : +2 Solidarité.',portee:'Sa case',effect:{solidarite:2},amplifiable:true},
+    {id:'crieur',name:'Le crieur public',role:'Influenceur',type:'Personnage',sup:'société · science',ic:'📣',
+     ef:'**À la pose** : +1 Solidarité. **Aura d’inversion ciblée** : retourne un voisin choisi (par exemple une dette en soutien).',portee:'Sa case + aura (inverse)',effect:{solidarite:1},amplifiable:true,aura:'invert'},
+    {id:'mutuelle',name:'La Mutuelle',role:'Amplificateur',type:'Personnage',sup:'société · arts',ic:'🤝',
+     ef:'**Aura d’amplification (zone)** : ×2 l’effet des cartes ET des éléments voisins.',portee:'Aura (×2)',aura:'amplify'},
     {id:'bistanclaque',name:'Le métier (bistanclaque)',role:'Propagateur',type:'Objet',sup:'science',ic:'🪡',
-     ef:'Greffé sur un personnage : répète son effet',portee:'Sur un personnage',special:'propagate'},
-    {id:'petition',name:'La pétition',role:'Switch',type:'Objet',sup:'société',ic:'📜',
-     ef:'Greffée sur un personnage : il peut annuler un foyer adjacent',portee:'Sur un personnage (aura d’annulation)',grantsAura:'calm'},
+     ef:'**Greffe** sur un personnage : répète son effet à la pose.',portee:'Sur un personnage',special:'propagate'},
+    {id:'petition',name:'La pétition',role:'Switch',type:'Objet',sup:'science · société',ic:'📜',
+     ef:'**Greffe** sur un personnage : lui confère **Aura d’annulation ciblée**.',portee:'Sur un personnage (aura d’annulation)',grantsAura:'calm'},
+    {id:'meute',name:'L’attroupement',role:'Résonateur',type:'Personnage',sup:'société',ic:'👥',
+     ef:'**Présence** · **Résonance** : à chaque tour, +1 Solidarité par voisin-personnage (toute couleur).',portee:'Sa case (Résonance)',resonance:{gauge:'solidarite',perNeighbor:1}},
   ],
   fragment:'« Vivre en travaillant ou mourir en combattant. La pente a sa mémoire, et elle ne plie pas. »',
 },
@@ -301,18 +345,18 @@ const PUZZLES = [
     'M':{type:'memoire'},
   },
   dotation:[
-    {id:'souffleur',name:'Le souffleur',role:'Symbole',type:'Personnage',sup:'arts',ic:'🤫',
-     ef:'Trac −2',portee:'Sa case',effect:{trac:-2},amplifiable:true},
+    {id:'souffleur',name:'Le souffleur',role:'Symbole',type:'Personnage',sup:'arts · science',ic:'🤫',
+     ef:'**À la pose** : −2 Trac.',portee:'Sa case',effect:{trac:-2},amplifiable:true},
     {id:'comedien',name:'Le comédien',role:'Symbole',type:'Personnage',sup:'arts',ic:'🎩',
-     ef:'Ferveur +2',portee:'Sa case',effect:{ferveur:2},amplifiable:true},
+     ef:'**À la pose** : +2 Ferveur.',portee:'Sa case',effect:{ferveur:2},amplifiable:true},
     {id:'diva',name:'La diva',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'🌹',
-     ef:'Son aura ×2 l’effet des cartes ET des éléments adjacents',portee:'Aura (×2)',aura:'amplify'},
+     ef:'**Aura d’amplification (zone)** : ×2 l’effet des cartes ET des éléments voisins.',portee:'Aura (×2)',aura:'amplify'},
     {id:'regisseur',name:'Le régisseur',role:'Switch',type:'Personnage',sup:'science · société',ic:'🎚️',
-     ef:'Trac −1 · son aura ANNULE un foyer adjacent',portee:'Sa case + aura (annule)',effect:{trac:-1},amplifiable:true,aura:'calm'},
-    {id:'ovation',name:'L’ovation',role:'Propagateur',type:'Objet',sup:'société',ic:'📣',
-     ef:'Greffée sur un personnage : répète son effet',portee:'Sur un personnage',special:'propagate'},
-    {id:'rideau',name:'Le rideau',role:'Influenceur',type:'Objet',sup:'arts',ic:'🎬',
-     ef:'Greffé sur un personnage : il peut INVERSER un foyer adjacent',portee:'Sur un personnage (aura d’inversion)',grantsAura:'invert'},
+     ef:'**À la pose** : −1 Trac. **Aura d’annulation ciblée** : annule un foyer voisin choisi.',portee:'Sa case + aura (annule)',effect:{trac:-1},amplifiable:true,aura:'calm'},
+    {id:'ovation',name:'L’ovation',role:'Propagateur',type:'Objet',sup:'science · société',ic:'📣',
+     ef:'**Greffe** sur un personnage : répète son effet à la pose.',portee:'Sur un personnage',special:'propagate'},
+    {id:'rideau',name:'Le rideau',role:'Influenceur',type:'Objet',sup:'arts · science',ic:'🎬',
+     ef:'**Greffe** sur un personnage : lui confère **Aura d’inversion ciblée**.',portee:'Sur un personnage (aura d’inversion)',grantsAura:'invert'},
   ],
   fragment:'« Le rideau se lève toujours sur un silence. Ce soir-là, le silence a applaudi. »',
 },
@@ -340,17 +384,19 @@ const PUZZLES = [
   },
   dotation:[
     {id:'temoin',name:'Le témoin',role:'Symbole',type:'Personnage',sup:'histoire',ic:'👵',
-     ef:'Oubli −2',portee:'Sa case',effect:{oubli:-2},amplifiable:true},
-    {id:'conteur',name:'Le conteur',role:'Symbole',type:'Personnage',sup:'arts',ic:'📖',
-     ef:'Discorde −2',portee:'Sa case',effect:{discorde:-2},amplifiable:true},
-    {id:'archiviste',name:'L’archiviste',role:'Influenceur',type:'Personnage',sup:'histoire',ic:'🗄️',
-     ef:'Oubli −1 · son aura INVERSE un foyer adjacent (et stoppe ses essaimages)',portee:'Sa case + aura (inverse)',effect:{oubli:-1},amplifiable:true,aura:'invert'},
-    {id:'passeuse',name:'La passeuse',role:'Amplificateur',type:'Personnage',sup:'société',ic:'🔑',
-     ef:'Son aura ×2 l’effet des cartes ET des éléments adjacents',portee:'Aura (×2)',aura:'amplify'},
-    {id:'plaque',name:'La plaque commémorative',role:'Modificateur',type:'Objet',sup:'histoire',ic:'🪧',
-     ef:'S’appose sur un FOYER : inverse son effet en permanence (utile sur une entité qui se déplace)',portee:'Sur un foyer/aspect',elementMod:'invertPerm'},
-    {id:'scelle',name:'Le scellé',role:'Switch',type:'Objet',sup:'société',ic:'🔒',
-     ef:'Greffé sur un personnage : son aura annule TOUS les foyers/aspects qui lui sont adjacents',portee:'Sur un personnage (aura d’annulation, toutes cases adjacentes)',grantsAura:'calm'},
+     ef:'**À la pose** : −2 Oubli.',portee:'Sa case',effect:{oubli:-2},amplifiable:true},
+    {id:'conteur',name:'Le conteur',role:'Symbole',type:'Personnage',sup:'arts · histoire',ic:'📖',
+     ef:'**À la pose** : −2 Discorde.',portee:'Sa case',effect:{discorde:-2},amplifiable:true},
+    {id:'archiviste',name:'L’archiviste',role:'Influenceur',type:'Personnage',sup:'science · histoire',ic:'🗄️',
+     ef:'**À la pose** : −1 Oubli. **Aura d’inversion ciblée** : inverse un foyer voisin (et stoppe ses essaimages).',portee:'Sa case + aura (inverse)',effect:{oubli:-1},amplifiable:true,aura:'invert'},
+    {id:'passeuse',name:'La passeuse',role:'Amplificateur',type:'Personnage',sup:'arts · histoire',ic:'🔑',
+     ef:'**Aura d’amplification (zone)** : ×2 l’effet des cartes ET des éléments voisins.',portee:'Aura (×2)',aura:'amplify'},
+    {id:'plaque',name:'La plaque commémorative',role:'Modificateur',type:'Objet',sup:'science · histoire',ic:'🪧',
+     ef:'**Greffe** sur un foyer/aspect : inverse son effet en permanence (utile sur une entité qui se déplace).',portee:'Sur un foyer/aspect',elementMod:'invertPerm'},
+    {id:'scelle',name:'Le scellé',role:'Switch',type:'Objet',sup:'science · société',ic:'🔒',
+     ef:'**Greffe** sur un personnage : son aura annule TOUS les foyers/aspects voisins.',portee:'Sur un personnage (aura d’annulation, toutes cases voisines)',grantsAura:'calm'},
+    {id:'rapsode',name:'Le rapsode',role:'Récitant',type:'Personnage',sup:'histoire',ic:'🎙️',
+     ef:'**À la pose** : **Rappel** — re-déclenche l’effet à la pose du dernier personnage que tu as joué.',portee:'Sa case (Rappel)',rappelLastCard:true},
   ],
   fragment:'« Il rangeait nos souvenirs dans ses vitrines, pour lui seul. On a rouvert les volets. »',
 },
@@ -367,10 +413,10 @@ const GEN_GB=[{key:'oubli',nm:'Oubli'},{key:'doute',nm:'Doute'},{key:'discorde',
 const GEN_FN={oubli:['L’oubli','La lacune','Le silence'],doute:['La rumeur','Le soupçon','La défiance'],discorde:['La querelle','La cabale','La fronde']};
 const GEN_DN={oubli:['Le témoin','La gardienne','Le passeur'],doute:['Le savant','La preuve','Le notaire'],discorde:['Le médiateur','Le pacte','La conciliatrice']};
 const GEN_DIFFS={
-  standard: {label:'Standard · 3 jauges, multi-fronts',     gauges:3, sMin:7,sMax:9, Fmin:3,Fmax:4, nd:[1,1], minTurns:3, reactiveProb:0.3},
-  serre:    {label:'Serré · peu de solutions',              gauges:3, sMin:7,sMax:9, Fmin:3,Fmax:4, nd:[1,1], minTurns:3, reactiveProb:0.3, maxOpenings:6},
-  reactif:  {label:'Réactif · des pièges qui s’éveillent',   gauges:3, sMin:7,sMax:9, Fmin:3,Fmax:4, nd:[1,1], minTurns:3, reactiveProb:0.6},
-  dynamique:{label:'Dynamique · terrain vivant',            gauges:3, sMin:7,sMax:9, Fmin:3,Fmax:4, nd:[1,1], minTurns:3, dynamic:'any', reactiveProb:0.2},
+  standard: {label:'Standard · 3 jauges, multi-fronts',     gauges:3, sMin:7,sMax:9, Fmin:3,Fmax:4, nd:[1,1], minTurns:3, reactiveProb:0.3, passagerProb:0.3},
+  serre:    {label:'Serré · peu de solutions',              gauges:3, sMin:7,sMax:9, Fmin:3,Fmax:4, nd:[1,1], minTurns:3, reactiveProb:0.3, passagerProb:0.3, maxOpenings:6},
+  reactif:  {label:'Réactif · des pièges qui s’éveillent',   gauges:3, sMin:7,sMax:9, Fmin:3,Fmax:4, nd:[1,1], minTurns:3, reactiveProb:0.6, passagerProb:0.3},
+  dynamique:{label:'Dynamique · terrain vivant',            gauges:3, sMin:7,sMax:9, Fmin:3,Fmax:4, nd:[1,1], minTurns:3, dynamic:'any', reactiveProb:0.2, passagerProb:0.4},
 };
 const GEN_UPN={solidarite:'Solidarité',ferveur:'Ferveur',entraide:'Entraide'};
 const GEN_SUP=['Le métier','La fabrique','L’atelier','La confrérie','Le chœur'];
@@ -410,6 +456,15 @@ function genCandidate(seed,d){
       fL.delta=0; // le réactif normalement ne tick pas (sinon double peine) ; le burst remplace le tick
     } }
   }
+  // PASSAGERS : un foyer ou piège reçoit une durée limitée (2-3 tours), puis se dissipe et libère la case
+  if(d.passagerProb){
+    for(let i=0;i<F;i++){ if(rng()<d.passagerProb){const ch=String.fromCharCode(70+i);const fL=legend[ch];
+      fL.lifespan = ri(2,3);
+      // ajuster le nom pour signaler la nature passagère (préfixe « passager »)
+      if(fL.reactOnPlace) fL.label = 'Piège passager — '+(fL.label.replace(/^(Le |La |L’)/,''));
+      else fL.label = 'Foyer passager — '+(fL.label.replace(/^(Le |La |L’)/,''));
+    } }
+  }
   // BLOCKERS : 1-3 voids dispersés
   const nVoids = d.dynamic? ri(1,2) : ri(2,3);
   for(let i=0;i<nVoids;i++){const[r,c]=free();map[r][c]=' ';}
@@ -439,16 +494,26 @@ function genCandidate(seed,d){
   const dot=[];let id=0;
   menaceGauges.forEach(g=>{
     const nd=ri(d.nd[0],d.nd[1]);
-    for(let i=0;i<nd;i++)dot.push({id:'d'+g.key[0]+(id++),name:pk(GEN_DN[g.key]),role:'Symbole',type:'Personnage',sup:'histoire',ic:'🎯',ef:g.nm+' −2 à la pose, puis −1/tour tant que présent',portee:'Sa case (effet persistant)',effect:{[g.key]:-2},effectPersist:{[g.key]:-1},amplifiable:true});
+    for(let i=0;i<nd;i++)dot.push({id:'d'+g.key[0]+(id++),name:pk(GEN_DN[g.key]),role:'Symbole',type:'Personnage',sup:'science',ic:'🎯',ef:'**À la pose** : −2 '+g.nm+'. **À chaque tour** : −1 '+g.nm+'.',portee:'Sa case (effet persistant)',effect:{[g.key]:-2},effectPersist:{[g.key]:-1},amplifiable:true});
   });
   if(valeurGauge){
     const nSup=ri(1,2);
-    for(let i=0;i<nSup;i++)dot.push({id:'sup'+(id++),name:pk(GEN_SUP),role:'Soutien',type:'Personnage',sup:'société',ic:'🤝',ef:valeurGauge.nm+' +2 à la pose, puis +1/tour tant que présent',portee:'Sa case (effet persistant)',effect:{[valeurGauge.key]:2},effectPersist:{[valeurGauge.key]:1},amplifiable:true});
+    for(let i=0;i<nSup;i++)dot.push({id:'sup'+(id++),name:pk(GEN_SUP),role:'Soutien',type:'Personnage',sup:'science · société',ic:'🤝',ef:'**À la pose** : +2 '+valeurGauge.nm+'. **À chaque tour** : +1 '+valeurGauge.nm+'.',portee:'Sa case (effet persistant)',effect:{[valeurGauge.key]:2},effectPersist:{[valeurGauge.key]:1},amplifiable:true});
   }
-  if(rng()<0.7) dot.push({id:'cop'+(id++),name:pk(['Le copiste','La greffière','Le doublure']),role:'Copiste',type:'Personnage',sup:'arts',ic:'📜',ef:'À la pose : applique les effets de tous les personnages adjacents (la valeur dépend du voisinage)',portee:'Sa case (positionnel)',copyAdjacent:true});
-  dot.push({id:'inv'+(id++),name:'L’archiviste',role:'Influenceur',type:'Personnage',sup:'histoire',ic:'🔄',ef:'Son aura INVERSE un foyer adjacent (et l’amp ciblé sur lui double l’inversion)',portee:'Aura ciblée (inverse)',aura:'invert'});
-  dot.push({id:'amp'+(id++),name:'La passeuse',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'➕',ef:'Son aura ×2 l’effet d’UNE carte ou d’un foyer adjacent (à toi de choisir le camp)',portee:'Aura ciblée (×2)',aura:'amplify'});
-  dot.push({id:'calm'+(id++),name:'Le scellé',role:'Switch',type:'Objet',sup:'société',ic:'🔒',ef:'Greffé sur un personnage : annule un foyer adjacent',portee:'Sur un personnage',grantsAura:'calm'});
+  if(rng()<0.7) dot.push({id:'cop'+(id++),name:pk(['Le copiste','La greffière','Le doublure']),role:'Copiste',type:'Personnage',sup:'société',ic:'📜',ef:'**À la pose** : **Copie** les effets de tous les personnages voisins.',portee:'Sa case (positionnel)',copyAdjacent:true});
+  dot.push({id:'inv'+(id++),name:'L’archiviste',role:'Influenceur',type:'Personnage',sup:'science · histoire',ic:'🔄',ef:'**Aura d’inversion ciblée** : inverse un foyer voisin. Si l’archiviste est lui-même amplifié, l’inversion est doublée.',portee:'Aura ciblée (inverse)',aura:'invert'});
+  dot.push({id:'amp'+(id++),name:'La passeuse',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'➕',ef:'**Aura d’amplification ciblée** : ×2 l’effet d’UNE carte ou d’un foyer voisin choisi (à toi de choisir le camp).',portee:'Aura ciblée (×2)',aura:'amplify'});
+  dot.push({id:'calm'+(id++),name:'Le scellé',role:'Switch',type:'Objet',sup:'science · société',ic:'🔒',ef:'**Greffe** sur un personnage : lui confère **Aura d’annulation ciblée** (annule un foyer voisin).',portee:'Sur un personnage',grantsAura:'calm'});
+  // ---- cartes nature : propagation et échange ----
+  // Le lierre : à chaque fin de tour, applique son effet une fois par CASE OCCUPÉE voisine (carte OU élément)
+  // → terrain qui grandit : plus le voisinage est dense, plus l'effet est fort. Récompense l'occupation lente.
+  dot.push({id:'lierre'+(id++),name:'Le lierre',role:'Propagateur',type:'Personnage',sup:'nature',ic:'🌿',
+    ef:'**Présence** · **Propagation** : à chaque fin de tour, applique son effet une fois par case occupée voisine (carte ou élément).',
+    portee:'Sa case (Propagation)',effect:{[menaceGauges[0].key]:-1},propagateAtTick:true});
+  // Le passeur : à la pose, échange sa position avec n'importe quel foyer/aspect du plateau OU un personnage adjacent
+  dot.push({id:'passeur'+(id++),name:'Le passeur',role:'Switch',type:'Personnage',sup:'nature',ic:'🔀',
+    ef:'**À la pose** : **Échange** — choisis un foyer ou aspect (n’importe où sur le plateau) ou un personnage adjacent, vous permutez vos places.',
+    portee:'Plateau (Échange long)',swapOnPlace:true});
   // ---- objet final ----
   const gauges=gaugeList.map(g=>({key:g.key,nm:g.nm,start:g.start,mode:g.mode,target:g.target,danger:g.danger,dispMax:g.dispMax}));
   const lawText = nG===3 ? ('Trois forces : faire retomber '+menaceGauges.map(g=>g.nm).join(' et ')+', et faire monter '+valeurGauge.nm+'.')
@@ -475,7 +540,9 @@ function genSolve(P,opt){ opt=opt||{};
          spawn: sp.spawn?{gauge:sp.spawn.gauge,delta:sp.spawn.delta,cap:sp.spawn.cap,count:0}:null,
          captures: !!sp.captures,
          reactOnPlace: sp.reactOnPlace?{gauge:sp.reactOnPlace.gauge,delta:sp.reactOnPlace.delta}:null,
-         reacted:false, card:null});}grid.push(row);}
+         reacted:false,
+         lifespan: sp.lifespan!==undefined?sp.lifespan:undefined,
+         card:null});}grid.push(row);}
     const g={};P.gauges.forEach(x=>g[x.key]=x.start);
     return {g,grid,hand:P.dotation.filter(c=>opt.directOnly?(c.type==='Personnage'&&c.effect&&!c.aura):true).map(c=>({...c})),left:P.perTurn,turn:1};}
   const clone=s=>({g:{...s.g},grid:s.grid.map(ro=>ro.map(x=>{const y={...x};if(x.card)y.card={...x.card};if(x.move)y.move={path:x.move.path,pi:x.move.pi};if(x.spawn)y.spawn={...x.spawn};if(x.reactOnPlace)y.reactOnPlace={...x.reactOnPlace};return y;})),hand:s.hand.slice(),left:s.left,turn:s.turn});
@@ -519,22 +586,26 @@ function genSolve(P,opt){ opt=opt||{};
     // 1bis) persistance des personnages — non amplifiée (la persistance est un courant ; amplifier reste un éclat ponctuel)
     for(let r=0;r<R;r++)for(let c=0;c<C;c++){const oc=s.grid[r][c].card;if(!oc||!oc.effectPersist||oc.suspended)continue;
       for(const g in oc.effectPersist)s.g[g]=clamp(g,s.g[g]+oc.effectPersist[g]);}
-    // 2) spawn (plafonné, gelé si annulé)
+    // 2) spawn (plafonné, gelé si annulé) — l'arrivée d'un essaim déclenche les pièges adjacents
     const spawners=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=s.grid[r][c];if(cl.type==='foyer'&&cl.spawn)spawners.push([cl,r,c]);}
     for(const[cl,r,c]of spawners){if(auraAt(s.grid,r,c,'calm'))continue;if(cl.spawn.count>=cl.spawn.cap)continue;
       const slot=ortho(r,c).find(([a,b])=>{const c2=s.grid[a][b];return c2.type==='empty'&&!c2.card;});
-      if(slot){cl.spawn.count++;s.grid[slot[0]][slot[1]]={type:'foyer',gauge:cl.spawn.gauge,delta:cl.spawn.delta,card:null};}}
-    // 3) mouvement (path, si destination libre)
+      if(slot){cl.spawn.count++;s.grid[slot[0]][slot[1]]={type:'foyer',gauge:cl.spawn.gauge,delta:cl.spawn.delta,card:null};triggerReactives(s,slot[0],slot[1]);}}
+    // 3) mouvement (path, si destination libre) — un foyer qui arrive à une nouvelle case déclenche les pièges adjacents
     const movers=[];for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=s.grid[r][c];if(cl.type==='foyer'&&cl.move)movers.push([cl,r,c]);}
     for(const[cl,r,c]of movers){const path=cl.move.path;let pi=(cl.move.pi||0);pi=(pi+1)%path.length;const[nr,nc]=path[pi];const dest=s.grid[nr][nc];
-      if(dest&&dest.type==='empty'&&!dest.card){cl.move.pi=pi;s.grid[nr][nc]=cl;s.grid[r][c]={type:'empty',card:null};}}
+      if(dest&&dest.type==='empty'&&!dest.card){cl.move.pi=pi;s.grid[nr][nc]=cl;s.grid[r][c]={type:'empty',card:null};triggerReactives(s,nr,nc);}}
+    // 4) passagers : décrémenter, libérer à 0
+    for(let r=0;r<R;r++)for(let c=0;c<C;c++){const cl=s.grid[r][c];
+      if(cl&&cl.type==='foyer'&&cl.lifespan!==undefined){cl.lifespan--;
+        if(cl.lifespan<=0)s.grid[r][c]={type:'empty',card:null};}}
     s.turn++;s.left=P.perTurn;
   }
   const met=g=>P.gauges.every(x=>x.mode==='up'?g[x.key]>=x.target:g[x.key]<=x.target);
   const lost=g=>P.gauges.some(x=>x.mode==='up'?g[x.key]<=x.danger:g[x.key]>=x.danger);
   const MAXT=opt.maxTurns||6,CAP=opt.nodeCap||60000;let nodes=0;
   const gsig=st=>st.turn+'|'+st.left+'|'+JSON.stringify(st.g)+'|'+st.hand.map(c=>c.id).sort()+'|'+st.grid.map(ro=>ro.map(x=>{
-    if(x.type==='foyer')return 'F'+x.gauge[0]+x.delta+(x.move?'m'+x.move.pi:'')+(x.spawn?'s'+x.spawn.count:'')+(x.captures?'k':'')+(x.reactOnPlace?'R':'')+(x.reacted?'r':'')+(x.card?'+'+x.card.id+(x.card.auraTargetRC?'@'+x.card.auraTargetRC.r+x.card.auraTargetRC.c:'')+(x.card.suspended?'!':''):'');
+    if(x.type==='foyer')return 'F'+x.gauge[0]+x.delta+(x.move?'m'+x.move.pi:'')+(x.spawn?'s'+x.spawn.count:'')+(x.captures?'k':'')+(x.reactOnPlace?'R':'')+(x.reacted?'r':'')+(x.lifespan!==undefined?'L'+x.lifespan:'')+(x.card?'+'+x.card.id+(x.card.auraTargetRC?'@'+x.card.auraTargetRC.r+x.card.auraTargetRC.c:'')+(x.card.suspended?'!':''):'');
     if(x.type==='empty')return x.card?(x.card.id+(x.card.auraTargetRC?'@'+x.card.auraTargetRC.r+x.card.auraTargetRC.c:'')+(x.card.suspended?'!':'')):'.';
     return x.type[0];
   }).join(',')).join('/');
@@ -570,11 +641,12 @@ function genBuild(){
   if(!P){ P=genCandidate((Math.random()*1e9)|0,d); const f=genSolve(P,{maxTurns:7,nodeCap:50000,minOnly:true}); P._minTurns=f.win?f.turns:'?'; P._openings=null; }
   // sous-titre adapté : jauges, mécaniques dynamiques, réactifs
   const gDesc = P.gauges.map(g=>g.nm+(g.mode==='up'?' ↑':' ↓')).join(' · ');
-  const dynas=[];const reactifs=[];
-  for(const k in P.legend){const e=P.legend[k];if(e.move)dynas.push('un foyer mobile');if(e.spawn)dynas.push('un foyer essaimant');if(e.captures)dynas.push('un foyer capturant');if(e.reactOnPlace)reactifs.push(e.label||'piège');}
+  const dynas=[];const reactifs=[];const passagers=[];
+  for(const k in P.legend){const e=P.legend[k];if(e.move)dynas.push('un foyer mobile');if(e.spawn)dynas.push('un foyer essaimant');if(e.captures)dynas.push('un foyer capturant');if(e.reactOnPlace)reactifs.push(e.label||'piège');if(e.lifespan!==undefined)passagers.push(e.label||'passager');}
   const dynStr = dynas.length?(' · '+dynas.join(', ')):'';
   const reactStr = reactifs.length?(' · '+reactifs.length+' piège'+(reactifs.length>1?'s':'')+' réactif'+(reactifs.length>1?'s':'')):'';
-  P.sub='Scène générée (graine '+P.seed+') · auras ciblées · '+gDesc+dynStr+reactStr+'. Vérifié par solveur : les cartes directes seules ne suffisent pas, solution en '+P._minTurns+' tour(s)'+(P._openings?(' · '+P._openings+' ouverture(s) gagnante(s) — choix serré'):'')+'.';
+  const passStr = passagers.length?(' · '+passagers.length+' élément'+(passagers.length>1?'s':'')+' passager'+(passagers.length>1?'s':'')):'';
+  P.sub='Scène générée (graine '+P.seed+') · auras ciblées · '+gDesc+dynStr+reactStr+passStr+'. Vérifié par solveur : les cartes directes seules ne suffisent pas, solution en '+P._minTurns+' tour(s)'+(P._openings?(' · '+P._openings+' ouverture(s) gagnante(s) — choix serré'):'')+'.';
   return P;
 }
 function genConstrained(){
@@ -602,13 +674,13 @@ function loadPuzzle(idx){
     grid.push(row);
   }
   hand = P.dotation.map(c=>Object.assign({},c));   // clone (équipement par partie)
-  sel=null; turn=1; left=P.perTurn; finished=false; memoireGrabbed=false; logEntries=[]; pendingTarget=null;
+  sel=null; turn=1; left=P.perTurn; finished=false; memoireGrabbed=false; logEntries=[]; pendingTarget=null; lastPersonnagePlayed=null;
   reconcileAspects();
   pushLog('La scène s’ouvre.');
   document.getElementById('overlay').classList.remove('show');
   renderTabs(idx); renderHeader(); renderAll();
   document.getElementById('gen-row').style.display = P._gen ? 'flex' : 'none';
-  document.getElementById('inspector').innerHTML='<div class="insp-row insp-empty">Touche une carte ou une case pour voir ses propriétés.</div>';
+  document.getElementById('inspector').innerHTML='<div class="insp-row insp-empty">'+t('Touche une carte ou une case pour voir ses propriétés.')+'</div>';
 }
 
 /* ============================ HELPERS ============================ */
@@ -649,6 +721,17 @@ function clampG(key,v){ const m=gMeta[key]; return Math.max(0, Math.min((m.dispM
 
 // ---- AURAS CIBLÉES : cibles éligibles d'une aura posée en (r,c) ----
 function auraTargetCells(r,c,type){
+  // SWAP : portée TABLEAU pour foyer/aspect (n'importe où) ; personnages restent adjacents pour conserver une notion de "passage"
+  if(type==='swap'){
+    const out=[];
+    for(let rr=0;rr<ROWS;rr++) for(let cc=0;cc<COLS;cc++){
+      if(rr===r&&cc===c) continue;
+      const cl=grid[rr][cc]; if(!cl) continue;
+      if(cl.type==='foyer'||cl.type==='aspect') out.push({r:rr,c:cc});
+      else if(cl.card&&cl.card.type==='Personnage' && Math.abs(rr-r)+Math.abs(cc-c)===1) out.push({r:rr,c:cc});
+    }
+    return out;
+  }
   return ortho(r,c).filter(p=>{ const cl=grid[p.r][p.c];
     if(type==='amplify') return (cl.card&&cl.card.effect&&cl.card.amplifiable) || cl.type==='foyer' || cl.type==='aspect';
     return cl.type==='foyer' || cl.type==='aspect';   // invert / calm visent un élément
@@ -656,15 +739,41 @@ function auraTargetCells(r,c,type){
 }
 function enterPendingTarget(r,c,type,card){
   const elig=auraTargetCells(r,c,type);
-  if(!elig.length){ pushLog(`<b>${card.name}</b> — aucune cible adjacente : l’aura reste sans effet.`); return; }
+  if(!elig.length){
+    const msg = type==='swap'
+      ? `<b>${card.name}</b> — aucun voisin à échanger : reste sur place.`
+      : `<b>${card.name}</b> — aucune cible adjacente : l’aura reste sans effet.`;
+    pushLog(msg); return;
+  }
   pendingTarget={r,c,type,card,elig};
   renderAll();
-  document.getElementById('inspector').innerHTML='<div class="insp-row"><b>Cible l’aura</b> — touche une case surlignée pour choisir ce que «&nbsp;'+card.name+'&nbsp;» va '+(type==='amplify'?'amplifier (×'+(card.auraFactor||2)+')':type==='invert'?'inverser':'annuler')+'.</div>';
+  const verbe = type==='amplify' ? t('amplifier')+' (×'+(card.auraFactor||2)+')'
+              : type==='invert' ? t('inverser')
+              : type==='calm' ? t('annuler')
+              : type==='swap' ? t('échanger avec')
+              : type;
+  const label = type==='swap'
+    ? '<div class="insp-row"><b>'+t('Choisis l’échange')+'</b> — '+t('touche un foyer/aspect surligné (n’importe où) ou un personnage adjacent, vous permutez vos places.')+'</div>'
+    : '<div class="insp-row"><b>'+t('Cible l’aura')+'</b> — '+t('touche une case surlignée pour choisir ce que')+' «&nbsp;'+card.name+'&nbsp;» '+t('va')+' '+verbe+'.</div>';
+  document.getElementById('inspector').innerHTML=label;
 }
 function bindAuraTarget(tr,tc){
   if(!pendingTarget) return;
   const {r,c,type,card,elig}=pendingTarget;
   if(!elig.some(p=>p.r===tr&&p.c===tc)) return;
+  // SWAP : permute (r,c) ↔ (tr,tc) en bloc (cellules échangées entièrement)
+  if(type==='swap'){
+    const tgt=grid[tr][tc];
+    const tname = (tgt.card&&tgt.card.name) || tgt.label || 'la cible';
+    const tmp=grid[r][c]; grid[r][c]=grid[tr][tc]; grid[tr][tc]=tmp;
+    pushLog(`<b>${card.name}</b> ${t('échange sa place avec')} ${tname}.`);
+    // les deux entités déplacées peuvent activer des pièges adjacents à leurs nouvelles positions
+    triggerAdjacentReactives(tr,tc,card.name);
+    triggerAdjacentReactives(r,c,tname);
+    pendingTarget=null; reconcileAspects(); renderAll(); checkState();
+    document.getElementById('inspector').innerHTML='<div class="insp-row insp-empty">'+t('Touche une carte ou une case pour voir ses propriétés.')+'</div>';
+    return;
+  }
   card.auraTargetRC={r:tr,c:tc};
   const tgt=grid[tr][tc];
   if(type==='amplify' && tgt.card && tgt.card.effect && tgt.card.amplifiable){
@@ -676,7 +785,7 @@ function bindAuraTarget(tr,tc){
     pushLog(`<b>${card.name}</b> ${type==='amplify'?'amplifie':type==='invert'?'inverse':'annule'} ${tname}.`);
   }
   pendingTarget=null; reconcileAspects(); renderAll(); checkState();
-  document.getElementById('inspector').innerHTML='<div class="insp-row insp-empty">Touche une carte ou une case pour voir ses propriétés.</div>';
+  document.getElementById('inspector').innerHTML='<div class="insp-row insp-empty">'+t('Touche une carte ou une case pour voir ses propriétés.')+'</div>';
 }
 
 // capture spatiale : une entité mobile encore hostile suspend l'aura des personnages qu'elle jouxte
@@ -739,37 +848,81 @@ function computeEffects(card,r,c){
 /* ============================ RENDU ============================ */
 function renderTabs(idx){ const el=document.getElementById('tabs'); el.innerHTML='';
   PUZZLES.forEach((p,i)=>{ const b=document.createElement('div'); b.className='tab'+(i===idx?' active':'');
-    b.textContent=(i+1)+'. '+p.title; b.onclick=()=>loadPuzzle(i); el.appendChild(b); }); }
+    b.textContent=(i+1)+'. '+t(p.title); b.onclick=()=>loadPuzzle(i); el.appendChild(b); }); }
 
-function renderHeader(){ document.getElementById('scene').textContent=P.scene;
-  document.getElementById('sub').textContent=P.sub;
-  document.getElementById('law').innerHTML='<span class="law-tag">Loi du lieu</span>'+P.law.text;
+function renderHeader(){ document.getElementById('scene').textContent=t(P.scene);
+  document.getElementById('sub').textContent=tEf(P.sub);
+  document.getElementById('law').innerHTML='<span class="law-tag">'+t('Loi du lieu')+'</span>'+tEf(P.law.text);
   // légende contextuelle
   const lg=document.getElementById('legend'); let h='';
   const has=(f)=>Object.values(P.legend).some(f);
-  if(has(s=>s.type==='foyer')) h+='<span><i class="f"></i> Foyer — avance chaque tour (vert s’il t’aide, rouge sinon)</span>';
-  if(has(s=>s.type==='aspect')) h+='<span><i class="asp"></i> Aspect statique — contribue une fois, à inverser/annuler</span>';
-  if(has(s=>s.move)) h+='<span>↪ se déplace chaque tour</span>';
-  if(has(s=>s.spawn)) h+='<span>✦ invoque des entités</span>';
-  if(has(s=>s.type==='memoire')) h+='<span><i class="m"></i> Mémoire enfouie — l’exhumer coûte un placement</span>';
+  if(has(s=>s.type==='foyer')) h+='<span><i class="f"></i> '+t('Foyer — avance chaque tour (vert s’il t’aide, rouge sinon)')+'</span>';
+  if(has(s=>s.type==='aspect')) h+='<span><i class="asp"></i> '+t('Aspect statique — contribue une fois, à inverser/annuler')+'</span>';
+  if(has(s=>s.move)) h+='<span>↪ '+t('se déplace chaque tour')+'</span>';
+  if(has(s=>s.spawn)) h+='<span>✦ '+t('invoque des entités')+'</span>';
+  if(has(s=>s.type==='memoire')) h+='<span><i class="m"></i> '+t('Mémoire enfouie — l’exhumer coûte un placement')+'</span>';
   lg.innerHTML=h;
 }
 
 function renderAll(){ renderGauges(); renderGrid(); renderHand(); renderTurn(); renderLog(); renderValidate(); }
 
+// projette les deltas qui s'appliqueront à la prochaine fin de tour (foyers ticks + persistance des cartes posées)
+function predictEndOfTurn(){
+  const deltas={}; P.gauges.forEach(g=>deltas[g.key]=0);
+  // 1) ticks de foyers
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+    if(cell&&cell.type==='foyer'&&!cell.dormant){ const d=elementDelta(cell,r,c); if(d) deltas[cell.gauge]=(deltas[cell.gauge]||0)+d; } }
+  // 2) persistance des cartes posées
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const oc=grid[r][c].card;
+    if(oc&&oc.effectPersist&&!oc.suspended) for(const g in oc.effectPersist) deltas[g]=(deltas[g]||0)+oc.effectPersist[g]; }
+  // 2bis) RÉSONANCE des cartes (compte voisins-personnages, applique au tick)
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const oc=grid[r][c].card;
+    if(!oc||!oc.resonance||oc.suspended) continue;
+    const nb=ortho(r,c).filter(p=>{const c2=grid[p.r][p.c];return c2&&c2.card&&c2.card.type==='Personnage';}).length;
+    if(nb>0) deltas[oc.resonance.gauge]=(deltas[oc.resonance.gauge]||0)+(oc.resonance.perNeighbor*nb);
+  }
+  // 2ter) PROPAGATION des cartes (compte cases occupées voisines, applique effect × nb)
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const oc=grid[r][c].card;
+    if(!oc||!oc.propagateAtTick||!oc.effect||oc.suspended) continue;
+    const nb=ortho(r,c).filter(p=>{const cl=grid[p.r][p.c]; return cl && (cl.card || cl.type==='foyer' || cl.type==='aspect');}).length;
+    if(nb>0) for(const g in oc.effect) deltas[g]=(deltas[g]||0)+(oc.effect[g]*nb);
+  }
+  // 3) pièges qui seront déclenchés par un spawn ou un déplacement ce tour (chaque piège ne se déclenche qu'une fois)
+  const willTrigger=new Set();
+  const fireIfArmed=(tr,tc)=>{ ortho(tr,tc).forEach(p=>{ const cl=grid[p.r][p.c];
+    if(cl&&cl.type==='foyer'&&cl.reactOnPlace&&!cl.reacted){const key=p.r+','+p.c;if(!willTrigger.has(key)){willTrigger.add(key);deltas[cl.reactOnPlace.gauge]=(deltas[cl.reactOnPlace.gauge]||0)+cl.reactOnPlace.delta;}} }); };
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c]; if(!cell)continue;
+    // déplacement vers (nr,nc)
+    if(cell.type==='foyer'&&cell.move){const path=cell.move.path;let pi=(cell.move.pi||0);pi=(pi+1)%path.length;const[nr,nc]=path[pi];const dest=grid[nr][nc];
+      if(dest&&dest.type==='empty'&&!dest.card&&(nr!==r||nc!==c)) fireIfArmed(nr,nc); }
+    // essaim vers slot
+    if(cell.type==='foyer'&&cell.spawn&&!auraAt(r,c,'calm')&&cell.spawn.count<cell.spawn.cap){
+      const slot=ortho(r,c).find(p=>{const c2=grid[p.r][p.c];return c2&&c2.type==='empty'&&!c2.card;});
+      if(slot) fireIfArmed(slot.r,slot.c); }
+  }
+  return deltas;
+}
 function renderGauges(){ const el=document.getElementById('gauges'); el.innerHTML='';
+  const pred=predictEndOfTurn();
   P.gauges.forEach(g=>{ const v=gauges[g.key]; const ok=g.mode==='down'?v<=g.target:v>=g.target;
     const max=g.dispMax||10; const pct=Math.max(0,Math.min(100,v/max*100));
     const linePos=Math.max(0,Math.min(100,g.target/max*100));
     const d=document.createElement('div'); d.className='gauge-v'+(ok?' ok':''); d.dataset.k=g.key;
     const tb = g.mode==='down' ? `bottom:0;height:${linePos}%` : `top:0;height:${100-linePos}%`;
     const arrow = g.mode==='down'?'≤':'≥';
+    const delta=pred[g.key]||0;
+    const projV=clampG(g.key,v+delta);
+    const projFav = (g.mode==='down')?(delta<=0):(delta>=0);
+    const predLine = (delta!==0)
+      ? `<div class="vpred" style="color:${projFav?'var(--sage)':'var(--sanguine)'}">→ ${projV} <span style="opacity:.7">(${delta>0?'+':''}${delta})</span></div>`
+      : `<div class="vpred" style="color:#8a8576">→ ${v} <span style="opacity:.7">(=)</span></div>`;
     d.innerHTML=`<div class="vval">${v}${ok?'<span class="vok">✓</span>':''}</div>
       <div class="vbar"><div class="vtarget" style="${tb}"></div><div class="vfill" style="height:${pct}%"></div><div class="vline" style="bottom:${linePos}%"></div></div>
+      ${predLine}
       <div class="vprev">&nbsp;</div>
-      <div class="vnm">${g.nm}</div>
-      <div class="vbut">but ${arrow} ${g.target}</div>
-      <div class="vkind">${GENERIC_KEYS.includes(g.key)?'commune':'propre'}</div>`;
+      <div class="vnm">${t(g.nm)}</div>
+      <div class="vbut">${t('but')} ${arrow} ${g.target}</div>
+      <div class="vkind">${GENERIC_KEYS.includes(g.key)?t('commune'):t('propre')}</div>`;
     el.appendChild(d); });
 }
 
@@ -779,8 +932,8 @@ function renderGrid(){ const el=document.getElementById('grid'); el.innerHTML=''
   const valid = (sel&&!pendingTarget)?validCells(sel):[];
   const targets = pendingTarget?pendingTarget.elig:[];
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
-    const cell=grid[r][c]; const div=document.createElement('div'); div.className='cell';
-    if(cell.type==='void'){ div.className='cell void'; el.appendChild(div); continue; }
+    const cell=grid[r][c]; const div=document.createElement('div'); div.className='cell'; div.dataset.r=r; div.dataset.c=c;
+    if(cell.type==='void'){ div.className='cell void'; div.dataset.r=r; div.dataset.c=c; el.appendChild(div); continue; }
     const isValid=valid.some(p=>p.r===r&&p.c===c); if(isValid) div.classList.add('valid');
     const isTarget=targets.some(p=>p.r===r&&p.c===c); if(isTarget) div.classList.add('target');
     if(pendingTarget && pendingTarget.r===r && pendingTarget.c===c) div.classList.add('aura-source');
@@ -797,42 +950,438 @@ function renderGrid(){ const el=document.getElementById('grid'); el.innerHTML=''
         const parts=[];for(const g in cell.card.effectPersist){const d=cell.card.effectPersist[g];const fav=(gMeta[g].mode==='down')?d<0:d>0;parts.push(`<span style="color:${fav?'var(--sage)':'var(--sanguine)'}">${d>0?'+':''}${d}/t</span>`);}
         persistBadge=`<span class="dlt persist-dlt">${parts.join(' ')}</span>`;
       }
-      div.innerHTML=`<div class="card-mini"><span class="ic">${cell.card.ic}</span><span class="cn">${cell.card.name}</span></div>${persistBadge}${x2}${eq}`;
+      // badge de résonance : compte les voisins-personnages, affiche le bonus actuel + projeté
+      let resBadge='';
+      if(cell.card.resonance&&!cell.card.suspended){
+        const nb=ortho(r,c).filter(p=>{const c2=grid[p.r][p.c];return c2&&c2.card&&c2.card.type==='Personnage';}).length;
+        const d=cell.card.resonance.perNeighbor*nb;
+        const fav=(gMeta[cell.card.resonance.gauge].mode==='down')?d<0:d>0;
+        resBadge=`<span class="dlt persist-dlt" style="color:${nb?(fav?'var(--sage)':'var(--sanguine)'):'#8a8576'}">↻ ${nb} voisin${nb>1?'s':''} ${d>0?'+':d<0?'':'='}${d?d+'/t':''}</span>`;
+      }
+      // badge de propagation : compte cases occupées voisines, affiche delta total projeté
+      let propBadge='';
+      if(cell.card.propagateAtTick&&cell.card.effect&&!cell.card.suspended){
+        const nb=ortho(r,c).filter(p=>{const cl=grid[p.r][p.c]; return cl && (cl.card || cl.type==='foyer' || cl.type==='aspect');}).length;
+        if(nb>0){
+          const firstG=Object.keys(cell.card.effect)[0]; const totD=cell.card.effect[firstG]*nb;
+          const fav=(gMeta[firstG].mode==='down')?totD<0:totD>0;
+          propBadge=`<span class="dlt persist-dlt" style="color:${fav?'var(--sage)':'var(--sanguine)'}">🌿 ${nb}× ${totD>0?'+':''}${totD}/t</span>`;
+        } else {
+          propBadge=`<span class="dlt persist-dlt" style="color:#8a8576">🌿 0</span>`;
+        }
+      }
+      div.innerHTML=`<div class="card-mini"><span class="ic">${cell.card.ic}</span><span class="cn">${cell.card.name}</span></div>${persistBadge}${resBadge}${propBadge}${x2}${eq}${cell.card.sup?`<span class="sup-tag" title="${cell.card.sup}">${supPips(cell.card.sup)}</span>`:''}`;
     } else if(cell.type==='foyer'){
       const d=elementDelta(cell,r,c);
+      const isTrap = !!cell.reactOnPlace;
+      const isInert = cell.reacted;
       const fav = cell.dormant ? favorable(cell) : (d!==0 ? (gMeta[cell.gauge].mode==='down'?d<0:d>0) : favorable(cell));
-      div.classList.add(cell.dormant?'dormant':(fav?'good':'bad'));
-      const marks=(cell.move?'<span class="mark">↪</span>':'')+(cell.spawn?'<span class="mark">✦</span>':'');
+      div.classList.add(cell.dormant?'dormant':isInert?'dormant':(isTrap?'bad':(fav?'good':'bad')));
+      const marks=(cell.move?'<span class="mark">↪</span>':'')+(cell.spawn?'<span class="mark">✦</span>':'')+(isTrap?'<span class="mark">⚡</span>':'');
       const eq=(cell.equips||[]).map(o=>`<span class="equip-badge">${o.ic}</span>`).join('');
+      const lsBadge = cell.lifespan!==undefined ? ` <span style="opacity:.85">· ⌛${cell.lifespan}</span>` : '';
       const dlt = cell.dormant
-        ? `<span class="dlt" style="color:#8a8576">${cell.delta>0?'+':''}${cell.delta} dort</span>`
-        : `<span class="dlt" style="color:${fav?'var(--sage)':'var(--sanguine)'}">${d>0?'+':''}${d}/t</span>`;
-      div.innerHTML=`<span class="ent">${cell.ent}</span><span class="lbl">${cell.label}</span>${dlt}${marks}${eq}`;
+        ? `<span class="dlt" style="color:#8a8576">${cell.delta>0?'+':''}${cell.delta} dort${lsBadge}</span>`
+        : isInert
+          ? `<span class="dlt" style="color:#8a8576">inerte</span>`
+          : isTrap
+            ? `<span class="dlt" style="color:var(--sanguine)">${cell.reactOnPlace.delta>0?'+':''}${cell.reactOnPlace.delta}${lsBadge}</span>`
+            : `<span class="dlt" style="color:${fav?'var(--sage)':'var(--sanguine)'}">${d>0?'+':''}${d}/t${lsBadge}</span>`;
+      div.innerHTML=`<span class="ent">${cell.ent}</span><span class="lbl">${t(cell.label)}</span>${dlt}${marks}${eq}`;
     } else if(cell.type==='aspect'){
       const d=aspectContribution(cell,r,c);
       const fav = (gMeta[cell.gauge].mode==='down') ? (d<0) : (d>0);
       div.classList.add('aspect', fav?'good':'bad');
       const eq=(cell.equips||[]).map(o=>`<span class="equip-badge">${o.ic}</span>`).join('');
-      div.innerHTML=`<span class="ent">${cell.ent}</span><span class="lbl">${cell.label}</span>`+
+      div.innerHTML=`<span class="ent">${cell.ent}</span><span class="lbl">${t(cell.label)}</span>`+
         `<span class="dlt" style="color:${fav?'var(--sage)':'var(--sanguine)'}">${d>0?'+':''}${d}</span>`+
         `<span class="aspect-tag">statique</span>${eq}`;
     } else if(cell.type==='memoire'){
       div.classList.add('memoire');
       div.innerHTML = memoireGrabbed?`<span class="ent">📖</span><span class="lbl">exhumée</span>`:`<span class="ent">▦</span><span class="lbl">mémoire</span>`;
     }
-    if(isValid){ div.classList.add('placeable'); div.onmouseenter=()=>showPreview(r,c); div.onmouseleave=clearPreview; }
+    if(isValid){ div.classList.add('placeable'); div.onpointerenter=()=>showPreview(r,c); div.onpointerleave=clearPreview; div.onpointercancel=clearPreview; }
+    // Drag & drop : la case accepte la carte glissée
+    div.ondragover=(e)=>{ if(sel&&isValid){ e.preventDefault(); e.dataTransfer.dropEffect='move'; div.classList.add('drag-over'); showPreview(r,c); } };
+    div.ondragleave=()=>{ div.classList.remove('drag-over'); clearPreview(); };
+    div.ondrop=(e)=>{ e.preventDefault(); div.classList.remove('drag-over'); clearPreview(); if(sel&&isValid) placeAt(r,c); };
     div.onclick=()=>{ if(pendingTarget){ if(isTarget) bindAuraTarget(r,c); }
                       else if(sel&&isValid) placeAt(r,c); else inspectCell(r,c); };
     el.appendChild(div);
   }
 }
 
+// Dictionnaire des mots-clefs et leur définition (utilisé pour tooltips dans la main)
+const KEYWORDS={
+  'À la pose':'Effet déclenché à l’instant où la carte est posée sur la grille (one-shot).',
+  'À chaque tour':'Effet appliqué à chaque fin de tour, tant que la carte reste présente. C’est la "persistance" — courant lent, opposé du burst.',
+  'Présence':'Effet continu tant que la carte reste sur la grille (synonyme de "tant que présent").',
+  'Aura d’amplification ciblée':'À la pose, choisis un voisin ortho (carte ou foyer). Tant que la carte est présente, l’effet du voisin choisi est multiplié ×2.',
+  'Aura d’amplification (zone)':'Tant que la carte est présente, l’effet de tous les voisins ortho (cartes ET foyers) est multiplié ×2. Pas de choix de cible — affecte la zone entière.',
+  'Aura d’inversion ciblée':'À la pose, choisis un voisin (carte ou foyer). Tant que la carte est présente, l’effet du voisin choisi est inversé (signe retourné). Si la carte porteuse est elle-même amplifiée, l’inversion est doublée.',
+  'Aura d’annulation ciblée':'À la pose, choisis un voisin (carte ou foyer). Tant que la carte est présente, l’effet du voisin choisi est annulé (0).',
+  'Greffe':'Cet objet se pose sur une carte ou un élément déjà présent. Il modifie ou complète son comportement sans occuper de case libre.',
+  'Copie':'Au moment précis de la pose, applique en une fois les effets de tous les personnages voisins (toutes couleurs). La valeur dépend du voisinage immédiat.',
+  '+1 placement':'Accorde un placement supplémentaire pour ce tour. Cumulable.',
+  'Rappel':'À la pose, déclenche à nouveau l’effet à la pose du dernier personnage que tu as joué (les rapsodes eux-mêmes ne sont pas pris en compte pour éviter les chaînes).',
+  'Résonance':'Tant que cette carte est présente, à chaque tour : ajoute un bonus à une jauge cible, proportionnel au nombre de cartes-personnages voisines (toute couleur).',
+  'Propagation':'Tant que la carte est présente, à chaque fin de tour : applique son effet une fois pour chaque case occupée voisine (carte ou élément). Plus le voisinage est dense, plus l’effet est fort.',
+  'Échange':'À la pose, choisis un voisin orthogonal (carte ou foyer) — vous permutez vos positions sur la grille. Utile pour relocaliser un foyer menaçant, ou pour replacer une carte au cœur d’un cluster.',
+};
+// Système d'internationalisation léger : LANG = 'fr' (défaut) ou 'en'. Traduit l'UI shell + les mots-clefs.
+let LANG='fr';
+const I18N={
+  // Shell UI
+  'expLore · bac à sable de design':{en:'expLore · design sandbox'},
+  'Ta dotation':{en:'Your hand'},
+  'Tour':{en:'Turn'},
+  'Placements restants :':{en:'Placements left:'},
+  'Fin du tour':{en:'End turn'},
+  'Valider la scène':{en:'Validate scene'},
+  'Recommencer':{en:'Restart'},
+  '🎲 Régénérer':{en:'🎲 Regenerate'},
+  'Standard · 3 jauges, multi-fronts':{en:'Standard · 3 gauges, multi-front'},
+  'Serré · peu de solutions':{en:'Tight · few solutions'},
+  'Réactif · pièges qui s’éveillent':{en:'Reactive · awakening traps'},
+  'Dynamique · terrain vivant':{en:'Dynamic · living terrain'},
+  'Dotation épuisée.':{en:'Hand empty.'},
+  'Touche une carte ou une case pour voir ses propriétés.':{en:'Tap a card or cell to see its properties.'},
+  // Mots-clefs (texte affiché)
+  'À la pose':{en:'On play'},
+  'À chaque tour':{en:'Each turn'},
+  'Présence':{en:'While present'},
+  'Aura d’amplification ciblée':{en:'Targeted amplification aura'},
+  'Aura d’amplification (zone)':{en:'Amplification aura (zone)'},
+  'Aura d’inversion ciblée':{en:'Targeted inversion aura'},
+  'Aura d’annulation ciblée':{en:'Targeted cancel aura'},
+  'Greffe':{en:'Graft'},
+  'Copie':{en:'Copy'},
+  '+1 placement':{en:'+1 placement'},
+  'Rappel':{en:'Recall'},
+  'Résonance':{en:'Resonance'},
+  // Noms de jauges
+  'Oubli':{en:'Oblivion'},
+  'Doute':{en:'Doubt'},
+  'Censure':{en:'Censorship'},
+  'Misère':{en:'Misery'},
+  'Solidarité':{en:'Solidarity'},
+  'Trac':{en:'Stage fright'},
+  'Ferveur':{en:'Fervor'},
+  'Discorde':{en:'Discord'},
+  'Entraide':{en:'Mutual aid'},
+  'Mémoire':{en:'Memory'},
+  // Titres des scènes (tabs)
+  'Rue Mercière':{en:'Mercière Street'},
+  'Croix-Rousse':{en:'Croix-Rousse'},
+  'Les Célestins':{en:'Les Célestins'},
+  'Le Collector':{en:'The Collector'},
+  '🎲 Procédural':{en:'🎲 Procedural'},
+  // Sous-titres / contexte des scènes
+  'La Rue Mercière, au XVI<sup>e</sup>':{en:'Mercière Street, 16th century'},
+  'La Croix-Rousse, la fabrique':{en:'Croix-Rousse, the workshops'},
+  'Les Célestins, soir de première':{en:'Les Célestins theatre, opening night'},
+  'Vieux Lyon, la ronde du Collector':{en:'Old Lyon, the Collector’s round'},
+  'Un lieu commun de Lyon':{en:'A common place in Lyon'},
+  // Labels piège
+  'Paré':{en:'Primed'},
+  'Piège armé':{en:'Trap primed'},
+  'Piège passager':{en:'Passing trap'},
+  'Piège déclenché':{en:'Trap triggered'},
+  'Foyer favorable':{en:'Favorable source'},
+  'Foyer défavorable':{en:'Adverse source'},
+  'Foyer passager':{en:'Passing source'},
+  'Aspect statique':{en:'Static aspect'},
+  'Déclenche':{en:'Triggers'},
+  'quand une case adjacente devient occupée':{en:'when an adjacent cell becomes occupied'},
+  'Loi du lieu':{en:'Local rule'},
+  // ===== Scènes : titres complets, sous-titres, lois, fragments =====
+  'Rue Mercière, sous la censure':{en:'Mercière Street, under censorship'},
+  'Lyon, 1546. L’encre sèche mal et l’on brûle sous les fenêtres des imprimeurs. Apaise les trois forces qui rongent la rue.':{en:'Lyon, 1546. Ink dries poorly and books burn under the printers’ windows. Soothe the three forces gnawing at the street.'},
+  'La chape — tant que la Censure reste à 4 ou plus, chaque geste d’apaisement est diminué de 1 (la peur émousse les efforts).':{en:'The pall — while Censorship stays at 4 or more, every soothing gesture is reduced by 1 (fear dulls the effort).'},
+  '« On disait qu’une femme ne pouvait écrire ainsi. Quelqu’un, pourtant, accepta de l’imprimer. »':{en:'“They said no woman could write like that. Yet someone agreed to print it.”'},
+
+  'La Croix-Rousse, la fabrique':{en:'Croix-Rousse, the workshops'},
+  'Sur les pentes, les canuts tissent dans le froid. Fais refluer la Misère et lève la Solidarité — le terrain monte en escalier.':{en:'On the slopes, silk weavers work in the cold. Push back Misery and raise Solidarity — the terrain climbs in stairs.'},
+  'L’entraide — à la fin du tour, si la Solidarité atteint 5 ou plus, la Misère reflue d’elle-même (Misère −1).':{en:'Mutual aid — at end of turn, if Solidarity reaches 5 or more, Misery recedes on its own (Misery −1).'},
+  '« Vivre en travaillant ou mourir en combattant. La pente a sa mémoire, et elle ne plie pas. »':{en:'“Live working or die fighting. The slope has its memory, and it does not bend.”'},
+
+  'Les Célestins, soir de première':{en:'Les Célestins, opening night'},
+  'La salle se remplit, les comédiens tremblent. Fais tomber le Trac et monter la Ferveur — la scène a la forme d’un plateau.':{en:'The hall fills, the actors tremble. Make Stage fright fall and Fervor rise — the stage takes the shape of a plateau.'},
+  'L’avant-première — tant que la Ferveur reste sous 4, le trac s’emballe (les foyers de Trac poussent deux fois plus fort).':{en:'The preview — while Fervor stays under 4, stage fright runs wild (Stage fright sources push twice as hard).'},
+  '« Le rideau se lève toujours sur un silence. Ce soir-là, le silence a applaudi. »':{en:'“The curtain always rises on a silence. That night, the silence applauded.”'},
+
+  'Vieux Lyon, la ronde du Collector':{en:'Old Lyon, the Collector’s round'},
+  'Dans les traboules, un Collector patrouille pour enfermer la mémoire, et une rumeur essaime. Fais tomber l’Oubli et la Discorde.':{en:'In the traboules, a Collector patrols to lock away memory, and a rumor spawns. Bring down Oblivion and Discord.'},
+  'La rumeur nourrit l’oubli — à la fin du tour, si la Discorde atteint 4, l’Oubli +1.':{en:'Rumor feeds oblivion — at end of turn, if Discord reaches 4, Oblivion +1.'},
+  '« Il rangeait nos souvenirs dans ses vitrines, pour lui seul. On a rouvert les volets. »':{en:'“He stored our memories in his cabinets, for himself alone. We reopened the shutters.”'},
+
+  'Un lieu commun de Lyon':{en:'A common place in Lyon'},
+  '« Un lieu sans nom se souvient aussi. »':{en:'“A nameless place remembers too.”'},
+
+  // ===== Étiquettes de foyers et éléments (cell.label) =====
+  'L’oubli':{en:'Oblivion'},
+  'La lacune':{en:'The gap'},
+  'Le silence':{en:'Silence'},
+  'La rumeur':{en:'The rumor'},
+  'Le soupçon':{en:'Suspicion'},
+  'La défiance':{en:'Mistrust'},
+  'La querelle':{en:'The quarrel'},
+  'La cabale':{en:'The cabal'},
+  'La fronde':{en:'The fronde'},
+  'L’endormi':{en:'The sleeper'},
+  'La sentinelle':{en:'The sentinel'},
+  'Le piège':{en:'The trap'},
+  'Le grief':{en:'The grievance'},
+  'Le rôdeur':{en:'The prowler'},
+  'La rumeur-mère':{en:'The mother rumor'},
+  'Le foyer-mère':{en:'The mother source'},
+  'La source':{en:'The source'},
+  'Le veilleur':{en:'The watcher'},
+  'Le suspicieux':{en:'The suspicious one'},
+  'L’inquisiteur':{en:'The inquisitor'},
+  'Écho':{en:'Echo'},
+  'Rumeur':{en:'Rumor'},
+  'Le bûcher':{en:'The pyre'},
+  'L’index':{en:'The Index'},
+  'Le placard':{en:'The placard'},
+  'Le frère prêcheur':{en:'The preaching brother'},
+  'L’atelier glacé':{en:'The freezing workshop'},
+  'La dette':{en:'The debt'},
+  'La fabrique au repos':{en:'The idle workshop'},
+  'Le trou dans la chaîne':{en:'The break in the chain'},
+  'Le pavé':{en:'The cobblestone'},
+  'Le Collector':{en:'The Collector'},
+  'Le vitrine':{en:'The cabinet'},
+
+  // ===== Légende et principes (UI) =====
+  'Foyer — avance chaque tour (vert s’il t’aide, rouge sinon)':{en:'Source — advances each turn (green if helpful, red otherwise)'},
+  'Aspect statique — contribue une fois, à inverser/annuler':{en:'Static aspect — contributes once, to invert/cancel'},
+  'se déplace chaque tour':{en:'moves each turn'},
+  'invoque des entités':{en:'spawns entities'},
+  'Mémoire enfouie — l’exhumer coûte un placement':{en:'Buried memory — exhuming it costs a placement'},
+  'Mémoire enfouie':{en:'Buried memory'},
+  'Mémoire':{en:'Memory'},
+  'Déjà exhumée.':{en:'Already exhumed.'},
+  'Y poser une carte l’exhume (fragment d’histoire), mais coûte un placement.':{en:'Placing a card here exhumes it (history fragment), but costs a placement.'},
+  'Case libre.':{en:'Empty cell.'},
+  'Pose':{en:'Play'},
+  'ici.':{en:'here.'},
+  'Sélectionne une carte.':{en:'Select a card.'},
+  'but':{en:'goal'},
+  'commune':{en:'common'},
+  'propre':{en:'specific'},
+  'pousse':{en:'pushes'},
+  'à chaque fin de tour':{en:'at each end of turn'},
+  'inversé':{en:'inverted'},
+  'amplifié':{en:'amplified'},
+  'dormant':{en:'dormant'},
+  'inerte':{en:'inert'},
+  'annulé':{en:'cancelled'},
+  'par une aura : ne pousse plus.':{en:'by an aura: no longer pushes.'},
+  'Se dissipera dans':{en:'Will dissipate in'},
+  'tour':{en:'turn'},
+  'tours':{en:'turns'},
+  '(dernier tour !)':{en:'(final turn!)'},
+  'Agir':{en:'Act'},
+  'Un piège ne se déclenche qu’au contact ; tu peux donc l’éviter — ou le déclencher délibérément, à coût, pour neutraliser une menace plus grave.':{en:'A trap only triggers on contact; you can avoid it — or deliberately trigger it, at a cost, to neutralize a worse threat.'},
+  'Une aura adjacente l’inverse, l’amplifie ou l’annule (effets cumulés) ; un objet « modificateur » peut l’altérer en permanence.':{en:'An adjacent aura inverts, amplifies, or cancels it (effects stack); a “modifier” object can alter it permanently.'},
+  'Verbe':{en:'Verb'},
+  'Effet':{en:'Effect'},
+  'Zone d’action':{en:'Range'},
+  'à':{en:'to'},
+  'ne contribue plus.':{en:'no longer contributes.'},
+  'contribue désormais':{en:'now contributes'},
+  'contribue':{en:'contributes'},
+  'aspect statique : contribue une fois, ne se répète pas':{en:'static aspect: contributes once, no repeat'},
+  'une fois éveillé, poussera':{en:'once awake, will push'},
+  'S’éveille quand':{en:'Awakens when'},
+  'devenu inerte, ne pousse plus rien.':{en:'now inert, no longer pushes anything.'},
+  // Portées des cartes
+  'Sa case (effet persistant)':{en:'Its cell (persistent effect)'},
+  'Sa case + aura (inverse)':{en:'Its cell + aura (invert)'},
+  'Sa case + aura (annule)':{en:'Its cell + aura (cancel)'},
+  'Sa case + aura (×2)':{en:'Its cell + aura (×2)'},
+  'Sa case':{en:'Its cell'},
+  'Sa case (positionnel)':{en:'Its cell (positional)'},
+  'Sa case (Rappel)':{en:'Its cell (Recall)'},
+  'Sa case (Résonance)':{en:'Its cell (Resonance)'},
+  'Sa case (+1 placement)':{en:'Its cell (+1 placement)'},
+  'Aura (×2)':{en:'Aura (×2)'},
+  'Aura ciblée (inverse)':{en:'Targeted aura (invert)'},
+  'Aura ciblée (×2)':{en:'Targeted aura (×2)'},
+  'Sur un personnage':{en:'On a character'},
+  'Sur un personnage (aura d’annulation)':{en:'On a character (cancel aura)'},
+  'Sur un personnage (aura d’annulation, toutes cases voisines)':{en:'On a character (cancel aura, all neighbor cells)'},
+  'Sur un personnage (aura d’inversion)':{en:'On a character (invert aura)'},
+  'Sur un foyer/aspect':{en:'On a source/aspect'},
+  // Cartes nature
+  'Le lierre':{en:'The ivy'},
+  'Le passeur':{en:'The ferrier'},
+  'Propagateur':{en:'Propagator'},
+  'Sa case (Propagation)':{en:'Its cell (Propagation)'},
+  'Sa case + un voisin (Échange)':{en:'Its cell + a neighbor (Swap)'},
+  'Propagation':{en:'Propagation'},
+  'Échange':{en:'Swap'},
+  'échange sa place avec':{en:'swaps places with'},
+  'Choisis l’échange':{en:'Choose the swap'},
+  'touche un voisin surligné, vous permutez vos places.':{en:'tap a highlighted neighbor, you swap places.'},
+  'touche un foyer/aspect surligné (n’importe où) ou un personnage adjacent, vous permutez vos places.':{en:'tap a highlighted source/aspect (anywhere) or an adjacent character, you swap places.'},
+  'Plateau (Échange long)':{en:'Board (Long swap)'},
+  'Sa case + un voisin (Échange)':{en:'Its cell + a neighbor (Swap)'},
+  '**Présence** · **Propagation** : à chaque fin de tour, applique son effet une fois par case occupée voisine (carte ou élément).':{en:'**While present** · **Propagation**: each end of turn, applies its effect once per occupied neighbor cell (card or element).'},
+  '**À la pose** : **Échange** — choisis un foyer ou aspect (n’importe où sur le plateau) ou un personnage adjacent, vous permutez vos places.':{en:'**On play**: **Swap** — choose a source or aspect (anywhere on the board) or an adjacent character, you swap places.'},
+  'Cible l’aura':{en:'Target the aura'},
+  'touche une case surlignée pour choisir ce que':{en:'tap a highlighted cell to choose what'},
+  'va':{en:'will'},
+  'amplifier':{en:'amplify'},
+  'inverser':{en:'invert'},
+  'annuler':{en:'cancel'},
+  'échanger avec':{en:'swap with'},
+  'Tape à côté pour fermer':{en:'Tap outside to close'},
+  'Tape une case pour jouer · tape la carte pour fermer':{en:'Tap a cell to play · tap the card to close'},
+  'Clic = sélectionner · double-clic = détail · glisser = poser':{en:'Click = select · double-click = details · drag = place'},
+  'Tape une case pour jouer · tape la carte pour fermer':{en:'Tap a cell to play · tap card to close'},
+  'Principes communs (toutes scènes) : les <b>foyers</b> (cerclés de rouge) poussent leur jauge chaque tour ; les <b>éléments statiques</b> font de même (verts s’ils t’aident, rouges sinon). Une <b>aura</b> agit sur les cartes ET les éléments de sa zone : amplifier (×2), inverser (change le signe), annuler (0). Les <b>objets</b> se posent sur un personnage pour l’augmenter.':{en:'Common principles (all scenes): <b>sources</b> (red-circled) push their gauge each turn; <b>static elements</b> do the same (green if helpful, red otherwise). An <b>aura</b> acts on cards AND elements in its zone: amplify (×2), invert (flips the sign), cancel (0). <b>Objects</b> attach to a character to augment them.'},
+
+  // ===== Chips et rôles =====
+  'Personnage':{en:'Character'},
+  'Objet':{en:'Object'},
+  'Symbole':{en:'Symbol'},
+  'Influenceur':{en:'Influencer'},
+  'Amplificateur':{en:'Amplifier'},
+  'Propagateur':{en:'Propagator'},
+  'Modificateur':{en:'Modifier'},
+  'Switch':{en:'Switch'},
+  'Relais':{en:'Relay'},
+  'Copiste':{en:'Copyist'},
+  'Soutien':{en:'Support'},
+  'Récitant':{en:'Reciter'},
+  'Résonateur':{en:'Resonator'},
+
+  // ===== Cartes hand : noms et descriptions ef =====
+  'Le copiste':{en:'The copyist'},
+  'Le chef d’atelier':{en:'The workshop master'},
+  'Le canut':{en:'The silk weaver'},
+  'Le crieur public':{en:'The town crier'},
+  'La Mutuelle':{en:'The Mutual Fund'},
+  'Le métier (bistanclaque)':{en:'The loom (bistanclaque)'},
+  'La pétition':{en:'The petition'},
+  'L’apprenti':{en:'The apprentice'},
+  'La presse de la Doloire':{en:'The Doloire press'},
+  'Le privilège du Roi':{en:'The King’s privilege'},
+  'Le souffleur':{en:'The prompter'},
+  'Le comédien':{en:'The actor'},
+  'La diva':{en:'The diva'},
+  'Le régisseur':{en:'The stage manager'},
+  'L’ovation':{en:'The ovation'},
+  'Le rideau':{en:'The curtain'},
+  'Le témoin':{en:'The witness'},
+  'Le conteur':{en:'The storyteller'},
+  'L’archiviste':{en:'The archivist'},
+  'La passeuse':{en:'The keeper'},
+  'La plaque commémorative':{en:'The commemorative plaque'},
+  'Le scellé':{en:'The seal'},
+  'Le rapsode':{en:'The rhapsode'},
+  'L’attroupement':{en:'The crowd'},
+
+  // Card ef texts (full strings)
+  '**À la pose** : −2 Doute. **Aura d’inversion ciblée** : inverse un foyer/élément voisin choisi.':{en:'**On play**: −2 Doubt. **Targeted inversion aura**: inverts a chosen neighboring source/element.'},
+  '**À la pose** : −3 Censure.':{en:'**On play**: −3 Censorship.'},
+  '**Aura d’amplification (zone)** : ×2 l’effet des cartes ET des éléments voisins.':{en:'**Amplification aura (zone)**: ×2 the effect of cards AND neighboring elements.'},
+  '**À la pose** : −3 Oubli.':{en:'**On play**: −3 Oblivion.'},
+  '**Greffe** sur un personnage : répète son effet à la pose.':{en:'**Graft** on a character: repeats its on-play effect.'},
+  '**Greffe** sur un personnage : lui confère **Aura d’annulation ciblée**.':{en:'**Graft** on a character: grants it a **Targeted cancel aura**.'},
+  '**À la pose** : −1 Oubli et **+1 placement** ce tour.':{en:'**On play**: −1 Oblivion and **+1 placement** this turn.'},
+  '**À la pose** : −3 Misère.':{en:'**On play**: −3 Misery.'},
+  '**À la pose** : +2 Solidarité.':{en:'**On play**: +2 Solidarity.'},
+  '**À la pose** : +1 Solidarité. **Aura d’inversion ciblée** : retourne un voisin choisi (par exemple une dette en soutien).':{en:'**On play**: +1 Solidarity. **Targeted inversion aura**: flips a chosen neighbor (for instance a debt into support).'},
+  '**À la pose** : −2 Trac.':{en:'**On play**: −2 Stage fright.'},
+  '**À la pose** : +2 Ferveur.':{en:'**On play**: +2 Fervor.'},
+  '**À la pose** : −1 Trac. **Aura d’annulation ciblée** : annule un foyer voisin choisi.':{en:'**On play**: −1 Stage fright. **Targeted cancel aura**: cancels a chosen neighboring source.'},
+  '**Greffe** sur un personnage : lui confère **Aura d’inversion ciblée**.':{en:'**Graft** on a character: grants it a **Targeted inversion aura**.'},
+  '**À la pose** : −2 Oubli.':{en:'**On play**: −2 Oblivion.'},
+  '**À la pose** : −2 Discorde.':{en:'**On play**: −2 Discord.'},
+  '**À la pose** : −1 Oubli. **Aura d’inversion ciblée** : inverse un foyer voisin (et stoppe ses essaimages).':{en:'**On play**: −1 Oblivion. **Targeted inversion aura**: inverts a neighboring source (and stops its spawns).'},
+  '**Greffe** sur un foyer/aspect : inverse son effet en permanence (utile sur une entité qui se déplace).':{en:'**Graft** on a source/aspect: inverts its effect permanently (useful on a moving entity).'},
+  '**Greffe** sur un personnage : son aura annule TOUS les foyers/aspects voisins.':{en:'**Graft** on a character: its aura cancels ALL neighboring sources/aspects.'},
+  '**À la pose** : **Rappel** — re-déclenche l’effet à la pose du dernier personnage que tu as joué.':{en:'**On play**: **Recall** — re-trigger the on-play effect of the last character you played.'},
+  '**Présence** · **Résonance** : à chaque tour, +1 Solidarité par voisin-personnage (toute couleur).':{en:'**While present** · **Resonance**: each turn, +1 Solidarity per neighbor-character (any color).'},
+};
+// Définitions traduites pour les tooltips
+const KEYWORDS_EN={
+  'On play':'Effect triggered the instant the card is placed (one-shot).',
+  'Each turn':'Effect applied each end of turn while the card remains present (persistence — slow current, opposite of burst).',
+  'While present':'Continuous effect while the card stays on the grid.',
+  'Targeted amplification aura':'On placement, pick an ortho neighbor (card or foyer). While the card is present, the neighbor’s effect is ×2.',
+  'Amplification aura (zone)':'While present, the effect of all ortho neighbors (cards AND foyers) is ×2. No target choice — affects the entire zone.',
+  'Targeted inversion aura':'On placement, pick a neighbor. While the card is present, the neighbor’s effect is inverted. If the card itself is amplified, the inversion is doubled.',
+  'Targeted cancel aura':'On placement, pick a neighbor. While the card is present, the neighbor’s effect is cancelled (0).',
+  'Graft':'This object attaches to an existing card or element. It modifies or completes its behavior without taking a free cell.',
+  'Copy':'At the moment of placement, applies all neighbor-personnage effects at once (any color). Value depends on the immediate neighborhood.',
+  '+1 placement':'Grants one extra placement this turn. Stackable.',
+  'Recall':'On placement, re-trigger the on-play effect of the last personnage you played (recallers themselves are excluded to avoid chains).',
+  'Resonance':'While this card is present, each turn: adds a bonus to a target gauge, proportional to the number of neighbor-personnage cards (any color).',
+  'Propagation':'While the card is present, each end of turn: applies its effect once for every occupied neighbor cell (card or element). The denser the neighborhood, the stronger the effect.',
+  'Exchange':'On play, pick an orthogonal neighbor (card or source) — you swap positions on the grid. Useful to relocate a threatening source, or to reposition a card into the heart of a cluster.',
+};
+function t(s){ if(LANG==='fr'||!s) return s; const e=I18N[s]; return e&&e.en?e.en:s; }
+// tEf : pour les textes longs (ef, sub, law). Cherche exact dans I18N, sinon applique tProse pour traduire les termes connus.
+function tEf(s){ if(LANG==='fr'||!s) return s; const e=I18N[s]; if(e&&e.en) return e.en; return tProse(s); }
+// Couleurs des supertypes (palette ouverte, type Magic colors)
+const SUP_COLORS={
+  'arts':'#d4965a',      // ochre — influence, rayonnement
+  'science':'#3a6ea5',   // bleu — précision, savoir
+  'nature':'#5f7a4f',    // vert sage — croissance, terrain
+  'société':'#8c352a',   // sanguine — présence des autres
+  'histoire':'#7d5b3d',  // sépia — rappel, mémoire
+};
+function supPips(sup){ if(!sup) return '';
+  return sup.split(/\s*·\s*/).map(p=>{const col=SUP_COLORS[p.trim()]||'#888';
+    return `<span class="sup-pip" style="background:${col}" title="${p}"></span>`;}).join('');
+}
+// Translation prose : transforme les termes connus (noms de jauges, etc.) dans une chaîne.
+// Couvre ce que t() ne couvre pas : prose libre contenant des termes traduisibles.
+function tProse(s){ if(LANG==='fr'||!s) return s;
+  const terms=['Solidarité','Mémoire','Entraide','Discorde','Misère','Censure','Ferveur','Oubli','Doute','Trac'];
+  let r=s; for(const term of terms){const en=I18N[term]&&I18N[term].en; if(en) r=r.split(term).join(en);}
+  return r;
+}
+function formatEf(text){ if(!text) return '';
+  // remplace **mot-clef** par <span class="kw" title="définition">mot-clef</span>
+  return text.replace(/\*\*([^*]+)\*\*/g,(m,kw)=>{
+    const displayKw=t(kw);
+    const defDict=LANG==='en'?KEYWORDS_EN:KEYWORDS;
+    const def=defDict[displayKw]||defDict[kw]||'(mot-clef non défini)';
+    const safeDef=def.replace(/"/g,'&quot;');
+    return '<span class="kw" title="'+safeDef+'">'+displayKw+'</span>';
+  });
+}
 function renderHand(){ const el=document.getElementById('hand'); el.innerHTML='';
   hand.forEach(card=>{ const d=document.createElement('div');
     d.className='card '+(card.type==='Objet'?'t-objet':'t-perso')+(sel&&sel.id===card.id?' sel':'');
-    d.innerHTML=`<span class="ic">${card.ic}</span><div class="body"><div class="cn">${card.name}</div><div class="role"><span class="chip ${card.type==='Objet'?'chip-o':'chip-p'}">${card.type}</span> ${card.role}</div><div class="ef">${card.ef}</div></div>`;
-    d.onclick=()=>selectCard(card); el.appendChild(d); });
-  if(hand.length===0) el.innerHTML='<div class="ef" style="color:#8a8576;font-size:12px">Dotation épuisée.</div>';
+    const pips = supPips(card.sup);
+    const supLabel = card.sup ? `<span class="chip-sup-text" title="${card.sup}">${pips}<i>${card.sup}</i></span>` : '';
+    d.innerHTML=`<span class="ic">${card.ic}</span><div class="body"><div class="cn">${t(card.name)}</div><div class="role"><span class="chip ${card.type==='Objet'?'chip-o':'chip-p'}">${t(card.type)}</span> ${t(card.role)} ${supLabel}</div><div class="ef">${formatEf(tEf(card.ef))}</div></div>`;
+    // === INTERACTIONS ===
+    // Clic simple : sélection (cases plaçables surlignées, modale fermée)
+    // Double-clic (desktop) ou appui long (mobile) : ouvre la modale grand format
+    // Drag (desktop) : glisser-déposer sur une case pour poser directement
+    let lpTimer=null, lpFired=false, lpStartX=0, lpStartY=0;
+    d.onclick=(e)=>{ if(lpFired){ lpFired=false; return; } selectCard(card); };
+    d.ondblclick=(e)=>{ e.preventDefault(); showCardDetail(card); };
+    // Drag & drop (desktop HTML5)
+    d.draggable=true;
+    d.ondragstart=(e)=>{ sel=card; inspectCard(card); renderHand(); renderGrid(); closeCardModal();
+      e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',card.id); d.classList.add('dragging'); };
+    d.ondragend=()=>{ d.classList.remove('dragging'); };
+    // Long-press tactile (≥450ms sans bouger trop) → modale
+    d.ontouchstart=(e)=>{ lpFired=false; const tch=e.touches[0]; lpStartX=tch.clientX; lpStartY=tch.clientY;
+      lpTimer=setTimeout(()=>{ lpFired=true; lpTimer=null; showCardDetail(card); },450); };
+    d.ontouchmove=(e)=>{ if(!lpTimer) return; const tch=e.touches[0];
+      if(Math.abs(tch.clientX-lpStartX)>10||Math.abs(tch.clientY-lpStartY)>10){ clearTimeout(lpTimer); lpTimer=null; } };
+    d.ontouchend=d.ontouchcancel=()=>{ if(lpTimer){ clearTimeout(lpTimer); lpTimer=null; } };
+    el.appendChild(d); });
+  if(hand.length===0) el.innerHTML=`<div class="ef" style="color:#8a8576;font-size:12px">${t('Dotation épuisée.')}</div>`;
 }
 function renderTurn(){ document.getElementById('turn').textContent=turn; document.getElementById('left').textContent=left; }
 function renderLog(){ const el=document.getElementById('log'); el.innerHTML='';
@@ -840,47 +1389,114 @@ function renderLog(){ const el=document.getElementById('log'); el.innerHTML='';
 function renderValidate(){ document.getElementById('validate').disabled=!objectiveMet(); }
 
 /* ============================ INSPECTEUR ============================ */
-function selectCard(card){ if(finished||pendingTarget) return; sel=(sel&&sel.id===card.id)?null:card; inspectCard(card); renderHand(); renderGrid(); }
+function selectCard(card){ if(finished||pendingTarget) return;
+  sel = (sel && sel.id===card.id) ? null : card;
+  inspectCard(card); renderHand(); renderGrid();
+  // Si la modale était ouverte (via double-clic/long-press), on la ferme pour ne pas perturber le placement
+  closeCardModal();
+}
+// Ouvre explicitement la modale grand format (déclenché par double-clic desktop ou long-press mobile)
+function showCardDetail(card){ if(finished||pendingTarget) return;
+  sel=card; inspectCard(card); renderHand(); renderGrid(); openCardModal(card);
+}
+// Modale carte : affiche la carte en grand avec frame coloré par supertype, fond flou.
+function openCardModal(card){
+  const bg=document.getElementById('card-modal');
+  const detail=document.getElementById('card-detail');
+  const sups=(card.sup||'').split(/\s*·\s*/).map(s=>s.trim()).filter(Boolean);
+  const c1=SUP_COLORS[sups[0]]||'#5c4a30';
+  const c2=sups[1]?(SUP_COLORS[sups[1]]||c1):c1;
+  detail.style.setProperty('--sup-color',c1);
+  detail.style.setProperty('--sup-tint',c1+'1f'); // hex alpha
+  // bi-supertype : bordure dégradée
+  if(sups.length>1){
+    detail.style.background='linear-gradient(180deg,var(--paper) 0%,#ebe2cd 100%) padding-box, linear-gradient(135deg,'+c1+' 0%,'+c2+' 100%) border-box';
+    detail.style.borderColor='transparent';
+  } else {
+    detail.style.background='linear-gradient(180deg,var(--paper) 0%,#ebe2cd 100%)';
+    detail.style.borderColor=c1;
+  }
+  detail.className='card-detail '+(card.type==='Objet'?'t-objet':'t-perso');
+  const pipsBig=sups.map(p=>'<span class="sup-pip" style="background:'+(SUP_COLORS[p]||'#888')+'" title="'+p+'"></span>').join('');
+  detail.innerHTML=`
+    <div class="cd-close-hint">${t('Tape une case pour jouer · tape la carte pour fermer')}</div>
+    <div class="cd-header">
+      <div class="cd-name">${t(card.name)}</div>
+      <div class="cd-meta">
+        <span class="cd-chip">${t(card.type)}</span>
+        <span>${t(card.role)}</span>
+        ${card.sup?'<span class="cd-sup">'+pipsBig+'<i>'+card.sup+'</i></span>':''}
+      </div>
+    </div>
+    <div class="cd-art"><span>${card.ic}</span></div>
+    <div class="cd-description">${formatEf(tEf(card.ef))}</div>
+    ${card.portee?'<div class="cd-footer">'+tEf(card.portee)+'</div>':''}
+  `;
+  bg.classList.add('show');
+}
+function closeCardModal(){ document.getElementById('card-modal').classList.remove('show'); }
+// Tap sur la carte affichée = ferme la modale (la sélection reste, donc cellules toujours plaçables)
+document.getElementById('card-detail').onclick=(e)=>{ e.stopPropagation(); closeCardModal(); };
+// Touche Échap = fermer la modale
+document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closeCardModal(); });
 function inspectCard(card){ const el=document.getElementById('inspector');
-  const badge=card.type==='Objet'?'<span class="tbadge objet">Objet</span>':'<span class="tbadge perso">Personnage</span>';
-  el.innerHTML=`<div class="insp-head"><span class="insp-ic">${card.ic}</span><div><div class="insp-nm">${card.name}</div>${badge} <span class="insp-sup">${card.sup||''}</span></div></div>
-    <div class="insp-row"><b>Verbe</b> ${card.role}</div>
-    <div class="insp-row"><b>Effet</b> ${card.ef}</div>
-    <div class="insp-row"><b>Zone d’action</b> ${card.portee||'—'}</div>`;
+  const badge=card.type==='Objet'?'<span class="tbadge objet">'+t('Objet')+'</span>':'<span class="tbadge perso">'+t('Personnage')+'</span>';
+  el.innerHTML=`<div class="insp-head"><span class="insp-ic">${card.ic}</span><div><div class="insp-nm">${t(card.name)}</div>${badge} <span class="insp-sup">${card.sup||''}</span></div></div>
+    <div class="insp-row"><b>${t('Verbe')}</b> ${t(card.role)}</div>
+    <div class="insp-row"><b>${t('Effet')}</b> ${formatEf(tEf(card.ef))}</div>
+    <div class="insp-row"><b>${t('Zone d’action')}</b> ${tEf(card.portee)||'—'}</div>`;
 }
 function inspectCell(r,c){ const cell=grid[r][c],el=document.getElementById('inspector');
   if(!cell||cell.type==='void') return;
   if(cell.card){ inspectCard(cell.card); return; }
   if(cell.type==='foyer'||cell.type==='aspect'){
-    const nm=gMeta[cell.gauge].nm;
+    const nm=t(gMeta[cell.gauge].nm);
     const d = cell.type==='aspect'?aspectContribution(cell,r,c):elementDelta(cell,r,c);
     const k=auraKindAt(r,c);
     const fav = cell.type==='aspect' ? ((gMeta[cell.gauge].mode==='down')?d<0:d>0) : favorable(cell);
     let state;
     if(cell.type==='aspect'){
-      state = (k==='calm'?'<b>annulé</b> : ne contribue plus.'
-        : k==='invert'?'<b style="color:var(--sage)">inversé</b> : contribue désormais '+(d>0?'+':'')+d+' à '+nm+'.'
-        : k==='amplify'?'<b style="color:var(--ochre)">amplifié</b> : contribue '+(d>0?'+':'')+d+' à '+nm+'.'
-        : 'aspect <b>statique</b> : contribue '+(d>0?'+':'')+d+' à '+nm+' une fois (ne se répète pas).');
+      state = (k==='calm'?'<b>'+t('annulé')+'</b> : '+t('ne contribue plus.')
+        : k==='invert'?'<b style="color:var(--sage)">'+t('inversé')+'</b> : '+t('contribue désormais')+' '+(d>0?'+':'')+d+' '+t('à')+' '+nm+'.'
+        : k==='amplify'?'<b style="color:var(--ochre)">'+t('amplifié')+'</b> : '+t('contribue')+' '+(d>0?'+':'')+d+' '+t('à')+' '+nm+'.'
+        : t('aspect statique : contribue une fois, ne se répète pas')+' ('+(d>0?'+':'')+d+' '+nm+').');
     } else {
       state = cell.dormant
-        ? '<b>dormant</b> — une fois éveillé, poussera '+nm+' '+(cell.delta>0?'+':'')+cell.delta+'/tour. S’éveille quand <b>'+condText(cell.wakeWhen)+'</b>.'+(cell.flavor?' <span style="color:var(--muted)">('+cell.flavor+')</span>':'')
-        : k==='calm'?'<b>annulé</b> par une aura : ne pousse plus.'
-        : 'pousse <b>'+nm+' '+(d>0?'+':'')+d+'</b> à chaque fin de tour'+(k==='invert'?' (inversé)':k==='amplify'?' (amplifié)':'')+'.';
+        ? '<b>'+t('dormant')+'</b> — '+t('une fois éveillé, poussera')+' '+nm+' '+(cell.delta>0?'+':'')+cell.delta+'/'+t('tour')+'. '+t('S’éveille quand')+' <b>'+condText(cell.wakeWhen)+'</b>.'
+        : cell.reactOnPlace
+          ? '<b style="color:var(--sanguine)">⚡ '+t('Paré')+'</b> : '+t('Déclenche')+' <b>'+nm+' '+(cell.reactOnPlace.delta>0?'+':'')+cell.reactOnPlace.delta+'</b> '+t('quand une case adjacente devient occupée')+'.'
+        : cell.reacted
+          ? '<b style="color:var(--muted)">'+t('Piège déclenché')+'</b> — '+t('devenu inerte, ne pousse plus rien.')
+        : k==='calm'?'<b>'+t('annulé')+'</b> '+t('par une aura : ne pousse plus.')
+        : t('pousse')+' <b>'+nm+' '+(d>0?'+':'')+d+'</b> '+t('à chaque fin de tour')+(k==='invert'?' ('+t('inversé')+')':k==='amplify'?' ('+t('amplifié')+')':'')+'.';
     }
     const moves = cell.move?'<div class="insp-row"><b>Déplacement</b> patrouille d’une case par tour (trajet fixe).'+(cell.captures?' Tant qu’il est hostile, il <b>capture</b> les personnages qu’il jouxte : leur aura est suspendue. Le convertir (objet) le neutralise.':'')+'</div>':'';
     const spawns = cell.spawn?'<div class="insp-row"><b>Spawn</b> invoque «&nbsp;'+cell.spawn.label+'&nbsp;» ('+(gMeta[cell.spawn.gauge]?gMeta[cell.spawn.gauge].nm:cell.spawn.gauge)+' '+(cell.spawn.delta>0?'+':'')+cell.spawn.delta+'/tour) dans une case voisine'+(cell.spawn.when?', quand '+condText(cell.spawn.when):'')+', jusqu’à '+cell.spawn.cap+' fois. Annule-le pour stopper.</div>':'';
     const equip = (cell.equips&&cell.equips.length)?'<div class="insp-row"><b>Objet</b> '+cell.equips.map(o=>o.name).join(', ')+' apposé(s) : modification permanente.</div>':'';
-    const tag = cell.type==='aspect'?'Aspect statique':(fav?'Foyer favorable':'Foyer défavorable');
-    el.innerHTML=`<div class="insp-head"><span class="insp-ic">${cell.ent}</span><div><div class="insp-nm">${cell.label}</div>
-        <span class="tbadge ${fav?'elem':'foyer'}">${tag}</span></div></div>
-      <div class="insp-row">${state}</div>${moves}${spawns}${equip}
-      <div class="insp-row"><b>Agir</b> Une aura adjacente l'inverse, l'amplifie ou l'annule (effets cumulés) ; un objet « modificateur » peut l'altérer en permanence.</div>`;
+    const isTrap = cell.reactOnPlace;
+    const isInert = cell.reacted;
+    const isPassager = cell.lifespan!==undefined;
+    const baseTag = cell.type==='aspect'?'Aspect statique'
+                  : isTrap ? 'Piège'
+                  : isInert ? 'Piège déclenché'
+                  : (fav?'Foyer favorable':'Foyer défavorable');
+    const tag = isPassager && !isInert ? baseTag.replace('Foyer','Foyer passager').replace('Piège','Piège passager') : baseTag;
+    const tagClass = cell.type==='aspect' ? 'elem'
+                   : isTrap ? 'piege'
+                   : isInert ? 'inerte'
+                   : (fav?'elem':'foyer');
+    const lifeRow = isPassager && !isInert
+      ? `<div class="insp-row" style="color:#cdc7b6">⌛ Se dissipera dans <b>${cell.lifespan} tour${cell.lifespan>1?'s':''}</b>${cell.lifespan===1?' (dernier tour !)':''}.</div>`
+      : '';
+    el.innerHTML=`<div class="insp-head"><span class="insp-ic">${cell.ent}</span><div><div class="insp-nm">${t(cell.label)}</div>
+        <span class="tbadge ${tagClass}">${tag}</span></div></div>
+      <div class="insp-row">${state}</div>${lifeRow}${moves}${spawns}${equip}
+      <div class="insp-row"><b>Agir</b> ${isTrap ? 'Un piège ne se déclenche qu’au contact ; tu peux donc l’éviter — ou le déclencher délibérément, à coût, pour neutraliser une menace plus grave.' : 'Une aura adjacente l’inverse, l’amplifie ou l’annule (effets cumulés) ; un objet « modificateur » peut l’altérer en permanence.'}</div>`;
   } else if(cell.type==='memoire'){
-    el.innerHTML=`<div class="insp-head"><span class="insp-ic">${memoireGrabbed?'📖':'▦'}</span><div><div class="insp-nm">Mémoire enfouie</div><span class="tbadge mem">Mémoire</span></div></div>
-      <div class="insp-row">${memoireGrabbed?'Déjà exhumée.':'Y poser une carte l’exhume (fragment d’histoire), mais coûte un placement.'}</div>`;
+    el.innerHTML=`<div class="insp-head"><span class="insp-ic">${memoireGrabbed?'📖':'▦'}</span><div><div class="insp-nm">${t('Mémoire enfouie')}</div><span class="tbadge mem">${t('Mémoire')}</span></div></div>
+      <div class="insp-row">${memoireGrabbed?t('Déjà exhumée.'):t('Y poser une carte l’exhume (fragment d’histoire), mais coûte un placement.')}</div>`;
   } else {
-    el.innerHTML=`<div class="insp-row insp-empty">Case libre. ${sel?'Pose «&nbsp;'+sel.name+'&nbsp;» ici.':'Sélectionne une carte.'}</div>`;
+    el.innerHTML=`<div class="insp-row insp-empty">${t('Case libre.')} ${sel?t('Pose')+' «&nbsp;'+t(sel.name)+'&nbsp;» '+t('ici.'):t('Sélectionne une carte.')}</div>`;
   }
 }
 
@@ -910,11 +1526,44 @@ function showPreview(r,c){ if(!sel) return;
     if(host&&sel.special==='propagate'&&host.effect){ const amp=host.amplifiable&&auraAt(r,c,'amplify');
       for(const g in host.effect) eff.push({g,d:host.effect[g]*(amp?2:1)}); } }
   else eff=computeEffects(sel,r,c);
+  // PIÈGES : si la pose touche un piège armé, ajouter son effet (immédiat, à la pose)
+  if(sel.type==='Personnage'){
+    ortho(r,c).forEach(p=>{ const cl=grid[p.r][p.c];
+      if(cl&&cl.type==='foyer'&&cl.reactOnPlace&&!cl.reacted){
+        eff.push({g:cl.reactOnPlace.gauge, d:cl.reactOnPlace.delta, why:'⚡ '+(cl.label||'piège')});
+      } });
+  }
   document.querySelectorAll('.gauge-v').forEach(gEl=>{ const key=gEl.dataset.k;
-    const sum=eff.filter(e=>e.g===key).reduce((a,e)=>a+e.d,0); const prev=gEl.querySelector('.vprev');
-    if(sum!==0){ prev.textContent=`→ ${clampG(key,gauges[key]+sum)} (${sum>0?'+':''}${sum})`; } else prev.innerHTML='&nbsp;'; });
+    const place=eff.filter(e=>e.g===key).reduce((a,e)=>a+e.d,0);
+    const prev=gEl.querySelector('.vprev');
+    if(place!==0){
+      const projV=clampG(key,gauges[key]+place);
+      const placeFav=(gMeta[key].mode==='down')?(place<=0):(place>=0);
+      // texte projection sur la pose seule
+      prev.innerHTML=`<span style="color:${placeFav?'var(--sage)':'var(--sanguine)'}">pose ${place>0?'+':''}${place} → ${projV}</span>`;
+      // animation : .vfill s'anime vers le niveau projeté + .vval affiche la valeur projetée + classe ok mise à jour
+      const max=gMeta[key].dispMax||10; const pct=Math.max(0,Math.min(100,projV/max*100));
+      const fill=gEl.querySelector('.vfill'); fill.style.height=pct+'%';
+      const ok = gMeta[key].mode==='down' ? projV<=gMeta[key].target : projV>=gMeta[key].target;
+      gEl.classList.toggle('ok',ok);
+      const vval=gEl.querySelector('.vval');
+      vval.innerHTML=`<span style="color:${placeFav?'var(--sage)':'var(--sanguine)'}">${projV}</span>${ok?'<span class="vok">✓</span>':''}`;
+    } else prev.innerHTML='&nbsp;';
+  });
 }
-function clearPreview(){ renderGauges(); }
+function clearPreview(){
+  // restaurer le fill et le vval aux valeurs courantes (l'animation se fait grâce à la transition CSS sur .vfill)
+  document.querySelectorAll('.gauge-v').forEach(gEl=>{ const key=gEl.dataset.k;const g=gMeta[key];const v=gauges[key];
+    const ok = g.mode==='down' ? v<=g.target : v>=g.target;
+    const max=g.dispMax||10; const pct=Math.max(0,Math.min(100,v/max*100));
+    gEl.querySelector('.vfill').style.height=pct+'%';
+    gEl.classList.toggle('ok',ok);
+    gEl.querySelector('.vval').innerHTML=`${v}${ok?'<span class="vok">✓</span>':''}`;
+    gEl.querySelector('.vprev').innerHTML='&nbsp;';
+  });
+}
+// Tracking du dernier personnage joué par le joueur (pour le mot-clef Rappel)
+let lastPersonnagePlayed=null;
 
 function placeAt(r,c){
   if(finished||!sel||left<=0||pendingTarget) return;
@@ -928,7 +1577,7 @@ function placeAt(r,c){
         pushLog(`<b>${card.name}</b> apposé sur ${cell.label} : son effet est inversé en permanence (${gMeta[cell.gauge].nm} ${cell.delta>0?'+':''}${cell.delta}/tour).`); }
       else if(card.elementMod==='neutralizePerm'){ cell.delta=0; cell.disabled=true;
         pushLog(`<b>${card.name}</b> apposé sur ${cell.label} : il est neutralisé définitivement.`); }
-      hand=hand.filter(x=>x.id!==card.id); sel=null; left--; reconcileAspects(); renderAll(); checkState(); return;
+      hand=hand.filter(x=>x.id!==card.id); sel=null; closeCardModal(); left--; reconcileAspects(); renderAll(); checkState(); return;
     }
     // b) greffe sur un PERSONNAGE pour l'augmenter (cumulable)
     const host=cell.card; if(!host||host.type!=='Personnage') return;
@@ -949,30 +1598,44 @@ function placeAt(r,c){
     }
     else if(card.grantsAura){ host.grantedAura=card.grantsAura;
       pushLog(`<b>${card.name}</b> greffé sur ${host.name} · aura « ${card.grantsAura} » accordée.`);
-      hand=hand.filter(x=>x.id!==card.id); sel=null; left--;
+      hand=hand.filter(x=>x.id!==card.id); sel=null; closeCardModal(); left--;
       if(!P.areaAuras){ enterPendingTarget(r,c,card.grantsAura,host); reconcileAspects(); renderAll(); checkState(); return; }
       reconcileAspects(); renderAll(); checkState(); return; }
     else pushLog(`<b>${card.name}</b> greffée sur ${host.name}.`);
-    hand=hand.filter(x=>x.id!==card.id); sel=null; left--; reconcileAspects(); renderAll(); checkState(); return;
+    hand=hand.filter(x=>x.id!==card.id); sel=null; closeCardModal(); left--; reconcileAspects(); renderAll(); checkState(); return;
   }
   const eff=computeEffects(card,r,c); grid[r][c].card=card; const parts=[];
+  // RAPPEL : si la carte a rappelLastCard et que le dernier personnage joué avait un effet à la pose, re-déclencher cet effet (en ignorant les rapsodes pour éviter les boucles)
+  if(card.rappelLastCard && lastPersonnagePlayed && lastPersonnagePlayed.effect && !lastPersonnagePlayed.rappelLastCard){
+    for(const g in lastPersonnagePlayed.effect){
+      const d=lastPersonnagePlayed.effect[g]; gauges[g]=clampG(g,gauges[g]+d);
+      parts.push(`${gMeta[g].nm} ${d>0?'+':''}${d} <i>(Rappel de ${lastPersonnagePlayed.name})</i>`);
+    }
+  }
   eff.forEach(e=>{ gauges[e.g]=clampG(e.g,gauges[e.g]+e.d);
     parts.push(`${gMeta[e.g].nm} ${e.d>0?'+':''}${e.d}${e.why?' <i>('+e.why+')</i>':''}`); });
   let memText='';
   if(grid[r][c].type==='memoire'&&!memoireGrabbed){ memoireGrabbed=true; memText=' — <b>mémoire exhumée</b>'; }
   pushLog(`<b>${card.name}</b> posé · ${parts.length?parts.join(', '):'pas d’effet direct'}${memText}`);
-  hand=hand.filter(x=>x.id!==card.id); sel=null; left--;
+  hand=hand.filter(x=>x.id!==card.id); sel=null; closeCardModal(); left--;
   if(card.bonusPlace){ left+=card.bonusPlace; pushLog(`${card.name} accorde un placement supplémentaire ce tour (+${card.bonusPlace}).`); }
-  // RÉACTIFS : un foyer adjacent avec reactOnPlace pas encore déclenché se réveille au contact, frappe une fois puis devient inerte
+  triggerAdjacentReactives(r,c,card.name);
+  // Tracker la dernière carte personnage jouée pour le RAPPEL futur (sauf rapsodes eux-mêmes pour éviter chaînage)
+  if(card.type==='Personnage' && !card.rappelLastCard) lastPersonnagePlayed=card;
+  // SWAP (nature) : si la carte a swapOnPlace, déclenche le ciblage swap (un voisin choisi échangera sa place)
+  if(card.swapOnPlace){ enterPendingTarget(r,c,'swap',grid[r][c].card); reconcileAspects(); renderAll(); checkState(); return; }
+  if(card.aura && !P.areaAuras){ enterPendingTarget(r,c,card.aura,grid[r][c].card); reconcileAspects(); renderAll(); checkState(); return; }
+  reconcileAspects(); renderAll(); checkState();
+}
+// Helper : tout ce qui ARRIVE à une case (carte posée, essaim créé, foyer déplacé) déclenche les pièges adjacents armés
+function triggerAdjacentReactives(r,c,causeLabel){
   ortho(r,c).forEach(p=>{ const cl=grid[p.r][p.c];
     if(cl&&cl.type==='foyer'&&cl.reactOnPlace&&!cl.reacted){
       const ro=cl.reactOnPlace; gauges[ro.gauge]=clampG(ro.gauge, gauges[ro.gauge]+ro.delta);
       cl.reacted=true; cl.delta=0; cl.reactOnPlace=null;
-      pushLog(`<b>⚡ ${cl.label||'Réactif'}</b> se réveille au contact de ${card.name} : ${gMeta[ro.gauge].nm} ${ro.delta>0?'+':''}${ro.delta} — puis devient inerte.`, true);
+      pushLog(`<b>⚡ ${cl.label||'Réactif'}</b> se réveille au contact de ${causeLabel} : ${gMeta[ro.gauge].nm} ${ro.delta>0?'+':''}${ro.delta} — puis devient inerte.`, true);
     }
   });
-  if(card.aura && !P.areaAuras){ enterPendingTarget(r,c,card.aura,grid[r][c].card); reconcileAspects(); renderAll(); checkState(); return; }
-  reconcileAspects(); renderAll(); checkState();
 }
 
 function endTurn(){
@@ -996,6 +1659,23 @@ function endTurn(){
       gauges[g]=clampG(g,gauges[g]+d); parts.push(`${gMeta[g].nm} ${d>0?'+':''}${d}`); }
     if(parts.length) pushLog(`${oc.name} poursuit son effet : ${parts.join(', ')}`);
   }
+  // 2ter) RÉSONANCE — cartes avec champ resonance:{gauge,perNeighbor} : +perNeighbor × nb voisins-personnages
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+    const oc=cell.card; if(!oc||!oc.resonance||oc.suspended) continue;
+    const nb=ortho(r,c).filter(p=>{const c2=grid[p.r][p.c];return c2&&c2.card&&c2.card.type==='Personnage';}).length;
+    if(nb===0) continue;
+    const d=oc.resonance.perNeighbor*nb; gauges[oc.resonance.gauge]=clampG(oc.resonance.gauge,gauges[oc.resonance.gauge]+d);
+    pushLog(`${oc.name} résonne (${nb} voisin${nb>1?'s':''}) : ${gMeta[oc.resonance.gauge].nm} ${d>0?'+':''}${d}`);
+  }
+  // 2quater) PROPAGATION (nature) — cartes avec propagateAtTick : applique effect une fois par CASE OCCUPÉE voisine (carte ou élément)
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+    const oc=cell.card; if(!oc||!oc.propagateAtTick||!oc.effect||oc.suspended) continue;
+    const nb=ortho(r,c).filter(p=>{const cl=grid[p.r][p.c]; return cl && (cl.card || cl.type==='foyer' || cl.type==='aspect');}).length;
+    if(nb===0) continue;
+    const parts=[];
+    for(const g in oc.effect){ const d=oc.effect[g]*nb; gauges[g]=clampG(g,gauges[g]+d); parts.push(`${gMeta[g].nm} ${d>0?'+':''}${d}`); }
+    pushLog(`<b>${oc.name}</b> propage : ${parts.join(', ')} (${nb} case${nb>1?'s':''} voisine${nb>1?'s':''} occupée${nb>1?'s':''}).`);
+  }
   // 3) loi du lieu (couplage)
   if(P.law.onTurnEnd) P.law.onTurnEnd(gauges,(t)=>pushLog(t,true));
   // 4) spawn : certains foyers essaiment (plafonné, gelé s'ils sont annulés)
@@ -1008,7 +1688,8 @@ function endTurn(){
     if(sp.count>=sp.cap) return;
     const slot=ortho(r,c).find(p=>grid[p.r][p.c].type==='empty'&&!grid[p.r][p.c].card);
     if(slot){ sp.count++; grid[slot.r][slot.c]={type:'foyer',gauge:sp.gauge,delta:sp.delta,ent:sp.ent,label:sp.label,card:null};
-      pushLog(`<b>${cell.label}</b> essaime : ${sp.label} apparaît (${gMeta[sp.gauge].nm} ${sp.delta>0?'+':''}${sp.delta}/tour).`,true); } });
+      pushLog(`<b>${cell.label}</b> essaime : ${sp.label} apparaît (${gMeta[sp.gauge].nm} ${sp.delta>0?'+':''}${sp.delta}/tour).`,true);
+      triggerAdjacentReactives(slot.r,slot.c,sp.label+' (essaim)'); } });
   // 5) déplacement : certaines entités patrouillent
   const movers=[];
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
@@ -1017,7 +1698,17 @@ function endTurn(){
     pi=(pi+1)%path.length; const [nr,nc]=path[pi]; const dest=grid[nr][nc];
     if(dest && dest.type==='empty' && !dest.card){ cell.move.pi=pi;
       grid[nr][nc]=cell; grid[r][c]={type:'empty',card:null};
-      pushLog(`${cell.label} se déplace.`); } });
+      pushLog(`${cell.label} se déplace.`);
+      triggerAdjacentReactives(nr,nc,cell.label+' (déplacement)'); } });
+  // 6) éléments passagers : décrémenter leur durée, libérer la case à 0 (la case redevient vide et plaçable)
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+    if(cell&&cell.type==='foyer'&&cell.lifespan!==undefined){ cell.lifespan--;
+      if(cell.lifespan<=0){
+        pushLog(`<b>${cell.label}</b> se dissipe — la case se libère.`);
+        grid[r][c]={type:'empty',card:null};
+      } else if(cell.lifespan===1){
+        pushLog(`${cell.label} ne tiendra qu’un tour de plus.`);
+      } } }
   reconcileAspects();
   turn++; left=P.perTurn; sel=null; renderAll(); checkState();
 }
@@ -1044,13 +1735,63 @@ function lose(reason){ finished=true; const m=document.getElementById('modal');
 function pushLog(t,law){ logEntries.push({t,law:!!law}); }
 
 document.getElementById('endturn').onclick=endTurn;
+// Helpers fantômes : aperçu rémanent des spawns et déplacements à venir
+function addGhost(r,c,ent,label){
+  const cellEl=document.querySelector('.cell[data-r="'+r+'"][data-c="'+c+'"]');
+  if(!cellEl)return;
+  const g=document.createElement('div'); g.className='ghost';
+  g.innerHTML='<span>'+ent+'</span>'+(label?'<span class="ghost-lbl">'+label+'</span>':'');
+  cellEl.appendChild(g);
+}
+function clearGhosts(){ document.querySelectorAll('.cell .ghost').forEach(g=>g.remove()); }
+// Survol du bouton Fin du tour : prévisualiser l'état post-tick — jauges animées + fantômes des spawns/déplacements
+(function(){const btn=document.getElementById('endturn');
+  function showEndTurnPreview(){ if(finished||pendingTarget)return;
+    // 1) jauges
+    const pred=predictEndOfTurn();
+    document.querySelectorAll('.gauge-v').forEach(gEl=>{const key=gEl.dataset.k;const delta=pred[key]||0;if(delta===0)return;
+      const g=gMeta[key];const projV=clampG(key,gauges[key]+delta);const max=g.dispMax||10;const pct=Math.max(0,Math.min(100,projV/max*100));
+      gEl.querySelector('.vfill').style.height=pct+'%';
+      const ok=g.mode==='down'?projV<=g.target:projV>=g.target; gEl.classList.toggle('ok',ok);
+      const fav=(g.mode==='down')?(delta<=0):(delta>=0);
+      gEl.querySelector('.vval').innerHTML='<span style="color:'+(fav?'var(--sage)':'var(--sanguine)')+'">'+projV+'</span>'+(ok?'<span class="vok">✓</span>':'');
+      gEl.querySelector('.vprev').innerHTML='<span style="color:'+(fav?'var(--sage)':'var(--sanguine)')+'">tick '+(delta>0?'+':'')+delta+'</span>';
+    });
+    // 2) fantômes pour mouvements (destination du prochain pas du chemin)
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
+      if(cell&&cell.type==='foyer'&&cell.move){
+        const path=cell.move.path; let pi=(cell.move.pi||0); pi=(pi+1)%path.length; const [nr,nc]=path[pi];
+        const dest=grid[nr][nc]; if(dest&&dest.type==='empty'&&!dest.card&&(nr!==r||nc!==c)) addGhost(nr,nc,cell.ent||'↪','passe ici');
+      }
+      // 3) fantômes pour spawns (slot libre adjacent, gelé si calm)
+      if(cell&&cell.type==='foyer'&&cell.spawn&&!auraAt(r,c,'calm')&&cell.spawn.count<cell.spawn.cap){
+        const slot=ortho(r,c).find(p=>{const c2=grid[p.r][p.c];return c2&&c2.type==='empty'&&!c2.card;});
+        if(slot) addGhost(slot.r,slot.c,cell.spawn.ent||'✦','essaime ici');
+      }
+    }
+  }
+  function fullClear(){ clearGhosts(); clearPreview(); }
+  btn.addEventListener('pointerenter',showEndTurnPreview);
+  btn.addEventListener('pointerleave',fullClear);
+  btn.addEventListener('pointercancel',fullClear);
+})();
 document.getElementById('validate').onclick=validate;
 document.getElementById('reset').onclick=()=>loadPuzzle(PUZZLES.indexOf(P));
 document.getElementById('gendiff').onchange=(e)=>{ genDiffName=e.target.value; genConstrained(); };
 document.getElementById('regen').onclick=()=>genConstrained();
+// I18N : applique les traductions sur tous les éléments [data-i18n] et bascule le label du bouton
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const key=el.getAttribute('data-i18n');el.textContent=t(key);});
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{const key=el.getAttribute('data-i18n-html');el.innerHTML=t(key);});
+  document.getElementById('lang-toggle').textContent=LANG==='fr'?'EN':'FR';
+  // re-render complet pour propager LANG dans tabs/header/cartes/inspecteur
+  if(typeof renderAll==='function') renderAll();
+}
+document.getElementById('lang-toggle').onclick=()=>{LANG=LANG==='fr'?'en':'fr';applyI18n();};
 
 PUZZLES.push(genBuild());   // 5e onglet : lieu procédural sous contraintes
 loadPuzzle(0);
+applyI18n();
 </script>
 </body>
 </html>
