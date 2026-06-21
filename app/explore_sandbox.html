@@ -29,22 +29,35 @@
   .layout{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
   @media(max-width:900px){.layout{grid-template-columns:1fr}}
   .board-area{display:flex;gap:16px;align-items:flex-start}
-  .gauges-v{display:flex;gap:12px;padding-top:4px}
   .gauge-v{display:flex;flex-direction:column;align-items:center;width:46px}
+  /* === JAUGES VERTICALES (style original) avec identité (symbole + couleur) === */
+  .gauges{display:flex;gap:14px;padding-top:4px;align-items:flex-start}
+  .gauge-v{display:flex;flex-direction:column;align-items:center;width:42px}
+  .gauge-v .g-icon-top{font-size:20px;margin-bottom:4px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));line-height:1}
   .gauge-v .vval{font-variant-numeric:tabular-nums;font-size:15px;font-weight:700;margin-bottom:4px}
   .gauge-v .vok{color:var(--sage);margin-left:2px;font-size:13px}
-  .gauge-v .vbar{position:relative;width:20px;height:200px;background:var(--ink2);border:1px solid var(--line);
-    border-radius:5px;overflow:hidden;display:flex;flex-direction:column-reverse}
-  .gauge-v .vfill{width:100%;background:var(--sanguine);transition:height .35s cubic-bezier(.2,.7,.2,1)}
+  .gauge-v .vbar{position:relative;width:22px;height:180px;background:var(--ink2);border:1px solid var(--line);
+    border-radius:5px;overflow:hidden}
+  .gauge-v .vfill{position:absolute;bottom:0;left:0;width:100%;background:var(--g-col,var(--sanguine));
+    transition:height .35s cubic-bezier(.2,.7,.2,1);box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
   .gauge-v.ok .vfill{background:var(--sage)}
-  .gauge-v .vtarget{position:absolute;left:0;right:0;background:rgba(95,122,79,.20)}
-  .gauge-v .vline{position:absolute;left:-2px;right:-2px;height:0;border-top:2px solid #e9e3d4;
-    box-shadow:0 0 0 1px rgba(0,0,0,.5);z-index:3}
+  /* Ghost preview : couleur de la jauge à opacité réduite, pulse subtile */
+  .gauge-v .vghost{position:absolute;left:0;right:0;background:var(--g-col,#888);opacity:.4;
+    border-top:1px dashed rgba(255,255,255,.55);border-bottom:1px dashed rgba(255,255,255,.3);
+    animation:vghostPulse 1.4s ease-in-out infinite;z-index:2}
+  @keyframes vghostPulse{0%,100%{opacity:.32}50%{opacity:.55}}
+  .gauge-v .vtarget{position:absolute;left:0;right:0;background:rgba(95,122,79,.18);z-index:0}
+  .gauge-v .vline{position:absolute;left:-3px;right:-3px;height:0;border-top:2px dashed #e93f2f;
+    box-shadow:0 0 4px rgba(233,63,47,.55);z-index:3}
   .gauge-v .vpred{font-size:10px;font-variant-numeric:tabular-nums;font-weight:600;height:13px;margin-top:4px;text-align:center}
-  .gauge-v .vprev{font-size:10px;color:var(--ochre);font-variant-numeric:tabular-nums;height:13px;margin-top:3px}
   .gauge-v .vnm{font-size:10px;margin-top:2px;text-align:center;color:#cdc7b6;line-height:1.15}
   .gauge-v .vbut{font-size:10px;color:var(--sage);font-weight:700;margin-top:2px}
   .gauge-v .vkind{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+  /* icone de jauge inline dans les textes (cartes, descriptions) */
+  .g-ic{display:inline-block;font-size:1em;margin-right:2px;vertical-align:-1px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+  /* icône SEULE (remplace le nom de la jauge en mode compact, cartes en main) */
+  .g-ic-solo{display:inline-block;font-size:1.15em;vertical-align:-2px;margin:0 1px;cursor:help;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
 
   .forme{display:inline-block;background:#0e1014;padding:10px;border:1px solid var(--line);border-radius:6px}
   .grid{display:grid;gap:6px}
@@ -82,6 +95,52 @@
   .cell .mark{position:absolute;top:2px;left:3px;font-size:11px;color:var(--ink)}
   .cell.memoire{background:repeating-linear-gradient(90deg,#cfc6ae,#cfc6ae 4px,#c3b99e 4px,#c3b99e 8px)}
   .cell.memoire .ent{color:#9a7321}
+  /* === IDENTITÉ 3D-ish DES ENTITÉS (foyers décoratifs, pas pièges) === */
+  /* Une entité = personnage ou foyer non-piège. On lui donne un relief, un socle, et un emoji surdimensionné en relief */
+  .cell.entity-3d{background:radial-gradient(circle at 50% 25%,#f7efd9 0%,#e2d5b3 65%,#c9bb95 100%);
+    border:1px solid #a0926e;border-radius:9px;
+    box-shadow:0 3px 0 rgba(70,55,30,.35),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 6px rgba(0,0,0,.18);
+    transform:translateY(-1px);
+    animation:entityIdle 3.8s ease-in-out infinite}
+  .cell.entity-3d::after{content:'';position:absolute;left:10%;right:10%;bottom:-5px;height:6px;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,.32) 0%,transparent 70%);
+    border-radius:50%;z-index:-1;pointer-events:none}
+  .cell.entity-3d .ent{font-size:30px;filter:drop-shadow(0 2px 1px rgba(0,0,0,.35));transform:translateY(-2px)}
+  .cell.entity-3d.good{box-shadow:0 3px 0 rgba(70,55,30,.35),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 6px rgba(0,0,0,.18),inset 0 0 0 2px rgba(95,122,79,.55)}
+  .cell.entity-3d.bad{box-shadow:0 3px 0 rgba(70,55,30,.35),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 6px rgba(0,0,0,.18),inset 0 0 0 2px rgba(181,52,31,.55)}
+  .cell.entity-3d .lbl{bottom:3px;font-weight:600;color:#5c4a30;text-shadow:0 1px 0 rgba(255,255,255,.4)}
+  @keyframes entityIdle{0%,100%{transform:translateY(-1px) scale(1)}50%{transform:translateY(-1.5px) scale(1.008)}}
+  /* personnage posé : même traitement 3D-ish + respiration légère (vie) */
+  .cell.placed.is-perso{border:1px solid #a0926e;border-radius:9px;
+    background:radial-gradient(circle at 50% 25%,#fbf5e3 0%,#e7dbbb 70%,#cdc09a 100%);
+    box-shadow:0 3px 0 rgba(70,55,30,.4),inset 0 1px 0 rgba(255,255,255,.6),inset 0 -3px 6px rgba(0,0,0,.18);
+    transform:translateY(-1px);
+    animation:persoIdle 3.5s ease-in-out infinite}
+  .cell.placed.is-perso::after{content:'';position:absolute;left:10%;right:10%;bottom:-5px;height:6px;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,.32) 0%,transparent 70%);
+    border-radius:50%;z-index:-1;pointer-events:none}
+  .cell.placed.is-perso .card-mini .ic{font-size:25px;filter:drop-shadow(0 2px 1px rgba(0,0,0,.3))}
+  @keyframes persoIdle{0%,100%{transform:translateY(-1px)}50%{transform:translateY(-3px)}}
+  /* === PIÈGES ARMÉS : pulsation rouge inquiète (en embuscade) === */
+  /* Fond sombre, halo rouge qui respire, ⚡ qui scintille — clair pour l'œil : « ça attend de mordre » */
+  .cell.foyer-trap-armed{background:radial-gradient(circle at 50% 65%,#3a1818 0%,#2a0e0e 80%);
+    border:1px solid #6a2a22;border-radius:5px;
+    animation:trapBreath 2.4s ease-in-out infinite;
+    overflow:visible}
+  .cell.foyer-trap-armed::before{content:'';position:absolute;inset:-3px;border-radius:8px;pointer-events:none;
+    background:radial-gradient(circle at center,rgba(232,90,60,.32) 0%,transparent 65%);
+    animation:trapHalo 2.4s ease-in-out infinite;z-index:0}
+  .cell.foyer-trap-armed .ent{color:#ff8a72!important;filter:drop-shadow(0 0 6px rgba(232,90,60,.7));
+    animation:trapEntPulse 2.4s ease-in-out infinite;font-size:28px;position:relative;z-index:2}
+  .cell.foyer-trap-armed .lbl{color:#ffb0a0;text-shadow:0 1px 2px rgba(0,0,0,.8);position:relative;z-index:2}
+  .cell.foyer-trap-armed .mark{color:#ff5a3a;text-shadow:0 0 4px rgba(232,90,60,.9);position:relative;z-index:2}
+  .cell.foyer-trap-armed .dlt{color:#ff8a72!important;text-shadow:0 1px 2px rgba(0,0,0,.8);position:relative;z-index:2}
+  @keyframes trapBreath{
+    0%,100%{box-shadow:inset 0 0 0 1px rgba(181,52,31,.4),inset 0 0 8px rgba(181,52,31,.2)}
+    50%{box-shadow:inset 0 0 0 2px rgba(232,90,60,.9),inset 0 0 12px rgba(232,90,60,.35),0 0 8px rgba(232,90,60,.5)}
+  }
+  @keyframes trapHalo{0%,100%{opacity:.35;transform:scale(.96)}50%{opacity:.85;transform:scale(1.08)}}
+  @keyframes trapEntPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
   /* surcouche aura */
   .cell.aura-amplify{box-shadow:inset 0 0 0 3px rgba(192,138,46,.7)}
   .cell.aura-invert{box-shadow:inset 0 0 0 3px rgba(95,122,79,.85)}
@@ -127,13 +186,22 @@
   .lang-btn:hover{background:#3a3530;border-color:var(--ochre)}
   .sup-pip{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:2px;vertical-align:-1px;border:1px solid rgba(0,0,0,.35);box-shadow:0 0 0 1px rgba(255,255,255,.1) inset}
   /* Drag & drop */
-  .card{cursor:grab}
+  .card{cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none}
   .card:active{cursor:grabbing}
-  .card.dragging{opacity:.4;transform:scale(.95);transition:transform .1s,opacity .1s}
+  .card.dragging{opacity:.25;transform:scale(.96);transition:transform .12s,opacity .12s}
+  /* Fantôme : clone visuel de la carte qui suit le doigt ou le curseur pendant le drag */
+  .drag-ghost{opacity:.92!important;transform:rotate(-3deg) scale(1.06)!important;
+    box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 2px var(--ochre),0 0 32px rgba(212,150,90,.4)!important;
+    background:var(--paper)!important;cursor:grabbing!important;transition:none!important;
+    margin:0!important;border-radius:8px}
   .cell.drag-over.placeable{background:rgba(212,150,90,.25);box-shadow:0 0 0 3px var(--ochre),0 0 16px rgba(212,150,90,.45) inset;transform:scale(1.05);transition:all .1s ease}
+  /* Territoire vert : cases marquées par un lierre — toute pose y déclenche un effet supplémentaire */
+  .cell.lierre-zone{background:linear-gradient(135deg,rgba(95,122,79,.18) 0%,rgba(95,122,79,.10) 100%);box-shadow:inset 0 0 0 1px rgba(95,122,79,.45)}
+  .cell.lierre-zone::before{content:'🌿';position:absolute;top:2px;left:3px;font-size:9px;opacity:.6;pointer-events:none;z-index:1}
+  .cell.lierre-zone.placeable{background:linear-gradient(135deg,rgba(95,122,79,.30) 0%,rgba(95,122,79,.18) 100%)}
   .hand-hint{font-size:10.5px;color:var(--muted);font-style:italic;margin:-2px 0 6px;letter-spacing:.02em;line-height:1.3}
   /* ============================ CARD MODAL ============================ */
-  .card-modal-bg{position:fixed;inset:0;background:rgba(15,12,10,.45);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:200;display:none;align-items:center;justify-content:center;animation:fadeIn .18s ease;padding:24px;pointer-events:none}
+  .card-modal-bg{position:fixed;inset:0;background:rgba(15,12,10,.45);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:200;display:none;align-items:center;justify-content:center;animation:fadeIn .18s ease;padding:24px;pointer-events:auto;cursor:pointer}
   .card-modal-bg.show{display:flex}
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   @keyframes cardIn{from{opacity:0;transform:translateY(12px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -196,17 +264,17 @@
 <div class="layout">
   <div class="main">
     <div class="board-area">
-      <div class="gauges-v" id="gauges"></div>
+      <div class="gauges" id="gauges"></div>
       <div class="forme"><div class="grid" id="grid"></div></div>
     </div>
     <div class="legend" id="legend"></div>
-    <div class="princ" data-i18n-html="Principes communs (toutes scènes) : les <b>foyers</b> (cerclés de rouge) poussent leur jauge chaque tour ; les <b>éléments statiques</b> font de même (verts s’ils t’aident, rouges sinon). Une <b>aura</b> agit sur les cartes ET les éléments de sa zone : amplifier (×2), inverser (change le signe), annuler (0). Les <b>objets</b> se posent sur un personnage pour l’augmenter.">Principes communs (toutes scènes) : les <b>foyers</b> (cerclés de rouge) poussent leur jauge chaque tour ; les <b>éléments statiques</b> font de même (verts s'ils t'aident, rouges sinon). Une <b>aura</b> agit sur les cartes ET les éléments de sa zone : amplifier (×2), inverser (change le signe), annuler (0). Les <b>objets</b> se posent sur un personnage pour l'augmenter.</div>
+    <div class="princ" data-i18n-html="Principes communs : les <b>entités</b> (cerclées de rouge) appliquent leur effet <b>Foyer</b> à chaque fin de tour ; les <b>aspects statiques</b> contribuent une fois. Une <b>aura</b> agit sur les entités voisines : amplifier (×2), inverser (change le signe), annuler (0). Les <b>objets</b> se posent sur un personnage (case occupée) pour l’augmenter ; les <b>pièges</b> attendent le contact pour frapper.">Principes communs : les <b>entités</b> (cerclées de rouge) appliquent leur effet <b>Foyer</b> à chaque fin de tour ; les <b>aspects statiques</b> contribuent une fois. Une <b>aura</b> agit sur les entités voisines : amplifier (×2), inverser (change le signe), annuler (0). Les <b>objets</b> se posent sur un personnage (case occupée) pour l'augmenter ; les <b>pièges</b> attendent le contact pour frapper.</div>
     <div class="inspector" id="inspector"><div class="insp-row insp-empty" data-i18n="Touche une carte ou une case pour voir ses propriétés.">Touche une carte ou une case pour voir ses propriétés.</div></div>
   </div>
 
   <div class="side">
     <h2 data-i18n="Ta dotation">Ta dotation</h2>
-    <div class="hand-hint" data-i18n="Clic = sélectionner · double-clic = détail · glisser = poser">Clic = sélectionner · double-clic = détail · glisser = poser</div>
+    <div class="hand-hint" data-i18n="Glisser-déposer = poser · clic = voir en grand">Glisser-déposer = poser · clic = voir en grand</div>
     <div class="turninfo"><span><span data-i18n="Tour">Tour</span> <b id="turn">1</b></span><span><span data-i18n="Placements restants :">Placements restants :</span> <b id="left">2</b></span></div>
     <div class="hand" id="hand"></div>
     <button class="btn" id="endturn" data-i18n="Fin du tour">Fin du tour</button>
@@ -264,19 +332,19 @@ const PUZZLES = [
   },
   dotation:[
     {id:'gryphe',name:'Sébastien Gryphe',role:'Influenceur',type:'Personnage',sup:'science · histoire',ic:'🦅',
-     ef:'**À la pose** : −2 Doute. **Aura d’inversion ciblée** : inverse un foyer/élément voisin choisi.',portee:'Sa case + aura (inverse)',effect:{doute:-2},amplifiable:true,aura:'invert'},
+     ef:'**Immédiat** : −2 Doute. **Aura d’inversion ciblée** : inverse un foyer/élément voisin choisi.',portee:'Sa case + aura (inverse)',effect:{doute:-2},amplifiable:true,aura:'invert'},
     {id:'dolet',name:'Étienne Dolet',role:'Symbole',type:'Personnage',sup:'science · histoire',ic:'🪓',
-     ef:'**À la pose** : −3 Censure.',portee:'Sa case',effect:{censure:-3},amplifiable:true},
+     ef:'**Immédiat** : −3 Censure.',portee:'Sa case',effect:{censure:-3},amplifiable:true},
     {id:'louise',name:'Louise Labé',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'🪶',
      ef:'**Aura d’amplification (zone)** : ×2 l’effet des cartes ET des éléments voisins.',portee:'Aura (×2)',aura:'amplify'},
     {id:'copiste',name:'Le copiste',role:'Symbole',type:'Personnage',sup:'société · histoire',ic:'✒️',
-     ef:'**À la pose** : −3 Oubli.',portee:'Sa case',effect:{oubli:-3},amplifiable:true},
+     ef:'**Immédiat** : −3 Oubli.',portee:'Sa case',effect:{oubli:-3},amplifiable:true},
     {id:'presse',name:'La presse de la Doloire',role:'Propagateur',type:'Objet',sup:'science · société',ic:'🗜️',
-     ef:'**Greffe** sur un personnage : répète son effet à la pose.',portee:'Sur un personnage',special:'propagate'},
+     ef:'**Immédiat** : répète l’effet à la pose de l’entité hôte.',portee:'Sur un personnage',special:'propagate'},
     {id:'privilege',name:'Le privilège du Roi',role:'Switch',type:'Objet',sup:'science · société',ic:'📜',
-     ef:'**Greffe** sur un personnage : lui confère **Aura d’annulation ciblée**.',portee:'Sur un personnage (aura d’annulation)',grantsAura:'calm'},
+     ef:'**Présence** : l’entité hôte gagne une **Aura d’annulation ciblée**.',portee:'Sur un personnage (aura d’annulation)',grantsAura:'calm'},
     {id:'apprenti',name:'L’apprenti',role:'Relais',type:'Personnage',sup:'société',ic:'🧒',
-     ef:'**À la pose** : −1 Oubli et **+1 placement** ce tour.',portee:'Sa case (+1 placement)',effect:{oubli:-1},amplifiable:true,bonusPlace:1},
+     ef:'**Immédiat** : −1 Oubli et **+1 placement** ce tour.',portee:'Sa case (+1 placement)',effect:{oubli:-1},amplifiable:true,bonusPlace:1},
   ],
   fragment:'« On disait qu’une femme ne pouvait écrire ainsi. Quelqu’un, pourtant, accepta de l’imprimer. »',
 },
@@ -305,19 +373,19 @@ const PUZZLES = [
   },
   dotation:[
     {id:'chef',name:'Le chef d’atelier',role:'Symbole',type:'Personnage',sup:'science · société',ic:'🧑‍🏭',
-     ef:'**À la pose** : −3 Misère.',portee:'Sa case',effect:{misere:-3},amplifiable:true},
+     ef:'**Immédiat** : −3 Misère.',portee:'Sa case',effect:{misere:-3},amplifiable:true},
     {id:'canut',name:'Le canut',role:'Symbole',type:'Personnage',sup:'société · arts',ic:'🕯️',
-     ef:'**À la pose** : +2 Solidarité.',portee:'Sa case',effect:{solidarite:2},amplifiable:true},
+     ef:'**Immédiat** : +2 Solidarité.',portee:'Sa case',effect:{solidarite:2},amplifiable:true},
     {id:'crieur',name:'Le crieur public',role:'Influenceur',type:'Personnage',sup:'société · science',ic:'📣',
-     ef:'**À la pose** : +1 Solidarité. **Aura d’inversion ciblée** : retourne un voisin choisi (par exemple une dette en soutien).',portee:'Sa case + aura (inverse)',effect:{solidarite:1},amplifiable:true,aura:'invert'},
+     ef:'**Immédiat** : +1 Solidarité. **Aura d’inversion ciblée** : retourne un voisin choisi (par exemple une dette en soutien).',portee:'Sa case + aura (inverse)',effect:{solidarite:1},amplifiable:true,aura:'invert'},
     {id:'mutuelle',name:'La Mutuelle',role:'Amplificateur',type:'Personnage',sup:'société · arts',ic:'🤝',
      ef:'**Aura d’amplification (zone)** : ×2 l’effet des cartes ET des éléments voisins.',portee:'Aura (×2)',aura:'amplify'},
     {id:'bistanclaque',name:'Le métier (bistanclaque)',role:'Propagateur',type:'Objet',sup:'science',ic:'🪡',
-     ef:'**Greffe** sur un personnage : répète son effet à la pose.',portee:'Sur un personnage',special:'propagate'},
+     ef:'**Immédiat** : répète l’effet à la pose de l’entité hôte.',portee:'Sur un personnage',special:'propagate'},
     {id:'petition',name:'La pétition',role:'Switch',type:'Objet',sup:'science · société',ic:'📜',
-     ef:'**Greffe** sur un personnage : lui confère **Aura d’annulation ciblée**.',portee:'Sur un personnage (aura d’annulation)',grantsAura:'calm'},
+     ef:'**Présence** : l’entité hôte gagne une **Aura d’annulation ciblée**.',portee:'Sur un personnage (aura d’annulation)',grantsAura:'calm'},
     {id:'meute',name:'L’attroupement',role:'Résonateur',type:'Personnage',sup:'société',ic:'👥',
-     ef:'**Présence** · **Résonance** : à chaque tour, +1 Solidarité par voisin-personnage (toute couleur).',portee:'Sa case (Résonance)',resonance:{gauge:'solidarite',perNeighbor:1}},
+     ef:'**Résonance** : à chaque tour, +1 Solidarité par voisin-personnage (toute couleur).',portee:'Sa case (Résonance)',resonance:{gauge:'solidarite',perNeighbor:1}},
   ],
   fragment:'« Vivre en travaillant ou mourir en combattant. La pente a sa mémoire, et elle ne plie pas. »',
 },
@@ -346,17 +414,17 @@ const PUZZLES = [
   },
   dotation:[
     {id:'souffleur',name:'Le souffleur',role:'Symbole',type:'Personnage',sup:'arts · science',ic:'🤫',
-     ef:'**À la pose** : −2 Trac.',portee:'Sa case',effect:{trac:-2},amplifiable:true},
+     ef:'**Immédiat** : −2 Trac.',portee:'Sa case',effect:{trac:-2},amplifiable:true},
     {id:'comedien',name:'Le comédien',role:'Symbole',type:'Personnage',sup:'arts',ic:'🎩',
-     ef:'**À la pose** : +2 Ferveur.',portee:'Sa case',effect:{ferveur:2},amplifiable:true},
+     ef:'**Immédiat** : +2 Ferveur.',portee:'Sa case',effect:{ferveur:2},amplifiable:true},
     {id:'diva',name:'La diva',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'🌹',
      ef:'**Aura d’amplification (zone)** : ×2 l’effet des cartes ET des éléments voisins.',portee:'Aura (×2)',aura:'amplify'},
     {id:'regisseur',name:'Le régisseur',role:'Switch',type:'Personnage',sup:'science · société',ic:'🎚️',
-     ef:'**À la pose** : −1 Trac. **Aura d’annulation ciblée** : annule un foyer voisin choisi.',portee:'Sa case + aura (annule)',effect:{trac:-1},amplifiable:true,aura:'calm'},
+     ef:'**Immédiat** : −1 Trac. **Aura d’annulation ciblée** : annule un foyer voisin choisi.',portee:'Sa case + aura (annule)',effect:{trac:-1},amplifiable:true,aura:'calm'},
     {id:'ovation',name:'L’ovation',role:'Propagateur',type:'Objet',sup:'science · société',ic:'📣',
-     ef:'**Greffe** sur un personnage : répète son effet à la pose.',portee:'Sur un personnage',special:'propagate'},
+     ef:'**Immédiat** : répète l’effet à la pose de l’entité hôte.',portee:'Sur un personnage',special:'propagate'},
     {id:'rideau',name:'Le rideau',role:'Influenceur',type:'Objet',sup:'arts · science',ic:'🎬',
-     ef:'**Greffe** sur un personnage : lui confère **Aura d’inversion ciblée**.',portee:'Sur un personnage (aura d’inversion)',grantsAura:'invert'},
+     ef:'**Présence** : l’entité hôte gagne une **Aura d’inversion ciblée**.',portee:'Sur un personnage (aura d’inversion)',grantsAura:'invert'},
   ],
   fragment:'« Le rideau se lève toujours sur un silence. Ce soir-là, le silence a applaudi. »',
 },
@@ -384,19 +452,19 @@ const PUZZLES = [
   },
   dotation:[
     {id:'temoin',name:'Le témoin',role:'Symbole',type:'Personnage',sup:'histoire',ic:'👵',
-     ef:'**À la pose** : −2 Oubli.',portee:'Sa case',effect:{oubli:-2},amplifiable:true},
+     ef:'**Immédiat** : −2 Oubli.',portee:'Sa case',effect:{oubli:-2},amplifiable:true},
     {id:'conteur',name:'Le conteur',role:'Symbole',type:'Personnage',sup:'arts · histoire',ic:'📖',
-     ef:'**À la pose** : −2 Discorde.',portee:'Sa case',effect:{discorde:-2},amplifiable:true},
+     ef:'**Immédiat** : −2 Discorde.',portee:'Sa case',effect:{discorde:-2},amplifiable:true},
     {id:'archiviste',name:'L’archiviste',role:'Influenceur',type:'Personnage',sup:'science · histoire',ic:'🗄️',
-     ef:'**À la pose** : −1 Oubli. **Aura d’inversion ciblée** : inverse un foyer voisin (et stoppe ses essaimages).',portee:'Sa case + aura (inverse)',effect:{oubli:-1},amplifiable:true,aura:'invert'},
+     ef:'**Immédiat** : −1 Oubli. **Aura d’inversion ciblée** : inverse un foyer voisin (et stoppe ses essaimages).',portee:'Sa case + aura (inverse)',effect:{oubli:-1},amplifiable:true,aura:'invert'},
     {id:'passeuse',name:'La passeuse',role:'Amplificateur',type:'Personnage',sup:'arts · histoire',ic:'🔑',
      ef:'**Aura d’amplification (zone)** : ×2 l’effet des cartes ET des éléments voisins.',portee:'Aura (×2)',aura:'amplify'},
     {id:'plaque',name:'La plaque commémorative',role:'Modificateur',type:'Objet',sup:'science · histoire',ic:'🪧',
-     ef:'**Greffe** sur un foyer/aspect : inverse son effet en permanence (utile sur une entité qui se déplace).',portee:'Sur un foyer/aspect',elementMod:'invertPerm'},
+     ef:'**Immédiat** : inverse l’effet de l’entité hôte en permanence (utile sur une entité qui se déplace).',portee:'Sur un foyer/aspect',elementMod:'invertPerm'},
     {id:'scelle',name:'Le scellé',role:'Switch',type:'Objet',sup:'science · société',ic:'🔒',
-     ef:'**Greffe** sur un personnage : son aura annule TOUS les foyers/aspects voisins.',portee:'Sur un personnage (aura d’annulation, toutes cases voisines)',grantsAura:'calm'},
+     ef:'**Présence** : l’entité hôte annule TOUS les foyers/aspects voisins.',portee:'Sur un personnage (aura d’annulation, toutes cases voisines)',grantsAura:'calm'},
     {id:'rapsode',name:'Le rapsode',role:'Récitant',type:'Personnage',sup:'histoire',ic:'🎙️',
-     ef:'**À la pose** : **Rappel** — re-déclenche l’effet à la pose du dernier personnage que tu as joué.',portee:'Sa case (Rappel)',rappelLastCard:true},
+     ef:'**Immédiat** : **Rappel** — re-déclenche l’effet à la pose du dernier personnage que tu as joué.',portee:'Sa case (Rappel)',rappelLastCard:true},
   ],
   fragment:'« Il rangeait nos souvenirs dans ses vitrines, pour lui seul. On a rouvert les volets. »',
 },
@@ -494,25 +562,25 @@ function genCandidate(seed,d){
   const dot=[];let id=0;
   menaceGauges.forEach(g=>{
     const nd=ri(d.nd[0],d.nd[1]);
-    for(let i=0;i<nd;i++)dot.push({id:'d'+g.key[0]+(id++),name:pk(GEN_DN[g.key]),role:'Symbole',type:'Personnage',sup:'science',ic:'🎯',ef:'**À la pose** : −2 '+g.nm+'. **À chaque tour** : −1 '+g.nm+'.',portee:'Sa case (effet persistant)',effect:{[g.key]:-2},effectPersist:{[g.key]:-1},amplifiable:true});
+    for(let i=0;i<nd;i++)dot.push({id:'d'+g.key[0]+(id++),name:pk(GEN_DN[g.key]),role:'Symbole',type:'Personnage',sup:'science',ic:'🎯',ef:'**Immédiat** : −2 '+g.nm+'. **Foyer** : −1 '+g.nm+'.',portee:'Sa case (effet persistant)',effect:{[g.key]:-2},effectPersist:{[g.key]:-1},amplifiable:true});
   });
   if(valeurGauge){
     const nSup=ri(1,2);
-    for(let i=0;i<nSup;i++)dot.push({id:'sup'+(id++),name:pk(GEN_SUP),role:'Soutien',type:'Personnage',sup:'science · société',ic:'🤝',ef:'**À la pose** : +2 '+valeurGauge.nm+'. **À chaque tour** : +1 '+valeurGauge.nm+'.',portee:'Sa case (effet persistant)',effect:{[valeurGauge.key]:2},effectPersist:{[valeurGauge.key]:1},amplifiable:true});
+    for(let i=0;i<nSup;i++)dot.push({id:'sup'+(id++),name:pk(GEN_SUP),role:'Soutien',type:'Personnage',sup:'science · société',ic:'🤝',ef:'**Immédiat** : +2 '+valeurGauge.nm+'. **Foyer** : +1 '+valeurGauge.nm+'.',portee:'Sa case (effet persistant)',effect:{[valeurGauge.key]:2},effectPersist:{[valeurGauge.key]:1},amplifiable:true});
   }
-  if(rng()<0.7) dot.push({id:'cop'+(id++),name:pk(['Le copiste','La greffière','Le doublure']),role:'Copiste',type:'Personnage',sup:'société',ic:'📜',ef:'**À la pose** : **Copie** les effets de tous les personnages voisins.',portee:'Sa case (positionnel)',copyAdjacent:true});
+  if(rng()<0.7) dot.push({id:'cop'+(id++),name:pk(['Le copiste','La greffière','Le doublure']),role:'Copiste',type:'Personnage',sup:'société',ic:'📜',ef:'**Immédiat** : **Copie** les effets de tous les personnages voisins.',portee:'Sa case (positionnel)',copyAdjacent:true});
   dot.push({id:'inv'+(id++),name:'L’archiviste',role:'Influenceur',type:'Personnage',sup:'science · histoire',ic:'🔄',ef:'**Aura d’inversion ciblée** : inverse un foyer voisin. Si l’archiviste est lui-même amplifié, l’inversion est doublée.',portee:'Aura ciblée (inverse)',aura:'invert'});
   dot.push({id:'amp'+(id++),name:'La passeuse',role:'Amplificateur',type:'Personnage',sup:'arts',ic:'➕',ef:'**Aura d’amplification ciblée** : ×2 l’effet d’UNE carte ou d’un foyer voisin choisi (à toi de choisir le camp).',portee:'Aura ciblée (×2)',aura:'amplify'});
-  dot.push({id:'calm'+(id++),name:'Le scellé',role:'Switch',type:'Objet',sup:'science · société',ic:'🔒',ef:'**Greffe** sur un personnage : lui confère **Aura d’annulation ciblée** (annule un foyer voisin).',portee:'Sur un personnage',grantsAura:'calm'});
+  dot.push({id:'calm'+(id++),name:'Le scellé',role:'Switch',type:'Objet',sup:'science · société',ic:'🔒',ef:'**Présence** : l’entité hôte gagne une **Aura d’annulation ciblée** (annule un foyer voisin).',portee:'Sur un personnage',grantsAura:'calm'});
   // ---- cartes nature : propagation et échange ----
-  // Le lierre : à chaque fin de tour, applique son effet une fois par CASE OCCUPÉE voisine (carte OU élément)
-  // → terrain qui grandit : plus le voisinage est dense, plus l'effet est fort. Récompense l'occupation lente.
-  dot.push({id:'lierre'+(id++),name:'Le lierre',role:'Propagateur',type:'Personnage',sup:'nature',ic:'🌿',
-    ef:'**Présence** · **Propagation** : à chaque fin de tour, applique son effet une fois par case occupée voisine (carte ou élément).',
-    portee:'Sa case (Propagation)',effect:{[menaceGauges[0].key]:-1},propagateAtTick:true});
+  // Le lierre : à la pose, marque une ligne OU une colonne de cases comme "territoire vert".
+  // Tant que ces cases sont vertes, toute carte qui y est posée applique en plus l'effet du lierre.
+  dot.push({id:'lierre'+(id++),name:'Le lierre',role:'Territoire',type:'Personnage',sup:'nature',ic:'🌿',
+    ef:'**Immédiat** : trace une **Ligne verte** (ligne ou colonne). S’applique aussitôt à chaque entité présente sur la ligne (personnages + foyers, hors pièges). Toute carte posée ensuite sur une case verte applique aussi son effet.',
+    portee:'Ligne ou colonne (Territoire vert)',effect:{[menaceGauges[0].key]:-1},lierreLineOnPlace:true});
   // Le passeur : à la pose, échange sa position avec n'importe quel foyer/aspect du plateau OU un personnage adjacent
   dot.push({id:'passeur'+(id++),name:'Le passeur',role:'Switch',type:'Personnage',sup:'nature',ic:'🔀',
-    ef:'**À la pose** : **Échange** — choisis un foyer ou aspect (n’importe où sur le plateau) ou un personnage adjacent, vous permutez vos places.',
+    ef:'**Immédiat** : **Échange** — choisis un foyer ou aspect (n’importe où sur le plateau) ou un personnage adjacent, vous permutez vos places.',
     portee:'Plateau (Échange long)',swapOnPlace:true});
   // ---- objet final ----
   const gauges=gaugeList.map(g=>({key:g.key,nm:g.nm,start:g.start,mode:g.mode,target:g.target,danger:g.danger,dispMax:g.dispMax}));
@@ -732,6 +800,13 @@ function auraTargetCells(r,c,type){
     }
     return out;
   }
+  // LIERRE LINE : toutes les cases sur la même ligne ET la même colonne (sauf la case du lierre lui-même et les void)
+  if(type==='lierreLine'){
+    const out=[];
+    for(let cc=0;cc<COLS;cc++){ if(cc===c) continue; const cl=grid[r][cc]; if(cl&&cl.type!=='void') out.push({r,c:cc}); }
+    for(let rr=0;rr<ROWS;rr++){ if(rr===r) continue; const cl=grid[rr][c]; if(cl&&cl.type!=='void') out.push({r:rr,c}); }
+    return out;
+  }
   return ortho(r,c).filter(p=>{ const cl=grid[p.r][p.c];
     if(type==='amplify') return (cl.card&&cl.card.effect&&cl.card.amplifiable) || cl.type==='foyer' || cl.type==='aspect';
     return cl.type==='foyer' || cl.type==='aspect';   // invert / calm visent un élément
@@ -754,7 +829,9 @@ function enterPendingTarget(r,c,type,card){
               : type;
   const label = type==='swap'
     ? '<div class="insp-row"><b>'+t('Choisis l’échange')+'</b> — '+t('touche un foyer/aspect surligné (n’importe où) ou un personnage adjacent, vous permutez vos places.')+'</div>'
-    : '<div class="insp-row"><b>'+t('Cible l’aura')+'</b> — '+t('touche une case surlignée pour choisir ce que')+' «&nbsp;'+card.name+'&nbsp;» '+t('va')+' '+verbe+'.</div>';
+    : type==='lierreLine'
+      ? '<div class="insp-row"><b>'+t('Trace ton territoire')+'</b> — '+t('touche une case en ligne (gauche/droite) ou en colonne (haut/bas) pour étendre la zone verte du lierre.')+'</div>'
+      : '<div class="insp-row"><b>'+t('Cible l’aura')+'</b> — '+t('touche une case surlignée pour choisir ce que')+' «&nbsp;'+card.name+'&nbsp;» '+t('va')+' '+verbe+'.</div>';
   document.getElementById('inspector').innerHTML=label;
 }
 function bindAuraTarget(tr,tc){
@@ -767,9 +844,41 @@ function bindAuraTarget(tr,tc){
     const tname = (tgt.card&&tgt.card.name) || tgt.label || 'la cible';
     const tmp=grid[r][c]; grid[r][c]=grid[tr][tc]; grid[tr][tc]=tmp;
     pushLog(`<b>${card.name}</b> ${t('échange sa place avec')} ${tname}.`);
-    // les deux entités déplacées peuvent activer des pièges adjacents à leurs nouvelles positions
     triggerAdjacentReactives(tr,tc,card.name);
     triggerAdjacentReactives(r,c,tname);
+    pendingTarget=null; reconcileAspects(); renderAll(); checkState();
+    document.getElementById('inspector').innerHTML='<div class="insp-row insp-empty">'+t('Touche une carte ou une case pour voir ses propriétés.')+'</div>';
+    return;
+  }
+  // LIERRE LINE : marque toutes les cases de la ligne OU colonne choisie comme "territoire vert"
+  // ET applique immédiatement l'effet du lierre à chaque ENTITÉ déjà présente sur la ligne
+  //   (Entité = personnage posé ou foyer décoratif non-piège — les pièges sont à part).
+  if(type==='lierreLine'){
+    const isRow = (tr===r);
+    const cells = [];
+    if(isRow){ for(let cc=0;cc<COLS;cc++){ const cl=grid[r][cc]; if(cl&&cl.type!=='void') cells.push({r,c:cc}); } }
+    else     { for(let rr=0;rr<ROWS;rr++){ const cl=grid[rr][c]; if(cl&&cl.type!=='void') cells.push({r:rr,c}); } }
+    // Marquage de toutes les cases (territoire vert pour futurs placements)
+    for(const p of cells){
+      grid[p.r][p.c].lierreFx = grid[p.r][p.c].lierreFx || [];
+      grid[p.r][p.c].lierreFx.push({effect:card.effect, ownerName:card.name, ownerR:r, ownerC:c});
+    }
+    pushLog(`<b>${card.name}</b> ${t('trace sa ligne verte')} (${isRow?t('ligne'):t('colonne')}, ${cells.length} ${t('cases')}).`);
+    // Effet immédiat sur les entités déjà présentes (≠ pièges)
+    const triggeredEntities = [];
+    for(const p of cells){
+      if(p.r===r && p.c===c) continue; // jamais sur le lierre lui-même
+      const cl = grid[p.r][p.c];
+      const isPersoEntity = cl.card && cl.card.type==='Personnage';
+      const isFoyerEntity = cl.type==='foyer' && !cl.reactOnPlace; // foyer décoratif, pas piège
+      if(!isPersoEntity && !isFoyerEntity) continue;
+      for(const g in card.effect){ const d=card.effect[g]; gauges[g]=clampG(g,gauges[g]+d); }
+      triggeredEntities.push((cl.card&&cl.card.name) || cl.label || t('entité'));
+    }
+    if(triggeredEntities.length){
+      const effStr = Object.entries(card.effect).map(([g,d])=>`${t(gMeta[g].nm)} ${d>0?'+':''}${d*triggeredEntities.length}`).join(', ');
+      pushLog(`<i>${t('s’étend sur')} ${triggeredEntities.length} ${t('entité' + (triggeredEntities.length>1?'s':''))} ${t('déjà présente'+(triggeredEntities.length>1?'s':''))}</i> : ${triggeredEntities.join(', ')} → <b>${effStr}</b>`);
+    }
     pendingTarget=null; reconcileAspects(); renderAll(); checkState();
     document.getElementById('inspector').innerHTML='<div class="insp-row insp-empty">'+t('Touche une carte ou une case pour voir ses propriétés.')+'</div>';
     return;
@@ -856,7 +965,7 @@ function renderHeader(){ document.getElementById('scene').textContent=t(P.scene)
   // légende contextuelle
   const lg=document.getElementById('legend'); let h='';
   const has=(f)=>Object.values(P.legend).some(f);
-  if(has(s=>s.type==='foyer')) h+='<span><i class="f"></i> '+t('Foyer — avance chaque tour (vert s’il t’aide, rouge sinon)')+'</span>';
+  if(has(s=>s.type==='foyer')) h+='<span><i class="f"></i> '+t('Entité — applique son effet Foyer chaque tour (vert s’il t’aide, rouge sinon)')+'</span>';
   if(has(s=>s.type==='aspect')) h+='<span><i class="asp"></i> '+t('Aspect statique — contribue une fois, à inverser/annuler')+'</span>';
   if(has(s=>s.move)) h+='<span>↪ '+t('se déplace chaque tour')+'</span>';
   if(has(s=>s.spawn)) h+='<span>✦ '+t('invoque des entités')+'</span>';
@@ -881,12 +990,6 @@ function predictEndOfTurn(){
     const nb=ortho(r,c).filter(p=>{const c2=grid[p.r][p.c];return c2&&c2.card&&c2.card.type==='Personnage';}).length;
     if(nb>0) deltas[oc.resonance.gauge]=(deltas[oc.resonance.gauge]||0)+(oc.resonance.perNeighbor*nb);
   }
-  // 2ter) PROPAGATION des cartes (compte cases occupées voisines, applique effect × nb)
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const oc=grid[r][c].card;
-    if(!oc||!oc.propagateAtTick||!oc.effect||oc.suspended) continue;
-    const nb=ortho(r,c).filter(p=>{const cl=grid[p.r][p.c]; return cl && (cl.card || cl.type==='foyer' || cl.type==='aspect');}).length;
-    if(nb>0) for(const g in oc.effect) deltas[g]=(deltas[g]||0)+(oc.effect[g]*nb);
-  }
   // 3) pièges qui seront déclenchés par un spawn ou un déplacement ce tour (chaque piège ne se déclenche qu'une fois)
   const willTrigger=new Set();
   const fireIfArmed=(tr,tc)=>{ ortho(tr,tc).forEach(p=>{ const cl=grid[p.r][p.c];
@@ -902,24 +1005,56 @@ function predictEndOfTurn(){
   }
   return deltas;
 }
+// === IDENTITÉ DES JAUGES ===
+// Chaque jauge a une icône (symbole) et une couleur identitaire, qui se retrouvent aussi sur les cartes
+// pour une lecture rapide. Si tu changes une icône/couleur ici, ça se propage partout.
+const GAUGE_META={
+  oubli:      {ic:'💭', color:'#6a6d75', nm:'Oubli'},
+  doute:      {ic:'❓', color:'#6c4a9c', nm:'Doute'},
+  censure:    {ic:'🔒', color:'#8c352a', nm:'Censure'},
+  misere:     {ic:'🪙', color:'#8c6a4a', nm:'Misère'},
+  solidarite: {ic:'🤝', color:'#5a8a4a', nm:'Solidarité'},
+  trac:       {ic:'😰', color:'#c49a3a', nm:'Trac'},
+  ferveur:    {ic:'🔥', color:'#d97a2a', nm:'Ferveur'},
+  discorde:   {ic:'⚡', color:'#c75432', nm:'Discorde'},
+  entraide:   {ic:'🫂', color:'#3a8a7a', nm:'Entraide'},
+  memoire:    {ic:'📖', color:'#7d5b3d', nm:'Mémoire'},
+};
+function gIc(key){ return (GAUGE_META[key]&&GAUGE_META[key].ic)||''; }
+function gCol(key){ return (GAUGE_META[key]&&GAUGE_META[key].color)||'#888'; }
+
 function renderGauges(){ const el=document.getElementById('gauges'); el.innerHTML='';
   const pred=predictEndOfTurn();
   P.gauges.forEach(g=>{ const v=gauges[g.key]; const ok=g.mode==='down'?v<=g.target:v>=g.target;
     const max=g.dispMax||10; const pct=Math.max(0,Math.min(100,v/max*100));
     const linePos=Math.max(0,Math.min(100,g.target/max*100));
-    const d=document.createElement('div'); d.className='gauge-v'+(ok?' ok':''); d.dataset.k=g.key;
-    const tb = g.mode==='down' ? `bottom:0;height:${linePos}%` : `top:0;height:${100-linePos}%`;
     const arrow = g.mode==='down'?'≤':'≥';
     const delta=pred[g.key]||0;
     const projV=clampG(g.key,v+delta);
+    const projPct=Math.max(0,Math.min(100,projV/max*100));
     const projFav = (g.mode==='down')?(delta<=0):(delta>=0);
+    const color = gCol(g.key);
+    const ic = gIc(g.key);
+    // Preview overlay : zone entre pct et projPct, couleur jauge à 35% d'opacité (plus clair que le fill solide)
+    let ghostHtml='';
+    if(delta!==0){
+      const lo=Math.min(pct,projPct), hi=Math.max(pct,projPct);
+      ghostHtml = `<div class="vghost" style="bottom:${lo}%;height:${hi-lo}%"></div>`;
+    }
+    const d=document.createElement('div'); d.className='gauge-v'+(ok?' ok':''); d.dataset.k=g.key;
+    const tb = g.mode==='down' ? `bottom:0;height:${linePos}%` : `top:0;height:${100-linePos}%`;
     const predLine = (delta!==0)
       ? `<div class="vpred" style="color:${projFav?'var(--sage)':'var(--sanguine)'}">→ ${projV} <span style="opacity:.7">(${delta>0?'+':''}${delta})</span></div>`
       : `<div class="vpred" style="color:#8a8576">→ ${v} <span style="opacity:.7">(=)</span></div>`;
-    d.innerHTML=`<div class="vval">${v}${ok?'<span class="vok">✓</span>':''}</div>
-      <div class="vbar"><div class="vtarget" style="${tb}"></div><div class="vfill" style="height:${pct}%"></div><div class="vline" style="bottom:${linePos}%"></div></div>
+    d.innerHTML=`<div class="g-icon-top" title="${t(g.nm)}">${ic}</div>
+      <div class="vval">${v}${ok?'<span class="vok">✓</span>':''}</div>
+      <div class="vbar" style="--g-col:${color}">
+        <div class="vtarget" style="${tb}"></div>
+        <div class="vfill" style="height:${pct}%"></div>
+        ${ghostHtml}
+        <div class="vline" style="bottom:${linePos}%"></div>
+      </div>
       ${predLine}
-      <div class="vprev">&nbsp;</div>
       <div class="vnm">${t(g.nm)}</div>
       <div class="vbut">${t('but')} ${arrow} ${g.target}</div>
       <div class="vkind">${GENERIC_KEYS.includes(g.key)?t('commune'):t('propre')}</div>`;
@@ -944,49 +1079,44 @@ function renderGrid(){ const el=document.getElementById('grid'); el.innerHTML=''
       div.classList.add('placed','is-perso'); if(cell.card.suspended) div.classList.add('suspended');
       const x2=(cell.card.amplifiable&&ampHere)?'<span class="x2-badge">×2</span>':'';
       const eq=(cell.card.equips||[]).map(o=>`<span class="equip-badge">${o.ic}</span>`).join('')+(cell.card.suspended?'<span class="equip-badge">🔒</span>':'');
-      // badge de persistance : effet par tour si la carte en a un
+      // badge de persistance : effet par tour si la carte en a un (avec icône de jauge)
       let persistBadge='';
       if(cell.card.effectPersist&&!cell.card.suspended){
-        const parts=[];for(const g in cell.card.effectPersist){const d=cell.card.effectPersist[g];const fav=(gMeta[g].mode==='down')?d<0:d>0;parts.push(`<span style="color:${fav?'var(--sage)':'var(--sanguine)'}">${d>0?'+':''}${d}/t</span>`);}
+        const parts=[];for(const g in cell.card.effectPersist){const d=cell.card.effectPersist[g];const fav=(gMeta[g].mode==='down')?d<0:d>0;parts.push(`<span style="color:${fav?'var(--sage)':'var(--sanguine)'}">${gIc(g)}${d>0?'+':''}${d}/t</span>`);}
         persistBadge=`<span class="dlt persist-dlt">${parts.join(' ')}</span>`;
       }
-      // badge de résonance : compte les voisins-personnages, affiche le bonus actuel + projeté
+      // badge de résonance : voisins-personnages, bonus projeté (avec icône de la jauge cible)
       let resBadge='';
       if(cell.card.resonance&&!cell.card.suspended){
         const nb=ortho(r,c).filter(p=>{const c2=grid[p.r][p.c];return c2&&c2.card&&c2.card.type==='Personnage';}).length;
         const d=cell.card.resonance.perNeighbor*nb;
         const fav=(gMeta[cell.card.resonance.gauge].mode==='down')?d<0:d>0;
-        resBadge=`<span class="dlt persist-dlt" style="color:${nb?(fav?'var(--sage)':'var(--sanguine)'):'#8a8576'}">↻ ${nb} voisin${nb>1?'s':''} ${d>0?'+':d<0?'':'='}${d?d+'/t':''}</span>`;
+        const icR=gIc(cell.card.resonance.gauge);
+        resBadge=`<span class="dlt persist-dlt" style="color:${nb?(fav?'var(--sage)':'var(--sanguine)'):'#8a8576'}">↻${nb} ${icR}${d>0?'+':d<0?'':'='}${d?d+'/t':''}</span>`;
       }
-      // badge de propagation : compte cases occupées voisines, affiche delta total projeté
-      let propBadge='';
-      if(cell.card.propagateAtTick&&cell.card.effect&&!cell.card.suspended){
-        const nb=ortho(r,c).filter(p=>{const cl=grid[p.r][p.c]; return cl && (cl.card || cl.type==='foyer' || cl.type==='aspect');}).length;
-        if(nb>0){
-          const firstG=Object.keys(cell.card.effect)[0]; const totD=cell.card.effect[firstG]*nb;
-          const fav=(gMeta[firstG].mode==='down')?totD<0:totD>0;
-          propBadge=`<span class="dlt persist-dlt" style="color:${fav?'var(--sage)':'var(--sanguine)'}">🌿 ${nb}× ${totD>0?'+':''}${totD}/t</span>`;
-        } else {
-          propBadge=`<span class="dlt persist-dlt" style="color:#8a8576">🌿 0</span>`;
-        }
-      }
-      div.innerHTML=`<div class="card-mini"><span class="ic">${cell.card.ic}</span><span class="cn">${cell.card.name}</span></div>${persistBadge}${resBadge}${propBadge}${x2}${eq}${cell.card.sup?`<span class="sup-tag" title="${cell.card.sup}">${supPips(cell.card.sup)}</span>`:''}`;
+      div.innerHTML=`<div class="card-mini"><span class="ic">${cell.card.ic}</span><span class="cn">${cell.card.name}</span></div>${persistBadge}${resBadge}${x2}${eq}${cell.card.sup?`<span class="sup-tag" title="${cell.card.sup}">${supPips(cell.card.sup)}</span>`:''}`;
     } else if(cell.type==='foyer'){
       const d=elementDelta(cell,r,c);
       const isTrap = !!cell.reactOnPlace;
       const isInert = cell.reacted;
       const fav = cell.dormant ? favorable(cell) : (d!==0 ? (gMeta[cell.gauge].mode==='down'?d<0:d>0) : favorable(cell));
       div.classList.add(cell.dormant?'dormant':isInert?'dormant':(isTrap?'bad':(fav?'good':'bad')));
+      // Identité 3D-ish pour les ENTITÉS (foyers décoratifs non-pièges). Les pièges restent visuellement plats/agressifs.
+      if(!isTrap && !isInert && !cell.dormant) div.classList.add('entity-3d');
+      // Pièges armés actifs : pulsation rouge inquiète (« en embuscade »)
+      if(isTrap && !isInert && !cell.dormant) div.classList.add('foyer-trap-armed');
       const marks=(cell.move?'<span class="mark">↪</span>':'')+(cell.spawn?'<span class="mark">✦</span>':'')+(isTrap?'<span class="mark">⚡</span>':'');
       const eq=(cell.equips||[]).map(o=>`<span class="equip-badge">${o.ic}</span>`).join('');
       const lsBadge = cell.lifespan!==undefined ? ` <span style="opacity:.85">· ⌛${cell.lifespan}</span>` : '';
+      const icCell = gIc(cell.gauge);
+      const icTrap = isTrap?gIc(cell.reactOnPlace.gauge):'';
       const dlt = cell.dormant
-        ? `<span class="dlt" style="color:#8a8576">${cell.delta>0?'+':''}${cell.delta} dort${lsBadge}</span>`
+        ? `<span class="dlt" style="color:#8a8576">${icCell}${cell.delta>0?'+':''}${cell.delta} dort${lsBadge}</span>`
         : isInert
           ? `<span class="dlt" style="color:#8a8576">inerte</span>`
           : isTrap
-            ? `<span class="dlt" style="color:var(--sanguine)">${cell.reactOnPlace.delta>0?'+':''}${cell.reactOnPlace.delta}${lsBadge}</span>`
-            : `<span class="dlt" style="color:${fav?'var(--sage)':'var(--sanguine)'}">${d>0?'+':''}${d}/t${lsBadge}</span>`;
+            ? `<span class="dlt" style="color:var(--sanguine)">${icTrap}${cell.reactOnPlace.delta>0?'+':''}${cell.reactOnPlace.delta}${lsBadge}</span>`
+            : `<span class="dlt" style="color:${fav?'var(--sage)':'var(--sanguine)'}">${icCell}${d>0?'+':''}${d}/t${lsBadge}</span>`;
       div.innerHTML=`<span class="ent">${cell.ent}</span><span class="lbl">${t(cell.label)}</span>${dlt}${marks}${eq}`;
     } else if(cell.type==='aspect'){
       const d=aspectContribution(cell,r,c);
@@ -994,17 +1124,20 @@ function renderGrid(){ const el=document.getElementById('grid'); el.innerHTML=''
       div.classList.add('aspect', fav?'good':'bad');
       const eq=(cell.equips||[]).map(o=>`<span class="equip-badge">${o.ic}</span>`).join('');
       div.innerHTML=`<span class="ent">${cell.ent}</span><span class="lbl">${t(cell.label)}</span>`+
-        `<span class="dlt" style="color:${fav?'var(--sage)':'var(--sanguine)'}">${d>0?'+':''}${d}</span>`+
+        `<span class="dlt" style="color:${fav?'var(--sage)':'var(--sanguine)'}">${gIc(cell.gauge)}${d>0?'+':''}${d}</span>`+
         `<span class="aspect-tag">statique</span>${eq}`;
     } else if(cell.type==='memoire'){
       div.classList.add('memoire');
       div.innerHTML = memoireGrabbed?`<span class="ent">📖</span><span class="lbl">exhumée</span>`:`<span class="ent">▦</span><span class="lbl">mémoire</span>`;
     }
     if(isValid){ div.classList.add('placeable'); div.onpointerenter=()=>showPreview(r,c); div.onpointerleave=clearPreview; div.onpointercancel=clearPreview; }
-    // Drag & drop : la case accepte la carte glissée
-    div.ondragover=(e)=>{ if(sel&&isValid){ e.preventDefault(); e.dataTransfer.dropEffect='move'; div.classList.add('drag-over'); showPreview(r,c); } };
-    div.ondragleave=()=>{ div.classList.remove('drag-over'); clearPreview(); };
-    div.ondrop=(e)=>{ e.preventDefault(); div.classList.remove('drag-over'); clearPreview(); if(sel&&isValid) placeAt(r,c); };
+    // Territoire vert tracé par un lierre : la cellule reçoit la classe lierre-zone et un title qui décrit l'effet
+    if(cell.lierreFx && cell.lierreFx.length){
+      div.classList.add('lierre-zone');
+      const fx0=cell.lierreFx[0];
+      const fxParts=[]; for(const g in fx0.effect){ const d=fx0.effect[g]; fxParts.push(t(gMeta[g].nm)+' '+(d>0?'+':'')+d); }
+      div.title = t('Territoire de')+' '+fx0.ownerName+' — '+t('toute pose ici applique')+' : '+fxParts.join(', ');
+    }
     div.onclick=()=>{ if(pendingTarget){ if(isTarget) bindAuraTarget(r,c); }
                       else if(sel&&isValid) placeAt(r,c); else inspectCell(r,c); };
     el.appendChild(div);
@@ -1012,20 +1145,29 @@ function renderGrid(){ const el=document.getElementById('grid'); el.innerHTML=''
 }
 
 // Dictionnaire des mots-clefs et leur définition (utilisé pour tooltips dans la main)
+// Taxonomie canonique (David) : Immédiat / Foyer / Aura / Dormant / Éphémère
+// Les anciens mots-clefs (À la pose, À chaque tour, Présence) restent listés en synonymes pour compatibilité.
 const KEYWORDS={
-  'À la pose':'Effet déclenché à l’instant où la carte est posée sur la grille (one-shot).',
-  'À chaque tour':'Effet appliqué à chaque fin de tour, tant que la carte reste présente. C’est la "persistance" — courant lent, opposé du burst.',
+  // === Taxonomie canonique ===
+  'Immédiat':'Effet déclenché à l’instant où la carte est posée sur la grille (one-shot, ne se répète pas).',
+  'Foyer':'Effet répété à chaque fin de tour, tant que la carte/entité reste présente. C’est le courant lent (persistance), opposé du burst immédiat.',
+  'Dormant':'L’entité est en sommeil — elle n’applique pas ses effets tant qu’une condition d’éveil n’est pas remplie.',
+  'Éphémère':'L’entité disparaît au bout de X tours (suivez le compteur ⌛ sur la cellule). Tactique : une menace passagère, ou un foyer favorable qu’il faut exploiter vite.',
+  // === Anciens synonymes (cartes existantes) ===
+  'À la pose':'Effet déclenché à l’instant où la carte est posée sur la grille (one-shot). Synonyme moderne : **Immédiat**.',
+  'À chaque tour':'Effet appliqué à chaque fin de tour, tant que la carte reste présente. Synonyme moderne : **Foyer**.',
   'Présence':'Effet continu tant que la carte reste sur la grille (synonyme de "tant que présent").',
   'Aura d’amplification ciblée':'À la pose, choisis un voisin ortho (carte ou foyer). Tant que la carte est présente, l’effet du voisin choisi est multiplié ×2.',
   'Aura d’amplification (zone)':'Tant que la carte est présente, l’effet de tous les voisins ortho (cartes ET foyers) est multiplié ×2. Pas de choix de cible — affecte la zone entière.',
   'Aura d’inversion ciblée':'À la pose, choisis un voisin (carte ou foyer). Tant que la carte est présente, l’effet du voisin choisi est inversé (signe retourné). Si la carte porteuse est elle-même amplifiée, l’inversion est doublée.',
   'Aura d’annulation ciblée':'À la pose, choisis un voisin (carte ou foyer). Tant que la carte est présente, l’effet du voisin choisi est annulé (0).',
-  'Greffe':'Cet objet se pose sur une carte ou un élément déjà présent. Il modifie ou complète son comportement sans occuper de case libre.',
+  'Greffe':'(Mot-clef obsolète — les objets se posent désormais sur les entités sans verbe spécial.)',
   'Copie':'Au moment précis de la pose, applique en une fois les effets de tous les personnages voisins (toutes couleurs). La valeur dépend du voisinage immédiat.',
   '+1 placement':'Accorde un placement supplémentaire pour ce tour. Cumulable.',
   'Rappel':'À la pose, déclenche à nouveau l’effet à la pose du dernier personnage que tu as joué (les rapsodes eux-mêmes ne sont pas pris en compte pour éviter les chaînes).',
   'Résonance':'Tant que cette carte est présente, à chaque tour : ajoute un bonus à une jauge cible, proportionnel au nombre de cartes-personnages voisines (toute couleur).',
-  'Propagation':'Tant que la carte est présente, à chaque fin de tour : applique son effet une fois pour chaque case occupée voisine (carte ou élément). Plus le voisinage est dense, plus l’effet est fort.',
+  'Propagation':'À la pose, le lierre te demande de choisir une ligne OU une colonne ; toutes les cases de cette direction deviennent un territoire vert. Tant que ces cases sont vertes, toute carte qui y est posée déclenche en plus l’effet du lierre (une fois par pose).',
+  'Ligne verte':'Territoire tracé par un lierre. Tant qu’une case en fait partie, toute carte qui y est posée applique aussi l’effet du lierre (en plus de son effet propre). Plusieurs lierres peuvent superposer leurs territoires.',
   'Échange':'À la pose, choisis un voisin orthogonal (carte ou foyer) — vous permutez vos positions sur la grille. Utile pour relocaliser un foyer menaçant, ou pour replacer une carte au cœur d’un cluster.',
 };
 // Système d'internationalisation léger : LANG = 'fr' (défaut) ou 'en'. Traduit l'UI shell + les mots-clefs.
@@ -1059,6 +1201,13 @@ const I18N={
   '+1 placement':{en:'+1 placement'},
   'Rappel':{en:'Recall'},
   'Résonance':{en:'Resonance'},
+  // === Taxonomie canonique des mots-clefs ===
+  'Immédiat':{en:'Immediate'},
+  'Foyer':{en:'Source'},
+  'Dormant':{en:'Dormant'},
+  'Éphémère':{en:'Ephemeral'},
+  'Entité':{en:'Entity'},
+  'Entités':{en:'Entities'},
   // Noms de jauges
   'Oubli':{en:'Oblivion'},
   'Doute':{en:'Doubt'},
@@ -1090,6 +1239,10 @@ const I18N={
   'Foyer favorable':{en:'Favorable source'},
   'Foyer défavorable':{en:'Adverse source'},
   'Foyer passager':{en:'Passing source'},
+  'Entité favorable':{en:'Favorable entity'},
+  'Entité défavorable':{en:'Adverse entity'},
+  'Entité éphémère':{en:'Ephemeral entity'},
+  'Piège éphémère':{en:'Ephemeral trap'},
   'Aspect statique':{en:'Static aspect'},
   'Déclenche':{en:'Triggers'},
   'quand une case adjacente devient occupée':{en:'when an adjacent cell becomes occupied'},
@@ -1155,6 +1308,7 @@ const I18N={
 
   // ===== Légende et principes (UI) =====
   'Foyer — avance chaque tour (vert s’il t’aide, rouge sinon)':{en:'Source — advances each turn (green if helpful, red otherwise)'},
+  'Entité — applique son effet Foyer chaque tour (vert s’il t’aide, rouge sinon)':{en:'Entity — applies its Source effect each turn (green if helpful, red otherwise)'},
   'Aspect statique — contribue une fois, à inverser/annuler':{en:'Static aspect — contributes once, to invert/cancel'},
   'se déplace chaque tour':{en:'moves each turn'},
   'invoque des entités':{en:'spawns entities'},
@@ -1228,8 +1382,25 @@ const I18N={
   'touche un foyer/aspect surligné (n’importe où) ou un personnage adjacent, vous permutez vos places.':{en:'tap a highlighted source/aspect (anywhere) or an adjacent character, you swap places.'},
   'Plateau (Échange long)':{en:'Board (Long swap)'},
   'Sa case + un voisin (Échange)':{en:'Its cell + a neighbor (Swap)'},
-  '**Présence** · **Propagation** : à chaque fin de tour, applique son effet une fois par case occupée voisine (carte ou élément).':{en:'**While present** · **Propagation**: each end of turn, applies its effect once per occupied neighbor cell (card or element).'},
-  '**À la pose** : **Échange** — choisis un foyer ou aspect (n’importe où sur le plateau) ou un personnage adjacent, vous permutez vos places.':{en:'**On play**: **Swap** — choose a source or aspect (anywhere on the board) or an adjacent character, you swap places.'},
+  '**Propagation** : à chaque fin de tour, applique son effet une fois par case occupée voisine (carte ou élément).':{en:'**Propagation**: each end of turn, applies its effect once per occupied neighbor cell (card or element).'},
+  '**Immédiat** : **Échange** — choisis un foyer ou aspect (n’importe où sur le plateau) ou un personnage adjacent, vous permutez vos places.':{en:'**Immediate**: **Swap** — choose a source or aspect (anywhere on the board) or an adjacent character, you swap places.'},
+  // Lierre territoire
+  'Territoire':{en:'Territory'},
+  'Ligne verte':{en:'Green line'},
+  'Ligne ou colonne (Territoire vert)':{en:'Row or column (Green territory)'},
+  'Trace ton territoire':{en:'Trace your territory'},
+  'touche une case en ligne (gauche/droite) ou en colonne (haut/bas) pour étendre la zone verte du lierre.':{en:'tap a cell in row (left/right) or column (up/down) to extend the ivy’s green zone.'},
+  'trace sa ligne verte':{en:'traces its green line'},
+  'ligne':{en:'row'},
+  'colonne':{en:'column'},
+  'cases':{en:'cells'},
+  'Territoire de':{en:'Territory of'},
+  'toute pose ici applique':{en:'any placement here applies'},
+  's’étend sur':{en:'extends to'},
+  'entité':{en:'entity'},
+  'entités':{en:'entities'},
+  'déjà présente':{en:'already present'},
+  'déjà présentes':{en:'already present'},
   'Cible l’aura':{en:'Target the aura'},
   'touche une case surlignée pour choisir ce que':{en:'tap a highlighted cell to choose what'},
   'va':{en:'will'},
@@ -1240,8 +1411,10 @@ const I18N={
   'Tape à côté pour fermer':{en:'Tap outside to close'},
   'Tape une case pour jouer · tape la carte pour fermer':{en:'Tap a cell to play · tap the card to close'},
   'Clic = sélectionner · double-clic = détail · glisser = poser':{en:'Click = select · double-click = details · drag = place'},
+  'Glisser-déposer = poser · clic = voir en grand':{en:'Drag & drop = place · click = view large'},
   'Tape une case pour jouer · tape la carte pour fermer':{en:'Tap a cell to play · tap card to close'},
   'Principes communs (toutes scènes) : les <b>foyers</b> (cerclés de rouge) poussent leur jauge chaque tour ; les <b>éléments statiques</b> font de même (verts s’ils t’aident, rouges sinon). Une <b>aura</b> agit sur les cartes ET les éléments de sa zone : amplifier (×2), inverser (change le signe), annuler (0). Les <b>objets</b> se posent sur un personnage pour l’augmenter.':{en:'Common principles (all scenes): <b>sources</b> (red-circled) push their gauge each turn; <b>static elements</b> do the same (green if helpful, red otherwise). An <b>aura</b> acts on cards AND elements in its zone: amplify (×2), invert (flips the sign), cancel (0). <b>Objects</b> attach to a character to augment them.'},
+  'Principes communs : les <b>entités</b> (cerclées de rouge) appliquent leur effet <b>Foyer</b> à chaque fin de tour ; les <b>aspects statiques</b> contribuent une fois. Une <b>aura</b> agit sur les entités voisines : amplifier (×2), inverser (change le signe), annuler (0). Les <b>objets</b> se posent sur un personnage (case occupée) pour l’augmenter ; les <b>pièges</b> attendent le contact pour frapper.':{en:'Common principles: <b>entities</b> (red-circled) apply their <b>Source</b> effect at each end of turn; <b>static aspects</b> contribute once. An <b>aura</b> acts on neighboring entities: amplify (×2), invert (flips the sign), cancel (0). <b>Objects</b> attach to a character (occupied cell) to augment them; <b>traps</b> wait for contact to strike.'},
 
   // ===== Chips et rôles =====
   'Personnage':{en:'Character'},
@@ -1285,32 +1458,52 @@ const I18N={
   'L’attroupement':{en:'The crowd'},
 
   // Card ef texts (full strings)
-  '**À la pose** : −2 Doute. **Aura d’inversion ciblée** : inverse un foyer/élément voisin choisi.':{en:'**On play**: −2 Doubt. **Targeted inversion aura**: inverts a chosen neighboring source/element.'},
-  '**À la pose** : −3 Censure.':{en:'**On play**: −3 Censorship.'},
+  '**Immédiat** : −2 Doute. **Aura d’inversion ciblée** : inverse un foyer/élément voisin choisi.':{en:'**Immediate**: −2 Doubt. **Targeted inversion aura**: inverts a chosen neighboring source/element.'},
+  '**Immédiat** : −3 Censure.':{en:'**Immediate**: −3 Censorship.'},
   '**Aura d’amplification (zone)** : ×2 l’effet des cartes ET des éléments voisins.':{en:'**Amplification aura (zone)**: ×2 the effect of cards AND neighboring elements.'},
-  '**À la pose** : −3 Oubli.':{en:'**On play**: −3 Oblivion.'},
-  '**Greffe** sur un personnage : répète son effet à la pose.':{en:'**Graft** on a character: repeats its on-play effect.'},
-  '**Greffe** sur un personnage : lui confère **Aura d’annulation ciblée**.':{en:'**Graft** on a character: grants it a **Targeted cancel aura**.'},
-  '**À la pose** : −1 Oubli et **+1 placement** ce tour.':{en:'**On play**: −1 Oblivion and **+1 placement** this turn.'},
-  '**À la pose** : −3 Misère.':{en:'**On play**: −3 Misery.'},
-  '**À la pose** : +2 Solidarité.':{en:'**On play**: +2 Solidarity.'},
-  '**À la pose** : +1 Solidarité. **Aura d’inversion ciblée** : retourne un voisin choisi (par exemple une dette en soutien).':{en:'**On play**: +1 Solidarity. **Targeted inversion aura**: flips a chosen neighbor (for instance a debt into support).'},
-  '**À la pose** : −2 Trac.':{en:'**On play**: −2 Stage fright.'},
-  '**À la pose** : +2 Ferveur.':{en:'**On play**: +2 Fervor.'},
-  '**À la pose** : −1 Trac. **Aura d’annulation ciblée** : annule un foyer voisin choisi.':{en:'**On play**: −1 Stage fright. **Targeted cancel aura**: cancels a chosen neighboring source.'},
-  '**Greffe** sur un personnage : lui confère **Aura d’inversion ciblée**.':{en:'**Graft** on a character: grants it a **Targeted inversion aura**.'},
-  '**À la pose** : −2 Oubli.':{en:'**On play**: −2 Oblivion.'},
-  '**À la pose** : −2 Discorde.':{en:'**On play**: −2 Discord.'},
-  '**À la pose** : −1 Oubli. **Aura d’inversion ciblée** : inverse un foyer voisin (et stoppe ses essaimages).':{en:'**On play**: −1 Oblivion. **Targeted inversion aura**: inverts a neighboring source (and stops its spawns).'},
-  '**Greffe** sur un foyer/aspect : inverse son effet en permanence (utile sur une entité qui se déplace).':{en:'**Graft** on a source/aspect: inverts its effect permanently (useful on a moving entity).'},
-  '**Greffe** sur un personnage : son aura annule TOUS les foyers/aspects voisins.':{en:'**Graft** on a character: its aura cancels ALL neighboring sources/aspects.'},
-  '**À la pose** : **Rappel** — re-déclenche l’effet à la pose du dernier personnage que tu as joué.':{en:'**On play**: **Recall** — re-trigger the on-play effect of the last character you played.'},
-  '**Présence** · **Résonance** : à chaque tour, +1 Solidarité par voisin-personnage (toute couleur).':{en:'**While present** · **Resonance**: each turn, +1 Solidarity per neighbor-character (any color).'},
+  '**Immédiat** : −3 Oubli.':{en:'**Immediate**: −3 Oblivion.'},
+  '**Immédiat** : répète l’effet à la pose de l’entité hôte.':{en:'**Graft** on a character: repeats its on-play effect.'},
+  '**Présence** : l’entité hôte gagne une **Aura d’annulation ciblée**.':{en:'**Graft** on a character: grants it a **Targeted cancel aura**.'},
+  '**Immédiat** : −1 Oubli et **+1 placement** ce tour.':{en:'**Immediate**: −1 Oblivion and **+1 placement** this turn.'},
+  '**Immédiat** : −3 Misère.':{en:'**Immediate**: −3 Misery.'},
+  '**Immédiat** : +2 Solidarité.':{en:'**Immediate**: +2 Solidarity.'},
+  '**Immédiat** : +1 Solidarité. **Aura d’inversion ciblée** : retourne un voisin choisi (par exemple une dette en soutien).':{en:'**Immediate**: +1 Solidarity. **Targeted inversion aura**: flips a chosen neighbor (for instance a debt into support).'},
+  '**Immédiat** : −2 Trac.':{en:'**Immediate**: −2 Stage fright.'},
+  '**Immédiat** : +2 Ferveur.':{en:'**Immediate**: +2 Fervor.'},
+  '**Immédiat** : −1 Trac. **Aura d’annulation ciblée** : annule un foyer voisin choisi.':{en:'**Immediate**: −1 Stage fright. **Targeted cancel aura**: cancels a chosen neighboring source.'},
+  '**Présence** : l’entité hôte gagne une **Aura d’inversion ciblée**.':{en:'**Graft** on a character: grants it a **Targeted inversion aura**.'},
+  '**Immédiat** : −2 Oubli.':{en:'**Immediate**: −2 Oblivion.'},
+  '**Immédiat** : −2 Discorde.':{en:'**Immediate**: −2 Discord.'},
+  '**Immédiat** : −1 Oubli. **Aura d’inversion ciblée** : inverse un foyer voisin (et stoppe ses essaimages).':{en:'**Immediate**: −1 Oblivion. **Targeted inversion aura**: inverts a neighboring source (and stops its spawns).'},
+  '**Immédiat** : inverse l’effet de l’entité hôte en permanence (utile sur une entité qui se déplace).':{en:'**Graft** on a source/aspect: inverts its effect permanently (useful on a moving entity).'},
+  '**Présence** : l’entité hôte annule TOUS les foyers/aspects voisins.':{en:'**Graft** on a character: its aura cancels ALL neighboring sources/aspects.'},
+  '**Immédiat** : **Rappel** — re-déclenche l’effet à la pose du dernier personnage que tu as joué.':{en:'**Immediate**: **Recall** — re-trigger the on-play effect of the last character you played.'},
+  '**Résonance** : à chaque tour, +1 Solidarité par voisin-personnage (toute couleur).':{en:'**Resonance**: each turn, +1 Solidarity per neighbor-character (any color).'},
+  // === Nouveaux ef d'objets sans "Greffe" (les objets se posent sur les entités, c'est implicite) ===
+  '**Immédiat** : répète l’effet à la pose de l’entité hôte.':{en:'**Immediate**: repeats the host entity’s on-play effect.'},
+  '**Présence** : l’entité hôte gagne une **Aura d’annulation ciblée**.':{en:'**While present**: the host entity gains a **Targeted cancel aura**.'},
+  '**Présence** : l’entité hôte gagne une **Aura d’inversion ciblée**.':{en:'**While present**: the host entity gains a **Targeted invert aura**.'},
+  '**Présence** : l’entité hôte gagne une **Aura d’annulation ciblée** (annule un foyer voisin).':{en:'**While present**: the host entity gains a **Targeted cancel aura** (cancels a neighboring source).'},
+  '**Immédiat** : inverse l’effet de l’entité hôte en permanence (utile sur une entité qui se déplace).':{en:'**Immediate**: inverts the host entity’s effect permanently (useful on a moving entity).'},
+  '**Présence** : l’entité hôte annule TOUS les foyers/aspects voisins.':{en:'**While present**: the host entity cancels ALL neighboring sources/aspects.'},
+  '**Immédiat** : trace une **Ligne verte** (ligne ou colonne). S’applique aussitôt à chaque entité présente sur la ligne (personnages + foyers, hors pièges). Toute carte posée ensuite sur une case verte applique aussi son effet.':{en:'**Immediate**: trace a **Green line** (row or column). Applies immediately to every entity present on the line (characters + sources, excluding traps). Any card placed later on a green cell also applies its effect.'},
+  '**Immédiat** : **Échange** — choisis un foyer ou aspect (n’importe où sur le plateau) ou un personnage adjacent, vous permutez vos places.':{en:'**Immediate**: **Swap** — choose a source or aspect (anywhere on the board) or an adjacent character, you swap places.'},
+  'Plateau (Échange long)':{en:'Board (Long swap)'},
+  // === Inspector et logs : termes manquants ===
+  'Déplacement':{en:'Movement'},
+  'Spawn':{en:'Spawn'},
+  'Aura d’amplification (zone)':{en:'Amplification aura (zone)'},
 };
 // Définitions traduites pour les tooltips
 const KEYWORDS_EN={
-  'On play':'Effect triggered the instant the card is placed (one-shot).',
-  'Each turn':'Effect applied each end of turn while the card remains present (persistence — slow current, opposite of burst).',
+  // === Canonical taxonomy ===
+  'Immediate':'Effect triggered the instant the card is placed (one-shot, does not repeat).',
+  'Source':'Effect repeated each end of turn while the card/entity remains present. The slow current (persistence), opposite of the immediate burst.',
+  'Dormant':'The entity is asleep — it applies no effects until an awakening condition is met.',
+  'Ephemeral':'The entity disappears after X turns (track the ⌛ counter on the cell). Tactical: a passing threat, or a favorable source you must exploit quickly.',
+  // === Old synonyms (existing cards) ===
+  'On play':'Effect triggered the instant the card is placed (one-shot). Modern synonym: **Immediate**.',
+  'Each turn':'Effect applied each end of turn while the card remains present. Modern synonym: **Source**.',
   'While present':'Continuous effect while the card stays on the grid.',
   'Targeted amplification aura':'On placement, pick an ortho neighbor (card or foyer). While the card is present, the neighbor’s effect is ×2.',
   'Amplification aura (zone)':'While present, the effect of all ortho neighbors (cards AND foyers) is ×2. No target choice — affects the entire zone.',
@@ -1321,12 +1514,44 @@ const KEYWORDS_EN={
   '+1 placement':'Grants one extra placement this turn. Stackable.',
   'Recall':'On placement, re-trigger the on-play effect of the last personnage you played (recallers themselves are excluded to avoid chains).',
   'Resonance':'While this card is present, each turn: adds a bonus to a target gauge, proportional to the number of neighbor-personnage cards (any color).',
-  'Propagation':'While the card is present, each end of turn: applies its effect once for every occupied neighbor cell (card or element). The denser the neighborhood, the stronger the effect.',
+  'Propagation':'On play, the ivy asks you to pick a row OR a column; all cells along that direction become green territory. While those cells are green, any card placed on them triggers the ivy’s effect too (once per placement).',
+  'Green line':'Territory traced by an ivy. While a cell is part of it, any card placed there also applies the ivy’s effect (in addition to its own). Multiple ivies can overlap territories.',
   'Exchange':'On play, pick an orthogonal neighbor (card or source) — you swap positions on the grid. Useful to relocate a threatening source, or to reposition a card into the heart of a cluster.',
 };
 function t(s){ if(LANG==='fr'||!s) return s; const e=I18N[s]; return e&&e.en?e.en:s; }
 // tEf : pour les textes longs (ef, sub, law). Cherche exact dans I18N, sinon applique tProse pour traduire les termes connus.
-function tEf(s){ if(LANG==='fr'||!s) return s; const e=I18N[s]; if(e&&e.en) return e.en; return tProse(s); }
+// Puis injecte les icônes des jauges. Mode 'compact' : l'icône REMPLACE le nom (avec tooltip pour accessibilité).
+// Mode normal : icône PRÉCÈDE le nom (lecture détaillée).
+function tEf(s, compact){ if(!s) return s;
+  let r = (LANG==='fr') ? s : ((I18N[s]&&I18N[s].en)?I18N[s].en:tProse(s));
+  return compact ? injectGaugeIconsCompact(r) : injectGaugeIcons(r);
+}
+// Mode plein : icône + nom (pour la prose, les scènes, les lois)
+function injectGaugeIcons(text){
+  if(!text) return text;
+  for(const key in GAUGE_META){
+    const meta=GAUGE_META[key];
+    const frNm=meta.nm;
+    const nm = (LANG==='en' && I18N[frNm] && I18N[frNm].en) ? I18N[frNm].en : frNm;
+    if(!nm||!meta.ic) continue;
+    const re = new RegExp('(?<!class="g-ic"[^>]*>)\\b'+nm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','g');
+    text = text.replace(re, '<span class="g-ic" style="color:'+meta.color+'">'+meta.ic+'</span>'+nm);
+  }
+  return text;
+}
+// Mode compact : remplace le nom par l'icône (lecture rapide sur les cartes en main)
+function injectGaugeIconsCompact(text){
+  if(!text) return text;
+  for(const key in GAUGE_META){
+    const meta=GAUGE_META[key];
+    const frNm=meta.nm;
+    const nm = (LANG==='en' && I18N[frNm] && I18N[frNm].en) ? I18N[frNm].en : frNm;
+    if(!nm||!meta.ic) continue;
+    const re = new RegExp('\\b'+nm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','g');
+    text = text.replace(re, '<span class="g-ic-solo" title="'+nm+'" style="color:'+meta.color+'">'+meta.ic+'</span>');
+  }
+  return text;
+}
 // Couleurs des supertypes (palette ouverte, type Magic colors)
 const SUP_COLORS={
   'arts':'#d4965a',      // ochre — influence, rayonnement
@@ -1361,25 +1586,18 @@ function renderHand(){ const el=document.getElementById('hand'); el.innerHTML=''
     d.className='card '+(card.type==='Objet'?'t-objet':'t-perso')+(sel&&sel.id===card.id?' sel':'');
     const pips = supPips(card.sup);
     const supLabel = card.sup ? `<span class="chip-sup-text" title="${card.sup}">${pips}<i>${card.sup}</i></span>` : '';
-    d.innerHTML=`<span class="ic">${card.ic}</span><div class="body"><div class="cn">${t(card.name)}</div><div class="role"><span class="chip ${card.type==='Objet'?'chip-o':'chip-p'}">${t(card.type)}</span> ${t(card.role)} ${supLabel}</div><div class="ef">${formatEf(tEf(card.ef))}</div></div>`;
-    // === INTERACTIONS ===
-    // Clic simple : sélection (cases plaçables surlignées, modale fermée)
-    // Double-clic (desktop) ou appui long (mobile) : ouvre la modale grand format
-    // Drag (desktop) : glisser-déposer sur une case pour poser directement
-    let lpTimer=null, lpFired=false, lpStartX=0, lpStartY=0;
-    d.onclick=(e)=>{ if(lpFired){ lpFired=false; return; } selectCard(card); };
-    d.ondblclick=(e)=>{ e.preventDefault(); showCardDetail(card); };
-    // Drag & drop (desktop HTML5)
-    d.draggable=true;
-    d.ondragstart=(e)=>{ sel=card; inspectCard(card); renderHand(); renderGrid(); closeCardModal();
-      e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',card.id); d.classList.add('dragging'); };
-    d.ondragend=()=>{ d.classList.remove('dragging'); };
-    // Long-press tactile (≥450ms sans bouger trop) → modale
-    d.ontouchstart=(e)=>{ lpFired=false; const tch=e.touches[0]; lpStartX=tch.clientX; lpStartY=tch.clientY;
-      lpTimer=setTimeout(()=>{ lpFired=true; lpTimer=null; showCardDetail(card); },450); };
-    d.ontouchmove=(e)=>{ if(!lpTimer) return; const tch=e.touches[0];
-      if(Math.abs(tch.clientX-lpStartX)>10||Math.abs(tch.clientY-lpStartY)>10){ clearTimeout(lpTimer); lpTimer=null; } };
-    d.ontouchend=d.ontouchcancel=()=>{ if(lpTimer){ clearTimeout(lpTimer); lpTimer=null; } };
+    d.innerHTML=`<span class="ic">${card.ic}</span><div class="body"><div class="cn">${t(card.name)}</div><div class="role"><span class="chip ${card.type==='Objet'?'chip-o':'chip-p'}">${t(card.type)}</span> ${t(card.role)} ${supLabel}</div><div class="ef">${formatEf(tEf(card.ef, true))}</div></div>`;
+    // === INTERACTION (pointer events unifiés souris+tactile) ===
+    // pointerdown : initialise un état "potentiel drag" — pas encore confirmé
+    // Si le pointeur bouge de plus de 8px avant pointerup → c'est un drag : on crée un fantôme qui suit le doigt/curseur
+    // Si pas de mouvement → c'est un tap : on ouvre la modale grand format
+    d.onpointerdown=(e)=>{ if(finished||pendingTarget) return;
+      if(e.pointerType==='mouse' && e.button!==0) return;
+      const rect=d.getBoundingClientRect();
+      dragState={card, cardEl:d, ghost:null, startX:e.clientX, startY:e.clientY,
+                 offsetX:e.clientX-rect.left, offsetY:e.clientY-rect.top,
+                 moved:false, pointerId:e.pointerId, cardW:rect.width};
+    };
     el.appendChild(d); });
   if(hand.length===0) el.innerHTML=`<div class="ef" style="color:#8a8576;font-size:12px">${t('Dotation épuisée.')}</div>`;
 }
@@ -1435,10 +1653,71 @@ function openCardModal(card){
   bg.classList.add('show');
 }
 function closeCardModal(){ document.getElementById('card-modal').classList.remove('show'); }
-// Tap sur la carte affichée = ferme la modale (la sélection reste, donc cellules toujours plaçables)
+// Clic sur le fond du modal (pas sur la carte elle-même) → ferme
+document.getElementById('card-modal').onclick=(e)=>{ if(e.target.id==='card-modal') closeCardModal(); };
+// Clic sur la carte elle-même → ferme aussi (avec stopPropagation pour ne pas remonter au fond)
 document.getElementById('card-detail').onclick=(e)=>{ e.stopPropagation(); closeCardModal(); };
-// Touche Échap = fermer la modale
+// Touche Échap = ferme la modale
 document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closeCardModal(); });
+// === DRAG SYSTEM (custom, pointer events, souris + tactile) ===
+// pointer events unifient souris et doigt. On démarre un état "potentiel drag" sur pointerdown ;
+// on bascule en drag réel après 8px de mouvement (sinon c'est un tap → modale).
+let dragState=null;
+function positionGhost(e){ if(!dragState||!dragState.ghost) return;
+  dragState.ghost.style.left=(e.clientX-dragState.offsetX)+'px';
+  dragState.ghost.style.top=(e.clientY-dragState.offsetY)+'px';
+}
+function updateDropTarget(e){
+  document.querySelectorAll('.cell.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  const elBelow=document.elementFromPoint(e.clientX,e.clientY);
+  const cellBelow=elBelow&&elBelow.closest('.cell.placeable');
+  if(cellBelow){ cellBelow.classList.add('drag-over');
+    const r=parseInt(cellBelow.dataset.r,10), c=parseInt(cellBelow.dataset.c,10);
+    if(!isNaN(r)&&!isNaN(c)) showPreview(r,c);
+  } else { clearPreview(); }
+}
+document.addEventListener('pointermove',(e)=>{
+  if(!dragState) return;
+  const dx=e.clientX-dragState.startX, dy=e.clientY-dragState.startY;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  if(!dragState.moved && dist>8){
+    dragState.moved=true;
+    sel=dragState.card; inspectCard(dragState.card); closeCardModal();
+    renderGrid();
+    const ghost=dragState.cardEl.cloneNode(true);
+    ghost.classList.add('drag-ghost');
+    ghost.style.position='fixed'; ghost.style.pointerEvents='none'; ghost.style.zIndex='500';
+    ghost.style.width=dragState.cardW+'px';
+    document.body.appendChild(ghost); dragState.ghost=ghost;
+    dragState.cardEl.classList.add('dragging');
+    positionGhost(e);
+  }
+  if(dragState.moved){ positionGhost(e); updateDropTarget(e); }
+});
+document.addEventListener('pointerup',(e)=>{
+  if(!dragState) return;
+  if(dragState.moved){
+    const elBelow=document.elementFromPoint(e.clientX,e.clientY);
+    const cellBelow=elBelow&&elBelow.closest('.cell.placeable');
+    if(cellBelow){ const r=parseInt(cellBelow.dataset.r,10), c=parseInt(cellBelow.dataset.c,10);
+      if(!isNaN(r)&&!isNaN(c)) placeAt(r,c);
+    } else { renderHand(); renderGrid(); }
+    if(dragState.ghost) dragState.ghost.remove();
+    if(dragState.cardEl) dragState.cardEl.classList.remove('dragging');
+    document.querySelectorAll('.cell.drag-over').forEach(el=>el.classList.remove('drag-over'));
+    clearPreview();
+  } else {
+    if(!finished&&!pendingTarget){ sel=dragState.card; inspectCard(dragState.card); renderHand(); renderGrid(); openCardModal(dragState.card); }
+  }
+  dragState=null;
+});
+document.addEventListener('pointercancel',()=>{
+  if(!dragState) return;
+  if(dragState.ghost) dragState.ghost.remove();
+  if(dragState.cardEl) dragState.cardEl.classList.remove('dragging');
+  document.querySelectorAll('.cell.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  clearPreview(); dragState=null;
+});
 function inspectCard(card){ const el=document.getElementById('inspector');
   const badge=card.type==='Objet'?'<span class="tbadge objet">'+t('Objet')+'</span>':'<span class="tbadge perso">'+t('Personnage')+'</span>';
   el.innerHTML=`<div class="insp-head"><span class="insp-ic">${card.ic}</span><div><div class="insp-nm">${t(card.name)}</div>${badge} <span class="insp-sup">${card.sup||''}</span></div></div>
@@ -1450,7 +1729,8 @@ function inspectCell(r,c){ const cell=grid[r][c],el=document.getElementById('ins
   if(!cell||cell.type==='void') return;
   if(cell.card){ inspectCard(cell.card); return; }
   if(cell.type==='foyer'||cell.type==='aspect'){
-    const nm=t(gMeta[cell.gauge].nm);
+    const icG = gIc(cell.gauge);
+    const nm=icG+' '+t(gMeta[cell.gauge].nm);
     const d = cell.type==='aspect'?aspectContribution(cell,r,c):elementDelta(cell,r,c);
     const k=auraKindAt(r,c);
     const fav = cell.type==='aspect' ? ((gMeta[cell.gauge].mode==='down')?d<0:d>0) : favorable(cell);
@@ -1461,17 +1741,20 @@ function inspectCell(r,c){ const cell=grid[r][c],el=document.getElementById('ins
         : k==='amplify'?'<b style="color:var(--ochre)">'+t('amplifié')+'</b> : '+t('contribue')+' '+(d>0?'+':'')+d+' '+t('à')+' '+nm+'.'
         : t('aspect statique : contribue une fois, ne se répète pas')+' ('+(d>0?'+':'')+d+' '+nm+').');
     } else {
+      // pour les pièges, l'icône est celle de la jauge cible du piège (peut différer du cell.gauge)
+      const icTrap = cell.reactOnPlace ? gIc(cell.reactOnPlace.gauge) : '';
+      const nmTrap = cell.reactOnPlace ? (icTrap+' '+t(gMeta[cell.reactOnPlace.gauge].nm)) : '';
       state = cell.dormant
         ? '<b>'+t('dormant')+'</b> — '+t('une fois éveillé, poussera')+' '+nm+' '+(cell.delta>0?'+':'')+cell.delta+'/'+t('tour')+'. '+t('S’éveille quand')+' <b>'+condText(cell.wakeWhen)+'</b>.'
         : cell.reactOnPlace
-          ? '<b style="color:var(--sanguine)">⚡ '+t('Paré')+'</b> : '+t('Déclenche')+' <b>'+nm+' '+(cell.reactOnPlace.delta>0?'+':'')+cell.reactOnPlace.delta+'</b> '+t('quand une case adjacente devient occupée')+'.'
+          ? '<b style="color:var(--sanguine)">⚡ '+t('Paré')+'</b> : '+t('Déclenche')+' <b>'+nmTrap+' '+(cell.reactOnPlace.delta>0?'+':'')+cell.reactOnPlace.delta+'</b> '+t('quand une case adjacente devient occupée')+'.'
         : cell.reacted
           ? '<b style="color:var(--muted)">'+t('Piège déclenché')+'</b> — '+t('devenu inerte, ne pousse plus rien.')
         : k==='calm'?'<b>'+t('annulé')+'</b> '+t('par une aura : ne pousse plus.')
         : t('pousse')+' <b>'+nm+' '+(d>0?'+':'')+d+'</b> '+t('à chaque fin de tour')+(k==='invert'?' ('+t('inversé')+')':k==='amplify'?' ('+t('amplifié')+')':'')+'.';
     }
     const moves = cell.move?'<div class="insp-row"><b>Déplacement</b> patrouille d’une case par tour (trajet fixe).'+(cell.captures?' Tant qu’il est hostile, il <b>capture</b> les personnages qu’il jouxte : leur aura est suspendue. Le convertir (objet) le neutralise.':'')+'</div>':'';
-    const spawns = cell.spawn?'<div class="insp-row"><b>Spawn</b> invoque «&nbsp;'+cell.spawn.label+'&nbsp;» ('+(gMeta[cell.spawn.gauge]?gMeta[cell.spawn.gauge].nm:cell.spawn.gauge)+' '+(cell.spawn.delta>0?'+':'')+cell.spawn.delta+'/tour) dans une case voisine'+(cell.spawn.when?', quand '+condText(cell.spawn.when):'')+', jusqu’à '+cell.spawn.cap+' fois. Annule-le pour stopper.</div>':'';
+    const spawns = cell.spawn?'<div class="insp-row"><b>Spawn</b> invoque «&nbsp;'+cell.spawn.label+'&nbsp;» ('+gIc(cell.spawn.gauge)+' '+(gMeta[cell.spawn.gauge]?t(gMeta[cell.spawn.gauge].nm):cell.spawn.gauge)+' '+(cell.spawn.delta>0?'+':'')+cell.spawn.delta+'/tour) dans une case voisine'+(cell.spawn.when?', quand '+condText(cell.spawn.when):'')+', jusqu’à '+cell.spawn.cap+' fois. Annule-le pour stopper.</div>':'';
     const equip = (cell.equips&&cell.equips.length)?'<div class="insp-row"><b>Objet</b> '+cell.equips.map(o=>o.name).join(', ')+' apposé(s) : modification permanente.</div>':'';
     const isTrap = cell.reactOnPlace;
     const isInert = cell.reacted;
@@ -1479,8 +1762,8 @@ function inspectCell(r,c){ const cell=grid[r][c],el=document.getElementById('ins
     const baseTag = cell.type==='aspect'?'Aspect statique'
                   : isTrap ? 'Piège'
                   : isInert ? 'Piège déclenché'
-                  : (fav?'Foyer favorable':'Foyer défavorable');
-    const tag = isPassager && !isInert ? baseTag.replace('Foyer','Foyer passager').replace('Piège','Piège passager') : baseTag;
+                  : (fav?'Entité favorable':'Entité défavorable');
+    const tag = isPassager && !isInert ? baseTag.replace('Entité','Entité éphémère').replace('Piège','Piège éphémère') : baseTag;
     const tagClass = cell.type==='aspect' ? 'elem'
                    : isTrap ? 'piege'
                    : isInert ? 'inerte'
@@ -1505,11 +1788,20 @@ function validCells(card){ const out=[];
   const targeted = !P.areaAuras;
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
     if(card.type==='Objet'){
-      let onPerso = cell.card && cell.card.type==='Personnage' && (card.special||card.grantsAura);
-      // un objet qui ACCORDE une aura (ciblé) n'est utile que si le personnage a une cible adjacente
-      if(onPerso && targeted && card.grantsAura && !auraTargetCells(r,c,card.grantsAura).length) onPerso=false;
-      const onElem  = (cell.type==='foyer'||cell.type==='aspect') && card.elementMod;
-      if(onPerso||onElem) out.push({r,c});
+      // Un objet peut se poser sur une ENTITÉ. Une entité = personnage posé OU foyer décoratif non-piège.
+      // Exclus : pièges (reactOnPlace), aspects statiques, mémoires.
+      const isPersoEntity = cell.card && cell.card.type==='Personnage';
+      const isFoyerEntity = cell.type==='foyer' && !cell.reactOnPlace && !cell.dormant;
+      // Compatibilité par type d'objet :
+      // - special/grantsAura : besoin d'un personnage (les foyers n'ont pas d'effet à la pose ni d'aura)
+      // - elementMod : besoin d'une entité-foyer/aspect (modification de l'effet de l'élément)
+      let valid = false;
+      if((card.special||card.grantsAura) && isPersoEntity){
+        valid = true;
+        if(targeted && card.grantsAura && !auraTargetCells(r,c,card.grantsAura).length) valid=false;
+      }
+      if(card.elementMod && (isFoyerEntity || cell.type==='aspect')) valid = true;
+      if(valid) out.push({r,c});
     } else {
       if((cell.type==='empty'||cell.type==='memoire') && !cell.card){
         if(targeted && card.aura && !auraTargetCells(r,c,card.aura).length) continue;  // aura ciblée sans cible : pose inutile
@@ -1526,42 +1818,57 @@ function showPreview(r,c){ if(!sel) return;
     if(host&&sel.special==='propagate'&&host.effect){ const amp=host.amplifiable&&auraAt(r,c,'amplify');
       for(const g in host.effect) eff.push({g,d:host.effect[g]*(amp?2:1)}); } }
   else eff=computeEffects(sel,r,c);
-  // PIÈGES : si la pose touche un piège armé, ajouter son effet (immédiat, à la pose)
+  // PIÈGES adjacents : si la pose les déclenche, ajouter leur delta au preview
   if(sel.type==='Personnage'){
     ortho(r,c).forEach(p=>{ const cl=grid[p.r][p.c];
       if(cl&&cl.type==='foyer'&&cl.reactOnPlace&&!cl.reacted){
         eff.push({g:cl.reactOnPlace.gauge, d:cl.reactOnPlace.delta, why:'⚡ '+(cl.label||'piège')});
       } });
   }
-  document.querySelectorAll('.gauge-v').forEach(gEl=>{ const key=gEl.dataset.k;
-    const place=eff.filter(e=>e.g===key).reduce((a,e)=>a+e.d,0);
-    const prev=gEl.querySelector('.vprev');
-    if(place!==0){
-      const projV=clampG(key,gauges[key]+place);
-      const placeFav=(gMeta[key].mode==='down')?(place<=0):(place>=0);
-      // texte projection sur la pose seule
-      prev.innerHTML=`<span style="color:${placeFav?'var(--sage)':'var(--sanguine)'}">pose ${place>0?'+':''}${place} → ${projV}</span>`;
-      // animation : .vfill s'anime vers le niveau projeté + .vval affiche la valeur projetée + classe ok mise à jour
-      const max=gMeta[key].dispMax||10; const pct=Math.max(0,Math.min(100,projV/max*100));
-      const fill=gEl.querySelector('.vfill'); fill.style.height=pct+'%';
-      const ok = gMeta[key].mode==='down' ? projV<=gMeta[key].target : projV>=gMeta[key].target;
-      gEl.classList.toggle('ok',ok);
-      const vval=gEl.querySelector('.vval');
-      vval.innerHTML=`<span style="color:${placeFav?'var(--sage)':'var(--sanguine)'}">${projV}</span>${ok?'<span class="vok">✓</span>':''}`;
-    } else prev.innerHTML='&nbsp;';
-  });
+  // Agrège deltas par jauge
+  const placeDeltas={}; for(const e of eff) placeDeltas[e.g]=(placeDeltas[e.g]||0)+e.d;
+  applyGaugePreview(placeDeltas);
 }
-function clearPreview(){
-  // restaurer le fill et le vval aux valeurs courantes (l'animation se fait grâce à la transition CSS sur .vfill)
-  document.querySelectorAll('.gauge-v').forEach(gEl=>{ const key=gEl.dataset.k;const g=gMeta[key];const v=gauges[key];
-    const ok = g.mode==='down' ? v<=g.target : v>=g.target;
-    const max=g.dispMax||10; const pct=Math.max(0,Math.min(100,v/max*100));
-    gEl.querySelector('.vfill').style.height=pct+'%';
+// Applique un map {gauge:delta} comme preview sur les jauges (anime vfill, mets à jour vval, place vghost)
+function applyGaugePreview(deltas){
+  document.querySelectorAll('.gauge-v').forEach(gEl=>{
+    const key=gEl.dataset.k; const m=gMeta[key];
+    const placeDelta=deltas[key]||0;
+    const v=gauges[key]; const projV=clampG(key, v+placeDelta);
+    const max=m.dispMax||10;
+    const pct=Math.max(0,Math.min(100,v/max*100));
+    const projPct=Math.max(0,Math.min(100,projV/max*100));
+    const placeFav=(m.mode==='down')?(placeDelta<=0):(placeDelta>=0);
+    // anime le fill vers la valeur projetée (transition CSS .35s)
+    const fill=gEl.querySelector('.vfill'); fill.style.height=projPct+'%';
+    // mets à jour la valeur affichée et la classe ok
+    const ok = m.mode==='down' ? projV<=m.target : projV>=m.target;
     gEl.classList.toggle('ok',ok);
-    gEl.querySelector('.vval').innerHTML=`${v}${ok?'<span class="vok">✓</span>':''}`;
-    gEl.querySelector('.vprev').innerHTML='&nbsp;';
+    const vval=gEl.querySelector('.vval');
+    if(placeDelta!==0){
+      vval.innerHTML=`<span style="color:${placeFav?'var(--sage)':'var(--sanguine)'}">${projV}</span>${ok?'<span class="vok">✓</span>':''}`;
+    } else {
+      vval.innerHTML=`${v}${ok?'<span class="vok">✓</span>':''}`;
+    }
+    // place le ghost overlay entre pct et projPct (clair, dashed) — créé si absent
+    let ghost=gEl.querySelector('.vghost');
+    if(placeDelta!==0){
+      const lo=Math.min(pct,projPct), hi=Math.max(pct,projPct);
+      if(!ghost){ ghost=document.createElement('div'); ghost.className='vghost'; gEl.querySelector('.vbar').appendChild(ghost); }
+      ghost.style.bottom=lo+'%'; ghost.style.height=(hi-lo)+'%'; ghost.style.display='';
+    } else if(ghost){ ghost.style.display='none'; }
+    // mets à jour le texte de prédiction
+    const vpred=gEl.querySelector('.vpred');
+    if(vpred){
+      if(placeDelta!==0){
+        vpred.innerHTML=`<span style="color:${placeFav?'var(--sage)':'var(--sanguine)'}">→ ${projV} <span style="opacity:.7">(${placeDelta>0?'+':''}${placeDelta})</span></span>`;
+      } else {
+        vpred.innerHTML=`<span style="color:#8a8576">→ ${v} <span style="opacity:.7">(=)</span></span>`;
+      }
+    }
   });
 }
+function clearPreview(){ renderGauges(); }
 // Tracking du dernier personnage joué par le joueur (pour le mot-clef Rappel)
 let lastPersonnagePlayed=null;
 
@@ -1614,6 +1921,16 @@ function placeAt(r,c){
   }
   eff.forEach(e=>{ gauges[e.g]=clampG(e.g,gauges[e.g]+e.d);
     parts.push(`${gMeta[e.g].nm} ${e.d>0?'+':''}${e.d}${e.why?' <i>('+e.why+')</i>':''}`); });
+  // LIERRE : si la case d'arrivée porte un territoire vert, déclencher l'effet du lierre propriétaire (en plus du sien)
+  // Ne s'applique que pour les personnages posés sur une case vide (pas pour les objets en greffe, pas pour le lierre lui-même)
+  if(card.type==='Personnage' && !card.lierreLineOnPlace && grid[r][c].lierreFx && grid[r][c].lierreFx.length){
+    for(const fx of grid[r][c].lierreFx){
+      for(const g in fx.effect){
+        const d=fx.effect[g]; gauges[g]=clampG(g,gauges[g]+d);
+        parts.push(`${gMeta[g].nm} ${d>0?'+':''}${d} <i>(territoire de ${fx.ownerName})</i>`);
+      }
+    }
+  }
   let memText='';
   if(grid[r][c].type==='memoire'&&!memoireGrabbed){ memoireGrabbed=true; memText=' — <b>mémoire exhumée</b>'; }
   pushLog(`<b>${card.name}</b> posé · ${parts.length?parts.join(', '):'pas d’effet direct'}${memText}`);
@@ -1624,6 +1941,8 @@ function placeAt(r,c){
   if(card.type==='Personnage' && !card.rappelLastCard) lastPersonnagePlayed=card;
   // SWAP (nature) : si la carte a swapOnPlace, déclenche le ciblage swap (un voisin choisi échangera sa place)
   if(card.swapOnPlace){ enterPendingTarget(r,c,'swap',grid[r][c].card); reconcileAspects(); renderAll(); checkState(); return; }
+  // LIERRE (nature) : si la carte a lierreLineOnPlace, déclenche le choix de direction (ligne ou colonne) pour le territoire vert
+  if(card.lierreLineOnPlace){ enterPendingTarget(r,c,'lierreLine',grid[r][c].card); reconcileAspects(); renderAll(); checkState(); return; }
   if(card.aura && !P.areaAuras){ enterPendingTarget(r,c,card.aura,grid[r][c].card); reconcileAspects(); renderAll(); checkState(); return; }
   reconcileAspects(); renderAll(); checkState();
 }
@@ -1666,15 +1985,6 @@ function endTurn(){
     if(nb===0) continue;
     const d=oc.resonance.perNeighbor*nb; gauges[oc.resonance.gauge]=clampG(oc.resonance.gauge,gauges[oc.resonance.gauge]+d);
     pushLog(`${oc.name} résonne (${nb} voisin${nb>1?'s':''}) : ${gMeta[oc.resonance.gauge].nm} ${d>0?'+':''}${d}`);
-  }
-  // 2quater) PROPAGATION (nature) — cartes avec propagateAtTick : applique effect une fois par CASE OCCUPÉE voisine (carte ou élément)
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c];
-    const oc=cell.card; if(!oc||!oc.propagateAtTick||!oc.effect||oc.suspended) continue;
-    const nb=ortho(r,c).filter(p=>{const cl=grid[p.r][p.c]; return cl && (cl.card || cl.type==='foyer' || cl.type==='aspect');}).length;
-    if(nb===0) continue;
-    const parts=[];
-    for(const g in oc.effect){ const d=oc.effect[g]*nb; gauges[g]=clampG(g,gauges[g]+d); parts.push(`${gMeta[g].nm} ${d>0?'+':''}${d}`); }
-    pushLog(`<b>${oc.name}</b> propage : ${parts.join(', ')} (${nb} case${nb>1?'s':''} voisine${nb>1?'s':''} occupée${nb>1?'s':''}).`);
   }
   // 3) loi du lieu (couplage)
   if(P.law.onTurnEnd) P.law.onTurnEnd(gauges,(t)=>pushLog(t,true));
@@ -1732,7 +2042,7 @@ function lose(reason){ finished=true; const m=document.getElementById('modal');
     <button class="btn" onclick="loadPuzzle(PUZZLES.indexOf(P))">Recommencer</button>`;
   document.getElementById('overlay').classList.add('show'); }
 
-function pushLog(t,law){ logEntries.push({t,law:!!law}); }
+function pushLog(t,law){ logEntries.push({t:injectGaugeIcons(t),law:!!law}); }
 
 document.getElementById('endturn').onclick=endTurn;
 // Helpers fantômes : aperçu rémanent des spawns et déplacements à venir
