@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archives — ExpLore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IM+Fell+English:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0a0810;
+  --ink-soft: #15101e;
+  --parchment: #f2e8d0;
+  --parchment-dark: #e0d0a8;
+  --parchment-line: rgba(160,130,70,0.22);
+  --gold: #c9913a;
+  --gold-light: #e8c06a;
+  --gold-dim: rgba(201,145,58,0.35);
+  --text-light: #f0ece2;
+  --text-dim: rgba(240,236,226,0.5);
+  --text-very-dim: rgba(240,236,226,0.3);
+  --red: #8b2020;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  color: var(--text-light);
+  font-family: 'IM Fell English', serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Grain texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 1000;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 25% 30%, rgba(255,255,255,0.015) 0%, transparent 50%),
+    radial-gradient(circle at 75% 70%, rgba(255,255,255,0.01) 0%, transparent 50%);
+  mix-blend-mode: overlay;
+  opacity: 0.6;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 999;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.4;
+}
+
+/* ── NAV ── */
+#nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.4rem 3rem;
+  background: linear-gradient(180deg, rgba(10,8,16,0.95) 0%, rgba(10,8,16,0.7) 80%, transparent 100%);
+  backdrop-filter: blur(8px);
+}
+#nav .logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem; font-weight: 600;
+  color: var(--gold-light);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+#nav .nav-links {
+  display: flex; gap: 2.2rem;
+  list-style: none;
+}
+#nav .nav-links a {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  transition: color 0.3s ease;
+}
+#nav .nav-links a:hover { color: var(--gold-light); }
+#nav .nav-links .nav-active { color: var(--gold-light); }
+#nav .lang-btn {
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold-light);
+  padding: 0.4rem 0.9rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+/* ── HEADER ── */
+#header {
+  padding: 9rem 3rem 4rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+#header .eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 1.4rem;
+}
+#header h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  margin-bottom: 1.6rem;
+}
+#header h1 em {
+  font-style: italic;
+  color: var(--gold-light);
+}
+#header .lede {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  max-width: 640px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+#header .meta {
+  margin-top: 2.2rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-very-dim);
+  letter-spacing: 0.08em;
+}
+#header .meta span { padding: 0 0.6rem; }
+#header .meta span + span { border-left: 1px solid var(--gold-dim); }
+
+/* ── CATEGORIES & ENTRIES ── */
+.category {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 3rem 3rem 1rem;
+}
+.category-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: var(--parchment);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.02em;
+}
+.category-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-very-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 2.4rem;
+}
+.category-divider {
+  height: 1px;
+  background: linear-gradient(to right, var(--gold-dim), transparent);
+  margin-bottom: 2.4rem;
+}
+.entries {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 1.6rem;
+}
+.entry {
+  border: 1px solid var(--gold-dim);
+  background: linear-gradient(180deg, rgba(255,255,255,0.018) 0%, rgba(255,255,255,0.005) 100%);
+  padding: 1.8rem 1.8rem 1.6rem;
+  position: relative;
+  transition: border-color 0.35s ease, background 0.35s ease;
+}
+.entry:hover {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(201,145,58,0.04) 0%, rgba(255,255,255,0.005) 100%);
+}
+.entry-status {
+  position: absolute; top: 1.2rem; right: 1.4rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-very-dim);
+}
+.entry-status.sealed { color: var(--red); }
+.entry h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.45rem;
+  font-weight: 400;
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.01em;
+}
+.entry h3 em {
+  font-style: italic;
+  color: var(--gold-light);
+  font-size: 0.92em;
+}
+.entry .entry-aka {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text-very-dim);
+  letter-spacing: 0.06em;
+  margin-bottom: 1.1rem;
+}
+.entry p {
+  font-family: 'IM Fell English', serif;
+  font-size: 0.98rem;
+  color: var(--text-light);
+  line-height: 1.65;
+  margin-bottom: 0.85rem;
+}
+.entry p:last-child { margin-bottom: 0; }
+.entry p em {
+  color: var(--gold-light);
+  font-style: italic;
+}
+.entry-sub {
+  margin-top: 1.4rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--gold-dim);
+}
+.entry-sub-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--gold);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+.entry-sub-content {
+  font-family: 'IM Fell English', serif;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* ── FOOTER ── */
+#footer {
+  max-width: 1100px;
+  margin: 5rem auto 0;
+  padding: 3rem 3rem 4rem;
+  text-align: center;
+  border-top: 1px solid var(--gold-dim);
+}
+#footer p {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  color: var(--text-dim);
+  font-size: 1rem;
+  margin-bottom: 1.4rem;
+}
+#footer a {
+  color: var(--gold-light);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--gold-dim);
+}
+#footer a:hover { color: var(--gold); }
+#footer .signature {
+  margin-top: 2rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-very-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 720px) {
+  #nav { padding: 1rem 1.4rem; }
+  #nav .nav-links { display: none; }
+  #header, .category, #footer { padding-left: 1.4rem; padding-right: 1.4rem; }
+  .entries { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav id="nav">
+  <a href="index.html" class="logo">ExpLore</a>
+  <ul class="nav-links">
+    <li><a href="index.html#concept">Le concept</a></li>
+    <li><a href="lore.html">L'univers</a></li>
+    <li><a href="index.html#how">Comment ça marche</a></li>
+    <li><a href="index.html#partners">Partenaires</a></li>
+    <li><a href="index.html#about">À propos</a></li>
+  </ul>
+  <button class="lang-btn">EN</button>
+</nav>
+
+<!-- ── HEADER ── -->
+<header id="header">
+  <p class="eyebrow">Archives — Sources & documents internes</p>
+  <h1>Les <em>Archives</em></h1>
+  <p class="lede">
+    Notes, définitions, fragments de documents internes — collectés et tenus à jour par
+    le service archivistique de l'organisation. Ce qui est ici est ce qu'on a accepté
+    de partager. Le reste reste scellé.
+  </p>
+  <p class="meta">
+    <span>État : ouvert au public</span>
+    <span>Mise à jour : en cours</span>
+    <span>Entrées : 9</span>
+  </p>
+</header>
+
+<!-- ── CONCEPTS ── -->
+<section class="category">
+  <h2 class="category-title">Concepts</h2>
+  <p class="category-sub">Notions fondamentales du domaine mnésique</p>
+  <div class="category-divider"></div>
+  <div class="entries">
+
+    <article class="entry">
+      <span class="entry-status">Consultable</span>
+      <h3>La poudre mémorielle</h3>
+      <p>
+        Substance impalpable, issue de l'oubli naturel des êtres vivants. Elle est continuellement
+        recyclée — la mémoire qui s'efface ne disparaît pas, elle se transforme et se redistribue
+        dans l'environnement, où elle peut être captée, agrégée, ou réinfusée.
+      </p>
+      <p>
+        La poudre est à l'origine de la plupart des outils que l'organisation a mis au point.
+        Elle sert notamment au processus de <em>stabilisation</em> des cartes.
+      </p>
+      <div class="entry-sub">
+        <span class="entry-sub-label">Histoire &amp; origine</span>
+        <span class="entry-sub-content">Archives scellées — pour consultation, contacter le service.</span>
+      </div>
+    </article>
+
+    <article class="entry">
+      <span class="entry-status">Consultable</span>
+      <h3>Les nébuleuses</h3>
+      <p>
+        Agrégats de poudre mémorielle qui se sont attachés à un lieu. On les considère
+        comme une forme de <em>mémoire collective ancrée</em>. Une nébuleuse peut être ancienne
+        de plusieurs siècles, ou très récente — son intensité varie selon la fréquentation
+        du lieu et la densité des présences qui s'y sont déposées.
+      </p>
+      <p>
+        Les nébuleuses paraissent capables de donner voix à la mémoire qu'elles contiennent.
+        Le processus exact reste partiellement compris.
+      </p>
+      <div class="entry-sub">
+        <span class="entry-sub-label">Histoire &amp; origine</span>
+        <span class="entry-sub-content">Archives scellées.</span>
+      </div>
+    </article>
+
+    <article class="entry">
+      <span class="entry-status">Consultable</span>
+      <h3>La noosynthèse</h3>
+      <p>
+        Discipline technique qui consiste à extraire une voix singulière — une <em>présence</em> —
+        depuis une nébuleuse. C'est sur les avancées de la noosynthèse que reposent les outils
+        utilisés par les explorateurs de terrain : <em>cartes</em>, <em>orbes</em>, instruments
+        secondaires.
+      </p>
+      <p>
+        Les corps scientifiques de l'organisation y consacrent l'essentiel de leurs travaux.
+        Les principes en sont enseignés, mais les protocoles avancés restent réservés.
+      </p>
+    </article>
+
+  </div>
+</section>
+
+<!-- ── OUTILS & OBJETS ── -->
+<section class="category">
+  <h2 class="category-title">Outils &amp; objets</h2>
+  <p class="category-sub">Instrumentation de terrain</p>
+  <div class="category-divider"></div>
+  <div class="entries">
+
+    <article class="entry">
+      <span class="entry-status">Consultable</span>
+      <h3>Les cartes</h3>
+      <p class="entry-aka">À l'origine : « tablettes mnésiques »</p>
+      <p>
+        Contenants destinés à accueillir une <em>présence</em> extraite d'une nébuleuse,
+        par noosynthèse. Une carte fraîchement recueillie est dite <em>non stabilisée</em> :
+        sourde, muette, en attente.
+      </p>
+      <p>
+        Pour qu'elle révèle ce qu'elle contient, il lui faut de la poudre mémorielle —
+        de l'attention, du temps. C'est le processus de <em>stabilisation</em>, lent par nature :
+        la mémoire a besoin de temps pour infuser.
+      </p>
+      <p>
+        Stabilisée, la carte retrouve sa couleur, son éclat, et l'on peut entendre ce qu'elle
+        gardait.
+      </p>
+    </article>
+
+    <article class="entry">
+      <span class="entry-status">Consultable</span>
+      <h3>Les orbes</h3>
+      <p>
+        Invention récente de l'organisation. Outil d'accélération du processus d'absorption,
+        capable d'infuser durablement la poudre mémorielle dans certains matériaux solides
+        — y compris dans les cartes elles-mêmes.
+      </p>
+      <p>
+        Leur fabrication est complexe : la difficulté n'est pas tant l'énergie nécessaire que
+        la conception d'un appareil capable de canaliser cette énergie sans capturer la présence
+        contenue dans la carte. C'est la dernière grande percée en noosynthèse.
+      </p>
+    </article>
+
+    <article class="entry">
+      <span class="entry-status">Consultable</span>
+      <h3>Le carnet de bord</h3>
+      <p>
+        Outil de terrain fourni à chaque explorateur. Au fil de la stabilisation des cartes,
+        certaines entrées s'y débloquent — souvenirs audios, notes textuelles, fragments visuels.
+      </p>
+      <p>
+        Le carnet est conçu pour être <em>personnalisé</em> : annotations, collages, marques
+        personnelles. L'organisation ne l'admet pas officiellement, mais ses corps scientifiques
+        ont observé que la mémoire des cartes paraît avoir besoin de cet ancrage humain pour
+        rester stable.
+      </p>
+    </article>
+
+  </div>
+</section>
+
+<!-- ── LIEUX ── -->
+<section class="category">
+  <h2 class="category-title">Lieux</h2>
+  <p class="category-sub">Espaces de référence</p>
+  <div class="category-divider"></div>
+  <div class="entries">
+
+    <article class="entry">
+      <span class="entry-status">Consultable</span>
+      <h3>L'Explorium</h3>
+      <p>
+        Représentation cartographique vivante du territoire exploré. Chaque présence recueillie
+        s'y reflète à l'endroit même où elle a été trouvée. Les nébuleuses connues y forment
+        progressivement un réseau lumineux dont la densité dit l'avancée de la collecte.
+      </p>
+      <p>
+        Plus qu'une carte, c'est un paysage. Il évolue à mesure que l'on marche.
+      </p>
+    </article>
+
+  </div>
+</section>
+
+<!-- ── L'ORGANISATION ── -->
+<section class="category">
+  <h2 class="category-title">L'Organisation</h2>
+  <p class="category-sub">Ce que l'on en sait — et ce qui reste scellé</p>
+  <div class="category-divider"></div>
+  <div class="entries">
+
+    <article class="entry">
+      <span class="entry-status">Consultable</span>
+      <h3>Présentation</h3>
+      <p>
+        Entité de longue date dont la mission déclarée est de lutter contre l'oubli — qu'elle
+        considère, depuis l'origine, comme un fléau à enrayer. Elle cartographie les nébuleuses,
+        finance la noosynthèse, et recense ce qui mérite d'être tenu.
+      </p>
+      <p>
+        Elle ne se présente pas. Elle ne recrute pas publiquement. On y entre rarement par
+        candidature, et plus souvent parce qu'on a été remarqué.
+      </p>
+      <div class="entry-sub">
+        <span class="entry-sub-label">Histoire &amp; origine</span>
+        <span class="entry-sub-content">Archives scellées.</span>
+      </div>
+    </article>
+
+    <article class="entry">
+      <span class="entry-status">Consultable</span>
+      <h3>Structure interne</h3>
+      <p>
+        L'organisation est articulée en plusieurs <em>corps</em>, chacun assumant une fonction
+        spécifique :
+      </p>
+      <p>
+        — <em>Corps de pouvoir</em> : mécènes, investisseurs, héritiers. Ils financent et
+        orientent.<br>
+        — <em>Corps exécutif</em> : dirigeants de centres, d'instituts de recherche et de
+        conservation.<br>
+        — <em>Corps scientifique</em> : présents dans certains centres seulement. Ils
+        maîtrisent et conçoivent les technologies mnésiques.<br>
+        — <em>Corps gestionnaire</em> : organisent les équipes de terrain — recrutement,
+        affectations, suivi des missions.<br>
+        — <em>Corps explorateur</em> : l'échelon de base. Ceux qui marchent, qui regardent,
+        qui collectent.
+      </p>
+      <div class="entry-sub">
+        <span class="entry-sub-label">Note de service</span>
+        <span class="entry-sub-content">
+          Un sixième corps est mentionné de manière informelle dans certaines archives
+          internes. Sa réalité n'est ni confirmée ni démentie par les corps exécutifs.
+        </span>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer id="footer">
+  <p>Ces archives s'étofferont à mesure que de nouveaux documents seront déclassifiés.</p>
+  <p><a href="lore.html">← Retour à l'univers</a></p>
+  <p class="signature">Service archivistique · ExpLore</p>
+</footer>
+
+</body>
+</html>

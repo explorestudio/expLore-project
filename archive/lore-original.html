@@ -450,110 +450,6 @@ nav.sc {
 /* Transition fondu */
 #transition-overlay { position:fixed; inset:0; z-index:9000; background:#000; opacity:1; pointer-events:all; transition:opacity 0.6s ease; }
 #transition-overlay.fade-in { opacity:0; pointer-events:none; }
-
-/* === Visuels supplémentaires v2 === */
-
-/* Carte d'identification explorateur */
-.lore-badge {
-  width: min(220px, 42vw);
-  background: linear-gradient(160deg, #161024 0%, #0d0b18 100%);
-  border: 1px solid var(--gold-dim);
-  padding: 22px 20px 20px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.55), 0 0 0 1px rgba(201,145,58,0.06) inset;
-  position: relative;
-  transform: rotate(1.5deg);
-  transition: transform 0.4s ease;
-}
-.lore-badge:hover { transform: rotate(0deg) scale(1.03); }
-.lb-corner {
-  position: absolute; top: 8px; right: 10px;
-  font-family: 'DM Mono', monospace; font-size: 9px;
-  color: var(--gold); opacity: 0.6; letter-spacing: 2px;
-}
-.lb-eyebrow {
-  font-family: 'DM Mono', monospace; font-size: 9px;
-  letter-spacing: 2.5px; text-transform: uppercase;
-  color: var(--gold); opacity: 0.7;
-  margin-bottom: 14px;
-}
-.lb-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 17px; font-weight: 600; font-style: italic;
-  color: var(--parchment); line-height: 1.2;
-  margin-bottom: 16px;
-}
-.lb-div {
-  height: 1px;
-  background: linear-gradient(90deg, var(--gold-dim), transparent);
-  margin: 14px 0;
-}
-.lb-row {
-  display: flex; justify-content: space-between; align-items: baseline;
-  font-family: 'DM Mono', monospace;
-  font-size: 10px; letter-spacing: 1.5px;
-  margin-bottom: 6px;
-}
-.lb-row .lb-label { color: var(--text-very-dim, rgba(240,236,226,0.35)); text-transform: uppercase; }
-.lb-row .lb-value { color: var(--gold-light); }
-.lb-foot {
-  margin-top: 16px;
-  font-family: 'IM Fell English', serif;
-  font-size: 10px; font-style: italic;
-  color: var(--text-dim); line-height: 1.5;
-}
-
-/* Nuage de poussière (Stade I - L'oubli) */
-.dust-cloud {
-  width: min(220px, 42vw); height: min(220px, 42vw);
-  position: relative;
-  display: flex; align-items: center; justify-content: center;
-}
-.dust-cloud::before {
-  content: '';
-  position: absolute; inset: 20%;
-  border-radius: 50%;
-  background: radial-gradient(circle at center,
-    rgba(201,145,58,0.18) 0%,
-    rgba(201,145,58,0.05) 40%,
-    transparent 70%);
-  filter: blur(8px);
-}
-.dust-particle {
-  position: absolute;
-  width: 3px; height: 3px;
-  border-radius: 50%;
-  background: var(--gold-light);
-  box-shadow: 0 0 6px var(--gold-light);
-  opacity: 0;
-  animation: dustFloat 8s ease-in-out infinite;
-}
-@keyframes dustFloat {
-  0%, 100% { opacity: 0; transform: translate(0,0); }
-  20% { opacity: 0.7; }
-  50% { opacity: 0.4; transform: translate(var(--dx, 20px), var(--dy, -20px)); }
-  80% { opacity: 0.1; }
-}
-
-/* Lien Archives discret dans l'épilogue */
-.ep-archives-link {
-  margin-top: 36px;
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: rgba(201,145,58,0.5);
-}
-.ep-archives-link a {
-  color: var(--gold-light);
-  text-decoration: none;
-  border-bottom: 1px dotted var(--gold-dim);
-  transition: color 0.3s, border-color 0.3s;
-}
-.ep-archives-link a:hover {
-  color: var(--gold);
-  border-color: var(--gold);
-}
-
 </style>
 </head>
 <body>
@@ -574,18 +470,21 @@ nav.sc {
   <button class="lang-btn">EN</button>
 </nav>
 
+<!-- Pages tombantes (fixed, toute la page) -->
+<div id="pages-scene"></div>
+
 <!-- ── INTRO ── -->
 <section id="intro">
   <div class="intro-vignette"></div>
   <div class="intro-particles" id="introParticles"></div>
-  <p class="intro-eyebrow">Fragment — Archives ouvertes</p>
+  <p class="intro-eyebrow">Fragment — Archives secrètes</p>
   <h1 class="intro-title">
-    Il existe<br>
-    <em>des présences.</em>
+    Il existait<br>
+    <em>un Grand Livre.</em>
   </h1>
   <p class="intro-sub">
-    Attachées aux pierres, aux noms, aux lieux qui se souviennent.<br>
-    Et qui parfois se dispersent.
+    Une mémoire collective, tissée de lieux, de figures et d'histoires.<br>
+    Quelqu'un l'efface.
   </p>
   <div class="scroll-cta">
     <span>Descendre pour lire</span>
@@ -593,143 +492,182 @@ nav.sc {
   </div>
 </section>
 
-<!-- ── STADES ── -->
+<!-- ── LIVRE CENTRAL ── -->
+<section id="livre-scene">
+  <div class="livre-container">
+    <div class="grand-livre" id="grandLivre">
+      <!-- Page gauche -->
+      <div class="gl-page gl-left">
+        <div class="page-lines"></div>
+        <div class="page-margin"></div>
+        <div class="page-text">
+          <span class="page-chapter">Prologue · Le Grand Livre</span>
+          <div class="page-heading">De la naissance<br>de la Mémoire</div>
+          <div class="page-body">
+            Avant les premières pierres, avant les premiers noms, il y avait des histoires.
+            Des histoires qui s'accrochaient aux lieux comme la mousse aux murs,
+            qui habitaient les carrefours et les places, les ruelles et les fleuves.
+            <br><br>
+            Ces histoires formaient, ensemble, quelque chose d'immense :
+            le Grand Livre de la Mémoire collective. Non pas écrit sur du papier,
+            mais inscrit dans les pierres, les visages, les gestes répétés
+            de génération en génération.
+          </div>
+        </div>
+        <span class="page-num">i</span>
+      </div>
+
+      <!-- Reliure -->
+      <div class="gl-spine"></div>
+
+      <!-- Page droite -->
+      <div class="gl-page gl-right">
+        <div class="page-lines"></div>
+        <div class="page-margin"></div>
+        <div class="page-text">
+          <span class="page-chapter">Prologue · L'Effacement</span>
+          <div class="page-heading">De ceux qui<br>cherchent à oublier</div>
+          <div class="page-body">
+            Mais toute mémoire a ses ennemis.
+            <br><br>
+            Une organisation — dont on ne prononce pas le nom dans les archives —
+            a commencé son travail dans l'ombre. Méthodique. Patiente. Implacable.
+            Page après page, lieu après lieu, figure après figure :
+            <em>l'effacement.</em>
+            <br><br>
+            Ce qui était su devient flou. Ce qui était flou disparaît.
+          </div>
+        </div>
+        <div class="page-seal">✦</div>
+        <span class="page-num">ii</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FRAGMENTS ── -->
 <section id="fragments">
 
-  <!-- Stade I — L'oubli -->
-  <article class="fragment-block">
+  <!-- Fragment 1 -->
+  <div class="fragment-block" id="frag1">
     <div class="frag-text">
-      <span class="frag-num">I · Stade</span>
-      <h2 class="frag-title"><em>L'oubli</em> — tout s'effrite.</h2>
-      <div class="frag-body">
-        On dit que la mémoire ne tient pas. Qu'elle se disperse comme une poussière,
-        qu'elle quitte les noms, qu'elle abandonne les lieux à mesure que les gestes
-        s'oublient. C'est un phénomène <strong>doux et continu</strong>. Personne ne
-        l'a inventé.
+      <span class="frag-num">Fragment I · L'Archéologue</span>
+      <h2 class="frag-title">Tu n'es pas<br><em>un simple joueur.</em></h2>
+      <p class="frag-body">
+        Les archéologues de la mémoire ne fouillent pas la terre.
+        Ils arpentent les villes, les yeux ouverts sur ce que les autres ne voient plus.
+        Une façade, une date gravée, un nom de rue — chaque détail est un indice.
         <br><br>
-        Mais certaines mémoires résistent. Elles s'agrègent quelque part — une place,
-        une façade, un fleuve — et y demeurent, plus denses, plus présentes. Comme si
-        certains lieux refusaient.
-        <br><br>
-        <em>Ce qui reste, on l'appelle </em><strong>présence</strong><em>. Faute d'un meilleur mot.</em>
-      </div>
+        <strong>Ta mission : retrouver les fragments avant qu'ils disparaissent.</strong>
+        Chaque lieu cache une carte. Chaque carte, un fragment.
+        Ensemble, ils reconstituent ce qu'on cherche à nous faire oublier.
+      </p>
     </div>
     <div class="frag-visual">
-      <div class="dust-cloud">
-        <span class="dust-particle" style="--dx: -25px; --dy: -30px; top: 30%; left: 35%; animation-delay: 0s;"></span>
-        <span class="dust-particle" style="--dx: 30px; --dy: -15px; top: 50%; left: 50%; animation-delay: 1.2s;"></span>
-        <span class="dust-particle" style="--dx: -15px; --dy: 35px; top: 45%; left: 60%; animation-delay: 2.4s;"></span>
-        <span class="dust-particle" style="--dx: 35px; --dy: 20px; top: 60%; left: 40%; animation-delay: 3.6s;"></span>
-        <span class="dust-particle" style="--dx: -30px; --dy: 5px; top: 40%; left: 55%; animation-delay: 4.8s;"></span>
-        <span class="dust-particle" style="--dx: 20px; --dy: -25px; top: 55%; left: 45%; animation-delay: 6s;"></span>
+      <div class="lore-card">
+        <span class="lc-type">Titre · Spécial</span>
+        <div class="lc-name">Archéologue de la Mémoire</div>
+        <div class="lc-div"></div>
+        <div class="lc-body">Débloqué au premier fragment récupéré. Celui qui voit ce que les autres ignorent.</div>
+        <span class="lc-rarity commun">Rang Novice</span>
       </div>
     </div>
-  </article>
+  </div>
 
-  <!-- Stade II — L'organisation -->
-  <article class="fragment-block">
+  <!-- Fragment 2 -->
+  <div class="fragment-block" id="frag2">
     <div class="frag-text">
-      <span class="frag-num">II · Stade</span>
-      <h2 class="frag-title">Ceux qui <em>s'en occupent</em>.</h2>
-      <div class="frag-body">
-        On ne sait pas quand elle est née. On ne sait pas vraiment qui en fait partie.
-        On sait seulement qu'une <strong>organisation</strong> s'est intéressée au
-        phénomène, qu'elle l'étudie, qu'elle le cartographie, et qu'elle s'efforce
-        d'en préserver quelque chose.
+      <span class="frag-num">Fragment II · Les Cartes</span>
+      <h2 class="frag-title"><em>Chaque lieu</em><br>cache une carte.</h2>
+      <p class="frag-body">
+        Les cartes ne sont pas de simples objets à collectionner.
+        Elles sont des éclats de mémoire — des fragments arrachés au Grand Livre
+        avant que l'organisation ne les efface définitivement.
         <br><br>
-        Elle a des bureaux qu'on ne visite pas. Des outils qu'on ne voit pas. Et des
-        explorateurs — qu'on croise parfois sans le savoir.
-        <br><br>
-        <em>On en sait ce qu'elle laisse savoir. Le reste est dans les archives.</em>
+        Une carte commune porte un souvenir. Une carte rare, une figure oubliée.
+        <strong>Une carte légendaire : un secret que personne ne devrait connaître.</strong>
+      </p>
+    </div>
+    <div class="frag-visual">
+      <div style="display:flex; gap:20px; align-items:center;">
+        <div class="lore-card" style="transform:rotate(3deg);">
+          <span class="lc-type">Lieu · Histoire</span>
+          <div class="lc-name">Les Frères Lumière</div>
+          <div class="lc-div"></div>
+          <div class="lc-body">Fragment récupéré. Le cinéma naquit ici.</div>
+          <span class="lc-rarity rare">Rare</span>
+        </div>
+        <div class="lore-card" style="transform:rotate(-4deg); margin-top:30px;">
+          <span class="lc-type">Figure · Arts</span>
+          <div class="lc-name">Guignol</div>
+          <div class="lc-div"></div>
+          <div class="lc-body">Fragment partiel. La voix du peuple.</div>
+          <span class="lc-rarity commun">Commun</span>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Fragment 3 -->
+  <div class="fragment-block" id="frag3">
+    <div class="frag-text">
+      <span class="frag-num">Fragment III · La Carte Mémorielle</span>
+      <h2 class="frag-title">Le Grand Livre<br><em>se reconstitue.</em></h2>
+      <p class="frag-body">
+        Au fur et à mesure que tu collectes, une carte apparaît.
+        Non pas une carte géographique — une carte de la mémoire.
+        Les lieux s'y connectent, les figures se retrouvent,
+        les fragments d'histoires forment un réseau de sens.
+        <br><br>
+        <strong>Ce réseau, c'est ce qu'on voulait détruire.</strong>
+        Ce réseau, c'est ce que tu es en train de sauver.
+      </p>
+    </div>
+    <div class="frag-visual">
+      <div class="memory-map-mini" id="memMapMini">
+        <!-- Noeuds générés en JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Fragment 4 -->
+  <div class="fragment-block" id="frag4">
+    <div class="frag-text">
+      <span class="frag-num">Fragment IV · L'Organisation</span>
+      <h2 class="frag-title"><em>Ils n'attendent pas.</em><br>Toi non plus.</h2>
+      <p class="frag-body">
+        On ne sait pas grand-chose de l'organisation.
+        Ni leur nombre, ni leurs méthodes exactes — seulement leurs traces :
+        des lieux qui perdent leur nom, des figures qui disparaissent des archives,
+        des histoires qui ne se transmettent plus.
+        <br><br>
+        <strong>Chaque carte récupérée est un acte de résistance.</strong>
+        Chaque fragment reconstitué, une victoire silencieuse.
+      </p>
     </div>
     <div class="frag-visual">
       <div class="lore-seal">
         <div class="seal-inner">
           <span class="seal-glyph">⬡</span>
-          Identité voilée<br>
-          <span style="font-size: 10px; opacity: 0.6;">Archives partiellement scellées</span>
+          <em>Identité inconnue</em><br>
+          <small style="font-size:10px;opacity:0.6;font-style:normal;">Archives scellées</small>
         </div>
       </div>
     </div>
-  </article>
-
-  <!-- Stade III — L'explorateur -->
-  <article class="fragment-block">
-    <div class="frag-text">
-      <span class="frag-num">III · Stade</span>
-      <h2 class="frag-title"><em>Tu n'es pas seul</em> à arpenter.</h2>
-      <div class="frag-body">
-        D'autres avant toi ont marché dans les mêmes rues. D'autres après toi le feront.
-        Les explorateurs ne sont ni des élus ni des sauveurs. Ce sont
-        <strong>des gens qui regardent</strong> ce que les autres ne voient plus.
-        <br><br>
-        Marcher, voir, saisir ce qui passe. Chacun fait sa part — et la part que tu fais,
-        personne d'autre ne la fera comme toi.
-      </div>
-    </div>
-    <div class="frag-visual">
-      <div class="lore-badge">
-        <span class="lb-corner">N°—</span>
-        <div class="lb-eyebrow">Carte d'inscription</div>
-        <div class="lb-title">Ordre des explorateurs<br>de la mémoire</div>
-        <div class="lb-div"></div>
-        <div class="lb-row"><span class="lb-label">Titre</span><span class="lb-value">Explorateur</span></div>
-        <div class="lb-row"><span class="lb-label">Rang</span><span class="lb-value">Novice</span></div>
-        <div class="lb-row"><span class="lb-label">Affectation</span><span class="lb-value">Terrain</span></div>
-        <div class="lb-foot">
-          « Marcher. Voir. Saisir ce qui passe. »
-        </div>
-      </div>
-    </div>
-  </article>
-
-  <!-- Stade IV — Les cartes -->
-  <article class="fragment-block">
-    <div class="frag-text">
-      <span class="frag-num">IV · Stade</span>
-      <h2 class="frag-title"><em>Ce qui restait</em> d'une voix.</h2>
-      <div class="frag-body">
-        Une <strong>carte</strong> n'est pas une image. C'est une <em>présence</em> qui
-        a accepté de se tenir tranquille un instant. Elle se recueille avec un outil que
-        l'organisation a mis au point, sur le terrain, à l'endroit même où la présence
-        se trouve.
-        <br><br>
-        On dit que les premières s'appelaient <strong>tablettes mnésiques</strong>.
-        Le nom est resté dans les archives.
-        <br><br>
-        Une carte fraîchement recueillie est sourde et muette. Elle a besoin
-        d'attention pour se stabiliser. C'est lent. C'est volontaire.
-        <em>Personne ne te bouscule.</em>
-      </div>
-    </div>
-    <div class="frag-visual">
-      <div class="lore-card">
-        <span class="lc-type">Lieu</span>
-        <div class="lc-name">Place Bellecour</div>
-        <div class="lc-div"></div>
-        <div class="lc-body">
-          Sur cette place, des siècles se sont croisés sans se connaître.
-        </div>
-        <span class="lc-rarity rare">Rare</span>
-      </div>
-    </div>
-  </article>
+  </div>
 
 </section>
 
 <!-- ── ÉPILOGUE ── -->
 <section id="epilogue">
   <p class="ep-whisper">Fin des archives accessibles</p>
-  <h2 class="ep-title">Le reste t'attend <em>dans la ville</em>.</h2>
+  <h2 class="ep-title">Le reste du livre<br><em>t'attend dans la ville.</em></h2>
   <p class="ep-body">
-    Ce que tu viens de lire n'est qu'un fragment. Les autres sont éparpillés
-    dans les rues, attachés aux lieux, attendant que quelqu'un les remarque.
+    Ce que tu viens de lire n'est qu'un fragment.
+    Les autres sont éparpillés dans les rues, attachés aux lieux,
+    attendant que quelqu'un les retrouve.
   </p>
-  <a href="index.html#how" class="ep-cta">Rejoindre l'exploration</a>
-  <p class="ep-archives-link">
-    Pour les curieux — <a href="wiki.html">consulter les Archives</a>
-  </p>
+  <a class="ep-cta" onclick="this.textContent='Bientôt disponible';">Rejoindre l'exploration</a>
 </section>
 
 <script>
@@ -939,6 +877,5 @@ document.querySelectorAll('a[href="index.html"]').forEach(function(a) {
   });
 });
 </script>
-
 </body>
 </html>
