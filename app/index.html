@@ -740,10 +740,44 @@
             transition: all 0.18s;
             letter-spacing: 0.2px;
         }
+        .alb-tab:hover {
+            background: rgba(255,255,255,0.14);
+            color: white;
+        }
         .alb-tab.active {
             background: rgba(32,178,170,0.25);
             color: #4dd9d0;
             box-shadow: inset 0 0 0 1px rgba(32,178,170,0.45);
+        }
+        .alb-type-strip {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 10px 8px;
+            flex-wrap: wrap;
+        }
+        .alb-type-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.95);
+            font-size: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+        .alb-type-btn:hover {
+            transform: translateY(-1px);
+            background: rgba(255,255,255,0.14);
+        }
+        .alb-type-btn.active {
+            background: rgba(255,255,255,0.22);
+            border-color: rgba(255,255,255,0.32);
+            box-shadow: 0 10px 22px rgba(0,0,0,0.12);
         }
         /* Zone scrollable */
         .alb-scroll {
@@ -1427,7 +1461,7 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            overflow: hidden;
+            overflow: visible;
         }
 
         /* ── Zone haute : la carte ─────────────────────────────────── */
@@ -1540,16 +1574,47 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
-        .card-category-badge {
-            background: #FEF3C7;
-            border: 2px solid #F59E0B;
-            color: #92400E;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-            margin-bottom: 12px;
+        .card-category-badge.sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .card-type-pin {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            border: 2px solid rgba(255,255,255,0.96);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 12px 26px rgba(0,0,0,0.26);
+            z-index: 2;
+        }
+        .card-type-pin::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 14px;
+            background: rgba(255,255,255,0.92);
+            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.18);
         }
 
         .card-art-area {
@@ -1563,14 +1628,38 @@
             justify-content: flex-start;
             margin-bottom: 0;
             position: relative;
-            padding: 16px;
-            padding-top: 90px;
-            gap: 10px;
+            padding: 0;
             box-sizing: border-box;
+            overflow: visible;
         }
 
         @media (max-width: 480px) {
-            .card-art-area { min-height: 300px; margin-bottom: 12px; padding-top: 75px; }
+            .card-art-area { min-height: 300px; margin-bottom: 12px; }
+        }
+
+        .card-art-placeholder {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            z-index: 0;
+            border-radius: 12px;
+            background: transparent;
+        }
+
+        #cardArtImg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            opacity: 1;
         }
 
         .card-art-title {
@@ -1588,6 +1677,7 @@
             max-width: calc(100% - 32px);
             line-height: 1.2;
             word-break: break-word;
+            z-index: 1;
         }
         .card-art-title.title-long   { font-size: 14px; padding: 6px 14px; }
         .card-art-title.title-medium { font-size: 16px; padding: 7px 16px; }
@@ -1596,18 +1686,6 @@
             .card-art-title { font-size: 15px; padding: 6px 16px; }
             .card-art-title.title-long   { font-size: 12px; }
             .card-art-title.title-medium { font-size: 13px; }
-        }
-
-        .card-art-placeholder {
-            font-size: 80px;
-            flex: 1 1 auto;
-            min-height: 0;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            border-radius: 8px;
         }
 
         @media (max-width: 480px) {
@@ -1625,29 +1703,33 @@
 
         /* ── Zone flavor text / dialogue inline (dans la carte) ──── */
         .card-flavor-zone {
-            margin-top: auto;
-            min-height: 56px;
-            padding: 10px 12px;
-            background: rgba(249, 250, 251, 0.92);
-            border-radius: 10px;
-            border-top: 1px solid rgba(107, 114, 128, 0.15);
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 16px;
+            min-height: 64px;
+            padding: 12px 14px;
+            background: rgba(249, 250, 251, 0.95);
+            border-radius: 14px;
+            border: 1px solid rgba(107, 114, 128, 0.18);
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            width: 100%;
             box-sizing: border-box;
-            flex-shrink: 0;
+            z-index: 2;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
             overflow: visible;
         }
         .card-flavor-text {
             font-family: Georgia, serif;
             font-style: italic;
-            font-size: 12.5px;
-            line-height: 1.5;
+            font-size: 13px;
+            line-height: 1.6;
             color: #4b5563;
             text-align: center;
             transition: opacity 0.3s ease;
+            width: 100%;
         }
         /* Mode dialogue : texte plus net, non-italique, couleur plus sombre */
         .card-flavor-zone.dialogue-mode {
@@ -7766,6 +7848,11 @@
                 <button class="alb-tab"         id="albTab-collections" onclick="albSwitchTab('collections')">Collections</button>
                 <button class="alb-tab"         id="albTab-ville"       onclick="albSwitchTab('ville')">Ville</button>
             </div>
+            <div class="alb-type-strip" id="albTypeStrip">
+                <button class="alb-type-btn" data-type="Personnage" onclick="_albSetCardTypeFilter('Personnage')" title="Personnage">👤</button>
+                <button class="alb-type-btn" data-type="Objet" onclick="_albSetCardTypeFilter('Objet')" title="Objet">⚙️</button>
+                <button class="alb-type-btn" data-type="Lieu" onclick="_albSetCardTypeFilter('Lieu')" title="Lieu">🏛️</button>
+            </div>
             <div class="alb-scroll" id="albScrollZone">
                 <div id="albContent"></div>
             </div>
@@ -7785,7 +7872,8 @@
                     <!-- ── Zone haute : la carte ───────────────── -->
                     <div class="card-stage" id="cardStage">
                         <div class="card-frame" onclick="event.stopPropagation()" style="position:relative;">
-                            <div class="card-category-badge" id="cardCategory">Personnage</div>
+                            <div class="card-type-pin" id="cardTypePin" role="img" aria-label="Type de carte"></div>
+                            <div class="card-category-badge sr-only" id="cardCategory">Personnage</div>
                             <div class="card-art-area">
                                 <div class="card-art-placeholder" onclick="showClickDialogue()" id="cardArtContainer" style="position:relative;">
                                     <img id="cardArtImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;display:none;">
@@ -16443,6 +16531,23 @@
         }
 
         let _albCurrentTab = 'cards';
+        let _albCardTypeFilter = null;
+
+        function _albUpdateTypeButtons() {
+            const buttons = document.querySelectorAll('.alb-type-btn');
+            buttons.forEach(btn => {
+                const type = btn.dataset.type;
+                btn.classList.toggle('active', type === _albCardTypeFilter);
+            });
+            const strip = document.getElementById('albTypeStrip');
+            if (strip) strip.style.display = _albCurrentTab === 'cards' ? 'flex' : 'none';
+        }
+
+        function _albSetCardTypeFilter(type) {
+            _albCardTypeFilter = (_albCardTypeFilter === type) ? null : type;
+            _albUpdateTypeButtons();
+            _albRenderCards();
+        }
 
         function albSwitchTab(tab) {
             _albCurrentTab = tab;
@@ -16450,6 +16555,7 @@
                 const b = document.getElementById('albTab-' + t);
                 if (b) b.classList.toggle('active', t === tab);
             });
+            _albUpdateTypeButtons();
             if (tab === 'cards')            _albRenderCards();
             else if (tab === 'collections') _albRenderCollections();
             else if (tab === 'ville')       _albRenderVille();
@@ -16460,7 +16566,14 @@
             if (!el) return;
             const all = getAllCards();
             // Onglet Cartes = toutes les cartes
-            const thematic  = all;
+            let thematic  = all;
+            if (_albCardTypeFilter) {
+                const typeLower = _albCardTypeFilter.toLowerCase();
+                thematic = thematic.filter(c => {
+                    const cardType = (c.type || '').toLowerCase();
+                    return cardType.includes(typeLower);
+                });
+            }
             const collected = thematic.filter(c => collectedCards.includes(c.id));
             const locked    = thematic.filter(c => !collectedCards.includes(c.id));
 
@@ -16831,6 +16944,16 @@
             if (artImg && artEmoji) {
                 if (card.art) { artImg.src = card.art; artImg.style.display = 'block'; artEmoji.style.display = 'none'; }
                 else { artImg.style.display = 'none'; artEmoji.style.display = 'block'; }
+            }
+            const typeIcon = {
+                'Personnage': '👤',
+                'Objet': '⚙️',
+                'Lieu': '🏛️'
+            }[card.type] || '❖';
+            const typePin = document.getElementById('cardTypePin');
+            if (typePin) {
+                typePin.textContent = typeIcon;
+                typePin.setAttribute('aria-label', 'Type de carte : ' + card.type);
             }
             if (!cardLevels[card.id]) cardLevels[card.id] = { level: 0, experience: 0, dustSpent: 0 };
             const _hdrTitle = document.getElementById('cardDetailHeaderTitle');
