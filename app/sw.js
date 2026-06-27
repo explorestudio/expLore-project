@@ -7,7 +7,7 @@
    À INCRÉMENTER à chaque mise à jour des assets
    (sinon les utilisateurs garderont les anciennes images en cache) */
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `explore-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -35,7 +35,7 @@ const PRECACHE_URLS = [
   // Personnages et illustrations
   './assets/Marcus.png',
   './assets/Gardienne.png',
-  './assets/passant.png',
+  './assets/clef%20de%20la%20ville.png',
   './assets/familypic.png',
   './assets/Tasse-cafe.png',
   './assets/cantine.png',
