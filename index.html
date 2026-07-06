@@ -424,6 +424,31 @@ section { padding: 110px 10vw; }
 .aq { font-family:'Cormorant Garamond',serif; font-size:clamp(19px,2.5vw,29px); font-weight:300; font-style:italic; line-height:1.45; color:var(--gold-light); border-left:2px solid rgba(201,145,58,0.3); padding-left:24px; margin:40px 0; }
 .at { font-size:17px; line-height:1.85; color:var(--text-dim); margin-bottom:16px; }
 
+/* Discord */
+#discord { border-top:1px solid rgba(201,145,58,0.1); text-align:center; display:flex; flex-direction:column; align-items:center; background:linear-gradient(180deg,transparent,rgba(88,101,242,0.04) 50%,transparent); }
+#discord .sb { margin:0 auto 42px; }
+.discord-btn { display:inline-flex; align-items:center; gap:12px; background:#5865F2; color:#fff; font-family:'Outfit',sans-serif; font-size:13px; font-weight:500; letter-spacing:2px; text-transform:uppercase; text-decoration:none; padding:17px 36px; border-radius:2px; transition:background 0.2s,transform 0.2s; }
+.discord-btn:hover { background:#4752c4; transform:translateY(-1px); }
+.discord-ico { width:22px; height:22px; fill:#fff; flex-shrink:0; }
+
+/* Join */
+#join { border-top:1px solid rgba(201,145,58,0.1); }
+.join-cards { display:grid; grid-template-columns:1fr 1fr; gap:2px; margin-top:52px; }
+.jcard { padding:34px 28px; border:1px solid rgba(201,145,58,0.1); position:relative; transition:border-color 0.3s,background 0.3s; display:flex; flex-direction:column; }
+.jcard:hover { border-color:rgba(201,145,58,0.3); background:rgba(201,145,58,0.03); }
+.jcard-tag { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); opacity:0.7; margin-bottom:14px; }
+.jcard h3 { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:400; margin-bottom:8px; }
+.jcard p { font-size:15px; line-height:1.75; color:var(--text-dim); margin-bottom:20px; }
+.jcard ul { list-style:none; display:flex; flex-direction:column; gap:7px; margin-bottom:26px; flex:1; }
+.jcard ul li { font-size:13px; color:var(--text-dim); padding-left:14px; position:relative; }
+.jcard ul li::before { content:'—'; position:absolute; left:0; color:rgba(201,145,58,0.4); }
+.jcard-ctas { display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
+.jcard-cta { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); text-decoration:none; border-bottom:1px solid rgba(201,145,58,0.3); padding-bottom:2px; transition:color 0.2s,border-color 0.2s; }
+.jcard-cta:hover { color:var(--gold-light); border-color:var(--gold-light); }
+.jcard-cta-mail { color:var(--text-dim); border-color:rgba(240,236,226,0.15); }
+.jcard-cta-mail:hover { color:var(--text); border-color:rgba(240,236,226,0.4); }
+@media(max-width:800px){.join-cards{grid-template-columns:1fr;}}
+
 /* Footer */
 footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
 .ft { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:24px; margin-bottom:36px; }
@@ -758,6 +783,67 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
     <p class="at rv d4" data-fr="ExpLore utilise la mécanique du jeu — la collecte, la progression, la curiosité — pour inviter à regarder différemment. Pas une app de plus. Un prétexte à se perdre." data-en="ExpLore uses game mechanics — collection, progression, curiosity — as an invitation to look differently. Not one more app. A reason to get lost.">
       ExpLore utilise la mécanique du jeu — la collecte, la progression, la curiosité — pour inviter à regarder différemment. Pas une app de plus. Un prétexte à se perdre.
     </p>
+  </div>
+</section>
+
+<!-- DISCORD -->
+<section id="discord">
+  <p class="ey rv" data-fr="Communauté" data-en="Community">Communauté</p>
+  <h2 class="st rv d1"><em data-fr="Rejoignez le Discord" data-en="Join the Discord">Rejoignez le Discord</em></h2>
+  <div class="div rv d1" style="margin:16px auto 34px;"></div>
+  <p class="sb rv d2" data-fr="Suivez l'avancement du projet, échangez avec l'équipe et soyez les premiers à tester les nouvelles fonctionnalités." data-en="Follow the project's progress, chat with the team, and be the first to test new features.">
+    Suivez l'avancement du projet, échangez avec l'équipe et soyez les premiers à tester les nouvelles fonctionnalités.
+  </p>
+  <a href="https://discord.gg/dtYbQKjRca" target="_blank" rel="noopener" class="discord-btn rv d3">
+    <svg class="discord-ico" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+    <span data-fr="Rejoindre le Discord" data-en="Join Discord">Rejoindre le Discord</span>
+  </a>
+</section>
+
+<!-- REJOIGNEZ-NOUS -->
+<section id="join">
+  <p class="ey rv" data-fr="Équipe" data-en="Team">Équipe</p>
+  <h2 class="st rv d1"><span data-fr="Rejoignez" data-en="Join">Rejoignez</span><br><em data-fr="l'aventure" data-en="the adventure">l'aventure</em></h2>
+  <div class="div rv d1"></div>
+  <p class="sb rv d2" data-fr="ExpLore est un projet indépendant porté par une petite équipe passionnée. Nous cherchons des bénévoles partageant notre vision pour nous aider à grandir." data-en="ExpLore is an independent project carried by a small passionate team. We're looking for volunteers who share our vision to help us grow.">
+    ExpLore est un projet indépendant porté par une petite équipe passionnée. Nous cherchons des bénévoles partageant notre vision pour nous aider à grandir.
+  </p>
+  <div class="join-cards rv d3">
+
+    <div class="jcard">
+      <div class="jcard-tag" data-fr="Bénévole" data-en="Volunteer">Bénévole</div>
+      <h3 data-fr="Community Manager" data-en="Community Manager">Community Manager</h3>
+      <p data-fr="Tu animes notre communauté Discord et nos réseaux sociaux, tu crées du lien entre les joueurs et l'équipe, et tu participes à faire grandir l'univers d'ExpLore." data-en="You'll animate our Discord community and social networks, foster connections between players and the team, and help grow the ExpLore universe.">
+        Tu animes notre communauté Discord et nos réseaux sociaux, tu crées du lien entre les joueurs et l'équipe, et tu participes à faire grandir l'univers d'ExpLore.
+      </p>
+      <ul>
+        <li data-fr="Animation Discord & réseaux sociaux" data-en="Discord & social media management">Animation Discord & réseaux sociaux</li>
+        <li data-fr="Rédaction de contenus autour du lore" data-en="Lore-based content writing">Rédaction de contenus autour du lore</li>
+        <li data-fr="Veille communautaire & retours joueurs" data-en="Community monitoring & player feedback">Veille communautaire & retours joueurs</li>
+      </ul>
+      <div class="jcard-ctas">
+        <a href="https://discord.gg/dtYbQKjRca" target="_blank" rel="noopener" class="jcard-cta" data-fr="Postuler sur Discord →" data-en="Apply on Discord →">Postuler sur Discord →</a>
+        <a href="mailto:ExpLoreStudio@proton.me" class="jcard-cta jcard-cta-mail" data-fr="ou par mail →" data-en="or by email →">ou par mail →</a>
+      </div>
+    </div>
+
+    <div class="jcard">
+      <div class="jcard-tag" data-fr="Bénévole" data-en="Volunteer">Bénévole</div>
+      <h3 data-fr="Artiste — Card Designer" data-en="Artist — Card Designer">Artiste — Card Designer</h3>
+      <p data-fr="Tu conçois les cartes du jeu et les éléments visuels de l'univers ExpLore : illustrations 2D, interfaces, iconographie. Ton travail devient la matière première de l'expérience joueur." data-en="You'll design the game cards and visual elements of the ExpLore universe: 2D illustrations, interfaces, iconography. Your work becomes the raw material of the player experience.">
+        Tu conçois les cartes du jeu et les éléments visuels de l'univers ExpLore : illustrations 2D, interfaces, iconographie. Ton travail devient la matière première de l'expérience joueur.
+      </p>
+      <ul>
+        <li data-fr="Illustration de cartes (personnages, lieux, artefacts)" data-en="Card illustration (characters, locations, artifacts)">Illustration de cartes (personnages, lieux, artefacts)</li>
+        <li data-fr="Design UI & iconographie in-game" data-en="In-game UI design & iconography">Design UI & iconographie in-game</li>
+        <li data-fr="Cohérence avec la direction artistique existante" data-en="Consistency with existing art direction">Cohérence avec la direction artistique existante</li>
+      </ul>
+      <div class="jcard-ctas">
+        <a href="https://discord.gg/dtYbQKjRca" target="_blank" rel="noopener" class="jcard-cta" data-fr="Postuler sur Discord →" data-en="Apply on Discord →">Postuler sur Discord →</a>
+        <a href="mailto:ExpLoreStudio@proton.me" class="jcard-cta jcard-cta-mail" data-fr="ou par mail →" data-en="or by email →">ou par mail →</a>
+      </div>
+    </div>
+
   </div>
 </section>
 
