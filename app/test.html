@@ -740,10 +740,44 @@
             transition: all 0.18s;
             letter-spacing: 0.2px;
         }
+        .alb-tab:hover {
+            background: rgba(255,255,255,0.14);
+            color: white;
+        }
         .alb-tab.active {
             background: rgba(32,178,170,0.25);
             color: #4dd9d0;
             box-shadow: inset 0 0 0 1px rgba(32,178,170,0.45);
+        }
+        .alb-type-strip {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 10px 8px;
+            flex-wrap: wrap;
+        }
+        .alb-type-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.95);
+            font-size: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+        .alb-type-btn:hover {
+            transform: translateY(-1px);
+            background: rgba(255,255,255,0.14);
+        }
+        .alb-type-btn.active {
+            background: rgba(255,255,255,0.22);
+            border-color: rgba(255,255,255,0.32);
+            box-shadow: 0 10px 22px rgba(0,0,0,0.12);
         }
         /* Zone scrollable */
         .alb-scroll {
@@ -1427,12 +1461,13 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            overflow: hidden;
+            overflow: visible;
         }
 
         /* ── Zone haute : la carte ─────────────────────────────────── */
         .card-stage {
-            flex-shrink: 0;
+            flex: 1 1 auto;
+            min-height: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1445,8 +1480,9 @@
 
         /* ── Zone basse : onglets ancrés + contenu scrollable ──────── */
         .card-info-panel {
-            flex: 1;
+            flex: 0 0 auto;
             min-height: 0;
+            max-height: 60%;
             display: flex;
             flex-direction: column;
             background: white;
@@ -1512,6 +1548,10 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.35);
             position: relative;
             min-height: 420px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
         }
 
         @media (max-width: 360px) {
@@ -1534,34 +1574,92 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
-        .card-category-badge {
-            background: #FEF3C7;
-            border: 2px solid #F59E0B;
-            color: #92400E;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-            margin-bottom: 12px;
+        .card-category-badge.sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .card-type-pin {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            border: 2px solid rgba(255,255,255,0.96);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 12px 26px rgba(0,0,0,0.26);
+            z-index: 2;
+        }
+        .card-type-pin::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 14px;
+            background: rgba(255,255,255,0.92);
+            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.18);
         }
 
         .card-art-area {
             background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
             border-radius: 12px;
             min-height: 390px;
+            flex: 1 1 auto;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            margin-bottom: 16px;
+            margin-bottom: 0;
             position: relative;
-            padding: 16px;
-            padding-top: 90px;
+            padding: 0;
+            box-sizing: border-box;
+            overflow: visible;
         }
 
         @media (max-width: 480px) {
-            .card-art-area { min-height: 300px; margin-bottom: 12px; padding-top: 75px; }
+            .card-art-area { min-height: 300px; margin-bottom: 12px; }
+        }
+
+        .card-art-placeholder {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            z-index: 0;
+            border-radius: 12px;
+            background: transparent;
+        }
+
+        #cardArtImg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            opacity: 1;
         }
 
         .card-art-title {
@@ -1579,6 +1677,7 @@
             max-width: calc(100% - 32px);
             line-height: 1.2;
             word-break: break-word;
+            z-index: 1;
         }
         .card-art-title.title-long   { font-size: 14px; padding: 6px 14px; }
         .card-art-title.title-medium { font-size: 16px; padding: 7px 16px; }
@@ -1588,8 +1687,6 @@
             .card-art-title.title-long   { font-size: 12px; }
             .card-art-title.title-medium { font-size: 13px; }
         }
-
-        .card-art-placeholder { font-size: 80px; }
 
         @media (max-width: 480px) {
             .card-art-placeholder { font-size: 60px; }
@@ -1606,25 +1703,33 @@
 
         /* ── Zone flavor text / dialogue inline (dans la carte) ──── */
         .card-flavor-zone {
-            margin-top: auto;
-            min-height: 56px;
-            padding: 10px 12px;
-            background: rgba(249, 250, 251, 0.75);
-            border-radius: 10px;
-            border-top: 1px solid rgba(107, 114, 128, 0.15);
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 16px;
+            min-height: 64px;
+            padding: 12px 14px;
+            background: rgba(249, 250, 251, 0.95);
+            border-radius: 14px;
+            border: 1px solid rgba(107, 114, 128, 0.18);
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
+            box-sizing: border-box;
+            z-index: 2;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+            overflow: visible;
         }
         .card-flavor-text {
             font-family: Georgia, serif;
             font-style: italic;
-            font-size: 12.5px;
-            line-height: 1.5;
+            font-size: 13px;
+            line-height: 1.6;
             color: #4b5563;
             text-align: center;
             transition: opacity 0.3s ease;
+            width: 100%;
         }
         /* Mode dialogue : texte plus net, non-italique, couleur plus sombre */
         .card-flavor-zone.dialogue-mode {
@@ -3510,6 +3615,7 @@
         .card-vtab-content {
             flex: 1;
             min-height: 0;
+            max-height: 100%;
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
@@ -6787,12 +6893,34 @@
         }
         .v2-grappes-strip-header {
             padding: 0 14px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         .v2-grappes-strip-title {
             font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
             color: rgba(244,236,219,0.55);
             font-family: 'Helvetica Neue', sans-serif; font-weight: 600;
         }
+        .v2-grappes-strip-nav {
+            display: flex;
+            gap: 6px;
+        }
+        .v2-grappes-strip-nav-btn {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: rgba(244,236,219,0.06);
+            border: 1px solid rgba(244,236,219,0.2);
+            color: #f4ecdb;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            padding: 0;
+        }
+        .v2-grappes-strip-nav-btn:active { background: rgba(244,236,219,0.14); }
         .v2-grappes-strip-scroll {
             display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden;
             padding: 0 14px 4px; scrollbar-width: none;
@@ -7178,7 +7306,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.24.0 · Pin centré + relance lumens au retour sur l'Explorium</div>
+            <div class="hud-version" id="hudVersion">v0.56.1 · Fix : les flèches de navigation entre grappes décalaient tout l'écran (scrollIntoView remontait les conteneurs parents) — défilement maintenant limité au bandeau.</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -7737,6 +7865,11 @@
                 <button class="alb-tab"         id="albTab-collections" onclick="albSwitchTab('collections')">Collections</button>
                 <button class="alb-tab"         id="albTab-ville"       onclick="albSwitchTab('ville')">Ville</button>
             </div>
+            <div class="alb-type-strip" id="albTypeStrip">
+                <button class="alb-type-btn" data-type="Personnage" onclick="_albSetCardTypeFilter('Personnage')" title="Personnage">👤</button>
+                <button class="alb-type-btn" data-type="Objet" onclick="_albSetCardTypeFilter('Objet')" title="Objet">⚙️</button>
+                <button class="alb-type-btn" data-type="Lieu" onclick="_albSetCardTypeFilter('Lieu')" title="Lieu">🏛️</button>
+            </div>
             <div class="alb-scroll" id="albScrollZone">
                 <div id="albContent"></div>
             </div>
@@ -7756,7 +7889,8 @@
                     <!-- ── Zone haute : la carte ───────────────── -->
                     <div class="card-stage" id="cardStage">
                         <div class="card-frame" onclick="event.stopPropagation()" style="position:relative;">
-                            <div class="card-category-badge" id="cardCategory">Personnage</div>
+                            <div class="card-type-pin" id="cardTypePin" role="img" aria-label="Type de carte"></div>
+                            <div class="card-category-badge sr-only" id="cardCategory">Personnage</div>
                             <div class="card-art-area">
                                 <div class="card-art-placeholder" onclick="showClickDialogue()" id="cardArtContainer" style="position:relative;">
                                     <img id="cardArtImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;display:none;">
@@ -8945,6 +9079,10 @@
             <div class="v2-grappes-strip">
                 <div class="v2-grappes-strip-header">
                     <span class="v2-grappes-strip-title">Grappes narratives</span>
+                    <div class="v2-grappes-strip-nav">
+                        <button class="v2-grappes-strip-nav-btn" onclick="v2ScrollGrappesStrip(-1)" aria-label="Grappe précédente">‹</button>
+                        <button class="v2-grappes-strip-nav-btn" onclick="v2ScrollGrappesStrip(1)" aria-label="Grappe suivante">›</button>
+                    </div>
                 </div>
                 <div class="v2-grappes-strip-scroll" id="v2GrappesScroll"></div>
             </div>
@@ -9089,7 +9227,7 @@
                 type: 'locale',
                 description: 'Trésors de la Presqu\'île lyonnaise',
                 cards: [
-                    { id: 'card6', cardKind: 'local', collections: ["pierres_memoire"], name: 'Place Bellecour', type: 'Lieu', poiId: 'bellecour', rarity: 'legendary', supertype: 'histoire',
+                    { id: 'card6', cardKind: 'local', collections: ["pierres_memoire", "ville_du_livre"], name: 'Place Bellecour', type: 'Lieu', poiId: 'bellecour', rarity: 'legendary', supertype: 'histoire',
                       clue: 'Lève les yeux vers le centre — cherche l\'équestre de bronze qui domine la place.', clueIcon: '🏇',
                       incipit: 'J\'ai été le cœur de mille révolutions et de mille fêtes. Les villes oublient, moi jamais.' },
                     { id: 'card7', cardKind: 'local', collections: ["arts_scene", "pierres_memoire"], name: 'Opéra de Lyon', type: 'Lieu', poiId: 'opera', rarity: 'rare', supertype: 'arts',
@@ -9124,7 +9262,7 @@
                     { id: 'card12', cardKind: 'local', collections: ["pierres_memoire"], name: 'Théâtre Romain', type: 'Lieu', poiId: 'theatre_romain', rarity: 'rare', supertype: 'histoire',
                       clue: 'Assieds-toi sur une des gradins de pierre — compte les rangées depuis le bas.', clueIcon: '🏛️',
                       incipit: 'J\'avais vingt mille places. Les comédiens sont partis, mais la colline garde encore la forme de mes applaudissements.' },
-                    { id: 'card13', cardKind: 'local', collections: ["pierres_memoire"], name: 'Cathédrale Saint-Jean', type: 'Lieu', poiId: 'saint_jean', rarity: 'rare', supertype: 'histoire',
+                    { id: 'card13', cardKind: 'local', collections: ["pierres_memoire", "ville_du_livre"], name: 'Cathédrale Saint-Jean', type: 'Lieu', poiId: 'saint_jean', rarity: 'rare', supertype: 'histoire',
                       clue: 'Lève les yeux vers le portail — cherche les médaillons sculptés qui racontent des scènes de la Genèse.', clueIcon: '🕍',
                       incipit: 'On m\'a mis trois siècles à bâtir. Je suis l\'œuvre de mains qui ne se sont jamais rencontrées.' },
                     { id: 'card14', cardKind: 'local', collections: ["pierres_memoire"], name: 'Traboule Renaissance', type: 'Lieu', poiId: 'vieux_lyon', rarity: 'common', supertype: 'societe', supertype2: 'histoire',
@@ -9162,6 +9300,30 @@
                     { id: 'card24', cardKind: 'local', collections: ["figures_lyon"], name: 'Les Canuts', type: 'Personnage', poiId: 'croix_rousse', rarity: 'rare', supertype: 'societe', supertype2: 'histoire',
                       clue: 'Cherche la voûte des Canuts sur le mur — trouve la femme qui tisse au premier plan.', clueIcon: '🧵',
                       incipit: 'Nous avons tissé la soie pour habiller les rois d\'Europe. Et nous sommes morts de faim dans nos ateliers.' },
+                ]
+            },
+
+            ville_du_livre: {
+                id: 'ville_du_livre',
+                name: 'Lyon, ville du livre',
+                type: 'thématique',
+                description: 'L\'imprimerie lyonnaise du XVIe siècle : maîtres, martyrs et voix nouvelles',
+                cards: [
+                    { id: 'card_louise_labe', cardKind: 'local', collections: ["ville_du_livre"], name: 'Louise Labé', type: 'Personnage', poiId: 'bellecordiere', rarity: 'rare', supertype: 'arts',
+                      clue: 'Cherche la rue qui porte son nom, juste au nord de la grande place.', clueIcon: '🪶',
+                      incipit: 'On a dit qu\'une femme ne pouvait écrire ainsi — que je n\'existais pas. Mes vers, eux, n\'ont jamais douté.' },
+                    { id: 'card_gryphe', cardKind: 'local', collections: ["ville_du_livre"], name: 'Sébastien Gryphe', type: 'Personnage', poiId: 'gryphe', rarity: 'rare', supertype: 'societe', supertype2: 'histoire',
+                      clue: 'Dans le Vieux-Lyon, cherche l\'ombre des vieux ateliers près de Saint-Jean.', clueIcon: '🦅',
+                      incipit: 'J\'ai donné à la France ses lettres penchées et à Lyon ses plus beaux livres. Le reste n\'est que poussière d\'encre.' },
+                    { id: 'card_dolet', cardKind: 'local', collections: ["ville_du_livre"], name: 'Étienne Dolet', type: 'Personnage', poiId: 'dolet', rarity: 'rare', supertype: 'societe', supertype2: 'histoire',
+                      clue: 'Descends rue Mercière, là où une hache servait jadis d\'enseigne.', clueIcon: '🪓',
+                      incipit: 'Trois mots de trop dans une traduction, et l\'on m\'a déclaré hérétique. Vivre libre, c\'était vivre.' },
+                    { id: 'card_presse_doloire', cardKind: 'local', collections: ["ville_du_livre"], name: 'La presse de la Doloire', type: 'Objet', poiId: 'presse_doloire', rarity: 'common', supertype: 'science', supertype2: 'societe',
+                      clue: 'Cherche l\'atelier rue Mercière où l\'on tirait les feuilles une à une.', clueIcon: '🗜️',
+                      incipit: 'Avant moi, copier un livre prenait des mois. Avec moi, cent feuilles par jour. Je n\'ai pas changé le monde — je l\'ai multiplié.' },
+                    { id: 'card_palais_st_jean', cardKind: 'local', collections: ["ville_du_livre"], name: 'Palais Saint-Jean', type: 'Lieu', poiId: 'palais_st_jean', rarity: 'rare', supertype: 'histoire', supertype2: 'societe',
+                      clue: 'Juste à côté de la cathédrale, cherche l\'ancien palais archiépiscopal — il a longtemps gardé les livres de la ville.', clueIcon: '📚',
+                      incipit: 'Ce qui a survécu au feu, à la censure et à l\'oubli a fini, un temps, sous mon toit. Les livres sont partis ailleurs depuis. Moi, je suis resté.' },
                 ]
             },
 
@@ -9232,6 +9394,21 @@
         const POIS = [
             // localCardId = carte ancrée dans Lyon
             // thematicPool = cartes universelles liées au THÈME du lieu (pas à Lyon)
+
+            // ── Parcours "Lyon, ville du livre" ──
+            // gated: 'ville_du_livre' → cachés tant que le rendez-vous Bellecour n'est
+            // pas validé. Coordonnées à ajuster librement (David teste au joystick).
+            { id: 'bellecordiere',   name: 'Rue Bellecordière',         lat: 45.7586, lng: 4.8340,
+              localCardId: 'card_louise_labe', thematicPool: [], gated: 'ville_du_livre' },
+            { id: 'gryphe',          name: 'Vieux-Lyon (Saint-Jean)',   lat: 45.7628, lng: 4.8266,
+              localCardId: 'card_gryphe', thematicPool: [], gated: 'ville_du_livre' },
+            { id: 'dolet',           name: 'Rue Mercière (Dolet)',      lat: 45.7637, lng: 4.8294,
+              localCardId: 'card_dolet', thematicPool: [], gated: 'ville_du_livre' },
+            { id: 'presse_doloire',  name: 'Rue Mercière (la Doloire)', lat: 45.7632, lng: 4.8297,
+              localCardId: 'card_presse_doloire', thematicPool: [], gated: 'ville_du_livre' },
+            { id: 'palais_st_jean',  name: 'Palais Saint-Jean',         lat: 45.7602, lng: 4.8272,
+              localCardId: 'card_palais_st_jean', thematicPool: [], gated: 'ville_du_livre' },
+
             { id: 'fourviere',        name: 'Basilique de Fourvière',    lat: 45.7624, lng: 4.8227,
             localCardId: 'card11',
             thematicPool: ['tc_masque','tc_commedia','tc_cabinet','tc_bibliotheque'] },
@@ -10129,31 +10306,18 @@
         const OB_TUTORIAL_CARD = {
             id: 'ob_tutorial_card',
             cardKind: 'lore',
-            name: 'Le Passant',
-            type: 'Personnage',
+            name: 'Les clefs de la ville',
+            type: 'Objet',
             rarity: 'rare',
             supertype: 'histoire',
-            incipit: 'Je ne pensais pas que quelqu\'un s\'arrêterait.',
-            clue: 'Un fragment discret, presque dissous. Il a attendu longtemps.',
+            incipit: 'Trois clefs pour une ville. Et pas une porte à ouvrir.',
+            clue: 'Un présent d\'apparat, offert puis presque oublié. Il en manque deux.',
             clueIcon: '✦',
             collections: [],
-            echoEntries: {
-                'ob_tutorial_card_0_1': {
-                    titre: 'Ce qu\'on ne dit pas',
-                    texte: 'Je me demande si elle savait que je l\'aimais. Je ne le lui ai jamais dit directement — dans notre génération on ne disait pas ces choses-là.\n\nOn le montrait autrement. En restant. En préparant le café. En regardant par la fenêtre sans avoir besoin de remplir le silence.\n\nPeut-être que c\'est suffisant. Peut-être que non.\n\nJe ne saurai jamais ce qu\'elle pensait le dimanche matin.'
-                },
-                'ob_tutorial_card_1_1': {
-                    titre: 'Les gens qu\'on oublie de remercier',
-                    texte: 'Mme Fortier savait le prénom de tout le monde. Elle savait aussi quand quelqu\'un n\'allait pas bien — elle posait une enveloppe, elle ne posait pas de questions.\n\nJe ne lui ai jamais dit merci. Pas une seule fois en douze ans.\n\nJe crois qu\'on fait ça — on prend pour acquis les gens qui font attention aux autres. Comme si ça leur venait naturellement et que ça ne leur coûtait rien.\n\nÇa coûte quelque chose. J\'aurais dû le lui dire.'
-                },
-                'ob_tutorial_card_2_1': {
-                    titre: 'Ce que j\'ai essayé de refaire',
-                    texte: 'Des années après, j\'ai essayé de réparer une paire de chaussures. Les miennes. Je me souvenais vaguement du geste — tenir le cuir d\'une certaine façon, appuyer là.\n\nÇa n\'a pas marché. J\'ai abîmé la semelle.\n\nMon père aurait su. Il m\'aurait montré si je lui avais demandé. Mais on ne demande pas ces choses-là quand on est jeune — on croit qu\'il y aura le temps.\n\nJe crois que c\'est ça, ce qu\'on perd vraiment quand quelqu\'un part. Pas les grandes choses. Les petits gestes qu\'on n\'a jamais pris la peine d\'apprendre.'
-                }
-            },
-            art: './assets/passant.png',
+            art: './assets/clef%20de%20la%20ville.png',
         }
         let _obDone        = false;
+        let _villeDuLivreUnlocked = false;  // true quand le rendez-vous Bellecour est validé → POI du parcours visibles
         let _obAct2Done    = false;
         let _obAct3Done    = false;
         let _obSpawnLat    = 0;
@@ -10401,10 +10565,12 @@
         function startOnboarding() {
             if (_obDone) return;
             // L'Acte I "Il existait un Grand Livre" a été remplacé par la cinématique BD.
-            // On enchaîne directement sur la note manuscrite de Marcus (Acte II).
+            // Plus de lettre manuscrite : le joueur n'a rien "reçu". On enchaîne directement
+            // sur le marqueur tutoriel, la jeune fille oriente le joueur en voix vive.
             document.getElementById('onboardingOverlay').classList.add('hidden');
             document.getElementById('obSkipBtn').classList.add('visible');
-            _obShowMarcusNote();
+            _obHideAllMarkers();
+            _obSpawnTutorialMarker();
         }
 
         function _obSkipTutorial() {
@@ -10424,15 +10590,44 @@
             document.getElementById('journalScreen').classList.remove('show');
 
             // Restaurer les POIs et terminer
+            // Donner la carte tutoriel même si elle n'a pas été collectée pendant le
+            // tuto passé : elle doit être présente dans la collection, consultable et
+            // améliorable (même état que si elle avait été cristallisée).
+            if (typeof OB_TUTORIAL_CARD === 'object' && OB_TUTORIAL_CARD) {
+                if (!cardLevels[OB_TUTORIAL_CARD.id]) {
+                    cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
+                }
+                if (!collectedCards.includes(OB_TUTORIAL_CARD.id)) collectedCards.push(OB_TUTORIAL_CARD.id);
+            }
             _obDone = true;
             _obAct2Done = true;
             _obAct3Done = true;
+            if (typeof _obGuide === 'object') { _obGuide.active = false; }
+            if (typeof _obGuideStopLoop === 'function') _obGuideStopLoop();
+            try { _obRemoveHighlight(); } catch(e) {}
+            // Activer le RDV Bellecour pour arriver à l'état de fin de tuto :
+            // quête dans le journal + épingle carte + boussole.
+            if (typeof _obActivateBellecourQuest === 'function') _obActivateBellecourQuest();
             // Marquer tous les écrans comme déjà vus pour éviter tout hint contextuel a posteriori
             if (typeof _obScreenSeen === 'object') {
                 ['collections','bag','journal','mindmap','carddetail'].forEach(k => { _obScreenSeen[k] = true; });
             }
             saveProgress();
             _obRestoreAllPOI();
+        }
+
+        // Active la quête "RDV Bellecour" : entrée dans le journal de quête,
+        // épingle sur la carte et boussole HUD. Idempotent.
+        function _obActivateBellecourQuest() {
+            try {
+                if (typeof grappeQuestState !== 'object') return;
+                if (!grappeQuestState.tutoriel) grappeQuestState.tutoriel = {};
+                grappeQuestState.tutoriel.t_bellecour = 'active';
+                window._selectedQuestKey = 'tutoriel:t_bellecour';
+                if (typeof updateQuestMarkers === 'function') updateQuestMarkers();
+                if (typeof updateQuestCompass === 'function') updateQuestCompass();
+                if (typeof updateQuestJournalBadge === 'function') updateQuestJournalBadge();
+            } catch (e) { console.warn('[expLore] activation RDV Bellecour échouée', e); }
         }
 
         function _obRunAct1(idx) {
@@ -10529,9 +10724,19 @@
                 window._obTutorialMarker = marker;
             }
 
+            // Zone de capture visible en permanence dès l'apparition du marqueur
+            // (et non plus seulement quand le joueur s'approche).
+            if (map && map.getSource('poi-circles')) {
+                map.getSource('poi-circles').setData({
+                    type: 'FeatureCollection',
+                    features: [{ type: 'Feature', properties: { id: 'ob_elara', status: 'local', lng: _obSpawnLng, lat: _obSpawnLat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(_obSpawnLng, _obSpawnLat, 50, ISOMETRIC_TILT)] } }]
+                });
+                try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'visible'); } catch(e) {}
+            }
+
             // Dialogue initial
             setTimeout(() => {
-                vnShow([{ speaker: 'Marcus', line: 'Il y a quelque chose là-bas. Pas un lieu, pas un monument — quelque chose de plus discret. Approche-toi.' }], null);
+                vnShow([{ speaker: 'La jeune fille', line: 'Il y a quelque chose là-bas. Pas un lieu, pas un monument — quelque chose de plus discret. Approche-toi.' }], null);
             }, 1200);
 
             // Surveiller la proximité — quand dans la zone, afficher la bannière nearby
@@ -10549,7 +10754,7 @@
         // Afficher la bannière nearby pour Elara
         function _obShowEllaraNearby() {
             const nearbyDiv = document.getElementById('nearbyPOI');
-            document.getElementById('poiName').textContent = 'Le Passant';
+            document.getElementById('poiName').textContent = 'Les clefs de la ville';
             const badge = document.getElementById('poiThematicBadge');
             if (badge) badge.style.display = 'none';
             const sub = nearbyDiv.querySelector('.nearby-poi-distance');
@@ -10625,9 +10830,9 @@
                 try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'none'); } catch(e) {}
             }
             vnShow([
-                { speaker: 'Marcus', line: 'Tu le sens ? Ces endroits gardent des traces. Pas les grandes histoires — les petites.' },
-                { speaker: 'Marcus', line: 'Les gens qui étaient là sans qu\'on pense à les noter.' },
-                { speaker: 'Marcus', line: 'Essaie de le cristalliser.' },
+                { speaker: 'La jeune fille', line: 'Tu le sens ? Ces endroits gardent des traces. Pas les grandes histoires — les petites.' },
+                { speaker: 'La jeune fille', line: 'Les gens qui étaient là sans qu\'on pense à les noter.' },
+                { speaker: 'La jeune fille', line: 'Essaie de le cristalliser.' },
             ], () => {
                 if (!cardLevels[OB_TUTORIAL_CARD.id]) {
                     cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
@@ -10643,16 +10848,11 @@
 
             if (!_obAct2Done && card.id === OB_TUTORIAL_CARD.id) {
                 _obAct2Done = true;
-                _obDone = true;
-                _obAct3Done = true;
                 saveProgress();
                 _obRestoreAllPOI();
-                vnShow([
-                    { speaker: 'Marcus', line: 'Ça a marché.' },
-                    { speaker: 'Marcus', line: 'Je ne savais pas si tu pouvais. Certaines personnes voient ces fragments. D\'autres passent à côté toute leur vie sans rien remarquer.' },
-                    { speaker: 'Marcus', line: 'Garde-le. On se recroisera.' },
-                ], null);
-                document.getElementById('obSkipBtn').classList.remove('visible');
+                // Le tuto NE se termine PLUS à la collecte : on enchaîne sur le parcours
+                // guidé (Collection → poudre → carnet/triplet → énergie/orbe → niveau → adieu).
+                setTimeout(() => _obGuideStart(), 400);
             }
         }
 
@@ -10676,38 +10876,384 @@
 
         // Appelé depuis openCollections()
         function _obOnOpenCollections() {
+            if (_obGuide.active) { _obGuideEvent('collections'); _obGuideRefresh(); return; }
             _obContextualHint('collections', [
-                { speaker: 'Marcus', line: 'Tes cartes s\'organisent ici. Des groupes se forment — des ensembles qui racontent quelque chose de plus grand que chaque fragment.' },
+                { speaker: 'La jeune fille', line: 'Tes cartes s\'organisent ici. Des groupes se forment — des ensembles qui racontent quelque chose de plus grand que chaque fragment.' },
             ]);
         }
 
         // Appelé depuis openBagScreen()
         function _obOnOpenBag() {
             _obContextualHint('bag', [
-                { speaker: 'Marcus', line: 'La poudre, les échos, les orbes. Tout ce que tu accumules en explorant.' },
+                { speaker: 'La jeune fille', line: 'La poudre, les échos, les orbes. Tout ce que tu accumules en explorant.' },
             ]);
         }
 
         // Appelé depuis openJournalScreen()
         function _obOnOpenJournal() {
+            if (_obGuide.active) { _obGuideEvent('journal'); _obGuideRefresh(); return; }
             _obContextualHint('journal', [
-                { speaker: 'Marcus', line: 'Les fragments que tu réveilles laissent des traces. Certaines te surprendront.' },
+                { speaker: 'La jeune fille', line: 'Les fragments que tu réveilles laissent des traces. Certaines te surprendront.' },
             ]);
         }
 
         // Appelé depuis openMindmap()
         function _obOnOpenMindmap() {
+            if (_obGuide.active) { _obGuideRefresh(); return; }
             _obContextualHint('mindmap', [
-                { speaker: 'Marcus', line: 'L\'Explorium. Il est vide pour l\'instant.' },
-                { speaker: 'Marcus', line: 'Certains fragments que tu collecteras s\'y inscriront — ceux qui appartiennent à quelque chose de plus grand.' },
+                { speaker: 'La jeune fille', line: 'L\'Explorium. Il est vide pour l\'instant.' },
+                { speaker: 'La jeune fille', line: 'Certains fragments que tu collecteras s\'y inscriront — ceux qui appartiennent à quelque chose de plus grand.' },
             ]);
         }
 
         // Appelé depuis openCardDetail()
         function _obOnOpenCardDetail() {
+            if (_obGuide.active) { _obGuideEvent('carddetail'); _obGuideRefresh(); return; }
             _obContextualHint('carddetail', [
-                { speaker: 'Marcus', line: 'La poudre mémorielle réveille ce qui s\'était tu. Essaie.' },
+                { speaker: 'La jeune fille', line: 'La poudre mémorielle réveille ce qui s\'était tu. Essaie.' },
             ]);
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        // PARCOURS GUIDÉ POST-COLLECTE — la jeune fille guide le joueur à
+        // travers Collection → poudre → carnet (triplet encre/pellicule/
+        // cassette) → énergie qui infuse → orbe → passage de niveau → adieu.
+        // Machine à états pilotée par _obGuideEvent(event).
+        // ════════════════════════════════════════════════════════════════
+        let _obGuide = { active: false, step: null };
+
+        function _obGuideRing(selector) {
+            setTimeout(() => { try { _obRingOnly(selector); } catch(e) {} }, 60);
+        }
+        function _obGuideClearRing() { try { _obRemoveHighlight(); } catch(e) {} }
+
+        // ── Anneau de guidage : boucle de réconciliation continue ────────
+        // Un seul anneau, recalé en permanence sur la cible vivante de l'étape
+        // courante. Il n'existe QUE si cette cible est réellement visible et au
+        // premier plan ; il disparaît dès qu'un autre écran passe devant, que la
+        // cible sort du champ, ou que l'étape change. Aucune logique d'écran à
+        // énumérer : on se fie à la visibilité réelle du DOM.
+
+        // Étape → sélecteur unique de la cible à entourer (null = aucun anneau).
+        const _OB_STEP_RING = {
+            go_collections: '#btnCollections',
+            go_card:        '.alb-card.alb-collected',
+            feed1:          '#addExpBtn',
+            journal1:       '#journalTabBtn',
+            lesson:         null,
+            feed2:          '#addExpBtn',
+            orb:            '#addExpBtn',
+            feed3:          '#addExpBtn',
+            reveal_rest:    null,
+            seal:           '#addExpBtn',
+        };
+
+        let _obRingSelector = null;   // sélecteur actuellement entouré
+        let _obGuideTimer   = null;   // handle de la boucle
+
+        // L'élément est-il réellement visible ET au premier plan (non recouvert) ?
+        function _obElementVisible(el) {
+            if (!el || !el.getBoundingClientRect) return false;
+            if (el.offsetParent === null && getComputedStyle(el).position !== 'fixed') return false;
+            const r = el.getBoundingClientRect();
+            if (r.width < 3 || r.height < 3) return false;
+            if (r.bottom < 0 || r.top > window.innerHeight || r.right < 0 || r.left > window.innerWidth) return false;
+            // Au-dessus de la pile ? (l'anneau est pointer-events:none, il n'interfère pas)
+            const cx = Math.round(r.left + r.width / 2);
+            const cy = Math.round(r.top + r.height / 2);
+            let top = document.elementFromPoint(cx, cy);
+            while (top) { if (top === el) return true; top = top.parentElement; }
+            return false;
+        }
+
+        // Crée ou repositionne l'anneau #obHighlightRing autour d'un élément.
+        function _obRingPlace(el) {
+            const app = document.getElementById('mainApp');
+            if (!app) return;
+            const rect = el.getBoundingClientRect();
+            const appRect = app.getBoundingClientRect();
+            const pad = 8;
+            const x = rect.left - appRect.left - pad;
+            const y = rect.top  - appRect.top  - pad;
+            const w = rect.width  + pad * 2;
+            const h = rect.height + pad * 2;
+            let ring = document.getElementById('obHighlightRing');
+            if (!ring) {
+                ring = document.createElement('div');
+                ring.id = 'obHighlightRing';
+                ring.style.cssText = [
+                    'position:absolute','border-radius:10px',
+                    'border:2px solid rgba(139,92,246,0.9)',
+                    'pointer-events:none','z-index:9002',
+                    'animation:obMarkerPulse 1.5s ease-in-out infinite'
+                ].join(';');
+                app.appendChild(ring);
+            }
+            ring.style.left   = x + 'px';
+            ring.style.top    = y + 'px';
+            ring.style.width  = w + 'px';
+            ring.style.height = h + 'px';
+        }
+
+        // Filet de sécurité : aligne le guide sur l'état réel du jeu, pour qu'il
+        // ne puisse jamais rester bloqué derrière le joueur (qui peut tout faire
+        // dans n'importe quel ordre). Tourne à chaque tick.
+        function _obGuideSync() {
+            if (!_obGuide.active) return;
+            const card = OB_TUTORIAL_CARD;
+            const cl = (typeof cardLevels === 'object') ? cardLevels[card.id] : null;
+            if (!cl) return;
+            // Ne pas agir tant qu'un overlay bloquant est affiché (dialogue VN ou
+            // synthèse de scellement) : on laisse l'événement 'sealed' faire la
+            // transition propre une fois la synthèse fermée.
+            const vn = document.getElementById('vnOverlay');
+            const synth = document.getElementById('orbSynthOverlay');
+            const blocked = (vn && vn.classList.contains('show')) || (synth && synth.classList.contains('show'));
+            // 1) La carte est montée de niveau → le chapitre a été scellé : on termine
+            //    (backstop si l'événement 'sealed' n'a pas été capté à la bonne étape).
+            if (cl.level >= 1) {
+                if (blocked) return;
+                _obGuideFinish();
+                return;
+            }
+            if (blocked) return;
+            // 2) XP au max alors que le guide est encore dans une étape de nourrissage
+            //    → router vers "dévoiler / sceller".
+            const needed = getExpNeeded(card, cl.level);
+            if (cl.experience >= needed) {
+                const feeding = ['feed1', 'journal1', 'lesson', 'feed2', 'orb', 'feed3'];
+                if (feeding.indexOf(_obGuide.step) !== -1) { _obAfterXpFull(); }
+            }
+        }
+
+        // Un tick de réconciliation : décide s'il faut un anneau, où, et le recale.
+        function _obGuideTick() {
+            if (!_obGuide.active) { _obGuideClearRing(); _obRingSelector = null; return; }
+            _obGuideSync();
+            if (!_obGuide.active) { _obGuideClearRing(); _obRingSelector = null; return; }
+            const selector = _OB_STEP_RING[_obGuide.step] || null;
+            // Pas d'anneau pendant un dialogue VN.
+            const vn = document.getElementById('vnOverlay');
+            const vnUp = vn && vn.classList.contains('show');
+            let el = (selector && !vnUp) ? document.querySelector(selector) : null;
+            if (el && !_obElementVisible(el)) el = null;
+            if (!el) {
+                if (_obRingSelector !== null) { _obGuideClearRing(); _obRingSelector = null; }
+                return;
+            }
+            _obRingPlace(el);
+            _obRingSelector = selector;
+        }
+
+        // Rafraîchissement immédiat (appelé après chaque transition / ouverture d'écran).
+        function _obGuideRefresh() { _obGuideTick(); }
+
+        // Démarre / arrête la boucle continue.
+        function _obGuideStartLoop() {
+            if (_obGuideTimer) return;
+            _obGuideTimer = setInterval(_obGuideTick, 220);
+        }
+        function _obGuideStopLoop() {
+            if (_obGuideTimer) { clearInterval(_obGuideTimer); _obGuideTimer = null; }
+            _obGuideClearRing();
+            _obRingSelector = null;
+        }
+
+        // Révèle une entrée carnet gratuitement (cadeau de la jeune fille — aucun coût d'encre)
+        function _obRevealEntryFree(cardId, entryId) {
+            const entries = cardJournalEntries[cardId];
+            if (!entries) return;
+            const entry = entries.find(e => e.id === entryId);
+            if (!entry || entry._revealed) return;
+            entry._revealed = true;
+            entry._isNew = true;
+            saveProgress();
+            if (document.getElementById('journalScreen').classList.contains('show')) {
+                renderJournalBio();
+                setTimeout(() => { try { animateLastJournalEntry(); } catch(e) {} }, 250);
+            }
+            if (typeof updateJournalBlink === 'function') updateJournalBlink();
+            if (selectedCard && selectedCard.id === cardId && typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
+        }
+
+        // Toutes les entrées du niveau courant de la carte tuto sont-elles révélées ?
+        function _obAllTutorialEntriesRevealed() {
+            const cl = cardLevels[OB_TUTORIAL_CARD.id];
+            const lvl = cl ? cl.level : 0;
+            const entries = (cardJournalEntries[OB_TUTORIAL_CARD.id] || []).filter(e => e.level === lvl);
+            return entries.length > 0 && entries.every(e => e._revealed);
+        }
+
+        // Démarrage — appelé à la fermeture du rituel de collecte
+        function _obGuideStart() {
+            _obGuide.active = true;
+            _obGuide.step = 'go_collections';
+            document.getElementById('obSkipBtn').classList.add('visible');
+            _obGuideStartLoop();
+            vnShow([
+                { speaker: 'La jeune fille', line: 'Tu l\'as recueillie. Mais une carte qu\'on vient de réveiller a presque tout oublié — il faut lui rendre sa mémoire.' },
+                { speaker: 'La jeune fille', line: 'Ouvre ta Collection. Elle t\'y attend, désormais.' },
+            ], () => _obGuideRefresh());
+        }
+
+        // Transition partagée : on vient d'ouvrir la fiche carte → invite à la nourrir.
+        function _obGuideEnterFeed1() {
+            _obGuide.step = 'feed1';
+            vnShow([
+                { speaker: 'La jeune fille', line: 'Pour qu\'une carte se souvienne, il lui faut de la poudre mémorielle. Donne-lui-en — et regarde ce qui remonte.' },
+            ], () => _obGuideRefresh());
+        }
+
+        // Fin du tuto : adieu de la jeune fille + activation du RDV Bellecour.
+        // Appelable depuis n'importe quelle étape (scellement), idempotent.
+        function _obGuideFinish() {
+            if (!_obGuide.active) return;
+            _obGuide.active = false;
+            _obGuide.step = null;
+            _obGuideStopLoop();
+            vnShow([
+                { speaker: 'La jeune fille', line: 'Voilà. Ce chapitre ne s\'oubliera plus. C\'est ça, être archéologue de la mémoire.' },
+                { speaker: 'La jeune fille', line: 'Je dois partir, maintenant — j\'ai mes propres voix à retrouver, ailleurs.' },
+                { speaker: 'La jeune fille', line: 'Avant ça, une direction : va place Bellecour. Là-bas, des voix se cherchent. Quand tu en croiseras une, quelque chose s\'ouvrira.' },
+                { speaker: 'La jeune fille', line: 'Tu retrouveras ce rendez-vous dans ton journal, et un repère t\'attend sur la carte. À toi, désormais.' },
+            ], () => {
+                _obDone = true;
+                _obAct3Done = true;
+                document.getElementById('obSkipBtn').classList.remove('visible');
+                // Filet de sécurité : garantir que la carte tutoriel est bien possédée
+                // (présente, consultable, améliorable), quel que soit le chemin suivi.
+                if (typeof OB_TUTORIAL_CARD === 'object' && OB_TUTORIAL_CARD) {
+                    if (!cardLevels[OB_TUTORIAL_CARD.id]) {
+                        cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
+                    }
+                    if (!collectedCards.includes(OB_TUTORIAL_CARD.id)) collectedCards.push(OB_TUTORIAL_CARD.id);
+                }
+                _obActivateBellecourQuest();
+                saveProgress();
+            });
+        }
+
+        // XP au max : router vers "dévoiler les pages restantes" ou directement "sceller".
+        function _obAfterXpFull() {
+            if (_obAllTutorialEntriesRevealed()) {
+                _obGuide.step = 'seal';
+                vnShow([
+                    { speaker: 'La jeune fille', line: 'Le chapitre est plein, et toutes ses pages dévoilées. Scelle-le — qu\'il prenne racine.' },
+                ], () => _obGuideRefresh());
+            } else {
+                _obGuide.step = 'reveal_rest';
+                vnShow([
+                    { speaker: 'La jeune fille', line: 'Le chapitre est plein — mais des pages restent voilées : une image, un son.' },
+                    { speaker: 'La jeune fille', line: 'Ouvre le carnet et dévoile-les toi-même, à la pellicule et à la cassette. Ensuite seulement tu pourras sceller.' },
+                ], () => _obGuideRefresh());
+            }
+        }
+
+        // Dispatcher d'événements du parcours guidé
+        function _obGuideEvent(ev) {
+            if (!_obGuide.active) return;
+
+            // Scellement = fin du tuto, quelle que soit l'étape où le guide se trouve.
+            // (Le joueur peut sceller par un chemin que le guide n'a pas anticipé.)
+            if (ev === 'sealed') { _obGuideFinish(); return; }
+
+            switch (_obGuide.step) {
+
+                case 'go_collections':
+                    if (ev === 'collections') {
+                        _obGuide.step = 'go_card';
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'La voilà. Muette, pour l\'instant. Ouvre-la.' },
+                        ], () => _obGuideRefresh());
+                    } else if (ev === 'carddetail') {
+                        // Le joueur a ouvert la carte directement (via le toast) — on enchaîne.
+                        _obGuideEnterFeed1();
+                    }
+                    break;
+
+                case 'go_card':
+                    if (ev === 'carddetail') {
+                        _obGuideEnterFeed1();
+                    }
+                    break;
+
+                case 'feed1':
+                    if (ev === 'entry_unlocked') {
+                        _obGuide.step = 'journal1';
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'Tu l\'as réveillée. Une page s\'est inscrite dans son carnet — il t\'appelle.' },
+                        ], () => _obGuideRefresh());
+                    } else if (ev === 'xp_full') {
+                        _obAfterXpFull();
+                    }
+                    break;
+
+                case 'journal1':
+                    if (ev === 'journal') {
+                        _obGuide.step = 'lesson';
+                        _obGuideClearRing();
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'Cette première page est voilée. Cette fois, c\'est moi qui l\'écris pour toi — avec mon encre.' },
+                        ], () => {
+                            _obRevealEntryFree(OB_TUTORIAL_CARD.id, OB_TUTORIAL_CARD.id + '_0_0');
+                            setTimeout(() => {
+                                vnShow([
+                                    { speaker: 'La jeune fille', line: 'Les voix laissent trois sortes de traces : des mots, des images, des sons.' },
+                                    { speaker: 'La jeune fille', line: 'L\'encre révèle les mots. La pellicule, les images. La cassette, les sons. Tu en as quelques-unes — sers-t\'en.' },
+                                    { speaker: 'La jeune fille', line: 'Reviens à la carte et continue à la nourrir, puis dévoile toi-même les pages qui s\'ouvriront.' },
+                                ], () => {
+                                    _obGuide.step = 'feed2';
+                                    _obGuideRefresh();
+                                });
+                            }, 700);
+                        });
+                    } else if (ev === 'xp_full') {
+                        _obAfterXpFull();
+                    }
+                    break;
+
+                case 'feed2':
+                    if (ev === 'energy_empty') {
+                        _obGuide.step = 'orb';
+                        if (typeof bagInv === 'object') bagInv.orbes = (bagInv.orbes || 0) + 1;
+                        if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
+                            { speaker: 'La jeune fille', line: 'Mais tiens — prends cette orbe mémorielle. Elle lui rend toute son énergie d\'un coup. Utilise-la.' },
+                        ], () => _obGuideRefresh());
+                    } else if (ev === 'xp_full') {
+                        _obAfterXpFull();
+                    }
+                    break;
+
+                case 'orb':
+                    if (ev === 'orb_used') {
+                        _obGuide.step = 'feed3';
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'Elle revit. Continue — mène ce premier chapitre à son terme.' },
+                        ], () => _obGuideRefresh());
+                    } else if (ev === 'xp_full') {
+                        _obAfterXpFull();
+                    }
+                    break;
+
+                case 'feed3':
+                    if (ev === 'xp_full') {
+                        _obAfterXpFull();
+                    }
+                    break;
+
+                case 'reveal_rest':
+                    if (ev === 'all_revealed') {
+                        _obGuide.step = 'seal';
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, scelle-le.' },
+                        ], () => _obGuideRefresh());
+                    }
+                    break;
+
+                // 'seal' : le scellement est géré en tête de fonction (ev === 'sealed').
+            }
         }
 
         // ── Highlight d'un élément avec trou dans l'overlay ──
@@ -10806,16 +11352,16 @@
             openMindmap();
             setTimeout(() => {
                 vnShow([
-                    { speaker: 'Marcus', line: 'Une carte thématique. Je n\'en avais pas vu depuis...' },
-                    { speaker: 'Marcus', line: 'Ce n\'est pas n\'importe qui qui peut les voir. Encore moins les récupérer.' },
-                    { speaker: 'Marcus', line: 'Le Grand Livre nous a parlé. À toi — et à travers toi, à moi.' },
-                    { speaker: 'Marcus', line: 'Tu es archéologue de la mémoire. Je ne sais pas pourquoi toi. Mais c\'est ce que tu es.' },
+                    { speaker: 'La jeune fille', line: 'Une carte thématique. Je n\'en avais pas vu depuis...' },
+                    { speaker: 'La jeune fille', line: 'Ce n\'est pas n\'importe qui qui peut les voir. Encore moins les récupérer.' },
+                    { speaker: 'La jeune fille', line: 'Le Grand Livre nous a parlé. À toi — et à travers toi, à moi.' },
+                    { speaker: 'La jeune fille', line: 'Tu es archéologue de la mémoire. Je ne sais pas pourquoi toi. Mais c\'est ce que tu es.' },
                     { speaker: 'La Gardienne', line: 'Marcus a raison. Et tort en même temps.' },
                     { speaker: 'La Gardienne', line: 'Tu n\'es pas archéologue parce que tu en es capable. Tu en es capable parce que tu regardes encore.' },
                     { speaker: 'La Gardienne', line: 'Le Grand Livre ne choisit pas des héros. Il remarque ceux qui regardent.' },
                     { speaker: 'La Gardienne', line: 'Et maintenant qu\'il t\'a remarqué — eux aussi.' },
-                    { speaker: 'Marcus', line: 'Ils ont détecté la collecte. Je leur ai dit que tu étais avec nous. Pour l\'instant, tu es protégé.' },
-                    { speaker: 'Marcus', line: 'Mais ils regardent maintenant.' },
+                    { speaker: 'La jeune fille', line: 'Ils ont détecté la collecte. Je leur ai dit que tu étais avec nous. Pour l\'instant, tu es protégé.' },
+                    { speaker: 'La jeune fille', line: 'Mais ils regardent maintenant.' },
                     { speaker: 'La Gardienne', line: 'Les cartes locales ouvrent les lieux. Dans ces lieux se cachent les fragments thématiques — ceux qui reconstruisent le Grand Livre.' },
                     { speaker: 'La Gardienne', line: 'Explore. Je serai là quand tu auras reconstitué quelque chose d\'important. Pas avant.' },
                 ], () => closeMindmap());
@@ -10982,32 +11528,10 @@
 
             // ── LE PASSANT (Tutoriel lore, Histoire) ──
             ob_tutorial_card: [
-                // Niveau 0 — toujours disponibles
-                { text: "Je pensais pas que quelqu'un s'arrêterait.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
-                { text: "Le dimanche matin, je fais toujours le même café. Même heure, même tasse. C'est bête, mais ça m'aide à me souvenir que la journée commence.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
-                { text: "Y'a des rituels qu'on garde pas pour soi. On les garde pour quelqu'un qui est plus là. On continue parce qu'on sait plus comment arrêter.", heart: true, level: 0,
-                  entry: { date: "Un dimanche ordinaire", text: "Certains rituels ne nous appartiennent plus vraiment. On les continue pour quelqu'un d'autre — pour ne pas laisser disparaître la preuve qu'ils ont existé. C'est une forme de fidélité qu'on ne nomme jamais, parce que la nommer, ce serait admettre qu'elle ne sert plus à rien.", photo: "./assets/Tasse-cafe.png", audio: "[Audio placeholder]" }
-                },
-                { text: "Ma femme avait le visage flou sur presque toutes les photos. Elle bougeait toujours au mauvais moment. Maintenant j'aime ça. Ça lui ressemble.", heart: true, level: 0,
-                  entry: { date: "Une photo retrouvée", text: "On garde les photos floues pour les mêmes raisons qu'on garde les gens imparfaits — parce que c'est eux. La netteté, c'est ce qu'on voudrait que les autres soient. Le flou, c'est ce qu'ils sont vraiment, et ce qu'on aime sans pouvoir l'expliquer.", photo: "./assets/familypic.png", audio: "[Audio placeholder]" }
-                },
-                // Niveau 1 — disponibles après level up
-                { text: "J'ai travaillé trente ans dans la même usine. Le bruit, les collègues, le réfectoire. On savait tous que ça durerait pas. On faisait semblant.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
-                { text: "Les gens qui oublient, c'est pas des ingrats. C'est juste qu'ils ont continué à avancer. L'oubli, c'est souvent une question de vitesse.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
-                { text: "La cantine de l'usine. On était deux cents à manger en même temps, serrés comme des sardines. Et pourtant on se connaissait. Maintenant je mange seul et je connais personne.", heart: true, level: 1,
-                  entry: { date: "Les années d'usine, Gerland", text: "Il y a des lieux où on appartient à quelque chose sans l'avoir choisi. Une table commune, une heure fixe, le même bruit autour. Ce n'est pas de l'amitié — c'est quelque chose d'antérieur à l'amitié. Un tissu. Quand il se défait, on réalise qu'on ne savait même pas qu'il existait.", photo: "./assets/cantine.png", audio: "[Audio placeholder]" }
-                },
-                { text: "Le jour où ma fille a eu son permis, elle m'a emmené faire un tour. Elle conduisait trop vite, j'ai rien dit. Elle était tellement fière.", heart: true, level: 1,
-                  entry: { date: "Un soir de novembre", text: "Il y a des moments où on comprend qu'on est en train de devenir moins nécessaire. Ce n'est pas une perte — c'est la preuve qu'on a bien fait son travail. Mais comprendre ça et ne pas avoir mal en même temps, c'est peut-être la chose la plus difficile qu'on demande aux gens qui aiment.", photo: "./assets/voiture.png", audio: "[Audio placeholder]" }
-                },
-                // Niveau 2 — disponibles après second level up
-                { text: "Ma fille m'a proposé de venir vivre avec elle à Villeurbanne. J'ai dit non. Elle comprend pas. Elle comprendrait si elle avait vécu quelque part vraiment.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
-                { text: "Les gens qui partent pensent qu'on peut recommencer ailleurs. C'est vrai. Mais ce qu'on recommence, c'est plus pareil. C'est une copie.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
-                { text: "J'ai gardé les clés de tous les appartements de mes voisins partis. Au cas où ils reviendraient. Ça fait longtemps que j'attends.", heart: true, level: 2,
-                  entry: { date: "Saint-Jean, aujourd'hui", text: "Bernard conserve un trousseau de sept clés. Aucun des anciens voisins n'est jamais revenu. Il ne les a pas rendues non plus. Ce geste dit quelque chose sur la fidélité — ou peut-être sur le refus d'accepter que certaines choses sont finies. La mémoire fonctionne parfois comme un trousseau : on garde des clés de portes qui n'existent plus.", photo: "[Photo placeholder]", audio: "[Audio placeholder]" }
-                },
-                { text: "Si je meurs ici, au moins j'aurai pas eu à faire mes cartons. C'est pas si peu.", heart: true, level: 2,
-                  entry: { date: "Réflexion tardive", text: "Il y a une forme d'humour dans la façon dont Bernard parle de la mort — comme si elle était une solution administrative acceptable. Ce qu'il ne dit pas directement : il a peur d'oublier. Pas d'être oublié. D'oublier lui-même les visages, les voix, l'ordre exact des choses. Rester ici, c'est lutter contre ça.", photo: "[Photo placeholder]", audio: "[Audio placeholder]" }
+                // Entrée carnet unique — texte de la jeune fille (validé). Débloquée à la collecte.
+                // Les 8 autres paliers (rare = 3 paliers × 3 chapitres) restent en placeholders auto.
+                { text: "Trois clefs, et pas une serrure.", heart: true, level: 0,
+                  entry: { date: "Les clefs qui n'ouvrent rien", text: "Les Clefs de la Ville de Lyon. Elles étaient trois, en bronze doré sur un plat d'argent, offertes à Napoléon en 1805 quand il est venu ici. Le plus étrange, c'est qu'elles n'ouvrent rien : juste une façon de dire « voilà notre ville ». Deux ont été perdues. Il en reste une, aujourd'hui, au musée Gadagne — une clef seule, et un plat qui se souvient des deux autres.", photo: null, audio: null }
                 }
             ],
 
@@ -11188,7 +11712,121 @@
                 { text: "Si je pouvais transmettre une seule chose, ce serait celle-là.", heart: true, level: 2,
                   entry: { date: "L'héritage", text: "Ce qui reste quand tout le reste s'efface — l'essentiel d'une existence.", photo: "[Photo d'époque : placeholder]", audio: "[Audio placeholder]" }
                 }
-            ]
+            ],
+
+            // ── GRAPPE "LYON, VILLE DU LIVRE" ──
+
+            // ── LOUISE LABÉ (Rare, Arts) ──
+            card_louise_labe: [
+                { text: "On a dit qu'une femme ne pouvait écrire ainsi — que je n'existais pas. J'ai publié sous mon nom, en 1555. Ça a suffi à me faire exister.", heart: true, level: 0,
+                  entry: { date: "Lyon, 1555", text: "Fille d'un cordier lyonnais, Louise Labé publie cette année-là un recueil de sonnets sur le désir amoureux, sous son propre nom. Le geste est presque unique pour une femme de son temps.", photo: "[Photo d'époque : édition originale, 1555]", audio: null }
+                },
+                { text: "Rue Bellecordière, la corderie n'existe plus. Mais le nom, lui, a survécu — accroché à moi plutôt qu'à mon père.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "Mes poèmes ne sont pas restés dans un tiroir. Quelqu'un, près de la Saône, a accepté de les imprimer. Reste à savoir qui.", heart: true, level: 1,
+                  entry: { date: "Lyon, quartier des libraires", text: "Le recueil de 1555 est imprimé dans le quartier lyonnais des libraires, alors en plein essor éditorial. Le nom précis de l'atelier reste à préciser dans ce carnet.", photo: null, audio: null }
+                },
+                { text: "On m'a reproché d'écrire comme un homme. Comme si le désir avait un genre grammatical.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "Une femme, fille de cordier, publie ses vers sous son nom. À Lyon, en ce siècle, c'était possible — ailleurs, presque nulle part.", heart: true, level: 2,
+                  entry: { date: "Lyon, XVIe siècle", text: "Lyon imprime alors plus de livres que presque toute autre ville d'Europe. Cette effervescence éditoriale rend possible des gestes autrement impensables.", photo: null, audio: null }
+                },
+                { text: "Il ne reste presque rien de mon visage — un portrait tardif, incertain. Il reste mes mots. C'est déjà beaucoup.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
+
+            // ── SÉBASTIEN GRYPHE (Rare, Société/Histoire) ──
+            card_gryphe: [
+                { text: "J'ai donné à la France ses lettres penchées, et à Lyon ses plus beaux livres.", heart: true, level: 0,
+                  entry: { date: "Lyon, XVIe siècle", text: "Imprimeur humaniste d'origine allemande installé à Lyon, Sébastien Gryphe introduit l'italique en France et imprime les Anciens, Érasme, puis Rabelais. Il devient l'un des plus grands maîtres de la rue Mercière.", photo: null, audio: null }
+                },
+                { text: "Rue Mercière, à mon époque, on comptait près de cent ateliers serrés dans les mêmes venelles. Le mien n'était pas le plus petit.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "On dit que j'ai formé les meilleurs. L'un de mes correcteurs, brillant et insolent, a fini par ouvrir son propre atelier rue Mercière. Ça s'est mal terminé pour lui.", heart: true, level: 1,
+                  entry: { date: "Atelier Gryphe, rue Mercière", text: "Gryphe forme et emploie plusieurs figures qui marqueront l'histoire de l'imprimerie lyonnaise, dont un jeune correcteur qui ouvrira ensuite sa propre boutique dans la même rue.", photo: null, audio: null }
+                },
+                { text: "Rabelais, je l'ai imprimé. Les Anciens aussi. Un atelier, ce n'est pas qu'une presse — c'est une bibliothèque qui choisit ce qu'elle laisse sortir.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "Sous mes presses, Lyon devient une capitale du livre. Je n'ai pas cherché la gloire — j'ai cherché la justesse d'un caractère bien taillé.", heart: true, level: 2,
+                  entry: { date: "Lyon, capitale du livre", text: "Gryphe introduit l'italique en France et imprime Rabelais, Érasme, les humanistes. Son atelier fait de Lyon, au XVIe siècle, l'un des grands centres européens de l'imprimerie.", photo: null, audio: null }
+                },
+                { text: "On m'a dit maître. Je préfère artisan — un caractère mal taillé, et c'est toute la page qui perd sa tenue.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
+
+            // ── ÉTIENNE DOLET (Rare, Société/Histoire) ──
+            card_dolet: [
+                { text: "Trois mots de trop dans une traduction, et l'on m'a déclaré hérétique. Vivre libre, c'était vivre.", heart: true, level: 0,
+                  entry: { date: "Paris, 1546", text: "Imprimeur, humaniste et poète, Étienne Dolet tient un atelier rue Mercière à l'enseigne de la Doloire. Il est brûlé à Paris, condamné pour une phrase jugée hérétique sur l'immortalité de l'âme.", photo: null, audio: null }
+                },
+                { text: "Ma devise tenait en trois mots : vivre libre, c'est vivre. Je ne l'ai pas reniée.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "J'avais appris le métier chez un maître réputé, avant d'ouvrir ma propre boutique à l'enseigne d'une hache.", heart: true, level: 1,
+                  entry: { date: "Rue Mercière", text: "Avant de s'installer à son compte, Dolet aurait fréquenté les ateliers des grands maîtres imprimeurs de la rue Mercière. Son propre atelier prend pour enseigne une doloire — une hache de tonnelier.", photo: null, audio: null }
+                },
+                { text: "Tout est parti d'une traduction. Trois mots ajoutés — « du tout » — dans une phrase sur la mort. Assez pour qu'on me déclare hérétique.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "On imprimait beaucoup à Lyon. On y surveillait tout autant.", heart: true, level: 2,
+                  entry: { date: "Lyon / Paris, 1546", text: "Le procès Dolet illustre la double nature du XVIe siècle lyonnais : capitale de l'imprimerie et terrain de surveillance du pouvoir. Diffuser des idées, à cette époque, pouvait coûter la vie.", photo: null, audio: null }
+                },
+                { text: "On a brûlé mes livres avec moi, place Maubert. Le feu ne distingue pas l'homme du papier.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
+
+            // ── LA PRESSE DE LA DOLOIRE (Commune, Science/Société) ──
+            card_presse_doloire: [
+                { text: "Bois et fer, vis et cadre. Rien de plus. Mais assez pour multiplier une page en quelques centaines d'exemplaires par jour.", heart: true, level: 0,
+                  entry: { date: "Rue Mercière, XVIe siècle", text: "Presse à bras typique du quartier Mercière, où l'on en comptait par centaines au XVIe siècle. Un objet en apparence simple, moteur d'une industrie entière.", photo: null, audio: null }
+                },
+                { text: "On m'a rangée à l'enseigne d'une hache. Une doloire, pour trancher le bois — pas pour trancher les têtes, malgré ce qui est arrivé ensuite.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "Je ne travaille jamais seule. Il faut des mains pour composer, corriger, tirer chaque feuille — des compagnons, nombreux dans ce quartier, plus organisés qu'on ne le croit.", heart: true, level: 1,
+                  entry: { date: "Quartier Mercière", text: "Autour de chaque presse gravite une équipe de compagnons imprimeurs, organisés en confréries parfois clandestines. Leur histoire reste à découvrir ailleurs dans ce carnet.", photo: null, audio: null }
+                },
+                { text: "Composer une page à l'envers, lettre par lettre, sans une faute : ce sont des mains de compagnons qui font ce travail, pas les miennes.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "Avant moi, recopier un livre prenait des mois. Avec moi, quelques centaines de feuilles par jour. Je n'ai rien inventé — j'ai juste multiplié.", heart: true, level: 2,
+                  entry: { date: "Lyon, XVIe siècle", text: "La presse à bras permet de multiplier un texte à une échelle inédite. C'est pour cela que Lyon compte, à cette époque, près de cent ateliers serrés dans les mêmes rues.", photo: null, audio: null }
+                },
+                { text: "On me démonte, on me remonte, on me revend d'atelier en atelier. Une presse ne meurt presque jamais — elle change juste de mains.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
+
+            // ── PLACE BELLECOUR — volet "ville du livre" (Légendaire, Histoire) ──
+            card6: [
+                { text: "On dit que je suis l'une des plus grandes places d'Europe — vide, justement, parce que j'ai été conçue ainsi.", heart: true, level: 0,
+                  entry: { date: "Bellecour, aujourd'hui", text: "Avec ses 62 000 m², la place Bellecour est l'une des plus grandes places d'Europe entièrement piétonne, pensée comme un vide organisé au cœur de la ville.", photo: null, audio: null }
+                },
+                { text: "Je suis le point de départ et de retour de bien des chemins. Celui-ci ne fait pas exception.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "L'histoire qu'on cherche n'est pas ici. Elle est juste à côté : quelques rues plus au nord, un quartier où l'on a imprimé les livres de toute l'Europe.", heart: true, level: 1,
+                  entry: { date: "Presqu'île, XVIe siècle", text: "Au XVIe siècle, le quartier qui borde la place au nord concentre l'essentiel de l'activité d'imprimerie lyonnaise — un secteur à découvrir ailleurs dans ce parcours.", photo: null, audio: null }
+                },
+                { text: "On m'a détruite à la Révolution, reconstruite sous Napoléon. Le vide, lui, a toujours été reconstruit à l'identique.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "Au XVIe siècle, ce coin-là n'existait pas comme on le voit aujourd'hui. Mais la ville imprimait déjà, à quelques pas — près de cent ateliers serrés dans les mêmes rues.", heart: true, level: 2,
+                  entry: { date: "Lyon, XVIe siècle", text: "Avant l'aménagement actuel de la place, le secteur voisin bruissait déjà de l'activité des ateliers d'imprimerie, qui feront de Lyon une capitale européenne du livre.", photo: null, audio: null }
+                },
+                { text: "Je suis un décor. Le drame, cette fois, ne se joue pas sur moi — juste à côté.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
+
+            // ── CATHÉDRALE SAINT-JEAN — volet "ville du livre" (Rare, Histoire) ──
+            card13: [
+                { text: "On m'a mis trois siècles à bâtir. Moins connu : j'ai aussi gardé, pendant des siècles, une bibliothèque de plusieurs centaines de manuscrits.", heart: true, level: 0,
+                  entry: { date: "Cathédrale Saint-Jean", text: "Siège du chapitre des chanoines-comtes de Lyon, la cathédrale gothique Saint-Jean conserve depuis le haut Moyen Âge une bibliothèque de plusieurs centaines de manuscrits.", photo: null, audio: null }
+                },
+                { text: "Mon horloge astronomique mesure le ciel depuis le XIVe siècle. Mes manuscrits, eux, mesuraient autre chose : la mémoire d'un chapitre entier.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "J'ai gardé des centaines de manuscrits pendant des siècles. Ce qu'il en reste aujourd'hui n'est plus ici — c'est descendu au bord du fleuve, dans une autre maison de livres.", heart: true, level: 1,
+                  entry: { date: "Vieux-Lyon", text: "Les manuscrits anciens du chapitre de Saint-Jean ont, au fil des siècles, changé de toit — direction un bâtiment voisin devenu bibliothèque.", photo: null, audio: null }
+                },
+                { text: "Juste à côté de moi, un ancien palais a pris le relais. On ne s'éloigne jamais vraiment de ses livres.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "On croit toujours que c'est l'Église qui brûlait les livres des autres. En 1562, c'est ma propre bibliothèque qui a pris feu, pillée pendant les guerres de religion. Le feu ne choisit pas son camp.", heart: true, level: 2,
+                  entry: { date: "Lyon, 1562", text: "Pendant les guerres de religion, la bibliothèque du chapitre de Saint-Jean est pillée et incendiée — un épisode qui brouille l'image simple d'une Église uniquement du côté des censeurs.", photo: null, audio: null }
+                },
+                { text: "Ce qu'on a perdu cette nuit-là, personne ne l'a jamais compté exactement.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
+
+            // ── PALAIS SAINT-JEAN (Rare, Histoire/Société) ──
+            card_palais_st_jean: [
+                { text: "Ce qui a survécu au feu, à la censure et à l'oubli a fini, un temps, sous mon toit.", heart: true, level: 0,
+                  entry: { date: "Lyon, 1911-1972", text: "Ancien palais archiépiscopal, le bâtiment devient bibliothèque municipale en 1911, après la séparation de l'Église et de l'État. Il abrite les fonds anciens lyonnais jusqu'en 1972.", photo: null, audio: null }
+                },
+                { text: "On m'a d'abord servi à l'Église. Puis à la Ville. Puis aux livres. Trois vies pour un seul bâtiment.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "Étrange bâtiment, juste à côté de la cathédrale. J'ai servi à l'Église, puis à la Ville, puis aux livres. Les manuscrits qu'on cherche ont vécu ici près d'un siècle, avant qu'on les déplace ailleurs.", heart: true, level: 1,
+                  entry: { date: "Vieux-Lyon, à côté de la cathédrale", text: "Le palais recueille notamment les manuscrits anciens issus du chapitre voisin, avant leur transfert ultérieur vers un autre site de conservation.", photo: null, audio: null }
+                },
+                { text: "Je suis voisin d'une cathédrale qui a, elle aussi, connu le feu. On ne choisit pas son voisinage par hasard.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "Tout ce qui a été imprimé, censuré, brûlé dans ce quartier a fini, un temps, gardé sous mon toit. Aujourd'hui les fonds sont à l'est de la ville, dans un silo moderne. Mais leur dernière maison de quartier, c'était moi.", heart: true, level: 2,
+                  entry: { date: "Lyon, 1972 →", text: "En 1972, les collections anciennes quittent le palais pour la bibliothèque de la Part-Dieu, faute d'espace. Manuscrits du chapitre, livres rares : ce qui a échappé au feu et à l'oubli est passé, un temps, par ce bâtiment.", photo: null, audio: null }
+                },
+                { text: "Je suis resté, moi. Les livres, eux, sont partis ailleurs. C'est aussi ça, une mémoire de quartier.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
         };
 
         // ==================== STATE ====================
@@ -11494,8 +12132,10 @@
         // Uniquement via setInterval — beforeunload/pagehide/visibilitychange
         // se déclenchent pendant le rechargement avec des variables réinitialisées
         let _appReady = false;
+        let _resetting = false;   // true pendant un reset : bloque toute sauvegarde
 
         function saveProgress() {
+            if (_resetting) return;  // un reset est en cours : ne rien réécrire dans le storage
             try {
                 // Ne jamais rétrograder _obDone de true à false
                 const _existingRaw = localStorage.getItem('lyon_cards_progress');
@@ -11560,6 +12200,7 @@
                     _obDone,
                     _obAct2Done,
                     _obAct3Done,
+                    _villeDuLivreUnlocked,
                     seenCardIds: [..._seenCardIds],
                     cardJournals,
                     grappeQuestState,
@@ -11579,7 +12220,7 @@
         function loadProgress() {
             try {
                 const raw = localStorage.getItem('lyon_cards_progress');
-                if (!raw) { console.log('[expLore] Aucune sauvegarde trouvée'); return; }
+                if (!raw) { console.log('[expLore] Aucune sauvegarde trouvée'); _progressLoaded = true; return; }
                 const d = JSON.parse(raw);
                 console.log('[expLore] Sauvegarde chargée — _obDone:', d._obDone, 'cartes:', (d.collectedCards||[]).length, 'poudre:', d.memorialDust);
                 if (d.collectedCards)        collectedCards      = d.collectedCards;
@@ -11631,6 +12272,7 @@
                 if (d._obDone)    _obDone    = d._obDone;
                 if (d._obAct2Done) _obAct2Done = d._obAct2Done;
                 if (d._obAct3Done) _obAct3Done = d._obAct3Done;
+                if (d._villeDuLivreUnlocked) _villeDuLivreUnlocked = d._villeDuLivreUnlocked;
                 if (d.seenCardIds)  _seenCardIds = new Set(d.seenCardIds);
                 if (d.cardJournals) cardJournals = d.cardJournals;
                 if (d.grappeQuestState) grappeQuestState = d.grappeQuestState;
@@ -11642,7 +12284,8 @@
                 if (d.poiCollectedKind && typeof d.poiCollectedKind === 'object') poiCollectedKind = d.poiCollectedKind;
                 if (typeof d.poiCooldownMs === 'number' && d.poiCooldownMs > 0) poiCooldownMs = d.poiCooldownMs;
                 console.log('[expLore] loadProgress _obDone après:', _obDone);
-            } catch(e) {}
+                _progressLoaded = true;
+            } catch(e) { _progressLoaded = true; }
         }
 
         function _resetProgressLegacyUnused() {
@@ -11779,6 +12422,7 @@
         let selectedCard = null;
 
         let gpsWatchId = null;
+        let _progressLoaded = false;
         let gpsActive = false;
 
         let joystickActive = false;
@@ -11796,6 +12440,26 @@
         }
 
         window.addEventListener('load', () => {
+            // Reset rapide par URL : ouvrir …/app/?reset efface toute la sauvegarde
+            // (utile pour retester le tuto sans passer par le menu, même bloqué dedans).
+            if (/[?&]reset\b/.test(location.search)) {
+                try { localStorage.clear(); } catch(e) {}
+                try { sessionStorage.clear(); } catch(e) {}
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(()=>{});
+                }
+                if ('caches' in window) {
+                    caches.keys().then(ks => ks.forEach(k => caches.delete(k))).catch(()=>{});
+                }
+                // Recharger sans le paramètre reset après un court délai (laisse le temps au clear)
+                setTimeout(() => {
+                    const u = new URL(location.href);
+                    u.searchParams.delete('reset');
+                    u.searchParams.set('_r', Date.now());
+                    location.replace(u.toString());
+                }, 250);
+                return; // ne pas démarrer l'app : on recharge proprement
+            }
             startApp();
             setTimeout(() => {
                 initJoystick();
@@ -12704,8 +13368,131 @@
         const CAM_NORTH_OFFSET = 0.0008;
 
         let _cameraMoving = false;
+        // ===== Animation de glissement du personnage (style Maps) =====
+        // Les points GPS arrivent par paliers (zone morte anti-dérive) ; pour éviter
+        // l'effet "téléportation", on fait GLISSER le marqueur de sa position
+        // affichée vers la nouvelle position validée, sur une durée ~= l'intervalle
+        // de relevé. La détection de distance reste par paliers (inchangée).
+        const _GPS_INTERVAL_MS = 2000;          // fréquence des relevés GPS
+        let _dispLat = null, _dispLng = null;   // position actuellement AFFICHÉE
+
+        // ===================== FILTRE DE KALMAN (style Maps) =====================
+        // Modèle à vitesse constante, 1D par axe, en MÈTRES (origine = 1er point).
+        // - L'accuracy du GPS sert de bruit de mesure : un point imprécis pèse moins.
+        // - L'état contient position ET vitesse → le filtre lisse le bruit ET fournit
+        //   une vitesse pour extrapoler l'affichage entre deux points (mouvement continu).
+        // Ça remplace l'ancienne zone morte d'affichage + la prédiction maison.
+        let _KAL_Q = 12.0;            // bruit de process : réactivité du filtre. ↑ = plus réactif/nerveux, ↓ = plus lisse/inerte. Réglable en direct via le panneau de test.
+        const _KAL_MAX_EXTRAPOLATE_MS = 2500; // plafond d'extrapolation d'affichage sans point neuf
+        const _EARTH_M_PER_DEG = 111320;
+
+        function _KalmanCV(q) { this.q = q; this.x = 0; this.v = 0; this.P = [[1,0],[0,1]]; this.ready = false; }
+        _KalmanCV.prototype.reset = function(x0) { this.x = x0; this.v = 0; this.P = [[1,0],[0,1]]; this.ready = true; };
+        _KalmanCV.prototype.predict = function(dt) {   // dt en secondes
+            if (!this.ready || dt <= 0) return;
+            this.x += this.v * dt;
+            const P = this.P, p00=P[0][0], p01=P[0][1], p10=P[1][0], p11=P[1][1];
+            // P = F P Fᵀ + Q, avec F=[[1,dt],[0,1]] et Q = bruit d'accélération discret
+            const dt2=dt*dt, dt3=dt2*dt, dt4=dt2*dt2, q=this.q;
+            this.P = [
+                [ p00 + dt*(p10+p01) + dt2*p11 + q*dt4/4, p01 + dt*p11 + q*dt3/2 ],
+                [ p10 + dt*p11 + q*dt3/2,                 p11 + q*dt2 ]
+            ];
+        };
+        _KalmanCV.prototype.update = function(z, r) {  // z mesure (m), r variance mesure (m²)
+            if (!this.ready) { this.reset(z); return; }
+            const P = this.P, S = P[0][0] + r;
+            const k0 = P[0][0]/S, k1 = P[1][0]/S, y = z - this.x;
+            this.x += k0*y; this.v += k1*y;
+            const p00=P[0][0], p01=P[0][1], p10=P[1][0], p11=P[1][1];
+            this.P = [ [(1-k0)*p00, (1-k0)*p01], [p10 - k1*p00, p11 - k1*p01] ];
+        };
+
+        let _kalE = new _KalmanCV(_KAL_Q);   // est (m)
+        let _kalN = new _KalmanCV(_KAL_Q);   // nord (m)
+        let _kalRefLat = null, _kalRefLng = null, _kalCosRef = 1;
+        let _kalLastUpdateT = 0, _kalRAF = null;
+
+        function _llToM(lat, lng) {
+            return {
+                e: (lng - _kalRefLng) * _EARTH_M_PER_DEG * _kalCosRef,
+                n: (lat - _kalRefLat) * _EARTH_M_PER_DEG
+            };
+        }
+        function _mToLL(e, n) {
+            return {
+                lat: _kalRefLat + n / _EARTH_M_PER_DEG,
+                lng: _kalRefLng + e / (_EARTH_M_PER_DEG * _kalCosRef)
+            };
+        }
+
+        function _setAvatarFacing(deltaE) {
+            const el = document.getElementById('avatarSvg');
+            if (!el) return;
+            if (deltaE > 0.01) el.style.transform = 'scaleX(1)';        // est → regarde à droite
+            else if (deltaE < -0.01) el.style.transform = 'scaleX(-1)'; // ouest → regarde à gauche
+        }
+
+        // Appelée à chaque point GPS : recale le filtre (predict jusqu'à maintenant + update).
+        function _kalmanOnFix(lat, lng, accuracy) {
+            const now = performance.now();
+            if (_kalRefLat == null) {
+                _kalRefLat = lat; _kalRefLng = lng;
+                _kalCosRef = Math.cos(lat * Math.PI / 180);
+            }
+            const m = _llToM(lat, lng);
+            if (!_kalE.ready) {
+                _kalE.reset(m.e); _kalN.reset(m.n);
+            } else {
+                const dt = Math.max(0, (now - _kalLastUpdateT) / 1000);
+                _kalE.predict(dt); _kalN.predict(dt);
+                const r = Math.max(1, (accuracy || 15)) ** 2;   // variance de mesure = accuracy²
+                _kalE.update(m.e, r); _kalN.update(m.n, r);
+            }
+            _kalLastUpdateT = now;
+            if (_dispLat == null) { const ll=_mToLL(_kalE.x,_kalN.x); _dispLat=ll.lat; _dispLng=ll.lng; }
+            _kalStartLoop();
+        }
+
+        function _kalStartLoop() { if (!_kalRAF) _kalRAF = requestAnimationFrame(_kalTick); }
+        function _kalStopLoop() { if (_kalRAF) { cancelAnimationFrame(_kalRAF); _kalRAF = null; } }
+
+        function _kalTick(now) {
+            if (!playerMarker || !map || !_kalE.ready) { _kalRAF = null; return; }
+            // Affichage = position filtrée + extrapolation par la vitesse estimée
+            // (plafonnée pour ne pas filer si le GPS tarde).
+            const dtDisp = Math.min(Math.max(0, (now - _kalLastUpdateT) / 1000), _KAL_MAX_EXTRAPOLATE_MS / 1000);
+            const e = _kalE.x + _kalE.v * dtDisp;
+            const n = _kalN.x + _kalN.v * dtDisp;
+            const ll = _mToLL(e, n);
+            const prevLng = _dispLng;
+            _dispLat = ll.lat; _dispLng = ll.lng;
+            _setAvatarFacing(_dispLng - prevLng);
+            playerMarker.setLngLat([_dispLng, _dispLat]);
+            if (!_cameraMoving) {
+                const offset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
+                map.easeTo({ center: [_dispLng, _dispLat + offset], duration: 0, easing: x => x });
+            }
+            _kalRAF = requestAnimationFrame(_kalTick);
+        }
+
+        // Réinitialise le filtre (au passage joystick → GPS, pour repartir propre).
+        function _kalmanReset() {
+            _kalStopLoop();
+            _kalE = new _KalmanCV(_KAL_Q); _kalN = new _KalmanCV(_KAL_Q);
+            _kalRefLat = null; _kalRefLng = null; _kalCosRef = 1; _kalLastUpdateT = 0;
+        }
+
+        // Déplacement DIRECT du perso (joystick/clavier : points très rapprochés,
+        // pas d'animation sinon le perso traîne). Maintient _dispLat/_dispLng à jour
+        // pour que le filtre GPS reparte de la bonne position si le GPS prend le relais.
         function updatePlayerOnMap() {
             if (!map || !playerMarker) return;
+            // Déplacement direct (joystick/clavier) : on coupe le filtre GPS pour
+            // éviter tout conflit (il repartira propre si le GPS reprend la main).
+            _kalmanReset();
+            _dispLat = playerPos.lat;
+            _dispLng = playerPos.lng;
             playerMarker.setLngLat([playerPos.lng, playerPos.lat]);
             if (_cameraMoving) return;
             _cameraMoving = true;
@@ -12719,6 +13506,22 @@
                 easing: t => t
             });
             setTimeout(() => { _cameraMoving = false; }, 100);
+        }
+
+        // Déplacement via GPS : on alimente le filtre de Kalman (lissage + prédiction).
+        function updatePlayerOnMapSmooth() {
+            if (!map || !playerMarker) return;
+            // Premier placement : on pose direct (évite un glissement depuis Lyon),
+            // on cale la caméra (pitch isométrique), puis le filtre prend le relais.
+            if (_dispLat == null) {
+                _dispLat = playerPos.lat;
+                _dispLng = playerPos.lng;
+                playerMarker.setLngLat([playerPos.lng, playerPos.lat]);
+                const offset0 = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
+                const pitch0 = _mapViewMode === 'far' ? MAP_VIEW.far.pitch : ISOMETRIC_TILT;
+                map.easeTo({ center: [playerPos.lng, playerPos.lat + offset0], pitch: pitch0, bearing: ISOMETRIC_HEADING, duration: 120, easing: t => t });
+            }
+            _kalmanOnFix(playerPos.lat, playerPos.lng, _lastFixAccuracy);
         }
 
 
@@ -13078,6 +13881,10 @@
 
         async function resetProgress() {
             if (!confirm('Réinitialiser toute la progression ?\n(Effacera : sauvegarde, cache, service worker)')) return;
+            // Bloque immédiatement toute sauvegarde (autosave 3s, ticks, handlers) :
+            // sinon l'état encore en mémoire (cartes, niveaux…) serait réécrit dans le
+            // localStorage juste après l'effacement, et le reset semblerait sans effet.
+            _resetting = true;
             try {
                 // 1. Clear localStorage (toutes les clés possibles)
                 try { localStorage.clear(); } catch(e) { console.warn('localStorage.clear', e); }
@@ -13866,6 +14673,12 @@
             const circleFeatures = [];
 
             poiMarkers.forEach(({ marker, el, poi }) => {
+                // POI de parcours verrouillé (ex. "ville du livre") : caché tant que
+                // le déclencheur (validation Bellecour) n'a pas eu lieu.
+                if (poi.gated === 'ville_du_livre' && !_villeDuLivreUnlocked) {
+                    el.style.display = 'none';
+                    return;
+                }
                 const status = getPoiThematicStatus(poi);
 
                 if (status === 'local') {
@@ -15841,9 +16654,27 @@
             _showNearbyConsoles();
             document.getElementById('collectionsPanel').classList.remove('show');
             selectedCollectionId = null;
+            if (typeof _obGuide === 'object' && _obGuide.active) setTimeout(() => _obGuideRefresh(), 120);
         }
 
         let _albCurrentTab = 'cards';
+        let _albCardTypeFilter = null;
+
+        function _albUpdateTypeButtons() {
+            const buttons = document.querySelectorAll('.alb-type-btn');
+            buttons.forEach(btn => {
+                const type = btn.dataset.type;
+                btn.classList.toggle('active', type === _albCardTypeFilter);
+            });
+            const strip = document.getElementById('albTypeStrip');
+            if (strip) strip.style.display = _albCurrentTab === 'cards' ? 'flex' : 'none';
+        }
+
+        function _albSetCardTypeFilter(type) {
+            _albCardTypeFilter = (_albCardTypeFilter === type) ? null : type;
+            _albUpdateTypeButtons();
+            _albRenderCards();
+        }
 
         function albSwitchTab(tab) {
             _albCurrentTab = tab;
@@ -15851,6 +16682,7 @@
                 const b = document.getElementById('albTab-' + t);
                 if (b) b.classList.toggle('active', t === tab);
             });
+            _albUpdateTypeButtons();
             if (tab === 'cards')            _albRenderCards();
             else if (tab === 'collections') _albRenderCollections();
             else if (tab === 'ville')       _albRenderVille();
@@ -15861,7 +16693,14 @@
             if (!el) return;
             const all = getAllCards();
             // Onglet Cartes = toutes les cartes
-            const thematic  = all;
+            let thematic  = all;
+            if (_albCardTypeFilter) {
+                const typeLower = _albCardTypeFilter.toLowerCase();
+                thematic = thematic.filter(c => {
+                    const cardType = (c.type || '').toLowerCase();
+                    return cardType.includes(typeLower);
+                });
+            }
             const collected = thematic.filter(c => collectedCards.includes(c.id));
             const locked    = thematic.filter(c => !collectedCards.includes(c.id));
 
@@ -16233,6 +17072,16 @@
                 if (card.art) { artImg.src = card.art; artImg.style.display = 'block'; artEmoji.style.display = 'none'; }
                 else { artImg.style.display = 'none'; artEmoji.style.display = 'block'; }
             }
+            const typeIcon = {
+                'Personnage': '👤',
+                'Objet': '⚙️',
+                'Lieu': '🏛️'
+            }[card.type] || '❖';
+            const typePin = document.getElementById('cardTypePin');
+            if (typePin) {
+                typePin.textContent = typeIcon;
+                typePin.setAttribute('aria-label', 'Type de carte : ' + card.type);
+            }
             if (!cardLevels[card.id]) cardLevels[card.id] = { level: 0, experience: 0, dustSpent: 0 };
             const _hdrTitle = document.getElementById('cardDetailHeaderTitle');
             if (_hdrTitle) _hdrTitle.textContent = card.name;
@@ -16328,6 +17177,7 @@
             // Annuler tout preview de skin non validé avant de quitter
             try { _cancelSkinPreviewIfAny(); } catch(e) {}
             document.getElementById('cardDetailView').classList.remove('show');
+            if (typeof _obGuide === 'object' && _obGuide.active) setTimeout(() => _obGuideRefresh(), 120);
             // Si on était venu depuis une modale grappe, la rouvrir au retour
             if (window._reopenGrappeQuestModalId) {
                 const id = window._reopenGrappeQuestModalId;
@@ -16759,6 +17609,9 @@
                     unlockJournalEntry(cardId, level, entry);
                     dustBlocked = false;
                     _triggerLayer2(cardId, entry._type || 'text');
+                    if (typeof _obGuide === 'object' && _obGuide.active && cardId === OB_TUTORIAL_CARD.id) {
+                        setTimeout(() => _obGuideEvent('entry_unlocked'), 300);
+                    }
                 }, 200);
             }
         }
@@ -16850,7 +17703,7 @@
                 entry.photo && (entry.photo.startsWith('data:') || entry.photo.startsWith('http')) ? 'visual' :
                 entry.audio && (entry.audio.startsWith('data:') || entry.audio.startsWith('http')) ? 'audio' : 'text'
             );
-            cardJournalEntries[cardId].push({ ...entry, level, _isNew: true, _available: true, _revealed: false, _type: entryType });
+            cardJournalEntries[cardId].push({ ...entry, level, _isNew: true, _available: true, _revealed: entry._revealed === true, _type: entryType });
             saveProgress();
             // Badge carnet
             updateJournalBlink();
@@ -16895,6 +17748,11 @@
             _cdState(cardId).revealedCount = (cardJournalEntries[cardId] || []).filter(e => e._revealed).length;
             // Retirer le blink si plus d'entrées non révélées
             updateJournalBlink();
+
+            // ── Accroche parcours guidé : toutes les entrées tuto révélées ? ──
+            if (typeof _obGuide === 'object' && _obGuide.active && cardId === OB_TUTORIAL_CARD.id && _obAllTutorialEntriesRevealed()) {
+                setTimeout(() => _obGuideEvent('all_revealed'), 450);
+            }
         }
 
         // Lignes de couche 2 — réaction au souvenir selon type d'entrée
@@ -17170,6 +18028,17 @@
 
             updateCardLevelDisplay();
             saveProgress();
+
+            // ── Accroches parcours guidé (carte tuto) ──
+            if (typeof _obGuide === 'object' && _obGuide.active && selectedCard.id === OB_TUTORIAL_CARD.id) {
+                const _needed = getExpNeeded(selectedCard, cl.level);
+                const _en = getCardEnergyState(selectedCard.id);
+                if (cl.experience >= _needed) {
+                    setTimeout(() => _obGuideEvent('xp_full'), 550);
+                } else if (_en.value <= 0) {
+                    setTimeout(() => _obGuideEvent('energy_empty'), 550);
+                }
+            }
         }
 
         // Utiliser une orbe pour restaurer l'énergie de la carte sélectionnée
@@ -17235,6 +18104,9 @@
                 updateCardLevelDisplay();
                 updateCardDetailOrbesDisplay();
                 showToast('✨ Orbe utilisée — la carte se ravive');
+                if (typeof _obGuide === 'object' && _obGuide.active && selectedCard && selectedCard.id === OB_TUTORIAL_CARD.id) {
+                    _obGuideEvent('orb_used');
+                }
             }, totalAnim);
         }
 
@@ -17315,6 +18187,12 @@
         function orbSynthClose() {
             const overlay = document.getElementById('orbSynthOverlay');
             overlay.classList.remove('show');
+
+            // ── Accroche parcours guidé : chapitre scellé → adieu de la jeune fille ──
+            if (typeof _obGuide === 'object' && _obGuide.active && selectedCard && selectedCard.id === OB_TUTORIAL_CARD.id) {
+                setTimeout(() => _obGuideEvent('sealed'), 350);
+                return;
+            }
 
             const sealedLvl = selectedCard ? (cardLevels[selectedCard.id].level - 1) : undefined;
             const journalEl = document.getElementById('journalScreen');
@@ -17973,6 +18851,7 @@
 
         function closeJournalScreen() {
             document.getElementById('journalScreen').classList.remove('show');
+            if (typeof _obGuide === 'object' && _obGuide.active) setTimeout(() => _obGuideRefresh(), 120);
 
             // Capturer le delta avant de réinitialiser
             const delta = window._journalSessionDelta || 0;
@@ -18679,9 +19558,10 @@
         // Suit la distance parcourue par le joueur via le watchPosition existant.
         // Filtres : 5m min, 15 km/h max par tronçon, accuracy < 50m. Détection mode véhicule.
         const _DIST = {
-            MIN_MOVE_M: 5,                  // ignore les positions < 5m (bruit GPS statique)
+            MIN_MOVE_M: 10,                 // plancher : ignore tout déplacement < 10m (couvre la dérive GPS à l'arrêt, y compris quand la précision rapportée est "bonne")
+            ACCURACY_MOVE_FACTOR: 0.5,      // zone morte = max(MIN_MOVE_M, accuracy × ce facteur)
             MAX_SEGMENT_KMH: 15,            // tronçon individuel : marche rapide / vélo cool
-            MAX_ACCURACY_M: 50,             // ignore les positions trop incertaines
+            MAX_ACCURACY_M: 100,            // ignore les positions trop incertaines (urbain dense / intérieur = souvent 30-80m)
             // Détection véhicule (moyenne mobile)
             VEHICLE_AVG_KMH_TRIGGER: 12,    // si moy 60s > 12 km/h soutenu → véhicule
             VEHICLE_RECOVER_KMH: 8,         // si moy 30s < 8 km/h → on reprend
@@ -18691,8 +19571,7 @@
             HISTORY_WINDOW_MS: 60000
         };
         // État du tracker (en mémoire uniquement, pas persisté)
-        let _distLastLat = null;
-        let _distLastLng = null;
+        let _distLastLat = null;        let _distLastLng = null;
         let _distLastTs = null;
         let _distVehicleMode = false;
         let _distVehicleToastShown = false;
@@ -18721,6 +19600,12 @@
 
         // Reset des compteurs quotidien/hebdo si on a changé de jour ou de semaine
         function _resetDistanceCountersIfNewPeriod() {
+            // Ne rien faire tant que la sauvegarde n'est pas chargée : sinon on risque
+            // de remettre les compteurs à zéro sur l'objet par défaut, avant que
+            // loadProgress() ait restauré les vraies valeurs (ordre non déterministe
+            // entre startGPS et map 'load'). C'était la cause des compteurs qui
+            // chutaient (50 → 13 → 0) à la réouverture de l'app.
+            if (!_progressLoaded) return false;
             const now = new Date();
             const today = now.toISOString().slice(0, 10); // "YYYY-MM-DD"
             const weekKey = _isoWeekKey(now);
@@ -18886,24 +19771,146 @@
 
         // ==================== GPS ====================
 
-        function startGPS() {
+        let _gpsEstablished = false;
+
+        // Affiche/masque le joystick selon l'état GPS : invisible dès que le GPS
+        // réel pilote le personnage, visible sinon.
+        function _updateJoystickVisibility() {
+            const jc = document.querySelector('.joystick-container');
+            if (jc) jc.style.display = gpsActive ? 'none' : '';
+        }
+
+        // Traite un point GPS (commun à watchPosition et au polling getCurrentPosition).
+        function _onGpsFix(position) {
+            const newLat = position.coords.latitude;
+            const newLng = position.coords.longitude;
+            const acc = position.coords.accuracy;
+            // Ignore un point strictement identique au précédent (évite double comptage
+            // quand plusieurs requêtes livrent la même position).
+            if (_lastFixLat === newLat && _lastFixLng === newLng) {
+                _gpsDebugUpdate(position);
+                return;
+            }
+
+            // NB : on ne filtre PLUS l'affichage par une zone morte ici. Le marqueur
+            // suit chaque point (toutes les 2 s) pour que la prédiction reste nourrie
+            // et le mouvement continu. La dérive à l'arrêt est absorbée par le lissage
+            // du prédicteur, et la DISTANCE est filtrée séparément dans
+            // _trackDistanceFromGps (ancre + seuil + vitesse) → pas de distance fantôme.
+
+            _lastFixLat = newLat;
+            _lastFixLng = newLng;
+            _lastFixAccuracy = (acc != null ? acc : 15);
+            playerPos = { lat: newLat, lng: newLng };
+            if (!gpsActive) {
+                gpsActive = true;
+                _gpsEstablished = true;
+                _updateJoystickVisibility();
+                if (map) { try { map.jumpTo({ center: [playerPos.lng, playerPos.lat] }); } catch(e) {} }
+            }
+            _cameraMoving = false;
+            if (playerMarker && map) updatePlayerOnMapSmooth();
+            checkNearbyPOI();
+            _trackDistanceFromGps(position);
+            _gpsDebugUpdate(position);
+        }
+
+        function _onGpsError(error) {
+            console.error('Erreur GPS:', error);
+            _gpsDebugError(error);
+            // On ne repasse en joystick QUE si la permission est explicitement refusée.
+            // Un timeout (code 3) ou une position indisponible (code 2) sont transitoires
+            // — fréquents en TWA/intérieur — et ne doivent pas désactiver le GPS.
+            if (error.code === error.PERMISSION_DENIED) {
+                gpsActive = false;
+                _updateJoystickVisibility();
+            }
+        }
+
+        let _lastFixLat = null, _lastFixLng = null;
+        let _lastFixAccuracy = 15;
+        let _gpsPollInterval = null;
+
+        // Acquisition d'un point en DEUX TEMPS :
+        //  1) haute précision (GPS satellite) — idéal en extérieur ;
+        //  2) si timeout/indisponible (fréquent en intérieur ou en TWA),
+        //     repli automatique sur la basse précision (réseau/Wi-Fi), rapide
+        //     et qui aboutit presque toujours.
+        // Acquisition d'un point en DEUX TEMPS :
+        //  1) haute précision (GPS satellite) — idéal en extérieur ;
+        //  2) si timeout/indisponible (fréquent en intérieur ou en TWA),
+        //     repli automatique sur la basse précision (réseau/Wi-Fi).
+        function _gpsRequestOnce() {
             if (!('geolocation' in navigator)) return;
+            navigator.geolocation.getCurrentPosition(
+                _onGpsFix,
+                (err) => {
+                    if (err.code === 3 || err.code === 2) {
+                        navigator.geolocation.getCurrentPosition(
+                            _onGpsFix,
+                            _onGpsError,
+                            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+                        );
+                    } else {
+                        _onGpsError(err);
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 12000, maximumAge: 8000 }
+            );
+        }
+
+        function startGPS() {
+            if (!('geolocation' in navigator)) {
+                if (_gpsDebug) _gpsDebugPanel().textContent = 'GPS indisponible : navigator.geolocation absent';
+                return;
+            }
+            if (_gpsDebug) _gpsDebugPanel().textContent = 'GPS : démarrage, en attente du 1er fix…';
             // Initialise la période courante (jour/semaine) au démarrage
             _resetDistanceCountersIfNewPeriod();
-            gpsWatchId = navigator.geolocation.watchPosition(
-                (position) => {
-                    playerPos = { lat: position.coords.latitude, lng: position.coords.longitude };
-                    if (playerMarker && map) {
-                        updatePlayerOnMap();
-                    }
-                    checkNearbyPOI();
-                    // Tracker de distance (filtres + anti-cheat véhicule)
-                    _trackDistanceFromGps(position);
-                },
-                (error) => { console.error('Erreur GPS:', error); gpsActive = false; },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-            );
-            gpsActive = true;
+            // Premier point tout de suite, puis polling toutes les 3 s.
+            _gpsRequestOnce();
+            if (_gpsPollInterval) clearInterval(_gpsPollInterval);
+            _gpsPollInterval = setInterval(_gpsRequestOnce, _GPS_INTERVAL_MS);
+        }
+
+        // ── Diagnostic GPS ────────────────────────────────────────────────
+        // Affiche un petit panneau en bas d'écran avec le détail des fix reçus.
+        // Activer : taper _gpsDebug=true dans la console, ou ?gpsdebug dans l'URL.
+        let _gpsDebug = (typeof location !== 'undefined' && /[?&]gpsdebug/.test(location.search));
+        let _gpsFixCount = 0;
+        function _gpsDebugPanel() {
+            let p = document.getElementById('gpsDebugPanel');
+            if (!p) {
+                p = document.createElement('div');
+                p.id = 'gpsDebugPanel';
+                p.style.cssText = [
+                    'position:fixed','left:8px','bottom:8px','z-index:99999',
+                    'background:rgba(0,0,0,0.82)','color:#0f0','font:11px/1.4 monospace',
+                    'padding:8px 10px','border-radius:8px','max-width:90vw',
+                    'pointer-events:none','white-space:pre'
+                ].join(';');
+                document.body.appendChild(p);
+            }
+            return p;
+        }
+        function _gpsDebugUpdate(position) {
+            if (!_gpsDebug) return;
+            _gpsFixCount++;
+            const c = position.coords;
+            const t = new Date();
+            const hh = String(t.getHours()).padStart(2,'0') + ':' +
+                       String(t.getMinutes()).padStart(2,'0') + ':' +
+                       String(t.getSeconds()).padStart(2,'0');
+            _gpsDebugPanel().textContent =
+                'GPS fix #' + _gpsFixCount + '  @' + hh +
+                '\nlat ' + c.latitude.toFixed(6) + '  lng ' + c.longitude.toFixed(6) +
+                '\naccuracy ' + Math.round(c.accuracy) + ' m' +
+                '\ndist_today ' + Math.round(playerStats.distance_today || 0) + ' m' +
+                '\nseuil ' + _DIST.MIN_MOVE_M + ' m  ·  veh ' + (_distVehicleMode ? 'oui' : 'non');
+        }
+        function _gpsDebugError(error) {
+            if (!_gpsDebug) return;
+            _gpsDebugPanel().textContent = 'GPS ERREUR code ' + error.code + '\n' + (error.message || '');
         }
 
         // ==================== PROGRESSION SYSTEM ====================
@@ -21329,6 +22336,19 @@
         let activeActorMoves = [];
         let pendingGrappeLumens = [];
 
+        // ── Griffarins (acteur non-carte, grappe "ville du livre") ──
+        // Pas une carte : pas de slot dans COLLECTIONS. Ils s'éclairent dans
+        // l'Explorium par accumulation — dès que ≥2 cartes de la grappe sont
+        // stabilisées à C1 ou plus (doc "grappe_lyon_ville_du_livre", section 4).
+        const VDL_CARD_IDS = ['card6', 'card_louise_labe', 'card_gryphe', 'card13', 'card_dolet', 'card_presse_doloire', 'card_palais_st_jean'];
+        function griffarinsUnlocked() {
+            const stabilized = VDL_CARD_IDS.filter(id => {
+                const cl = cardLevels[id];
+                return cl && cl.level >= 1;
+            });
+            return stabilized.length >= 2;
+        }
+
         // ════════════════════════════════════════════════════════
         // STRUCTURE DE QUÊTES PAR GRAPPE
         // Une grappe = une planche BD + une quête à plusieurs étapes
@@ -21336,6 +22356,31 @@
         // Étape résolue = une ou plusieurs cases de BD débloquées
         // ════════════════════════════════════════════════════════
         const GRAPPE_QUESTS = {
+            tutoriel: {
+                title: 'Les premiers pas',
+                color: '#A78BFA',
+                bd: {
+                    totalCases: 1,
+                    cases: [
+                        { id: 'tuto_case1', title: 'La direction de la jeune fille', text: 'Elle t\'a tout montré, puis elle est repartie retrouver ses propres voix. Avant de disparaître, elle t\'a laissé un cap : place Bellecour, là où les voix de la ville se cherchent les unes les autres.' },
+                    ]
+                },
+                quete: {
+                    titre: 'La direction de la jeune fille',
+                    etapes: [
+                        {
+                            id: 't_bellecour',
+                            titre: 'Le rendez-vous de Bellecour',
+                            indice: 'La jeune fille t\'a indiqué la place Bellecour. Rends-toi là-bas : une voix t\'y attend, et quelque chose s\'ouvrira.',
+                            // Prérequis sentinelle (jamais rempli) → l\'étape reste verrouillée
+                            // jusqu\'à ce que le tuto la force en \'active\' à la fin du parcours guidé.
+                            prerequis: [{ cardId: '__tuto_lock__', minLevel: 1 }],
+                            objectifGeo: { lat: 45.7578, lng: 4.8320, rayon: 80, nom: 'Place Bellecour' },
+                            rewardCases: ['tuto_case1'],
+                        },
+                    ]
+                }
+            },
             passeurs: {
                 title: 'Les passeurs',
                 color: '#34d399',
@@ -21586,6 +22631,83 @@
                         },
                     ]
                 }
+            },
+            ville_du_livre: {
+                title: 'Lyon, ville du livre',
+                color: '#b45309',
+                bd: {
+                    totalCases: 7,
+                    cases: [
+                        { id: 'vdl_case1', title: 'Une ville qui imprime', text: 'Au début du XVIe siècle, Lyon, ville de foires et de marchands, s\'empare de l\'imprimerie encore jeune. Près de cent ateliers s\'entassent autour de la rue Mercière — la place Bellecour, elle, reste le vide organisé au cœur d\'une ville qui, juste à côté, imprime déjà pour toute l\'Europe.' },
+                        { id: 'vdl_case2', title: 'Le maître et son atelier', text: 'Sébastien Gryphe, imprimeur humaniste venu d\'Allemagne, introduit l\'italique en France et imprime Rabelais et les Anciens. Sous ses presses, Lyon devient un nœud du réseau européen de l\'imprimerie — et forme, sans le vouloir, ceux qui lui succéderont.' },
+                        { id: 'vdl_case3', title: 'Une voix singulière', text: 'En 1555, Louise Labé publie sous son nom un recueil de sonnets sur le désir — un geste presque unique pour une femme de son temps. À Lyon, cette liberté-là est possible ; ailleurs, presque nulle part.' },
+                        { id: 'vdl_case4', title: 'Le Grand Tric', text: 'Une presse ne travaille jamais seule : il faut des compagnons pour composer, corriger, tirer chaque feuille. En avril 1539, ces compagnons — les Griffarins, confrérie clandestine des imprimeurs lyonnais — déclenchent le Grand Tric, la première grève ouvrière de France. Les ateliers ferment trois mois ; le roi craint que l\'imprimerie ne quitte la ville.' },
+                        { id: 'vdl_case5', title: 'Trois mots de trop', text: 'Étienne Dolet, imprimeur à l\'enseigne de la Doloire, va plus loin que les autres. Trois mots ajoutés à une traduction, jugés hérétiques, suffisent à le condamner. Il est brûlé à Paris avec ses livres en 1546 — la ville qui imprime tout est aussi la ville qu\'on surveille tout autant.' },
+                        { id: 'vdl_case6', title: 'L\'autre incendie', text: 'En 1562, en pleine guerre de religion, la bibliothèque du chapitre de la cathédrale Saint-Jean est pillée et incendiée à son tour. On croit toujours que l\'Église est du côté de ceux qui brûlent les livres des autres — le feu, lui, ne choisit pas son camp.' },
+                        { id: 'vdl_case7', title: 'Ce qui a survécu', text: 'Manuscrits du chapitre, livres de Dolet, vers de Louise Labé : ce que le feu et la censure ont épargné a fini, un temps, sous le toit du Palais Saint-Jean, juste à côté de la cathédrale. Les fonds ont depuis émigré vers la Part-Dieu — mais leur dernière maison de quartier reste là, à deux pas du lieu d\'origine.' },
+                    ]
+                },
+                quete: {
+                    titre: 'Les voix imprimées',
+                    etapes: [
+                        {
+                            id: 'vdl_1a',
+                            titre: 'Une ville qui imprime',
+                            indice: 'Depuis Bellecour, l\'histoire du livre se joue juste à côté. Trouve l\'atelier où l\'on tirait les feuilles une à une.',
+                            prerequis: [{ cardId: 'card6', minLevel: 0 }, { cardId: 'card_presse_doloire', minLevel: 1 }],
+                            objectifGeo: { lat: 45.7632, lng: 4.8297, rayon: 80, nom: 'Rue Mercière (la Doloire)' },
+                            rewardCases: ['vdl_case1'],
+                        },
+                        {
+                            id: 'vdl_1b',
+                            titre: 'Le maître et son atelier',
+                            indice: 'Un maître humaniste a formé les meilleurs imprimeurs de la ville. Cherche du côté de Saint-Jean.',
+                            prerequis: [{ cardId: 'card_gryphe', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7628, lng: 4.8266, rayon: 80, nom: 'Vieux-Lyon (Saint-Jean)' },
+                            rewardCases: ['vdl_case2'],
+                        },
+                        {
+                            id: 'vdl_1c',
+                            titre: 'Une voix singulière',
+                            indice: 'Une femme a publié ses vers sous son nom, tout près de Bellecour. Trouve la rue qui porte son nom.',
+                            prerequis: [{ cardId: 'card_louise_labe', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7586, lng: 4.8340, rayon: 80, nom: 'Rue Bellecordière' },
+                            rewardCases: ['vdl_case3'],
+                        },
+                        {
+                            id: 'vdl_2_tric',
+                            titre: 'Le Grand Tric',
+                            indice: 'Une presse ne travaille jamais seule. Retourne du côté des ateliers de la Doloire, là où les compagnons s\'organisaient.',
+                            prerequis: [{ cardId: 'card_presse_doloire', minLevel: 2 }, { cardId: 'card_gryphe', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7632, lng: 4.8297, rayon: 80, nom: 'Rue Mercière (la Doloire)' },
+                            rewardCases: ['vdl_case4'],
+                        },
+                        {
+                            id: 'vdl_2_dolet',
+                            titre: 'Trois mots de trop',
+                            indice: 'Un imprimeur est allé plus loin que les autres. Cherche l\'enseigne d\'une hache, rue Mercière.',
+                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_doloire', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7637, lng: 4.8294, rayon: 80, nom: 'Rue Mercière (Dolet)' },
+                            rewardCases: ['vdl_case5'],
+                        },
+                        {
+                            id: 'vdl_3_incendie',
+                            titre: 'L\'autre incendie',
+                            indice: 'Une bibliothèque a brûlé, et ce n\'est pas celle qu\'on croit. Retourne à la cathédrale Saint-Jean.',
+                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_doloire', minLevel: 2 }, { cardId: 'card13', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7606, lng: 4.8268, rayon: 80, nom: 'Cathédrale Saint-Jean' },
+                            rewardCases: ['vdl_case6'],
+                        },
+                        {
+                            id: 'vdl_3_survivant',
+                            titre: 'Ce qui a survécu',
+                            indice: 'Juste à côté de la cathédrale, un ancien palais a gardé ce que le feu a épargné.',
+                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_doloire', minLevel: 2 }, { cardId: 'card13', minLevel: 2 }, { cardId: 'card_palais_st_jean', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7602, lng: 4.8272, rayon: 80, nom: 'Palais Saint-Jean' },
+                            rewardCases: ['vdl_case7'],
+                        },
+                    ]
+                }
             }
         };
 
@@ -21632,6 +22754,14 @@
             if (!etape) return;
             if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
             grappeQuestState[grappeId][etapeId] = 'completed';
+
+            // Validation du rendez-vous Bellecour → ouverture du parcours "Lyon, ville
+            // du livre" : les POI du parcours deviennent visibles et collectables.
+            if (etapeId === 't_bellecour' && !_villeDuLivreUnlocked) {
+                _villeDuLivreUnlocked = true;
+                if (typeof updatePOIVisibility === 'function') updatePOIVisibility();
+                showToast('📖 Un parcours s\'ouvre : Lyon, ville du livre');
+            }
 
             // Pastille "nouveau" : l'étape change d'état → notification Explorium
             if (typeof showVaultNotification === 'function') showVaultNotification();
@@ -22676,6 +23806,16 @@
 
                 body.appendChild(etapeEl);
             });
+
+            // Griffarins : acteur non-carte de la grappe "ville du livre",
+            // s'éclaire par accumulation (≥2 cartes de la grappe stabilisées à C1+)
+            if (grappeId === 'ville_du_livre' && typeof griffarinsUnlocked === 'function' && griffarinsUnlocked()) {
+                const griffarinsNote = document.createElement('div');
+                griffarinsNote.className = 'gq-section-label';
+                griffarinsNote.style.cssText = 'margin-top:12px;color:#b45309;';
+                griffarinsNote.textContent = '👥 Les Griffarins s\'éclairent dans l\'Explorium — la confrérie des compagnons-imprimeurs.';
+                body.appendChild(griffarinsNote);
+            }
 
             // Bouton Fresque globale (remplace l'ancien bouton BD)
             const fresqueBtn = document.createElement('button');
@@ -24594,6 +25734,15 @@
             // ── Guillotière / SE ──
             card1:           { x: 0.70, y: 0.62 },  // St-Exupéry
             tc_ibn_battuta:  { x: 0.88, y: 0.60 },
+
+            // ── Grappe "Lyon, ville du livre" (Presqu'île / Vieux-Lyon Saint-Jean) ──
+            card6:                { x: 0.58, y: 0.68 },  // Place Bellecour
+            card_louise_labe:     { x: 0.62, y: 0.62 },  // Rue Bellecordière
+            card_dolet:           { x: 0.34, y: 0.58 },  // Rue Mercière
+            card_presse_doloire:  { x: 0.30, y: 0.63 },  // Rue Mercière (la Doloire)
+            card_gryphe:          { x: 0.16, y: 0.48 },  // Vieux-Lyon (Saint-Jean)
+            card13:               { x: 0.09, y: 0.50 },  // Cathédrale Saint-Jean
+            card_palais_st_jean:  { x: 0.05, y: 0.58 },  // Palais Saint-Jean
         };
 
         // ── Prérequis additionnels par étape (étape ID → array de prerequis V2) ──
@@ -24645,11 +25794,20 @@
         })();
 
         // 3) Hook getAllCards pour exclure ces pseudo-cartes (elles ne sont PAS dans le Sac)
+        //    et inclure la carte tutoriel (Les clefs de la ville) afin qu'elle apparaisse
+        //    dans la Collection une fois collectée.
         (function v2HookGetAllCards() {
             if (typeof getAllCards !== 'function') return;
             const orig = window.getAllCards;
             window.getAllCards = function() {
-                return orig.call(this).filter(c => !c || !c._v2WorldActor);
+                const list = orig.call(this).filter(c => !c || !c._v2WorldActor);
+                if (typeof OB_TUTORIAL_CARD !== 'undefined'
+                    && typeof collectedCards !== 'undefined'
+                    && collectedCards.includes(OB_TUTORIAL_CARD.id)
+                    && !list.some(c => c && c.id === OB_TUTORIAL_CARD.id)) {
+                    list.push({ ...OB_TUTORIAL_CARD, image: OB_TUTORIAL_CARD.image || OB_TUTORIAL_CARD.art });
+                }
+                return list;
             };
         })();
 
@@ -24730,6 +25888,14 @@
             tc_ibn_battuta: { emoji:'🧭', kind:'actor' },
             card18:         { emoji:'🔭', kind:'actor' },
             card1:          { emoji:'✈',  kind:'actor' },
+            // ── Grappe "Lyon, ville du livre" ──
+            card6:               { emoji:'🏟', kind:'actor' },
+            card_louise_labe:    { emoji:'🪶', kind:'actor' },
+            card_gryphe:         { emoji:'🦅', kind:'actor' },
+            card13:              { emoji:'🕍', kind:'actor' },
+            card_dolet:          { emoji:'🪓', kind:'actor' },
+            card_presse_doloire: { emoji:'🗜', kind:'actor' },
+            card_palais_st_jean: { emoji:'📚', kind:'actor' },
         };
         Object.entries(V2_NEW_ACTORS).forEach(([id, a]) => {
             V2_CARD_META[id] = { emoji: a.emoji, kind: a.kind };
@@ -24741,6 +25907,7 @@
             memoire_formes: '#f472b6',
             pouvoir_lieux: '#fb923c',
             passeurs: '#34d399',
+            ville_du_livre: '#b45309',
         };
 
         // Prefix "mf_", "pl_" : les étapes existent dans GRAPPE_QUESTS sous d'autres préfixes ?
@@ -24756,6 +25923,17 @@
         let v2State = { panX:0, panY:0, zoom:1 };
         let V2_MAP_W = 941, V2_MAP_H = 1672;
         const V2_SVG_NS = 'http://www.w3.org/2000/svg';
+
+        // ── Grappe sélectionnée (une seule constellation affichée à la fois) ──
+        let v2SelectedGrappeId = null;
+        // IDs de cartes (+ éléments du monde) impliqués dans une grappe donnée
+        function v2GetGrappeCardIds(grappeId) {
+            const ids = new Set();
+            v2GetAllEtapes().filter(e => e.grappeId === grappeId).forEach(e => {
+                e.mergedPrereqs.forEach(p => ids.add(p.cardId));
+            });
+            return ids;
+        }
 
         // ── Helpers ──
         function v2GetCardName(cardId) {
@@ -25212,7 +26390,9 @@
         function v2RenderNodes() {
             const layer = document.getElementById('v2NodesLayer');
             layer.innerHTML = '';
+            const grappeCardIds = v2SelectedGrappeId ? v2GetGrappeCardIds(v2SelectedGrappeId) : null;
             Object.entries(V2_POSITIONS).forEach(([cardId, pos]) => {
+                if (grappeCardIds && !grappeCardIds.has(cardId)) return;
                 if (!v2NodeIsVisible(cardId)) return;
                 const meta = V2_CARD_META[cardId];
                 if (!meta) return;
@@ -25541,6 +26721,32 @@
             });
         }
 
+        // Centre une pill dans le bandeau SANS toucher au scroll d'aucun autre
+        // conteneur (contrairement à Element.scrollIntoView, qui remonte tous
+        // les ancêtres scrollables et peut décaler l'écran entier).
+        function v2ScrollPillIntoView(pill) {
+            const strip = document.getElementById('v2GrappesScroll');
+            if (!strip || !pill) return;
+            const stripRect = strip.getBoundingClientRect();
+            const pillRect = pill.getBoundingClientRect();
+            const delta = (pillRect.left + pillRect.width / 2) - (stripRect.left + stripRect.width / 2);
+            strip.scrollTo({ left: strip.scrollLeft + delta, behavior: 'smooth' });
+        }
+
+        // Navigation gauche/droite entre grappes narratives : change la grappe
+        // sélectionnée (donc la constellation affichée), pas un simple défilement.
+        function v2ScrollGrappesStrip(dir) {
+            const ids = Object.keys(GRAPPE_QUESTS);
+            if (!ids.length) return;
+            const curIdx = ids.indexOf(v2SelectedGrappeId);
+            const nextIdx = curIdx === -1 ? 0 : (curIdx + dir + ids.length) % ids.length;
+            v2SelectedGrappeId = ids[nextIdx];
+            v2RenderAll();
+            const strip = document.getElementById('v2GrappesScroll');
+            const activePill = strip?.querySelector('.v2-grappe-pill.selected');
+            v2ScrollPillIntoView(activePill);
+        }
+
         function v2RenderGrappesStrip() {
             const strip = document.getElementById('v2GrappesScroll');
             if (!strip) return;
@@ -25557,10 +26763,12 @@
                 });
                 const color = V2_GRAPPE_COLORS[gid] || '#d9a441';
                 const pct = total > 0 ? (completed / total) * 100 : 0;
+                const isSelected = v2SelectedGrappeId === gid;
 
                 const pill = document.createElement('div');
-                pill.className = 'v2-grappe-pill';
-                pill.style.borderColor = pct > 0 ? color + '66' : 'rgba(244,236,219,0.18)';
+                pill.className = 'v2-grappe-pill' + (isSelected ? ' selected' : '');
+                pill.style.borderColor = isSelected ? color : (pct > 0 ? color + '66' : 'rgba(244,236,219,0.18)');
+                if (isSelected) pill.style.boxShadow = '0 0 8px ' + color + '80';
                 pill.innerHTML = `
                     <div class="v2-grappe-pill-color-strip" style="background:${color}"></div>
                     <div class="v2-grappe-pill-name">${grappe.title}</div>
@@ -25572,9 +26780,18 @@
                     </div>
                 `;
                 pill.addEventListener('click', () => {
-                    if (typeof openGrappeQuestModal === 'function') {
-                        document.body.classList.add('v2-modal-context');
-                        openGrappeQuestModal(gid);
+                    if (v2SelectedGrappeId === gid) {
+                        // Grappe déjà sélectionnée : un 2e tap ouvre le détail de la quête
+                        if (typeof openGrappeQuestModal === 'function') {
+                            document.body.classList.add('v2-modal-context');
+                            openGrappeQuestModal(gid);
+                        }
+                    } else {
+                        v2SelectedGrappeId = gid;
+                        v2RenderAll();
+                        // v2RenderAll() reconstruit le bandeau : la pill d'origine est
+                        // détachée du DOM, on récupère la nouvelle avant de recentrer.
+                        v2ScrollPillIntoView(strip.querySelector('.v2-grappe-pill.selected'));
                     }
                 });
                 strip.appendChild(pill);
@@ -25583,7 +26800,7 @@
 
         function v2RenderAll() {
             v2ResetMediaPositions();
-            const all = v2GetAllEtapes();
+            const all = v2GetAllEtapes().filter(e => !v2SelectedGrappeId || e.grappeId === v2SelectedGrappeId);
             v2DrawVeil();
             v2RenderThreads(all);
             v2RenderNodes();
@@ -25902,6 +27119,9 @@
                 svg.setAttribute('height', V2_MAP_H);
                 svg.setAttribute('viewBox', `0 0 ${V2_MAP_W} ${V2_MAP_H}`);
                 v2SyncLumensFromV1();
+                if (!v2SelectedGrappeId || !GRAPPE_QUESTS[v2SelectedGrappeId]) {
+                    v2SelectedGrappeId = Object.keys(GRAPPE_QUESTS)[0] || null;
+                }
                 v2RenderAll();
                 v2CenterOnPresquile();
                 v2AttachPanZoom();
