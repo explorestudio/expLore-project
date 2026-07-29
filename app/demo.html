@@ -7273,14 +7273,16 @@
                         <button class="avatar-menu-item avatar-menu-item--disabled">
                             <span>👤</span> Mon compte <span class="soon-badge">Bientôt</span>
                         </button>
+                        <!-- Progression : succès de la démo OT -->
                         <button class="avatar-menu-item" onclick="closeAvatarMenu(); openProgressionScreen()">
                             <span>⭐</span> Progression
                         </button>
                         <button class="avatar-menu-item avatar-menu-item--disabled">
                             <span>🛒</span> Magasin <span class="soon-badge">Bientôt</span>
                         </button>
-                        <div class="avatar-menu-divider"></div>
-                        <button class="avatar-menu-item avatar-menu-item--test" onclick="closeAvatarMenu(); openTestPanel()">
+                        <!-- Mode test : masqué pour la démo OT (accès retiré) -->
+                        <div class="avatar-menu-divider" style="display:none;"></div>
+                        <button class="avatar-menu-item avatar-menu-item--test" style="display:none;" onclick="closeAvatarMenu(); openTestPanel()">
                             <span>🧪</span> Mode test
                         </button>
                     </div>
@@ -7318,19 +7320,7 @@
                     </svg>
                     <span class="action-bar-lbl">Explorium</span>
                 </button>
-                <button class="action-bar-btn" id="btnStudio" onclick="openStudioScreen()" title="Studio">
-                    <!-- Maison / studio -->
-                    <svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg">
-                        <polygon points="13,3 23,11 3,11" fill="#A78BFA"/>
-                        <polygon points="13,3 23,11 3,11" fill="none" stroke="#7C3AED" stroke-width="1" stroke-linejoin="round"/>
-                        <rect x="4" y="11" width="18" height="12" rx="1" fill="#C4B5FD"/>
-                        <rect x="4" y="11" width="18" height="12" rx="1" fill="none" stroke="#7C3AED" stroke-width="1"/>
-                        <rect x="10" y="16" width="6" height="7" rx="1" fill="#7C3AED"/>
-                        <rect x="6" y="13" width="4" height="4" rx="0.5" fill="white" opacity="0.7"/>
-                        <rect x="16" y="13" width="4" height="4" rx="0.5" fill="white" opacity="0.7"/>
-                    </svg>
-                    <span class="action-bar-lbl">Studio</span>
-                </button>
+                <!-- Studio : RETIRÉ pour la démo OT (action-bar = Collection · Explorium · Sac) -->
                 <button class="action-bar-btn" id="btnBag" onclick="openBagScreen()" title="Sac">
                     <!-- Sac à dos -->
                     <svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg">
@@ -7347,7 +7337,8 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.56.1 · Fix : les flèches de navigation entre grappes décalaient tout l'écran (scrollIntoView remontait les conteneurs parents) — défilement maintenant limité au bandeau.</div>
+            <!-- Bandeau version : retiré pour la démo OT -->
+            <div class="hud-version" id="hudVersion" style="display:none;"></div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -7368,8 +7359,8 @@
                 </div>
             </div>
 
-            <!-- Journal de quête (sous le compteur poudre) -->
-            <button class="hud-quest-journal" id="hudQuestJournal" onclick="openQuestJournal()" title="Journal de quête">
+            <!-- Journal de quête : masqué pour la démo OT (pas de quêtes) -->
+            <button class="hud-quest-journal" id="hudQuestJournal" style="display:none;" onclick="openQuestJournal()" title="Journal de quête">
                 <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#1f2937" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4V4z"/>
                     <path d="M8 8h8M8 12h8M8 16h5"/>
@@ -7398,8 +7389,8 @@
                 oncontextmenu="toggleSpeedPanel(event)"
                 title="Changer la vue · Appui long pour la vitesse">🔭</button>
 
-            <!-- Bouton calque quartiers : contours + titres + progression -->
-            <button class="zone-layer-toggle" id="zoneLayerToggleBtn"
+            <!-- Bouton calque quartiers : RETIRÉ pour la démo OT (pas de zones) -->
+            <button class="zone-layer-toggle" id="zoneLayerToggleBtn" style="display:none;"
                 onclick="toggleZonesLayer()"
                 title="Afficher / masquer les quartiers">🏘️</button>
 
@@ -7550,7 +7541,6 @@
                     <button onclick="testCompleteAllGrappeQuests()" class="test-action-btn">🏆 Terminer toutes étapes grappe</button>
                     <button onclick="testForceCompleteCurrentQuest()" class="test-action-btn">⚡ Forcer validation quête active</button>
                     <button onclick="startIntroBD()" class="test-action-btn">🎬 Rejouer cinématique BD</button>
-                    <button onclick="testToggleCompleteZones()" class="test-action-btn">🗺️ Compléter les zones (aperçu)</button>
                     <button onclick="testRefillCardEnergy()" class="test-action-btn">⚡ Restaurer énergie toutes cartes</button>
                     <button onclick="testFastForwardCardEnergy()" class="test-action-btn">⏩ +2h sur énergie cartes</button>
                     <button onclick="resetProgress()" class="test-action-btn test-action-btn--danger">⚠️ Réinitialiser la progression</button>
@@ -7943,7 +7933,12 @@
         <!-- Card Detail View -->
         <div id="cardDetailView" class="card-detail-view" onclick="handleCardDetailBackdropClick(event)">
             <div class="card-detail-inner" onclick="event.stopPropagation()">
-                <!-- Bouton fermer flottant -->
+                <!-- DÉMO OT — Bouton retour direct à la mappe (surbrillançable par le guide) -->
+                <button id="demoBackToMapBtn" onclick="_demoReturnToMap()" title="Retour à la mappe"
+                    style="position:absolute;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:6px;
+                           background:rgba(20,18,38,0.85);border:1px solid rgba(167,139,250,0.55);color:#EDE9FE;
+                           padding:7px 14px;border-radius:18px;font-size:13px;font-weight:700;cursor:pointer;
+                           box-shadow:0 3px 12px rgba(0,0,0,0.45);">← Mappe</button>
 
                 <div class="card-detail-body">
                     <!-- ── Zone haute : la carte ───────────────── -->
@@ -7973,7 +7968,7 @@
                             <!-- Colonne onglets verticaux -->
                             <div class="card-vtabs">
                                 <button class="card-vtab active" id="vtabCarte" onclick="switchTab('card', event)">Carte</button>
-                                <button class="card-vtab" id="vtabSkins" onclick="switchTab('skins', event)">Skins</button>
+                                <button class="card-vtab" id="vtabSkins" style="display:none;" onclick="switchTab('skins', event)">Skins</button>
                                 <button class="card-vtab" id="vtabGeneral" onclick="switchTab('general', event)">Général</button>
                             </div>
 
@@ -8249,8 +8244,9 @@
                 </div>
             </div>
             <div class="prog-tabs">
-                <button class="prog-tab active" id="progTabBP" onclick="switchProgTab('battlepass')">🗺️ Parcours</button>
-                <button class="prog-tab" id="progTabAchiev" onclick="switchProgTab('achievements')">🏆 Succès</button>
+                <!-- DÉMO OT : onglet Parcours (battlepass) masqué, seuls les Succès restent -->
+                <button class="prog-tab" id="progTabBP" style="display:none;" onclick="switchProgTab('battlepass')">🗺️ Parcours</button>
+                <button class="prog-tab active" id="progTabAchiev" onclick="switchProgTab('achievements')">🏆 Succès</button>
             </div>
             <!-- Petit encart "Tes pas dans Lyon" — discret, sobre, registre exploration -->
             <div class="prog-distance-card" id="progDistanceCard">
@@ -9200,7 +9196,7 @@
                 </div>
             </div>
 
-            <div class="v2-grappes-strip">
+            <div class="v2-grappes-strip" style="display:none;"><!-- masqué démo OT : pas de grappes -->
                 <div class="v2-grappes-strip-header">
                     <span class="v2-grappes-strip-title">Grappes narratives</span>
                     <div class="v2-grappes-strip-nav">
@@ -10583,18 +10579,22 @@
         // ══════════════════════════════════════
 
         // ── Carte tutoriel ──
+        // DÉMO OT — Carte unique. On conserve l'id 'ob_tutorial_card' (câblé en
+        // dur dans le rituel, le guide, la révélation gratuite, la sauvegarde) et
+        // on rhabille uniquement le contenu. Invisible pour le joueur : il voit
+        // « Office du Tourisme » partout. Contenu éditorial = placeholders (Canelle).
         const OB_TUTORIAL_CARD = {
             id: 'ob_tutorial_card',
             cardKind: 'lore',
-            name: 'Les clefs de la ville',
-            type: 'Objet',
+            name: 'Office du Tourisme',
+            type: 'Lieu',
             rarity: 'rare',
-            supertype: 'histoire',
-            incipit: 'Trois clefs pour une ville. Et pas une porte à ouvrir.',
-            clue: 'Un présent d\'apparat, offert puis presque oublié. Il en manque deux.',
+            supertype: 'societe',
+            incipit: '[Incipit à rédiger — Canelle]',
+            clue: '[Indice à rédiger — Canelle]',
             clueIcon: '✦',
             collections: [],
-            art: './assets/clef%20de%20la%20ville.png',
+            art: './assets/placeholder_ot.png',
         }
         let _obDone        = false;
         let _villeDuLivreUnlocked = false;  // true quand le rendez-vous Bellecour est validé → POI du parcours visibles
@@ -11018,14 +11018,18 @@
                 vnShow([{ speaker: 'La jeune fille', line: 'Il y a quelque chose là-bas. Pas un lieu, pas un monument — quelque chose de plus discret. Approche-toi.' }], null);
             }, 1200);
 
-            // Surveiller la proximité — quand dans la zone, afficher la bannière nearby
+            // Surveiller la proximité — afficher la bannière quand dans la zone,
+            // la MASQUER si le joueur en ressort sans avoir collecté (DÉMO OT).
             window._obProximityCheck = setInterval(() => {
                 if (!playerPos) return;
+                if (_obCollectTriggered) { clearInterval(window._obProximityCheck); window._obProximityCheck = null; return; }
                 const dist = getDistance(playerPos.lat, playerPos.lng, _obSpawnLat, _obSpawnLng);
+                const nearbyDiv = document.getElementById('nearbyPOI');
+                const isShown = nearbyDiv && !nearbyDiv.classList.contains('hidden');
                 if (dist <= COLLECTION_RADIUS) {
-                    clearInterval(window._obProximityCheck);
-                    window._obProximityCheck = null;
-                    _obShowEllaraNearby();
+                    if (!isShown) _obShowEllaraNearby();
+                } else if (isShown) {
+                    nearbyDiv.classList.add('hidden');
                 }
             }, 800);
         }
@@ -11033,7 +11037,7 @@
         // Afficher la bannière nearby pour Elara
         function _obShowEllaraNearby() {
             const nearbyDiv = document.getElementById('nearbyPOI');
-            document.getElementById('poiName').textContent = 'Les clefs de la ville';
+            document.getElementById('poiName').textContent = OB_TUTORIAL_CARD.name;
             const badge = document.getElementById('poiThematicBadge');
             if (badge) badge.style.display = 'none';
             const sub = nearbyDiv.querySelector('.nearby-poi-distance');
@@ -11112,11 +11116,10 @@
             // carte (personnage·lieu·objet) avec mots-clés colorés, échange jeune fille ↔ joueur.
             // Couleurs : nébuleuse #B98CE8, présences #E09AC0, carte #F5B841, types #5FC9E8.
             vnShow([
-                { speaker: 'La jeune fille', html: 'Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> doivent se trouver à l\'intérieur. Ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span> !' },
+                { speaker: 'La jeune fille', html: 'Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> flottent à l\'intérieur. Approche-toi — ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span>.' },
                 { speaker: 'Toi', line: 'Ma quoi ?' },
-                { speaker: 'La jeune fille', html: 'Une <span style="color:#F5B841;font-weight:600">carte</span>. C\'est le nom qu\'on donne à une mémoire qu\'on a réussi à fixer : un <span style="color:#5FC9E8;font-weight:600">personnage</span>, un <span style="color:#5FC9E8;font-weight:600">lieu</span> ou un <span style="color:#5FC9E8;font-weight:600">objet</span> que la ville avait presque oublié.' },
-                { speaker: 'La jeune fille', html: 'Celle-ci, tiens : les <span style="color:#F5B841;font-weight:600">clefs de la ville</span>. Trois clefs d\'apparat offertes à un empereur — et qui n\'ouvrent aucune porte. La ville en a fait un symbole, puis les a presque oubliées.' },
-                { speaker: 'La jeune fille', line: 'Approche-toi, et cristallise-la. Elle est à toi.' },
+                { speaker: 'La jeune fille', html: 'Une <span style="color:#F5B841;font-weight:600">carte</span>. Le nom qu\'on donne à une mémoire qu\'on a réussi à fixer : un <span style="color:#5FC9E8;font-weight:600">personnage</span>, un <span style="color:#5FC9E8;font-weight:600">lieu</span> ou un <span style="color:#5FC9E8;font-weight:600">objet</span> que la ville avait presque oublié.' },
+                { speaker: 'La jeune fille', line: 'Cristallise-la, et découvre ce qu\'elle garde. Elle est à toi.' },
             ], () => {
                 if (!cardLevels[OB_TUTORIAL_CARD.id]) {
                     cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
@@ -11132,12 +11135,40 @@
 
             if (!_obAct2Done && card.id === OB_TUTORIAL_CARD.id) {
                 _obAct2Done = true;
+                // DÉMO OT : forcer immédiatement l'état de la carte (§5.2) —
+                // ouverte au chapitre 2, proche de la complétion.
+                _demoSeedCardState();
                 saveProgress();
                 _obRestoreAllPOI();
-                // Le tuto NE se termine PLUS à la collecte : on enchaîne sur le parcours
-                // guidé (Collection → poudre → carnet/triplet → énergie/orbe → niveau → adieu).
+                // On enchaîne sur le parcours guidé court dédié à la démo OT.
                 setTimeout(() => _obGuideStart(), 400);
             }
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        // DÉMO OT — Seeding de l'état initial de la carte (§5.2).
+        // Appelé juste après la collecte : la carte s'ouvre déjà au chapitre 2
+        // (niveau 1), avec 3/3 entrées du ch.1 et 2/3 du ch.2 déjà révélées.
+        // Énergie basse (2/6) pour que le beat « carte épuisée » tombe pile au
+        // clic qui débloque la 3e entrée du chapitre 2.
+        // ════════════════════════════════════════════════════════════════
+        function _demoSeedCardState() {
+            const id = OB_TUTORIAL_CARD.id;
+            cardLevels[id] = { level: 1, experience: 300, dustSpent: 550, heartsDone: { 0: [0, 1, 2], 1: [0, 1], 2: [] } };
+            cardJournalEntries[id] = [];
+            [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1]].forEach(([lvl, idx]) => _demoSeedJournalEntry(lvl, idx));
+            cardEnergy[id] = { value: 2, lastTickAt: Date.now() };
+            saveProgress();
+        }
+        function _demoSeedJournalEntry(level, idx) {
+            const id = OB_TUTORIAL_CARD.id;
+            const heartLines = getHeartLines(id, level);
+            const hl = heartLines[idx];
+            if (!hl || !hl.entry) return;
+            const entryId = id + '_' + level + '_' + idx;
+            const types = ['text', 'visual', 'audio'];
+            const forcedType = types[(level * 3 + idx) % 3];
+            unlockJournalEntry(id, level, { id: entryId, ...hl.entry, _type: forcedType });
         }
 
 
@@ -11219,18 +11250,40 @@
         // énumérer : on se fie à la visibilité réelle du DOM.
 
         // Étape → sélecteur unique de la cible à entourer (null = aucun anneau).
+        // DÉMO OT — étapes du guide court : ouvrir la carte → nourrir (ch.2) →
+        // aller chercher l'orbe → finir le ch.2 → sceller → nourrir (ch.3) → fin.
+        // Le bouton #addExpBtn est multi-usage (nourrir / utiliser l'orbe / sceller).
+        // Valeur = sélecteur, OU fonction renvoyant un sélecteur (cible dynamique).
+        // get_orb / feed_ch3 : si la ressource manque → on pointe le retour à la
+        // mappe (pour aller récolter) ; sinon le bouton d'action de la carte.
         const _OB_STEP_RING = {
-            go_collections: '#btnCollections',
-            go_card:        '.alb-card.alb-collected',
-            feed1:          '#addExpBtn',
-            journal1:       '#journalTabBtn',
-            lesson:         null,
-            feed2:          '#addExpBtn',
-            orb:            '#addExpBtn',
-            feed3:          '#addExpBtn',
-            reveal_rest:    null,
-            seal:           '#addExpBtn',
+            go_collections:  '#btnCollections',
+            go_card:         '.alb-card.alb-collected',
+            feed_ch2:        '#addExpBtn',
+            get_orb:         () => (bagInv.orbes > 0 ? '#addExpBtn' : _demoBackToMapSelector()),
+            feed_finish_ch2: '#addExpBtn',
+            seal_ch2:        '#addExpBtn',
+            feed_ch3:        () => (memorialDust >= 50 ? '#addExpBtn' : _demoBackToMapSelector()),
         };
+
+        // DÉMO OT — Premier bouton « retour à la mappe » réellement visible
+        // (fiche carte, Collection ou carnet). Renvoie null si aucun n'est à l'écran.
+        function _demoBackToMapSelector() {
+            const cands = ['#demoBackToMapBtn', '.alb-back', '.journal-screen-back'];
+            for (let i = 0; i < cands.length; i++) {
+                const el = document.querySelector(cands[i]);
+                if (el && _obElementVisible(el)) return cands[i];
+            }
+            return null;
+        }
+
+        // DÉMO OT — Retour direct à la mappe depuis la fiche carte (un seul tap).
+        function _demoReturnToMap() {
+            try { closeCardDetail(); } catch (e) {}
+            try { closeCollections(); } catch (e) {}
+            try { closeJournalScreen(); } catch (e) {}
+            try { closeMindmap(); } catch (e) {}
+        }
 
         let _obRingSelector = null;   // sélecteur actuellement entouré
         let _obGuideTimer   = null;   // handle de la boucle
@@ -11283,30 +11336,23 @@
         // ne puisse jamais rester bloqué derrière le joueur (qui peut tout faire
         // dans n'importe quel ordre). Tourne à chaque tick.
         function _obGuideSync() {
+            // DÉMO OT : backstop léger. NE termine PLUS au niveau ≥ 1 (la carte
+            // démarre au niveau 1). On ne rattrape que les événements manqués.
             if (!_obGuide.active) return;
             const card = OB_TUTORIAL_CARD;
             const cl = (typeof cardLevels === 'object') ? cardLevels[card.id] : null;
             if (!cl) return;
-            // Ne pas agir tant qu'un overlay bloquant est affiché (dialogue VN ou
-            // synthèse de scellement) : on laisse l'événement 'sealed' faire la
-            // transition propre une fois la synthèse fermée.
             const vn = document.getElementById('vnOverlay');
             const synth = document.getElementById('orbSynthOverlay');
             const blocked = (vn && vn.classList.contains('show')) || (synth && synth.classList.contains('show'));
-            // 1) La carte est montée de niveau → le chapitre a été scellé : on termine
-            //    (backstop si l'événement 'sealed' n'a pas été capté à la bonne étape).
-            if (cl.level >= 1) {
-                if (blocked) return;
-                _obGuideFinish();
-                return;
-            }
             if (blocked) return;
-            // 2) XP au max alors que le guide est encore dans une étape de nourrissage
-            //    → router vers "dévoiler / sceller".
-            const needed = getExpNeeded(card, cl.level);
-            if (cl.experience >= needed) {
-                const feeding = ['feed1', 'journal1', 'lesson', 'feed2', 'orb', 'feed3'];
-                if (feeding.indexOf(_obGuide.step) !== -1) { _obAfterXpFull(); }
+            // Backstop : XP plein au chapitre 2 mais l'événement xp_full a été manqué → sceller.
+            if (_obGuide.step === 'feed_finish_ch2' && cl.level === 1) {
+                if (cl.experience >= getExpNeeded(card, cl.level)) _obAfterXpFull();
+            }
+            // Backstop : 3e entrée du chapitre 3 débloquée mais entry_unlocked manqué → fin.
+            if (_obGuide.step === 'feed_ch3' && cl.level >= 2) {
+                if (cl.heartsDone && (cl.heartsDone[2] || []).length >= 3) _obGuideFinish();
             }
         }
 
@@ -11315,7 +11361,8 @@
             if (!_obGuide.active) { _obGuideClearRing(); _obRingSelector = null; return; }
             _obGuideSync();
             if (!_obGuide.active) { _obGuideClearRing(); _obRingSelector = null; return; }
-            const selector = _OB_STEP_RING[_obGuide.step] || null;
+            const rawSel = _OB_STEP_RING[_obGuide.step];
+            const selector = (typeof rawSel === 'function' ? rawSel() : rawSel) || null;
             // Pas d'anneau pendant un dialogue VN.
             const vn = document.getElementById('vnOverlay');
             const vnUp = vn && vn.classList.contains('show');
@@ -11375,79 +11422,98 @@
             document.getElementById('obSkipBtn').classList.add('visible');
             _obGuideStartLoop();
             vnShow([
-                { speaker: 'La jeune fille', line: 'Tu l\'as recueillie. Mais une carte qu\'on vient de réveiller a presque tout oublié — il faut lui rendre sa mémoire.' },
-                { speaker: 'La jeune fille', line: 'Ouvre ta Collection. Elle t\'y attend, désormais.' },
+                { speaker: 'La jeune fille', line: 'Tu l\'as recueillie. Mais une carte qu\'on vient de réveiller a presque tout oublié — à toi de lui rendre sa mémoire.' },
+                { speaker: 'La jeune fille', line: 'Ouvre ta Collection, puis la carte. Tout se passe dans son détail.' },
             ], () => _obGuideRefresh());
         }
 
         // Transition partagée : on vient d'ouvrir la fiche carte → invite à la nourrir.
         function _obGuideEnterFeed1() {
-            _obGuide.step = 'feed1';
+            _obGuide.step = 'feed_ch2';
             vnShow([
-                { speaker: 'La jeune fille', line: 'Pour qu\'une carte se souvienne, il lui faut de la poudre mémorielle. Donne-lui-en — et regarde ce qui remonte.' },
+                { speaker: 'La jeune fille', line: 'Je lui ai déjà rendu un peu de sa mémoire — tiens, elle a même déjà quelques souvenirs dans son carnet. À toi de réveiller le reste.' },
+                { speaker: 'La jeune fille', html: 'Pour qu\'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire — regarde son carnet se remplir.' },
             ], () => _obGuideRefresh());
         }
 
-        // Fin du tuto : adieu de la jeune fille + activation du RDV Bellecour.
-        // Appelable depuis n'importe quelle étape (scellement), idempotent.
+        // DÉMO OT — Complétion : adieu de la jeune fille + écran de fin.
+        // Appelée quand la 3e entrée du chapitre 3 est débloquée.
         function _obGuideFinish() {
             if (!_obGuide.active) return;
             _obGuide.active = false;
             _obGuide.step = null;
             _obGuideStopLoop();
             vnShow([
-                { speaker: 'La jeune fille', line: 'Voilà. Ce chapitre ne s\'oubliera plus. C\'est ça, être archéologue de la mémoire.' },
-                // ── Onboarding : les trois types de points (nébuleuses/cartes, panoramas,
-                //    points d'info), puis zones + points-souvenirs (v3). Sans Bellecour.
-                { speaker: 'La jeune fille', line: 'Avant que je parte, écoute. Trois choses t\'attendent en marchant.' },
-                // Mots-clés colorés : nébuleuses, présences, cartes, panoramas, points d'information, quartiers.
-                { speaker: 'La jeune fille', html: 'Les <span style="color:#B98CE8;font-weight:600">nébuleuses</span>. Elles apparaissent sur ta carte comme des points lumineux, à des lieux précis de la ville. Recueille les <span style="color:#E09AC0;font-weight:600">présences</span> qu\'elles renferment, et elles deviennent des <span style="color:#F5B841;font-weight:600">cartes</span> — chacune a une histoire à te rendre, une fois que tu lui auras donné le temps de s\'en souvenir.' },
-                { speaker: 'La jeune fille', html: 'Les <span style="color:#5FC9E8;font-weight:600">panoramas</span>. Ce sont des lieux où le regard porte — un pont, une crête, une vue qu\'on ne voit qu\'en s\'arrêtant. Quand tu y prends la photo, l\'Ordre garde mémoire de ce que tu as vu.' },
-                { speaker: 'La jeune fille', html: 'Les <span style="color:#7BD88F;font-weight:600">points d\'information</span>. Des supports que d\'autres ont laissés, incomplets. Tu peux les compléter en y insérant les parchemins que tu récupères en chemin. Une fois assemblés, ils te livrent ce qu\'ils cachaient.' },
-                { speaker: 'La jeune fille', html: 'La ville est faite de <span style="color:#C89039;font-weight:600">quartiers</span>. Chacun a ses <span style="color:#E09AC0;font-weight:600">présences</span>, ses <span style="color:#5FC9E8;font-weight:600">vues</span>, ses <span style="color:#7BD88F;font-weight:600">histoires</span> à découvrir. Tu verras leur avancement se dessiner à mesure que tu les parcours.' },
-                { speaker: 'La jeune fille', line: 'Et là où tu passes, la carte en garde trace — chaque geste que tu poses laisse un petit signe, discret, à sa place exacte. À toi de reconnaître, plus tard, le dessin de ton exploration.' },
-                { speaker: 'La jeune fille', line: 'Je dois partir, maintenant — j\'ai mes propres voix à retrouver, ailleurs. Le reste vient en marchant. À toi, désormais.' },
+                { speaker: 'La jeune fille', line: 'Voilà. Cette carte t\'a tout rendu — trois chapitres, et pas une page qui manque. C\'est ça, être archéologue de la mémoire.' },
+                { speaker: 'La jeune fille', line: 'Je dois repartir, maintenant — d\'autres voix m\'attendent, ailleurs. Le reste vient en marchant. À toi, désormais.' },
             ], () => {
                 _obDone = true;
                 _obAct3Done = true;
                 document.getElementById('obSkipBtn').classList.remove('visible');
-                // Filet de sécurité : garantir que la carte tutoriel est bien possédée
-                // (présente, consultable, améliorable), quel que soit le chemin suivi.
-                if (typeof OB_TUTORIAL_CARD === 'object' && OB_TUTORIAL_CARD) {
-                    if (!cardLevels[OB_TUTORIAL_CARD.id]) {
-                        cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
-                    }
-                    if (!collectedCards.includes(OB_TUTORIAL_CARD.id)) collectedCards.push(OB_TUTORIAL_CARD.id);
-                }
-                // RDV Bellecour désactivé pour le test 1 (parcours reporté au test 2).
-                // _obActivateBellecourQuest();
                 saveProgress();
+                _demoShowEndScreen();
             });
         }
 
-        // XP au max : router vers "dévoiler les pages restantes" ou directement "sceller".
-        function _obAfterXpFull() {
-            if (_obAllTutorialEntriesRevealed()) {
-                _obGuide.step = 'seal';
-                vnShow([
-                    { speaker: 'La jeune fille', line: 'Le chapitre est plein, et toutes ses pages dévoilées. Scelle-le — qu\'il prenne racine.' },
-                ], () => _obGuideRefresh());
-            } else {
-                _obGuide.step = 'reveal_rest';
-                vnShow([
-                    { speaker: 'La jeune fille', line: 'Le chapitre est plein — mais des pages restent voilées : une image, un son.' },
-                    { speaker: 'La jeune fille', line: 'Ouvre le carnet et dévoile-les toi-même, à la pellicule et à la cassette. Ensuite seulement tu pourras sceller.' },
-                ], () => _obGuideRefresh());
-            }
+        // DÉMO OT — Toast "lore" pour les beats scénarisés (épuisement / orbe).
+        function showDemoToast(msg) {
+            const ex = document.getElementById('demoLoreToast');
+            if (ex) ex.remove();
+            const t = document.createElement('div');
+            t.id = 'demoLoreToast';
+            t.textContent = msg;
+            t.style.cssText = [
+                'position:fixed', 'top:96px', 'left:50%', 'transform:translateX(-50%)',
+                'max-width:80%', 'background:linear-gradient(135deg,rgba(30,27,58,0.96),rgba(20,18,38,0.96))',
+                'color:#EDE9FE', 'padding:12px 22px', 'border-radius:22px',
+                'font-size:14px', 'font-weight:600', 'line-height:1.4', 'text-align:center',
+                'z-index:10000', 'border:1px solid rgba(167,139,250,0.45)',
+                'box-shadow:0 6px 24px rgba(88,28,135,0.5)', 'pointer-events:none'
+            ].join(';');
+            document.body.appendChild(t);
+            setTimeout(() => { if (t.parentNode) t.remove(); }, 4200);
         }
 
-        // Dispatcher d'événements du parcours guidé
+        // DÉMO OT — Écran de fin plein écran (§5.8).
+        function _demoShowEndScreen() {
+            if (document.getElementById('demoEndScreen')) return;
+            const ov = document.createElement('div');
+            ov.id = 'demoEndScreen';
+            ov.style.cssText = [
+                'position:fixed', 'inset:0', 'z-index:100000',
+                'background:radial-gradient(circle at 50% 40%, #1b1636 0%, #0a0814 100%)',
+                'display:flex', 'flex-direction:column', 'align-items:center', 'justify-content:center',
+                'text-align:center', 'padding:32px', 'gap:16px',
+                'opacity:0', 'transition:opacity 0.9s ease'
+            ].join(';');
+            ov.innerHTML =
+                '<div style="font-size:26px;color:#F5B841;font-weight:700;letter-spacing:1px;">Fin de la démonstration</div>' +
+                '<div style="font-size:16px;color:#EDE9FE;opacity:0.9;">Merci d\'avoir exploré.</div>' +
+                '<div style="margin-top:24px;font-size:12px;color:rgba(237,233,254,0.55);letter-spacing:2px;text-transform:uppercase;">ExpLoreStudio · expLore</div>' +
+                '<button id="demoEndClose" style="margin-top:28px;background:rgba(245,184,65,0.14);border:1px solid rgba(245,184,65,0.5);color:#F5B841;padding:10px 26px;border-radius:22px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px;">Revenir à la carte</button>';
+            document.body.appendChild(ov);
+            requestAnimationFrame(() => { ov.style.opacity = '1'; });
+            document.getElementById('demoEndClose').onclick = () => {
+                ov.style.opacity = '0';
+                setTimeout(() => { if (ov.parentNode) ov.remove(); }, 900);
+            };
+        }
+
+        // DÉMO OT — XP du chapitre 2 au max → inviter à sceller.
+        // (Les entrées sont auto-révélées : pas d'étape "dévoiler les pages".)
+        function _obAfterXpFull() {
+            _obGuide.step = 'seal_ch2';
+            vnShow([
+                { speaker: 'La jeune fille', line: 'Le chapitre est plein. Scelle-le : qu\'il prenne racine.' },
+            ], () => _obGuideRefresh());
+        }
+
+        // DÉMO OT — Dispatcher du parcours guidé court.
+        // Flux : go_collections → go_card → feed_ch2 → (énergie 0) get_orb →
+        //        (orbe utilisée) feed_finish_ch2 → (xp plein) seal_ch2 →
+        //        (scellé) feed_ch3 → (3e entrée ch.3) fin.
         function _obGuideEvent(ev) {
             if (!_obGuide.active) return;
-
-            // Scellement = fin du tuto, quelle que soit l'étape où le guide se trouve.
-            // (Le joueur peut sceller par un chemin que le guide n'a pas anticipé.)
-            if (ev === 'sealed') { _obGuideFinish(); return; }
 
             switch (_obGuide.step) {
 
@@ -11458,7 +11524,6 @@
                             { speaker: 'La jeune fille', line: 'La voilà. Muette, pour l\'instant. Ouvre-la.' },
                         ], () => _obGuideRefresh());
                     } else if (ev === 'carddetail') {
-                        // Le joueur a ouvert la carte directement (via le toast) — on enchaîne.
                         _obGuideEnterFeed1();
                     }
                     break;
@@ -11469,82 +11534,77 @@
                     }
                     break;
 
-                case 'feed1':
-                    if (ev === 'entry_unlocked') {
-                        _obGuide.step = 'journal1';
-                        vnShow([
-                            { speaker: 'La jeune fille', line: 'Tu l\'as réveillée. Une page s\'est inscrite dans son carnet — il t\'appelle.' },
-                        ], () => _obGuideRefresh());
-                    } else if (ev === 'xp_full') {
-                        _obAfterXpFull();
-                    }
-                    break;
-
-                case 'journal1':
-                    if (ev === 'journal') {
-                        _obGuide.step = 'lesson';
-                        _obGuideClearRing();
-                        vnShow([
-                            { speaker: 'La jeune fille', line: 'Cette première page est voilée. Cette fois, c\'est moi qui l\'écris pour toi — avec mon encre.' },
-                        ], () => {
-                            _obRevealEntryFree(OB_TUTORIAL_CARD.id, OB_TUTORIAL_CARD.id + '_0_0');
-                            setTimeout(() => {
-                                vnShow([
-                                    { speaker: 'La jeune fille', line: 'Les voix laissent trois sortes de traces : des mots, des images, des sons.' },
-                                    { speaker: 'La jeune fille', line: 'L\'encre révèle les mots. La pellicule, les images. La cassette, les sons. Tu en as quelques-unes — sers-t\'en.' },
-                                    { speaker: 'La jeune fille', line: 'Reviens à la carte et continue à la nourrir, puis dévoile toi-même les pages qui s\'ouvriront.' },
-                                ], () => {
-                                    _obGuide.step = 'feed2';
-                                    _obGuideRefresh();
-                                });
-                            }, 700);
-                        });
-                    } else if (ev === 'xp_full') {
-                        _obAfterXpFull();
-                    }
-                    break;
-
-                case 'feed2':
+                case 'feed_ch2':
+                    // La carte s'épuise (énergie pré-semée à 2) pile au clic qui
+                    // débloque la 3e entrée du chapitre 2 → détour orbe.
                     if (ev === 'energy_empty') {
-                        _obGuide.step = 'orb';
-                        if (typeof bagInv === 'object') bagInv.orbes = (bagInv.orbes || 0) + 1;
-                        if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
+                        _obGuide.step = 'get_orb';
+                        showDemoToast('La carte est épuisée. Cherche de quoi la raviver.');
                         vnShow([
-                            { speaker: 'La jeune fille', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
-                            { speaker: 'La jeune fille', line: 'Mais tiens — prends cette orbe mémorielle. Elle lui rend toute son énergie d\'un coup. Utilise-la.' },
+                            { speaker: 'La jeune fille', line: 'La voilà à bout de souffle. La mémoire a besoin d\'une orbe pour se raviver d\'un coup — il y en a une, tout près, sur la carte. Va la chercher.' },
+                            { speaker: 'La jeune fille', line: 'Profites-en pour ramasser la poudre que tu croiseras : tu en manqueras bientôt.' },
                         ], () => _obGuideRefresh());
                     } else if (ev === 'xp_full') {
                         _obAfterXpFull();
                     }
                     break;
 
-                case 'orb':
+                case 'get_orb':
+                    // Le joueur revient, réutilise l'orbe collectée sur la carte.
                     if (ev === 'orb_used') {
-                        _obGuide.step = 'feed3';
+                        _obGuide.step = 'feed_finish_ch2';
+                        showDemoToast('La mémoire s\'ouvre à nouveau.');
                         vnShow([
-                            { speaker: 'La jeune fille', line: 'Elle revit. Continue — mène ce premier chapitre à son terme.' },
+                            { speaker: 'La jeune fille', line: 'Elle revit. Continue — mène ce chapitre à son terme.' },
                         ], () => _obGuideRefresh());
-                    } else if (ev === 'xp_full') {
-                        _obAfterXpFull();
+                    } else if (ev === 'carddetail') {
+                        // Cas 1 : l'orbe est déjà en poche → l'utiliser.
+                        // Cas 2 : elle manque → renvoyer le joueur la chercher sur la mappe.
+                        if (bagInv.orbes > 0) {
+                            vnShow([
+                                { speaker: 'La jeune fille', line: 'Tu as l\'orbe. Pose-la sur la carte pour la raviver.' },
+                            ], () => _obGuideRefresh());
+                        } else {
+                            vnShow([
+                                { speaker: 'La jeune fille', line: 'Il te manque encore l\'orbe — elle t\'attend sur la carte, tout près. Referme la carte, va la chercher, puis reviens.' },
+                            ], () => _obGuideRefresh());
+                        }
                     }
                     break;
 
-                case 'feed3':
+                case 'feed_finish_ch2':
                     if (ev === 'xp_full') {
                         _obAfterXpFull();
                     }
                     break;
 
-                case 'reveal_rest':
-                    if (ev === 'all_revealed') {
-                        _obGuide.step = 'seal';
+                case 'seal_ch2':
+                    if (ev === 'sealed') {
+                        _obGuide.step = 'feed_ch3';
+                        // Le chapitre 3 démarre avec l'énergie pleine (sinon 12 clics infaisables).
+                        try { restoreCardEnergy(OB_TUTORIAL_CARD.id); } catch (e) {}
+                        if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
                         vnShow([
-                            { speaker: 'La jeune fille', line: 'Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, scelle-le.' },
+                            { speaker: 'La jeune fille', line: 'Un chapitre se ferme, un autre s\'ouvre — le dernier de cette carte.' },
+                            { speaker: 'La jeune fille', line: 'Il te faudra plus de poudre. Sers-toi de celle que tu as ramassée.' },
                         ], () => _obGuideRefresh());
                     }
                     break;
 
-                // 'seal' : le scellement est géré en tête de fonction (ev === 'sealed').
+                case 'feed_ch3':
+                    // Fin quand les 3 entrées du chapitre 3 sont débloquées (xp 600).
+                    if (ev === 'entry_unlocked') {
+                        const cl = cardLevels[OB_TUTORIAL_CARD.id];
+                        if (cl && cl.heartsDone && (cl.heartsDone[2] || []).length >= 3) {
+                            _obGuideFinish();
+                        }
+                    } else if (ev === 'carddetail' && memorialDust < 50) {
+                        // Cas 2 : plus de poudre pour finir le chapitre 3 → aller en récolter.
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'Tu n\'as plus de poudre... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.' },
+                        ], () => _obGuideRefresh());
+                    }
+                    break;
             }
         }
 
@@ -11784,12 +11844,13 @@
                     2: [0.33, 0.66]
                 }
             },
-            rare:      { 
-                name: 'Rare',      
-                color: '#3B82F6', 
-                shape: 'pentagon', 
+            rare:      {
+                name: 'Rare',
+                color: '#3B82F6',
+                shape: 'pentagon',
                 exp: { 0: 250, 1: 520, 2: 800 },
-                increment: 20,
+                increment: 50,   // DÉMO OT : +50/clic (au lieu de 20) → ~17 taps sur la boucle, moins fastidieux
+
                 milestones: {
                     0: [0.25, 0.5, 0.75],
                     1: [0.25, 0.5, 0.75],
@@ -11829,12 +11890,38 @@
         const CARD_DIALOGUES = {
 
             // ── LE PASSANT (Tutoriel lore, Histoire) ──
+            // ── OFFICE DU TOURISME (carte unique de la démo) ──
+            // rare → 3 chapitres × 3 entrées carnet = 9 entrées « heart ».
+            // Contenu = PLACEHOLDERS (Canelle finalisera après recherches).
+            // _revealed:true sur chaque entrée → dévoilée sans encre (démo sans
+            // friction ressource). Trivia (heart:false) pour l'ambiance.
             ob_tutorial_card: [
-                // Entrée carnet unique — texte de la jeune fille (validé). Débloquée à la collecte.
-                // Les 8 autres paliers (rare = 3 paliers × 3 chapitres) restent en placeholders auto.
-                { text: "Trois clefs, et pas une serrure.", heart: true, level: 0,
-                  entry: { date: "Les clefs qui n'ouvrent rien", text: "Les Clefs de la Ville de Lyon. Elles étaient trois, en bronze doré sur un plat d'argent, offertes à Napoléon en 1805 quand il est venu ici. Le plus étrange, c'est qu'elles n'ouvrent rien : juste une façon de dire « voilà notre ville ». Deux ont été perdues. Il en reste une, aujourd'hui, au musée Gadagne — une clef seule, et un plat qui se souvient des deux autres.", photo: null, audio: null }
-                }
+                // ─ Chapitre 1 (niveau 0) — « déjà écrites par la présence tutélaire » ─
+                { text: "[Dialogue placeholder — l'Office du Tourisme se souvient…]", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "[Fragment tutélaire 1]", heart: true, level: 0,
+                  entry: { date: "Office du Tourisme · Chapitre I — 1", text: "[Fragment posé par la présence tutélaire — texte à finaliser]", photo: null, audio: null, _revealed: true } },
+                { text: "[Fragment tutélaire 2]", heart: true, level: 0,
+                  entry: { date: "Office du Tourisme · Chapitre I — 2", text: "[Fragment posé par la présence tutélaire — texte à finaliser]", photo: null, audio: null, _revealed: true } },
+                { text: "[Fragment tutélaire 3]", heart: true, level: 0,
+                  entry: { date: "Office du Tourisme · Chapitre I — 3", text: "[Fragment posé par la présence tutélaire — texte à finaliser]", photo: null, audio: null, _revealed: true } },
+
+                // ─ Chapitre 2 (niveau 1) — à révéler par le joueur ─
+                { text: "[Dialogue placeholder — l'Office du Tourisme se souvient…]", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "[Entrée chapitre II — 1]", heart: true, level: 1,
+                  entry: { date: "Office du Tourisme · Chapitre II — 1", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null, _revealed: true } },
+                { text: "[Entrée chapitre II — 2]", heart: true, level: 1,
+                  entry: { date: "Office du Tourisme · Chapitre II — 2", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null, _revealed: true } },
+                { text: "[Entrée chapitre II — 3]", heart: true, level: 1,
+                  entry: { date: "Office du Tourisme · Chapitre II — 3", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null, _revealed: true } },
+
+                // ─ Chapitre 3 (niveau 2) — à révéler par le joueur ─
+                { text: "[Dialogue placeholder — l'Office du Tourisme se souvient…]", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+                { text: "[Entrée chapitre III — 1]", heart: true, level: 2,
+                  entry: { date: "Office du Tourisme · Chapitre III — 1", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null, _revealed: true } },
+                { text: "[Entrée chapitre III — 2]", heart: true, level: 2,
+                  entry: { date: "Office du Tourisme · Chapitre III — 2", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null, _revealed: true } },
+                { text: "[Entrée chapitre III — 3]", heart: true, level: 2,
+                  entry: { date: "Office du Tourisme · Chapitre III — 3", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null, _revealed: true } }
             ],
 
             // ── GUIGNOL (Commune, Arts) ──
@@ -12133,7 +12220,7 @@
 
         // ==================== STATE ====================
 
-        let playerPos = { ...LYON_CENTER };
+        let playerPos = { lat: 45.7576, lng: 4.8324 }; // DÉMO OT : spawn forcé à l'Office du Tourisme (place Bellecour sud)
         let collectedCards = [];
 
         // ── Sauvegarde / Chargement ──
@@ -12440,7 +12527,7 @@
             if (_resetting) return;  // un reset est en cours : ne rien réécrire dans le storage
             try {
                 // Ne jamais rétrograder _obDone de true à false
-                const _existingRaw = localStorage.getItem('lyon_cards_progress');
+                const _existingRaw = localStorage.getItem('demo_ot_progress');
                 if (_existingRaw) {
                     try {
                         const _existing = JSON.parse(_existingRaw);
@@ -12514,14 +12601,14 @@
                     poiCollectedKind,
                     poiCooldownMs,
                 };
-                localStorage.setItem('lyon_cards_progress', JSON.stringify(_saveData));
+                localStorage.setItem('demo_ot_progress', JSON.stringify(_saveData));
                 console.log('[expLore] Sauvegarde écrite — poudre:', _saveData.memorialDust, 'cartes:', (_saveData.collectedCards||[]).length, '_obDone:', _saveData._obDone);
             } catch(e) { console.error('[expLore] Erreur saveProgress:', e); }
         }
 
         function loadProgress() {
             try {
-                const raw = localStorage.getItem('lyon_cards_progress');
+                const raw = localStorage.getItem('demo_ot_progress');
                 if (!raw) { console.log('[expLore] Aucune sauvegarde trouvée'); _progressLoaded = true; return; }
                 const d = JSON.parse(raw);
                 console.log('[expLore] Sauvegarde chargée — _obDone:', d._obDone, 'cartes:', (d.collectedCards||[]).length, 'poudre:', d.memorialDust);
@@ -12592,17 +12679,17 @@
 
         function _resetProgressLegacyUnused() {
             if (!confirm('Réinitialiser toute la progression ? Cette action est irréversible.')) return;
-            localStorage.removeItem('lyon_cards_progress');
+            localStorage.removeItem('demo_ot_progress');
             location.reload();
         }
         function resetOnboarding() {
-            const raw=localStorage.getItem('lyon_cards_progress'); if(raw){try{const d=JSON.parse(raw);d._obDone=false;d._obAct2Done=false;d._obAct3Done=false;localStorage.setItem('lyon_cards_progress',JSON.stringify(d));}catch(e){}}
+            const raw=localStorage.getItem('demo_ot_progress'); if(raw){try{const d=JSON.parse(raw);d._obDone=false;d._obAct2Done=false;d._obAct3Done=false;localStorage.setItem('demo_ot_progress',JSON.stringify(d));}catch(e){}}
             location.reload();
         }
         let cardLevels = {};
         let hasSeenMapointTutorial = false;
         let hasSeenEchoTuto = false;
-        let memorialDust = 10000;
+        let memorialDust = 250;   // DÉMO OT : poudre initiale calibrée pour finir le chapitre 2 pile (5 clics × 50)
         let collectedEchoes = [];
         let placedEchoes = {}; // kept for compat
         let cardJournals = {}; // { cardId: { slot1: supertype, slot2: ..., slot3: ... } }
@@ -12617,12 +12704,12 @@
             objets:     [],   // [{ id, name, desc, qty }]
             parchemins: [],   // [{ id, name, desc }]
             boussoles:  [],   // [{ id, name, zone, desc, active }]
-            orbes:               10,
+            orbes:               0,   // DÉMO OT : 0 orbe au départ (le joueur va la chercher au POI)
             lumens:              0,
             echoFoldersUnlocked: {},  // { cardId: true }
-            pellicules:          3,   // révèle les entrées visuelles
-            encre:               3,   // révèle les entrées textuelles
-            cassettes:           3,   // révèle les entrées audio
+            pellicules:          0,   // DÉMO OT : fournitures à 0 (entrées carnet auto-révélées, slots masqués)
+            encre:               0,
+            cassettes:           0,
         };
         let collectedDustPoints = [];
 
@@ -12663,7 +12750,7 @@
         // Chaque ressource collectée note son timestamp dans poiCollectedAt[id].
         // Un tick périodique scanne et retire les ids dont le cooldown est expiré
         // des tableaux collected* concernés → ils respawnent silencieusement.
-        let poiCooldownMs = 3 * 60 * 1000;  // 3 minutes par défaut
+        let poiCooldownMs = Infinity;  // DÉMO OT : jamais de respawn (POI collectables une seule fois)
         let poiCollectedAt = {};  // { [poiId]: timestamp }
         // Mapping id -> nom du tableau collected* à scruter pour le respawn.
         // Permet de retirer l'id du bon tableau quand le cooldown expire.
@@ -12768,9 +12855,7 @@
             startApp();
             setTimeout(() => {
                 initJoystick();
-                if (isMobileDevice && 'geolocation' in navigator) {
-                    setTimeout(startGPS, 500);
-                }
+                // DÉMO OT : GPS totalement désactivé (aucun prompt de géoloc). Joystick uniquement.
             }, 1500);
         });
 
@@ -12824,7 +12909,7 @@
         }
 
         function initMap() {
-            playerPos = { ...LYON_CENTER };
+            playerPos = { lat: 45.7576, lng: 4.8324 }; // DÉMO OT : spawn à l'Office du Tourisme
             document.getElementById('dustCounter').textContent = memorialDust;
             createMap();
         }
@@ -12867,6 +12952,32 @@
         function createMap() {
             // no token needed for MapLibre+OpenFreeMap
             // maplibregl is free and open source = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z28yMzJoMGoxaWNhbzAifQ.az9JUrQP7klCgD3W-ueILQ';
+
+            // ─────────────────────────────────────────────────────────────
+            // DÉMO OT — Neutralisation des points ambiants du prototype.
+            // La démo ne présente qu'UNE carte (nébuleuse tutorielle) + 2 POI
+            // (poudre, orbe). On vide ici tous les tableaux de points hérités
+            // de test.html et on injecte les 2 seuls POI de la démo.
+            // (Les gros littéraux restent intacts plus haut — override propre,
+            //  réversible en retirant ce bloc.)
+            // ─────────────────────────────────────────────────────────────
+            POIS.length = 0;
+            BAZAR_POINTS.length = 0;
+            CARNET_RESOURCE_POINTS.length = 0;
+            SCROLL_POINTS.length = 0;
+            LOOT_POINTS.length = 0;
+            ECHO_POINTS.length = 0;
+            INFO_POINTS.length = 0;
+            PANNEAU_POINTS.length = 0;
+            TEST_ZONES.length = 0;
+            // POI poudre (dose généreuse) + POI orbe, en triangle avec l'OT.
+            DUST_POINTS.length = 0;
+            DUST_POINTS.push({ id: 'dust_ot', lat: 45.7574, lng: 4.8332 });
+            ORB_POINTS.length = 0;
+            ORB_POINTS.push({ id: 'orb_ot', lat: 45.7581, lng: 4.8318 });
+            // Grappes narratives + quêtes locales : désactivées pour la démo.
+            try { Object.keys(GRAPPE_QUESTS).forEach(k => delete GRAPPE_QUESTS[k]); } catch (e) {}
+            try { Object.keys(LOCAL_QUESTS).forEach(k => delete LOCAL_QUESTS[k]); } catch (e) {}
 
             map = new maplibregl.Map({
                 container: 'map',
@@ -13026,48 +13137,21 @@
             // POI: 50m, Dust: 30m, Echo: 30m
             // Pixel formula: meters * 512 * 2^zoom * cos(45.76°) / (2π * 6378137)
 
-            // ── Périmètre de test (informatif) ──
-            // Inséré AVANT les layers de POI → rendu en dessous d'eux, au-dessus
-            // du fond de carte. Ne filtre rien : purement visuel.
-            map.addSource('test-perimeter', {
-                type: 'geojson',
-                data: TEST_PERIMETER
-            });
-            map.addLayer({
-                id: 'perimeter-fill',
-                type: 'fill',
-                source: 'test-perimeter',
-                paint: { 'fill-color': '#C89039', 'fill-opacity': 0.05 }
-            });
-            map.addLayer({
-                id: 'perimeter-line',
-                type: 'line',
-                source: 'test-perimeter',
-                paint: { 'line-color': '#6A5028', 'line-opacity': 0.6, 'line-width': 2 }
-            });
+            // ── Périmètre de test : RETIRÉ pour la démo OT ──
+            // (couches perimeter-fill / perimeter-line supprimées)
 
-            // ── Zones pré-définies (v3, §2.3) ──
+            // ── Zones pré-définies (v3, §2.3) ── RETIRÉES pour la démo (TEST_ZONES vide) ──
             // Au-dessus du périmètre, sous les POI. Contour pointillé doré + label nom·%.
             map.addSource('test-zones', {
                 type: 'geojson',
                 data: buildZonesGeoJSON()
-            });
-            // Fond vert discret pour une zone complétée (100%).
-            map.addLayer({
-                id: 'zones-fill-done',
-                type: 'fill',
-                source: 'test-zones',
-                paint: {
-                    'fill-color': '#2E9E54',
-                    'fill-opacity': ['case', ['==', ['get', 'percentage'], 100], 0.10, 0]
-                }
             });
             map.addLayer({
                 id: 'zones-line',
                 type: 'line',
                 source: 'test-zones',
                 paint: {
-                    'line-color': ['case', ['==', ['get', 'percentage'], 100], '#2E7D46', '#9B6D2E'],
+                    'line-color': '#9B6D2E',
                     'line-opacity': 0.65,
                     'line-width': 1.6,
                     'line-dasharray': [3, 2]
@@ -13384,7 +13468,6 @@
                 // points-souvenirs et peuplement des deux layers (zones + souvenirs).
                 try { localStorage.removeItem('expLore_tracePoints_v1'); } catch(e) {}
                 loadVisitedPoints();
-                loadZoneDistance();
                 initZoneBadges();
                 refreshZonesLayer();
                 refreshVisitedPointsLayer();
@@ -14743,11 +14826,6 @@
                 playerStats.distance_today = (playerStats.distance_today || 0) + distM;
                 playerStats.distance_week  = (playerStats.distance_week  || 0) + distM;
                 _markOutingDay();
-                // v3 : créditer la marche à la zone courante + refresh throttlé des badges (~15 m).
-                addZoneDistance(lat2, lng2, distM);
-                if (!_DIST._zoneRefresh) _DIST._zoneRefresh = 0;
-                _DIST._zoneRefresh += distM;
-                if (_DIST._zoneRefresh >= 15) { _DIST._zoneRefresh = 0; if (typeof refreshZonesLayer === 'function') refreshZonesLayer(); }
                 if (typeof updateStat === 'function') {
                     updateStat('distance_total', playerStats.distance_total);
                     updateStat('outings_days', playerStats.outings_days);
@@ -15502,26 +15580,6 @@
             catch(e) { visitedPoints = []; }
         }
 
-        // ── Distance parcourue par zone : la marche compte dans la complétion ──
-        let zoneDistance = {};                 // { zoneId: mètres cumulés }
-        const ZONE_DISTANCE_TARGET = 1000;     // 1 km marché dans la zone = objectif "marche" plein
-        let _previewCompleteZones = false;     // bouton test : force l'affichage à 100%
-        function saveZoneDistance() {
-            try { localStorage.setItem('expLore_zoneDistance_v1', JSON.stringify(zoneDistance)); } catch(e) {}
-        }
-        function loadZoneDistance() {
-            try { const raw = localStorage.getItem('expLore_zoneDistance_v1'); zoneDistance = raw ? JSON.parse(raw) : {}; }
-            catch(e) { zoneDistance = {}; }
-        }
-        // Ajoute des mètres à la zone contenant le joueur (appelé par les trackers de distance).
-        function addZoneDistance(lat, lng, meters) {
-            if (!meters || meters <= 0) return;
-            const zone = findZoneOf(lat, lng);
-            if (!zone) return;
-            zoneDistance[zone.id] = (zoneDistance[zone.id] || 0) + meters;
-            saveZoneDistance();
-        }
-
         function _traceHaversine(lat1, lng1, lat2, lng2) {
             const R = 6371000, toRad = d => d * Math.PI / 180;
             const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
@@ -15551,21 +15609,15 @@
             const cartesFaites    = cartes.filter(c => isCardCaptured(c.id)).length;
             const panoramasFaits  = panoramas.filter(p => isPanoramaTaken(p.id)).length;
             const pointsInfoFaits = pointsInfo.filter(p => isPanneauCompleted(p.id)).length;
-            // La MARCHE compte comme un objectif à part entière (+1 au total) : la
-            // fraction parcourue (0..1) sur ZONE_DISTANCE_TARGET s'ajoute aux "faits".
-            const meters   = zoneDistance[zone.id] || 0;
-            const distFrac = Math.min(1, meters / ZONE_DISTANCE_TARGET);
-            const total = cartes.length + panoramas.length + pointsInfo.length + 1; // +1 = objectif marche
-            let faits   = cartesFaites + panoramasFaits + pointsInfoFaits + distFrac;
-            let percentage = total > 0 ? Math.round((faits / total) * 100) : 0;
-            if (_previewCompleteZones) { faits = total; percentage = 100; } // bouton test
+            const total = cartes.length + panoramas.length + pointsInfo.length;
+            const faits = cartesFaites + panoramasFaits + pointsInfoFaits;
             return {
-                total, faits, percentage,
+                total, faits,
+                percentage: total > 0 ? Math.round((faits / total) * 100) : 0,
                 detail: {
-                    cartes:     { total: cartes.length,     faits: _previewCompleteZones ? cartes.length     : cartesFaites },
-                    panoramas:  { total: panoramas.length,  faits: _previewCompleteZones ? panoramas.length  : panoramasFaits },
-                    pointsInfo: { total: pointsInfo.length, faits: _previewCompleteZones ? pointsInfo.length : pointsInfoFaits },
-                    marche:     { meters: _previewCompleteZones ? ZONE_DISTANCE_TARGET : meters, target: ZONE_DISTANCE_TARGET, frac: _previewCompleteZones ? 1 : distFrac }
+                    cartes:     { total: cartes.length,     faits: cartesFaites },
+                    panoramas:  { total: panoramas.length,  faits: panoramasFaits },
+                    pointsInfo: { total: pointsInfo.length, faits: pointsInfoFaits }
                 }
             };
         }
@@ -15610,7 +15662,7 @@
             st.textContent =
                 ".zone-badge{font-family:'Crimson Pro','Crimson Text',Georgia,serif;background:rgba(246,242,232,0.94);"
               + "border:1px solid #9B6D2E;border-radius:9px;padding:4px 9px 5px;max-width:150px;box-shadow:0 2px 9px rgba(0,0,0,0.20);"
-              + "pointer-events:auto;cursor:pointer;text-align:center;user-select:none;}"
+              + "pointer-events:none;text-align:center;user-select:none;}"
               + ".zone-badge-name{font-size:10px;font-weight:600;color:#6A5028;text-transform:uppercase;letter-spacing:0.4px;"
               + "line-height:1.15;margin-bottom:3px;}"
               + ".zone-badge-row{display:flex;align-items:center;gap:6px;justify-content:center;}"
@@ -15634,8 +15686,6 @@
                     + '<div class="zone-badge-row"><div class="zone-badge-bar"><div class="zone-badge-bar-fill"></div></div>'
                     + '<div class="zone-badge-pct">0%</div></div>';
                 el.querySelector('.zone-badge-name').textContent = zone.name;
-                el.title = 'Voir le détail de la complétion';
-                el.addEventListener('click', () => openZoneDetail(zone.id));
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([c.lng, c.lat]).addTo(map);
                 _zoneBadges[zone.id] = { marker, el };
             });
@@ -15672,65 +15722,6 @@
             applyZonesLayerVisibility();
         }
 
-        // ── Détail de complétion d'une zone (clic sur le bandeau) ──
-        function _injectZoneDetailCSS() {
-            if (document.getElementById('zoneDetailStyle')) return;
-            const st = document.createElement('style');
-            st.id = 'zoneDetailStyle';
-            st.textContent =
-                "#zoneDetailPanel{position:fixed;inset:0;z-index:9500;display:none;align-items:center;justify-content:center;"
-              + "background:rgba(10,8,18,0.55);}"
-              + "#zoneDetailPanel.show{display:flex;}"
-              + ".zd-card{font-family:'Crimson Pro','Crimson Text',Georgia,serif;background:#F6F2E8;border:1px solid #9B6D2E;"
-              + "border-radius:14px;padding:18px 20px 20px;width:min(320px,86vw);box-shadow:0 10px 40px rgba(0,0,0,0.4);position:relative;}"
-              + ".zd-close{position:absolute;top:8px;right:10px;background:none;border:none;font-size:18px;color:#8a5a1e;cursor:pointer;line-height:1;}"
-              + ".zd-title{font-size:15px;font-weight:700;color:#6A5028;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;padding-right:22px;line-height:1.2;}"
-              + ".zd-pct{font-size:30px;font-weight:800;color:#8a5a1e;line-height:1;}"
-              + ".zd-bar{height:7px;background:rgba(106,80,40,0.18);border-radius:4px;overflow:hidden;margin:8px 0 14px;}"
-              + ".zd-bar-fill{height:100%;background:#C89039;border-radius:4px;}"
-              + ".zd-row{display:flex;justify-content:space-between;font-size:14px;color:#5a4a30;padding:5px 0;border-top:1px solid rgba(106,80,40,0.12);}"
-              + ".zd-row span:last-child{font-weight:700;color:#6A5028;}";
-            document.head.appendChild(st);
-        }
-        function openZoneDetail(zoneId) {
-            const zone = TEST_ZONES.find(z => z.id === zoneId);
-            if (!zone) return;
-            _injectZoneDetailCSS();
-            const c = computeZoneCompletion(zone);
-            const d = c.detail;
-            let panel = document.getElementById('zoneDetailPanel');
-            if (!panel) {
-                panel = document.createElement('div');
-                panel.id = 'zoneDetailPanel';
-                panel.addEventListener('click', e => { if (e.target === panel) closeZoneDetail(); });
-                document.body.appendChild(panel);
-            }
-            const row = (label, faits, total) => '<div class="zd-row"><span>' + label + '</span><span>' + faits + '/' + total + '</span></div>';
-            panel.innerHTML =
-                '<div class="zd-card">'
-              + '<button class="zd-close" onclick="closeZoneDetail()">✕</button>'
-              + '<div class="zd-title">' + zone.name + '</div>'
-              + '<div class="zd-pct">' + c.percentage + '%</div>'
-              + '<div class="zd-bar"><div class="zd-bar-fill" style="width:' + c.percentage + '%"></div></div>'
-              + row('Cartes-lieu', d.cartes.faits, d.cartes.total)
-              + row('Panoramas', d.panoramas.faits, d.panoramas.total)
-              + row("Points d'info", d.pointsInfo.faits, d.pointsInfo.total)
-              + '<div class="zd-row"><span>Marche</span><span>' + Math.round(d.marche.meters) + ' / ' + d.marche.target + ' m</span></div>'
-              + '</div>';
-            panel.classList.add('show');
-        }
-        function closeZoneDetail() {
-            const panel = document.getElementById('zoneDetailPanel');
-            if (panel) panel.classList.remove('show');
-        }
-
-        // ── Bouton test : bascule l'aperçu "zones complétées" (100%) ──
-        function testToggleCompleteZones() {
-            _previewCompleteZones = !_previewCompleteZones;
-            refreshZonesLayer();
-            if (typeof showToast === 'function') showToast(_previewCompleteZones ? '🗺️ Zones : aperçu complété (100%)' : '↩ Zones : complétion réelle');
-        }
-
         // ── Points-souvenirs : rendu + marquage ──
         function buildVisitedPointsGeoJSON() {
             return {
@@ -15746,10 +15737,9 @@
         // Appelé à chaque action significative (carte, panorama, info, parchemin, mystère).
         // Enregistre un point à la position ACTUELLE du joueur (pas celle de l'objet).
         function markVisitedPoint(type, ref) {
-            if (typeof playerPos === 'undefined' || !playerPos) return; // pas de position → rien
-            visitedPoints.push({ lat: playerPos.lat, lng: playerPos.lng, type, timestamp: Date.now(), ref: ref || null });
-            saveVisitedPoints();
-            refreshVisitedPointsLayer();
+            // DÉMO OT : points-souvenirs retirés → no-op (conservé pour ne pas
+            // casser les appelants disséminés dans le code).
+            return;
         }
 
         // Ray-casting : le point {lat,lng} est-il dans le polygone [{lat,lng}] ? (zones + réutilisable)
@@ -16418,10 +16408,20 @@
             document.getElementById('photoViewerScreen').classList.remove('show');
         }
 
+        // DÉMO OT — Première catégorie visible (qty>0, ou Orbes toujours visible).
+        function _bagFirstVisibleCat() {
+            for (let i = 0; i < BAG_CATS.length; i++) {
+                const cat = BAG_CATS[i];
+                const qty = cat.getItems().reduce((s, it) => s + (it.empty ? 0 : it.qty), 0);
+                if (qty > 0 || cat.id === 'orbes') return i;
+            }
+            return 0;
+        }
+
         function openBagScreen() {
             _hideAllNearbyConsoles();
             _obOnOpenBag();
-            _bagCat = 0; _bagSel = null;
+            _bagCat = _bagFirstVisibleCat(); _bagSel = null;
             document.getElementById("bagScreen").classList.add("show");
             _bagRender();
         }
@@ -16434,6 +16434,8 @@
         function _bagTabs() {
             document.getElementById("bagTabsEl").innerHTML = BAG_CATS.map((cat, i) => {
                 const qty = cat.getItems().reduce((s, it) => s + (it.empty ? 0 : it.qty), 0);
+                // DÉMO OT : masquer les catégories vides (sauf Orbes, toujours visible).
+                if (qty <= 0 && cat.id !== 'orbes') return "";
                 // Utiliser le SVG canonique pour l'onglet parchemins
                 const tabIco = cat.id === 'parchemins' ? scrollIconSVG(22) : cat.icon;
                 return "<div class='bag-tab " + (i === _bagCat ? "active" : "") + "' onclick='_bagSelCat(" + i + ")'>" +
@@ -17245,7 +17247,9 @@
             if (!_obDone) { _obDone = true; _obAct2Done = true; _obAct3Done = true; console.log('[expLore] _obDone forcé à true via collectDust'); }
             collectedDustPoints.push(currentNearbyDust.id);
             markPoiCollected(currentNearbyDust.id, 'dust');
-            const amount = Math.floor(Math.random() * (MAX_DUST_DROP - MIN_DUST_DROP + 1)) + MIN_DUST_DROP;
+            _demoCheckEveil();
+            // DÉMO OT : dose fixe et généreuse (le chapitre 3 consomme 600 poudre).
+            const amount = 800;
             memorialDust += amount;
             document.getElementById('dustCounter').textContent = memorialDust;
             updateDustVisibility();
@@ -17328,6 +17332,7 @@
             if (!_obDone) { _obDone = true; _obAct2Done = true; _obAct3Done = true; }
             collectedOrbs.push(currentNearbyOrb.id);
             markPoiCollected(currentNearbyOrb.id, 'orbs');
+            _demoCheckEveil();
             bagInv.orbes += 1;
             updateOrbVisibility();
             checkNearbyPOI();
@@ -18655,7 +18660,7 @@
         // Récupération : 1 cran toutes les 2h. L'orbe peut bypasser
         // le repos pour restaurer l'énergie complètement.
         // ─────────────────────────────────────────────────────────────
-        const CARD_ENERGY_BY_LEVEL = [9, 6, 3, 3]; // index = niveau (0..3)
+        const CARD_ENERGY_BY_LEVEL = [9, 6, 20, 20]; // DÉMO OT : niv.2/3 montés 3→20 (sinon le chapitre 3 = 12 clics est infaisable avec 3 crans)
         const CARD_ENERGY_RECOVERY_MS = 2 * 60 * 60 * 1000; // 2h par cran
         // En mémoire, indexé par cardId : { value: 0..max, lastTickAt: timestamp }
         let cardEnergy = {};
@@ -18906,6 +18911,7 @@
             // Level up
             cl.level += 1;
             cl.experience = 0;
+            _demoCheckEveil(); // DÉMO OT : peut débloquer le succès « L'éveil de la carte »
 
             // Reset dialogue pour le nouveau niveau
             const dustKey = selectedCard.id + '_' + cl.level;
@@ -20495,10 +20501,6 @@
                 // Marquer le jour de sortie
                 _markOutingDay();
 
-                // v3 : créditer la marche à la zone courante.
-                addZoneDistance(lat, lng, distM);
-                if (typeof refreshZonesLayer === 'function') refreshZonesLayer();
-
                 // Mise à jour de la position de référence
                 _distLastLat = lat;
                 _distLastLng = lng;
@@ -20624,6 +20626,8 @@
         }
 
         function startGPS() {
+            // DÉMO OT : GPS neutralisé — on n'appelle jamais navigator.geolocation.
+            return;
             if (!('geolocation' in navigator)) {
                 if (_gpsDebug) _gpsDebugPanel().textContent = 'GPS indisponible : navigator.geolocation absent';
                 return;
@@ -20802,13 +20806,22 @@
             { id:'ach_dist_50km',  cat:'Explorateur', icon:'🏛️', name:'Lyon en grand',         desc:'Parcourir 50 km dans Lyon',         xpReward:200, goal:50000, stat:'distance_total' },
             { id:'ach_outings3',   cat:'Explorateur', icon:'📅', name:'Nomade',               desc:'Sortir explorer sur 3 jours différents', xpReward:50,  goal:3, stat:'outings_days' },
         ];
+        // DÉMO OT — On ne conserve que 2 succès dédiés à la démo.
+        //  · Premiers pas : quelques mètres parcourus (stat distance auto-suivie).
+        //  · L'éveil de la carte : chapitre 3 atteint ET orbe ET poudre collectées
+        //    (ordre libre) — via un stat de synthèse demo_eveil.
+        ACHIEVEMENTS_DATA.length = 0;
+        ACHIEVEMENTS_DATA.push(
+            { id:'ach_first_steps', cat:'Explorateur', icon:'👣', name:'Premiers pas',        desc:'Faire tes premiers pas dans Lyon',              xpReward:0, goal:150, stat:'distance_total' },
+            { id:'ach_eveil',       cat:'Alchimiste',  icon:'✦', name:"L'éveil de la carte", desc:'Carte au niveau 2, orbe et poudre récoltées',   xpReward:0, goal:1,  stat:'demo_eveil' }
+        );
 
         // ── State ──
         let playerXP = 0;
         let playerTotalXP = 0;
         let playerLevel = 1;
         let achievementsState = {};
-        let playerStats = { cards:0, echoes:0, echoes_placed:0, dust_total:0, dust_spent:0, card_levels:0, max_level_cards:0, collections_done:0, legendary_cards:0, supertypes_collected:0,
+        let playerStats = { cards:0, echoes:0, echoes_placed:0, dust_total:0, dust_spent:0, card_levels:0, max_level_cards:0, collections_done:0, legendary_cards:0, supertypes_collected:0, demo_eveil:0,
             // Distance parcourue (en mètres) — calculée via GPS Haversine, filtres anti-bruit/véhicule
             distance_total: 0, distance_today: 0, distance_week: 0,
             _lastDistDay: null, _lastDistWeekKey: null, _lastDistWeekDay: null,
@@ -21230,12 +21243,23 @@
                 if (state.progress >= a.goal) { state.unlocked = true; awardXP(a.xpReward); showAchievementToast(a); }
             });
         }
+        // DÉMO OT — Succès « L'éveil de la carte » : chapitre 3 atteint (carte niv.≥2)
+        // ET orbe ET poudre collectées, dans n'importe quel ordre.
+        function _demoCheckEveil() {
+            try {
+                const cl = cardLevels[OB_TUTORIAL_CARD.id];
+                const lvOk = cl && cl.level >= 2;
+                const dustOk = collectedDustPoints.indexOf('dust_ot') !== -1;
+                const orbOk = collectedOrbs.indexOf('orb_ot') !== -1;
+                if (lvOk && dustOk && orbOk) updateStat('demo_eveil', 1);
+            } catch (e) {}
+        }
         function showAchievementToast(a) {
             const ex = document.getElementById('achieveToast');
             if (ex) ex.remove();
             const t = document.createElement('div');
             t.id = 'achieveToast'; t.className = 'achievement-toast';
-            t.innerHTML = '<div class="achievement-toast-icon">' + a.icon + '</div><div class="achievement-toast-text"><div class="achievement-toast-label">🏆 Succès débloqué !</div><div class="achievement-toast-name">' + a.name + '</div></div><div class="achievement-toast-xp">+' + a.xpReward + ' XP</div>';
+            t.innerHTML = '<div class="achievement-toast-icon">' + a.icon + '</div><div class="achievement-toast-text"><div class="achievement-toast-label">🏆 Succès débloqué !</div><div class="achievement-toast-name">' + a.name + '</div></div>' + (a.xpReward > 0 ? '<div class="achievement-toast-xp">+' + a.xpReward + ' XP</div>' : '');
             document.getElementById('mainApp').appendChild(t);
             setTimeout(() => { if (t.parentNode) t.remove(); }, 3500);
         }
@@ -21340,7 +21364,7 @@
             renderBattlepassNodes();
             renderAchievementsList();
             refreshProgDistanceUI();
-            switchProgTab('battlepass');
+            switchProgTab('achievements'); // DÉMO OT : ouvrir directement sur les Succès
             document.getElementById('progressionScreen').classList.add('show');
         }
         function closeProgressionScreen() { document.getElementById('progressionScreen').classList.remove('show'); }
@@ -24395,8 +24419,8 @@
         }
 
         function showVaultNotification() {
-            // Affiche tous les dots "nouveau" liés à l'Explorium (action-bar, collections, journal)
-            document.querySelectorAll('.vault-notif-dot').forEach(d => { d.style.display = 'block'; });
+            // DÉMO OT : pas de pastille "nouveau" sur l'Explorium (plus lieu d'être).
+            return;
         }
 
         function clearVaultNotification() {
@@ -28146,39 +28170,14 @@
 
 
     </script>
-    <!-- ═══════════ PWA — Enregistrement Service Worker ═══════════ -->
+    <!-- ═══════════ DÉMO OT — Pas de Service Worker ═══════════ -->
+    <!-- On n'enregistre AUCUN SW pour la démo, et on désinscrit tout SW hérité -->
+    <!-- (ex. celui du vrai prototype /app/) pour éviter tout cache obsolète.   -->
     <script>
         if ('serviceWorker' in navigator) {
-            // Désinscrire immédiatement tous les SW sur localhost
-            if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-                navigator.serviceWorker.getRegistrations().then(regs => {
-                    regs.forEach(reg => { reg.unregister(); console.log('[PWA] SW désinscrit:', reg.scope); });
-                });
-                caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-                console.log('[PWA] Service Worker et cache désactivés sur localhost');
-            }
-            window.addEventListener('load', () => {
-                // Ne pas enregistrer sur localhost
-                if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-                    return;
-                }
-                navigator.serviceWorker.register('./sw.js')
-                    .then((reg) => {
-                        console.log('[PWA] Service Worker enregistré', reg.scope);
-                        reg.addEventListener('updatefound', () => {
-                            const newWorker = reg.installing;
-                            if (!newWorker) return;
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    // Forcer rechargement immédiat pour appliquer la nouvelle version
-                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
-                                    location.reload();
-                                }
-                            });
-                        });
-                    })
-                    .catch((err) => console.warn('[PWA] Échec enregistrement SW', err));
-            });
+            navigator.serviceWorker.getRegistrations()
+                .then(regs => regs.forEach(reg => reg.unregister()))
+                .catch(() => {});
         }
     </script>
 </body>
