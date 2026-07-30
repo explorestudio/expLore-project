@@ -10,17 +10,17 @@
     <!-- ═══════════ PWA ═══════════ -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#1a0f2e">
-    <meta name="description" content="expLore — Archéologues de la Mémoire, exploration géolocalisée à Lyon">
+    <meta name="description" content="ExpLore — Explorateurs de la Mémoire, exploration géolocalisée à Lyon">
     <!-- iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="expLore">
+    <meta name="apple-mobile-web-app-title" content="ExpLore">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
 
-    <title>expLore</title>
+    <title>ExpLore</title>
     <style>
         * {
             margin: 0;
@@ -1000,7 +1000,6 @@
             font-size: 20px;
             font-weight: bold;
             pointer-events: none;
-        }ms: center;
         }
 
         .collections-title { font-size: 20px; font-weight: bold; }
@@ -6608,19 +6607,27 @@
         .vn-scene { position:relative;display:flex;flex-direction:column;align-items:flex-start;padding:0;z-index:1; }
         .vn-portrait-row { display:flex;align-items:flex-end;padding:0 16px; }
         .vn-bust { width:72px;height:72px;flex-shrink:0;object-fit:cover;object-position:top center;border-radius:50%;border:2px solid rgba(255,255,255,0.3);filter:drop-shadow(0 4px 12px rgba(0,0,0,0.7)); }
-        /* Grand portrait (jeune fille) : figure à gauche montant au-dessus de la boîte.
+        /* Portrait (jeune fille) : buste à gauche montant au-dessus de la boîte.
            Fond transparent (PNG RGBA) ; le bas de l'image passe derrière la boîte opaque.
-           Réglages à ajuster : --portrait-h (hauteur), left. */
+           C'est la LARGEUR qui pilote : le buste est presque aussi large que haut
+           (ratio ~0,84), donc un dimensionnement en vh le faisait déborder de l'écran
+           sur mobile. max-height ne sert que de garde-fou en paysage.
+           Pour ajuster : la valeur centrale du clamp (42%) et `left`. */
         .vn-bust--full {
-            position: absolute !important;
-            left: 4px;
-            bottom: 0;
-            height: 60vh;
-            max-height: 520px;
-            width: auto !important;
+            /* Dans le flux (et non en absolute) : le buste s'assoit sur le haut de la
+               boîte quelle que soit la longueur du texte. La marge négative fait passer
+               le bas du torse derrière la boîte — le reste du buste dépasse au-dessus. */
+            position: relative;
+            display: block;
+            margin-left: -6px;
+            margin-bottom: -22px;
+            width: clamp(130px, 42%, 210px) !important;
+            height: auto !important;
+            max-height: 46vh;
             border: none !important;
             border-radius: 0 !important;
             object-fit: contain;
+            object-position: bottom center;
             filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6));
             z-index: 0;
             pointer-events: none;
@@ -9335,8 +9342,8 @@
              Volontairement bilingue : le joueur n'a pas encore choisi.
              Ce bloc est exclu de la traduction automatique (cf. translateNode). -->
         <div id="langSelectOverlay" class="lang-select-overlay">
-            <div class="lang-select-logo">exp<em>L</em>ore</div>
-            <div class="lang-select-sub">Archéologues de la Mémoire · Lyon</div>
+            <div class="lang-select-logo">Exp<em>L</em>ore</div>
+            <div class="lang-select-sub">Explorateurs de la Mémoire · Lyon</div>
             <div class="lang-select-title">Langue · Language</div>
             <div class="lang-select-btns">
                 <button class="lang-select-btn" onclick="chooseLanguage('fr')">
@@ -9698,26 +9705,39 @@
                 `For a card to remember, feed it <span style="color:#A78BFA;font-weight:600">memorial dust</span>. Each dose wakes a little of its story — watch its journal fill up.`,
             "La voilà. Muette, pour l'instant. Ouvre-la.": "There it is. Silent, for now. Open it.",
             "La carte est épuisée. Cherche de quoi la raviver.": "The card is spent. Find something to revive it.",
-            "La voilà à bout de souffle. La mémoire a besoin d'une orbe pour se raviver d'un coup — il y en a une, tout près, sur la carte. Va la chercher.": "It's out of breath. Memory needs an orb to come back all at once — there's one close by, on the map. Go and get it.",
+            "La voilà à bout de souffle. La mémoire a besoin d'une orbe pour se raviver d'un coup — il y en a deux, tout près, sur la carte. Collecte-les.": "It's out of breath. Memory needs an orb to come back all at once — there are two close by, on the map. Go and collect them.",
             "Profites-en pour ramasser la poudre que tu croiseras : tu en manqueras bientôt.": "While you're at it, pick up any dust you come across: you'll be short of it soon.",
             "La mémoire s'ouvre à nouveau.": "Memory opens again.",
             "Elle revit. Continue — mène ce chapitre à son terme.": "It's alive again. Keep going — carry this chapter through to the end.",
             "Tu as l'orbe. Pose-la sur la carte pour la raviver.": "You have the orb. Place it on the card to revive it.",
-            "Il te manque encore l'orbe — elle t'attend sur la carte, tout près. Referme la carte, va la chercher, puis reviens.": "You're still missing the orb — it's waiting for you on the map, close by. Close the card, go and fetch it, then come back.",
+            "Il te manque encore une orbe — elles t'attendent sur la mappe, tout près. Referme la carte, va les chercher, puis reviens.": "You're still missing an orb — they're waiting for you on the map, close by. Close the card, go and fetch them, then come back.",
+            "Les orbes du quartier sont épuisées. Laisse-lui le temps : la mémoire revient d'elle-même, lentement.": "The orbs in this quarter are spent. Give it time: memory returns on its own, slowly.",
+
+            // ── Carnet : économie des fournitures ──
+            "Son carnet. Le premier chapitre s'y est déjà écrit — celui-là, tu peux le lire.": "Its notebook. The first chapter is already written there — that one you can read.",
+            "Les pages voilées demandent autre chose que de la poudre : une <span style=\"color:#FCD34D;font-weight:600\">pellicule</span> pour une image, une <span style=\"color:#C4B5FD;font-weight:600\">cassette</span> pour une voix, de l'<span style=\"color:#E0A458;font-weight:600\">encre</span> pour un texte.": "Veiled pages ask for more than dust: a <span style=\"color:#FCD34D;font-weight:600\">film roll</span> for an image, a <span style=\"color:#C4B5FD;font-weight:600\">tape</span> for a voice, <span style=\"color:#E0A458;font-weight:600\">ink</span> for a text.",
+            "L'échoppe en tient, juste au nord d'ici. Sers-toi.": "The stall keeps some, just north of here. Help yourself.",
+            "Tu en as déjà sur toi. Touche une page voilée pour la révéler.": "You already have some on you. Touch a veiled page to reveal it.",
+            "Le chapitre est plein — mais il garde encore des pages voilées. Ouvre son carnet et dévoile-les : c'est à cette condition qu'il pourra être scellé.": "The chapter is full — but it still keeps veiled pages. Open its notebook and reveal them: only then can it be sealed.",
+            "Garde ton orbe — cette carte n'a plus soif. Ce sont ses pages voilées qui la retiennent : ouvre son carnet.": "Keep your orb — this card is no longer thirsty. It's the veiled pages holding it back: open its notebook.",
+            "La voilà à bout de souffle. Tu as déjà une orbe sur toi — pose-la sur la carte, elle se ravivera d'un coup.": "It's out of breath. You already have an orb on you — place it on the card and it will revive at once.",
+            "Il t'en faudra beaucoup — plus que tu n'en as. Va en récolter sur la mappe avant de continuer.": "You'll need a lot — more than you have. Go and gather some on the map before you continue.",
+            "Ces pages resteront voilées tant que tu n'auras rien pour les révéler. L'échoppe est au nord, tout près.": "These pages will stay veiled until you have something to reveal them with. The stall is north, close by.",
+            "Échoppe de Bellecour": "Bellecour Stall",
             "Le chapitre est plein. Scelle-le : qu'il prenne racine.": "The chapter is full. Seal it — let it take root.",
             "Un chapitre se ferme, un autre s'ouvre — le dernier de cette carte.": "One chapter closes, another opens — the last of this card.",
             "Il te faudra plus de poudre. Sers-toi de celle que tu as ramassée.": "You'll need more dust. Use what you've gathered.",
             "Tu n'as plus de poudre... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.": "You're out of dust... Close the card, go and gather some on the map, then come back and finish this last chapter.",
-            "Voilà. Cette carte t'a tout rendu — trois chapitres, et pas une page qui manque. C'est ça, être archéologue de la mémoire.": "There. This card has given you everything back — three chapters, and not a page missing. That is what it means to be a memory archaeologist.",
+            "Voilà. Cette carte t'a tout rendu — trois chapitres, et pas une page qui manque. C'est ça, être explorateur de la mémoire.": "There. This card has given you everything back — three chapters, and not a page missing. That is what it means to be a memory explorer.",
             "Je dois repartir, maintenant — d'autres voix m'attendent, ailleurs. Le reste vient en marchant. À toi, désormais.": "I have to go now — other voices are waiting for me elsewhere. The rest comes with walking. It's yours from here.",
 
             // ── Acte III : la Gardienne ──
             "Une carte thématique. Je n'en avais pas vu depuis...": "A themed card. I hadn't seen one since...",
             "Ce n'est pas n'importe qui qui peut les voir. Encore moins les récupérer.": "Not just anyone can see them. Fewer still can recover them.",
             "Le Grand Livre nous a parlé. À toi — et à travers toi, à moi.": "The Great Book has spoken to us. To you — and through you, to me.",
-            "Tu es archéologue de la mémoire. Je ne sais pas pourquoi toi. Mais c'est ce que tu es.": "You are a memory archaeologist. I don't know why it should be you. But that is what you are.",
+            "Tu es explorateur de la mémoire. Je ne sais pas pourquoi toi. Mais c'est ce que tu es.": "You are a memory explorer. I don't know why it should be you. But that is what you are.",
             "Marcus a raison. Et tort en même temps.": "Marcus is right. And wrong at the same time.",
-            "Tu n'es pas archéologue parce que tu en es capable. Tu en es capable parce que tu regardes encore.": "You are not an archaeologist because you are capable of it. You are capable of it because you still look.",
+            "Tu n'es pas explorateur parce que tu en es capable. Tu en es capable parce que tu regardes encore.": "You are not an explorer because you are capable of it. You are capable of it because you still look.",
             "Le Grand Livre ne choisit pas des héros. Il remarque ceux qui regardent.": "The Great Book does not choose heroes. It notices those who look.",
             "Et maintenant qu'il t'a remarqué — eux aussi.": "And now that it has noticed you — so have they.",
             "Ils ont détecté la collecte. Je leur ai dit que tu étais avec nous. Pour l'instant, tu es protégé.": "They detected the collection. I told them you were with us. For now, you're protected.",
@@ -11817,6 +11837,8 @@
             { id: 'orb_zoneB_7', lat: 45.742, lng: 4.833 }, // Jean Macé ouest
             { id: 'orb_zoneB_8', lat: 45.744, lng: 4.858 }, // Monplaisir nord
             { id: 'orb_zoneB_9', lat: 45.738, lng: 4.827 }, // Tony Garnier nord
+            // NB : pour la démo OT, ce littéral est entièrement écrasé dans createMap()
+            // (ORB_POINTS.length = 0) — les points réellement utilisés sont définis là-bas.
         ];
 
         // ── Points ressources carnet (cassette / pellicule / encre) ──
@@ -12161,6 +12183,12 @@
         let _obAct3Done    = false;
         let _obSpawnLat    = 0;
         let _obSpawnLng    = 0;
+
+        // La mappe doit se réveiller dès la collecte de la carte tutoriel, pas à la fin du tutoriel :
+        // le parcours guidé envoie le joueur chercher une orbe et de la poudre, ce qui exige
+        // zones de capture, bannières de collecte et marqueurs actifs. _obDone ne passe à true
+        // qu'au tout dernier dialogue — trop tard. _obAct2Done marque le bon moment.
+        function _obMapActive() { return _obDone || _obAct2Done; }
 
         // ── Acte I : Le Grand Livre ──
         const OB_ACT1_LINES = [
@@ -12567,7 +12595,7 @@
             if (map && map.getSource('poi-circles')) {
                 map.getSource('poi-circles').setData({
                     type: 'FeatureCollection',
-                    features: [{ type: 'Feature', properties: { id: 'ob_elara', status: 'local', lng: _obSpawnLng, lat: _obSpawnLat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(_obSpawnLng, _obSpawnLat, 50, ISOMETRIC_TILT)] } }]
+                    features: [{ type: 'Feature', properties: { id: 'ob_tutorial', status: 'local', lng: _obSpawnLng, lat: _obSpawnLat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(_obSpawnLng, _obSpawnLat, 50, ISOMETRIC_TILT)] } }]
                 });
                 try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'visible'); } catch(e) {}
             }
@@ -12586,15 +12614,15 @@
                 const nearbyDiv = document.getElementById('nearbyPOI');
                 const isShown = nearbyDiv && !nearbyDiv.classList.contains('hidden');
                 if (dist <= COLLECTION_RADIUS) {
-                    if (!isShown) _obShowEllaraNearby();
+                    if (!isShown) _obShowTutorialNearby();
                 } else if (isShown) {
                     nearbyDiv.classList.add('hidden');
                 }
             }, 800);
         }
 
-        // Afficher la bannière nearby pour Elara
-        function _obShowEllaraNearby() {
+        // Afficher la bannière nearby du marqueur tutoriel
+        function _obShowTutorialNearby() {
             const nearbyDiv = document.getElementById('nearbyPOI');
             document.getElementById('poiName').textContent = OB_TUTORIAL_CARD.name;
             const badge = document.getElementById('poiThematicBadge');
@@ -12611,11 +12639,11 @@
                 };
             }
             nearbyDiv.classList.remove('hidden');
-            // Cercle de capture visible pour Elara uniquement
+            // Cercle de capture visible pour le marqueur tutoriel uniquement
             if (map && map.getSource('poi-circles')) {
                 map.getSource('poi-circles').setData({
                     type: 'FeatureCollection',
-                    features: [{ type: 'Feature', properties: { id: 'ob_elara', status: 'local', lng: _obSpawnLng, lat: _obSpawnLat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(_obSpawnLng, _obSpawnLat, 50, ISOMETRIC_TILT)] } }]
+                    features: [{ type: 'Feature', properties: { id: 'ob_tutorial', status: 'local', lng: _obSpawnLng, lat: _obSpawnLat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(_obSpawnLng, _obSpawnLat, 50, ISOMETRIC_TILT)] } }]
                 });
                 try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'visible'); } catch(e) {}
             }
@@ -12625,7 +12653,7 @@
         function _obRestoreAllPOI() {
             if (window._obTutorialMarker) { window._obTutorialMarker.remove(); window._obTutorialMarker = null; }
             if (window._obProximityCheck) { clearInterval(window._obProximityCheck); window._obProximityCheck = null; }
-            // Cacher la bannière Elara si encore visible
+            // Cacher la bannière du marqueur tutoriel si encore visible
             document.getElementById('nearbyPOI').classList.add('hidden');
             document.querySelectorAll('[data-ob-hidden="true"]').forEach(el => {
                 el.removeAttribute('data-ob-hidden');
@@ -12666,7 +12694,7 @@
             _obCollectTriggered = true;
             if (window._obTutorialMarker) { window._obTutorialMarker.remove(); window._obTutorialMarker = null; }
             if (window._obProximityCheck) { clearInterval(window._obProximityCheck); window._obProximityCheck = null; }
-            // Masquer le cercle Elara
+            // Masquer le cercle du marqueur tutoriel
             if (map && map.getSource('poi-circles')) {
                 map.getSource('poi-circles').setData({ type: 'FeatureCollection', features: [] });
                 try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'none'); } catch(e) {}
@@ -12821,7 +12849,9 @@
             feed_ch2:        '#addExpBtn',
             get_orb:         () => (bagInv.orbes > 0 ? '#addExpBtn' : _demoBackToMapSelector()),
             feed_finish_ch2: '#addExpBtn',
-            seal_ch2:        '#addExpBtn',
+            // Si des pages restent voilées, le bouton de scellement est désactivé :
+            // l'anneau doit désigner le carnet, pas un bouton mort.
+            seal_ch2:        () => (_demoUnrevealedAtLevel() > 0 ? '#journalTabBtn' : '#addExpBtn'),
             feed_ch3:        () => (memorialDust >= 50 ? '#addExpBtn' : _demoBackToMapSelector()),
         };
 
@@ -13003,7 +13033,7 @@
             _obGuide.step = null;
             _obGuideStopLoop();
             vnShow([
-                { speaker: 'La jeune fille', line: 'Voilà. Cette carte t\'a tout rendu — trois chapitres, et pas une page qui manque. C\'est ça, être archéologue de la mémoire.' },
+                { speaker: 'La jeune fille', line: 'Voilà. Cette carte t\'a tout rendu — trois chapitres, et pas une page qui manque. C\'est ça, être explorateur de la mémoire.' },
                 { speaker: 'La jeune fille', line: 'Je dois repartir, maintenant — d\'autres voix m\'attendent, ailleurs. Le reste vient en marchant. À toi, désormais.' },
             ], () => {
                 _obDone = true;
@@ -13048,7 +13078,7 @@
             ov.innerHTML =
                 '<div style="font-size:26px;color:#F5B841;font-weight:700;letter-spacing:1px;">Fin de la démonstration</div>' +
                 '<div style="font-size:16px;color:#EDE9FE;opacity:0.9;">Merci d\'avoir exploré.</div>' +
-                '<div style="margin-top:24px;font-size:12px;color:rgba(237,233,254,0.55);letter-spacing:2px;text-transform:uppercase;">ExpLoreStudio · expLore</div>' +
+                '<div style="margin-top:24px;font-size:12px;color:rgba(237,233,254,0.55);letter-spacing:2px;text-transform:uppercase;">ExpLoreStudio · ExpLore</div>' +
                 '<button id="demoEndClose" style="margin-top:28px;background:rgba(245,184,65,0.14);border:1px solid rgba(245,184,65,0.5);color:#F5B841;padding:10px 26px;border-radius:22px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px;">Revenir à la carte</button>';
             document.body.appendChild(ov);
             requestAnimationFrame(() => { ov.style.opacity = '1'; });
@@ -13062,9 +13092,95 @@
         // (Les entrées sont auto-révélées : pas d'étape "dévoiler les pages".)
         function _obAfterXpFull() {
             _obGuide.step = 'seal_ch2';
-            vnShow([
-                { speaker: 'La jeune fille', line: 'Le chapitre est plein. Scelle-le : qu\'il prenne racine.' },
-            ], () => _obGuideRefresh());
+            const rep = [];
+            if (_demoUnrevealedAtLevel() > 0) {
+                // XP au max mais des pages restent voilées : c'est le carnet qui bloque.
+                rep.push({ speaker: 'La jeune fille', line: 'Le chapitre est plein — mais il garde encore des pages voilées. Ouvre son carnet et dévoile-les : c\'est à cette condition qu\'il pourra être scellé.' });
+                if (_demoMissingSupplies() > 0) {
+                    rep.push({ speaker: 'La jeune fille', line: 'L\'échoppe en tient, juste au nord d\'ici. Sers-toi.' });
+                }
+            } else {
+                rep.push({ speaker: 'La jeune fille', line: 'Le chapitre est plein. Scelle-le : qu\'il prenne racine.' });
+            }
+            vnShow(rep, () => _obGuideRefresh());
+        }
+
+        // DÉMO OT — Remarques sur le carnet. La première ouverture explique l'économie
+        // des fournitures ; les suivantes n'interviennent que si le joueur est à sec,
+        // pour ne jamais répéter une consigne déjà satisfaite.
+        let _obJournalSeen = false;
+
+        // Entrées encore voilées de la carte tutoriel, et celles que le joueur peut
+        // réellement révéler MAINTENANT. Le stock brut ne suffit pas : une pellicule
+        // n'ouvre qu'une entrée visuelle, et le scellement d'un chapitre en offre une
+        // au hasard — d'où des « tu en as déjà » trompeurs.
+        function _demoVeiledEntries() {
+            return (cardJournalEntries[OB_TUTORIAL_CARD.id] || []).filter(e => !e._revealed);
+        }
+        // Combien de fournitures manquent pour révéler TOUTES les pages voilées.
+        // Compté par type : sceller un chapitre offre une fourniture au hasard, et
+        // une seule pellicule ne suffit pas si deux entrées visuelles sont voilées.
+        function _demoMissingSupplies() {
+            const need = { visual: 0, audio: 0, text: 0 };
+            _demoVeiledEntries().forEach(e => { need[e._type || 'text'] = (need[e._type || 'text'] || 0) + 1; });
+            return Math.max(0, need.visual - (bagInv.pellicules || 0))
+                 + Math.max(0, need.audio  - (bagInv.cassettes  || 0))
+                 + Math.max(0, need.text   - (bagInv.encre      || 0));
+        }
+
+        function _obJournalHint() {
+            const manque = _demoMissingSupplies();
+            if (!_obJournalSeen) {
+                _obJournalSeen = true;
+                const rep = [
+                    { speaker: 'La jeune fille', line: 'Son carnet. Le premier chapitre s\'y est déjà écrit — celui-là, tu peux le lire.' },
+                    { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poudre : une <span style="color:#FCD34D;font-weight:600">pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">encre</span> pour un texte.' },
+                ];
+                // « Tu en as déjà » seulement s'il peut tout révéler ; sinon on le
+                // renvoie sur la mappe, à l'échoppe.
+                rep.push(manque === 0
+                    ? { speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' }
+                    : { speaker: 'La jeune fille', line: 'L\'échoppe en tient, juste au nord d\'ici. Sers-toi.' });
+                vnShow(rep, () => _obGuideRefresh());
+                return;
+            }
+            // Ne relancer que s'il reste des pages voilées ET de quoi manquer.
+            if (manque > 0 && _demoVeiledEntries().length > 0) {
+                vnShow([
+                    { speaker: 'La jeune fille', line: 'Ces pages resteront voilées tant que tu n\'auras rien pour les révéler. L\'échoppe est au nord, tout près.' },
+                ], () => _obGuideRefresh());
+            }
+        }
+
+        // Entrées non révélées du niveau courant : à XP plein, elles bloquent le
+        // scellement (cf. updateCardLevelDisplay). Ni l'orbe ni la poudre n'y changent
+        // quoi que ce soit — les relances doivent donc renvoyer vers le carnet.
+        function _demoUnrevealedAtLevel() {
+            const cl = cardLevels[OB_TUTORIAL_CARD.id];
+            if (!cl) return 0;
+            return (cardJournalEntries[OB_TUTORIAL_CARD.id] || [])
+                .filter(e => e.level === cl.level && !e._revealed).length;
+        }
+        // La carte est-elle bloquée par ses pages voilées plutôt que par l'énergie ?
+        function _demoBlockedByEntries() {
+            const cl = cardLevels[OB_TUTORIAL_CARD.id];
+            if (!cl) return false;
+            return cl.experience >= getExpNeeded(OB_TUTORIAL_CARD, cl.level)
+                && _demoUnrevealedAtLevel() > 0;
+        }
+
+        // Poudre nécessaire au chapitre 3 : exp[2] = 800 à +50 par dose.
+        // Sert de seuil aux relances « il t'en faudra plus ».
+        const _DEMO_DUST_CH3 = 800;
+
+        // DÉMO OT — Ce qui reste réellement à ramasser sur la mappe.
+        // Les relances de la jeune fille s'y adossent : elle ne doit jamais envoyer
+        // le joueur chercher une ressource qui n'existe plus.
+        function _demoOrbsLeft() {
+            return ORB_POINTS.filter(o => !collectedOrbs.includes(o.id)).length;
+        }
+        function _demoDustLeft() {
+            return DUST_POINTS.filter(d => !collectedDustPoints.includes(d.id)).length;
         }
 
         // DÉMO OT — Dispatcher du parcours guidé court.
@@ -13073,6 +13189,11 @@
         //        (scellé) feed_ch3 → (3e entrée ch.3) fin.
         function _obGuideEvent(ev) {
             if (!_obGuide.active) return;
+
+            // Le carnet a sa propre économie (pellicule / cassette / encre), distincte
+            // de la poudre. La remarque vaut à n'importe quelle étape du parcours :
+            // on la traite avant le switch.
+            if (ev === 'journal') { _obJournalHint(); return; }
 
             switch (_obGuide.step) {
 
@@ -13098,11 +13219,22 @@
                     // débloque la 3e entrée du chapitre 2 → détour orbe.
                     if (ev === 'energy_empty') {
                         _obGuide.step = 'get_orb';
-                        showDemoToast('La carte est épuisée. Cherche de quoi la raviver.');
-                        vnShow([
-                            { speaker: 'La jeune fille', line: 'La voilà à bout de souffle. La mémoire a besoin d\'une orbe pour se raviver d\'un coup — il y en a une, tout près, sur la carte. Va la chercher.' },
-                            { speaker: 'La jeune fille', line: 'Profites-en pour ramasser la poudre que tu croiseras : tu en manqueras bientôt.' },
-                        ], () => _obGuideRefresh());
+                        // Répliques bâties sur l'état réel : ne jamais envoyer chercher
+                        // ce que le joueur a déjà en poche, ni ce qui n'est plus sur la mappe.
+                        const rep = [];
+                        if (bagInv.orbes > 0) {
+                            rep.push({ speaker: 'La jeune fille', line: 'La voilà à bout de souffle. Tu as déjà une orbe sur toi — pose-la sur la carte, elle se ravivera d\'un coup.' });
+                        } else if (_demoOrbsLeft() > 0) {
+                            rep.push({ speaker: 'La jeune fille', line: 'La voilà à bout de souffle. La mémoire a besoin d\'une orbe pour se raviver d\'un coup — il y en a deux, tout près, sur la carte. Collecte-les.' });
+                        } else {
+                            rep.push({ speaker: 'La jeune fille', line: 'Les orbes du quartier sont épuisées. Laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' });
+                        }
+                        if (memorialDust < _DEMO_DUST_CH3 && _demoDustLeft() > 0) {
+                            rep.push({ speaker: 'La jeune fille', line: 'Profites-en pour ramasser la poudre que tu croiseras : tu en manqueras bientôt.' });
+                        }
+                        // Toast APRÈS le dialogue : sa durée de vie (4,2 s) est plus courte
+                        // que la lecture des répliques, il expirait sans être vu.
+                        vnShow(rep, () => { showDemoToast('La carte est épuisée. Cherche de quoi la raviver.'); _obGuideRefresh(); });
                     } else if (ev === 'xp_full') {
                         _obAfterXpFull();
                     }
@@ -13112,20 +13244,31 @@
                     // Le joueur revient, réutilise l'orbe collectée sur la carte.
                     if (ev === 'orb_used') {
                         _obGuide.step = 'feed_finish_ch2';
-                        showDemoToast('La mémoire s\'ouvre à nouveau.');
                         vnShow([
                             { speaker: 'La jeune fille', line: 'Elle revit. Continue — mène ce chapitre à son terme.' },
-                        ], () => _obGuideRefresh());
+                        ], () => { showDemoToast('La mémoire s\'ouvre à nouveau.'); _obGuideRefresh(); });
                     } else if (ev === 'carddetail') {
                         // Cas 1 : l'orbe est déjà en poche → l'utiliser.
                         // Cas 2 : elle manque → renvoyer le joueur la chercher sur la mappe.
-                        if (bagInv.orbes > 0) {
+                        if (_demoBlockedByEntries()) {
+                            // La carte est déjà pleine : l'orbe n'y changerait rien,
+                            // ce sont les pages voilées qui bloquent.
+                            vnShow([
+                                { speaker: 'La jeune fille', line: 'Garde ton orbe — cette carte n\'a plus soif. Ce sont ses pages voilées qui la retiennent : ouvre son carnet.' },
+                            ], () => _obGuideRefresh());
+                        } else if (bagInv.orbes > 0) {
                             vnShow([
                                 { speaker: 'La jeune fille', line: 'Tu as l\'orbe. Pose-la sur la carte pour la raviver.' },
                             ], () => _obGuideRefresh());
-                        } else {
+                        } else if (_demoOrbsLeft() > 0) {
                             vnShow([
-                                { speaker: 'La jeune fille', line: 'Il te manque encore l\'orbe — elle t\'attend sur la carte, tout près. Referme la carte, va la chercher, puis reviens.' },
+                                { speaker: 'La jeune fille', line: 'Il te manque encore une orbe — elles t\'attendent sur la mappe, tout près. Referme la carte, va les chercher, puis reviens.' },
+                            ], () => _obGuideRefresh());
+                        } else {
+                            // Plus aucune orbe en poche ni sur la mappe : ne pas envoyer
+                            // le joueur chercher ce qui n'existe plus.
+                            vnShow([
+                                { speaker: 'La jeune fille', line: 'Les orbes du quartier sont épuisées. Laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' },
                             ], () => _obGuideRefresh());
                         }
                     }
@@ -13143,10 +13286,13 @@
                         // Le chapitre 3 démarre avec l'énergie pleine (sinon 12 clics infaisables).
                         try { restoreCardEnergy(OB_TUTORIAL_CARD.id); } catch (e) {}
                         if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
-                        vnShow([
-                            { speaker: 'La jeune fille', line: 'Un chapitre se ferme, un autre s\'ouvre — le dernier de cette carte.' },
-                            { speaker: 'La jeune fille', line: 'Il te faudra plus de poudre. Sers-toi de celle que tu as ramassée.' },
-                        ], () => _obGuideRefresh());
+                        const rep = [{ speaker: 'La jeune fille', line: 'Un chapitre se ferme, un autre s\'ouvre — le dernier de cette carte.' }];
+                        if (memorialDust >= _DEMO_DUST_CH3) {
+                            rep.push({ speaker: 'La jeune fille', line: 'Il te faudra plus de poudre. Sers-toi de celle que tu as ramassée.' });
+                        } else if (_demoDustLeft() > 0) {
+                            rep.push({ speaker: 'La jeune fille', line: 'Il t\'en faudra beaucoup — plus que tu n\'en as. Va en récolter sur la mappe avant de continuer.' });
+                        }
+                        vnShow(rep, () => _obGuideRefresh());
                     }
                     break;
 
@@ -13157,8 +13303,9 @@
                         if (cl && cl.heartsDone && (cl.heartsDone[2] || []).length >= 3) {
                             _obGuideFinish();
                         }
-                    } else if (ev === 'carddetail' && memorialDust < 50) {
+                    } else if (ev === 'carddetail' && memorialDust < 50 && _demoDustLeft() > 0) {
                         // Cas 2 : plus de poudre pour finir le chapitre 3 → aller en récolter.
+                        // Silencieux s'il n'en reste plus une seule sur la mappe.
                         vnShow([
                             { speaker: 'La jeune fille', line: 'Tu n\'as plus de poudre... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.' },
                         ], () => _obGuideRefresh());
@@ -13266,9 +13413,9 @@
                     { speaker: 'La jeune fille', line: 'Une carte thématique. Je n\'en avais pas vu depuis...' },
                     { speaker: 'La jeune fille', line: 'Ce n\'est pas n\'importe qui qui peut les voir. Encore moins les récupérer.' },
                     { speaker: 'La jeune fille', line: 'Le Grand Livre nous a parlé. À toi — et à travers toi, à moi.' },
-                    { speaker: 'La jeune fille', line: 'Tu es archéologue de la mémoire. Je ne sais pas pourquoi toi. Mais c\'est ce que tu es.' },
+                    { speaker: 'La jeune fille', line: 'Tu es explorateur de la mémoire. Je ne sais pas pourquoi toi. Mais c\'est ce que tu es.' },
                     { speaker: 'La Gardienne', line: 'Marcus a raison. Et tort en même temps.' },
-                    { speaker: 'La Gardienne', line: 'Tu n\'es pas archéologue parce que tu en es capable. Tu en es capable parce que tu regardes encore.' },
+                    { speaker: 'La Gardienne', line: 'Tu n\'es pas explorateur parce que tu en es capable. Tu en es capable parce que tu regardes encore.' },
                     { speaker: 'La Gardienne', line: 'Le Grand Livre ne choisit pas des héros. Il remarque ceux qui regardent.' },
                     { speaker: 'La Gardienne', line: 'Et maintenant qu\'il t\'a remarqué — eux aussi.' },
                     { speaker: 'La jeune fille', line: 'Ils ont détecté la collecte. Je leur ai dit que tu étais avec nous. Pour l\'instant, tu es protégé.' },
@@ -13467,22 +13614,26 @@
                   entry: { date: "Office du Tourisme · Chapitre I — 3", text: "[Fragment posé par la présence tutélaire — texte à finaliser]", photo: null, audio: null, _revealed: true } },
 
                 // ─ Chapitre 2 (niveau 1) — à révéler par le joueur ─
+                // Plus de `_revealed: true` à partir d'ici : ces entrées se dévoilent
+                // contre une fourniture (pellicule / cassette / encre selon leur type),
+                // à prendre à l'Échoppe de Bellecour. Seul le chapitre I reste offert,
+                // pour que le carnet ne soit pas vide au premier regard.
                 { text: "[Dialogue placeholder — l'Office du Tourisme se souvient…]", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
                 { text: "[Entrée chapitre II — 1]", heart: true, level: 1,
-                  entry: { date: "Office du Tourisme · Chapitre II — 1", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null, _revealed: true } },
+                  entry: { date: "Office du Tourisme · Chapitre II — 1", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null } },
                 { text: "[Entrée chapitre II — 2]", heart: true, level: 1,
-                  entry: { date: "Office du Tourisme · Chapitre II — 2", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null, _revealed: true } },
+                  entry: { date: "Office du Tourisme · Chapitre II — 2", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null } },
                 { text: "[Entrée chapitre II — 3]", heart: true, level: 1,
-                  entry: { date: "Office du Tourisme · Chapitre II — 3", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null, _revealed: true } },
+                  entry: { date: "Office du Tourisme · Chapitre II — 3", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null } },
 
                 // ─ Chapitre 3 (niveau 2) — à révéler par le joueur ─
                 { text: "[Dialogue placeholder — l'Office du Tourisme se souvient…]", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
                 { text: "[Entrée chapitre III — 1]", heart: true, level: 2,
-                  entry: { date: "Office du Tourisme · Chapitre III — 1", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null, _revealed: true } },
+                  entry: { date: "Office du Tourisme · Chapitre III — 1", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null } },
                 { text: "[Entrée chapitre III — 2]", heart: true, level: 2,
-                  entry: { date: "Office du Tourisme · Chapitre III — 2", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null, _revealed: true } },
+                  entry: { date: "Office du Tourisme · Chapitre III — 2", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null } },
                 { text: "[Entrée chapitre III — 3]", heart: true, level: 2,
-                  entry: { date: "Office du Tourisme · Chapitre III — 3", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null, _revealed: true } }
+                  entry: { date: "Office du Tourisme · Chapitre III — 3", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null } }
             ],
 
             // ── GUIGNOL (Commune, Arts) ──
@@ -14530,14 +14681,20 @@
 
             // ─────────────────────────────────────────────────────────────
             // DÉMO OT — Neutralisation des points ambiants du prototype.
-            // La démo ne présente qu'UNE carte (nébuleuse tutorielle) + 2 POI
-            // (poudre, orbe). On vide ici tous les tableaux de points hérités
+            // La démo ne présente qu'UNE carte (nébuleuse tutorielle) + 3 POI
+            // (poudre, 2 orbes). On vide ici tous les tableaux de points hérités
             // de test.html et on injecte les 2 seuls POI de la démo.
             // (Les gros littéraux restent intacts plus haut — override propre,
             //  réversible en retirant ce bloc.)
             // ─────────────────────────────────────────────────────────────
             POIS.length = 0;
+            // Un seul bazar, plein nord de l'OT : c'est la source des fournitures
+            // (pellicule / cassette / encre) qui débloquent les entrées du carnet.
             BAZAR_POINTS.length = 0;
+            BAZAR_POINTS.push({
+                id: 'bazar_ot', name: 'Échoppe de Bellecour', lat: 45.7585, lng: 4.8324,
+                icon: '🛖', stock: { pellicules: 3, encre: 3, cassettes: 3 }
+            }); // ~100 m plein nord
             CARNET_RESOURCE_POINTS.length = 0;
             SCROLL_POINTS.length = 0;
             LOOT_POINTS.length = 0;
@@ -14545,11 +14702,16 @@
             INFO_POINTS.length = 0;
             PANNEAU_POINTS.length = 0;
             TEST_ZONES.length = 0;
-            // POI poudre (dose généreuse) + POI orbe, en triangle avec l'OT.
+            // POI poudre (dose généreuse) + 2 POI orbe, en éventail autour de l'OT.
+            // Deux orbes : la carte peut retomber à court d'énergie une seconde fois,
+            // et le joueur ne doit jamais avoir à attendre la régénération (2 h/cran).
+            // Toutes au nord ou à l'est du joueur : la caméra est décalée vers le nord
+            // et le pitch écrase la bande sud, où un point passe hors champ.
             DUST_POINTS.length = 0;
-            DUST_POINTS.push({ id: 'dust_ot', lat: 45.7574, lng: 4.8332 });
+            DUST_POINTS.push({ id: 'dust_ot',  lat: 45.7574, lng: 4.8332 }); // ~66 m sud-est
             ORB_POINTS.length = 0;
-            ORB_POINTS.push({ id: 'orb_ot', lat: 45.7581, lng: 4.8318 });
+            ORB_POINTS.push({ id: 'orb_ot',    lat: 45.7581, lng: 4.8318 }); // ~73 m nord-ouest
+            ORB_POINTS.push({ id: 'orb_ot_2',  lat: 45.7581, lng: 4.8334 }); // ~96 m nord-est
             // Grappes narratives + quêtes locales : désactivées pour la démo.
             try { Object.keys(GRAPPE_QUESTS).forEach(k => delete GRAPPE_QUESTS[k]); } catch (e) {}
             try { Object.keys(LOCAL_QUESTS).forEach(k => delete LOCAL_QUESTS[k]); } catch (e) {}
@@ -15297,10 +15459,14 @@
                 if (!_obDone) el.style.display = 'none';
                 const inner = document.createElement('div');
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-62%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+                const _oPid = 'orb_' + orb.id.replace(/[^a-z0-9]/gi,'');
                 const _oIcon = document.createElement('div');
                 _oIcon.style.cssText = 'flex-shrink:0;filter:drop-shadow(0 0 6px rgba(99,102,241,0.8));';
-                _oIcon.innerHTML = "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\"><circle cx=\"12\" cy=\"13\" r=\"10\" fill=\"url(#di_o)\"/><ellipse cx=\"12\" cy=\"13\" rx=\"10\" ry=\"10\" stroke=\"rgba(103,232,249,0.6)\" stroke-width=\"1\"/><ellipse cx=\"9\" cy=\"9\" rx=\"3.5\" ry=\"2.5\" fill=\"rgba(255,255,255,0.35)\" transform=\"rotate(-20 9 9)\"/><circle cx=\"15\" cy=\"16\" r=\"1.2\" fill=\"rgba(255,255,255,0.2)\"/><defs><radialGradient id=\"di_o\" cx=\"38%\" cy=\"35%\" r=\"65%\"><stop offset=\"0%\" stop-color=\"#cffafe\"/><stop offset=\"55%\" stop-color=\"#06b6d4\"/><stop offset=\"100%\" stop-color=\"#164e63\"/></radialGradient></defs></svg>";
-                const _oPid = 'orb_' + orb.id.replace(/[^a-z0-9]/gi,'');
+                // L'id du dégradé doit être unique par orbe. Avec un id fixe, toutes les
+                // orbes référencent le dégradé de la première : dès qu'elle est collectée
+                // (marqueur masqué), les autres perdent leur remplissage et disparaissent.
+                const _oGrad = 'di_' + _oPid;
+                _oIcon.innerHTML = "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\"><circle cx=\"12\" cy=\"13\" r=\"10\" fill=\"url(#" + _oGrad + ")\"/><ellipse cx=\"12\" cy=\"13\" rx=\"10\" ry=\"10\" stroke=\"rgba(103,232,249,0.6)\" stroke-width=\"1\"/><ellipse cx=\"9\" cy=\"9\" rx=\"3.5\" ry=\"2.5\" fill=\"rgba(255,255,255,0.35)\" transform=\"rotate(-20 9 9)\"/><circle cx=\"15\" cy=\"16\" r=\"1.2\" fill=\"rgba(255,255,255,0.2)\"/><defs><radialGradient id=\"" + _oGrad + "\" cx=\"38%\" cy=\"35%\" r=\"65%\"><stop offset=\"0%\" stop-color=\"#cffafe\"/><stop offset=\"55%\" stop-color=\"#06b6d4\"/><stop offset=\"100%\" stop-color=\"#164e63\"/></radialGradient></defs></svg>";
                 const _oWrap = _buildPoiVisual(_oPid, {
                     top:    'rgba(103,232,249,0.9)',
                     mid:    'rgba(6,182,212,0.55)',
@@ -16169,7 +16335,7 @@
         }
 
         function _capUpdate() {
-            if (!_obDone) { _capZones = []; return; }
+            if (!_obMapActive()) { _capZones = []; return; }
             _capZones = [];
             const add = (lng, lat, r, type) => _capZones.push({ lng, lat, r, type, color: _CAP_COLORS[type] || '#ffffff' });
             POIS.forEach(poi => {
@@ -16178,10 +16344,12 @@
                 else if (st === 'thematic_available') add(poi.lng, poi.lat, 50, 'poi_thematic');
                 else if (st === 'cooldown') add(poi.lng, poi.lat, 50, 'poi_cooldown');
             });
-            DUST_POINTS.forEach(d => { if (!collectedDustPoints.includes(d.id)) add(d.lng, d.lat, 50, 'dust'); });
-            ECHO_POINTS.forEach(e => { if (!collectedEchoes.includes(e.id)) add(e.lng, e.lat, 30, 'echo'); });
-            ORB_POINTS.forEach(o => { if (!collectedOrbs.includes(o.id)) add(o.lng, o.lat, 50, 'orb'); });
-            SCROLL_POINTS.forEach(s => { if (!collectedScrolls.includes(s.id)) add(s.lng, s.lat, 50, 'scroll'); });
+            // Rayons = constantes de collecte réelles : dessiner 50 m là où la collecte
+            // se déclenche à 30 m faisait entrer le joueur dans un cercle inopérant.
+            DUST_POINTS.forEach(d => { if (!collectedDustPoints.includes(d.id)) add(d.lng, d.lat, DUST_RADIUS, 'dust'); });
+            ECHO_POINTS.forEach(e => { if (!collectedEchoes.includes(e.id)) add(e.lng, e.lat, ECHO_RADIUS, 'echo'); });
+            ORB_POINTS.forEach(o => { if (!collectedOrbs.includes(o.id)) add(o.lng, o.lat, ORB_RADIUS, 'orb'); });
+            SCROLL_POINTS.forEach(s => { if (!collectedScrolls.includes(s.id)) add(s.lng, s.lat, SCROLL_RADIUS, 'scroll'); });
             LOOT_POINTS.forEach(l => { if (!collectedLoots.includes(l.id)) add(l.lng, l.lat, 50, 'loot'); });
             CARNET_RESOURCE_POINTS.forEach(pt => { if (!collectedCarnetResources.includes(pt.id)) add(pt.lng, pt.lat, CARNET_RESOURCE_RADIUS, 'carnet_resource'); });
         }
@@ -16529,8 +16697,9 @@
             // Vérifier aussi les objectifs de quêtes actives
             try { checkActiveQuestGeofencing(); } catch(e) { console.error('checkActiveQuestGeofencing', e); }
 
-            // Pendant l'onboarding, ne pas écraser la bannière Elara
-            if (!_obDone) return;
+            // Pendant l'acte du marqueur tutoriel, ne pas écraser sa bannière. Après sa collecte
+            // (_obAct2Done), le parcours guidé a besoin des bannières de collecte.
+            if (!_obMapActive()) return;
             const _screenBlocked = _isAnyScreenOpen();
             // POI — gestion locale + thématique
             currentNearbyPOI = null;
@@ -16720,7 +16889,7 @@
         // ==================== VISIBILITY ====================
 
         function updatePOIVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const allCards = Object.values(COLLECTIONS).flatMap(c => c.cards);
             const circleFeatures = [];
 
@@ -16799,7 +16968,7 @@
         }
 
         function updateDustVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const visible = [];
             dustMarkers.forEach(({ marker, el, dust }) => {
                 const show = !collectedDustPoints.includes(dust.id);
@@ -16819,7 +16988,7 @@
         }
 
         function updateEchoVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const visible = [];
             echoMarkers.forEach(({ marker, el, echo }) => {
                 // §3.4 : échos masqués pour le test 1.
@@ -16838,7 +17007,7 @@
             }
         }
         function updateOrbVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const visible = [];
             orbMarkers.forEach(({ marker, el, orb }) => {
                 const show = !collectedOrbs.includes(orb.id);
@@ -16855,7 +17024,7 @@
         }
 
         function updateScrollVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const visible = [];
             scrollMarkers.forEach(({ marker, el, scroll }) => {
                 const show = !collectedScrolls.includes(scroll.id);
@@ -16873,7 +17042,7 @@
         }
 
         function updateCarnetResourceVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const visible = [];
             carnetResourceMarkers.forEach(({ el, pt, type: _oldType }) => {
                 const collected = collectedCarnetResources.includes(pt.id);
@@ -16906,7 +17075,7 @@
         }
 
         function updateLootVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const visible = [];
             lootMarkers.forEach(({ el, loot }) => {
                 const show = !collectedLoots.includes(loot.id);
@@ -18823,8 +18992,10 @@
             collectedDustPoints.push(currentNearbyDust.id);
             markPoiCollected(currentNearbyDust.id, 'dust');
             _demoCheckEveil();
-            // DÉMO OT : dose fixe et généreuse (le chapitre 3 consomme 600 poudre).
-            const amount = 800;
+            // DÉMO OT : dose fixe et généreuse. Le chapitre 3 coûte 800 poudre
+            // (exp[2] = 800 à +50/clic, soit 16 clics) — 800 par ramassage ne laissait
+            // aucune marge, 1000 permet de finir même en n'en ramassant qu'une.
+            const amount = 1000;
             memorialDust += amount;
             document.getElementById('dustCounter').textContent = memorialDust;
             updateDustVisibility();
@@ -20239,7 +20410,7 @@
         // Récupération : 1 cran toutes les 2h. L'orbe peut bypasser
         // le repos pour restaurer l'énergie complètement.
         // ─────────────────────────────────────────────────────────────
-        const CARD_ENERGY_BY_LEVEL = [9, 6, 20, 20]; // DÉMO OT : niv.2/3 montés 3→20 (sinon le chapitre 3 = 12 clics est infaisable avec 3 crans)
+        const CARD_ENERGY_BY_LEVEL = [9, 6, 20, 20]; // DÉMO OT : niv.2/3 montés 3→20 (sinon le chapitre 3 = 16 clics est infaisable avec 3 crans)
         const CARD_ENERGY_RECOVERY_MS = 2 * 60 * 60 * 1000; // 2h par cran
         // En mémoire, indexé par cardId : { value: 0..max, lastTickAt: timestamp }
         let cardEnergy = {};
@@ -20503,18 +20674,13 @@
             _cdState(selectedCard.id).newTriviaAvailable = true;
             _refreshCardDot(selectedCard.id);
 
-            // Donner un parchemin au level up
-            bagInv.parchemins.push({
-                id:   'scroll_card_' + Date.now(),
-                name: 'Parchemin',
-                desc: "Un parchemin obtenu en progressant avec " + selectedCard.name + "."
-            });
+            // Plus de parchemin au level up : le gain n'a pas de sens ici. Les parchemins
+            // se ramassent sur le terrain et servent aux panneaux d'information.
             // Récompense fourniture au level up
             const orbRewards = ['pellicules', 'encre', 'cassettes'];
             const orbReward = orbRewards[levelBefore % 3];
             bagInv[orbReward] = (bagInv[orbReward] || 0) + 1;
             if (orbReward === 'pellicules') updateCameraHUD();
-            setTimeout(() => showScrollGainToast(), 1800);
 
                         // Lancer l'overlay de synthèse
             const SYNTH_TEXTS = [
@@ -22829,7 +22995,8 @@
                 const cl = cardLevels[OB_TUTORIAL_CARD.id];
                 const lvOk = cl && cl.level >= 2;
                 const dustOk = collectedDustPoints.indexOf('dust_ot') !== -1;
-                const orbOk = collectedOrbs.indexOf('orb_ot') !== -1;
+                // N'importe laquelle des orbes de la démo compte (orb_ot, orb_ot_2…).
+                const orbOk = collectedOrbs.some(id => String(id).indexOf('orb_ot') === 0);
                 if (lvOk && dustOk && orbOk) updateStat('demo_eveil', 1);
             } catch (e) {}
         }
@@ -23420,7 +23587,7 @@
         }
 
         function initBazarMarkers() {
-            const BAZAR_RADIUS = 80;
+            const BAZAR_RADIUS = 30;   // aligné sur la poudre et les orbes (30 m)
             BAZAR_POINTS.forEach(bazar => {
                 const el = document.createElement('div');
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:pointer;';
@@ -23462,8 +23629,8 @@
 
             // Vérifier la proximité en continu pour la bannière nearby
             setInterval(() => {
-                if (!playerPos || _obDone === false) return;
-                const BAZAR_RADIUS = 80;
+                if (!playerPos || !_obMapActive()) return;
+                const BAZAR_RADIUS = 30;   // aligné sur la poudre et les orbes (30 m)
                 let nearest = null;
                 let nearestDist = Infinity;
                 BAZAR_POINTS.forEach(bazar => {

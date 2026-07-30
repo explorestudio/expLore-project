@@ -1,7 +1,7 @@
 {
-  "name": "expLore",
-  "short_name": "expLore",
-  "description": "Archéologues de la Mémoire — exploration géolocalisée à Lyon",
+  "name": "ExpLore",
+  "short_name": "ExpLore",
+  "description": "Explorateurs de la Mémoire — exploration géolocalisée à Lyon",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

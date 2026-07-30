@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────
-   expLore — Service Worker
+   ExpLore — Service Worker
    Stratégie : network-first
    - Toujours chercher la version la plus récente sur le réseau
    - Cache utilisé uniquement si hors-ligne
@@ -7,7 +7,7 @@
    À INCRÉMENTER à chaque mise à jour des assets
    (sinon les utilisateurs garderont les anciennes images en cache) */
 
-const CACHE_VERSION = 'v7';
+const CACHE_VERSION = 'v8';
 const CACHE_NAME = `explore-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
