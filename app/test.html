@@ -1443,7 +1443,10 @@
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            padding: 16px 0 0;
+            /* 30px et non 16 : l'épingle de type (.card-type-pin) remonte de 18px
+               au-dessus de la carte, et .card-detail-view est en overflow:hidden —
+               avec 16px elle dépassait du panneau et se faisait rogner. */
+            padding: 30px 0 0;
             cursor: default;
             position: relative;
         }
