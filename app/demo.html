@@ -1458,6 +1458,48 @@
             .card-detail-inner { width: 270px; }
         }
 
+        /* ── DÉMO OT — Sortie par les marges ────────────────────────
+           La fiche se ferme en touchant le fond de part et d'autre de la
+           carte (cf. handleCardDetailBackdropClick). Plutôt qu'un bouton
+           parallèle, le guide allume ces deux bandes : elles montrent le
+           geste réel. Décoratives — pointer-events:none, le clic passe au
+           travers et c'est bien le backdrop qui ferme. */
+        .demo-exit-hint {
+            position: absolute;
+            top: 0; bottom: 0;
+            width: calc(50% - 150px);
+            min-width: 36px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+        @media (max-width: 360px) {
+            .demo-exit-hint { width: calc(50% - 135px); }
+        }
+        .demo-exit-hint.show { animation: demoExitPulse 1.9s ease-in-out infinite; }
+        .demo-exit-hint.left  { left: 0;  background: linear-gradient(to right, rgba(139,92,246,0.32), rgba(139,92,246,0)); }
+        .demo-exit-hint.right { right: 0; background: linear-gradient(to left,  rgba(139,92,246,0.32), rgba(139,92,246,0)); }
+        .demo-exit-hint-arrow {
+            font-size: 20px; line-height: 1; color: #EDE9FE;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.65);
+        }
+        /* Vertical : la marge ne fait qu'une quarantaine de pixels de large. */
+        .demo-exit-hint-label {
+            writing-mode: vertical-rl;
+            font-size: 10px; font-weight: 700; letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(237,233,254,0.92);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.65);
+        }
+        .demo-exit-hint.left .demo-exit-hint-label { transform: rotate(180deg); }
+        @keyframes demoExitPulse { 0%, 100% { opacity: 0.42; } 50% { opacity: 1; } }
+
         @keyframes cardDetailSlideUp {
             from { opacity: 0; transform: scale(0.90) translateY(24px); }
             to   { opacity: 1; transform: scale(1)    translateY(0); }
@@ -8193,13 +8235,6 @@
         <!-- Card Detail View -->
         <div id="cardDetailView" class="card-detail-view" onclick="handleCardDetailBackdropClick(event)">
             <div class="card-detail-inner" onclick="event.stopPropagation()">
-                <!-- DÉMO OT — Bouton retour direct à la mappe (surbrillançable par le guide) -->
-                <button id="demoBackToMapBtn" onclick="_demoReturnToMap()" title="Retour à la mappe"
-                    style="position:absolute;top:12px;left:12px;z-index:6;display:flex;align-items:center;gap:6px;
-                           background:rgba(20,18,38,0.85);border:1px solid rgba(167,139,250,0.55);color:#EDE9FE;
-                           padding:7px 14px;border-radius:18px;font-size:13px;font-weight:700;cursor:pointer;
-                           box-shadow:0 3px 12px rgba(0,0,0,0.45);">← Mappe</button>
-
                 <div class="card-detail-body">
                     <!-- ── Zone haute : la carte ───────────────── -->
                     <div class="card-stage" id="cardStage">
@@ -9678,7 +9713,7 @@
             // ── Collections & fiche carte ──
             "Retour à la mappe": "Back to map",
             "Retour à la carte": "Back to map",
-            "← Mappe": "← Map",
+            "Mappe": "Map",
             "Cartes": "Cards",
             "Ville": "City",
             "Personnage": "Character",
@@ -13083,23 +13118,47 @@
             seal_ch3:        () => (_demoUnrevealedAtLevel() > 0 ? '#journalTabBtn' : '#addExpBtn'),
         };
 
-        // DÉMO OT — Premier bouton « retour à la mappe » réellement visible
-        // (fiche carte, Collection ou carnet). Renvoie null si aucun n'est à l'écran.
+        // DÉMO OT — Comment renvoyer le joueur vers la mappe depuis l'écran courant.
+        // Carnet et Collection ont un vrai bouton retour : on l'entoure. La fiche
+        // carte n'en a pas — elle se ferme en touchant le fond de part et d'autre
+        // de la carte : on renvoie la sentinelle '@exit-hint', que _obGuideTick
+        // traduit en surlignage des deux marges plutôt qu'en anneau.
         function _demoBackToMapSelector() {
-            const cands = ['#demoBackToMapBtn', '.alb-back', '.journal-screen-back'];
+            const cands = ['.journal-screen-back', '.alb-back'];
             for (let i = 0; i < cands.length; i++) {
                 const el = document.querySelector(cands[i]);
                 if (el && _obElementVisible(el)) return cands[i];
             }
+            const cd = document.getElementById('cardDetailView');
+            if (cd && cd.classList.contains('show')) return '@exit-hint';
             return null;
         }
 
-        // DÉMO OT — Retour direct à la mappe depuis la fiche carte (un seul tap).
-        function _demoReturnToMap() {
-            try { closeCardDetail(); } catch (e) {}
-            try { closeCollections(); } catch (e) {}
-            try { closeJournalScreen(); } catch (e) {}
-            try { closeMindmap(); } catch (e) {}
+        // DÉMO OT — Allume / éteint les deux marges de sortie de la fiche carte.
+        // Les bandes sont créées à la première demande et restent dans le DOM.
+        function _demoExitHint(on) {
+            const view = document.getElementById('cardDetailView');
+            if (!view) return;
+            let hints = view.querySelectorAll('.demo-exit-hint');
+            if (!hints.length) {
+                if (!on) return;                       // rien à éteindre
+                ['left', 'right'].forEach(side => {
+                    const el = document.createElement('div');
+                    el.className = 'demo-exit-hint ' + side;
+                    el.setAttribute('aria-hidden', 'true');   // doublon visuel du geste
+                    el.innerHTML = '<span class="demo-exit-hint-arrow"></span>'
+                                 + '<span class="demo-exit-hint-label"></span>';
+                    el.querySelector('.demo-exit-hint-arrow').textContent = (side === 'left' ? '←' : '→');
+                    view.appendChild(el);
+                });
+                hints = view.querySelectorAll('.demo-exit-hint');
+            }
+            // Libellé réécrit à chaque allumage : la langue a pu changer depuis.
+            if (on) hints.forEach(el => {
+                const lab = el.querySelector('.demo-exit-hint-label');
+                if (lab) lab.textContent = T('Mappe');
+            });
+            hints.forEach(el => el.classList.toggle('show', !!on));
         }
 
         let _obRingSelector = null;   // sélecteur actuellement entouré
@@ -13177,14 +13236,22 @@
 
         // Un tick de réconciliation : décide s'il faut un anneau, où, et le recale.
         function _obGuideTick() {
-            if (!_obGuide.active) { _obGuideClearRing(); _obRingSelector = null; return; }
+            if (!_obGuide.active) { _obGuideClearRing(); _demoExitHint(false); _obRingSelector = null; return; }
             _obGuideSync();
-            if (!_obGuide.active) { _obGuideClearRing(); _obRingSelector = null; return; }
+            if (!_obGuide.active) { _obGuideClearRing(); _demoExitHint(false); _obRingSelector = null; return; }
             const rawSel = _OB_STEP_RING[_obGuide.step];
             const selector = (typeof rawSel === 'function' ? rawSel() : rawSel) || null;
             // Pas d'anneau pendant un dialogue VN.
             const vn = document.getElementById('vnOverlay');
             const vnUp = vn && vn.classList.contains('show');
+            // Sortie de la fiche carte : pas d'anneau (aucun bouton à entourer),
+            // on allume les deux marges du fond à la place.
+            if (selector === '@exit-hint') {
+                if (_obRingSelector !== null) { _obGuideClearRing(); _obRingSelector = null; }
+                _demoExitHint(!vnUp);
+                return;
+            }
+            _demoExitHint(false);
             let el = (selector && !vnUp) ? document.querySelector(selector) : null;
             if (el && !_obElementVisible(el)) el = null;
             if (!el) {
@@ -13206,6 +13273,7 @@
         function _obGuideStopLoop() {
             if (_obGuideTimer) { clearInterval(_obGuideTimer); _obGuideTimer = null; }
             _obGuideClearRing();
+            _demoExitHint(false);
             _obRingSelector = null;
         }
 
