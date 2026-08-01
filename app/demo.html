@@ -1686,7 +1686,137 @@
             inset: 0;
             z-index: 0;
             opacity: 1;
+            transition: opacity 0.14s linear;
         }
+
+        /* ════════════════════════════════════════════════════════════
+           DÉMO OT — Timeline des visuels multi-niveaux
+           Une seule illustration visible à la fois, qui se transforme
+           sur place. Sous elle, trois pastilles reliées par un trait
+           disent où en est la carte : remplies pour les états révélés,
+           en contour pour ceux qui restent à venir.
+           Couleurs reprises de la barre d'XP (#A855F7 → #7C3AED), pour
+           ne pas introduire d'accent supplémentaire.
+           ════════════════════════════════════════════════════════════ */
+        /* Pilule de fond : dit que la rangée est un contrôle et non un ornement,
+           et garantit le contraste des pastilles quelle que soit l'illustration */
+        .ot-tl {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 100px;             /* recalé en JS sur la hauteur réelle du flavor */
+            display: flex;
+            align-items: center;
+            /* Au-dessus de tout ce que contient la zone d'art (titre : 1,
+               flavor : 2, overlay de skin : 0) — rien ne doit rogner la
+               zone de clic par le bas. */
+            z-index: 6;
+            overflow: visible;
+            padding: 0 4px;
+            border-radius: 999px;
+            background: rgba(20,16,42,0.30);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.18);
+            box-shadow: 0 2px 10px rgba(15,23,42,0.28);
+        }
+
+        /* La zone cliquable EST le bouton : 40 × 46 px, soit une cible large.
+           Les marges verticales négatives le font déborder de 8 px au-dessus
+           et au-dessous de la pilule : la zone de clic est haute alors que la
+           pilule reste fine. La pastille violette n'est que le décor du bouton,
+           dessinée en son centre par le pseudo-élément. */
+        .ot-tl-node {
+            position: relative;
+            z-index: 1;
+            flex: 0 0 auto;
+            width: 40px;
+            height: 46px;
+            margin: -8px 0;
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ot-tl-node::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 13px;
+            height: 13px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1.5px solid #7C3AED;
+            background: linear-gradient(135deg, #A855F7 0%, #7C3AED 100%);
+            /* Liseré clair : la pastille tient sur une illustration sombre
+               comme sur une illustration claire */
+            box-shadow: 0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 4px rgba(15,23,42,0.35);
+            transition: width 0.22s ease, height 0.22s ease,
+                        opacity 0.22s ease, box-shadow 0.22s ease;
+        }
+        .ot-tl-node.active::before {
+            width: 18px;
+            height: 18px;
+            box-shadow: 0 0 0 1.5px rgba(255,255,255,0.9),
+                        0 0 0 5px rgba(168,85,247,0.3),
+                        0 1px 5px rgba(15,23,42,0.4);
+        }
+        .ot-tl-node.locked { cursor: default; }
+        .ot-tl-node.locked::before {
+            background: rgba(255,255,255,0.18);
+            opacity: 0.42;
+        }
+        /* Retour au tap */
+        .ot-tl-node:active::before { transform: translate(-50%, -50%) scale(0.82); }
+
+        /* Trait de liaison : marges négatives pour qu'il passe sous les boutons
+           et relie visuellement les pastilles. Pâle vers un état verrouillé. */
+        .ot-tl-seg {
+            flex: 0 0 auto;
+            width: 42px;
+            margin: 0 -14px;
+            height: 2px;
+            background: rgba(196,181,253,0.85);
+            transition: background 0.4s ease;
+        }
+        .ot-tl-seg.dim { background: rgba(196,181,253,0.3); }
+
+        /* Déblocage d'un nouvel état, détail ouvert : la pastille se remplit
+           dans un bref halo, le trait qui y mène s'éclaircit en même temps */
+        .ot-tl-node.unlocking::before { animation: otTlUnlock 0.45s ease-out both; }
+        @keyframes otTlUnlock {
+            0%   { opacity: 0.42; transform: translate(-50%, -50%) scale(0.8);
+                   box-shadow: 0 0 0 1.5px rgba(255,255,255,0.85), 0 0 0 0 rgba(196,181,253,0); }
+            55%  { opacity: 1;    transform: translate(-50%, -50%) scale(1.5);
+                   box-shadow: 0 0 0 1.5px rgba(255,255,255,0.95), 0 0 12px 5px rgba(196,181,253,0.85); }
+            100% { opacity: 1;    transform: translate(-50%, -50%) scale(1);
+                   box-shadow: 0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 4px rgba(15,23,42,0.35); }
+        }
+
+        /* Tap sur un état encore verrouillé */
+        .ot-tl-node.refused { animation: otTlRefuse 0.36s ease-in-out; }
+        @keyframes otTlRefuse {
+            0%, 100% { transform: translateX(0); }
+            25%      { transform: translateX(-3px); }
+            75%      { transform: translateX(3px); }
+        }
+
+        /* Couche de transformation : le nouveau visuel apparaît par-dessus
+           l'ancien, très légèrement agrandi, puis prend sa place */
+        .ot-morph {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transform: scale(1.03);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .ot-morph.in { opacity: 1; transform: scale(1); }
 
         .card-art-title {
             position: absolute;
@@ -1735,7 +1865,12 @@
             bottom: 16px;
             min-height: 64px;
             padding: 12px 14px;
-            background: rgba(249, 250, 251, 0.95);
+            /* Translucide : on doit reconnaître l'illustration dessous, pas juste
+               voir une teinte. D'où un flou très faible — au-delà de ~4px il ne
+               reste qu'une bouillie de couleurs. La lisibilité du texte est
+               rattrapée par son halo (voir .card-flavor-text), qui n'agit que
+               sous les lettres et laisse l'image nette autour. */
+            background: rgba(249, 250, 251, 0.34);
             border-radius: 14px;
             border: 1px solid rgba(107, 114, 128, 0.18);
             display: flex;
@@ -1743,7 +1878,8 @@
             justify-content: center;
             box-sizing: border-box;
             z-index: 2;
-            backdrop-filter: blur(6px);
+            backdrop-filter: blur(2px) saturate(1.1);
+            -webkit-backdrop-filter: blur(2px) saturate(1.1);
             box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
             overflow: visible;
         }
@@ -1752,14 +1888,21 @@
             font-style: italic;
             font-size: 13px;
             line-height: 1.6;
-            color: #4b5563;
+            color: #3f4654;
             text-align: center;
+            /* Halo clair concentré sous les lettres : porte toute la lisibilité,
+               ce qui permet de garder le fond de la boîte très transparent */
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95),
+                         0 0 6px  rgba(255, 255, 255, 0.9),
+                         0 0 14px rgba(255, 255, 255, 0.65);
             transition: opacity 0.3s ease;
             width: 100%;
         }
         /* Mode dialogue : texte plus net, non-italique, couleur plus sombre */
+        /* Les modes dialogue restent plus opaques que l'ambiance : c'est du
+           contenu narratif, il doit se lire sans effort. */
         .card-flavor-zone.dialogue-mode {
-            background: rgba(243, 240, 255, 0.95);
+            background: rgba(243, 240, 255, 0.7);
             border-top-color: rgba(124, 58, 237, 0.3);
             box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.15);
         }
@@ -1770,7 +1913,7 @@
         }
         /* Variante memory */
         .card-flavor-zone.dialogue-mode.memory {
-            background: rgba(254, 243, 199, 0.95);
+            background: rgba(254, 243, 199, 0.7);
             border-top-color: rgba(146, 64, 14, 0.3);
             box-shadow: inset 0 0 0 1px rgba(146, 64, 14, 0.2);
         }
@@ -1780,7 +1923,7 @@
         }
         /* Variante heart */
         .card-flavor-zone.dialogue-mode.heart {
-            background: rgba(237, 233, 254, 0.95);
+            background: rgba(237, 233, 254, 0.7);
             border-top-color: rgba(76, 29, 149, 0.35);
             box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.25);
         }
@@ -7943,6 +8086,9 @@
             <div class="ritual-obtained-name" id="ritualRevealName"></div>
             <div class="ritual-big-card" id="ritualBigCard">
                 <div id="ritualBigCardArt" class="ritual-big-card-art">
+                    <!-- DÉMO OT — visuel de la carte (niveau 0) ; masqué si la carte n'en a pas -->
+                    <img id="ritualBigCardImg" src="" alt=""
+                         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;z-index:0;">
                     <div class="ritual-big-card-art-shine"></div>
                     <div class="ritual-big-card-art-particles" id="ritualCardParticles"></div>
                     <div class="ritual-big-card-art-icon" id="ritualBigIcon"></div>
@@ -9741,6 +9887,7 @@
             "La voilà à bout de souffle. La mémoire a besoin d'une orbe pour se raviver d'un coup — il y en a deux, tout près, sur la carte. Collecte-les.": "It's out of breath. Memory needs an orb to come back all at once — there are two close by, on the map. Go and collect them.",
             "Profites-en pour ramasser la poudre que tu croiseras : tu en manqueras bientôt.": "While you're at it, pick up any dust you come across: you'll be short of it soon.",
             "La mémoire s'ouvre à nouveau.": "Memory opens again.",
+            "Cette version n'est pas encore révélée.": "This version hasn't been revealed yet.",
             "Elle revit. Continue — mène ce chapitre à son terme.": "It's alive again. Keep going — carry this chapter through to the end.",
             "Tu as l'orbe. Pose-la sur la carte pour la raviver.": "You have the orb. Place it on the card to revive it.",
             "Il te manque encore une orbe — elles t'attendent sur la mappe, tout près. Referme la carte, va les chercher, puis reviens.": "You're still missing an orb — they're waiting for you on the map, close by. Close the card, go and fetch them, then come back.",
@@ -12208,7 +12355,43 @@
             clue: '[Indice à rédiger — Canelle]',
             clueIcon: '✦',
             collections: [],
-            art: './assets/placeholder_ot.png',
+
+            // Visuel par défaut — fallback pour tout code qui lit `card.art` directement
+            art: './assets/Office1.png',
+
+            // Visuels par niveau (index = niveau, 0-based). Casse des fichiers
+            // respectée telle quelle : GitHub Pages est sensible à la casse.
+            artByLevel: [
+                './assets/Office1.png',   // niveau 0 = chapitre 1
+                './assets/Office2.png',   // niveau 1 = chapitre 2
+                './assets/Office3.png',   // niveau 2 = chapitre 3
+            ],
+        }
+
+        // ════════════════════════════════════════════════════════════════
+        // DÉMO OT — Visuels multi-niveaux
+        // Seule la carte OT définit `artByLevel` ; toutes les autres cartes
+        // retombent sur `card.art` sans changement de comportement.
+        // ════════════════════════════════════════════════════════════════
+        function getCardArtForLevel(card, level) {
+            if (!card) return null;
+            const byLevel = card.artByLevel;
+            if (Array.isArray(byLevel) && byLevel[level]) return byLevel[level];
+            return card.art || null;
+        }
+
+        // Niveau courant de la carte (0 si inconnue / non collectée)
+        function _otCardLevel(card) {
+            if (!card) return 0;
+            const cl = (typeof cardLevels === 'object') ? cardLevels[card.id] : null;
+            return cl ? (cl.level || 0) : 0;
+        }
+
+        // Nombre de visuels débloqués : un visuel l'est si son index ≤ niveau courant.
+        // 0 si la carte n'a pas de visuels multiples (→ pas d'éventail du tout).
+        function _otVisualCount(card) {
+            if (!card || !Array.isArray(card.artByLevel)) return 0;
+            return Math.min(card.artByLevel.length, _otCardLevel(card) + 1);
         }
         let _obDone        = false;
         let _villeDuLivreUnlocked = false;  // true quand le rendez-vous Bellecour est validé → POI du parcours visibles
@@ -17918,6 +18101,23 @@
             document.getElementById('ritualBigCardArt').style.background =
                 `linear-gradient(160deg, ${color}44 0%, ${color}14 55%, rgba(8,6,15,0.9) 100%)`;
             document.getElementById('ritualBigIcon').textContent         = card.clueIcon || info.symbol || '✦';
+
+            // DÉMO OT — la carte est révélée à son tout premier visuel (niveau 0),
+            // quel que soit le niveau auquel l'état de démo l'ouvrira ensuite.
+            const _revealArt = getCardArtForLevel(card, 0);
+            const _revealImg = document.getElementById('ritualBigCardImg');
+            const _revealIcon = document.getElementById('ritualBigIcon');
+            if (_revealImg) {
+                if (_revealArt) {
+                    _revealImg.src = _revealArt;
+                    _revealImg.style.display = 'block';
+                    if (_revealIcon) _revealIcon.style.display = 'none';
+                } else {
+                    _revealImg.removeAttribute('src');
+                    _revealImg.style.display = 'none';
+                    if (_revealIcon) _revealIcon.style.display = '';
+                }
+            }
             document.getElementById('ritualRevealSupertype').textContent = `${info.symbol || ''} ${info.name || ''}`;
             document.getElementById('ritualRevealCardName').textContent  = card.name;
             document.getElementById('ritualRevealCardType').textContent  = `${card.type} · ${card.rarity || ''}`;
@@ -19602,6 +19802,169 @@
 
         // ==================== CARD DETAIL ====================
 
+        // ════════════════════════════════════════════════════════════════
+        // DÉMO OT — Timeline des visuels dans le détail carte
+        // Une seule illustration à la fois, qui se transforme sur place.
+        // La timeline montre TOUS les états de la carte, y compris ceux
+        // qui restent à révéler (pastille en contour) : le joueur sait
+        // qu'il y a une suite, sans savoir laquelle.
+        // ════════════════════════════════════════════════════════════════
+        let _otTlIndex  = -1;    // visuel affiché (-1 = pas encore initialisé)
+        let _otTlCardId = '';    // carte à laquelle _otTlIndex se rapporte
+        let _otTlPendingReveal = -1;   // état fraîchement débloqué, à animer au prochain build
+
+        // Nombre total d'états de la carte (débloqués ou non)
+        function _otTlTotal(card) {
+            return (card && Array.isArray(card.artByLevel)) ? card.artByLevel.length : 0;
+        }
+
+        function _otTlBuild(card, opts) {
+            opts = opts || {};
+            const holder  = document.getElementById('cardArtContainer');
+            const artArea = document.querySelector('.card-art-area');
+            if (!holder || !artArea) return;
+
+            const total = _otTlTotal(card);
+            if (total < 2) {                       // carte à visuel unique → pas de timeline
+                artArea.querySelectorAll('.ot-tl').forEach(el => el.remove());
+                holder.querySelectorAll('.ot-morph').forEach(el => el.remove());
+                _otTlPendingReveal = -1;
+                return;
+            }
+
+            // Dernier état débloqué : le visuel i l'est si le niveau l'a atteint
+            const maxUnlocked = Math.min(total, _otVisualCount(card)) - 1;
+
+            // Nouvelle carte → on se cale sur son état courant. Sinon on garde le
+            // visuel que le joueur consultait (§6.4 du brief).
+            if (_otTlCardId !== card.id || _otTlIndex < 0) {
+                _otTlCardId = card.id;
+                _otTlIndex  = maxUnlocked;
+            }
+            if (_otTlIndex > maxUnlocked) _otTlIndex = maxUnlocked;
+            if (_otTlIndex < 0) _otTlIndex = 0;
+
+            const revealIdx = _otTlPendingReveal;
+            _otTlPendingReveal = -1;
+
+            // ── Rangée : pastille, trait, pastille, trait, pastille…
+            let tl = artArea.querySelector('.ot-tl');
+            if (!tl) {
+                tl = document.createElement('div');
+                tl.className = 'ot-tl';
+                artArea.appendChild(tl);
+            }
+            if (tl.children.length !== total * 2 - 1) {
+                tl.innerHTML = '';
+                for (let i = 0; i < total; i++) {
+                    if (i > 0) {
+                        const seg = document.createElement('span');
+                        seg.className = 'ot-tl-seg';
+                        seg.dataset.seg = String(i);      // segment menant à la pastille i
+                        tl.appendChild(seg);
+                    }
+                    const node = document.createElement('button');
+                    node.className = 'ot-tl-node';
+                    node.type = 'button';
+                    node.dataset.idx = String(i);
+                    node.addEventListener('click', (e) => { e.stopPropagation(); _otTlSelect(i); });
+                    tl.appendChild(node);
+                }
+            }
+
+            // ── État de chaque pastille et de chaque trait
+            tl.querySelectorAll('.ot-tl-node').forEach(node => {
+                const i = Number(node.dataset.idx);
+                const unlocked = i <= maxUnlocked;
+                node.classList.toggle('locked', !unlocked);
+                node.classList.toggle('active', unlocked && i === _otTlIndex);
+                node.setAttribute('aria-label', unlocked
+                    ? 'Voir le visuel ' + (i + 1)
+                    : 'Visuel ' + (i + 1) + ' — pas encore révélé');
+                node.setAttribute('aria-disabled', unlocked ? 'false' : 'true');
+                if (i === revealIdx) {
+                    node.classList.remove('unlocking');
+                    void node.offsetWidth;                 // relance l'animation
+                    node.classList.add('unlocking');
+                    node.addEventListener('animationend', () => node.classList.remove('unlocking'), { once: true });
+                }
+            });
+            tl.querySelectorAll('.ot-tl-seg').forEach(seg => {
+                seg.classList.toggle('dim', Number(seg.dataset.seg) > maxUnlocked);
+            });
+
+            // La zone de flavor a une hauteur variable selon le texte : caler la
+            // timeline juste au-dessus plutôt que sur une valeur en dur.
+            const flavor = document.getElementById('cardFlavorZone');
+            // +34 : les boutons débordent de 8 px sous la pilule, il faut que
+            // leur bord bas reste franchement au-dessus de la zone de flavor.
+            if (flavor && flavor.offsetHeight) tl.style.bottom = (flavor.offsetHeight + 34) + 'px';
+
+            // ── Illustration affichée
+            const artImg = document.getElementById('cardArtImg');
+            const src    = getCardArtForLevel(card, _otTlIndex);
+            if (artImg && src) {
+                if (opts.morph) _otTlMorph(holder, artImg, src);
+                else { artImg.src = src; artImg.style.opacity = '1'; artImg.style.display = 'block'; }
+            }
+        }
+
+        // Tap sur une pastille
+        function _otTlSelect(i) {
+            if (!selectedCard) return;
+            const maxUnlocked = Math.min(_otTlTotal(selectedCard), _otVisualCount(selectedCard)) - 1;
+
+            if (i > maxUnlocked) {
+                // État pas encore révélé : on le signale sans rien changer
+                const node = document.querySelector('.ot-tl .ot-tl-node[data-idx="' + i + '"]');
+                if (node) {
+                    node.classList.remove('refused');
+                    void node.offsetWidth;
+                    node.classList.add('refused');
+                    node.addEventListener('animationend', () => node.classList.remove('refused'), { once: true });
+                }
+                if (typeof showDemoToast === 'function') {
+                    showDemoToast("Cette version n'est pas encore révélée.");
+                    // Retour bref : on n'attend pas les 4 s du toast narratif
+                    setTimeout(() => document.getElementById('demoLoreToast')?.remove(), 1800);
+                }
+                return;
+            }
+            if (i === _otTlIndex || i < 0) return;
+            _otTlIndex = i;
+            _otTlBuild(selectedCard, { morph: true });
+        }
+
+        // Transformation sur place : le nouveau visuel se substitue à l'ancien
+        function _otTlMorph(holder, artImg, src) {
+            if (!holder || !artImg || !src) return;
+            if (artImg.getAttribute('src') === src) return;
+            holder.querySelectorAll('.ot-morph').forEach(el => el.remove());
+
+            const layer = document.createElement('div');
+            layer.className = 'ot-morph';
+            layer.style.backgroundImage = 'url("' + src + '")';
+            holder.appendChild(layer);
+            requestAnimationFrame(() => requestAnimationFrame(() => layer.classList.add('in')));
+
+            setTimeout(() => {
+                artImg.src = src;
+                artImg.style.opacity = '1';
+                artImg.style.display = 'block';
+                // Retrait à la frame suivante : la couche masque le remplacement
+                requestAnimationFrame(() => requestAnimationFrame(() => layer.remove()));
+            }, 320);
+        }
+
+        // Passage de niveau : si un état se débloque, on le note pour l'animer au
+        // prochain build. La carte affichée ne change pas — c'est au joueur d'aller
+        // voir ce qui vient d'apparaître.
+        function _otTlOnLevelUp(card, levelBefore) {
+            if (!card || !Array.isArray(card.artByLevel)) return;
+            const newIdx = levelBefore + 1;
+            if (newIdx < card.artByLevel.length) _otTlPendingReveal = newIdx;
+        }
+
         function openCardDetail(card) {
             _obOnOpenCardDetail();
             selectedCard = card;
@@ -19610,10 +19973,18 @@
             if (!cardLevels[card.id]) {
                 cardLevels[card.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
             }
+            // DÉMO OT — visuel affiché : le dernier état débloqué à la première
+            // ouverture, puis celui que le joueur consultait. _otTlBuild refait
+            // le même calcul juste après ; on le pose ici pour éviter un flash.
+            const _otMax = Math.max(0, _otVisualCount(card) - 1);
+            const _otIdx = (_otTlCardId === card.id && _otTlIndex >= 0)
+                ? Math.min(_otTlIndex, _otMax)
+                : _otMax;
             const artImg = document.getElementById('cardArtImg');
             const artEmoji = document.getElementById('cardArtEmoji');
             if (artImg && artEmoji) {
-                if (card.art) { artImg.src = card.art; artImg.style.display = 'block'; artEmoji.style.display = 'none'; }
+                const artSrc = getCardArtForLevel(card, _otIdx);
+                if (artSrc) { artImg.src = artSrc; artImg.style.opacity = '1'; artImg.style.display = 'block'; artEmoji.style.display = 'none'; }
                 else { artImg.style.display = 'none'; artEmoji.style.display = 'block'; }
             }
             const typeIcon = {
@@ -19698,6 +20069,9 @@
             document.getElementById('cardDetailView').classList.add('show');
             // Injecter le flavor text d'ambiance dans la zone basse de la carte
             setCardFlavorText(CARD_FLAVOR_TEXTS[card.id] || DEFAULT_FLAVOR);
+            // DÉMO OT — timeline des visuels : construite après le flavor text,
+            // dont la hauteur détermine sa position.
+            requestAnimationFrame(() => _otTlBuild(card));
             updateJournalBlink();
             // Couche 4 — déclencheur passif
             setTimeout(() => _triggerPassiveDialogue(card), 600);
@@ -20695,6 +21069,7 @@
             cl.level += 1;
             cl.experience = 0;
             _demoCheckEveil(); // DÉMO OT : peut débloquer le succès « L'éveil de la carte »
+            _otTlOnLevelUp(selectedCard, levelBefore); // DÉMO OT : nouvel état de carte à révéler ?
 
             // Reset dialogue pour le nouveau niveau
             const dustKey = selectedCard.id + '_' + cl.level;
@@ -20731,6 +21106,14 @@
         function orbSynthClose() {
             const overlay = document.getElementById('orbSynthOverlay');
             overlay.classList.remove('show');
+
+            // DÉMO OT — l'overlay de synthèse levé, le détail carte redevient
+            // visible : c'est le moment d'allumer la pastille fraîchement débloquée.
+            if (_otTlPendingReveal >= 0 && selectedCard
+                && document.getElementById('cardDetailView')?.classList.contains('show')) {
+                const _tlCard = selectedCard;
+                setTimeout(() => _otTlBuild(_tlCard), 420);
+            }
 
             // ── Accroche parcours guidé : chapitre scellé → adieu de la jeune fille ──
             if (typeof _obGuide === 'object' && _obGuide.active && selectedCard && selectedCard.id === OB_TUTORIAL_CARD.id) {
@@ -28411,7 +28794,11 @@
                     && typeof collectedCards !== 'undefined'
                     && collectedCards.includes(OB_TUTORIAL_CARD.id)
                     && !list.some(c => c && c.id === OB_TUTORIAL_CARD.id)) {
-                    list.push({ ...OB_TUTORIAL_CARD, image: OB_TUTORIAL_CARD.image || OB_TUTORIAL_CARD.art });
+                    // DÉMO OT — la vignette suit la progression : visuel du niveau courant
+                    const _otThumb = (typeof getCardArtForLevel === 'function')
+                        ? getCardArtForLevel(OB_TUTORIAL_CARD, Math.max(0, _otVisualCount(OB_TUTORIAL_CARD) - 1))
+                        : OB_TUTORIAL_CARD.art;
+                    list.push({ ...OB_TUTORIAL_CARD, image: OB_TUTORIAL_CARD.image || _otThumb });
                 }
                 return list;
             };
