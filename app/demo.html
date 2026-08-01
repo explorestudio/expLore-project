@@ -9882,6 +9882,7 @@
             "Je lui ai déjà rendu un peu de sa mémoire — tiens, elle a même déjà quelques souvenirs dans son carnet. À toi de réveiller le reste.": "I've already given it back a little of its memory — look, it even has a few recollections in its journal. The rest is yours to wake.",
             [`Pour qu'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire — regarde son carnet se remplir.`]:
                 `For a card to remember, feed it <span style="color:#A78BFA;font-weight:600">memorial dust</span>. Each dose wakes a little of its story — watch its journal fill up.`,
+            "Et regarde-la, elle. Une carte qui regagne sa mémoire ne garde pas le même visage — les points sous son portrait comptent les états qu'elle a retrouvés. Un seul, pour l'instant.": "And look at it, too. A card that wins back its memory doesn't keep the same face — the dots beneath its portrait count the states it has recovered. Just one, for now.",
             "La voilà. Muette, pour l'instant. Ouvre-la.": "There it is. Silent, for now. Open it.",
             "La carte est épuisée. Cherche de quoi la raviver.": "The card is spent. Find something to revive it.",
             "La voilà à bout de souffle. La mémoire a besoin d'une orbe pour se raviver d'un coup — il y en a deux, tout près, sur la carte. Collecte-les.": "It's out of breath. Memory needs an orb to come back all at once — there are two close by, on the map. Go and collect them.",
@@ -9908,8 +9909,17 @@
             "Un chapitre se ferme, un autre s'ouvre — le dernier de cette carte.": "One chapter closes, another opens — the last of this card.",
             "Il te faudra plus de poudre. Sers-toi de celle que tu as ramassée.": "You'll need more dust. Use what you've gathered.",
             "Tu n'as plus de poudre... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.": "You're out of dust... Close the card, go and gather some on the map, then come back and finish this last chapter.",
-            "Voilà. Cette carte t'a tout rendu — trois chapitres, et pas une page qui manque. C'est ça, être explorateur de la mémoire.": "There. This card has given you everything back — three chapters, and not a page missing. That is what it means to be a memory explorer.",
-            "Je dois repartir, maintenant — d'autres voix m'attendent, ailleurs. Le reste vient en marchant. À toi, désormais.": "I have to go now — other voices are waiting for me elsewhere. The rest comes with walking. It's yours from here.",
+            "Et un état de plus s'est allumé sous son portrait. Touche les points : elle garde tous ses âges, tu peux revenir les voir quand tu veux.": "And one more state has lit up beneath its portrait. Touch the dots: it keeps all its ages, you can come back and see them whenever you like.",
+            "Le dernier chapitre est plein — mais son carnet garde encore des pages voilées. Dévoile-les : une mémoire à trous ne se scelle pas.": "The last chapter is full — but its notebook still keeps veiled pages. Reveal them: a memory full of holes cannot be sealed.",
+            "Le dernier chapitre est plein, et pas une page ne manque. Scelle-le : elle aura regagné toute sa mémoire.": "The last chapter is full, and not a page is missing. Seal it: it will have won back all of its memory.",
+
+            // ── Conclusion de la démo ──
+            "Voilà. Cette carte t'a tout rendu — trois chapitres, pas une page qui manque, et ses trois visages retrouvés. Elle se souvient enfin d'elle-même.": "There. This card has given you everything back — three chapters, not a page missing, and its three faces recovered. It remembers itself at last.",
+            "Reviens la voir quand tu veux : ses états restent à toi, tu peux la reparcourir d'un âge à l'autre. Une mémoire regagnée ne se reperd pas.": "Come back and see it whenever you like: its states are yours now, you can walk it from one age to another. A memory won back is never lost again.",
+            "C'est ça, être explorateur de la mémoire.": "That is what it means to be a memory explorer.",
+            "Et il y en a d'autres. Beaucoup d'autres — dans les rues, sous les façades, au bord des deux fleuves. Toutes aussi muettes que celle-ci l'était il y a une heure.": "And there are others. Many others — in the streets, beneath the façades, along the two rivers. All as silent as this one was an hour ago.",
+            "Je dois repartir : d'autres voix m'attendent, ailleurs. Mais on se reverra — je finis toujours par retrouver ceux qui regardent encore.": "I have to go: other voices are waiting for me elsewhere. But we'll meet again — I always end up finding those who still look.",
+            "Le reste vient en marchant. À toi, désormais.": "The rest comes with walking. It's yours from here.",
 
             // ── Acte III : la Gardienne ──
             "Une carte thématique. Je n'en avais pas vu depuis...": "A themed card. I hadn't seen one since...",
@@ -13069,6 +13079,8 @@
             // l'anneau doit désigner le carnet, pas un bouton mort.
             seal_ch2:        () => (_demoUnrevealedAtLevel() > 0 ? '#journalTabBtn' : '#addExpBtn'),
             feed_ch3:        () => (memorialDust >= 50 ? '#addExpBtn' : _demoBackToMapSelector()),
+            // Dernier scellement : même arbitrage que seal_ch2 (carnet d'abord).
+            seal_ch3:        () => (_demoUnrevealedAtLevel() > 0 ? '#journalTabBtn' : '#addExpBtn'),
         };
 
         // DÉMO OT — Premier bouton « retour à la mappe » réellement visible
@@ -13155,10 +13167,12 @@
             if (_obGuide.step === 'feed_finish_ch2' && cl.level === 1) {
                 if (cl.experience >= getExpNeeded(card, cl.level)) _obAfterXpFull();
             }
-            // Backstop : 3e entrée du chapitre 3 débloquée mais entry_unlocked manqué → fin.
-            if (_obGuide.step === 'feed_ch3' && cl.level >= 2) {
-                if (cl.heartsDone && (cl.heartsDone[2] || []).length >= 3) _obGuideFinish();
+            // Backstop : XP plein au chapitre 3 mais xp_full manqué → inviter à sceller.
+            if (_obGuide.step === 'feed_ch3' && cl.level === 2) {
+                if (cl.experience >= getExpNeeded(card, cl.level)) _obAfterXpFullCh3();
             }
+            // Backstop : chapitre 3 scellé (niveau max) mais l'événement manqué → fin.
+            if (_obGuide.step === 'seal_ch3' && cl.level >= MAX_LEVEL) _obGuideFinish();
         }
 
         // Un tick de réconciliation : décide s'il faut un anneau, où, et le recale.
@@ -13238,19 +13252,25 @@
             vnShow([
                 { speaker: 'La jeune fille', line: 'Je lui ai déjà rendu un peu de sa mémoire — tiens, elle a même déjà quelques souvenirs dans son carnet. À toi de réveiller le reste.' },
                 { speaker: 'La jeune fille', html: 'Pour qu\'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire — regarde son carnet se remplir.' },
+                { speaker: 'La jeune fille', line: 'Et regarde-la, elle. Une carte qui regagne sa mémoire ne garde pas le même visage — les points sous son portrait comptent les états qu\'elle a retrouvés. Un seul, pour l\'instant.' },
             ], () => _obGuideRefresh());
         }
 
         // DÉMO OT — Complétion : adieu de la jeune fille + écran de fin.
-        // Appelée quand la 3e entrée du chapitre 3 est débloquée.
+        // Appelée au scellement du chapitre III : niveau max atteint, carnet complet,
+        // trois états visuels débloqués.
         function _obGuideFinish() {
             if (!_obGuide.active) return;
             _obGuide.active = false;
             _obGuide.step = null;
             _obGuideStopLoop();
             vnShow([
-                { speaker: 'La jeune fille', line: 'Voilà. Cette carte t\'a tout rendu — trois chapitres, et pas une page qui manque. C\'est ça, être explorateur de la mémoire.' },
-                { speaker: 'La jeune fille', line: 'Je dois repartir, maintenant — d\'autres voix m\'attendent, ailleurs. Le reste vient en marchant. À toi, désormais.' },
+                { speaker: 'La jeune fille', line: 'Voilà. Cette carte t\'a tout rendu — trois chapitres, pas une page qui manque, et ses trois visages retrouvés. Elle se souvient enfin d\'elle-même.' },
+                { speaker: 'La jeune fille', line: 'Reviens la voir quand tu veux : ses états restent à toi, tu peux la reparcourir d\'un âge à l\'autre. Une mémoire regagnée ne se reperd pas.' },
+                { speaker: 'La jeune fille', line: 'C\'est ça, être explorateur de la mémoire.' },
+                { speaker: 'La jeune fille', line: 'Et il y en a d\'autres. Beaucoup d\'autres — dans les rues, sous les façades, au bord des deux fleuves. Toutes aussi muettes que celle-ci l\'était il y a une heure.' },
+                { speaker: 'La jeune fille', line: 'Je dois repartir : d\'autres voix m\'attendent, ailleurs. Mais on se reverra — je finis toujours par retrouver ceux qui regardent encore.' },
+                { speaker: 'La jeune fille', line: 'Le reste vient en marchant. À toi, désormais.' },
             ], () => {
                 _obDone = true;
                 _obAct3Done = true;
@@ -13317,6 +13337,23 @@
                 }
             } else {
                 rep.push({ speaker: 'La jeune fille', line: 'Le chapitre est plein. Scelle-le : qu\'il prenne racine.' });
+            }
+            vnShow(rep, () => _obGuideRefresh());
+        }
+
+        // DÉMO OT — Chapitre III au max : dernière étape avant la conclusion.
+        // Même logique que _obAfterXpFull, mais le scellement porte ici la carte
+        // à son niveau maximum : les répliques annoncent la mémoire complète.
+        function _obAfterXpFullCh3() {
+            _obGuide.step = 'seal_ch3';
+            const rep = [];
+            if (_demoUnrevealedAtLevel() > 0) {
+                rep.push({ speaker: 'La jeune fille', line: 'Le dernier chapitre est plein — mais son carnet garde encore des pages voilées. Dévoile-les : une mémoire à trous ne se scelle pas.' });
+                if (_demoMissingSupplies() > 0) {
+                    rep.push({ speaker: 'La jeune fille', line: 'L\'échoppe en tient, juste au nord d\'ici. Sers-toi.' });
+                }
+            } else {
+                rep.push({ speaker: 'La jeune fille', line: 'Le dernier chapitre est plein, et pas une page ne manque. Scelle-le : elle aura regagné toute sa mémoire.' });
             }
             vnShow(rep, () => _obGuideRefresh());
         }
@@ -13402,7 +13439,7 @@
         // DÉMO OT — Dispatcher du parcours guidé court.
         // Flux : go_collections → go_card → feed_ch2 → (énergie 0) get_orb →
         //        (orbe utilisée) feed_finish_ch2 → (xp plein) seal_ch2 →
-        //        (scellé) feed_ch3 → (3e entrée ch.3) fin.
+        //        (scellé) feed_ch3 → (xp plein) seal_ch3 → (scellé = niveau max) fin.
         function _obGuideEvent(ev) {
             if (!_obGuide.active) return;
 
@@ -13502,7 +13539,10 @@
                         // Le chapitre 3 démarre avec l'énergie pleine (sinon 12 clics infaisables).
                         try { restoreCardEnergy(OB_TUTORIAL_CARD.id); } catch (e) {}
                         if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
-                        const rep = [{ speaker: 'La jeune fille', line: 'Un chapitre se ferme, un autre s\'ouvre — le dernier de cette carte.' }];
+                        const rep = [
+                            { speaker: 'La jeune fille', line: 'Un chapitre se ferme, un autre s\'ouvre — le dernier de cette carte.' },
+                            { speaker: 'La jeune fille', line: 'Et un état de plus s\'est allumé sous son portrait. Touche les points : elle garde tous ses âges, tu peux revenir les voir quand tu veux.' },
+                        ];
                         if (memorialDust >= _DEMO_DUST_CH3) {
                             rep.push({ speaker: 'La jeune fille', line: 'Il te faudra plus de poudre. Sers-toi de celle que tu as ramassée.' });
                         } else if (_demoDustLeft() > 0) {
@@ -13513,18 +13553,28 @@
                     break;
 
                 case 'feed_ch3':
-                    // Fin quand les 3 entrées du chapitre 3 sont débloquées (xp 600).
-                    if (ev === 'entry_unlocked') {
-                        const cl = cardLevels[OB_TUTORIAL_CARD.id];
-                        if (cl && cl.heartsDone && (cl.heartsDone[2] || []).length >= 3) {
-                            _obGuideFinish();
-                        }
+                    // Le chapitre III plein ne clôt plus la démo : il reste à dévoiler
+                    // ses pages puis à le sceller — c'est le scellement qui porte le
+                    // niveau au maximum, et donc la carte à sa mémoire complète.
+                    if (ev === 'xp_full') {
+                        _obAfterXpFullCh3();
                     } else if (ev === 'carddetail' && memorialDust < 50 && _demoDustLeft() > 0) {
                         // Cas 2 : plus de poudre pour finir le chapitre 3 → aller en récolter.
                         // Silencieux s'il n'en reste plus une seule sur la mappe.
                         vnShow([
                             { speaker: 'La jeune fille', line: 'Tu n\'as plus de poudre... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.' },
                         ], () => _obGuideRefresh());
+                    }
+                    break;
+
+                case 'seal_ch3':
+                    // Dernier verrou : sceller le chapitre III. Le bouton n'est
+                    // actif que si toutes les pages du niveau sont dévoilées, donc
+                    // « scellé » vaut ici « niveau max + carnet complet ».
+                    if (ev === 'sealed') {
+                        _obGuideFinish();
+                    } else if (ev === 'all_revealed' || ev === 'carddetail') {
+                        _obAfterXpFullCh3();
                     }
                     break;
             }
