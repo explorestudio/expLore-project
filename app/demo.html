@@ -3270,6 +3270,502 @@
             font-family: Georgia, serif; font-style: italic;
         }
 
+        /* ══════════════════════════════════════════════════════════════
+           MUSIQUE D'AMBIANCE — bouton de bascule + toast d'invitation
+           Posé sous le compteur de poudre (même créneau que le bouton
+           journal de quête, masqué dans cette démo). Style aligné sur le
+           HUD blanc translucide, pas sur les tokens du carnet : le bouton
+           vit sur la carte, pas dans le carnet.
+           ══════════════════════════════════════════════════════════════ */
+        /* `absolute` et non `fixed` : le bouton doit rester dans le cadre
+           téléphone (.app-container, 390 px centrés sur desktop). */
+        .bg-music-toggle {
+            position: absolute;
+            top: 64px; right: 14px;
+            z-index: 1000;
+            width: 40px; height: 40px;
+            padding: 0; border: none; border-radius: 50%;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(6px);
+            color: #6b7280;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.14);
+            transition: transform 0.12s ease, background 0.2s ease, color 0.2s ease;
+        }
+        .bg-music-toggle:hover  { transform: scale(1.05); }
+        .bg-music-toggle:active { transform: scale(0.94); }
+        .bg-music-toggle.on {
+            color: #7C3AED;
+            background: rgba(255,255,255,0.98);
+            box-shadow: 0 2px 12px rgba(124,58,237,0.32);
+        }
+        .bg-music-icon { transition: opacity 0.2s ease, transform 0.2s ease; }
+        .bg-music-toggle.on .bg-music-icon-on { animation: bgMusicPop 0.2s ease-out; }
+        @keyframes bgMusicPop {
+            from { opacity: 0; transform: scale(0.82); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        /* Toast d'invitation : affiché une seule fois, pointe vers le bouton */
+        .bg-music-invite {
+            position: absolute;
+            top: 112px; right: 14px;
+            z-index: 1001;
+            max-width: 240px;
+            padding: 11px 14px;
+            background: linear-gradient(135deg, rgba(30,27,58,0.96), rgba(20,18,38,0.96));
+            border: 1px solid rgba(167,139,250,0.45);
+            border-radius: 14px;
+            box-shadow: 0 6px 24px rgba(88,28,135,0.5);
+            color: #EDE9FE;
+            font-size: 12.5px; font-weight: 600; line-height: 1.4;
+            cursor: pointer;
+            opacity: 0; transform: translateY(-6px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .bg-music-invite.show { opacity: 1; transform: translateY(0); }
+        .bg-music-invite::after {   /* flèche pointant vers le bouton */
+            content: '';
+            position: absolute; top: -7px; right: 12px;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-bottom: 7px solid rgba(30,27,58,0.96);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           CARNET SCRAPBOOK — gabarits d'entrée de la carte OT
+           Bloc autonome, préfixe .jsb- : aucun style existant n'est
+           touché, le retrait se fait d'un seul tenant.
+           Polices système : la démo reste autonome hors ligne, on
+           n'ajoute pas de Google Fonts. Grain du papier en dégradés
+           CSS tant que ./assets/textures/paper_grain.png n'existe pas.
+           ══════════════════════════════════════════════════════════════ */
+        .jsb-page {
+            --jsb-paper:    #f4e8d0;
+            --jsb-ink:      #2c1e0f;
+            --jsb-ink-soft: #6b5238;
+            --jsb-accent:   #2f5c3a;
+            --jsb-warm:     #a3402a;
+            --jsb-gold:     #b98a3e;
+            --jsb-tape:     rgba(224,210,168,0.75);
+            --jsb-serif:    Georgia, 'Times New Roman', serif;
+            --jsb-hand:     'Segoe Script', 'Bradley Hand', 'Snell Roundhand', 'Comic Sans MS', cursive;
+
+            position: relative;
+            margin: 6px 0 28px;
+            padding: 20px 16px 24px;
+            background-color: var(--jsb-paper);
+            /* Grain de substitution : trois semis de points + un voile
+               diagonal, assez discret pour ne pas moirer au scroll. */
+            background-image:
+                radial-gradient(circle at 18% 12%, rgba(160,120,50,0.10) 0 1px, transparent 1px),
+                radial-gradient(circle at 72% 38%, rgba(120,85,35,0.08) 0 1px, transparent 1px),
+                radial-gradient(circle at 44% 78%, rgba(160,120,50,0.09) 0 1px, transparent 1px),
+                linear-gradient(158deg, rgba(255,250,235,0.55) 0%, rgba(214,190,146,0.30) 100%);
+            background-size: 90px 90px, 130px 130px, 70px 70px, 100% 100%;
+            border-radius: 2px;
+            box-shadow:
+                0 2px 10px rgba(60,35,10,0.18),
+                inset 0 0 46px rgba(150,110,45,0.14);
+        }
+
+        .jsb-title {
+            font-family: var(--jsb-serif);
+            font-size: 15px; font-weight: 600;
+            letter-spacing: 0.6px;
+            color: var(--jsb-ink);
+            text-align: center;
+            margin: 2px 0 14px;
+        }
+        .jsb-title::after {
+            content: ''; display: block;
+            width: 46px; height: 1px; margin: 8px auto 0;
+            background: var(--jsb-gold); opacity: 0.7;
+        }
+
+        /* Image scotchée, légèrement de travers */
+        .jsb-photo {
+            position: relative;
+            transform: rotate(var(--jsb-rot, -1deg));
+            background: #fbf6ea;
+            padding: 7px 7px 8px;
+            border: 1px solid rgba(160,120,50,0.28);
+            box-shadow: 0 3px 9px rgba(60,35,10,0.22);
+            margin: 0 4px 12px;
+        }
+        .jsb-photo img {
+            width: 100%; height: auto; display: block;
+            border-radius: 1px;
+        }
+        /* Visible seulement si l'asset manque (ou n'est pas encore fourni) */
+        .jsb-photo-ph {
+            display: none;
+            min-height: 150px;
+            align-items: center; justify-content: center;
+            background: repeating-linear-gradient(45deg,
+                rgba(150,120,80,0.10) 0 8px,
+                rgba(150,120,80,0.04) 8px 16px);
+            border: 1px dashed rgba(120,85,35,0.35);
+            font-family: var(--jsb-serif); font-style: italic;
+            font-size: 11px; color: rgba(90,62,25,0.6);
+        }
+        .jsb-photo.no-img .jsb-photo-ph { display: flex; }
+
+        .jsb-caption {
+            font-family: var(--jsb-hand);
+            font-size: 13px; line-height: 1.4;
+            color: var(--jsb-ink-soft);
+            text-align: center; opacity: 0.9;
+            margin: 0 8px 16px;
+            transform: rotate(-0.5deg);
+        }
+
+        .jsb-body {
+            font-family: var(--jsb-serif);
+            font-size: 12.5px; line-height: 1.85;
+            color: var(--jsb-ink);
+            text-align: justify;
+            -webkit-hyphens: auto; hyphens: auto;
+            margin: 0 2px 18px;
+        }
+
+        .jsb-quote {
+            font-family: var(--jsb-hand);
+            font-size: 16px; line-height: 1.5;
+            color: var(--jsb-accent);
+            margin: 0 60px 2px 26px;
+            padding-left: 10px;
+            border-left: 2px solid rgba(47,92,58,0.28);
+            transform: rotate(-0.6deg);
+        }
+
+        /* ── Décorations (CSS pur / SVG inline, aucune image externe) ── */
+        .jsb-deco { position: absolute; pointer-events: none; }
+        .jsb-tape-top {
+            top: -9px; left: 50%;
+            width: 92px; height: 22px; margin-left: -46px;
+            transform: rotate(-3deg);
+            background-color: var(--jsb-tape);
+            background-image: repeating-linear-gradient(90deg,
+                rgba(255,255,255,0.16) 0 3px, transparent 3px 7px);
+            box-shadow: 0 1px 3px rgba(60,35,10,0.18);
+        }
+        .jsb-tape-corner {
+            top: -4px; right: -16px;
+            width: 74px; height: 20px;
+            transform: rotate(45deg);
+            background-color: var(--jsb-tape);
+            background-image: repeating-linear-gradient(90deg,
+                rgba(255,255,255,0.16) 0 3px, transparent 3px 7px);
+            box-shadow: 0 1px 3px rgba(60,35,10,0.16);
+        }
+        .jsb-stamp {
+            right: 6px; bottom: 8px;
+            width: 88px; height: 88px;
+            color: var(--jsb-warm);
+            opacity: 0.34;
+            transform: rotate(-13deg);
+            mix-blend-mode: multiply;
+        }
+        .jsb-pin {
+            width: 17px; height: 17px; border-radius: 50%;
+            background: radial-gradient(circle at 33% 30%,
+                #ffffff 0 1px, var(--jsb-pin, #b03a3a) 2px 100%);
+            box-shadow: 0 2px 4px rgba(60,35,10,0.4);
+        }
+        .jsb-clip {
+            top: -14px; left: 22px;
+            width: 22px; height: 44px;
+            color: #8e8b84;
+            filter: drop-shadow(0 1px 2px rgba(60,35,10,0.3));
+        }
+        /* Coin de page corné */
+        .jsb-fold {
+            right: 0; bottom: 0;
+            width: 0; height: 0;
+            border-style: solid; border-width: 0 0 18px 18px;
+            border-color: transparent transparent rgba(196,170,120,0.55) transparent;
+            filter: drop-shadow(-1px -1px 1px rgba(60,35,10,0.18));
+        }
+
+        /* Cachet rectangulaire (date fictive, à fixer par Canelle) */
+        .jsb-stamp-date {
+            right: 10px; bottom: 12px;
+            padding: 3px 8px;
+            border: 1.5px solid rgba(20,14,6,0.6);
+            color: rgba(20,14,6,0.6);
+            font-family: var(--jsb-serif); font-size: 9.5px;
+            letter-spacing: 1.4px; text-transform: uppercase;
+            transform: rotate(-7deg);
+            opacity: 0.5; mix-blend-mode: multiply;
+        }
+
+        /* ── Ligne de contexte (date / chapitre) ── */
+        .jsb-eyebrow {
+            font-family: var(--jsb-serif); font-style: italic;
+            font-size: 10px; letter-spacing: 0.4px;
+            color: var(--jsb-ink-soft); opacity: 0.65;
+            text-align: center; margin: 0 0 6px;
+        }
+
+        /* ── Affordance « consulter le dossier » sur une image ── */
+        .jsb-photo.has-dossier { cursor: pointer; }
+        .jsb-photo-badge {
+            position: absolute; right: 10px; bottom: 12px;
+            display: flex; align-items: center; gap: 4px;
+            padding: 3px 8px;
+            background: rgba(44,30,15,0.72);
+            color: #f4e8d0;
+            font-family: var(--jsb-serif); font-size: 9.5px;
+            letter-spacing: 0.6px; border-radius: 2px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        .jsb-photo.has-dossier:active { filter: brightness(0.96); }
+
+        /* ── Gabarit `image_anecdote_postit` ── */
+        .jsb-float-photo {
+            width: 52%;
+            margin: 2px 0 8px 12px;
+            float: right;
+        }
+        .jsb-float-photo.left { float: left; margin: 2px 12px 8px 0; }
+        .jsb-postit {
+            position: relative;
+            clear: both;
+            width: 62%; min-height: 74px;
+            margin: 6px 8px 4px auto;
+            padding: 16px 12px 12px;
+            background: var(--jsb-postit, #f7e58c);
+            box-shadow: 1px 3px 8px rgba(60,35,10,0.26);
+            transform: rotate(2.2deg);
+            font-family: var(--jsb-hand);
+            font-size: 13.5px; line-height: 1.45;
+            color: #4a3a12;
+        }
+        .jsb-postit .jsb-pin {
+            position: absolute; top: -7px; left: 50%; margin-left: -8px;
+        }
+
+        /* ── Gabarit `illustration_list` ── */
+        .jsb-illus-row {
+            display: flex; flex-wrap: wrap; gap: 12px;
+            align-items: flex-start; margin: 4px 0 14px;
+        }
+        .jsb-illus {
+            position: relative;
+            flex: 1 1 44%; min-width: 118px;
+            background: #fbf6ea;
+            padding: 5px;
+            border: 1px solid rgba(160,120,50,0.22);
+            box-shadow: 0 2px 6px rgba(60,35,10,0.16);
+        }
+        .jsb-illus img { width: 100%; height: auto; display: block; }
+        .jsb-illus.no-img::after {
+            content: 'Illustration à venir';
+            display: flex; align-items: center; justify-content: center;
+            min-height: 110px; padding: 0 8px;
+            background: repeating-linear-gradient(45deg,
+                rgba(150,120,80,0.10) 0 8px, rgba(150,120,80,0.04) 8px 16px);
+            border: 1px dashed rgba(120,85,35,0.35);
+            font-family: var(--jsb-serif); font-style: italic;
+            font-size: 11px; color: rgba(90,62,25,0.6); text-align: center;
+        }
+        .jsb-list { flex: 1 1 44%; min-width: 118px; }
+        .jsb-list-title {
+            font-family: var(--jsb-hand);
+            font-size: 14px; color: var(--jsb-accent);
+            margin-bottom: 6px;
+        }
+        .jsb-list ul { list-style: none; margin: 0; padding: 0; }
+        .jsb-list li {
+            position: relative;
+            font-family: var(--jsb-serif);
+            font-size: 11.5px; line-height: 1.6;
+            color: var(--jsb-ink);
+            padding-left: 15px; margin-bottom: 6px;
+        }
+        .jsb-list li::before {
+            content: '✦';
+            position: absolute; left: 0; top: 0;
+            color: var(--jsb-gold); font-size: 10px;
+        }
+
+        /* ── Gabarit `two_images_compare` ── */
+        .jsb-compare { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 14px; }
+        .jsb-compare-item {
+            position: relative; flex: 1 1 0; min-width: 0;
+            background: #fbf6ea; padding: 5px 5px 6px;
+            border: 1px solid rgba(160,120,50,0.24);
+            box-shadow: 0 2px 6px rgba(60,35,10,0.18);
+        }
+        .jsb-compare-item img { width: 100%; height: auto; display: block; }
+        .jsb-compare-label {
+            position: absolute; left: 5px; bottom: 6px; right: 5px;
+            background: rgba(20,14,6,0.82); color: #f4e8d0;
+            font-family: var(--jsb-serif); font-size: 9.5px;
+            letter-spacing: 0.6px; text-transform: uppercase;
+            padding: 3px 6px; text-align: center;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .jsb-compare-sep {
+            align-self: center;
+            font-family: var(--jsb-serif); font-size: 13px;
+            color: var(--jsb-ink-soft); opacity: 0.6;
+        }
+
+        /* ── Gabarit `audio_entry` ── */
+        .jsb-audio {
+            position: relative;
+            display: flex; align-items: center; gap: 10px;
+            margin: 6px 2px 10px;
+            padding: 12px 12px;
+            background: #fbf6ea;
+            border: 1px solid rgba(160,120,50,0.26);
+            box-shadow: 0 3px 10px rgba(60,35,10,0.2);
+            transform: rotate(-0.5deg);
+        }
+        .jsb-audio-label {
+            position: absolute; top: -9px; left: 12px;
+            padding: 0 6px;
+            background: #fbf6ea;
+            font-family: var(--jsb-hand); font-size: 12px;
+            color: var(--jsb-ink-soft);
+        }
+        .jsb-audio-play {
+            flex: 0 0 auto;
+            width: 40px; height: 40px; border-radius: 50%;
+            border: 2px solid var(--jsb-warm);
+            background: rgba(163,64,42,0.08);
+            color: var(--jsb-warm);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; padding: 0;
+            transition: transform 0.15s ease, background 0.2s ease;
+        }
+        .jsb-audio-play:active { transform: scale(0.92); }
+        .jsb-audio-play[disabled] {
+            border-color: rgba(107,82,56,0.4);
+            color: rgba(107,82,56,0.5);
+            background: transparent; cursor: default;
+        }
+        /* Seul repère de lecture en cours, faute de waveform animée */
+        .jsb-audio.playing {
+            box-shadow: 0 3px 14px rgba(163,64,42,0.24);
+            border-color: rgba(163,64,42,0.35);
+        }
+        /* Waveform : image statique fournie, jamais générée. Absente = rien. */
+        .jsb-audio-wave {
+            flex: 0 1 auto; min-width: 0;
+            max-height: 40px; max-width: 100px;
+            opacity: 0.7;
+        }
+        .jsb-audio-time {
+            flex: 0 0 auto;
+            margin-left: auto;
+            font-family: var(--jsb-serif); font-size: 10px;
+            color: var(--jsb-ink-soft); opacity: 0.8;
+            font-variant-numeric: tabular-nums;
+        }
+        .jsb-audio-note {
+            font-family: var(--jsb-hand); font-size: 13px;
+            color: var(--jsb-ink-soft); opacity: 0.85;
+            text-align: right; margin: 0 6px 4px 0;
+            transform: rotate(-0.8deg);
+        }
+
+        /* ══ Dossier photo : consultation plein écran, 1 image à la fois ══ */
+        .jsb-dsr {
+            position: fixed; inset: 0; z-index: 860;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(30,18,6,0); backdrop-filter: blur(0px);
+            opacity: 0; pointer-events: none;
+            transition: background 0.28s ease, opacity 0.24s ease;
+        }
+        .jsb-dsr.open {
+            background: rgba(30,18,6,0.78);
+            backdrop-filter: blur(4px);
+            opacity: 1; pointer-events: all;
+        }
+        .jsb-dsr-inner {
+            width: 90%; max-width: 340px;
+            background: var(--jsb-paper, #f4e8d0);
+            border-radius: 3px;
+            padding: 14px 14px 12px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+            transform: scale(0.9); transition: transform 0.28s cubic-bezier(0.34,1.3,0.64,1);
+        }
+        .jsb-dsr.open .jsb-dsr-inner { transform: scale(1); }
+        .jsb-dsr-head {
+            display: flex; align-items: flex-start; gap: 8px;
+            margin-bottom: 10px;
+        }
+        .jsb-dsr-title {
+            flex: 1;
+            font-family: Georgia, serif; font-size: 12px;
+            font-weight: 600; letter-spacing: 0.5px;
+            color: #2c1e0f;
+        }
+        .jsb-dsr-sub {
+            display: block; margin-top: 2px;
+            font-weight: 400; font-style: italic; font-size: 10px;
+            color: #6b5238; opacity: 0.75;
+        }
+        .jsb-dsr-close {
+            flex: 0 0 auto;
+            background: none; border: none; padding: 2px 4px;
+            font-size: 17px; line-height: 1; cursor: pointer;
+            color: rgba(107,82,56,0.7);
+        }
+        .jsb-dsr-stage {
+            position: relative; overflow: hidden;
+            background: #e8dcc8;
+            border: 1px solid rgba(160,120,50,0.25);
+            touch-action: pan-y;
+        }
+        .jsb-dsr-track {
+            display: flex;
+            transition: transform 0.26s cubic-bezier(0.32,0.72,0,1);
+        }
+        .jsb-dsr-track.dragging { transition: none; }
+        .jsb-dsr-slide {
+            flex: 0 0 100%; min-width: 100%;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 150px;
+        }
+        .jsb-dsr-slide img { width: 100%; height: auto; display: block; }
+        .jsb-dsr-slide .jsb-dsr-missing {
+            display: none;
+            font-family: Georgia, serif; font-style: italic;
+            font-size: 11px; color: rgba(90,62,25,0.6);
+            padding: 40px 10px;
+        }
+        .jsb-dsr-slide.miss .jsb-dsr-missing { display: block; }
+        .jsb-dsr-caption {
+            font-family: 'Segoe Script', 'Bradley Hand', cursive;
+            font-size: 12.5px; line-height: 1.4;
+            color: #6b5238; text-align: center;
+            min-height: 34px; margin: 8px 4px 4px;
+        }
+        .jsb-dsr-nav {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 10px;
+        }
+        .jsb-dsr-arrow {
+            background: none; border: none; cursor: pointer;
+            font-size: 22px; line-height: 1; padding: 2px 8px;
+            color: #6b5238;
+            transition: opacity 0.2s ease;
+        }
+        .jsb-dsr-arrow[disabled] { opacity: 0.22; cursor: default; }
+        .jsb-dsr-dots { display: flex; gap: 7px; }
+        .jsb-dsr-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: rgba(107,82,56,0.3);
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+        .jsb-dsr-dot.on { background: #a3402a; transform: scale(1.35); }
+
         /* ── Lightbox scrapbook ── */
         .scrap-lightbox {
             position: fixed; inset: 0; z-index: 800;
@@ -7835,6 +8331,7 @@
                     <button onclick="testPlaceAllLumens()" class="test-action-btn">🕯️ Tout éclairer (lumens)</button>
                     <button onclick="testUnlockGrappeCards()" class="test-action-btn">🃏 Débloquer cartes (grappe)</button>
                     <button onclick="testUnlockGrappeEntries()" class="test-action-btn">📖 Débloquer entrées carnet (grappe)</button>
+                    <button onclick="testRevealOtJournal()" class="test-action-btn">📓 Révéler le carnet OT (scrapbook)</button>
                     <button onclick="testQueueGrappeLumens()" class="test-action-btn">✨ Éclairer hidden points (grappe)</button>
                     <button onclick="testLevelUpGrappeCards()" class="test-action-btn">⭐ Cartes grappe LV3 (test quête)</button>
                     <button onclick="testCompleteAllGrappeQuests()" class="test-action-btn">🏆 Terminer toutes étapes grappe</button>
@@ -9524,6 +10021,44 @@
             <div class="scrap-lightbox-audio" id="scrapLbAudio"></div>
             <div id="scrapLbN2"></div>
         </div>
+        </div>
+
+        <!-- ── MUSIQUE D'AMBIANCE ── -->
+        <!-- preload="none" : la piste fait 2,7 Mo et la musique est OFF par
+             défaut — on ne télécharge rien tant que le joueur n'active pas. -->
+        <audio id="bgMusic" src="./assets/audio/ambient_bg.mp3" loop preload="none"></audio>
+        <button id="bgMusicToggle" class="bg-music-toggle" type="button"
+                onclick="BgMusic.toggle()" aria-label="Activer la musique">
+            <svg class="bg-music-icon bg-music-icon-on" viewBox="0 0 24 24" width="21" height="21" style="display:none">
+                <path d="M9 18V5l12-2v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="6" cy="18" r="3" fill="currentColor"/>
+                <circle cx="18" cy="16" r="3" fill="currentColor"/>
+            </svg>
+            <svg class="bg-music-icon bg-music-icon-off" viewBox="0 0 24 24" width="21" height="21">
+                <path d="M9 18V5l12-2v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
+                <circle cx="6" cy="18" r="3" fill="currentColor" opacity="0.4"/>
+                <circle cx="18" cy="16" r="3" fill="currentColor" opacity="0.4"/>
+                <line x1="3" y1="21" x2="21" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+
+        <!-- ── DOSSIER PHOTO (carnet scrapbook) ── -->
+        <div class="jsb-dsr" id="jsbDossier" onclick="closeJsbDossier(event)">
+            <div class="jsb-dsr-inner">
+                <div class="jsb-dsr-head">
+                    <div class="jsb-dsr-title" id="jsbDsrTitle"></div>
+                    <button class="jsb-dsr-close" onclick="closeJsbDossier()" aria-label="Fermer le dossier">✕</button>
+                </div>
+                <div class="jsb-dsr-stage" id="jsbDsrStage">
+                    <div class="jsb-dsr-track" id="jsbDsrTrack"></div>
+                </div>
+                <div class="jsb-dsr-caption" id="jsbDsrCaption"></div>
+                <div class="jsb-dsr-nav">
+                    <button class="jsb-dsr-arrow" id="jsbDsrPrev" onclick="jsbDossierGo(-1)" aria-label="Photo précédente">‹</button>
+                    <div class="jsb-dsr-dots" id="jsbDsrDots"></div>
+                    <button class="jsb-dsr-arrow" id="jsbDsrNext" onclick="jsbDossierGo(1)" aria-label="Photo suivante">›</button>
+                </div>
+            </div>
         </div>
 
         <!-- ── LEVEL-UP OVERLAY ── -->
@@ -13422,6 +13957,7 @@
                 }
             } else {
                 rep.push({ speaker: 'La jeune fille', line: 'Le dernier chapitre est plein, et pas une page ne manque. Scelle-le : elle aura regagné toute sa mémoire.' });
+
             }
             vnShow(rep, () => _obGuideRefresh());
         }
@@ -14899,6 +15435,7 @@
                 return; // ne pas démarrer l'app : on recharge proprement
             }
             startApp();
+            BgMusic.init();   // musique d'ambiance : OFF par défaut, rien ne démarre ici
             setTimeout(() => {
                 initJoystick();
                 // DÉMO OT : GPS totalement désactivé (aucun prompt de géoloc). Joystick uniquement.
@@ -16419,6 +16956,27 @@
             });
             saveProgress();
             showToast('📖 ' + count + ' entrée(s) carnet débloquée(s)');
+        }
+
+        // TEST — révèle les 9 entrées du carnet de la carte OT pour juger des
+        // gabarits scrapbook sans dérouler toute la progression. Outil de
+        // debug : ne touche ni au niveau de la carte, ni aux fournitures.
+        function testRevealOtJournal() {
+            const id = 'ob_tutorial_card';
+            if (!cardJournalEntries[id]) cardJournalEntries[id] = [];
+            (CARD_DIALOGUES[id] || []).filter(d => d.heart && d.entry).forEach(d => {
+                const lvl = d.level !== undefined ? d.level : 0;
+                let e = cardJournalEntries[id].find(x => x.text === d.entry.text);
+                if (!e) {
+                    e = Object.assign({}, d.entry, { level: lvl, _available: true });
+                    cardJournalEntries[id].push(e);
+                }
+                e._revealed = true;
+            });
+            saveProgress();
+            if (selectedCard && selectedCard.id === id) renderJournalBio();
+            // showToast n'existe pas dans ce fichier (voir showDemoToast)
+            showDemoToast('📓 Carnet OT révélé — ' + cardJournalEntries[id].length + ' entrées');
         }
 
         function testQueueGrappeLumens() {
@@ -21328,6 +21886,773 @@
 
         let animatingN2CardId = null;
 
+        // ══════════════════════════════════════════════════════════════
+        // CARNET SCRAPBOOK — gabarits d'entrée de la carte OT
+        // 5 gabarits (image_citation, image_anecdote_postit,
+        // illustration_list, two_images_compare, audio_entry), appliqués
+        // aux 9 entrées de la carte OT. Contenus = placeholders :
+        // Canelle rédigera. Ce bloc, l'overlay #jsbDossier et le point
+        // d'appel dans renderJournalBio se retirent d'un seul tenant.
+        //
+        // Images : chemins définitifs prévus ./assets/journal/ot_aX_pY.png.
+        // Tant qu'ils n'existent pas, on pointe des assets présents pour
+        // juger du rendu ; un fichier manquant bascule sur « Image à
+        // venir » sans 404 fatal.
+        // ══════════════════════════════════════════════════════════════
+        const JSB_ENTRIES = {
+            ob_tutorial_card: [
+                // ─── Arc 1 (niveau 0) — posées par la présence tutélaire ───
+                {
+                    level: 0, index: 0,
+                    template: 'image_citation',
+                    title: "[Titre de l'entrée — à rédiger]",
+                    image: './assets/Office1.png',
+                    imageCaption: '[légende manuscrite — à rédiger]',
+                    body: "[Fragment posé par la présence tutélaire — texte à finaliser. "
+                        + "Quatre à six lignes de corps de texte, de quoi juger du gris "
+                        + "typographique, de la justification et de l'interlignage sur la "
+                        + "largeur d'un écran mobile.]",
+                    quote: '[citation manuscrite — à rédiger]',
+                    decorations: ['tape_top', 'tape_corner', 'stamp_lyon_patrimoine'],
+                    dossier: {
+                        title: '[Dossier — à nommer]',
+                        photos: [
+                            { src: './assets/Office1.png',      caption: '[légende 1 — à rédiger]' },
+                            { src: './assets/intro/case1.png',  caption: '[légende 2 — à rédiger]' },
+                            { src: './assets/intro/case2.png',  caption: '[légende 3 — à rédiger]' },
+                        ],
+                    },
+                },
+                {
+                    level: 0, index: 1,
+                    template: 'image_anecdote_postit',
+                    title: '[Titre — à rédiger]',
+                    image: './assets/intro/case3.png',
+                    imageSide: 'right',
+                    body: "[Fragment posé par la présence tutélaire — texte à finaliser. "
+                        + "Le texte s'écoule autour de l'image collée, puis le post-it "
+                        + "vient par-dessus, en bas de page.]",
+                    postit: { color: 'yellow', text: '[note manuscrite — à rédiger]' },
+                    decorations: ['tape_corner'],
+                    dossier: {
+                        title: '[Dossier — à nommer]',
+                        photos: [
+                            { src: './assets/intro/case3.png', caption: '[légende 1 — à rédiger]' },
+                            { src: './assets/intro/case4.png', caption: '[légende 2 — à rédiger]' },
+                            { src: './assets/intro/case5.png', caption: '[légende 3 — à rédiger]' },
+                        ],
+                    },
+                },
+                {
+                    level: 0, index: 2,
+                    template: 'illustration_list',
+                    title: '[Titre — à rédiger]',
+                    image: './assets/parchemin.png',
+                    body: "[Fragment posé par la présence tutélaire — texte à finaliser.]",
+                    listTitle: 'À observer',
+                    list: ['[à observer 1]', '[à observer 2]', '[à observer 3]'],
+                    decorations: ['paperclip_top', 'corner_fold'],
+                },
+
+                // ─── Arc 2 (niveau 1) — à révéler ───
+                {
+                    level: 1, index: 0,
+                    template: 'image_citation',
+                    title: '[Titre — à rédiger]',
+                    image: './assets/Office2.png',
+                    imageCaption: '[légende manuscrite — à rédiger]',
+                    body: '[Entrée à rédiger — recherche en cours.]',
+                    quote: '[citation manuscrite — à rédiger]',
+                    decorations: ['tape_top', 'stamp_date'],
+                    dossier: {
+                        title: '[Dossier — à nommer]',
+                        photos: [
+                            { src: './assets/Office2.png',     caption: '[légende 1 — à rédiger]' },
+                            { src: './assets/intro/case6.png', caption: '[légende 2 — à rédiger]' },
+                            { src: './assets/intro/case7.png', caption: '[légende 3 — à rédiger]' },
+                        ],
+                    },
+                },
+                {
+                    level: 1, index: 1,
+                    template: 'two_images_compare',
+                    title: '[Titre — à rédiger]',
+                    imageLeft: './assets/Office1.png',
+                    imageLeftLabel: '[avant]',
+                    imageRight: './assets/Office3.png',
+                    imageRightLabel: '[après]',
+                    body: '[Entrée à rédiger — recherche en cours.]',
+                    decorations: ['tape_corner', 'stamp_lyon_patrimoine'],
+                    dossier: {
+                        title: '[Dossier — à nommer]',
+                        photos: [
+                            { src: './assets/Office1.png', caption: '[légende avant — à rédiger]' },
+                            { src: './assets/Office3.png', caption: '[légende après — à rédiger]' },
+                            { src: './assets/intro/case8.png', caption: '[légende 3 — à rédiger]' },
+                        ],
+                    },
+                },
+                {
+                    level: 1, index: 2,
+                    template: 'audio_entry',
+                    title: '[Titre — à rédiger]',
+                    body: '[Entrée à rédiger — recherche en cours.]',
+                    audio: {
+                        // Nom du fichier tel que déposé par David.
+                        src: './assets/audio/officetourisme.mp3',
+                        label: 'Ambiance sonore — Place Bellecour',
+                        // Lue dynamiquement sur `loadedmetadata` : rien à
+                        // re-mesurer si le fichier change.
+                        duration: null,
+                        // Optionnelle : ignorée tant que le fichier n'existe pas.
+                        waveformImage: './assets/audio/ot_a2_p3_wave.svg',
+                    },
+                    audioNote: '[instruction manuscrite — à rédiger]',
+                    decorations: ['tape_top'],
+                },
+
+                // ─── Arc 3 (niveau 2) — à révéler ───
+                {
+                    level: 2, index: 0,
+                    template: 'image_anecdote_postit',
+                    title: '[Titre — à rédiger]',
+                    image: './assets/intro/case6.png',
+                    imageSide: 'left',
+                    body: '[Entrée à rédiger — recherche en cours.]',
+                    postit: { color: 'pink', text: '[note manuscrite — à rédiger]' },
+                    decorations: ['tape_top'],
+                    dossier: {
+                        title: '[Dossier — à nommer]',
+                        photos: [
+                            { src: './assets/intro/case6.png', caption: '[légende 1 — à rédiger]' },
+                            { src: './assets/intro/case7.png', caption: '[légende 2 — à rédiger]' },
+                            { src: './assets/intro/case8.png', caption: '[légende 3 — à rédiger]' },
+                        ],
+                    },
+                },
+                {
+                    // Était une 2e entrée audio : ramenée à un gabarit visuel
+                    // tant qu'une seule piste sert de preuve de concept.
+                    level: 2, index: 1,
+                    template: 'illustration_list',
+                    title: '[Titre — à rédiger]',
+                    image: './assets/intro/case7.png',
+                    body: '[Entrée à rédiger — recherche en cours.]',
+                    listTitle: 'À observer',
+                    list: ['[à observer 1]', '[à observer 2]', '[à observer 3]'],
+                    decorations: ['paperclip_top', 'corner_fold'],
+                },
+                {
+                    level: 2, index: 2,
+                    template: 'two_images_compare',
+                    title: '[Titre — à rédiger]',
+                    imageLeft: './assets/intro/case2.png',
+                    imageLeftLabel: '[label gauche]',
+                    imageRight: './assets/intro/case5.png',
+                    imageRightLabel: '[label droit]',
+                    body: '[Entrée à rédiger — recherche en cours.]',
+                    decorations: ['tape_top', 'stamp_date'],
+                    dossier: {
+                        title: '[Dossier — à nommer]',
+                        photos: [
+                            { src: './assets/intro/case2.png', caption: '[légende 1 — à rédiger]' },
+                            { src: './assets/intro/case5.png', caption: '[légende 2 — à rédiger]' },
+                            { src: './assets/Office3.png',     caption: '[légende 3 — à rédiger]' },
+                        ],
+                    },
+                },
+            ],
+        };
+
+        let _jsbUid = 0;
+
+        function _jsbEsc(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Gabarit associé à une entrée du carnet, ou null si la carte n'en a pas
+        function _jsbTemplateFor(cardId, level, index) {
+            const list = JSB_ENTRIES[cardId];
+            if (!list) return null;
+            const tpl = list.find(function (e) { return e.level === level && e.index === index; });
+            return (tpl && JSB_TEMPLATES[tpl.template]) ? tpl : null;
+        }
+
+        // ── Décorations : CSS pur ou SVG inline, jamais d'image externe ──
+        function _jsbDeco(name, uid) {
+            switch (name) {
+                case 'tape_top':
+                    return '<span class="jsb-deco jsb-tape-top"></span>';
+                case 'tape_corner':
+                    return '<span class="jsb-deco jsb-tape-corner"></span>';
+                case 'corner_fold':
+                    return '<span class="jsb-deco jsb-fold"></span>';
+                case 'paperclip_top':
+                    return '<svg class="jsb-deco jsb-clip" viewBox="0 0 22 44" fill="none" aria-hidden="true">'
+                         +   '<path d="M15.5 10v22a5.5 5.5 0 0 1-11 0V9a3.6 3.6 0 0 1 7.2 0v21.5a1.9 1.9 0 0 1-3.8 0V12"'
+                         +     ' stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>'
+                         + '</svg>';
+                case 'stamp_date':
+                    return '<span class="jsb-deco jsb-stamp-date">[date]</span>';
+                case 'stamp_lyon_patrimoine':
+                    return '<svg class="jsb-deco jsb-stamp" viewBox="0 0 100 100" aria-hidden="true">'
+                         +   '<defs><path id="jsbArc' + uid + '" fill="none" '
+                         +     'd="M50,50 m-33,0 a33,33 0 1,1 66,0 a33,33 0 1,1 -66,0"/></defs>'
+                         +   '<circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2.6"/>'
+                         +   '<circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="0.9"/>'
+                         +   '<text fill="currentColor" font-family="Georgia, serif" font-size="9.5" letter-spacing="1.4">'
+                         +     '<textPath href="#jsbArc' + uid + '" startOffset="4%">LYON · PATRIMOINE · MÉMOIRE</textPath>'
+                         +   '</text>'
+                         +   '<text x="50" y="47" text-anchor="middle" fill="currentColor" '
+                         +     'font-family="Georgia, serif" font-size="11" letter-spacing="1">ARCHIVES</text>'
+                         +   '<text x="50" y="61" text-anchor="middle" fill="currentColor" '
+                         +     'font-family="Georgia, serif" font-size="8.5" letter-spacing="1">— O.T. —</text>'
+                         + '</svg>';
+                default:
+                    return '';
+            }
+        }
+
+        // Cadre photo : image + repli « Image à venir », et accès au dossier
+        // quand l'entrée en déclare un.
+        function _jsbFrame(src, o) {
+            o = o || {};
+            const onErr = 'this.style.display=&#39;none&#39;;this.parentNode.classList.add(&#39;no-img&#39;);';
+            let h = '<div class="jsb-photo' + (src ? '' : ' no-img')
+                  + (o.dossierKey ? ' has-dossier' : '') + (o.cls ? ' ' + o.cls : '') + '"'
+                  + ' style="--jsb-rot:' + (o.rot || 0) + 'deg;"';
+            if (o.dossierKey) {
+                h += ' role="button" tabindex="0" aria-label="Consulter le dossier photo"'
+                   + ' onclick="openJsbDossier(\'' + o.dossierKey + '\',' + (o.start || 0) + ')"';
+            }
+            h += '>';
+            if (src) h += '<img src="' + _jsbEsc(src) + '" alt="" onerror="' + onErr + '">';
+            h += '<div class="jsb-photo-ph">Image à venir</div>';
+            if (o.dossierKey && o.count) {
+                h += '<span class="jsb-photo-badge">📎 Dossier · ' + o.count + '</span>';
+            }
+            h += '</div>';
+            return h;
+        }
+
+        // Enregistre le dossier d'une entrée et renvoie sa clé (ou null)
+        function _jsbRegisterDossier(entry, ctx) {
+            const dsr = entry.dossier;
+            if (!dsr || !dsr.photos || !dsr.photos.length) return null;
+            _jsbDsrData[ctx.key] = {
+                title: dsr.title || entry.title || 'Dossier',
+                sub: ctx.date || '',
+                photos: dsr.photos,
+            };
+            return ctx.key;
+        }
+
+        function _jsbOpen(entry, uid) {
+            let h = '<div class="jsb-page jsb-' + entry.template.replace(/_/g, '-') + '">';
+            (entry.decorations || []).forEach(function (d) { h += _jsbDeco(d, uid); });
+            return h;
+        }
+
+        function _jsbHead(entry, ctx) {
+            let h = '';
+            if (ctx.date)    h += '<div class="jsb-eyebrow">' + _jsbEsc(ctx.date) + '</div>';
+            if (entry.title) h += '<div class="jsb-title">' + _jsbEsc(entry.title) + '</div>';
+            return h;
+        }
+
+        // ── Gabarit 1 : image scotchée, légende, corps justifié, citation ──
+        function _jsbImageCitation(entry, ctx) {
+            const uid = ++_jsbUid;
+            const key = _jsbRegisterDossier(entry, ctx);
+            let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
+            h += _jsbFrame(entry.image, {
+                rot: ((uid * 37) % 21 - 10) / 10,       // −1.0° à +1.0°, stable par entrée
+                dossierKey: key,
+                count: key ? entry.dossier.photos.length : 0,
+            });
+            if (entry.imageCaption) h += '<div class="jsb-caption">' + _jsbEsc(entry.imageCaption) + '</div>';
+            if (entry.body)         h += '<div class="jsb-body">' + _jsbEsc(entry.body) + '</div>';
+            if (entry.quote)        h += '<div class="jsb-quote">« ' + _jsbEsc(entry.quote) + ' »</div>';
+            return h + '</div>';
+        }
+
+        // ── Gabarit 2 : image collée sur le côté, texte autour, post-it ──
+        function _jsbImagePostit(entry, ctx) {
+            const uid = ++_jsbUid;
+            const key = _jsbRegisterDossier(entry, ctx);
+            const side = entry.imageSide === 'left' ? ' left' : '';
+            let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
+            h += _jsbFrame(entry.image, {
+                cls: 'jsb-float-photo' + side,
+                rot: ((uid * 53) % 25 - 12) / 5,        // −2.4° à +2.4°
+                dossierKey: key,
+                count: key ? entry.dossier.photos.length : 0,
+            });
+            if (entry.body) h += '<div class="jsb-body">' + _jsbEsc(entry.body) + '</div>';
+            if (entry.postit) {
+                const tones = { yellow: '#f7e58c', pink: '#f7c8c8', blue: '#c4dbef' };
+                h += '<div class="jsb-postit" style="--jsb-postit:' + (tones[entry.postit.color] || tones.yellow) + ';">'
+                   +   '<span class="jsb-pin" style="--jsb-pin:#b03a3a;"></span>'
+                   +   _jsbEsc(entry.postit.text)
+                   + '</div>';
+            }
+            return h + '<div style="clear:both;"></div></div>';
+        }
+
+        // ── Gabarit 3 : illustration + liste « À observer » ──
+        function _jsbIllustrationList(entry, ctx) {
+            const uid = ++_jsbUid;
+            let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
+            h += '<div class="jsb-illus-row">';
+            h +=   '<div class="jsb-illus' + (entry.image ? '' : ' no-img') + '">';
+            if (entry.image) {
+                h += '<img src="' + _jsbEsc(entry.image) + '" alt="" '
+                   +   'onerror="this.style.display=&#39;none&#39;;this.parentNode.classList.add(&#39;no-img&#39;);">';
+            }
+            h +=   '</div>';
+            h +=   '<div class="jsb-list">';
+            h +=     '<div class="jsb-list-title">' + _jsbEsc(entry.listTitle || 'À observer') + '</div>';
+            h +=     '<ul>' + (entry.list || []).map(function (li) {
+                        return '<li>' + _jsbEsc(li) + '</li>';
+                     }).join('') + '</ul>';
+            h +=   '</div>';
+            h += '</div>';
+            if (entry.body) h += '<div class="jsb-body">' + _jsbEsc(entry.body) + '</div>';
+            return h + '</div>';
+        }
+
+        // ── Gabarit 4 : deux images côte à côte, labels en surimpression ──
+        function _jsbTwoImages(entry, ctx) {
+            const uid = ++_jsbUid;
+            const key = _jsbRegisterDossier(entry, ctx);
+            let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
+            h += '<div class="jsb-compare">';
+            [[entry.imageLeft, entry.imageLeftLabel, 0], [entry.imageRight, entry.imageRightLabel, 1]]
+                .forEach(function (pair, n) {
+                    if (n === 1) h += '<span class="jsb-compare-sep">↔</span>';
+                    h += '<div class="jsb-compare-item"'
+                       + (key ? ' onclick="openJsbDossier(\'' + key + '\',' + pair[2] + ')"'
+                              + ' role="button" tabindex="0" aria-label="Consulter le dossier photo"' : '')
+                       + '>';
+                    if (pair[0]) {
+                        h += '<img src="' + _jsbEsc(pair[0]) + '" alt="" '
+                           +   'onerror="this.style.display=&#39;none&#39;;">';
+                    }
+                    if (pair[1]) h += '<span class="jsb-compare-label">' + _jsbEsc(pair[1]) + '</span>';
+                    h += '</div>';
+                });
+            h += '</div>';
+            if (entry.body) h += '<div class="jsb-body">' + _jsbEsc(entry.body) + '</div>';
+            return h + '</div>';
+        }
+
+        // ── Gabarit 5 : encart audio (lecture déclenchée au tap, jamais auto) ──
+        function _jsbAudioEntry(entry, ctx) {
+            const uid = ++_jsbUid;
+            const au  = entry.audio || {};
+            const aid = 'jsbAudio' + uid;
+            let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
+            if (entry.body) h += '<div class="jsb-body">' + _jsbEsc(entry.body) + '</div>';
+            // La durée n'est pas codée en dur : elle s'affiche sur
+            // `loadedmetadata`, d'ici là le compteur reste à `--:--`.
+            h += '<div class="jsb-audio" data-audio-entry>';
+            h +=   '<audio id="' + aid + '" src="' + _jsbEsc(au.src || '') + '" preload="metadata"></audio>';
+            if (au.label) h += '<span class="jsb-audio-label">' + _jsbEsc(au.label) + '</span>';
+            h +=   '<button class="jsb-audio-play" type="button" aria-label="Lire l\'extrait sonore">'
+                 +   _jsbIconPlay() + '</button>';
+            // Waveform statique : uniquement si l'image est fournie ; pas de
+            // repli visuel si le fichier manque, l'encart reste bouton + timer.
+            if (au.waveformImage) {
+                h += '<img class="jsb-audio-wave" src="' + _jsbEsc(au.waveformImage) + '" alt="" '
+                   +   'onerror="this.remove();">';
+            }
+            h +=   '<span class="jsb-audio-time">00:00 / --:--</span>';
+            h += '</div>';
+            if (entry.audioNote) h += '<div class="jsb-audio-note">' + _jsbEsc(entry.audioNote) + '</div>';
+            return h + '</div>';
+        }
+
+        const JSB_TEMPLATES = {
+            image_citation:        _jsbImageCitation,
+            image_anecdote_postit: _jsbImagePostit,
+            illustration_list:     _jsbIllustrationList,
+            two_images_compare:    _jsbTwoImages,
+            audio_entry:           _jsbAudioEntry,
+        };
+
+        // ══════════════════════════════════════════════════════════════
+        // Lecteur audio du carnet
+        // Aucun autoplay : la lecture ne part que sur tap explicite.
+        // ══════════════════════════════════════════════════════════════
+        function _jsbIconPlay() {
+            return '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">'
+                 + '<path d="M8 5v14l11-7z"/></svg>';
+        }
+        function _jsbIconPause() {
+            return '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">'
+                 + '<path d="M6.5 5h3.5v14H6.5zM14 5h3.5v14H14z"/></svg>';
+        }
+        // Durée manquante ou pas encore lue → `--:--`
+        function _jsbFmt(sec) {
+            if (!isFinite(sec) || sec < 0) return '--:--';
+            const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+            return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        function _jsbAudioReset(box) {
+            if (!box) return;
+            box.classList.remove('playing');
+            const btn = box.querySelector('.jsb-audio-play');
+            if (btn) btn.innerHTML = _jsbIconPlay();
+        }
+
+        function _jsbInitAudio(root) {
+            (root || document).querySelectorAll('.jsb-audio').forEach(function (box) {
+                if (box.dataset.jsbReady) return;
+                box.dataset.jsbReady = '1';
+
+                const audio = box.querySelector('audio');
+                const btn   = box.querySelector('.jsb-audio-play');
+                const time  = box.querySelector('.jsb-audio-time');
+                if (!audio || !btn) return;
+                const dur = function () { return _jsbFmt(audio.duration); };
+
+                // Fichier absent (404) : bouton désactivé, l'entrée reste lisible
+                audio.addEventListener('error', function () {
+                    btn.disabled = true;
+                    _jsbAudioReset(box);
+                    if (time) time.textContent = '[audio indisponible]';
+                });
+                audio.addEventListener('loadedmetadata', function () {
+                    if (time) time.textContent = '00:00 / ' + dur();
+                });
+                audio.addEventListener('timeupdate', function () {
+                    if (time) time.textContent = _jsbFmt(audio.currentTime) + ' / ' + dur();
+                });
+                audio.addEventListener('ended', function () {
+                    audio.currentTime = 0;
+                    _jsbAudioReset(box);
+                    if (time) time.textContent = '00:00 / ' + dur();
+                });
+
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (!audio.paused) { audio.pause(); _jsbAudioReset(box); return; }
+                    // Une seule piste à la fois
+                    document.querySelectorAll('.jsb-audio audio').forEach(function (other) {
+                        if (other !== audio && !other.paused) {
+                            other.pause();
+                            _jsbAudioReset(other.closest('.jsb-audio'));
+                        }
+                    });
+                    const p = audio.play();
+                    if (p && p.then) {
+                        p.then(function () {
+                            box.classList.add('playing');
+                            btn.innerHTML = _jsbIconPause();
+                        }).catch(function () {
+                            btn.disabled = true;
+                            if (time) time.textContent = '[audio indisponible]';
+                        });
+                    } else {
+                        box.classList.add('playing');
+                        btn.innerHTML = _jsbIconPause();
+                    }
+                });
+            });
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // MUSIQUE D'AMBIANCE
+        // OFF par défaut, état persistant, ducking pendant la lecture
+        // d'une entrée audio du carnet. Jamais de lecture sans geste du
+        // joueur : si l'état persistant est ON, on attend le premier tap.
+        // ══════════════════════════════════════════════════════════════
+        const BgMusic = (function () {
+            const KEY_ENABLED = 'demo_ot_music_enabled';
+            const KEY_INVITE  = 'demo_ot_music_invite_shown';
+            const VOL_NORMAL  = 0.35;    // ambiance de fond, pas bande-son
+            const VOL_DUCKED  = 0.035;   // 10 % du volume normal
+            const FADE_DOWN   = 400;
+            const FADE_UP     = 600;
+
+            let audioEl = null, btn = null, iconOn = null, iconOff = null;
+            let enabled = false;
+            let pendingStart = false;   // ON persistant, en attente du 1er tap
+            let ducked = false;
+            let fadeTimer = null;
+
+            function _read(key) {
+                try { return localStorage.getItem(key); } catch (e) { return null; }
+            }
+            function _write(key, val) {
+                try { localStorage.setItem(key, val); } catch (e) {}
+            }
+
+            function init() {
+                audioEl = document.getElementById('bgMusic');
+                btn     = document.getElementById('bgMusicToggle');
+                if (!audioEl || !btn) return;
+                iconOn  = btn.querySelector('.bg-music-icon-on');
+                iconOff = btn.querySelector('.bg-music-icon-off');
+
+                audioEl.volume = VOL_NORMAL;
+                enabled = (_read(KEY_ENABLED) === 'true');
+                updateUI();
+
+                // Politique autoplay : rien ne démarre avant un geste du joueur
+                if (enabled) {
+                    pendingStart = true;
+                    document.addEventListener('click',      _firstTap, { once: true, capture: true });
+                    document.addEventListener('touchstart', _firstTap, { once: true, capture: true });
+                }
+
+                document.addEventListener('visibilitychange', _visibility);
+                _setupDucking();
+                _maybeInvite();
+            }
+
+            function _firstTap() {
+                if (pendingStart && enabled) {
+                    audioEl.volume = ducked ? VOL_DUCKED : VOL_NORMAL;
+                    audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
+                }
+            }
+
+            function toggle() {
+                enabled = !enabled;
+                _write(KEY_ENABLED, String(enabled));
+                updateUI();
+                _dismissInvite();
+                if (enabled) {
+                    // Reprise déjà atténuée si une entrée du carnet joue (cas §7.5)
+                    audioEl.volume = ducked ? VOL_DUCKED : VOL_NORMAL;
+                    audioEl.play().catch(function () {});
+                    pendingStart = false;
+                } else {
+                    if (fadeTimer) { clearInterval(fadeTimer); fadeTimer = null; }
+                    audioEl.pause();   // pause, pas stop : la reprise se fait en place
+                }
+            }
+
+            function updateUI() {
+                btn.classList.toggle('on', enabled);
+                if (iconOn)  iconOn.style.display  = enabled ? '' : 'none';
+                if (iconOff) iconOff.style.display = enabled ? 'none' : '';
+                btn.setAttribute('aria-label', enabled ? 'Désactiver la musique' : 'Activer la musique');
+            }
+
+            function _visibility() {
+                if (!enabled) return;
+                if (document.hidden) audioEl.pause();
+                else if (!pendingStart) audioEl.play().catch(function () {});
+            }
+
+            function _fadeTo(target, ms) {
+                if (fadeTimer) { clearInterval(fadeTimer); fadeTimer = null; }
+                if (!enabled) { audioEl.volume = target; return; }   // OFF : rien à entendre
+                const from  = audioEl.volume;
+                const delta = target - from;
+                const steps = 20;
+                let n = 0;
+                fadeTimer = setInterval(function () {
+                    n++;
+                    audioEl.volume = Math.max(0, Math.min(1, from + delta * (n / steps)));
+                    if (n >= steps) {
+                        clearInterval(fadeTimer);
+                        fadeTimer = null;
+                        audioEl.volume = target;
+                    }
+                }, ms / steps);
+            }
+
+            // Écoute passive des entrées audio du carnet : on ne touche pas
+            // à leur logique. `play`/`pause`/`ended` ne bouillonnent pas,
+            // d'où la capture sur document.
+            function _setupDucking() {
+                function isJournalAudio(el) {
+                    return el && el.tagName === 'AUDIO' && el.closest && el.closest('.jsb-audio');
+                }
+                document.addEventListener('play', function (e) {
+                    if (!isJournalAudio(e.target)) return;
+                    ducked = true;
+                    _fadeTo(VOL_DUCKED, FADE_DOWN);
+                }, true);
+                ['pause', 'ended'].forEach(function (evt) {
+                    document.addEventListener(evt, function (e) {
+                        if (!isJournalAudio(e.target)) return;
+                        ducked = false;
+                        _fadeTo(VOL_NORMAL, FADE_UP);
+                    }, true);
+                });
+            }
+
+            function _dismissInvite() {
+                const el = document.getElementById('bgMusicInvite');
+                if (!el) return;
+                el.classList.remove('show');
+                setTimeout(function () { if (el.parentNode) el.remove(); }, 320);
+            }
+
+            // Un plein écran couvre le bouton (choix de langue, cinématique
+            // d'intro, onboarding) : inviter maintenant reviendrait à ne rien
+            // montrer. On attend que la vue soit dégagée.
+            function _blocked() {
+                return ['#langSelectOverlay', '#introBDCinematic', '#onboardingOverlay']
+                    .some(function (sel) {
+                        const el = document.querySelector(sel);
+                        if (!el) return false;
+                        const cs = getComputedStyle(el);
+                        return cs.display !== 'none' && cs.visibility !== 'hidden'
+                            && parseFloat(cs.opacity || '1') > 0.05;
+                    });
+            }
+
+            function _showInvite() {
+                if (document.getElementById('bgMusicInvite')) return;
+                _write(KEY_INVITE, 'true');   // écrit à l'affichage réel, pas avant
+                const el = document.createElement('div');
+                el.id = 'bgMusicInvite';
+                el.className = 'bg-music-invite';
+                el.textContent = (typeof T === 'function')
+                    ? T("Une ambiance sonore accompagne l'exploration. Tu peux l'activer ici.")
+                    : "Une ambiance sonore accompagne l'exploration. Tu peux l'activer ici.";
+                el.addEventListener('click', _dismissInvite);
+                // Dans le cadre téléphone, pas dans <body> : sinon le toast
+                // se place hors du cadre sur desktop.
+                (btn.parentNode || document.body).appendChild(el);
+                requestAnimationFrame(function () { el.classList.add('show'); });
+                setTimeout(_dismissInvite, 5000);
+            }
+
+            function _maybeInvite() {
+                if (_read(KEY_INVITE) === 'true') return;
+                if (enabled) return;                 // déjà au courant, inutile
+                let tries = 0;
+                const timer = setInterval(function () {
+                    tries++;
+                    if (!_blocked()) { clearInterval(timer); _showInvite(); }
+                    else if (tries > 40) { clearInterval(timer); }   // ~48 s : on renonce
+                }, 1200);
+            }
+
+            return { init: init, toggle: toggle };
+        })();
+
+        // ══════════════════════════════════════════════════════════════
+        // Dossier photo : consultation d'une entrée illustrée, une image
+        // à la fois, navigation par swipe / flèches / pastilles.
+        // ══════════════════════════════════════════════════════════════
+        let _jsbDsrData = {};   // clé d'entrée → { title, sub, photos: [...] }
+        let _jsbDsrKey  = '';
+        let _jsbDsrIdx  = 0;
+
+        function openJsbDossier(key, startIdx) {
+            const data = _jsbDsrData[key];
+            const ov   = document.getElementById('jsbDossier');
+            if (!data || !ov) return;
+
+            _jsbDsrKey = key;
+            _jsbDsrIdx = Math.min(Math.max(0, startIdx || 0), data.photos.length - 1);
+
+            document.getElementById('jsbDsrTitle').innerHTML =
+                _jsbEsc(data.title) + (data.sub ? '<span class="jsb-dsr-sub">' + _jsbEsc(data.sub) + '</span>' : '');
+
+            document.getElementById('jsbDsrTrack').innerHTML = data.photos.map(function (p) {
+                return '<div class="jsb-dsr-slide' + (p.src ? '' : ' miss') + '">'
+                     + (p.src
+                        ? '<img src="' + _jsbEsc(p.src) + '" alt="" onerror="this.style.display=&#39;none&#39;;'
+                          + 'this.parentNode.classList.add(&#39;miss&#39;);">'
+                        : '')
+                     + '<div class="jsb-dsr-missing">Image à venir</div>'
+                     + '</div>';
+            }).join('');
+
+            document.getElementById('jsbDsrDots').innerHTML = data.photos.map(function (p, i) {
+                return '<span class="jsb-dsr-dot" onclick="jsbDossierAt(' + i + ')"></span>';
+            }).join('');
+
+            _jsbDsrBind();
+            _jsbDsrRender();
+            ov.classList.add('open');
+        }
+
+        function closeJsbDossier(e) {
+            if (e && e.target && e.target.id !== 'jsbDossier'
+                && !e.target.classList.contains('jsb-dsr-close')) return;
+            const ov = document.getElementById('jsbDossier');
+            if (ov) ov.classList.remove('open');
+        }
+
+        function jsbDossierGo(delta) { jsbDossierAt(_jsbDsrIdx + delta); }
+
+        function jsbDossierAt(i) {
+            const data = _jsbDsrData[_jsbDsrKey];
+            if (!data) return;
+            _jsbDsrIdx = Math.min(Math.max(0, i), data.photos.length - 1);
+            _jsbDsrRender();
+        }
+
+        function _jsbDsrRender() {
+            const data = _jsbDsrData[_jsbDsrKey];
+            if (!data) return;
+            const track = document.getElementById('jsbDsrTrack');
+            if (track) track.style.transform = 'translateX(' + (-_jsbDsrIdx * 100) + '%)';
+
+            const cap = document.getElementById('jsbDsrCaption');
+            if (cap) cap.textContent = data.photos[_jsbDsrIdx].caption || '';
+
+            const dots = document.querySelectorAll('#jsbDsrDots .jsb-dsr-dot');
+            dots.forEach(function (d, i) { d.classList.toggle('on', i === _jsbDsrIdx); });
+
+            const prev = document.getElementById('jsbDsrPrev');
+            const next = document.getElementById('jsbDsrNext');
+            if (prev) prev.disabled = (_jsbDsrIdx === 0);
+            if (next) next.disabled = (_jsbDsrIdx === data.photos.length - 1);
+        }
+
+        // Swipe horizontal — lié une seule fois à l'ouverture du premier dossier
+        function _jsbDsrBind() {
+            const stage = document.getElementById('jsbDsrStage');
+            const track = document.getElementById('jsbDsrTrack');
+            if (!stage || !track || stage.dataset.jsbBound) return;
+            stage.dataset.jsbBound = '1';
+
+            let x0 = 0, dx = 0, active = false;
+
+            stage.addEventListener('touchstart', function (e) {
+                if (e.touches.length !== 1) return;
+                active = true; x0 = e.touches[0].clientX; dx = 0;
+                track.classList.add('dragging');
+            }, { passive: true });
+
+            stage.addEventListener('touchmove', function (e) {
+                if (!active) return;
+                dx = e.touches[0].clientX - x0;
+                track.style.transform = 'translateX(calc(' + (-_jsbDsrIdx * 100) + '% + ' + dx + 'px))';
+            }, { passive: true });
+
+            stage.addEventListener('touchend', function () {
+                if (!active) return;
+                active = false;
+                track.classList.remove('dragging');
+                const seuil = Math.min(60, (stage.offsetWidth || 300) * 0.22);
+                if (Math.abs(dx) > seuil) jsbDossierGo(dx < 0 ? 1 : -1);
+                else _jsbDsrRender();
+            });
+        }
+
+        // Clavier (desktop) : Échap ferme, flèches naviguent
+        document.addEventListener('keydown', function (e) {
+            const ov = document.getElementById('jsbDossier');
+            if (!ov || !ov.classList.contains('open')) return;
+            if (e.key === 'Escape')          { closeJsbDossier(); e.stopPropagation(); }
+            else if (e.key === 'ArrowRight') { jsbDossierGo(1); }
+            else if (e.key === 'ArrowLeft')  { jsbDossierGo(-1); }
+        });
+
         function renderJournalBio(animateLevel, skipColorLevel) {
             if (!selectedCard) return;
             const cardId = selectedCard.id;
@@ -21429,6 +22754,22 @@
                     const isNew  = !isClosed && !!entry._isNew;
                     const delay  = isNew ? 'animation-delay:' + (i * 0.12) + 's;' : '';
                     const lay  = LAYOUTS[globalIdx % LAYOUTS.length];
+
+                    // CARNET SCRAPBOOK : une entrée révélée d'une carte qui
+                    // déclare des gabarits passe par le rendu scrapbook. Les
+                    // entrées non révélées gardent le rendu « à dévoiler »
+                    // existant : la mécanique de fournitures est inchangée.
+                    if (entry._revealed) {
+                        const jsbTpl = _jsbTemplateFor(cardId, lvl, i);
+                        if (jsbTpl) {
+                            html2 += JSB_TEMPLATES[jsbTpl.template](jsbTpl, {
+                                key: cardId + '_' + lvl + '_' + i,
+                                date: entry.date || '',
+                            });
+                            globalIdx++;
+                            return;
+                        }
+                    }
 
                     // ── Entrée disponible non révélée ──
                     if (entry._available && !entry._revealed) {
@@ -21594,6 +22935,7 @@
             });
 
             notebook.innerHTML = html2;
+            _jsbInitAudio(notebook);   // lecteurs audio des entrées scrapbook
         }
 
         function renderJournalAnnexes() {
