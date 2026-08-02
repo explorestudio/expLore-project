@@ -1446,7 +1446,9 @@
             /* 30px et non 16 : l'épingle de type (.card-type-pin) remonte de 18px
                au-dessus de la carte, et .card-detail-view est en overflow:hidden —
                avec 16px elle dépassait du panneau et se faisait rogner. */
-            padding: 30px 0 0;
+            /* 14px en bas : le panneau d'infos est une boîte posée, pas une
+               feuille qui file hors écran — il lui faut une marge sous elle. */
+            padding: 30px 0 14px;
             cursor: default;
             position: relative;
         }
@@ -1456,6 +1458,9 @@
 
         @media (max-width: 360px) {
             .card-detail-inner { width: 270px; }
+            /* Débord réduit : sur un écran étroit, la boîte se ferait rogner
+               par l'overflow de la vue et perdrait ses coins. */
+            .card-info-panel { margin-left: -18px; margin-right: -18px; }
         }
 
         /* ── DÉMO OT — Sortie par les marges ────────────────────────
@@ -1554,10 +1559,18 @@
             display: flex;
             flex-direction: column;
             background: white;
-            border-radius: 16px 16px 0 0;
+            /* Fermé sur les quatre côtés : bord bas franc + ombre portée sous
+               la boîte. Sans ça, le panneau touchait le bas de l'écran et se
+               lisait comme une zone qu'on peut encore faire défiler. */
+            border-radius: 16px;
+            border: 1px solid rgba(15,23,42,0.10);
             overflow: hidden;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.18);
-            margin-top: 8px;
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.12),
+                        0 8px 22px rgba(0,0,0,0.32);
+            /* Débord latéral : la boîte est plus large que la carte et va
+               chercher la place utile. La sortie par les marges reste jouable
+               à hauteur de la carte, au-dessus. */
+            margin: 8px -26px 0;
             position: relative;
         }
 
@@ -1741,7 +1754,9 @@
            ne pas introduire d'accent supplémentaire.
            ════════════════════════════════════════════════════════════ */
         /* Pilule de fond : dit que la rangée est un contrôle et non un ornement,
-           et garantit le contraste des pastilles quelle que soit l'illustration */
+           et garantit le contraste des pastilles quelle que soit l'illustration.
+           Repli seulement : la rangée est désormais logée dans la boîte de
+           dialogue, qui la neutralise (voir .card-flavor-zone .ot-tl). */
         .ot-tl {
             position: absolute;
             left: 50%;
@@ -1845,6 +1860,49 @@
             75%      { transform: translateX(3px); }
         }
 
+        /* ── Timeline logée dans la boîte de dialogue ────────────────
+           Elle y suit le flux (plus de recalage vertical en JS) et perd sa
+           pilule de fond : le contraste est déjà porté par la boîte. Les
+           pastilles se réaccordent sur un fond clair — sans liseré blanc,
+           et avec un état verrouillé visible (le blanc translucide y
+           disparaissait). */
+        .card-flavor-zone .ot-tl {
+            position: static;
+            transform: none;
+            bottom: auto;
+            left: auto;
+            padding: 0;
+            background: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border: none;
+            box-shadow: none;
+        }
+        .card-flavor-zone .ot-tl-node::before {
+            box-shadow: 0 1px 3px rgba(15,23,42,0.22);
+        }
+        .card-flavor-zone .ot-tl-node.active::before {
+            box-shadow: 0 0 0 4px rgba(168,85,247,0.22),
+                        0 1px 3px rgba(15,23,42,0.25);
+        }
+        .card-flavor-zone .ot-tl-node.locked::before {
+            background: rgba(124,58,237,0.15);
+            border-color: rgba(124,58,237,0.32);
+            opacity: 1;
+        }
+        .card-flavor-zone .ot-tl-seg      { background: rgba(124,58,237,0.45); }
+        .card-flavor-zone .ot-tl-seg.dim  { background: rgba(124,58,237,0.16); }
+
+        /* Une carte à quatre ou cinq états serait à l'étroit dans la boîte :
+           les boutons se resserrent jusqu'à 27 px plutôt que d'en déborder.
+           La pastille dessinée au centre ne bouge pas, seule la zone de clic
+           se réduit. */
+        .card-flavor-zone .ot-tl { max-width: 100%; }
+        .card-flavor-zone .ot-tl-node {
+            flex: 0 1 40px;
+            min-width: 27px;
+        }
+
         /* Couche de transformation : le nouveau visuel apparaît par-dessus
            l'ancien, très légèrement agrandi, puis prend sa place */
         .ot-morph {
@@ -1915,9 +1973,12 @@
             background: rgba(249, 250, 251, 0.34);
             border-radius: 14px;
             border: 1px solid rgba(107, 114, 128, 0.18);
+            /* Colonne : le texte, puis la rangée de pastilles sous lui */
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 9px;
             box-sizing: border-box;
             z-index: 2;
             backdrop-filter: blur(2px) saturate(1.1);
@@ -20524,12 +20585,16 @@
             _otTlPendingReveal = -1;
 
             // ── Rangée : pastille, trait, pastille, trait, pastille…
+            // Elle vit dans la boîte de dialogue, sous le texte.
+            const flavor = document.getElementById('cardFlavorZone');
             let tl = artArea.querySelector('.ot-tl');
             if (!tl) {
                 tl = document.createElement('div');
                 tl.className = 'ot-tl';
-                artArea.appendChild(tl);
             }
+            const tlHost = flavor || artArea;
+            if (tl.parentElement !== tlHost) tlHost.appendChild(tl);
+
             if (tl.children.length !== total * 2 - 1) {
                 tl.innerHTML = '';
                 for (let i = 0; i < total; i++) {
@@ -20568,13 +20633,6 @@
             tl.querySelectorAll('.ot-tl-seg').forEach(seg => {
                 seg.classList.toggle('dim', Number(seg.dataset.seg) > maxUnlocked);
             });
-
-            // La zone de flavor a une hauteur variable selon le texte : caler la
-            // timeline juste au-dessus plutôt que sur une valeur en dur.
-            const flavor = document.getElementById('cardFlavorZone');
-            // +34 : les boutons débordent de 8 px sous la pilule, il faut que
-            // leur bord bas reste franchement au-dessus de la zone de flavor.
-            if (flavor && flavor.offsetHeight) tl.style.bottom = (flavor.offsetHeight + 34) + 'px';
 
             // ── Illustration affichée
             const artImg = document.getElementById('cardArtImg');
@@ -25588,6 +25646,16 @@
 
         function closeBazarScreen() {
             _showNearbyConsoles();
+            // Le joueur vient de fermer l'échoppe : sa console ne doit pas se
+            // rouvrir dans la seconde. _showNearbyConsoles() a remis à zéro
+            // l'edge-trigger de tous les types — on le rétablit pour le bazar
+            // seul et on le marque comme vu. La console ne reviendra qu'après
+            // être sorti de la zone puis y être revenu ; entre-temps, le
+            // marqueur sur la mappe reste le chemin de retour.
+            if (currentNearbyBazar) {
+                _poiEntered.bazar = currentNearbyBazar.id;
+                window._dismissPoiConsole('bazar', currentNearbyBazar.id);
+            }
             const el = document.getElementById('bazarScreen');
             el.style.transform    = 'translateY(100%)';
             el.style.pointerEvents = 'none';
