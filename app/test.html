@@ -1699,6 +1699,7 @@
             inset: 0;
             z-index: 0;
             opacity: 1;
+            transition: opacity 0.14s linear;
         }
 
         /* ════════════════════════════════════════════════════════════
@@ -7126,17 +7127,47 @@
         .ibd-case .ibd-narration.bottom {
             top: auto; bottom: 8px;
         }
+        /* Bulle de dialogue BD : ovale galbé, trait épais, queue vers le personnage
+           (à droite dans toutes les cases de l'intro). La queue est faite de deux
+           triangles CSS superposés — le noir dessine le contour, le blanc le remplit
+           en remontant de quelques pixels pour masquer le trait de la bulle. */
         .ibd-case .ibd-bubble {
             position: absolute;
-            background: rgba(255,255,255,0.96);
+            background: rgba(255,255,255,0.97);
             color: #111;
             font-size: 12px;
-            padding: 8px 12px;
-            border-radius: 14px;
-            border: 2px solid #111;
-            line-height: 1.3;
+            /* Retrait vertical généreux : dans un ovale, les lignes du haut et du bas
+               longent la courbe et toucheraient le trait avec un padding serré. */
+            padding: 15px 22px;
+            border-radius: 46% / 42%;
+            border: 3px solid #111;
+            line-height: 1.35;
             font-weight: 600;
-            max-width: 60%;
+            text-align: center;
+            max-width: 66%;
+            box-shadow: 2px 3px 0 rgba(0,0,0,0.22);
+        }
+        .ibd-case .ibd-bubble::before,
+        .ibd-case .ibd-bubble::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+        /* Contour de la queue */
+        .ibd-case .ibd-bubble::before {
+            right: 16%;
+            bottom: -17px;
+            border-width: 20px 0 0 17px;
+            border-color: #111 transparent transparent transparent;
+        }
+        /* Remplissage, décalé vers l'intérieur pour recouvrir le bord de la bulle */
+        .ibd-case .ibd-bubble::after {
+            right: calc(16% + 4px);
+            bottom: -11px;
+            border-width: 15px 0 0 12px;
+            border-color: rgba(255,255,255,0.97) transparent transparent transparent;
         }
         .ibd-case.appearing {
             animation: ibdAppear 0.8s ease-out;
@@ -7279,12 +7310,17 @@
            Fond transparent (PNG RGBA) ; le bas de l'image passe derrière la boîte opaque.
            Réglages à ajuster : --portrait-h (hauteur), left. */
         .vn-bust--full {
-            position: absolute !important;
-            left: 4px;
-            bottom: 0;
-            height: 60vh;
-            max-height: 520px;
-            width: auto !important;
+            /* Dans le flux (et non en absolute) : le buste s'assoit sur le haut de la
+               boîte quelle que soit la longueur du texte. La marge négative fait passer
+               le bas du torse derrière la boîte — le reste du buste dépasse au-dessus. */
+            position: relative;
+            display: block;
+            margin-left: -6px;
+            margin-bottom: -22px;
+            width: clamp(130px, 42%, 210px) !important;
+            height: auto !important;
+            max-height: 46vh;
+            object-position: bottom center;
             border: none !important;
             border-radius: 0 !important;
             object-fit: contain;
