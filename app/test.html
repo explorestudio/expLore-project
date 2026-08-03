@@ -1922,7 +1922,12 @@
             bottom: 16px;
             min-height: 64px;
             padding: 12px 14px;
-            background: rgba(249, 250, 251, 0.95);
+            /* Translucide : on doit reconnaître l'illustration dessous, pas juste
+               voir une teinte. D'où un flou très faible — au-delà de ~4px il ne
+               reste qu'une bouillie de couleurs. La lisibilité du texte est
+               rattrapée par son halo (voir .card-flavor-text), qui n'agit que
+               sous les lettres et laisse l'image nette autour. */
+            background: rgba(249, 250, 251, 0.34);
             border-radius: 14px;
             border: 1px solid rgba(107, 114, 128, 0.18);
             /* Colonne : le texte, puis la rangée de pastilles sous lui */
@@ -1933,7 +1938,8 @@
             gap: 9px;
             box-sizing: border-box;
             z-index: 2;
-            backdrop-filter: blur(6px);
+            backdrop-filter: blur(2px) saturate(1.1);
+            -webkit-backdrop-filter: blur(2px) saturate(1.1);
             box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
             overflow: visible;
         }
@@ -1942,14 +1948,21 @@
             font-style: italic;
             font-size: 13px;
             line-height: 1.6;
-            color: #4b5563;
+            color: #3f4654;
             text-align: center;
+            /* Halo clair concentré sous les lettres : porte toute la lisibilité,
+               ce qui permet de garder le fond de la boîte très transparent */
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95),
+                         0 0 6px  rgba(255, 255, 255, 0.9),
+                         0 0 14px rgba(255, 255, 255, 0.65);
             transition: opacity 0.3s ease;
             width: 100%;
         }
         /* Mode dialogue : texte plus net, non-italique, couleur plus sombre */
+        /* Les modes dialogue restent plus opaques que l'ambiance : c'est du
+           contenu narratif, il doit se lire sans effort. */
         .card-flavor-zone.dialogue-mode {
-            background: rgba(243, 240, 255, 0.95);
+            background: rgba(243, 240, 255, 0.7);
             border-top-color: rgba(124, 58, 237, 0.3);
             box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.15);
         }
@@ -1960,7 +1973,7 @@
         }
         /* Variante memory */
         .card-flavor-zone.dialogue-mode.memory {
-            background: rgba(254, 243, 199, 0.95);
+            background: rgba(254, 243, 199, 0.7);
             border-top-color: rgba(146, 64, 14, 0.3);
             box-shadow: inset 0 0 0 1px rgba(146, 64, 14, 0.2);
         }
@@ -1970,7 +1983,7 @@
         }
         /* Variante heart */
         .card-flavor-zone.dialogue-mode.heart {
-            background: rgba(237, 233, 254, 0.95);
+            background: rgba(237, 233, 254, 0.7);
             border-top-color: rgba(76, 29, 149, 0.35);
             box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.25);
         }
@@ -7539,7 +7552,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.58.0 · Port demo.html : visuels multi-niveaux (mécanisme `artByLevel`, inerte tant qu'aucune carte ne le déclare) + fiche carte retouchée (panneau d'infos fermé et élargi, rangée des visuels logée dans la boîte de dialogue).</div>
+            <div class="hud-version" id="hudVersion">v0.58.0 · Port demo.html : visuels multi-niveaux (mécanisme `artByLevel`, inerte tant qu'aucune carte ne le déclare) + fiche carte retouchée (panneau d'infos fermé et élargi, rangée des visuels logée dans la boîte de dialogue, fond translucide laissant voir l'illustration).</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
