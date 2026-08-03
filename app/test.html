@@ -7581,7 +7581,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.60.0 · Port demo.html : correctifs UX — console du bazar qui se rouvrait aussitôt fermée, cercles de capture alignés sur les distances réelles de collecte, bannière du marqueur tutoriel masquée si on quitte la zone, mappe active dès la collecte de la carte tutoriel (et non à la fin du tutoriel).</div>
+            <div class="hud-version" id="hudVersion">v0.61.0 · Tutoriel : échoppe posée près du joueur à la collecte (triplet encre/pellicule/cassette), répliques de la jeune fille bâties sur l'état réel du sac, et toast système enfin défini (il était appelé 64 fois sans exister).</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11432,10 +11432,45 @@
                 _obAct2Done = true;
                 saveProgress();
                 _obRestoreAllPOI();
+                _obSpawnTutorialBazar();
                 // Le tuto NE se termine PLUS à la collecte : on enchaîne sur le parcours
                 // guidé (Collection → poudre → carnet/triplet → énergie/orbe → niveau → adieu).
                 setTimeout(() => _obGuideStart(), 400);
             }
+        }
+
+        // ── Échoppe du tutoriel — posée près du joueur à la collecte ──
+        // Les quatre échoppes fixes de Lyon sont trop loin d'un joueur qui
+        // démarre n'importe où : sans celle-ci, le triplet encre / pellicule /
+        // cassette resterait une notion abstraite pendant tout le tutoriel.
+        // Posée au sud-est, à l'opposé du marqueur tutoriel (nord-est), pour
+        // qu'on ne confonde pas les deux repères.
+        function _obSpawnTutorialBazar() {
+            if (BAZAR_POINTS.some(b => b.id === 'bazar_tuto')) return;   // déjà posée
+            if (!playerPos) return;
+            const bazar = {
+                id: 'bazar_tuto',
+                name: 'Échoppe du passeur',
+                lat: playerPos.lat - 0.00055,
+                lng: playerPos.lng + 0.00070,
+                icon: '🛖',
+                stock: { pellicules: 3, encre: 3, cassettes: 3 },
+            };
+            BAZAR_POINTS.push(bazar);
+            // alwaysVisible : les échoppes ordinaires restent masquées jusqu'à la
+            // fin du tutoriel, celle-ci doit être visible pendant.
+            if (typeof map !== 'undefined' && map) _createBazarMarker(bazar, { alwaysVisible: true });
+        }
+
+        // Ce qu'il reste réellement à ramasser / dépenser — les répliques du
+        // parcours guidé s'appuient dessus plutôt que sur un scénario supposé.
+        function _obSuppliesTotal() {
+            return (bagInv.encre || 0) + (bagInv.pellicules || 0) + (bagInv.cassettes || 0);
+        }
+        function _obTutoBazarNear() {
+            const b = BAZAR_POINTS.find(p => p.id === 'bazar_tuto');
+            if (!b || !playerPos) return null;
+            return { bazar: b, dist: Math.round(getDistance(playerPos.lat, playerPos.lng, b.lat, b.lng)) };
         }
 
 
@@ -11787,11 +11822,24 @@
                         ], () => {
                             _obRevealEntryFree(OB_TUTORIAL_CARD.id, OB_TUTORIAL_CARD.id + '_0_0');
                             setTimeout(() => {
-                                vnShow([
+                                // Répliques bâties sur l'état réel du sac : ne jamais
+                                // dire au joueur qu'il a de quoi dévoiler s'il n'a rien,
+                                // ni l'envoyer à l'échoppe s'il est déjà fourni.
+                                const _sup  = _obSuppliesTotal();
+                                const _shop = _obTutoBazarNear();
+                                const _lines = [
                                     { speaker: 'La jeune fille', line: 'Les voix laissent trois sortes de traces : des mots, des images, des sons.' },
-                                    { speaker: 'La jeune fille', line: 'L\'encre révèle les mots. La pellicule, les images. La cassette, les sons. Tu en as quelques-unes — sers-t\'en.' },
-                                    { speaker: 'La jeune fille', line: 'Reviens à la carte et continue à la nourrir, puis dévoile toi-même les pages qui s\'ouvriront.' },
-                                ], () => {
+                                    { speaker: 'La jeune fille', line: 'L\'encre révèle les mots. La pellicule, les images. La cassette, les sons.' },
+                                ];
+                                if (_sup > 0) {
+                                    _lines.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi — sers-t\'en. Quand tu n\'en auras plus, une échoppe en tient toujours.' });
+                                } else if (_shop) {
+                                    _lines.push({ speaker: 'La jeune fille', line: 'Il ne t\'en reste aucune. Une échoppe en tient, à ' + _shop.dist + ' mètres d\'ici — va t\'y fournir, puis reviens.' });
+                                } else {
+                                    _lines.push({ speaker: 'La jeune fille', line: 'Il ne t\'en reste aucune. Les échoppes de la ville en tiennent — cherche-les sur la mappe.' });
+                                }
+                                _lines.push({ speaker: 'La jeune fille', line: 'Reviens à la carte et continue à la nourrir, puis dévoile toi-même les pages qui s\'ouvriront.' });
+                                vnShow(_lines, () => {
                                     _obGuide.step = 'feed2';
                                     _obGuideRefresh();
                                 });
@@ -11805,11 +11853,17 @@
                 case 'feed2':
                     if (ev === 'energy_empty') {
                         _obGuide.step = 'orb';
-                        if (typeof bagInv === 'object') bagInv.orbes = (bagInv.orbes || 0) + 1;
+                        // Ne pas offrir une orbe à qui en a déjà : le cadeau passait
+                        // inaperçu et la réplique sonnait faux. On n'en donne une que
+                        // si le sac est vide.
+                        const _hadOrb = (bagInv.orbes || 0) > 0;
+                        if (!_hadOrb && typeof bagInv === 'object') bagInv.orbes = (bagInv.orbes || 0) + 1;
                         if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
                         vnShow([
                             { speaker: 'La jeune fille', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
-                            { speaker: 'La jeune fille', line: 'Mais tiens — prends cette orbe mémorielle. Elle lui rend toute son énergie d\'un coup. Utilise-la.' },
+                            _hadOrb
+                                ? { speaker: 'La jeune fille', line: 'Tu portes déjà une orbe mémorielle. Pose-la sur la carte : elle lui rend toute son énergie d\'un coup.' }
+                                : { speaker: 'La jeune fille', line: 'Mais tiens — prends cette orbe mémorielle. Elle lui rend toute son énergie d\'un coup. Utilise-la.' },
                         ], () => _obGuideRefresh());
                     } else if (ev === 'xp_full') {
                         _obAfterXpFull();
@@ -16067,6 +16121,40 @@
         }
 
         // ── Toasts onboarding "lore" (§3.3) ──
+        // ── Toast système ────────────────────────────────────────────
+        // Message court et factuel : ce qu'on vient de gagner, ce qui manque,
+        // ce qui est refusé. Distinct du toast « lore » (sépia, narratif) et
+        // du toast de carte. Appelé depuis une soixantaine d'endroits — sans
+        // lui, un manque de fourniture ou un refus ne produisait aucun retour.
+        function showToast(msg, ms) {
+            if (!msg) return;
+            if (!document.getElementById('sysToastStyle')) {
+                const st = document.createElement('style');
+                st.id = 'sysToastStyle';
+                st.textContent = ".sys-toast{position:absolute;top:90px;left:50%;transform:translateX(-50%) translateY(-8px);"
+                    + "z-index:1600;max-width:min(320px,86%);background:rgba(15,12,28,0.92);backdrop-filter:blur(8px);"
+                    + "-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.14);border-radius:24px;"
+                    + "padding:9px 18px;font-size:13px;font-weight:700;color:#fff;text-align:center;line-height:1.4;"
+                    + "box-shadow:0 4px 20px rgba(0,0,0,0.5);opacity:0;transition:opacity .22s ease,transform .22s ease;"
+                    + "pointer-events:none;}"
+                    + ".sys-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}";
+                document.head.appendChild(st);
+            }
+            // Un seul à la fois : le dernier message est le plus pertinent
+            const old = document.getElementById('sysToast');
+            if (old) old.remove();
+            const el = document.createElement('div');
+            el.id = 'sysToast';
+            el.className = 'sys-toast';
+            el.textContent = msg;
+            (document.getElementById('mainApp') || document.body).appendChild(el);
+            requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+            setTimeout(() => {
+                el.classList.remove('show');
+                setTimeout(() => { if (el.parentNode) el.remove(); }, 260);
+            }, ms || 2400);
+        }
+
         function showOnboardingToast(key) {
             const messages = {
                 first_capture: "Elle est là. Sourde et muette encore, mais elle est là. Reste avec elle un instant — elle a besoin de temps pour se souvenir."
@@ -22464,13 +22552,16 @@
             openPanneauScreen();
         }
 
-        function initBazarMarkers() {
+        // Crée le marqueur d'une échoppe et l'enregistre. Extrait de la boucle
+        // d'init pour qu'une échoppe puisse aussi être posée en cours de partie
+        // (échoppe du tutoriel, cf. _obSpawnTutorialBazar).
+        function _createBazarMarker(bazar, opts) {
+            opts = opts || {};
             const BAZAR_RADIUS = 80;
-            BAZAR_POINTS.forEach(bazar => {
                 const el = document.createElement('div');
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:pointer;';
                 el.title = bazar.name;
-                if (!_obDone) { el.dataset.obHidden = 'true'; el.style.display = 'none'; }
+                if (!opts.alwaysVisible && !_obDone) { el.dataset.obHidden = 'true'; el.style.display = 'none'; }
 
                 const inner = document.createElement('div');
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-90%);display:flex;flex-direction:column;align-items:center;cursor:pointer;pointer-events:auto;';
@@ -22503,7 +22594,10 @@
                     .setLngLat([bazar.lng, bazar.lat])
                     .addTo(map);
                 bazarMarkers.push({ marker, el, inner, bazar });
-            });
+        }
+
+        function initBazarMarkers() {
+            BAZAR_POINTS.forEach(bazar => _createBazarMarker(bazar));
 
             // Vérifier la proximité en continu pour la bannière nearby
             setInterval(() => {
