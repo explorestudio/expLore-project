@@ -11113,8 +11113,9 @@
         }
 
         function finishIntroBD() {
-            // Le clic sur « Commencer l'aventure » est le geste qui autorise la
-            // lecture audio : c'est ici que la musique d'ambiance démarre.
+            // Sortie de la cinématique — « Commencer l'aventure » ou « Passer ».
+            // C'est le geste qui autorise la lecture audio : la musique
+            // d'ambiance démarre ici, et nulle part avant.
             if (typeof BgMusic !== 'undefined') BgMusic.start();
             const cinema = document.getElementById('introBDCinematic');
             cinema.style.transition = 'opacity 0.6s ease';
@@ -20061,10 +20062,7 @@
                 // Politique autoplay : rien ne démarre sans geste du joueur.
                 if (enabled) {
                     pendingStart = true;
-                    if (!_introPlaying()) {
-                        document.addEventListener('click',      _firstTap, { once: true, capture: true });
-                        document.addEventListener('touchstart', _firstTap, { once: true, capture: true });
-                    }
+                    _armFirstTap();
                 }
 
                 document.addEventListener('visibilitychange', _visibility);
@@ -20078,11 +20076,22 @@
                 audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
             }
 
+            function _armFirstTap() {
+                document.addEventListener('click',      _firstTap, { once: true, capture: true });
+                document.addEventListener('touchstart', _firstTap, { once: true, capture: true });
+            }
+
+            // Reprise au premier geste — pour une partie déjà entamée, où la
+            // cinématique ne rejoue pas. La vérification se fait ICI et non à
+            // l'init : au démarrage, la cinématique n'est pas encore à l'écran
+            // (elle est lancée après un délai), donc l'init ne peut pas savoir.
+            // Un clic pendant la cinématique ne démarre rien et réarme l'écoute :
+            // le démarrage appartient au bouton « Commencer l'aventure ».
             function _firstTap() {
-                if (pendingStart && enabled) {
-                    audioEl.volume = ducked ? VOL_DUCKED : VOL_NORMAL;
-                    audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
-                }
+                if (!pendingStart || !enabled) return;
+                if (_introPlaying()) { _armFirstTap(); return; }
+                audioEl.volume = ducked ? VOL_DUCKED : VOL_NORMAL;
+                audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
             }
 
             function toggle() {
