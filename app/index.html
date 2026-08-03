@@ -14569,7 +14569,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.56.0 · Exemple de contenu : la carte tutoriel déclare trois visuels (rangée de pastilles + morphing) et sa première entrée de carnet est rendue en page d'album.</div>
+            <div class="hud-version" id="hudVersion">v0.56.0</div>
             <!-- Bouton calque quartiers : contours + titres + progression -->
             <button class="zone-layer-toggle" id="zoneLayerToggleBtn"
                 onclick="toggleZonesLayer()"
@@ -16739,6 +16739,167 @@
             "🚶 Mode marche repris — distance comptée": "🚶 Walking resumed — distance counted",
             "Aucune quête active à valider": "No active quest to complete",
 
+            // ── Interface : libellés et attributs restés en français ──
+            // Chaînes posées en JS (textContent / innerHTML / aria-label) que la
+            // traduction initiale n'avait pas couvertes.
+            "Les clefs de la ville": "The Keys to the City",
+            "✦ Carte thématique disponible": "✦ Themed card available",
+            "Voir le détail de la complétion": "See completion details",
+            "Aucune note laissée.": "No note left.",
+            "🔮 +1 Orbe de mémoire !": "🔮 +1 Memory orb!",
+            "✨ Niveau maximum atteint": "✨ Maximum level reached",
+            "La mémoire infuse. Reviens plus tard ou ravive-la avec une orbe.": "Memory is steeping. Come back later, or revive it with an orb.",
+            "La mémoire infuse. Tu peux explorer ailleurs en attendant.": "Memory is steeping. You can explore elsewhere in the meantime.",
+            "Utiliser une orbe": "Use an orb",
+            "Offre de la poudre à cette carte pour qu'elle te raconte son histoire...": "Offer dust to this card so it tells you its story...",
+            "Approfondis tes cartes dans l'Explorium pour débloquer de nouvelles quêtes.": "Deepen your cards in the Explorium to unlock new quests.",
+            "Va sur place": "Go there",
+            "Va sur place pour valider": "Go there to complete it",
+            "Objectif sur le terrain": "Field objective",
+            "Case verrouillée": "Locked panel",
+            "Chaque nom est une porte entrouverte. Derrière, une vie entière à explorer.": "Every name is a door left ajar. Behind it, a whole life to explore.",
+
+            // Attributs d'accessibilité (aria-label)
+            "Fermer le dossier": "Close the dossier",
+            "Consulter le dossier photo": "Open the photo dossier",
+            "Photo précédente": "Previous photo",
+            "Photo suivante": "Next photo",
+            "Lire l'extrait sonore": "Play the sound clip",
+            "Désactiver la musique": "Turn music off",
+            "Activer la musique": "Turn music on",
+
+            // ── Messages à trous (helper TF) ──
+            // %1, %2… sont remplacés APRÈS traduction par les valeurs injectées.
+            // Ne pas retirer les marqueurs ni changer leur ordre sans adapter
+            // l'appel correspondant. Les gabarits identiques en anglais
+            // ('%1 +1 %2', '📍 %1 — %2') n'ont volontairement pas d'entrée.
+            "Approche-toi de %1": "Come closer to %1",
+            "Ce slot s'ouvre %1": "This slot opens %1",
+            "🛖 %1 — trop loin": "🛖 %1 — too far",
+            "Cette traînée coûte %1 lumens, mais vous n'en avez que %2.": "This trail costs %1 lumens, but you only have %2.",
+            "%1 — délaissé": "%1 — set aside",
+            "%1 — rencontré": "%1 — encountered",
+            "%1 — pas encore collectée.": "%1 — not collected yet.",
+            "%1 · Niveau %2": "%1 · Level %2",
+
+            "Prêtes à évoluer (%1)": "Ready to evolve (%1)",
+            "Aucune carte %1 dans ton carnet": "No %1 card in your notebook",
+            "Fragment à débloquer (%1)": "Fragment to unlock (%1)",
+            "%1 · fragment scellé": "%1 · sealed fragment",
+            "Écho %1": "%1 Echo",
+            "+%1 poudre mémorielle": "+%1 memorial dust",
+            "%1 / %2 cartes": "%1 / %2 cards",
+            "Savoir %1 — écho requis": "%1 knowledge — echo required",
+            "Collecte un écho %1 pour débloquer ce savoir": "Collect a %1 echo to unlock this knowledge",
+            "Aucun écho %1": "No %1 echo",
+            "Mémoire %1 — insérez un parchemin pour révéler": "Memory %1 — insert a scroll to reveal",
+            "%1 disponible": "%1 available",
+            "%1 disponibles": "%1 available",
+            "Lieu à découvrir": "Place to discover",
+
+            "%1 +1 Écho %2": "%1 +1 %2 Echo",
+            "%1 Écho %2": "%1 %2 Echo",
+            "Collecter \"%1\"": "Collect \"%1\"",
+            "Explore Lyon pour trouver une carte %1 à qui le confier.": "Explore Lyon to find a %1 card to entrust it to.",
+            "📜 Parchemin collecté : %1": "📜 Scroll collected: %1",
+            "%1 / %2 cartes locales découvertes": "%1 / %2 local cards discovered",
+            "Saison 1 · %1 / %2 cartes thématiques": "Season 1 · %1 / %2 themed cards",
+            "Voir le visuel %1": "View artwork %1",
+            "Visuel %1 — pas encore révélé": "Artwork %1 — not revealed yet",
+            "Type de carte : %1": "Card type: %1",
+            "elle reviendra à elle dans %1": "it will come round in %1",
+            "%1 — scellé": "%1 — sealed",
+            "Il vous faut %1 poudres mémorielle pour débloquer cet objet. Vous en avez %2.": "You need %1 memorial dust to unlock this item. You have %2.",
+            "%1 ajouté !": "%1 added!",
+            "Nouvel objet ajouté à votre studio. %1": "New item added to your studio. %1",
+            "+%1 pellicule": "+%1 film roll",
+            "+%1 pellicules": "+%1 film rolls",
+            "Débloqué au palier %1": "Unlocked at tier %1",
+            "%1 XP accumulés": "%1 XP accumulated",
+            "%1/%2 parchemins insérés": "%1/%2 scrolls inserted",
+            "%1 quête(s) — %2 en cours": "%1 quest(s) — %2 in progress",
+            "%1 · %2/%3 étapes": "%1 · %2/%3 steps",
+            "🖼 Voir la fresque (%1/%2)": "🖼 View the fresco (%1/%2)",
+            "Fresque · %1": "Fresco · %1",
+
+            // Nœuds de texte isolés dans des gabarits (pas de trou nécessaire)
+            "🏆 Succès débloqué !": "🏆 Achievement unlocked!",
+            "ajouté au studio !": "added to the studio!",
+            "ajouté à ton studio !": "added to your studio!",
+            "ajoutée": "added",
+            "ajoutées": "added",
+            "ressource": "resource",
+
+            // ── Bibliothèque de Lyon : carnet et quête ──
+            // Écrit pour index.html, qui retient la Bibliothèque comme septième
+            // carte de « Lyon, ville du livre » là où test.html garde le Palais
+            // Saint-Jean. Les entrées correspondantes du Palais restent au-dessus :
+            // elles servent test.html, les deux dictionnaires étant identiques.
+            "Ce qui a survécu au feu, à la censure et à l'oubli a fini par arriver jusqu'à moi.": "What survived fire, censorship and oblivion eventually made its way to me.",
+            "En 1972, les collections anciennes quittent le Palais Saint-Jean, faute d'espace, pour la bibliothèque de la Part-Dieu. Manuscrits du chapitre, livres rares et éditions du XVIe siècle rejoignent un bâtiment conçu pour les conserver.": "In 1972, the early collections leave the Palais Saint-Jean for lack of space, bound for the Part-Dieu library. Chapter manuscripts, rare books and sixteenth-century editions move into a building designed to preserve them.",
+            "On m'appelle un silo. C'est le mot juste : je ne suis pas d'abord une salle de lecture, je suis une réserve.": "They call me a silo. It's the right word: I am not first and foremost a reading room, I am a store.",
+            "Les livres qu'on m'a confiés ont déjà vécu ailleurs. Un chapitre, un palais, des ateliers. Je suis leur dernière adresse, pas leur première.": "The books entrusted to me have already lived elsewhere. A chapter, a palace, workshops. I am their last address, not their first.",
+            "Les fonds anciens lyonnais ont changé de toit plusieurs fois : le chapitre de la cathédrale Saint-Jean, puis l'ancien palais archiépiscopal de 1911 à 1972, avant ce transfert vers l'est de la ville.": "Lyon's early collections have changed roofs several times: the chapter of Saint-Jean cathedral, then the former archbishop's palace from 1911 to 1972, before this transfer to the east of the city.",
+            "Je suis loin du quartier où l'on imprimait. C'est peut-être mieux ainsi : le feu ne remonte pas jusqu'ici.": "I am a long way from the quarter where they printed. Perhaps that is for the best: fire does not reach this far.",
+            "Tout ce qui a été imprimé, censuré, brûlé rue Mercière tient aujourd'hui sur quelques kilomètres de rayonnages. On croit garder des livres — on garde des voix.": "Everything printed, censored and burned on rue Mercière now fits on a few kilometres of shelving. You think you are keeping books — you are keeping voices.",
+            "Part-Dieu, aujourd'hui": "Part-Dieu, today",
+            "La bibliothèque de la Part-Dieu conserve l'un des plus importants fonds anciens de France. Ce qui a échappé à l'incendie de 1562, aux bûchers et à l'oubli y est aujourd'hui inventorié, restauré et consultable.": "The Part-Dieu library holds one of the most important collections of early books in France. What escaped the fire of 1562, the pyres and oblivion is now catalogued, restored and open to consultation.",
+            "Personne ne vient me voir pour mon architecture. On vient pour ce que je garde. Ça me va très bien.": "No one comes to see me for my architecture. They come for what I keep. That suits me very well.",
+            "Manuscrits du chapitre, livres de Dolet, vers de Louise Labé : ce que le feu et la censure ont épargné a quitté le vieux quartier pour l'est de la ville. La Bibliothèque de Lyon conserve aujourd'hui ces fonds — dernière adresse d'une histoire commencée rue Mercière, à quatre siècles et quelques kilomètres de là.": "Chapter manuscripts, Dolet's books, Louise Labé's verses: what fire and censorship spared has left the old quarter for the east of the city. The Bibliothèque de Lyon holds those collections today — the last address of a story that began on rue Mercière, four centuries and a few kilometres away.",
+            "Loin du vieux quartier, vers l'est, un grand bâtiment garde aujourd'hui ce que le feu a épargné.": "Far from the old quarter, to the east, a great building keeps today what the fire spared.",
+
+            // ── Contenu éditorial : indices, incipits, descriptions d'objets ──
+            // Les noms propres géographiques et historiques restent en français.
+            "Trouve le grand bâtiment qui garde, aujourd'hui encore, la mémoire de la ville.": "Find the great building that still keeps the city's memory today.",
+            "Ce qui a survécu au feu, à la censure et à l'oubli finit souvent ici. Je suis la dernière demeure des voix qu'on a voulu taire.": "What survived fire, censorship and oblivion often ends up here. I am the last home of the voices they tried to silence.",
+            "Trois clefs pour une ville. Et pas une porte à ouvrir.": "Three keys for a city. And not one door to open.",
+            "Un présent d'apparat, offert puis presque oublié. Il en manque deux.": "A ceremonial gift, presented then all but forgotten. Two are missing.",
+            "Trois clefs, et pas une serrure.": "Three keys, and not one lock.",
+            "Les clefs qui n'ouvrent rien": "The keys that open nothing",
+            "Les Clefs de la Ville de Lyon. Elles étaient trois, en bronze doré sur un plat d'argent, offertes à Napoléon en 1805 quand il est venu ici. Le plus étrange, c'est qu'elles n'ouvrent rien : juste une façon de dire « voilà notre ville ». Deux ont été perdues. Il en reste une, aujourd'hui, au musée Gadagne — une clef seule, et un plat qui se souvient des deux autres.": "The Keys to the City of Lyon. There were three of them, gilded bronze on a silver tray, presented to Napoleon in 1805 when he came here. The strangest part is that they open nothing: just a way of saying \"here is our city\". Two were lost. One remains today, at the musée Gadagne — a single key, and a tray that remembers the other two.",
+            "La pente rude que remontaient les canuts chaque matin, navette sur l'épaule.": "The steep climb the canuts, Lyon's silk weavers, walked up each morning, shuttle on their shoulder.",
+            "Axe commercial percé au XIXe siècle. Les Lyonnais l'appellent la Ré.": "A commercial avenue cut through in the 19th century. Locals call it la Ré.",
+            "Quelque chose dort dans les ruelles du Vieux-Lyon.": "Something sleeps in the alleys of Vieux-Lyon.",
+
+            // Bandeaux de proximité
+            "Rapproche-toi !": "Come closer!",
+            "Carte à portée !": "Card in range!",
+            "Parchemin à portée !": "Scroll in range!",
+            "Mystère à portée !": "Mystery in range!",
+
+            // Sac : objets, descriptions et actions
+            "Échoppe du passeur": "Bearer's Stall",
+            "Orbe de mémoire": "Memory orb",
+            "Boussole du Vieux-Lyon": "Vieux-Lyon Compass",
+            "Fragment de connaissance": "Fragment of knowledge",
+            "Parchemin de test.": "Test scroll.",
+            "+1 orbe de mémoire": "+1 memory orb",
+            "Associer à une carte": "Assign to a card",
+            "Utiliser dans un carnet": "Use in a notebook",
+            "Utiliser pour un level up": "Use for a level up",
+            "Voir la photo": "View the photo",
+            "Voir sur la carte": "View on the map",
+            "Les plaques de rues se collectent en marchant dans la ville. Chacune porte une histoire courte et dense.": "Street plaques are collected by walking through the city. Each one carries a short, dense story.",
+            "Des parchemins se collectent en explorant la ville ou en faisant progresser tes cartes.": "Scrolls are collected by exploring the city or by advancing your cards.",
+            "Une boussole te guidera vers quelque chose d'inexploré dans la ville.": "A compass will guide you towards something unexplored in the city.",
+            "Une pellicule photographique non développée. Utilise-la dans le carnet d'une carte pour révéler une entrée visuelle, ou dans l'appareil photo pour capturer un panorama.": "An undeveloped roll of film. Use it in a card's notebook to reveal a visual entry, or in the camera to capture a panorama.",
+            "Un flacon d'encre mémorielle. Verse-la sur une entrée textuelle dans le carnet d'une carte pour en révéler le contenu.": "A vial of memorial ink. Pour it over a text entry in a card's notebook to reveal its content.",
+            "Une cassette vierge. Insère-la dans une entrée audio dans le carnet d'une carte pour en libérer le son.": "A blank tape. Insert it into an audio entry in a card's notebook to release its sound.",
+            "Concentré de poudre mémorielle. Glisse-le dans le carnet d'une carte pour valider le passage de niveau et sceller le chapitre narratif.": "Concentrated memorial dust. Slip it into a card's notebook to confirm the level up and seal the narrative chapter.",
+            "Les photos se prennent depuis les points d'information sur la carte. Chacune est accompagnée d'une note et d'une date de visite.": "Photos are taken from the information points on the map. Each comes with a note and a visit date.",
+
+            // Chemin de l'Explorateur — jalons
+            "Observer le monde.": "Observe the world.",
+            "Le représenter.": "Depict it.",
+            "Bâtir des lieux pour le garder.": "Build places to keep it.",
+            "Trouver des passeurs.": "Find bearers.",
+            "Ce que nous transmettons.": "What we pass on.",
+
+            // Récompenses d'échoppe (littéraux d'une table, pas de trou)
+            "🎞️ +1 pellicule": "🎞️ +1 film",
+            "🖋️ +1 encre": "🖋️ +1 ink",
+            "📼 +1 cassette": "📼 +1 tape",
+
             // ══════════ ÉTAPE 2 — NARRATION ══════════
 
             // ── Locuteurs du visual novel ──
@@ -16836,6 +16997,42 @@
             "Et un état de plus s'est allumé sous son portrait. Touche les points : elle garde tous ses âges, tu peux revenir les voir quand tu veux.": "And one more state has lit up beneath its portrait. Touch the dots: it keeps all its ages, you can come back and see them whenever you like.",
             "Le dernier chapitre est plein — mais son carnet garde encore des pages voilées. Dévoile-les : une mémoire à trous ne se scelle pas.": "The last chapter is full — but its notebook still keeps veiled pages. Reveal them: a memory full of holes cannot be sealed.",
             "Le dernier chapitre est plein, et pas une page ne manque. Scelle-le : elle aura regagné toute sa mémoire.": "The last chapter is full, and not a page is missing. Seal it: it will have won back all of its memory.",
+
+
+            // ── Parcours guidé : répliques restées en français ──
+            // Écrites après la traduction initiale (portée depuis demo.html),
+            // ou reformulées depuis. Le bloc couvre les deux fichiers : certaines
+            // répliques n'existent que dans index.html, d'autres que dans test.html.
+            "Tu le sens ? Ces endroits gardent des traces. Pas les grandes histoires — les petites.": "Can you feel it? These places keep traces. Not the great stories — the small ones.",
+            "Les gens qui étaient là sans qu'on pense à les noter.": "The people who were there without anyone thinking to write them down.",
+            "Essaie de le cristalliser.": "Try to crystallize it.",
+            "Approche-toi, et cristallise-la. Elle est à toi.": "Come closer, and crystallize it. It's yours.",
+            "Tu l'as recueillie. Mais une carte qu'on vient de réveiller a presque tout oublié — il faut lui rendre sa mémoire.": "You've taken it in. But a card that has only just been woken has forgotten almost everything — its memory has to be given back.",
+            "Ouvre ta Collection. Elle t'y attend, désormais.": "Open your Collection. It's waiting for you there now.",
+            "Pour qu'une carte se souvienne, il lui faut de la poudre mémorielle. Donne-lui-en — et regarde ce qui remonte.": "For a card to remember, it needs memorial dust. Give it some — and watch what comes back up.",
+            "Tu l'as réveillée. Une page s'est inscrite dans son carnet — il t'appelle.": "You've woken it. A page has written itself in its notebook — it's calling you.",
+            "Cette première page est voilée. Cette fois, c'est moi qui l'écris pour toi — avec mon encre.": "This first page is veiled. This time I'll write it for you — with my ink.",
+            "Les voix laissent trois sortes de traces : des mots, des images, des sons.": "Voices leave three kinds of traces: words, images, sounds.",
+            "L'encre révèle les mots. La pellicule, les images. La cassette, les sons.": "Ink reveals words. Film, images. Tape, sounds.",
+            "L'encre révèle les mots. La pellicule, les images. La cassette, les sons. Tu en as quelques-unes — sers-t'en.": "Ink reveals words. Film, images. Tape, sounds. You have a few — use them.",
+            "Tu en as déjà sur toi — sers-t'en. Quand tu n'en auras plus, une échoppe en tient toujours.": "You already have some on you — use them. When you run out, a stall always keeps some.",
+            "Il ne t'en reste aucune. Les échoppes de la ville en tiennent — cherche-les sur la mappe.": "You have none left. The city's stalls keep some — look for them on the map.",
+            "Reviens à la carte et continue à la nourrir, puis dévoile toi-même les pages qui s'ouvriront.": "Come back to the card and keep feeding it, then reveal for yourself the pages that open.",
+            "La carte s'épuise. La mémoire a besoin d'infuser — il faudrait attendre des heures qu'elle se ravive d'elle-même.": "The card is running out. Memory needs to steep — it would take hours for it to revive on its own.",
+            "Mais tiens — prends cette orbe mémorielle. Elle lui rend toute son énergie d'un coup. Utilise-la.": "But here — take this memory orb. It gives back all its energy at once. Use it.",
+            "Tu portes déjà une orbe mémorielle. Pose-la sur la carte : elle lui rend toute son énergie d'un coup.": "You're already carrying a memory orb. Place it on the card: it gives back all its energy at once.",
+            "Elle revit. Continue — mène ce premier chapitre à son terme.": "It's alive again. Keep going — carry this first chapter through to its end.",
+            "Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, scelle-le.": "All the pages are unveiled. Come back to the card: the chapter is complete, seal it.",
+            "Le chapitre est plein, et toutes ses pages dévoilées. Scelle-le — qu'il prenne racine.": "The chapter is full, and all its pages unveiled. Seal it — let it take root.",
+            "Le chapitre est plein — mais des pages restent voilées : une image, un son.": "The chapter is full — but some pages stay veiled: an image, a sound.",
+            "Ouvre le carnet et dévoile-les toi-même, à la pellicule et à la cassette. Ensuite seulement tu pourras sceller.": "Open the notebook and reveal them yourself, with film and tape. Only then can you seal it.",
+            "Voilà. Ce chapitre ne s'oubliera plus. C'est ça, être explorateur de la mémoire.": "There. This chapter will not be forgotten again. That is what being a memory explorer means.",
+            "Avant que je parte, écoute. Trois choses t'attendent en marchant.": "Before I go, listen. Three things are waiting for you as you walk.",
+            "Et là où tu passes, la carte en garde trace — chaque geste que tu poses laisse un petit signe, discret, à sa place exacte. À toi de reconnaître, plus tard, le dessin de ton exploration.": "And wherever you pass, the map keeps a trace of it — every gesture you make leaves a small, discreet sign at its exact place. Later, it's for you to recognize the shape your exploration has drawn.",
+            "Je dois partir, maintenant — j'ai mes propres voix à retrouver, ailleurs.": "I have to go now — I have voices of my own to find, elsewhere.",
+            "Je dois partir, maintenant — j'ai mes propres voix à retrouver, ailleurs. Le reste vient en marchant. À toi, désormais.": "I have to go now — I have voices of my own to find, elsewhere. The rest comes as you walk. It's yours now.",
+            "Avant ça, une direction : va place Bellecour. Là-bas, des voix se cherchent. Quand tu en croiseras une, quelque chose s'ouvrira.": "Before that, a direction: go to place Bellecour. Voices are looking for one another there. When you cross one, something will open.",
+            "Tu retrouveras ce rendez-vous dans ton journal, et un repère t'attend sur la carte. À toi, désormais.": "You'll find this meeting again in your quest log, and a marker is waiting for you on the map. It's yours now.",
 
 
             // ── Acte III : la Gardienne ──
@@ -17931,6 +18128,18 @@
             const hit = I18N_EN[key];
             if (hit === undefined) return str;
             return str.replace(key, hit);
+        }
+
+        // Traduit un message à trous. Un texte construit par concaténation ne
+        // peut pas servir de clé : une fois les variables injectées, la chaîne
+        // est unique et n'existe dans aucune table. On traduit donc le gabarit,
+        // qui porte des marqueurs %1, %2…, puis on réinjecte les valeurs.
+        // En français T() rend le gabarit inchangé : le rendu FR est identique.
+        function TF(template, ...vals) {
+            return T(template).replace(/%(\d+)/g, (_, i) => {
+                const v = vals[i - 1];
+                return (v === undefined || v === null) ? '' : String(v);
+            });
         }
 
         // Traduit un nœud et toute sa descendance.
@@ -20621,7 +20830,122 @@
                 { text: "Si je pouvais transmettre une seule chose, ce serait celle-là.", heart: true, level: 2,
                   entry: { date: "L'héritage", text: "Ce qui reste quand tout le reste s'efface — l'essentiel d'une existence.", photo: "[Photo d'époque : placeholder]", audio: "[Audio placeholder]" }
                 }
-            ]
+            ],
+            // ── GRAPPE "LYON, VILLE DU LIVRE" ──
+
+            // ── LOUISE LABÉ (Rare, Arts) ──
+            card_louise_labe: [
+                { text: "On a dit qu'une femme ne pouvait écrire ainsi — que je n'existais pas. J'ai publié sous mon nom, en 1555. Ça a suffi à me faire exister.", heart: true, level: 0,
+                  entry: { date: "Lyon, 1555", text: "Fille d'un cordier lyonnais, Louise Labé publie cette année-là un recueil de sonnets sur le désir amoureux, sous son propre nom. Le geste est presque unique pour une femme de son temps.", photo: "[Photo d'époque : édition originale, 1555]", audio: null }
+                },
+                { text: "Rue Bellecordière, la corderie n'existe plus. Mais le nom, lui, a survécu — accroché à moi plutôt qu'à mon père.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "Mes poèmes ne sont pas restés dans un tiroir. Quelqu'un, près de la Saône, a accepté de les imprimer. Reste à savoir qui.", heart: true, level: 1,
+                  entry: { date: "Lyon, quartier des libraires", text: "Le recueil de 1555 est imprimé dans le quartier lyonnais des libraires, alors en plein essor éditorial. Le nom précis de l'atelier reste à préciser dans ce carnet.", photo: null, audio: null }
+                },
+                { text: "On m'a reproché d'écrire comme un homme. Comme si le désir avait un genre grammatical.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "Une femme, fille de cordier, publie ses vers sous son nom. À Lyon, en ce siècle, c'était possible — ailleurs, presque nulle part.", heart: true, level: 2,
+                  entry: { date: "Lyon, XVIe siècle", text: "Lyon imprime alors plus de livres que presque toute autre ville d'Europe. Cette effervescence éditoriale rend possible des gestes autrement impensables.", photo: null, audio: null }
+                },
+                { text: "Il ne reste presque rien de mon visage — un portrait tardif, incertain. Il reste mes mots. C'est déjà beaucoup.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
+
+            // ── SÉBASTIEN GRYPHE (Rare, Société/Histoire) ──
+            card_gryphe: [
+                { text: "J'ai donné à la France ses lettres penchées, et à Lyon ses plus beaux livres.", heart: true, level: 0,
+                  entry: { date: "Lyon, XVIe siècle", text: "Imprimeur humaniste d'origine allemande installé à Lyon, Sébastien Gryphe introduit l'italique en France et imprime les Anciens, Érasme, puis Rabelais. Il devient l'un des plus grands maîtres de la rue Mercière.", photo: null, audio: null }
+                },
+                { text: "Rue Mercière, à mon époque, on comptait près de cent ateliers serrés dans les mêmes venelles. Le mien n'était pas le plus petit.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "On dit que j'ai formé les meilleurs. L'un de mes correcteurs, brillant et insolent, a fini par ouvrir son propre atelier rue Mercière. Ça s'est mal terminé pour lui.", heart: true, level: 1,
+                  entry: { date: "Atelier Gryphe, rue Mercière", text: "Gryphe forme et emploie plusieurs figures qui marqueront l'histoire de l'imprimerie lyonnaise, dont un jeune correcteur qui ouvrira ensuite sa propre boutique dans la même rue.", photo: null, audio: null }
+                },
+                { text: "Rabelais, je l'ai imprimé. Les Anciens aussi. Un atelier, ce n'est pas qu'une presse — c'est une bibliothèque qui choisit ce qu'elle laisse sortir.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "Sous mes presses, Lyon devient une capitale du livre. Je n'ai pas cherché la gloire — j'ai cherché la justesse d'un caractère bien taillé.", heart: true, level: 2,
+                  entry: { date: "Lyon, capitale du livre", text: "Gryphe introduit l'italique en France et imprime Rabelais, Érasme, les humanistes. Son atelier fait de Lyon, au XVIe siècle, l'un des grands centres européens de l'imprimerie.", photo: null, audio: null }
+                },
+                { text: "On m'a dit maître. Je préfère artisan — un caractère mal taillé, et c'est toute la page qui perd sa tenue.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
+
+            // ── ÉTIENNE DOLET (Rare, Société/Histoire) ──
+            card_dolet: [
+                { text: "Trois mots de trop dans une traduction, et l'on m'a déclaré hérétique. Vivre libre, c'était vivre.", heart: true, level: 0,
+                  entry: { date: "Paris, 1546", text: "Imprimeur, humaniste et poète, Étienne Dolet tient un atelier rue Mercière à l'enseigne de la Doloire. Il est brûlé à Paris, condamné pour une phrase jugée hérétique sur l'immortalité de l'âme.", photo: null, audio: null }
+                },
+                { text: "Ma devise tenait en trois mots : vivre libre, c'est vivre. Je ne l'ai pas reniée.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "J'avais appris le métier chez un maître réputé, avant d'ouvrir ma propre boutique à l'enseigne d'une hache.", heart: true, level: 1,
+                  entry: { date: "Rue Mercière", text: "Avant de s'installer à son compte, Dolet aurait fréquenté les ateliers des grands maîtres imprimeurs de la rue Mercière. Son propre atelier prend pour enseigne une doloire — une hache de tonnelier.", photo: null, audio: null }
+                },
+                { text: "Tout est parti d'une traduction. Trois mots ajoutés — « du tout » — dans une phrase sur la mort. Assez pour qu'on me déclare hérétique.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "On imprimait beaucoup à Lyon. On y surveillait tout autant.", heart: true, level: 2,
+                  entry: { date: "Lyon / Paris, 1546", text: "Le procès Dolet illustre la double nature du XVIe siècle lyonnais : capitale de l'imprimerie et terrain de surveillance du pouvoir. Diffuser des idées, à cette époque, pouvait coûter la vie.", photo: null, audio: null }
+                },
+                { text: "On a brûlé mes livres avec moi, place Maubert. Le feu ne distingue pas l'homme du papier.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
+
+            // ── LA PRESSE DE LA DOLOIRE (Commune, Science/Société) ──
+            card_presse_doloire: [
+                { text: "Bois et fer, vis et cadre. Rien de plus. Mais assez pour multiplier une page en quelques centaines d'exemplaires par jour.", heart: true, level: 0,
+                  entry: { date: "Rue Mercière, XVIe siècle", text: "Presse à bras typique du quartier Mercière, où l'on en comptait par centaines au XVIe siècle. Un objet en apparence simple, moteur d'une industrie entière.", photo: null, audio: null }
+                },
+                { text: "On m'a rangée à l'enseigne d'une hache. Une doloire, pour trancher le bois — pas pour trancher les têtes, malgré ce qui est arrivé ensuite.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "Je ne travaille jamais seule. Il faut des mains pour composer, corriger, tirer chaque feuille — des compagnons, nombreux dans ce quartier, plus organisés qu'on ne le croit.", heart: true, level: 1,
+                  entry: { date: "Quartier Mercière", text: "Autour de chaque presse gravite une équipe de compagnons imprimeurs, organisés en confréries parfois clandestines. Leur histoire reste à découvrir ailleurs dans ce carnet.", photo: null, audio: null }
+                },
+                { text: "Composer une page à l'envers, lettre par lettre, sans une faute : ce sont des mains de compagnons qui font ce travail, pas les miennes.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "Avant moi, recopier un livre prenait des mois. Avec moi, quelques centaines de feuilles par jour. Je n'ai rien inventé — j'ai juste multiplié.", heart: true, level: 2,
+                  entry: { date: "Lyon, XVIe siècle", text: "La presse à bras permet de multiplier un texte à une échelle inédite. C'est pour cela que Lyon compte, à cette époque, près de cent ateliers serrés dans les mêmes rues.", photo: null, audio: null }
+                },
+                { text: "On me démonte, on me remonte, on me revend d'atelier en atelier. Une presse ne meurt presque jamais — elle change juste de mains.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
+
+            // ── PLACE BELLECOUR — volet "ville du livre" (Légendaire, Histoire) ──
+            card6: [
+                { text: "On dit que je suis l'une des plus grandes places d'Europe — vide, justement, parce que j'ai été conçue ainsi.", heart: true, level: 0,
+                  entry: { date: "Bellecour, aujourd'hui", text: "Avec ses 62 000 m², la place Bellecour est l'une des plus grandes places d'Europe entièrement piétonne, pensée comme un vide organisé au cœur de la ville.", photo: null, audio: null }
+                },
+                { text: "Je suis le point de départ et de retour de bien des chemins. Celui-ci ne fait pas exception.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "L'histoire qu'on cherche n'est pas ici. Elle est juste à côté : quelques rues plus au nord, un quartier où l'on a imprimé les livres de toute l'Europe.", heart: true, level: 1,
+                  entry: { date: "Presqu'île, XVIe siècle", text: "Au XVIe siècle, le quartier qui borde la place au nord concentre l'essentiel de l'activité d'imprimerie lyonnaise — un secteur à découvrir ailleurs dans ce parcours.", photo: null, audio: null }
+                },
+                { text: "On m'a détruite à la Révolution, reconstruite sous Napoléon. Le vide, lui, a toujours été reconstruit à l'identique.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "Au XVIe siècle, ce coin-là n'existait pas comme on le voit aujourd'hui. Mais la ville imprimait déjà, à quelques pas — près de cent ateliers serrés dans les mêmes rues.", heart: true, level: 2,
+                  entry: { date: "Lyon, XVIe siècle", text: "Avant l'aménagement actuel de la place, le secteur voisin bruissait déjà de l'activité des ateliers d'imprimerie, qui feront de Lyon une capitale européenne du livre.", photo: null, audio: null }
+                },
+                { text: "Je suis un décor. Le drame, cette fois, ne se joue pas sur moi — juste à côté.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
+
+            // ── CATHÉDRALE SAINT-JEAN — volet "ville du livre" (Rare, Histoire) ──
+            card13: [
+                { text: "On m'a mis trois siècles à bâtir. Moins connu : j'ai aussi gardé, pendant des siècles, une bibliothèque de plusieurs centaines de manuscrits.", heart: true, level: 0,
+                  entry: { date: "Cathédrale Saint-Jean", text: "Siège du chapitre des chanoines-comtes de Lyon, la cathédrale gothique Saint-Jean conserve depuis le haut Moyen Âge une bibliothèque de plusieurs centaines de manuscrits.", photo: null, audio: null }
+                },
+                { text: "Mon horloge astronomique mesure le ciel depuis le XIVe siècle. Mes manuscrits, eux, mesuraient autre chose : la mémoire d'un chapitre entier.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "J'ai gardé des centaines de manuscrits pendant des siècles. Ce qu'il en reste aujourd'hui n'est plus ici — c'est descendu au bord du fleuve, dans une autre maison de livres.", heart: true, level: 1,
+                  entry: { date: "Vieux-Lyon", text: "Les manuscrits anciens du chapitre de Saint-Jean ont, au fil des siècles, changé de toit — direction un bâtiment voisin devenu bibliothèque.", photo: null, audio: null }
+                },
+                { text: "Juste à côté de moi, un ancien palais a pris le relais. On ne s'éloigne jamais vraiment de ses livres.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "On croit toujours que c'est l'Église qui brûlait les livres des autres. En 1562, c'est ma propre bibliothèque qui a pris feu, pillée pendant les guerres de religion. Le feu ne choisit pas son camp.", heart: true, level: 2,
+                  entry: { date: "Lyon, 1562", text: "Pendant les guerres de religion, la bibliothèque du chapitre de Saint-Jean est pillée et incendiée — un épisode qui brouille l'image simple d'une Église uniquement du côté des censeurs.", photo: null, audio: null }
+                },
+                { text: "Ce qu'on a perdu cette nuit-là, personne ne l'a jamais compté exactement.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
+
+            // ── PALAIS SAINT-JEAN (Rare, Histoire/Société) ──
+
+            // ── LA BIBLIOTHÈQUE DE LYON (Rare, Histoire) ──
+            card_bibliotheque: [
+                { text: "Ce qui a survécu au feu, à la censure et à l'oubli a fini par arriver jusqu'à moi.", heart: true, level: 0,
+                  entry: { date: "Lyon, 1972", text: "En 1972, les collections anciennes quittent le Palais Saint-Jean, faute d'espace, pour la bibliothèque de la Part-Dieu. Manuscrits du chapitre, livres rares et éditions du XVIe siècle rejoignent un bâtiment conçu pour les conserver.", photo: null, audio: null }
+                },
+                { text: "On m'appelle un silo. C'est le mot juste : je ne suis pas d'abord une salle de lecture, je suis une réserve.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "Les livres qu'on m'a confiés ont déjà vécu ailleurs. Un chapitre, un palais, des ateliers. Je suis leur dernière adresse, pas leur première.", heart: true, level: 1,
+                  entry: { date: "Vieux-Lyon → Part-Dieu", text: "Les fonds anciens lyonnais ont changé de toit plusieurs fois : le chapitre de la cathédrale Saint-Jean, puis l'ancien palais archiépiscopal de 1911 à 1972, avant ce transfert vers l'est de la ville.", photo: null, audio: null }
+                },
+                { text: "Je suis loin du quartier où l'on imprimait. C'est peut-être mieux ainsi : le feu ne remonte pas jusqu'ici.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "Tout ce qui a été imprimé, censuré, brûlé rue Mercière tient aujourd'hui sur quelques kilomètres de rayonnages. On croit garder des livres — on garde des voix.", heart: true, level: 2,
+                  entry: { date: "Part-Dieu, aujourd'hui", text: "La bibliothèque de la Part-Dieu conserve l'un des plus importants fonds anciens de France. Ce qui a échappé à l'incendie de 1562, aux bûchers et à l'oubli y est aujourd'hui inventorié, restauré et consultable.", photo: null, audio: null }
+                },
+                { text: "Personne ne vient me voir pour mon architecture. On vient pour ce que je garde. Ça me va très bien.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+            ],
         };
 
         // ==================== STATE ====================
@@ -21359,7 +21683,7 @@
             toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);'
                 + 'background:' + st.color + ';color:white;padding:8px 18px;border-radius:16px;'
                 + 'font-size:13px;font-weight:700;z-index:9999;pointer-events:none;';
-            toast.textContent = st.symbol + ' +1 Écho ' + st.name;
+            toast.textContent = TF('%1 +1 Écho %2', st.symbol, T(st.name));
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2000);
         }
@@ -22047,7 +22371,7 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-62%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _crIcon = document.createElement('div');
                 _crIcon.style.cssText = 'flex-shrink:0;width:40px;height:40px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));';
-                _crIcon.innerHTML = '<img src="' + encodeURI(type.image) + '" alt="' + (type.label || 'ressource') + '" style="width:100%;height:100%;object-fit:contain;pointer-events:none;" draggable="false" onerror="this.style.display=\'none\';"/>';
+                _crIcon.innerHTML = '<img src="' + encodeURI(type.image) + '" alt="' + T(type.label || 'ressource') + '" style="width:100%;height:100%;object-fit:contain;pointer-events:none;" draggable="false" onerror="this.style.display=\'none\';"/>';
                 const _crPid = 'carnetres_' + pt.id.replace(/[^a-z0-9]/gi,'');
                 const _crWrap = _buildPoiVisual(_crPid, type.color, _crIcon, 36, 28);
                 inner.appendChild(_crWrap);
@@ -22075,7 +22399,7 @@
                 const el = document.createElement('div');
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) el.style.display = 'none';
-                el.title = 'Écho ' + info.name;
+                el.title = TF('Écho %1', T(info.name));
                 const inner = document.createElement('div');
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _echoIcon = document.createElement('div');
@@ -23401,7 +23725,7 @@
                     const card = allCards.find(c => c.id === state.drawnCardId);
                     document.getElementById('poiName').textContent = nearbyPoi.name;
                     const btn = nearbyDiv.querySelector('.collect-btn');
-                    if (btn) { btn.textContent = card ? `Collecter "${card.name}"` : 'Collecter la carte'; btn.onclick = collectThematicCard; }
+                    if (btn) { btn.textContent = card ? TF('Collecter "%1"', T(card.name)) : 'Collecter la carte'; btn.onclick = collectThematicCard; }
                     const badge = document.getElementById('poiThematicBadge');
                     if (badge) badge.style.display = 'inline-block';
                     const sub = nearbyDiv.querySelector('.nearby-poi-distance');
@@ -23443,7 +23767,7 @@
             const nearbyEchoDiv = document.getElementById('nearbyEcho');
             if (nearbyEcho) {
                 const info = SUPERTYPES[nearbyEcho.supertype];
-                document.getElementById('echoName').textContent = `${info.symbol} Écho ${info.name}`;
+                document.getElementById('echoName').textContent = `${info.symbol} ${TF('Écho %1', T(info.name))}`;
                 const show = _shouldShowPoiConsole('echo', nearbyEcho.id) && !_screenBlocked;
                 if (show) nearbyEchoDiv.classList.remove('hidden');
                 else if (_screenBlocked) nearbyEchoDiv.classList.add('hidden');
@@ -23510,7 +23834,7 @@
             const nearbyCRDiv = document.getElementById('nearbyCarnetResource');
             if (nearbyCR) {
                 const type = _getCarnetResourceType(nearbyCR.id);
-                document.getElementById('carnetResourceName').innerHTML = '<img src="' + encodeURI(type.image) + '" alt="' + (type.label || 'ressource') + '" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:6px;display:inline-block;" draggable="false" onerror="this.style.display=\'none\';"/>' + type.label.charAt(0).toUpperCase() + type.label.slice(1);
+                document.getElementById('carnetResourceName').innerHTML = '<img src="' + encodeURI(type.image) + '" alt="' + T(type.label || 'ressource') + '" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:6px;display:inline-block;" draggable="false" onerror="this.style.display=\'none\';"/>' + type.label.charAt(0).toUpperCase() + type.label.slice(1);
                 const show = _shouldShowPoiConsole('carnetResource', nearbyCR.id) && !_screenBlocked;
                 if (show) nearbyCRDiv.classList.remove('hidden');
                 else if (_screenBlocked) nearbyCRDiv.classList.add('hidden');
@@ -24324,7 +24648,7 @@
 
             // Remplir les champs
             const stEl = document.getElementById('ritualSupertype');
-            stEl.textContent = `✦ ${info.name || card.supertype} · ${card.type}`;
+            stEl.textContent = `✦ ${T(info.name || card.supertype)} · ${T(card.type)}`;
             stEl.style.color = color;
 
             document.getElementById('ritualCardName').textContent = card.name;
@@ -24666,7 +24990,7 @@
             }
             document.getElementById('ritualRevealSupertype').textContent = `${info.symbol || ''} ${info.name || ''}`;
             document.getElementById('ritualRevealCardName').textContent  = card.name;
-            document.getElementById('ritualRevealCardType').textContent  = `${card.type} · ${card.rarity || ''}`;
+            document.getElementById('ritualRevealCardType').textContent  = `${T(card.type)} · ${T(card.rarity || '')}`;
             document.getElementById('ritualBigCard').style.boxShadow     =
                 `0 0 0 1px ${color}50, 0 0 40px ${color}30, 0 20px 60px rgba(0,0,0,0.7)`;
 
@@ -24753,7 +25077,7 @@
             const info  = SUPERTYPES[card.supertype] || {};
             const color = info.color || '#ffffff';
             document.getElementById('popupCardName').textContent = card.name;
-            document.getElementById('popupCardType').textContent = (info.name || '') + ' · ' + card.type;
+            document.getElementById('popupCardType').textContent = T(info.name || '') + ' · ' + T(card.type);
             const linkedStory = (typeof MINDMAP_ZONES !== 'undefined') && MINDMAP_ZONES.find(sub =>
                 sub.requiredCards && sub.requiredCards.includes(card.id)
             );
@@ -24900,7 +25224,7 @@
             // Image ou illustration
             const wrap = document.getElementById('photoViewerImgWrap');
             if (photo.photoData) {
-                wrap.innerHTML = '<img src="' + photo.photoData + '" alt="' + (photo.title||'Photo') + '">';
+                wrap.innerHTML = '<img src="' + photo.photoData + '" alt="' + T(photo.title||'Photo') + '">';
             } else {
                 const illus = INFO_ILLUSTRATIONS && INFO_ILLUSTRATIONS[photo.infoId]
                     ? INFO_ILLUSTRATIONS[photo.infoId]
@@ -24961,7 +25285,7 @@
             const items = cat.getItems();
             document.getElementById("bagCatIco").textContent = cat.icon;
             document.getElementById("bagCatNm").textContent  = cat.label;
-            document.getElementById("bagCatQt").textContent  = items.filter(it => !it.empty).length + " type(s)";
+            document.getElementById("bagCatQt").textContent  = TF('%1 type(s)', items.filter(it => !it.empty).length);
             document.getElementById("bagListEl").innerHTML =
                 "<div class='bag-grp-lbl'>" + (items[0]?.empty ? "Vide" : "En réserve") + "</div>" +
                 items.map(item => {
@@ -25065,7 +25389,7 @@
                     <span style="color:#6b7280;font-size:11px;">Donne de la poudre à tes cartes pour remplir leur jauge.</span>
                 </div>`;
             } else {
-                cardsHtml += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;padding:0 16px 8px;">Prêtes à évoluer (${eligibleCards.length})</div>`;
+                cardsHtml += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;padding:0 16px 8px;">${TF('Prêtes à évoluer (%1)', eligibleCards.length)}</div>`;
                 cardsHtml += eligibleCards.map(c => {
                     const cl = cardLevels[c.id];
                     const cfg = RARITY_CONFIG[c.rarity] || RARITY_CONFIG.common;
@@ -25209,13 +25533,13 @@
                 cardsHtml = `<div style="color:#9ca3af;text-align:center;padding:40px 24px;">
                     <div style="font-size:36px;margin-bottom:12px;">${info.symbol}</div>
                     <div style="font-size:13px;font-weight:700;color:white;margin-bottom:6px;">
-                        Aucune carte ${info.name} dans ton carnet</div>
+                        ${TF('Aucune carte %1 dans ton carnet', T(info.name))}</div>
                     <div style="font-size:12px;color:#6b7280;line-height:1.6;">
                         Explore Lyon pour en trouver une.</div>
                 </div>`;
             } else {
                 if (eligible.length > 0) {
-                    cardsHtml += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;padding:16px 16px 8px;">Fragment à débloquer (${eligible.length})</div>`;
+                    cardsHtml += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;padding:16px 16px 8px;">${TF('Fragment à débloquer (%1)', eligible.length)}</div>`;
                     cardsHtml += eligible.map(c => `
                         <div onclick="bagEchoGoToJournal('${c.id}')"
                             style="display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;
@@ -25228,7 +25552,7 @@
                             <div style="flex:1;min-width:0;">
                                 <div style="font-size:13px;font-weight:700;color:white;white-space:nowrap;
                                     overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
-                                <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${c.type || ''} · fragment scellé</div>
+                                <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${TF('%1 · fragment scellé', T(c.type || ''))}</div>
                             </div>
                             <div style="font-size:11px;color:${info.color};font-weight:700;">Ouvrir →</div>
                         </div>`).join('');
@@ -25276,8 +25600,8 @@
                         border:2px solid ${info.color};display:flex;align-items:center;justify-content:center;font-size:18px;">
                         ${info.symbol}</div>
                     <div>
-                        <div style="font-size:13px;font-weight:800;color:white;">Écho ${info.name}</div>
-                        <div style="font-size:10px;color:rgba(255,255,255,0.4);">${qty} disponible${qty > 1 ? 's' : ''}</div>
+                        <div style="font-size:13px;font-weight:800;color:white;">${TF('Écho %1', T(info.name))}</div>
+                        <div style="font-size:10px;color:rgba(255,255,255,0.4);">${TF(qty > 1 ? '%1 disponibles' : '%1 disponible', qty)}</div>
                     </div>
                 </div>
                 <div style="flex:1;overflow-y:auto;">${cardsHtml}</div>`;
@@ -25750,7 +26074,7 @@
             updateCarnetResourceVisibility();
             saveProgress();
             // Toast
-            showToast(type.emoji + ' +1 ' + type.label);
+            showToast(TF('%1 +1 %2', type.emoji, T(type.label)));
         }
 
         function collectDust() {
@@ -25780,7 +26104,7 @@
                 'display:flex','align-items:center','gap:8px',
                 'animation:filmToastAnim 2.8s ease forwards'
             ].join(';');
-            toast.innerHTML = `${dustIconHtml(20)}<span>+${amount} poudre mémorielle</span>`;
+            toast.innerHTML = `${dustIconHtml(20)}<span>${TF('+%1 poudre mémorielle', amount)}</span>`;
             document.body.appendChild(toast);
             setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
         }
@@ -25812,7 +26136,7 @@
                 );
 
                 document.getElementById('echoTutoName').textContent =
-                    (supertypeInfo.symbol || '✨') + ' Écho ' + (supertypeInfo.name || '');
+                    TF('%1 Écho %2', (supertypeInfo.symbol || '✨'), T(supertypeInfo.name || ''));
                 document.getElementById('echoTutoIcon').textContent = supertypeInfo.symbol || '✨';
 
                 const descEl   = document.getElementById('echoTutoDesc');
@@ -25827,7 +26151,7 @@
                         closeEchoTutoToast();
                     };
                 } else {
-                    descEl.textContent        = 'Explore Lyon pour trouver une carte ' + (supertypeInfo.name || '') + ' à qui le confier.';
+                    descEl.textContent        = TF('Explore Lyon pour trouver une carte %1 à qui le confier.', T(supertypeInfo.name || ''));
                     targetEl.style.display    = 'none';
                 }
 
@@ -25875,7 +26199,7 @@
             // Toast
             const toast = document.createElement('div');
             toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#78350F,#451a03);color:#FCD34D;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:700;z-index:9999;border:1px solid rgba(217,119,6,0.5);box-shadow:0 4px 16px rgba(217,119,6,0.4);pointer-events:none;';
-            toast.textContent = '📜 Parchemin collecté : ' + scroll.name;
+            toast.textContent = TF('📜 Parchemin collecté : %1', T(scroll.name));
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2500);
         }
@@ -26114,7 +26438,7 @@
                     <div class="alb-penta-cards-inside">${dots}</div>
                 </div>
                 <div class="alb-coll-detail-name">${colDef.name}</div>
-                <div class="alb-coll-detail-count">${cards.filter(c=>collectedCards.includes(c.id)).length} / ${cards.length} cartes</div>
+                <div class="alb-coll-detail-count">${TF('%1 / %2 cartes', cards.filter(c=>collectedCards.includes(c.id)).length, cards.length)}</div>
             `;
 
             const overlay = document.getElementById('albCollOverlay');
@@ -26238,7 +26562,7 @@
                 const collected = localCards.filter(c => collectedCards.includes(c.id));
                 const summary = document.createElement('div');
                 summary.style.cssText = 'text-align:center;padding:8px 0 16px;font-size:12px;color:rgba(255,255,255,0.4);';
-                summary.textContent = `${collected.length} / ${localCards.length} cartes locales découvertes`;
+                summary.textContent = TF('%1 / %2 cartes locales découvertes', collected.length, localCards.length);
                 listDiv.appendChild(summary);
 
                 const grid = document.createElement('div');
@@ -26271,7 +26595,7 @@
 
                 const summary = document.createElement('div');
                 summary.style.cssText = 'text-align:center;padding:8px 0 4px;font-size:12px;color:rgba(255,255,255,0.4);';
-                summary.textContent = `Saison 1 · ${collected.length} / ${s1Cards.length} cartes thématiques`;
+                summary.textContent = TF('Saison 1 · %1 / %2 cartes thématiques', collected.length, s1Cards.length);
                 listDiv.appendChild(summary);
 
                 const memNote = document.createElement('div');
@@ -26413,8 +26737,8 @@
                 node.classList.toggle('locked', !unlocked);
                 node.classList.toggle('active', unlocked && i === _otTlIndex);
                 node.setAttribute('aria-label', unlocked
-                    ? 'Voir le visuel ' + (i + 1)
-                    : 'Visuel ' + (i + 1) + ' — pas encore révélé');
+                    ? TF('Voir le visuel %1', i + 1)
+                    : TF('Visuel %1 — pas encore révélé', i + 1));
                 node.setAttribute('aria-disabled', unlocked ? 'false' : 'true');
                 if (i === revealIdx) {
                     node.classList.remove('unlocking');
@@ -26520,7 +26844,7 @@
             const typePin = document.getElementById('cardTypePin');
             if (typePin) {
                 typePin.textContent = typeIcon;
-                typePin.setAttribute('aria-label', 'Type de carte : ' + card.type);
+                typePin.setAttribute('aria-label', TF('Type de carte : %1', T(card.type)));
             }
             if (!cardLevels[card.id]) cardLevels[card.id] = { level: 0, experience: 0, dustSpent: 0 };
             const _hdrTitle = document.getElementById('cardDetailHeaderTitle');
@@ -26794,9 +27118,9 @@
                     if (restHint) {
                         restHint.style.display = 'block';
                         if (hasOrb) {
-                            restHint.innerHTML = 'La mémoire infuse. Reviens plus tard ou ravive-la avec une orbe.<span class="card-rest-timer">elle reviendra à elle dans ' + formatTimeLeft(timeLeft) + '</span>';
+                            restHint.innerHTML = 'La mémoire infuse. Reviens plus tard ou ravive-la avec une orbe.<span class="card-rest-timer">' + TF('elle reviendra à elle dans %1', formatTimeLeft(timeLeft)) + '</span>';
                         } else {
-                            restHint.innerHTML = 'La mémoire infuse. Tu peux explorer ailleurs en attendant.<span class="card-rest-timer">elle reviendra à elle dans ' + formatTimeLeft(timeLeft) + '</span>';
+                            restHint.innerHTML = 'La mémoire infuse. Tu peux explorer ailleurs en attendant.<span class="card-rest-timer">' + TF('elle reviendra à elle dans %1', formatTimeLeft(timeLeft)) + '</span>';
                         }
                     }
 
@@ -27622,7 +27946,7 @@
             ];
             const LEVEL_NAMES = ['Chapitre I', 'Chapitre II', 'Chapitre III'];
             document.getElementById('orbSynthCardName').textContent = selectedCard.name;
-            document.getElementById('orbSynthLevel').textContent = LEVEL_NAMES[levelBefore] + ' — scellé';
+            document.getElementById('orbSynthLevel').textContent = TF('%1 — scellé', T(LEVEL_NAMES[levelBefore]));
             document.getElementById('orbSynthText').textContent = SYNTH_TEXTS[Math.min(levelBefore, 2)];
             document.getElementById('orbSynthOverlay').classList.add('show');
         }
@@ -28060,7 +28384,7 @@
                 } else {
                     html2 += `<div class="journal-annexe-card-empty">
                         <div class="journal-annexe-card-empty-icon">${info.symbol}</div>
-                        <span class="journal-annexe-card-empty-label">Savoir ${info.name} — écho requis</span>
+                        <span class="journal-annexe-card-empty-label">${TF('Savoir %1 — écho requis', T(info.name))}</span>
                     </div>`;
                 }
             });
@@ -28136,7 +28460,7 @@
                             <div style="width:28px;height:28px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:14px;">${info.symbol}</div>
                             <span style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">${info.name}</span>
                         </div>
-                        <div style="padding:12px;border-radius:10px;border:1px dashed #e5e7eb;font-size:12px;color:#9ca3af;text-align:center;">Collecte un écho ${info.name} pour débloquer ce savoir</div>
+                        <div style="padding:12px;border-radius:10px;border:1px dashed #e5e7eb;font-size:12px;color:#9ca3af;text-align:center;">${TF('Collecte un écho %1 pour débloquer ce savoir', T(info.name))}</div>
                     </div>`;
                 }
             });
@@ -29352,7 +29676,7 @@
                 const tooltip = document.getElementById('studioTooltip');
                 document.getElementById('tooltipIcon').textContent = '💜';
                 document.getElementById('tooltipName').textContent = 'Poudre insuffisante';
-                document.getElementById('tooltipDesc').textContent = `Il vous faut ${price} poudres mémorielle pour débloquer cet objet. Vous en avez ${memorialDust}.`;
+                document.getElementById('tooltipDesc').textContent = TF('Il vous faut %1 poudres mémorielle pour débloquer cet objet. Vous en avez %2.', price, memorialDust);
                 tooltip.classList.remove('hidden');
                 return;
             }
@@ -29369,8 +29693,8 @@
             const item = STUDIO_ITEMS[itemId];
             const tooltip = document.getElementById('studioTooltip');
             document.getElementById('tooltipIcon').textContent = item.icon;
-            document.getElementById('tooltipName').textContent = `${item.name} ajouté !`;
-            document.getElementById('tooltipDesc').textContent = `Nouvel objet ajouté à votre studio. ${item.desc}`;
+            document.getElementById('tooltipName').textContent = TF('%1 ajouté !', T(item.name));
+            document.getElementById('tooltipDesc').textContent = TF('Nouvel objet ajouté à votre studio. %1', T(item.desc));
             tooltip.classList.remove('hidden');
             saveProgress();
         }
@@ -29502,8 +29826,8 @@
 
             const anyEcho = validTypes.some(st => (bagInv.echos[st] || 0) > 0);
             if (!anyEcho) {
-                const label = validTypes.map(st => SUPERTYPES[st].name).join(' / ');
-                div.innerHTML = `<div style="color:#9ca3af;text-align:center;width:100%;padding:20px;">Aucun écho ${label}</div>`;
+                const label = validTypes.map(st => T(SUPERTYPES[st].name)).join(' / ');
+                div.innerHTML = `<div style="color:#9ca3af;text-align:center;width:100%;padding:20px;">${TF('Aucun écho %1', label)}</div>`;
                 return;
             }
 
@@ -30192,7 +30516,7 @@
                 'box-shadow:0 4px 20px rgba(0,0,0,0.5)',
                 'animation:filmToastAnim 2.8s ease forwards'
             ].join(';');
-            t.innerHTML = `📷 <span style="color:#fcd34d">+${n} pellicule${n>1?'s':''}</span> ajoutée${n>1?'s':''}`;
+            t.innerHTML = `📷 <span style="color:#fcd34d">${TF(n>1 ? '+%1 pellicules' : '+%1 pellicule', n)}</span> ajoutée${n>1?'s':''}`;
             document.getElementById('mainApp').appendChild(t);
             setTimeout(() => { if (t.parentNode) t.remove(); }, 3000);
         }
@@ -30332,7 +30656,7 @@
             if (name) name.textContent = skin.name || '—';
             if (status) {
                 if (!unlocked) {
-                    status.textContent = skin.palier ? ('Débloqué au palier ' + skin.palier) : 'Verrouillé';
+                    status.textContent = skin.palier ? TF('Débloqué au palier %1', skin.palier) : 'Verrouillé';
                     status.classList.remove('active-status');
                 } else if (isActive) {
                     status.textContent = '✓ Actif';
@@ -30668,7 +30992,7 @@
             document.getElementById('progAvatarLevel').textContent = playerLevel;
             document.getElementById('progRankName').textContent    = rank.name;
             document.getElementById('progRankTitle').textContent   = rank.title;
-            document.getElementById('progXpTotal').textContent     = playerTotalXP + ' XP accumulés';
+            document.getElementById('progXpTotal').textContent     = TF('%1 XP accumulés', playerTotalXP);
             document.getElementById('progXpFill').style.width      = pct + '%';
             document.getElementById('progXpCurrent').textContent   = playerXP + ' XP';
             document.getElementById('progXpNext').textContent      = need === Infinity ? 'Niveau maximum !' : 'Prochain rang : ' + (need-playerXP) + ' XP';
@@ -30895,7 +31219,7 @@
                 el.addEventListener('click', () => {
                     const dist = getDistance(playerPos.lat, playerPos.lng, pan.lat, pan.lng);
                     if (dist > PANNEAU_RADIUS) {
-                        showToast('Approche-toi de ' + pan.title);
+                        showToast(TF('Approche-toi de %1', T(pan.title)));
                         return;
                     }
                     currentPanneauScreen = pan;
@@ -30948,7 +31272,7 @@
                 document.getElementById('panneauNearbyName').textContent = currentNearbyPanneau.title;
                 const { filled, total } = getPanneauProgress(currentNearbyPanneau.id);
                 document.getElementById('panneauNearbySlots').textContent =
-                    filled === total ? '✓ Complété' : filled + '/' + total + ' parchemins insérés';
+                    filled === total ? '✓ Complété' : TF('%1/%2 parchemins insérés', filled, total);
                 nearbyDiv.classList.remove('hidden');
             } else {
                 nearbyDiv.classList.add('hidden');
@@ -31001,7 +31325,7 @@
                     html += `<div class="panneau-audio-text" id="pat_${pan.id}_${i}">${c.audio}</div>`;
                     html += `</div></div>`;
                 } else {
-                    html += `<div class="panneau-locked-entry">🔒 <span>Mémoire ${i+1} — insérez un parchemin pour révéler</span></div>`;
+                    html += `<div class="panneau-locked-entry">🔒 <span>${TF('Mémoire %1 — insérez un parchemin pour révéler', i+1)}</span></div>`;
                 }
             });
 
@@ -31056,7 +31380,7 @@
                         day:   'en journée (9h–19h)', dusk: 'au crépuscule (19h–22h)',
                         rain:  'sous la pluie', sun: 'par temps ensoleillé', fog: 'par temps de brouillard'
                     };
-                    showToast('Ce slot s\'ouvre ' + (COND_LABELS[condition] || 'à certaines heures'));
+                    showToast(TF('Ce slot s\'ouvre %1', T(COND_LABELS[condition] || 'à certaines heures')));
                     return;
                 }
             }
@@ -31158,7 +31482,7 @@
 
                 el.addEventListener('click', () => {
                     const dist = getDistance(playerPos.lat, playerPos.lng, bazar.lat, bazar.lng);
-                    if (dist > BAZAR_RADIUS) { showToast('🛖 ' + bazar.name + ' — trop loin'); return; }
+                    if (dist > BAZAR_RADIUS) { showToast(TF('🛖 %1 — trop loin', T(bazar.name))); return; }
                     currentNearbyBazar = bazar;
                     openBazarScreen(bazar);
                 });
@@ -32714,6 +33038,83 @@
                         },
                     ]
                 }
+            },
+            ville_du_livre: {
+                title: 'Lyon, ville du livre',
+                color: '#b45309',
+                bd: {
+                    totalCases: 7,
+                    cases: [
+                        { id: 'vdl_case1', title: 'Une ville qui imprime', text: 'Au début du XVIe siècle, Lyon, ville de foires et de marchands, s\'empare de l\'imprimerie encore jeune. Près de cent ateliers s\'entassent autour de la rue Mercière — la place Bellecour, elle, reste le vide organisé au cœur d\'une ville qui, juste à côté, imprime déjà pour toute l\'Europe.' },
+                        { id: 'vdl_case2', title: 'Le maître et son atelier', text: 'Sébastien Gryphe, imprimeur humaniste venu d\'Allemagne, introduit l\'italique en France et imprime Rabelais et les Anciens. Sous ses presses, Lyon devient un nœud du réseau européen de l\'imprimerie — et forme, sans le vouloir, ceux qui lui succéderont.' },
+                        { id: 'vdl_case3', title: 'Une voix singulière', text: 'En 1555, Louise Labé publie sous son nom un recueil de sonnets sur le désir — un geste presque unique pour une femme de son temps. À Lyon, cette liberté-là est possible ; ailleurs, presque nulle part.' },
+                        { id: 'vdl_case4', title: 'Le Grand Tric', text: 'Une presse ne travaille jamais seule : il faut des compagnons pour composer, corriger, tirer chaque feuille. En avril 1539, ces compagnons — les Griffarins, confrérie clandestine des imprimeurs lyonnais — déclenchent le Grand Tric, la première grève ouvrière de France. Les ateliers ferment trois mois ; le roi craint que l\'imprimerie ne quitte la ville.' },
+                        { id: 'vdl_case5', title: 'Trois mots de trop', text: 'Étienne Dolet, imprimeur à l\'enseigne de la Doloire, va plus loin que les autres. Trois mots ajoutés à une traduction, jugés hérétiques, suffisent à le condamner. Il est brûlé à Paris avec ses livres en 1546 — la ville qui imprime tout est aussi la ville qu\'on surveille tout autant.' },
+                        { id: 'vdl_case6', title: 'L\'autre incendie', text: 'En 1562, en pleine guerre de religion, la bibliothèque du chapitre de la cathédrale Saint-Jean est pillée et incendiée à son tour. On croit toujours que l\'Église est du côté de ceux qui brûlent les livres des autres — le feu, lui, ne choisit pas son camp.' },
+                        { id: 'vdl_case7', title: 'Ce qui a survécu', text: 'Manuscrits du chapitre, livres de Dolet, vers de Louise Labé : ce que le feu et la censure ont épargné a quitté le vieux quartier pour l\'est de la ville. La Bibliothèque de Lyon conserve aujourd\'hui ces fonds — dernière adresse d\'une histoire commencée rue Mercière, à quatre siècles et quelques kilomètres de là.' },
+                    ]
+                },
+                quete: {
+                    titre: 'Les voix imprimées',
+                    etapes: [
+                        {
+                            id: 'vdl_1a',
+                            titre: 'Une ville qui imprime',
+                            indice: 'Depuis Bellecour, l\'histoire du livre se joue juste à côté. Trouve l\'atelier où l\'on tirait les feuilles une à une.',
+                            prerequis: [{ cardId: 'card6', minLevel: 0 }, { cardId: 'card_presse_doloire', minLevel: 1 }],
+                            objectifGeo: { lat: 45.7632, lng: 4.8297, rayon: 80, nom: 'Rue Mercière (la Doloire)' },
+                            rewardCases: ['vdl_case1'],
+                        },
+                        {
+                            id: 'vdl_1b',
+                            titre: 'Le maître et son atelier',
+                            indice: 'Un maître humaniste a formé les meilleurs imprimeurs de la ville. Cherche du côté de Saint-Jean.',
+                            prerequis: [{ cardId: 'card_gryphe', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7628, lng: 4.8266, rayon: 80, nom: 'Vieux-Lyon (Saint-Jean)' },
+                            rewardCases: ['vdl_case2'],
+                        },
+                        {
+                            id: 'vdl_1c',
+                            titre: 'Une voix singulière',
+                            indice: 'Une femme a publié ses vers sous son nom, tout près de Bellecour. Trouve la rue qui porte son nom.',
+                            prerequis: [{ cardId: 'card_louise_labe', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7586, lng: 4.8340, rayon: 80, nom: 'Rue Bellecordière' },
+                            rewardCases: ['vdl_case3'],
+                        },
+                        {
+                            id: 'vdl_2_tric',
+                            titre: 'Le Grand Tric',
+                            indice: 'Une presse ne travaille jamais seule. Retourne du côté des ateliers de la Doloire, là où les compagnons s\'organisaient.',
+                            prerequis: [{ cardId: 'card_presse_doloire', minLevel: 2 }, { cardId: 'card_gryphe', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7632, lng: 4.8297, rayon: 80, nom: 'Rue Mercière (la Doloire)' },
+                            rewardCases: ['vdl_case4'],
+                        },
+                        {
+                            id: 'vdl_2_dolet',
+                            titre: 'Trois mots de trop',
+                            indice: 'Un imprimeur est allé plus loin que les autres. Cherche l\'enseigne d\'une hache, rue Mercière.',
+                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_doloire', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7637, lng: 4.8294, rayon: 80, nom: 'Rue Mercière (Dolet)' },
+                            rewardCases: ['vdl_case5'],
+                        },
+                        {
+                            id: 'vdl_3_incendie',
+                            titre: 'L\'autre incendie',
+                            indice: 'Une bibliothèque a brûlé, et ce n\'est pas celle qu\'on croit. Retourne à la cathédrale Saint-Jean.',
+                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_doloire', minLevel: 2 }, { cardId: 'card13', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7606, lng: 4.8268, rayon: 80, nom: 'Cathédrale Saint-Jean' },
+                            rewardCases: ['vdl_case6'],
+                        },
+                        {
+                            id: 'vdl_3_survivant',
+                            titre: 'Ce qui a survécu',
+                            indice: 'Loin du vieux quartier, vers l\'est, un grand bâtiment garde aujourd\'hui ce que le feu a épargné.',
+                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_doloire', minLevel: 2 }, { cardId: 'card13', minLevel: 2 }, { cardId: 'card_bibliotheque', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7607, lng: 4.8559, rayon: 80, nom: 'Bibliothèque de Lyon' },
+                            rewardCases: ['vdl_case7'],
+                        },
+                    ]
+                }
             }
         };
 
@@ -33105,7 +33506,7 @@
         // Pas une carte : pas de slot dans COLLECTIONS. Ils s'éclairent dans
         // l'Explorium par accumulation — dès que ≥2 cartes de la grappe sont
         // stabilisées à C1 ou plus (doc "grappe_lyon_ville_du_livre", section 4).
-        const VDL_CARD_IDS = ['card6', 'card_louise_labe', 'card_gryphe', 'card13', 'card_dolet', 'card_presse_doloire', 'card_palais_st_jean'];
+        const VDL_CARD_IDS = ['card6', 'card_louise_labe', 'card_gryphe', 'card13', 'card_dolet', 'card_presse_doloire', 'card_bibliotheque'];
         function griffarinsUnlocked() {
             const stabilized = VDL_CARD_IDS.filter(id => {
                 const cl = cardLevels[id];
@@ -33237,7 +33638,7 @@
             }
 
             const activeCount = list.filter(q => q.status === 'active').length;
-            subtitle.textContent = list.length + ' quête(s) — ' + activeCount + ' en cours';
+            subtitle.textContent = TF('%1 quête(s) — %2 en cours', list.length, activeCount);
 
             body.innerHTML = '';
             // Si pas de quête sélectionnée, sélectionner automatiquement la première active
@@ -33261,7 +33662,7 @@
                     <div class="qj-quest-grappe">${grappe.title}${selectedBadge}</div>
                     <div class="qj-quest-title">${etape.titre}</div>
                     <div class="qj-quest-indice">${etape.indice}</div>
-                    <div class="qj-quest-place">📍 ${etape.objectifGeo?.nom || 'Lieu à découvrir'}</div>
+                    <div class="qj-quest-place">📍 ${T(etape.objectifGeo?.nom || 'Lieu à découvrir')}</div>
                     <div class="qj-quest-action"></div>
                 `;
                 const actions = el.querySelector('.qj-quest-action');
@@ -33448,7 +33849,7 @@
                     el.innerHTML = `<div class="quest-pin-marker"></div>`;
                 }
                 el.addEventListener('click', () => {
-                    showToast('📍 ' + etape.objectifGeo.nom + ' — ' + etape.titre);
+                    showToast(TF('📍 %1 — %2', T(etape.objectifGeo.nom), T(etape.titre)));
                 });
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([etape.objectifGeo.lng, etape.objectifGeo.lat])
@@ -33522,7 +33923,7 @@
             const nameEl = document.getElementById('nearbyQuestName');
             const descEl = document.getElementById('nearbyQuestDesc');
             const btn = document.getElementById('nearbyQuestBtn');
-            if (nameEl) nameEl.textContent = '✦ ' + (etape.titre || 'Quête');
+            if (nameEl) nameEl.textContent = '✦ ' + T(etape.titre || 'Quête');
             if (descEl) descEl.textContent = etape.objectifGeo?.nom || 'Tu es à l\'endroit recherché';
             // Couleur de la grappe sur le bouton + bordure
             if (btn) btn.style.background = grappe.color || '#d9a441';
@@ -33657,7 +34058,7 @@
             document.getElementById('grappeQuestTitle').textContent = grappe.title;
             const totalEtapes = grappe.quete.etapes.length;
             const completedCount = grappe.quete.etapes.filter(e => _getEtapeStatus(grappeId, e) === 'completed').length;
-            document.getElementById('grappeQuestSubtitle').textContent = grappe.quete.titre + ' · ' + completedCount + '/' + totalEtapes + ' étapes';
+            document.getElementById('grappeQuestSubtitle').textContent = TF('%1 · %2/%3 étapes', T(grappe.quete.titre), completedCount, totalEtapes);
 
             const body = document.getElementById('grappeQuestBody');
             body.innerHTML = '';
@@ -33843,7 +34244,7 @@
                 return grappeQuestState[grappeId]?.[et.id] === 'completed';
             }).length;
             const fresqueTotalEtapes = grappe.quete.etapes.length;
-            fresqueBtn.textContent = '🖼 Voir la fresque (' + fresqueCompletedCount + '/' + fresqueTotalEtapes + ')';
+            fresqueBtn.textContent = TF('🖼 Voir la fresque (%1/%2)', fresqueCompletedCount, fresqueTotalEtapes);
             fresqueBtn.onclick = () => openFresqueModal(grappeId);
             body.appendChild(fresqueBtn);
         }
@@ -35195,7 +35596,7 @@
                     checkLumenReveals();
                 } else {
                     // Pas assez de lumens
-                    alert(`Cette traînée coûte ${lumenCost} lumens, mais vous n'en avez que ${bagInv.lumens}.`);
+                    alert(TF('Cette traînée coûte %1 lumens, mais vous n\'en avez que %2.', lumenCost, bagInv.lumens));
                 }
             }
             
@@ -35753,6 +36154,14 @@
             // ── Guillotière / SE ──
             card1:           { x: 0.70, y: 0.62 },  // St-Exupéry
             tc_ibn_battuta:  { x: 0.88, y: 0.60 },
+            // ── Lyon, ville du livre ──
+            card6:                { x: 0.58, y: 0.68 },  // Place Bellecour
+            card_louise_labe:     { x: 0.62, y: 0.62 },  // Rue Bellecordière
+            card_dolet:           { x: 0.34, y: 0.58 },  // Rue Mercière
+            card_presse_doloire:  { x: 0.30, y: 0.63 },  // Rue Mercière (la Doloire)
+            card_gryphe:          { x: 0.16, y: 0.48 },  // Vieux-Lyon (Saint-Jean)
+            card13:               { x: 0.09, y: 0.50 },  // Cathédrale Saint-Jean
+            card_bibliotheque:    { x: 0.82, y: 0.49 },  // Bibliothèque de la Part-Dieu
         };
 
         // ── Prérequis additionnels par étape (étape ID → array de prerequis V2) ──
@@ -35902,6 +36311,14 @@
             tc_ibn_battuta: { emoji:'🧭', kind:'actor' },
             card18:         { emoji:'🔭', kind:'actor' },
             card1:          { emoji:'✈',  kind:'actor' },
+            // ── Lyon, ville du livre ──
+            card6:               { emoji:'🏟', kind:'actor' },
+            card_louise_labe:    { emoji:'🪶', kind:'actor' },
+            card_gryphe:         { emoji:'🦅', kind:'actor' },
+            card13:              { emoji:'🕍', kind:'actor' },
+            card_dolet:          { emoji:'🪓', kind:'actor' },
+            card_presse_doloire: { emoji:'🗜', kind:'actor' },
+            card_bibliotheque:   { emoji:'📚', kind:'actor' },
         };
         Object.entries(V2_NEW_ACTORS).forEach(([id, a]) => {
             V2_CARD_META[id] = { emoji: a.emoji, kind: a.kind };
@@ -36822,10 +37239,10 @@
             if (V2_NEW_ACTORS[cardId]) {
                 if (v2IsOwned(cardId)) {
                     v2UnmarkWorldActorEncountered(cardId);
-                    if (typeof showToast === 'function') showToast(`${name} — délaissé`);
+                    if (typeof showToast === 'function') showToast(TF('%1 — délaissé', T(name)));
                 } else {
                     v2MarkWorldActorEncountered(cardId);
-                    if (typeof showToast === 'function') showToast(`${name} — rencontré`);
+                    if (typeof showToast === 'function') showToast(TF('%1 — rencontré', T(name)));
                 }
                 if (typeof refreshMindmapState === 'function') refreshMindmapState();
                 v2RenderAll();
@@ -36838,17 +37255,17 @@
             }
             // Carte non obtenue mais éclairée : message d'indice
             if (!owned) {
-                if (typeof showToast === 'function') showToast(`${name} — pas encore collectée.`);
+                if (typeof showToast === 'function') showToast(TF('%1 — pas encore collectée.', T(name)));
                 return;
             }
             // Carte obtenue : ouvrir la fiche détaillée comme en V1
             if (typeof openCardDetail !== 'function' || typeof getCardById !== 'function') {
-                if (typeof showToast === 'function') showToast(`${name} · Niveau ${level}`);
+                if (typeof showToast === 'function') showToast(TF('%1 · Niveau %2', T(name), level));
                 return;
             }
             const card = getCardById(cardId);
             if (!card) {
-                if (typeof showToast === 'function') showToast(`${name} · Niveau ${level}`);
+                if (typeof showToast === 'function') showToast(TF('%1 · Niveau %2', T(name), level));
                 return;
             }
             // Garder source pour le retour (le back doit revenir à la V2)
@@ -37218,7 +37635,7 @@
 
             // Header
             const color = (typeof V2_GRAPPE_COLORS !== 'undefined' && V2_GRAPPE_COLORS[grappeId]) || '#d9a441';
-            document.getElementById('fresqueEyebrow').textContent = 'Fresque · ' + grappe.title.toUpperCase();
+            document.getElementById('fresqueEyebrow').textContent = TF('Fresque · %1', T(grappe.title).toUpperCase());
             document.getElementById('fresqueTitle').textContent = grappe.quete.titre || grappe.title;
             const completed = etapes.filter(et => grappeQuestState[grappeId]?.[et.id] === 'completed').length;
             document.getElementById('fresqueProgress').textContent = `${completed} / ${etapes.length}`;
