@@ -7581,7 +7581,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.59.0 · Port demo.html : musique d'ambiance (active par défaut, démarre au clic sur « Commencer l'aventure », bouton de coupure en haut à droite, atténuation pendant une entrée audio du carnet).</div>
+            <div class="hud-version" id="hudVersion">v0.60.0 · Port demo.html : correctifs UX — console du bazar qui se rouvrait aussitôt fermée, cercles de capture alignés sur les distances réelles de collecte, bannière du marqueur tutoriel masquée si on quitte la zone, mappe active dès la collecte de la carte tutoriel (et non à la fin du tutoriel).</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10883,6 +10883,11 @@
         let _villeDuLivreUnlocked = false;  // true quand le rendez-vous Bellecour est validé → POI du parcours visibles
         let _obAct2Done    = false;
         let _obAct3Done    = false;
+        // La mappe doit se réveiller dès la collecte de la carte tutoriel, pas à la fin du
+        // tutoriel : le joueur a besoin des zones de capture, des bannières de collecte et
+        // des marqueurs actifs avant le dernier dialogue. _obDone ne passe à true qu'à ce
+        // dernier dialogue — trop tard. _obAct2Done marque le bon moment.
+        function _obMapActive() { return _obDone || _obAct2Done; }
         let _obSpawnLat    = 0;
         let _obSpawnLng    = 0;
 
@@ -11305,14 +11310,20 @@
                 vnShow([{ speaker: 'La jeune fille', line: 'Il y a quelque chose là-bas. Pas un lieu, pas un monument — quelque chose de plus discret. Approche-toi.' }], null);
             }, 1200);
 
-            // Surveiller la proximité — quand dans la zone, afficher la bannière nearby
+            // Surveiller la proximité — afficher la bannière quand dans la zone,
+            // la MASQUER si le joueur en ressort sans avoir collecté. La
+            // surveillance ne s'arrête qu'à la collecte : sans ça, une bannière
+            // proposant de ramasser restait à l'écran une fois le joueur reparti.
             window._obProximityCheck = setInterval(() => {
                 if (!playerPos) return;
+                if (_obCollectTriggered) { clearInterval(window._obProximityCheck); window._obProximityCheck = null; return; }
                 const dist = getDistance(playerPos.lat, playerPos.lng, _obSpawnLat, _obSpawnLng);
+                const nearbyDiv = document.getElementById('nearbyPOI');
+                const isShown = nearbyDiv && !nearbyDiv.classList.contains('hidden');
                 if (dist <= COLLECTION_RADIUS) {
-                    clearInterval(window._obProximityCheck);
-                    window._obProximityCheck = null;
-                    _obShowTutorialNearby();
+                    if (!isShown) _obShowTutorialNearby();
+                } else if (isShown) {
+                    nearbyDiv.classList.add('hidden');
                 }
             }, 800);
         }
@@ -14799,7 +14810,7 @@
         }
 
         function _capUpdate() {
-            if (!_obDone) { _capZones = []; return; }
+            if (!_obMapActive()) { _capZones = []; return; }
             _capZones = [];
             const add = (lng, lat, r, type) => _capZones.push({ lng, lat, r, type, color: _CAP_COLORS[type] || '#ffffff' });
             POIS.forEach(poi => {
@@ -14808,10 +14819,12 @@
                 else if (st === 'thematic_available') add(poi.lng, poi.lat, 50, 'poi_thematic');
                 else if (st === 'cooldown') add(poi.lng, poi.lat, 50, 'poi_cooldown');
             });
-            DUST_POINTS.forEach(d => { if (!collectedDustPoints.includes(d.id)) add(d.lng, d.lat, 50, 'dust'); });
-            ECHO_POINTS.forEach(e => { if (!collectedEchoes.includes(e.id)) add(e.lng, e.lat, 30, 'echo'); });
-            ORB_POINTS.forEach(o => { if (!collectedOrbs.includes(o.id)) add(o.lng, o.lat, 50, 'orb'); });
-            SCROLL_POINTS.forEach(s => { if (!collectedScrolls.includes(s.id)) add(s.lng, s.lat, 50, 'scroll'); });
+            // Rayons = constantes de collecte réelles : dessiner 50 m là où la collecte
+            // se déclenche à 30 m faisait entrer le joueur dans un cercle inopérant.
+            DUST_POINTS.forEach(d => { if (!collectedDustPoints.includes(d.id)) add(d.lng, d.lat, DUST_RADIUS, 'dust'); });
+            ECHO_POINTS.forEach(e => { if (!collectedEchoes.includes(e.id)) add(e.lng, e.lat, ECHO_RADIUS, 'echo'); });
+            ORB_POINTS.forEach(o => { if (!collectedOrbs.includes(o.id)) add(o.lng, o.lat, ORB_RADIUS, 'orb'); });
+            SCROLL_POINTS.forEach(s => { if (!collectedScrolls.includes(s.id)) add(s.lng, s.lat, SCROLL_RADIUS, 'scroll'); });
             LOOT_POINTS.forEach(l => { if (!collectedLoots.includes(l.id)) add(l.lng, l.lat, 50, 'loot'); });
             CARNET_RESOURCE_POINTS.forEach(pt => { if (!collectedCarnetResources.includes(pt.id)) add(pt.lng, pt.lat, CARNET_RESOURCE_RADIUS, 'carnet_resource'); });
         }
@@ -15165,7 +15178,7 @@
             try { checkActiveQuestGeofencing(); } catch(e) { console.error('checkActiveQuestGeofencing', e); }
 
             // Pendant l'onboarding, ne pas écraser la bannière du marqueur tutoriel
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const _screenBlocked = _isAnyScreenOpen();
             // POI — gestion locale + thématique
             currentNearbyPOI = null;
@@ -15355,7 +15368,7 @@
         // ==================== VISIBILITY ====================
 
         function updatePOIVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const allCards = Object.values(COLLECTIONS).flatMap(c => c.cards);
             const circleFeatures = [];
 
@@ -15434,7 +15447,7 @@
         }
 
         function updateDustVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const visible = [];
             dustMarkers.forEach(({ marker, el, dust }) => {
                 const show = !collectedDustPoints.includes(dust.id);
@@ -15454,7 +15467,7 @@
         }
 
         function updateEchoVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const visible = [];
             echoMarkers.forEach(({ marker, el, echo }) => {
                 // §3.4 : échos masqués pour le test 1.
@@ -15473,7 +15486,7 @@
             }
         }
         function updateOrbVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const visible = [];
             orbMarkers.forEach(({ marker, el, orb }) => {
                 const show = !collectedOrbs.includes(orb.id);
@@ -15490,7 +15503,7 @@
         }
 
         function updateScrollVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const visible = [];
             scrollMarkers.forEach(({ marker, el, scroll }) => {
                 const show = !collectedScrolls.includes(scroll.id);
@@ -15508,7 +15521,7 @@
         }
 
         function updateCarnetResourceVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const visible = [];
             carnetResourceMarkers.forEach(({ el, pt, type: _oldType }) => {
                 const collected = collectedCarnetResources.includes(pt.id);
@@ -15541,7 +15554,7 @@
         }
 
         function updateLootVisibility() {
-            if (!_obDone) return;
+            if (!_obMapActive()) return;
             const visible = [];
             lootMarkers.forEach(({ el, loot }) => {
                 const show = !collectedLoots.includes(loot.id);
@@ -19420,6 +19433,14 @@
             const overlay = document.getElementById('orbSynthOverlay');
             overlay.classList.remove('show');
 
+            // L'overlay de synthèse levé, le détail carte redevient visible :
+            // c'est le moment d'allumer la pastille fraîchement débloquée.
+            if (_otTlPendingReveal >= 0 && selectedCard
+                && document.getElementById('cardDetailView')?.classList.contains('show')) {
+                const _tlCard = selectedCard;
+                setTimeout(() => _otTlBuild(_tlCard), 420);
+            }
+
             // ── Accroche parcours guidé : chapitre scellé → adieu de la jeune fille ──
             if (typeof _obGuide === 'object' && _obGuide.active && selectedCard && selectedCard.id === OB_TUTORIAL_CARD.id) {
                 setTimeout(() => _obGuideEvent('sealed'), 350);
@@ -22486,7 +22507,7 @@
 
             // Vérifier la proximité en continu pour la bannière nearby
             setInterval(() => {
-                if (!playerPos || _obDone === false) return;
+                if (!playerPos || !_obMapActive()) return;
                 const BAZAR_RADIUS = 80;
                 let nearest = null;
                 let nearestDist = Infinity;
@@ -22569,6 +22590,16 @@
 
         function closeBazarScreen() {
             _showNearbyConsoles();
+            // Le joueur vient de fermer l'échoppe : sa console ne doit pas se
+            // rouvrir dans la seconde. _showNearbyConsoles() a remis à zéro
+            // l'edge-trigger de tous les types — on le rétablit pour le bazar
+            // seul et on le marque comme vu. La console ne reviendra qu'après
+            // être sorti de la zone puis y être revenu ; entre-temps, le
+            // marqueur sur la mappe reste le chemin de retour.
+            if (currentNearbyBazar) {
+                _poiEntered.bazar = currentNearbyBazar.id;
+                window._dismissPoiConsole('bazar', currentNearbyBazar.id);
+            }
             const el = document.getElementById('bazarScreen');
             el.style.transform    = 'translateY(100%)';
             el.style.pointerEvents = 'none';
