@@ -8124,7 +8124,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.63.0 · Port demo.html terminé : carnet scrapbook (gabarits de page, décorations, lecteurs audio, dossier photo). Catalogue vide — le carnet est inchangé tant qu'aucune entrée n'est déclarée.</div>
+            <div class="hud-version" id="hudVersion">v0.64.0 · Exemple de contenu : la carte tutoriel déclare trois visuels (rangée de pastilles + morphing) et sa première entrée de carnet est rendue en page d'album.</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -12916,6 +12916,16 @@
             clueIcon: '✦',
             collections: [],
             art: './assets/clef%20de%20la%20ville.png',
+
+            // Visuels par niveau (index = niveau). Le chapitre I porte
+            // l'illustration réelle ; les deux suivants sont des visuels
+            // PROVISOIRES, posés pour éprouver la rangée de pastilles et le
+            // morphing — à remplacer par les illustrations définitives.
+            artByLevel: [
+                './assets/clef%20de%20la%20ville.png',   // niveau 0 — une clef
+                './assets/clef_chapitre2.svg',           // niveau 1 — la deuxième se devine
+                './assets/clef_chapitre3.svg',           // niveau 2 — les trois sur le plat
+            ],
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -22388,7 +22398,28 @@
         // n'est déclarée.
         // Forme : { cardId: [ { level, index, template, title, image, ... } ] }
         // ══════════════════════════════════════════════════════════════
-        const JSB_ENTRIES = {};
+        const JSB_ENTRIES = {
+            // ── EXEMPLE — carte tutoriel, chapitre I, première entrée ──
+            // Montre le rendu scrapbook : photo scotchée et légèrement
+            // basculée, légende manuscrite, corps de page, citation de la
+            // carte, scotch et tampon. Le texte est celui de l'entrée
+            // existante, repris tel quel.
+            ob_tutorial_card: [
+                {
+                    level: 0, index: 0,
+                    template: 'image_citation',
+                    title: "Trois clefs, aucune serrure",
+                    image: './assets/clef%20de%20la%20ville.png',
+                    imageCaption: "l'unique rescapée, telle qu'on la voit aujourd'hui",
+                    body: "Les Clefs de la Ville de Lyon. Elles étaient trois, en bronze doré sur un plat d'argent, "
+                        + "offertes à Napoléon en 1805 quand il est venu ici. Le plus étrange, c'est qu'elles n'ouvrent "
+                        + "rien : juste une façon de dire « voilà notre ville ». Deux ont été perdues. Il en reste une, "
+                        + "aujourd'hui, au musée Gadagne — une clef seule, et un plat qui se souvient des deux autres.",
+                    quote: "Trois clefs, et pas une serrure.",
+                    decorations: ['tape_top', 'tape_corner', 'stamp_lyon_patrimoine'],
+                },
+            ],
+        };
 
         let _jsbUid = 0;
 
