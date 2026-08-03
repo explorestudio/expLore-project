@@ -12969,12 +12969,16 @@
             objets:     [],   // [{ id, name, desc, qty }]
             parchemins: [],   // [{ id, name, desc }]
             boussoles:  [],   // [{ id, name, zone, desc, active }]
-            orbes:               10,
+            // Dotation de départ resserrée : l'orbe et les fournitures doivent
+            // s'obtenir en jeu, sinon l'échoppe et le don d'orbe du tutoriel
+            // n'ont plus lieu d'être. Une de chaque suffit à comprendre le
+            // principe ; la suite se gagne sur le terrain.
+            orbes:               0,
             lumens:              0,
             echoFoldersUnlocked: {},  // { cardId: true }
-            pellicules:          3,   // révèle les entrées visuelles
-            encre:               3,   // révèle les entrées textuelles
-            cassettes:           3,   // révèle les entrées audio
+            pellicules:          1,   // révèle les entrées visuelles
+            encre:               1,   // révèle les entrées textuelles
+            cassettes:           1,   // révèle les entrées audio
         };
         let collectedDustPoints = [];
 
