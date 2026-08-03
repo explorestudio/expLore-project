@@ -1914,6 +1914,35 @@
             position: relative;
         }
 
+        /* ── Bouton de la musique d'ambiance ────────────────────────── */
+        .bg-music-toggle {
+            position: absolute;
+            top: 64px; right: 14px;
+            z-index: 1000;
+            width: 40px; height: 40px;
+            padding: 0; border: none; border-radius: 50%;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(6px);
+            color: #6b7280;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.14);
+            transition: transform 0.12s ease, background 0.2s ease, color 0.2s ease;
+        }
+        .bg-music-toggle:hover  { transform: scale(1.05); }
+        .bg-music-toggle:active { transform: scale(0.94); }
+        .bg-music-toggle.on {
+            color: #7C3AED;
+            background: rgba(255,255,255,0.98);
+            box-shadow: 0 2px 12px rgba(124,58,237,0.32);
+        }
+        .bg-music-icon { transition: opacity 0.2s ease, transform 0.2s ease; }
+        .bg-music-toggle.on .bg-music-icon-on { animation: bgMusicPop 0.2s ease-out; }
+        @keyframes bgMusicPop {
+            from { opacity: 0; transform: scale(0.82); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
         /* ── Zone flavor text / dialogue inline (dans la carte) ──── */
         .card-flavor-zone {
             position: absolute;
@@ -7552,7 +7581,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.58.0 · Port demo.html : visuels multi-niveaux (mécanisme `artByLevel`, inerte tant qu'aucune carte ne le déclare) + fiche carte retouchée (panneau d'infos fermé et élargi, rangée des visuels logée dans la boîte de dialogue, fond translucide laissant voir l'illustration).</div>
+            <div class="hud-version" id="hudVersion">v0.59.0 · Port demo.html : musique d'ambiance (active par défaut, démarre au clic sur « Commencer l'aventure », bouton de coupure en haut à droite, atténuation pendant une entrée audio du carnet).</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -9443,6 +9472,25 @@
         </div>
         </div>
 
+        <!-- ── MUSIQUE D'AMBIANCE ── -->
+        <!-- preload="none" : la piste fait 2,7 Mo. Elle n'est téléchargée qu'au
+             moment où la lecture démarre, en fin de cinématique d'intro. -->
+        <audio id="bgMusic" src="./assets/audio/ambient_bg.mp3" loop preload="none"></audio>
+        <button id="bgMusicToggle" class="bg-music-toggle" type="button"
+                onclick="BgMusic.toggle()" aria-label="Désactiver la musique">
+            <svg class="bg-music-icon bg-music-icon-on" viewBox="0 0 24 24" width="21" height="21" style="display:none">
+                <path d="M9 18V5l12-2v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="6" cy="18" r="3" fill="currentColor"/>
+                <circle cx="18" cy="16" r="3" fill="currentColor"/>
+            </svg>
+            <svg class="bg-music-icon bg-music-icon-off" viewBox="0 0 24 24" width="21" height="21">
+                <path d="M9 18V5l12-2v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
+                <circle cx="6" cy="18" r="3" fill="currentColor" opacity="0.4"/>
+                <circle cx="18" cy="16" r="3" fill="currentColor" opacity="0.4"/>
+                <line x1="3" y1="21" x2="21" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+
         <!-- ── LEVEL-UP OVERLAY ── -->
         <div id="levelupOverlay" class="levelup-overlay" onclick="closeLevelupOverlay()">
             <div class="levelup-burst" id="levelupBurst">⭐</div>
@@ -11065,6 +11113,9 @@
         }
 
         function finishIntroBD() {
+            // Le clic sur « Commencer l'aventure » est le geste qui autorise la
+            // lecture audio : c'est ici que la musique d'ambiance démarre.
+            if (typeof BgMusic !== 'undefined') BgMusic.start();
             const cinema = document.getElementById('introBDCinematic');
             cinema.style.transition = 'opacity 0.6s ease';
             cinema.style.opacity = '0';
@@ -13001,6 +13052,7 @@
                 return; // ne pas démarrer l'app : on recharge proprement
             }
             startApp();
+            BgMusic.init();   // musique d'ambiance : rien ne démarre ici
             setTimeout(() => {
                 initJoystick();
                 if (isMobileDevice && 'geolocation' in navigator) {
@@ -19955,6 +20007,153 @@
                 if (el) el.classList.add('active');
             }
         }
+
+        // ══════════════════════════════════════════════════════════════
+        // MUSIQUE D'AMBIANCE
+        // Active par défaut, état persistant, ducking pendant la lecture
+        // d'une entrée audio du carnet. Jamais de lecture sans geste du
+        // joueur : le démarrage est le bouton « Commencer l'aventure » en
+        // fin de cinématique (start()). Sur une partie déjà entamée, la
+        // cinématique ne rejoue pas — on reprend au premier tap.
+        // ══════════════════════════════════════════════════════════════
+        const BgMusic = (function () {
+            const KEY_ENABLED = 'lyon_cards_music_enabled';
+            const VOL_NORMAL  = 0.35;    // ambiance de fond, pas bande-son
+            const VOL_DUCKED  = 0.035;   // 10 % du volume normal
+            const FADE_DOWN   = 400;
+            const FADE_UP     = 600;
+
+            let audioEl = null, btn = null, iconOn = null, iconOff = null;
+            let enabled = true;
+            let pendingStart = false;   // ON, en attente d'un geste du joueur
+            let ducked = false;
+            let fadeTimer = null;
+
+            function _read(key) {
+                try { return localStorage.getItem(key); } catch (e) { return null; }
+            }
+            function _write(key, val) {
+                try { localStorage.setItem(key, val); } catch (e) {}
+            }
+
+            // La cinématique d'intro est-elle à l'écran ? Tant qu'elle l'est, on
+            // n'arme pas la reprise au premier tap : le démarrage appartient au
+            // bouton de fin de cinématique.
+            function _introPlaying() {
+                const el = document.getElementById('introBDCinematic');
+                if (!el || el.classList.contains('hidden')) return false;
+                const cs = getComputedStyle(el);
+                return cs.display !== 'none' && cs.visibility !== 'hidden'
+                    && parseFloat(cs.opacity || '1') > 0.05;
+            }
+
+            function init() {
+                audioEl = document.getElementById('bgMusic');
+                btn     = document.getElementById('bgMusicToggle');
+                if (!audioEl || !btn) return;
+                iconOn  = btn.querySelector('.bg-music-icon-on');
+                iconOff = btn.querySelector('.bg-music-icon-off');
+
+                audioEl.volume = VOL_NORMAL;
+                enabled = (_read(KEY_ENABLED) !== 'false');   // ON par défaut
+                updateUI();
+
+                // Politique autoplay : rien ne démarre sans geste du joueur.
+                if (enabled) {
+                    pendingStart = true;
+                    if (!_introPlaying()) {
+                        document.addEventListener('click',      _firstTap, { once: true, capture: true });
+                        document.addEventListener('touchstart', _firstTap, { once: true, capture: true });
+                    }
+                }
+
+                document.addEventListener('visibilitychange', _visibility);
+                _setupDucking();
+            }
+
+            // Démarrage explicite — appelé en fin de cinématique d'intro
+            function start() {
+                if (!audioEl || !enabled) return;
+                audioEl.volume = ducked ? VOL_DUCKED : VOL_NORMAL;
+                audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
+            }
+
+            function _firstTap() {
+                if (pendingStart && enabled) {
+                    audioEl.volume = ducked ? VOL_DUCKED : VOL_NORMAL;
+                    audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
+                }
+            }
+
+            function toggle() {
+                enabled = !enabled;
+                _write(KEY_ENABLED, String(enabled));
+                updateUI();
+                if (enabled) {
+                    // Reprise déjà atténuée si une entrée du carnet joue
+                    audioEl.volume = ducked ? VOL_DUCKED : VOL_NORMAL;
+                    audioEl.play().catch(function () {});
+                    pendingStart = false;
+                } else {
+                    if (fadeTimer) { clearInterval(fadeTimer); fadeTimer = null; }
+                    audioEl.pause();   // pause, pas stop : la reprise se fait en place
+                }
+            }
+
+            function updateUI() {
+                btn.classList.toggle('on', enabled);
+                if (iconOn)  iconOn.style.display  = enabled ? '' : 'none';
+                if (iconOff) iconOff.style.display = enabled ? 'none' : '';
+                btn.setAttribute('aria-label', enabled ? 'Désactiver la musique' : 'Activer la musique');
+            }
+
+            function _visibility() {
+                if (!enabled) return;
+                if (document.hidden) audioEl.pause();
+                else if (!pendingStart) audioEl.play().catch(function () {});
+            }
+
+            function _fadeTo(target, ms) {
+                if (fadeTimer) { clearInterval(fadeTimer); fadeTimer = null; }
+                if (!enabled) { audioEl.volume = target; return; }   // OFF : rien à entendre
+                const from  = audioEl.volume;
+                const delta = target - from;
+                const steps = 20;
+                let n = 0;
+                fadeTimer = setInterval(function () {
+                    n++;
+                    audioEl.volume = Math.max(0, Math.min(1, from + delta * (n / steps)));
+                    if (n >= steps) {
+                        clearInterval(fadeTimer);
+                        fadeTimer = null;
+                        audioEl.volume = target;
+                    }
+                }, ms / steps);
+            }
+
+            // Écoute passive des entrées audio du carnet : on ne touche pas à
+            // leur logique. `play`/`pause`/`ended` ne bouillonnent pas, d'où la
+            // capture sur document. Sans entrée audio, ce hook ne fait rien.
+            function _setupDucking() {
+                function isJournalAudio(el) {
+                    return el && el.tagName === 'AUDIO' && el.closest && el.closest('.jsb-audio');
+                }
+                document.addEventListener('play', function (e) {
+                    if (!isJournalAudio(e.target)) return;
+                    ducked = true;
+                    _fadeTo(VOL_DUCKED, FADE_DOWN);
+                }, true);
+                ['pause', 'ended'].forEach(function (evt) {
+                    document.addEventListener(evt, function (e) {
+                        if (!isJournalAudio(e.target)) return;
+                        ducked = false;
+                        _fadeTo(VOL_NORMAL, FADE_UP);
+                    }, true);
+                });
+            }
+
+            return { init: init, toggle: toggle, start: start };
+        })();
 
         // ==================== JOURNAL ====================
 
