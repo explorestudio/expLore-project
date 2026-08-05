@@ -19775,11 +19775,13 @@
                     let style = '';
                     if (caseDef.narrationSize === 'tiny')  style = 'font-size:8.5px;padding:3px 5px;line-height:1.2;';
                     if (caseDef.narrationSize === 'micro') style = 'font-size:7px;padding:2px 4px;line-height:1.15;';
-                    html += '<div class="' + cls + '" style="' + style + '">' + caseDef.narration + '</div>';
+                    html += '<div class="' + cls + '" style="' + style + '">' + T(caseDef.narration) + '</div>';
                 }
                 if (caseDef.bubble) {
                     const bp = caseDef.bubble.pos || { top: '10%', left: '10%' };
-                    html += '<div class="ibd-bubble" style="top:' + bp.top + ';left:' + bp.left + ';">' + caseDef.bubble.text.replace(/\n/g, '<br>') + '</div>';
+                    // T() AVANT la conversion \n → <br> : une fois la bulle scindée
+                    // en deux nœuds texte, la clé multi-ligne ne peut plus mordre.
+                    html += '<div class="ibd-bubble" style="top:' + bp.top + ';left:' + bp.left + ';">' + T(caseDef.bubble.text).replace(/\n/g, '<br>') + '</div>';
                 }
                 el.innerHTML = html;
 
