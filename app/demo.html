@@ -3734,6 +3734,119 @@
             transform: rotate(-0.8deg);
         }
 
+        /* ── Corps de texte découpé en paragraphes (voix « je » de la carte) ── */
+        .jsb-body p { margin: 0 0 0.9em; }
+        .jsb-body p:last-child { margin-bottom: 0; }
+
+        /* Réponse masquée, révélée au tap (mini-question posée dans le corps) */
+        .jsb-spoiler {
+            display: inline-block;
+            padding: 0 6px; border-radius: 2px;
+            background: var(--jsb-ink); color: transparent;
+            cursor: pointer; -webkit-user-select: none; user-select: none;
+            transition: background 0.25s ease, color 0.25s ease;
+        }
+        .jsb-spoiler.on { background: rgba(185,138,62,0.22); color: var(--jsb-ink); }
+
+        /* Paragraphe préfixé « >> » : encart lettre / coupure collée */
+        .jsb-letter {
+            margin: 4px 6px 16px;
+            padding: 12px 14px;
+            background: rgba(255,250,235,0.7);
+            border: 1px solid rgba(160,120,50,0.3);
+            border-left: 3px solid var(--jsb-warm);
+            box-shadow: 0 2px 8px rgba(60,35,10,0.14);
+            transform: rotate(-0.5deg);
+            font-family: var(--jsb-serif); font-style: italic;
+            font-size: 12px; line-height: 1.8; color: var(--jsb-ink-soft);
+        }
+
+        /* ── Gabarit `links_screen` : sorties vers le web, hors du carnet ── */
+        .jsb-links { margin: 4px 2px 14px; }
+        .jsb-link {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 10px; padding: 10px 12px;
+            background: #fbf6ea;
+            border: 1px solid rgba(160,120,50,0.26);
+            box-shadow: 0 2px 7px rgba(60,35,10,0.16);
+            text-decoration: none; color: var(--jsb-ink);
+        }
+        .jsb-link:nth-child(odd)  { transform: rotate(-0.5deg); }
+        .jsb-link:nth-child(even) { transform: rotate(0.6deg); }
+        .jsb-link-mark {
+            flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(47,92,58,0.35);
+            color: var(--jsb-accent); font-size: 13px;
+        }
+        .jsb-link-txt { flex: 1 1 auto; min-width: 0; display: block; }
+        .jsb-link-label {
+            display: block;
+            font-family: var(--jsb-serif); font-size: 11.5px;
+            font-weight: 600; letter-spacing: 0.3px;
+        }
+        .jsb-link-caption {
+            display: block;
+            font-family: var(--jsb-hand); font-size: 12.5px;
+            color: var(--jsb-ink-soft); line-height: 1.35;
+        }
+        .jsb-link-ext { flex: 0 0 auto; color: var(--jsb-accent); font-size: 14px; }
+        /* URL pas encore confirmée : la ligne reste lisible mais inerte */
+        .jsb-link.pending { opacity: 0.72; cursor: default; }
+        .jsb-link-todo {
+            font-family: var(--jsb-serif); font-style: italic; font-size: 9.5px;
+            color: rgba(90,62,25,0.6);
+        }
+
+        /* ── Gabarit `timeline_page` : frise statique, deux pavillons ── */
+        .jsb-tl { margin: 2px 0 10px; }
+        .jsb-tl-head { display: flex; gap: 8px; padding-left: 62px; margin-bottom: 6px; }
+        .jsb-tl-head span {
+            flex: 1 1 0;
+            font-family: var(--jsb-serif); font-size: 9px;
+            letter-spacing: 0.7px; text-transform: uppercase;
+            color: var(--jsb-ink-soft); opacity: 0.75; text-align: center;
+        }
+        .jsb-tl-row {
+            position: relative;
+            display: flex; gap: 8px; align-items: stretch;
+            padding: 0 0 12px 62px;
+        }
+        /* Axe vertical continu — s'arrête au dernier repère */
+        .jsb-tl-row::before {
+            content: ''; position: absolute;
+            left: 52px; top: 6px; bottom: -2px; width: 1px;
+            background: rgba(120,85,35,0.35);
+        }
+        .jsb-tl-row:last-child::before { bottom: auto; height: 6px; }
+        .jsb-tl-row::after {
+            content: ''; position: absolute;
+            left: 49px; top: 4px; width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--jsb-gold);
+            box-shadow: 0 0 0 2px var(--jsb-paper);
+        }
+        .jsb-tl-when {
+            position: absolute; left: 0; top: 1px; width: 46px;
+            font-family: var(--jsb-serif); font-size: 9.5px; line-height: 1.25;
+            font-weight: 600; color: var(--jsb-warm); text-align: right;
+            /* « Aujourd'hui » dépasse la colonne : on le laisse se couper */
+            overflow-wrap: break-word;
+            -webkit-hyphens: auto; hyphens: auto;
+        }
+        .jsb-tl-cell {
+            flex: 1 1 0; min-width: 0;
+            display: flex; gap: 6px; align-items: flex-start;
+            padding: 6px 8px;
+            background: rgba(255,250,235,0.6);
+            border: 1px solid rgba(160,120,50,0.22);
+            font-family: var(--jsb-serif); font-size: 10.5px; line-height: 1.45;
+            color: var(--jsb-ink);
+        }
+        /* Repère sans événement de ce côté : place tenue, aucun cadre visible */
+        .jsb-tl-cell.empty { background: none; border: none; }
+        .jsb-tl-ico { flex: 0 0 auto; font-size: 12px; line-height: 1.2; }
+
         /* ══ Dossier photo : consultation plein écran, 1 image à la fois ══ */
         .jsb-dsr {
             position: fixed; inset: 0; z-index: 860;
@@ -12981,10 +13094,14 @@
         // ══════════════════════════════════════
 
         // ── Carte tutoriel ──
+        // demo-ot v0.2 — contenu éditorial carte OT (Canelle)
         // DÉMO OT — Carte unique. On conserve l'id 'ob_tutorial_card' (câblé en
         // dur dans le rituel, le guide, la révélation gratuite, la sauvegarde) et
         // on rhabille uniquement le contenu. Invisible pour le joueur : il voit
-        // « Office du Tourisme » partout. Contenu éditorial = placeholders (Canelle).
+        // « Office du Tourisme » partout. Contenu éditorial : Canelle — 3 arcs
+        // intégrés ; restent à fournir l'incipit, l'indice, l'affiche du
+        // Rectangle et le fronton vide de Mars.
+        // Coordonnées réelles du lieu : 45.75718567058155 / 4.833052975484796.
         const OB_TUTORIAL_CARD = {
             id: 'ob_tutorial_card',
             cardKind: 'lore',
@@ -14530,41 +14647,78 @@
 
             // ── LE PASSANT (Tutoriel lore, Histoire) ──
             // ── OFFICE DU TOURISME (carte unique de la démo) ──
-            // rare → 3 chapitres × 3 entrées carnet = 9 entrées « heart ».
-            // Contenu = PLACEHOLDERS (Canelle finalisera après recherches).
-            // _revealed:true sur chaque entrée → dévoilée sans encre (démo sans
-            // friction ressource). Trivia (heart:false) pour l'ambiance.
+            // rare → 3 arcs × 3 entrées carnet = 9 entrées « heart ».
+            // Contenu éditorial : Canelle. Voix à la première personne (la carte
+            // parle) et tutoiement du joueur — ne pas neutraliser en style
+            // encyclopédique. Le texte de chaque entrée vit ICI et nulle part
+            // ailleurs : JSB_ENTRIES ne porte que la mise en page.
+            // Balisage disponible dans `text` : ligne vide = paragraphe,
+            // « >> » en tête = encart lettre, {{sp:…}} = réponse masquée.
+            // _revealed:true sur l'arc 1 → offert, le carnet n'est pas vide au
+            // premier regard. Trivia (heart:false) pour l'ambiance.
             ob_tutorial_card: [
-                // ─ Chapitre 1 (niveau 0) — « déjà écrites par la présence tutélaire » ─
-                { text: "[Dialogue placeholder — l'Office du Tourisme se souvient…]", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
-                { text: "[Fragment tutélaire 1]", heart: true, level: 0,
-                  entry: { date: "Office du Tourisme · Chapitre I — 1", text: "[Fragment posé par la présence tutélaire — texte à finaliser]", photo: null, audio: null, _revealed: true } },
-                { text: "[Fragment tutélaire 2]", heart: true, level: 0,
-                  entry: { date: "Office du Tourisme · Chapitre I — 2", text: "[Fragment posé par la présence tutélaire — texte à finaliser]", photo: null, audio: null, _revealed: true } },
-                { text: "[Fragment tutélaire 3]", heart: true, level: 0,
-                  entry: { date: "Office du Tourisme · Chapitre I — 3", text: "[Fragment posé par la présence tutélaire — texte à finaliser]", photo: null, audio: null, _revealed: true } },
+                // ─ Arc 1 (niveau 0) — « Bienvenue à l'Office du Tourisme ! » ─
+                { text: "Tout le monde passe devant moi. Peu s'arrêtent pour se demander ce que j'étais avant.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "Neuf heures à dix-huit heures, tous les jours. Je n'ai pas des horaires de monument, j'ai des horaires de maison.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                { text: "Je suis le Pavillon qui aime accueillir les curieux. Toi compris.", heart: true, level: 0,
+                  entry: { date: "Arc I · Un point de départ pour découvrir Lyon",
+                    text: "Au cœur de Lyon, je suis le Pavillon qui aime accueillir les curieux : visiteurs, Lyonnais et même toi se croisent avant de repartir explorer la métropole.\n\n"
+                        + "J'ouvre mes portes tous les jours de 9 h à 18 h et tu peux trouver en mon sein mes alliés pour t'aider avec des conseils personnalisés, de la documentation, un grand écran, une borne d'information Vélo'v et… du wifi gratuit si tu es à court de data.\n\n"
+                        + "Si tu as l'œil tu reconnaîtras un grand chef qui nous a quitté en 2018 ! Il trône très fier à l'intérieur pour faire un selfie si ça te dit ? Quel est son nom ? {{sp:Paul Bocuse}}",
+                    photo: null, audio: null, _revealed: true } },
+                { text: "Trois images de moi, prises à trois moments différents. Regarde-les défiler.", heart: true, level: 0,
+                  entry: { date: "Arc I · Un point de départ pour découvrir Lyon",
+                    text: "On me visite comme on feuillette un carnet : la façade d'abord, puis le grand écran, puis quelqu'un à qui parler. Trois images, trois façons d'entrer chez moi.",
+                    photo: 'placeholder_visual', audio: null, _revealed: true } },
+                { text: "Une partie de moi tient dans ta poche. Emporte-la.", heart: true, level: 0,
+                  entry: { date: "Arc I · Un point de départ pour découvrir Lyon",
+                    text: "Je ne tiens pas entièrement dans mes murs. Une partie de moi vit sur un écran, et celle-là, tu peux l'emporter avec toi.",
+                    photo: null, audio: null, _revealed: true } },
 
-                // ─ Chapitre 2 (niveau 1) — à révéler par le joueur ─
+                // ─ Arc 2 (niveau 1) — « Un pavillon peut en cacher un autre » ─
                 // Plus de `_revealed: true` à partir d'ici : ces entrées se dévoilent
                 // contre une fourniture (pellicule / cassette / encre selon leur type),
-                // à prendre à l'Échoppe de Bellecour. Seul le chapitre I reste offert,
+                // à prendre à l'Échoppe de Bellecour. Seul l'arc 1 reste offert,
                 // pour que le carnet ne soit pas vide au premier regard.
-                { text: "[Dialogue placeholder — l'Office du Tourisme se souvient…]", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
-                { text: "[Entrée chapitre II — 1]", heart: true, level: 1,
-                  entry: { date: "Office du Tourisme · Chapitre II — 1", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null } },
-                { text: "[Entrée chapitre II — 2]", heart: true, level: 1,
-                  entry: { date: "Office du Tourisme · Chapitre II — 2", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null } },
-                { text: "[Entrée chapitre II — 3]", heart: true, level: 1,
-                  entry: { date: "Office du Tourisme · Chapitre II — 3", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null } },
+                { text: "Regarde à l'autre bout de la place. Quelqu'un me ressemble beaucoup trop pour que ce soit un hasard.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "Mars veillait sur mon fronton. On l'a décroché en 1956, et personne ne l'a remplacé.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
+                { text: "Je ne suis pas seul sur cette place. Nous sommes deux, et on nous a voulus semblables.", heart: true, level: 1,
+                  entry: { date: "Arc II · Un pavillon peut en cacher un autre",
+                    text: "Tu me crois seul sur cette place ? Regarde à l'autre bout : un pavillon me fait face, même taille, même allure. Nous avons été pensés comme une paire, un accord de symétrie posé sur Bellecour.\n\n"
+                        + "Un siècle et demi plus tard, nous nous ressemblons encore — à quelques détails près. Ce sont ces détails qui racontent tout.",
+                    photo: 'placeholder_visual', audio: null } },
+                { text: "Lève les yeux sur les frontons. L'un a gardé son dieu, l'autre a perdu le sien.", heart: true, level: 1,
+                  entry: { date: "Arc II · Un pavillon peut en cacher un autre",
+                    text: "Observez les frontons ! L'un porte encore une figure d'Apollon, dieu des arts, de la musique et de la lumière, sculptée par Joseph-Hugues Fabisch. L'autre paraît aujourd'hui beaucoup plus sobre… mais son fronton n'a pas toujours été vide : il était autrefois orné de Mars, dieu de la guerre, rappelant parfaitement son ancienne fonction. Une idée de laquelle ?\n\n"
+                        + "La sculpture fut retirée en 1956. Deux pavillons presque jumeaux, donc, mais deux symboles opposés : les arts d'un côté, l'autorité militaire de l'autre. Une opposition qui correspond étonnamment bien à leur histoire, même si rien ne permet encore d'affirmer qu'elle avait été pensée ainsi dès l'origine.",
+                    photo: 'placeholder_visual', audio: null } },
+                { text: "Maison de Lyon, puis le Rectangle, puis des bureaux. On m'a donné trois noms en un demi-siècle.", heart: true, level: 1,
+                  entry: { date: "Arc II · Un pavillon peut en cacher un autre",
+                    text: "Au milieu du XXème siècle, c'est déjà un lieu dédié à la culture lyonnaise. Sous le nom de « Maison de Lyon », le bâtiment est un centre d'art contemporain et un lieu d'exposition municipal. Ce n'est qu'en 1998 qu'il prend le nom du Rectangle. Il accueillera régulièrement des événements liés à la Biennale de Lyon.\n\n"
+                        + "Le pavillon a ensuite cessé ses activités artistiques début 2006 pour devenir les bureaux de l'Office du Tourisme de Lyon.",
+                    photo: null, audio: null } },
 
-                // ─ Chapitre 3 (niveau 2) — à révéler par le joueur ─
-                { text: "[Dialogue placeholder — l'Office du Tourisme se souvient…]", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
-                { text: "[Entrée chapitre III — 1]", heart: true, level: 2,
-                  entry: { date: "Office du Tourisme · Chapitre III — 1", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null } },
-                { text: "[Entrée chapitre III — 2]", heart: true, level: 2,
-                  entry: { date: "Office du Tourisme · Chapitre III — 2", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null } },
-                { text: "[Entrée chapitre III — 3]", heart: true, level: 2,
-                  entry: { date: "Office du Tourisme · Chapitre III — 3", text: "[Entrée à rédiger — recherche en cours]", photo: null, audio: null } }
+                // ─ Arc 3 (niveau 2) — « Une histoire de destins liés » ─
+                { text: "Avant la pierre, il y a eu des planches. Et avant les planches, un refus.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+                { text: "Corps de garde, poste de police, bureau du tourisme : j'ai toujours servi à renseigner quelqu'un. Sur des routes, ou sur des ennemis.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+                { text: "Cette place a bien failli ne jamais nous connaître.", heart: true, level: 2,
+                  entry: { date: "Arc III · Une histoire de destins liés",
+                    text: "Il faut savoir que cette grande place où tu marches n'a failli jamais connaître ces bâtiments. Une opposition préfectorale rappelle à la ville qu'elle ne peut bâtir aucune maison, ni édifice, soit pour le public ou les particuliers ni même pour quelque usage que ce puisse être.\n\n"
+                        + "Cependant, par l'astuce de l'esthétique, un nouveau et joli Corps-de-garde en forme de tente est érigé en mars 1828 du côté de la verdure de la Place Bellecour. Habile ! L'année qui suit, l'homme d'affaires Adrien-Alfred Granier obtient l'autorisation d'élever, à l'autre extrémité, un pavillon de même allure en planches et mortier.\n\n"
+                        + "Ce dernier sera un café, il ouvre dès le 21 juin 1829 sous la direction de Garnier et son épouse qu'on appellera « La Reine des Tilleuls », petit clin d'œil pour les arbres se trouvant de ce côté de la place.",
+                    photo: null, audio: null } },
+                { text: "Les flammes, puis la faillite, puis un couple qui rachète les ruines. La suite tient en une page.", heart: true, level: 2,
+                  entry: { date: "Arc III · Une histoire de destins liés",
+                    // Le premier bloc est l'anecdote-lettre de Canelle : « >> » la
+                    // rend comme une coupure collée dans le carnet.
+                    text: ">> Les Pavillons traversent ensuite des années mouvementées. En 1831, le Corps-de-garde disparaît dans les flammes lors de la première révolte des Canuts, tandis que le Pavillon des époux Girard résiste. Il grandit même peu à peu, mais… En 1839, les Girard criblés de dettes, font faillite. La fête était finie !\n"
+                        + "Ce qui reste finira par rester à l'abandon jusqu'à ce qu'un certain Jean-Baptiste Vollot et son épouse Agathe Dupont s'y installent.\n\n"
+                        + "Au milieu du XIXème siècle, changement de décor ! Jean-Baptiste Vollot permettra l'impulsion qui mènera à la reconstruction entière des deux pavillons de Bellecour. Fini les constructions légères : sous la direction des architectes René Dardel et Tony Desjardins, le Corps-de-garde et son pendant sont rebâtis en pierre de taille. L'opération coûtera cher, au point que Vollot fera appel à plusieurs investisseurs et artisans lyonnais pour mener le chantier à terme. Le 21 octobre 1856, l'ancien Café du Pavillon renaît sous un nom autrement plus éclatant : la Maison Dorée et le Corps-de-Garde sera bientôt flambant neuf.",
+                    photo: null, audio: null } },
+                { text: "Mets nos deux vies côte à côte. Elles se répondent plus qu'elles ne se ressemblent.", heart: true, level: 2,
+                  entry: { date: "Arc III · Une histoire de destins liés",
+                    text: "Mets nos deux histoires l'une à côté de l'autre et suis-les de haut en bas. Ce ne sont pas deux vies parallèles : ce sont deux vies qui se répondent.",
+                    photo: null, audio: null } }
             ],
 
             // ── GUIGNOL (Commune, Arts) ──
@@ -14863,7 +15017,11 @@
 
         // ==================== STATE ====================
 
-        let playerPos = { lat: 45.7576, lng: 4.8324 }; // DÉMO OT : spawn forcé à l'Office du Tourisme (place Bellecour sud)
+        // DÉMO OT : spawn forcé devant l'Office du Tourisme (place Bellecour sud).
+        // Position calée pour que le marqueur de la carte, posé à +0.00045 /
+        // +0.00030 du joueur par _obSpawnTutorialMarker(), tombe sur les
+        // coordonnées réelles de l'OT (45.75718567 / 4.83305298).
+        let playerPos = { lat: 45.756736, lng: 4.832753 };
         let collectedCards = [];
 
         // ── Sauvegarde / Chargement ──
@@ -15567,7 +15725,7 @@
         }
 
         function initMap() {
-            playerPos = { lat: 45.7576, lng: 4.8324 }; // DÉMO OT : spawn à l'Office du Tourisme
+            playerPos = { lat: 45.756736, lng: 4.832753 }; // DÉMO OT : spawn devant l'Office du Tourisme
             document.getElementById('dustCounter').textContent = memorialDust;
             createMap();
         }
@@ -21946,178 +22104,186 @@
 
         // ══════════════════════════════════════════════════════════════
         // CARNET SCRAPBOOK — gabarits d'entrée de la carte OT
-        // 5 gabarits (image_citation, image_anecdote_postit,
-        // illustration_list, two_images_compare, audio_entry), appliqués
-        // aux 9 entrées de la carte OT. Contenus = placeholders :
-        // Canelle rédigera. Ce bloc, l'overlay #jsbDossier et le point
-        // d'appel dans renderJournalBio se retirent d'un seul tenant.
+        // 7 gabarits (image_citation, image_anecdote_postit,
+        // illustration_list, two_images_compare, audio_entry,
+        // links_screen, timeline_page), appliqués aux 9 entrées de la
+        // carte OT. Ce bloc, l'overlay #jsbDossier et le point d'appel
+        // dans renderJournalBio se retirent d'un seul tenant.
         //
-        // Images : chemins définitifs prévus ./assets/journal/ot_aX_pY.png.
-        // Tant qu'ils n'existent pas, on pointe des assets présents pour
-        // juger du rendu ; un fichier manquant bascule sur « Image à
-        // venir » sans 404 fatal.
+        // MISE EN PAGE SEULEMENT : le texte des entrées vient de
+        // CARD_DIALOGUES (`entry.text`). Un gabarit ne déclare un `body`
+        // que s'il veut s'écarter de ce texte.
+        //
+        // Images : ./assets/Cards/Office_du_tourisme/ — casse exacte
+        // (`Cards` avec C majuscule), sans espace ni accent, GitHub Pages
+        // et le wrap APK y sont sensibles. Une clé `image` absente = entrée
+        // texte-seul, aucun emplacement photo. Une clé renseignée dont le
+        // fichier manque bascule sur « Image à venir » sans 404 fatal.
         // ══════════════════════════════════════════════════════════════
         const JSB_ENTRIES = {
             ob_tutorial_card: [
-                // ─── Arc 1 (niveau 0) — posées par la présence tutélaire ───
+                // ─── Arc 1 (niveau 0) — « Bienvenue à l'Office du Tourisme ! » ───
                 {
+                    // Texte-seul : pas de clé `image`, donc aucun emplacement photo.
                     level: 0, index: 0,
                     template: 'image_citation',
-                    title: "[Titre de l'entrée — à rédiger]",
-                    image: './assets/Office1.png',
-                    imageCaption: '[légende manuscrite — à rédiger]',
-                    body: "[Fragment posé par la présence tutélaire — texte à finaliser. "
-                        + "Quatre à six lignes de corps de texte, de quoi juger du gris "
-                        + "typographique, de la justification et de l'interlignage sur la "
-                        + "largeur d'un écran mobile.]",
-                    quote: '[citation manuscrite — à rédiger]',
-                    decorations: ['tape_top', 'tape_corner', 'stamp_lyon_patrimoine'],
-                    dossier: {
-                        title: '[Dossier — à nommer]',
-                        photos: [
-                            { src: './assets/Office1.png',      caption: '[légende 1 — à rédiger]' },
-                            { src: './assets/intro/case1.png',  caption: '[légende 2 — à rédiger]' },
-                            { src: './assets/intro/case2.png',  caption: '[légende 3 — à rédiger]' },
-                        ],
-                    },
+                    title: "Bienvenue à l'Office du Tourisme !",
+                    quote: 'Ouvert tous les jours, 9 h – 18 h.',
+                    decorations: ['tape_top', 'stamp_lyon_patrimoine'],
                 },
                 {
+                    // Diaporama : la première photo tient la page, les trois se
+                    // parcourent dans le dossier (swipe / pastilles / flèches).
                     level: 0, index: 1,
-                    template: 'image_anecdote_postit',
-                    title: '[Titre — à rédiger]',
-                    image: './assets/intro/case3.png',
-                    imageSide: 'right',
-                    body: "[Fragment posé par la présence tutélaire — texte à finaliser. "
-                        + "Le texte s'écoule autour de l'image collée, puis le post-it "
-                        + "vient par-dessus, en bas de page.]",
-                    postit: { color: 'yellow', text: '[note manuscrite — à rédiger]' },
+                    template: 'image_citation',
+                    title: 'Entrer, regarder, demander',
+                    image: './assets/Cards/Office_du_tourisme/ot_a1_diapo1_facade.jpg',
+                    imageCaption: 'Vous ne savez pas par où commencer ? Entrez.',
                     decorations: ['tape_corner'],
                     dossier: {
-                        title: '[Dossier — à nommer]',
+                        title: 'Trois regards sur le Pavillon',
                         photos: [
-                            { src: './assets/intro/case3.png', caption: '[légende 1 — à rédiger]' },
-                            { src: './assets/intro/case4.png', caption: '[légende 2 — à rédiger]' },
-                            { src: './assets/intro/case5.png', caption: '[légende 3 — à rédiger]' },
+                            { src: './assets/Cards/Office_du_tourisme/ot_a1_diapo1_facade.jpg',
+                              caption: 'Vous ne savez pas par où commencer ? Entrez.' },
+                            { src: './assets/Cards/Office_du_tourisme/ot_a1_diapo2_ecran.jpg',
+                              caption: 'Trouvez des idées adaptées à vos attentes et demandez conseil aux Lyon City Experts.' },
+                            { src: './assets/Cards/Office_du_tourisme/ot_a1_diapo3_conseillers.jpg',
+                              caption: 'Demandez conseil aux Lyon City Experts.' },
                         ],
                     },
                 },
                 {
                     level: 0, index: 2,
-                    template: 'illustration_list',
-                    title: '[Titre — à rédiger]',
-                    image: './assets/parchemin.png',
-                    body: "[Fragment posé par la présence tutélaire — texte à finaliser.]",
-                    listTitle: 'À observer',
-                    list: ['[à observer 1]', '[à observer 2]', '[à observer 3]'],
-                    decorations: ['paperclip_top', 'corner_fold'],
+                    template: 'links_screen',
+                    title: 'Me retrouver ailleurs',
+                    // URL OnlyLyon à confirmer avec David : tant que `href` est
+                    // null, la ligne s'affiche mais n'ouvre rien. On n'invente
+                    // aucune adresse. Site pressenti : https://www.lyon-france.com
+                    links: [
+                        { icon: '🌐', label: 'Le site',
+                          caption: 'Un site pour préparer votre découverte de Lyon',
+                          href: null },
+                        { icon: '📱', label: "L'application",
+                          caption: 'Une app qui vous accompagne dans Lyon',
+                          href: null },
+                    ],
+                    decorations: ['paperclip_top'],
                 },
 
-                // ─── Arc 2 (niveau 1) — à révéler ───
+                // ─── Arc 2 (niveau 1) — « Un pavillon peut en cacher un autre » ───
                 {
                     level: 1, index: 0,
-                    template: 'image_citation',
-                    title: '[Titre — à rédiger]',
-                    image: './assets/Office2.png',
-                    imageCaption: '[légende manuscrite — à rédiger]',
-                    body: '[Entrée à rédiger — recherche en cours.]',
-                    quote: '[citation manuscrite — à rédiger]',
-                    decorations: ['tape_top', 'stamp_date'],
+                    template: 'two_images_compare',
+                    title: 'Un bâtiment jumeau',
+                    imageLeft: './assets/Cards/Office_du_tourisme/ot_a2_pavillon_epoque.png',
+                    imageLeftLabel: 'Autrefois',
+                    imageRight: './assets/Cards/Office_du_tourisme/ot_a2_pavillon_actuel.png',
+                    imageRightLabel: "Aujourd'hui",
+                    decorations: ['tape_top'],
                     dossier: {
-                        title: '[Dossier — à nommer]',
+                        title: 'Les deux pavillons',
                         photos: [
-                            { src: './assets/Office2.png',     caption: '[légende 1 — à rédiger]' },
-                            { src: './assets/intro/case6.png', caption: '[légende 2 — à rédiger]' },
-                            { src: './assets/intro/case7.png', caption: '[légende 3 — à rédiger]' },
+                            { src: './assets/Cards/Office_du_tourisme/ot_a2_pavillon_epoque.png',
+                              caption: "Le pavillon au fronton de Mars, sur une photographie ancienne." },
+                            { src: './assets/Cards/Office_du_tourisme/ot_a2_pavillon_actuel.png',
+                              caption: "Son jumeau aujourd'hui, sous l'enseigne ONLYLYON." },
                         ],
                     },
                 },
                 {
                     level: 1, index: 1,
-                    template: 'two_images_compare',
-                    title: '[Titre — à rédiger]',
-                    imageLeft: './assets/Office1.png',
-                    imageLeftLabel: '[avant]',
-                    imageRight: './assets/Office3.png',
-                    imageRightLabel: '[après]',
-                    body: '[Entrée à rédiger — recherche en cours.]',
-                    decorations: ['tape_corner', 'stamp_lyon_patrimoine'],
+                    template: 'image_citation',
+                    title: 'Apollon et le fronton vide',
+                    image: './assets/Cards/Office_du_tourisme/ot_a2_fronton_apollon_actuel.png',
+                    imageCaption: 'Apollon, sculpté par Joseph-Hugues Fabisch.',
+                    quote: "Les arts d'un côté, l'autorité militaire de l'autre.",
+                    stampDate: '1956',
+                    decorations: ['tape_corner', 'stamp_date'],
                     dossier: {
-                        title: '[Dossier — à nommer]',
+                        title: 'Les frontons',
                         photos: [
-                            { src: './assets/Office1.png', caption: '[légende avant — à rédiger]' },
-                            { src: './assets/Office3.png', caption: '[légende après — à rédiger]' },
-                            { src: './assets/intro/case8.png', caption: '[légende 3 — à rédiger]' },
+                            { src: './assets/Cards/Office_du_tourisme/ot_a2_fronton_apollon_actuel.png',
+                              caption: "Apollon, dieu des arts, de la musique et de la lumière." },
+                            { src: './assets/Cards/Office_du_tourisme/ot_a2_fronton_mars_epoque.png',
+                              caption: 'Mars, casqué, sur le fronton voisin — avant son retrait.' },
+                            // Image prévue par la fiche, pas encore fournie :
+                            // bascule sur « Image à venir » dans le dossier.
+                            { src: './assets/Cards/Office_du_tourisme/ot_a2_fronton_mars_vide.png',
+                              caption: "Le fronton vide, aujourd'hui : Mars en a été retiré en 1956." },
                         ],
                     },
                 },
                 {
+                    // Affiche du Rectangle prévue par Canelle, pas encore fournie :
+                    // l'emplacement s'affiche en « Image à venir », le texte se
+                    // suffit à lui-même en attendant.
                     level: 1, index: 2,
-                    template: 'audio_entry',
-                    title: '[Titre — à rédiger]',
-                    body: '[Entrée à rédiger — recherche en cours.]',
-                    audio: {
-                        // Nom du fichier tel que déposé par David.
-                        src: './assets/audio/officetourisme.mp3',
-                        label: 'Ambiance sonore — Place Bellecour',
-                        // Lue dynamiquement sur `loadedmetadata` : rien à
-                        // re-mesurer si le fichier change.
-                        duration: null,
-                        // Optionnelle : ignorée tant que le fichier n'existe pas.
-                        waveformImage: './assets/audio/ot_a2_p3_wave.svg',
-                    },
-                    audioNote: '[instruction manuscrite — à rédiger]',
-                    decorations: ['tape_top'],
-                },
-
-                // ─── Arc 3 (niveau 2) — à révéler ───
-                {
-                    level: 2, index: 0,
-                    template: 'image_anecdote_postit',
-                    title: '[Titre — à rédiger]',
-                    image: './assets/intro/case6.png',
-                    imageSide: 'left',
-                    body: '[Entrée à rédiger — recherche en cours.]',
-                    postit: { color: 'pink', text: '[note manuscrite — à rédiger]' },
-                    decorations: ['tape_top'],
-                    dossier: {
-                        title: '[Dossier — à nommer]',
-                        photos: [
-                            { src: './assets/intro/case6.png', caption: '[légende 1 — à rédiger]' },
-                            { src: './assets/intro/case7.png', caption: '[légende 2 — à rédiger]' },
-                            { src: './assets/intro/case8.png', caption: '[légende 3 — à rédiger]' },
-                        ],
-                    },
-                },
-                {
-                    // Était une 2e entrée audio : ramenée à un gabarit visuel
-                    // tant qu'une seule piste sert de preuve de concept.
-                    level: 2, index: 1,
-                    template: 'illustration_list',
-                    title: '[Titre — à rédiger]',
-                    image: './assets/intro/case7.png',
-                    body: '[Entrée à rédiger — recherche en cours.]',
-                    listTitle: 'À observer',
-                    list: ['[à observer 1]', '[à observer 2]', '[à observer 3]'],
+                    template: 'image_citation',
+                    title: 'Une même mission',
+                    image: './assets/Cards/Office_du_tourisme/ot_a3_affiche_rectangle.png',
+                    imageCaption: 'Une affiche du Rectangle — à retrouver.',
                     decorations: ['paperclip_top', 'corner_fold'],
                 },
+
+                // ─── Arc 3 (niveau 2) — « Une histoire de destins liés » ───
                 {
-                    level: 2, index: 2,
-                    template: 'two_images_compare',
-                    title: '[Titre — à rédiger]',
-                    imageLeft: './assets/intro/case2.png',
-                    imageLeftLabel: '[label gauche]',
-                    imageRight: './assets/intro/case5.png',
-                    imageRightLabel: '[label droit]',
-                    body: '[Entrée à rédiger — recherche en cours.]',
+                    // Texte-seul, comme les deux entrées qui suivent : leur force
+                    // est narrative, on ne leur colle pas d'image de complaisance.
+                    level: 2, index: 0,
+                    template: 'image_citation',
+                    title: 'Urbaniser la ville autrement',
+                    quote: 'ni maison, ni édifice, pour quelque usage que ce puisse être',
+                    decorations: ['corner_fold'],
+                },
+                {
+                    level: 2, index: 1,
+                    template: 'image_citation',
+                    title: 'La sécurité, symétrie du plaisir',
+                    stampDate: '1856',
                     decorations: ['tape_top', 'stamp_date'],
-                    dossier: {
-                        title: '[Dossier — à nommer]',
-                        photos: [
-                            { src: './assets/intro/case2.png', caption: '[légende 1 — à rédiger]' },
-                            { src: './assets/intro/case5.png', caption: '[légende 2 — à rédiger]' },
-                            { src: './assets/Office3.png',     caption: '[légende 3 — à rédiger]' },
-                        ],
-                    },
+                },
+                {
+                    // Frise statique : un repère par ligne, les deux pavillons en
+                    // vis-à-vis. Un repère sans événement d'un côté laisse la case
+                    // vide sans cadre. Version animée à décider après validation.
+                    level: 2, index: 2,
+                    template: 'timeline_page',
+                    title: 'Deux pavillons, deux destins',
+                    columns: ['Pavillon Est', 'Pavillon Ouest'],
+                    // Icônes : 🛡️ sécurité · 🍽️ restauration/sociabilité ·
+                    // 🧭 tourisme · 🎨 culture · ℹ️ point info · 🗂️ bureau ·
+                    // 🏛️ patrimoine. Repères à faire valider par Canelle.
+                    timeline: [
+                        // Pas d'exposant « ᵉ » : Georgia ne le porte pas et il
+                        // retombe sur un glyphe parasite.
+                        { when: 'Milieu XIXe',
+                          est:   { icon: '🛡️', text: 'Corps de Garde' },
+                          ouest: { icon: '🍽️', text: 'Maison Dorée' } },
+                        { when: 'Fin XIXe — début XXe',
+                          est:   { icon: '🛡️', text: 'Poste de Police' },
+                          ouest: { icon: '🍽️', text: "Développement de l'établissement" } },
+                        { when: '1924',
+                          est:   { icon: '🧭', text: "Pavillon cédé au Syndicat d'Initiative de Lyon" } },
+                        { when: '1941',
+                          est:   { icon: '🏛️', text: 'Site classé, avec la place Bellecour' },
+                          ouest: { icon: '🏛️', text: 'Site classé' } },
+                        { when: '1945',
+                          est:   { icon: '🧭', text: 'Restauration en Maison du Tourisme' } },
+                        { when: '1956',
+                          est:   { icon: '🏛️', text: 'Mars retiré du fronton' } },
+                        { when: '1968',
+                          ouest: { icon: '🎨', text: 'Acquisition par la ville, devient la Maison de Lyon' } },
+                        { when: '1998',
+                          ouest: { icon: '🎨', text: 'Inauguration du Rectangle' } },
+                        { when: '2008',
+                          ouest: { icon: '🗂️', text: "Travaux d'aménagement pour les bureaux de l'Office du Tourisme" } },
+                        { when: '2015',
+                          est:   { icon: '🧭', text: 'Réaménagement du Pavillon ONLYLYON' } },
+                        { when: "Aujourd'hui",
+                          est:   { icon: 'ℹ️', text: "Point d'infos" },
+                          ouest: { icon: '🗂️', text: 'Point de gestion' } },
+                    ],
+                    decorations: ['tape_top'],
                 },
             ],
         };
@@ -22130,6 +22296,31 @@
                 .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
+        // Corps de texte d'une entrée : les textes de Canelle sont écrits en
+        // paragraphes, on les rend comme tels au lieu de les aplatir.
+        //   ligne vide       → nouveau paragraphe
+        //   « >> » en tête   → encart lettre (anecdote collée dans le carnet)
+        //   {{sp:réponse}}   → réponse masquée, dévoilée au tap
+        // Tout passe par _jsbEsc avant d'être balisé : rien d'injectable.
+        function _jsbPara(txt) {
+            if (!txt) return '';
+            return String(txt).split(/\n[ \t]*\n/).map(function (p) {
+                p = p.trim();
+                if (!p) return '';
+                const letter = /^>>\s*/.test(p);
+                if (letter) p = p.replace(/^>>\s*/, '');
+                const inner = _jsbEsc(p)
+                    .replace(/\{\{sp:([^}]*)\}\}/g, function (m, rep) {
+                        return '<span class="jsb-spoiler" role="button" tabindex="0"'
+                             + ' onclick="this.classList.add(&#39;on&#39;)">' + rep + '</span>';
+                    })
+                    .replace(/\n/g, '<br>');
+                return letter
+                    ? '<div class="jsb-letter">' + inner + '</div>'
+                    : '<p>' + inner + '</p>';
+            }).join('');
+        }
+
         // Gabarit associé à une entrée du carnet, ou null si la carte n'en a pas
         function _jsbTemplateFor(cardId, level, index) {
             const list = JSB_ENTRIES[cardId];
@@ -22139,7 +22330,7 @@
         }
 
         // ── Décorations : CSS pur ou SVG inline, jamais d'image externe ──
-        function _jsbDeco(name, uid) {
+        function _jsbDeco(name, uid, entry) {
             switch (name) {
                 case 'tape_top':
                     return '<span class="jsb-deco jsb-tape-top"></span>';
@@ -22153,7 +22344,9 @@
                          +     ' stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>'
                          + '</svg>';
                 case 'stamp_date':
-                    return '<span class="jsb-deco jsb-stamp-date">[date]</span>';
+                    // Millésime porté par l'entrée (`stampDate`) ; sans lui, pas de tampon.
+                    if (!entry || !entry.stampDate) return '';
+                    return '<span class="jsb-deco jsb-stamp-date">' + _jsbEsc(entry.stampDate) + '</span>';
                 case 'stamp_lyon_patrimoine':
                     return '<svg class="jsb-deco jsb-stamp" viewBox="0 0 100 100" aria-hidden="true">'
                          +   '<defs><path id="jsbArc' + uid + '" fill="none" '
@@ -22209,7 +22402,7 @@
 
         function _jsbOpen(entry, uid) {
             let h = '<div class="jsb-page jsb-' + entry.template.replace(/_/g, '-') + '">';
-            (entry.decorations || []).forEach(function (d) { h += _jsbDeco(d, uid); });
+            (entry.decorations || []).forEach(function (d) { h += _jsbDeco(d, uid, entry); });
             return h;
         }
 
@@ -22225,13 +22418,17 @@
             const uid = ++_jsbUid;
             const key = _jsbRegisterDossier(entry, ctx);
             let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
-            h += _jsbFrame(entry.image, {
-                rot: ((uid * 37) % 21 - 10) / 10,       // −1.0° à +1.0°, stable par entrée
-                dossierKey: key,
-                count: key ? entry.dossier.photos.length : 0,
-            });
+            // Pas de clé `image` → entrée texte-seul : aucun emplacement photo.
+            // Chemin renseigné mais fichier absent → repli « Image à venir ».
+            if (entry.image) {
+                h += _jsbFrame(entry.image, {
+                    rot: ((uid * 37) % 21 - 10) / 10,   // −1.0° à +1.0°, stable par entrée
+                    dossierKey: key,
+                    count: key ? entry.dossier.photos.length : 0,
+                });
+            }
             if (entry.imageCaption) h += '<div class="jsb-caption">' + _jsbEsc(entry.imageCaption) + '</div>';
-            if (entry.body)         h += '<div class="jsb-body">' + _jsbEsc(entry.body) + '</div>';
+            if (entry.body)         h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
             if (entry.quote)        h += '<div class="jsb-quote">« ' + _jsbEsc(entry.quote) + ' »</div>';
             return h + '</div>';
         }
@@ -22242,13 +22439,15 @@
             const key = _jsbRegisterDossier(entry, ctx);
             const side = entry.imageSide === 'left' ? ' left' : '';
             let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
-            h += _jsbFrame(entry.image, {
-                cls: 'jsb-float-photo' + side,
-                rot: ((uid * 53) % 25 - 12) / 5,        // −2.4° à +2.4°
-                dossierKey: key,
-                count: key ? entry.dossier.photos.length : 0,
-            });
-            if (entry.body) h += '<div class="jsb-body">' + _jsbEsc(entry.body) + '</div>';
+            if (entry.image) {
+                h += _jsbFrame(entry.image, {
+                    cls: 'jsb-float-photo' + side,
+                    rot: ((uid * 53) % 25 - 12) / 5,    // −2.4° à +2.4°
+                    dossierKey: key,
+                    count: key ? entry.dossier.photos.length : 0,
+                });
+            }
+            if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
             if (entry.postit) {
                 const tones = { yellow: '#f7e58c', pink: '#f7c8c8', blue: '#c4dbef' };
                 h += '<div class="jsb-postit" style="--jsb-postit:' + (tones[entry.postit.color] || tones.yellow) + ';">'
@@ -22277,7 +22476,7 @@
                      }).join('') + '</ul>';
             h +=   '</div>';
             h += '</div>';
-            if (entry.body) h += '<div class="jsb-body">' + _jsbEsc(entry.body) + '</div>';
+            if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
             return h + '</div>';
         }
 
@@ -22302,7 +22501,7 @@
                     h += '</div>';
                 });
             h += '</div>';
-            if (entry.body) h += '<div class="jsb-body">' + _jsbEsc(entry.body) + '</div>';
+            if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
             return h + '</div>';
         }
 
@@ -22312,7 +22511,7 @@
             const au  = entry.audio || {};
             const aid = 'jsbAudio' + uid;
             let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
-            if (entry.body) h += '<div class="jsb-body">' + _jsbEsc(entry.body) + '</div>';
+            if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
             // La durée n'est pas codée en dur : elle s'affiche sur
             // `loadedmetadata`, d'ici là le compteur reste à `--:--`.
             h += '<div class="jsb-audio" data-audio-entry>';
@@ -22332,12 +22531,76 @@
             return h + '</div>';
         }
 
+        // ── Gabarit 6 : sorties web (site / app), ouverture en nouvel onglet ──
+        // Une entrée sans `href` reste affichée mais inerte : on ne fabrique
+        // pas d'URL, on montre que la place est réservée.
+        function _jsbLinksScreen(entry, ctx) {
+            const uid = ++_jsbUid;
+            let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
+            if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
+            h += '<div class="jsb-links">';
+            (entry.links || []).forEach(function (l) {
+                const live = !!l.href;
+                h += live
+                    ? '<a class="jsb-link" href="' + _jsbEsc(l.href) + '"'
+                      + ' target="_blank" rel="noopener noreferrer">'
+                    : '<span class="jsb-link pending">';
+                h +=   '<span class="jsb-link-mark">' + _jsbEsc(l.icon || '◈') + '</span>';
+                h +=   '<span class="jsb-link-txt">';
+                if (l.label)   h += '<span class="jsb-link-label">' + _jsbEsc(l.label) + '</span>';
+                if (l.caption) h += '<span class="jsb-link-caption">' + _jsbEsc(l.caption) + '</span>';
+                if (!live)     h += '<span class="jsb-link-todo">lien à venir</span>';
+                h +=   '</span>';
+                if (live) h += '<span class="jsb-link-ext" aria-hidden="true">↗</span>';
+                h += live ? '</a>' : '</span>';
+            });
+            h += '</div>';
+            if (entry.linksNote) {
+                h += '<div class="jsb-audio-note">' + _jsbEsc(entry.linksNote) + '</div>';
+            }
+            return h + '</div>';
+        }
+
+        // ── Gabarit 7 : frise chronologique statique, deux colonnes ──
+        // Un repère peut n'avoir d'événement que d'un côté : la case d'en face
+        // garde sa place dans la grille mais ne dessine aucun cadre.
+        function _jsbTimeline(entry, ctx) {
+            const uid  = ++_jsbUid;
+            const cols = entry.columns || ['Pavillon Est', 'Pavillon Ouest'];
+            let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
+            if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
+            h += '<div class="jsb-tl">';
+            h +=   '<div class="jsb-tl-head">'
+                 +   '<span>' + _jsbEsc(cols[0]) + '</span>'
+                 +   '<span>' + _jsbEsc(cols[1]) + '</span>'
+                 + '</div>';
+            (entry.timeline || []).forEach(function (row) {
+                h += '<div class="jsb-tl-row">';
+                h +=   '<span class="jsb-tl-when">' + _jsbEsc(row.when || '') + '</span>';
+                [row.est, row.ouest].forEach(function (cell) {
+                    if (!cell) { h += '<span class="jsb-tl-cell empty"></span>'; return; }
+                    h += '<span class="jsb-tl-cell">'
+                       +   '<span class="jsb-tl-ico" aria-hidden="true">' + _jsbEsc(cell.icon || '·') + '</span>'
+                       +   '<span>' + _jsbEsc(cell.text || '') + '</span>'
+                       + '</span>';
+                });
+                h += '</div>';
+            });
+            h += '</div>';
+            if (entry.timelineNote) {
+                h += '<div class="jsb-audio-note">' + _jsbEsc(entry.timelineNote) + '</div>';
+            }
+            return h + '</div>';
+        }
+
         const JSB_TEMPLATES = {
             image_citation:        _jsbImageCitation,
             image_anecdote_postit: _jsbImagePostit,
             illustration_list:     _jsbIllustrationList,
             two_images_compare:    _jsbTwoImages,
             audio_entry:           _jsbAudioEntry,
+            links_screen:          _jsbLinksScreen,
+            timeline_page:         _jsbTimeline,
         };
 
         // ══════════════════════════════════════════════════════════════
@@ -22818,8 +23081,14 @@
                     // entrées non révélées gardent le rendu « à dévoiler »
                     // existant : la mécanique de fournitures est inchangée.
                     if (entry._revealed) {
-                        const jsbTpl = _jsbTemplateFor(cardId, lvl, i);
+                        let jsbTpl = _jsbTemplateFor(cardId, lvl, i);
                         if (jsbTpl) {
+                            // Le texte de l'entrée vit dans CARD_DIALOGUES et nulle part
+                            // ailleurs : le gabarit ne redéclare un `body` que s'il veut
+                            // s'en écarter. Évite de tenir la même prose à deux endroits.
+                            if (jsbTpl.body === undefined) {
+                                jsbTpl = Object.assign({}, jsbTpl, { body: entry.text || '' });
+                            }
                             html2 += JSB_TEMPLATES[jsbTpl.template](jsbTpl, {
                                 key: cardId + '_' + lvl + '_' + i,
                                 date: entry.date || '',
