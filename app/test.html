@@ -3638,6 +3638,39 @@
             box-shadow: 0 3px 14px rgba(163,64,42,0.24);
             border-color: rgba(163,64,42,0.35);
         }
+        /* ── Pastille de type sur une entrée révélée du carnet ──
+           Rappelle la fourniture qui l'a ouverte : pellicule (visuel),
+           cassette (audio), encre (texte). Purement indicative — jamais
+           cliquable, elle ne doit pas voler le tap de l'entrée. */
+        .jrn-type {
+            position: absolute; top: 2px; right: 2px;
+            width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none; z-index: 3;
+            transform: rotate(6deg);
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.28));
+        }
+        .jrn-type img { width: 100%; height: 100%; object-fit: contain; }
+        .jrn-type .jrn-reels { display: none; width: 30px; height: 20px; }
+        /* Lecture en cours : la cassette fixe cède la place à la cassette
+           animée — bobines qui tournent, bande qui défile entre les deux. */
+        .jrn-playing .jrn-type--audio img        { display: none; }
+        .jrn-playing .jrn-type--audio .jrn-reels { display: block; }
+        .jrn-playing .jrn-type--audio { animation: jrnCassetteWobble 2.4s ease-in-out infinite; }
+        .jrn-reels-hub { transform-box: fill-box; transform-origin: 50% 50%; }
+        .jrn-playing .jrn-reels-hub  { animation: jrnReelSpin 1.4s linear infinite; }
+        .jrn-playing .jrn-reels-tape { animation: jrnTapeRun 0.5s linear infinite; }
+        @keyframes jrnReelSpin { to { transform: rotate(360deg); } }
+        @keyframes jrnTapeRun  { to { stroke-dashoffset: -7; } }
+        @keyframes jrnCassetteWobble {
+            0%, 100% { transform: rotate(6deg); }
+            50%      { transform: rotate(2deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .jrn-playing .jrn-type--audio,
+            .jrn-playing .jrn-reels-hub,
+            .jrn-playing .jrn-reels-tape { animation: none; }
+        }
         /* Waveform : image statique fournie, jamais générée. Absente = rien. */
         .jsb-audio-wave {
             flex: 0 1 auto; min-width: 0;
@@ -10350,6 +10383,10 @@
             // ── Toasts ──
             "🔓 Caméra déverrouillée": "🔓 Camera unlocked",
             "🔒 Caméra verrouillée": "🔒 Camera locked",
+            // Pastilles de type sur les entrées révélées du carnet
+            "Entrée visuelle · révélée par une pellicule": "Visual entry · revealed with a roll of film",
+            "Entrée audio · révélée par une cassette": "Audio entry · revealed with a tape",
+            "Entrée textuelle · révélée par de l'encre": "Text entry · revealed with ink",
             "❌ Aucune pellicule disponible": "❌ No film available",
             "❌ Aucune cassette disponible": "❌ No tape available",
             "❌ Aucune encre disponible": "❌ No ink available",
@@ -22264,6 +22301,7 @@
                             html2 += JSB_TEMPLATES[jsbTpl.template](jsbTpl, {
                                 key: cardId + '_' + lvl + '_' + i,
                                 date: entry.date || '',
+                                type: entry._type || '',
                             });
                             globalIdx++;
                             return;
@@ -22363,6 +22401,9 @@
                         html2 += ' data-entry-id="' + entryId + '"';
                     }
                     html2 += '>';
+
+                    // Pastille de type — même repère que sur les gabarits scrapbook.
+                    html2 += _jrnTypeBadge(entry._type);
 
                     // Scotch sur N1 et N2 uniquement (pas sur N0)
                     if (isClickable || entry.echoContent) {
@@ -22943,8 +22984,47 @@
             return h;
         }
 
+
+        // ══════════════════════════════════════════════════════════════
+        // Pastille de type sur une entrée révélée du carnet
+        // Une fois ouverte, l'entrée ne dit plus par quelle fourniture elle
+        // l'a été. On rappelle la ressource consommée avec l'icône qu'elle
+        // porte déjà sur la mappe — pellicule, cassette, encre.
+        // ══════════════════════════════════════════════════════════════
+        const JRN_TYPE_ICONS = {
+            visual: { src: './assets/Icon Pellicule.png', label: 'Entrée visuelle · révélée par une pellicule' },
+            audio:  { src: './assets/Icon Cassette.png',  label: 'Entrée audio · révélée par une cassette' },
+            text:   { src: './assets/Icon Encre.png',     label: 'Entrée textuelle · révélée par de l\'encre' },
+        };
+
+        // Cassette dessinée en SVG : le PNG est une illustration figée, ses
+        // bobines ne peuvent pas tourner. Ce doublon ne sort que pendant la
+        // lecture, le temps que la bande défile.
+        function _jrnCassetteSvg() {
+            return '<svg class="jrn-reels" viewBox="0 0 40 26" aria-hidden="true">'
+                 +   '<rect x="1" y="1" width="38" height="24" rx="3.5" fill="#e9b93c" stroke="#3a2a12" stroke-width="1.6"/>'
+                 +   '<rect x="5" y="9.5" width="30" height="7" fill="#2a1c0c"/>'
+                 +   '<line class="jrn-reels-tape" x1="5" y1="13" x2="35" y2="13" stroke="#eed79a" stroke-width="2.2" stroke-dasharray="3 4"/>'
+                 +   '<g class="jrn-reels-hub"><circle cx="13" cy="13" r="4.6" fill="#f7edd4" stroke="#3a2a12" stroke-width="1.3"/>'
+                 +     '<path d="M13 13L13 8.4M13 13L9 15.3M13 13L17 15.3" stroke="#3a2a12" stroke-width="1.3" stroke-linecap="round"/></g>'
+                 +   '<g class="jrn-reels-hub"><circle cx="27" cy="13" r="4.6" fill="#f7edd4" stroke="#3a2a12" stroke-width="1.3"/>'
+                 +     '<path d="M27 13L27 8.4M27 13L23 15.3M27 13L31 15.3" stroke="#3a2a12" stroke-width="1.3" stroke-linecap="round"/></g>'
+                 + '</svg>';
+        }
+
+        // Type inconnu (vieilles entrées sans _type) → aucune pastille plutôt
+        // qu'une pastille fausse.
+        function _jrnTypeBadge(type) {
+            const ic = JRN_TYPE_ICONS[type];
+            if (!ic) return '';
+            return '<span class="jrn-type jrn-type--' + type + '" title="' + ic.label + '">'
+                 +   '<img src="' + encodeURI(ic.src) + '" alt="" draggable="false" onerror="this.style.display=\'none\';">'
+                 +   (type === 'audio' ? _jrnCassetteSvg() : '')
+                 + '</span>';
+        }
+
         function _jsbHead(entry, ctx) {
-            let h = '';
+            let h = _jrnTypeBadge(ctx.type);
             if (ctx.date)    h += '<div class="jsb-eyebrow">' + _jsbEsc(ctx.date) + '</div>';
             if (entry.title) h += '<div class="jsb-title">' + _jsbEsc(entry.title) + '</div>';
             return h;
@@ -23089,9 +23169,18 @@
             return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
         }
 
+        // La classe voyage aussi sur la page : c'est elle qui porte la
+        // pastille cassette à animer.
+        function _jsbAudioMark(box, on) {
+            if (!box) return;
+            box.classList.toggle('playing', on);
+            const page = box.closest('.jsb-page');
+            if (page) page.classList.toggle('jrn-playing', on);
+        }
+
         function _jsbAudioReset(box) {
             if (!box) return;
-            box.classList.remove('playing');
+            _jsbAudioMark(box, false);
             const btn = box.querySelector('.jsb-audio-play');
             if (btn) btn.innerHTML = _jsbIconPlay();
         }
@@ -23138,14 +23227,14 @@
                     const p = audio.play();
                     if (p && p.then) {
                         p.then(function () {
-                            box.classList.add('playing');
+                            _jsbAudioMark(box, true);
                             btn.innerHTML = _jsbIconPause();
                         }).catch(function () {
                             btn.disabled = true;
                             if (time) time.textContent = '[audio indisponible]';
                         });
                     } else {
-                        box.classList.add('playing');
+                        _jsbAudioMark(box, true);
                         btn.innerHTML = _jsbIconPause();
                     }
                 });
