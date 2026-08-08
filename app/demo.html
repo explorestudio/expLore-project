@@ -9003,11 +9003,10 @@
                                 <!-- ── Pane GÉNÉRAL : infos statiques ── -->
                                 <div class="card-vtab-pane" id="cardPaneGeneral">
                                     <div id="generalTab" class="tab-content active" style="display:block;padding:0;">
-                                        <div class="info-row"><span class="info-label">Naissance</span><span class="info-value">7 novembre 1867</span></div>
-                                        <div class="info-row"><span class="info-label">Décès</span><span class="info-value">4 juillet 1934</span></div>
-                                        <div class="info-row"><span class="info-label">Nationalité</span><span class="info-value">Polonaise, Française</span></div>
-                                        <div class="info-row"><span class="info-label">Conjoint</span><span class="info-value">Pierre Curie</span></div>
-                                        <p style="margin-top:12px; padding:0 4px; color:#4b5563; font-size:13px; line-height:1.6;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                                        <div class="info-row"><span class="info-label">Fondation</span><span class="info-value">1974</span></div>
+                                        <div class="info-row"><span class="info-label">Type</span><span class="info-value">Organisation à but non lucratif</span></div>
+                                        <div class="info-row"><span class="info-label">Siège</span><span class="info-value">2ᵉ arrondissement</span></div>
+                                        <p style="margin-top:12px; padding:0 4px; color:#4b5563; font-size:13px; line-height:1.6;">Installé dans l'un des deux pavillons de la place Bellecour, l'Office du Tourisme de Lyon accueille visiteurs et Lyonnais tous les jours de 9 h à 18 h : conseils personnalisés, documentation, billetterie et visites guidées. Le bâtiment, ancien corps de garde devenu centre d'art sous le nom du Rectangle, abrite ses bureaux depuis 2006.</p>
                                     </div>
                                 </div>
 
@@ -10437,13 +10436,12 @@
             "Défaut": "Default",
             "Actif": "Active",
             "Appliquer": "Apply",
-            "Naissance": "Born",
-            "Décès": "Died",
-            "Nationalité": "Nationality",
-            "Polonaise, Française": "Polish, French",
-            "Conjoint": "Spouse",
-            "7 novembre 1867": "November 7, 1867",
-            "4 juillet 1934": "July 4, 1934",
+            // Onglet « Général » de la fiche carte (Office du Tourisme)
+            "Fondation": "Founded",
+            "Organisation à but non lucratif": "Non-profit organization",
+            "Siège": "Head office",
+            "2ᵉ arrondissement": "2nd arrondissement",
+            "Installé dans l'un des deux pavillons de la place Bellecour, l'Office du Tourisme de Lyon accueille visiteurs et Lyonnais tous les jours de 9 h à 18 h : conseils personnalisés, documentation, billetterie et visites guidées. Le bâtiment, ancien corps de garde devenu centre d'art sous le nom du Rectangle, abrite ses bureaux depuis 2006.": "Housed in one of the two pavilions on place Bellecour, the Lyon Tourist Office welcomes visitors and Lyonnais every day from 9 am to 6 pm: personalized advice, brochures, ticketing and guided tours. The building — a former guardhouse, later an art centre known as le Rectangle — has held its offices since 2006.",
 
             // ── Appareil photo / viseur ──
             "pellicule(s)": "roll(s)",
@@ -13293,6 +13291,9 @@
 
         let _introBDStep = 0;
         let _introBDCaseEls = {}; // id -> élément DOM (réutilisé entre étapes pour transitions fluides)
+        // Sauvegardé : évite de rejouer la cinématique après un rechargement en
+        // plein tutoriel (bascule de langue, cf. toggleLanguage).
+        let _introBDSeen = false;
 
         function startIntroBD() {
             _introBDStep = 0;
@@ -13391,6 +13392,8 @@
         }
 
         function finishIntroBD() {
+            _introBDSeen = true;
+            if (typeof saveProgress === 'function') saveProgress();
             const cinema = document.getElementById('introBDCinematic');
             cinema.style.transition = 'opacity 0.6s ease';
             cinema.style.opacity = '0';
@@ -15387,6 +15390,12 @@
                     pendingGrappeLumens,
                     actorArrivedSet: [...actorArrivedSet],
                     revealedPoints: [...revealedPoints],
+                    // État du tutoriel lui-même : sans lui, un rechargement en
+                    // cours de tuto rejoue la BD et perd le parcours guidé,
+                    // alors que le monde (POI ramassés) reste, lui, sauvegardé.
+                    _introBDSeen,
+                    _obGuideActive: _obGuide.active,
+                    _obGuideStep: _obGuide.step,
                     _obDone,
                     _obAct2Done,
                     _obAct3Done,
@@ -15458,6 +15467,10 @@
                 if (d.pendingGrappeLumens)    pendingGrappeLumens = d.pendingGrappeLumens || [];
                 if (d.actorArrivedSet)        actorArrivedSet = new Set(d.actorArrivedSet);
                 if (d.revealedPoints)        revealedPoints = new Set(d.revealedPoints);
+                // Sauvegardes antérieures à ce champ : si la carte tutoriel a déjà
+                // été collectée, la BD a forcément été vue.
+                if (d._introBDSeen || d._obAct2Done) _introBDSeen = true;
+                if (d._obGuideActive) { _obGuide.active = true; _obGuide.step = d._obGuideStep || null; }
                 console.log('[expLore] loadProgress _obDone raw:', d._obDone, typeof d._obDone);
                 if (d._obDone)    _obDone    = d._obDone;
                 if (d._obAct2Done) _obAct2Done = d._obAct2Done;
@@ -15678,7 +15691,26 @@
 
         // Corps historique de initApp, appelé une fois la langue connue.
         function _initAppAfterLang() {
-            if (!_obDone) {
+            if (!_obDone && _introBDSeen) {
+                // Reprise après un rechargement en plein tutoriel (bascule de
+                // langue) : la BD a déjà été vue, on ne la rejoue pas. Soit le
+                // parcours guidé était en cours et on le reprend à son étape,
+                // soit la carte tutoriel n'est pas encore collectée et on rend
+                // son marqueur.
+                document.getElementById('onboardingOverlay').classList.add('hidden');
+                if (_obGuide.active) {
+                    document.getElementById('obSkipBtn').classList.add('visible');
+                    _obGuideStartLoop();
+                    setTimeout(_obGuideRefresh, 400);
+                } else if (_obAct2Done) {
+                    // Carte tutoriel déjà collectée mais guide éteint : sauvegarde
+                    // antérieure à ce correctif. Sans ça le joueur reste bloqué
+                    // devant un marqueur qui ne mène nulle part.
+                    _obGuideStart();
+                } else {
+                    startOnboarding();
+                }
+            } else if (!_obDone) {
                 setTimeout(startIntroBD, 800);
             } else {
                 // Tutoriel déjà fait — masquer tous les overlays onboarding
@@ -21534,14 +21566,15 @@
             if (!entry || entry._revealed) return;
             // Vérifier et consommer l'objet requis
             const type = entry._type || 'text';
+            // showToast n'existe pas dans ce fichier : on passe par showDemoToast
             if (type === 'visual') {
-                if (!bagInv.pellicules || bagInv.pellicules <= 0) { showToast('❌ Aucune pellicule disponible'); return; }
+                if (!bagInv.pellicules || bagInv.pellicules <= 0) { showDemoToast('❌ Aucune pellicule disponible'); return; }
                 bagInv.pellicules--;
             } else if (type === 'audio') {
-                if (!bagInv.cassettes || bagInv.cassettes <= 0) { showToast('❌ Aucune cassette disponible'); return; }
+                if (!bagInv.cassettes || bagInv.cassettes <= 0) { showDemoToast('❌ Aucune cassette disponible'); return; }
                 bagInv.cassettes--;
             } else {
-                if (!bagInv.encre || bagInv.encre <= 0) { showToast('❌ Aucune encre disponible'); return; }
+                if (!bagInv.encre || bagInv.encre <= 0) { showDemoToast('❌ Aucune encre disponible'); return; }
                 bagInv.encre--;
             }
             entry._revealed = true;
@@ -23145,7 +23178,9 @@
                                +   'margin-bottom:18px;'
                                +   'transform:rotate(' + lay.rotate + ');'
                                + '"'
-                               + (hasItem ? ' onclick="revealJournalEntry(\'' + (selectedCard ? selectedCard.id : '') + '\',\'' + entry.id + '\')"' : '')
+                               // Cliquable même sans la ressource : revealJournalEntry
+                               // affiche alors un message d'erreur au lieu de rien faire.
+                               + ' onclick="revealJournalEntry(\'' + (selectedCard ? selectedCard.id : '') + '\',\'' + entry.id + '\')"'
                                + '>'
                                + innerAvail
                                + '</div>';
