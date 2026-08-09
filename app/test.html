@@ -4393,10 +4393,10 @@
         .card-carnet-btn {
             flex-shrink: 0;
             background: white;
-            border: 2px solid #fcd34d;
-            border-radius: 10px;
-            width: 36px;
-            height: 36px;
+            border: 2.5px solid #fcd34d;
+            border-radius: 12px;
+            width: 54px;
+            height: 54px;
             cursor: pointer;
             padding: 0;
             display: flex;
@@ -4407,7 +4407,7 @@
             overflow: visible;
         }
         .card-carnet-icon {
-            font-size: 18px;
+            font-size: 28px;
             line-height: 1;
             width: 80%;
             height: 80%;
@@ -4435,24 +4435,84 @@
            - L'icône (le span) pulse en taille pour attirer le regard
            - Un halo doré scintille AUTOUR du bouton via box-shadow (pas par-dessus) */
         .card-carnet-btn.has-new {
-            animation: carnetBtnHalo 1.4s ease-in-out infinite;
+            animation: carnetBtnHalo 1.1s ease-in-out infinite;
         }
         .card-carnet-btn.has-new .card-carnet-icon {
-            animation: carnetIconPulse 1.4s ease-in-out infinite;
+            animation: carnetIconPulse 1.1s ease-in-out infinite;
         }
         @keyframes carnetBtnHalo {
             0%, 100% {
-                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
+                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.85);
                 border-color: #fcd34d;
+                background: white;
             }
             50% {
-                box-shadow: 0 0 0 7px rgba(251, 191, 36, 0);
+                box-shadow: 0 0 0 13px rgba(251, 191, 36, 0),
+                            0 0 20px 5px rgba(251, 191, 36, 0.75);
                 border-color: #f59e0b;
+                background: #fffbeb;
             }
         }
         @keyframes carnetIconPulse {
-            0%, 100% { transform: scale(1); }
-            50%      { transform: scale(1.18); }
+            0%, 100% { transform: scale(1);    filter: none; }
+            50%      { transform: scale(1.28); filter: drop-shadow(0 0 7px rgba(251, 191, 36, 0.95)); }
+        }
+
+        /* ══ Œil « observer » : ouvre la carte en plein écran, sans UI ══ */
+        .card-eye-btn {
+            position: absolute;
+            right: 18px;
+            bottom: 20px;
+            width: 46px;
+            height: 46px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            z-index: 6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
+            transition: transform 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .card-eye-btn:hover  { transform: scale(1.12); }
+        .card-eye-btn:active { transform: scale(0.92); }
+
+        /* Vue plein écran : uniquement l'illustration, aucun élément d'interface.
+           Un tap n'importe où referme. */
+        .card-fullscreen-view {
+            position: fixed;
+            inset: 0;
+            z-index: 100000;
+            background: #000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+        .card-fullscreen-view.show {
+            display: flex;
+            animation: cardFullscreenIn 0.22s ease;
+        }
+        .card-fullscreen-view img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+        }
+        .card-fullscreen-emoji {
+            font-size: 40vw;
+            line-height: 1;
+        }
+        @keyframes cardFullscreenIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
         }
 
         /* ══ Onglet "Skins" : carrousel ══ */
@@ -8763,6 +8823,8 @@
                     <div class="card-stage" id="cardStage">
                         <div class="card-frame" onclick="event.stopPropagation()" style="position:relative;">
                             <div class="card-type-pin" id="cardTypePin" role="img" aria-label="Type de carte"></div>
+                            <!-- Œil « observer » : affiche la carte en plein écran, sans UI -->
+                            <button class="card-eye-btn" id="cardEyeBtn" onclick="openCardFullscreen(event)" title="Voir la carte en plein écran" aria-label="Voir la carte en plein écran">👁️</button>
                             <div class="card-category-badge sr-only" id="cardCategory">Personnage</div>
                             <div class="card-art-area">
                                 <div class="card-art-placeholder" onclick="showClickDialogue()" id="cardArtContainer" style="position:relative;">
@@ -8872,6 +8934,12 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Vue plein écran de la carte, déclenchée par l'œil : aucune UI -->
+        <div class="card-fullscreen-view" id="cardFullscreenView" onclick="closeCardFullscreen()">
+            <img id="cardFullscreenImg" alt="" style="display:none;">
+            <span class="card-fullscreen-emoji" id="cardFullscreenEmoji" style="display:none;">👤</span>
         </div>
 
         <!-- Header fantôme conservé pour compatibilité JS (caché) -->
@@ -21145,6 +21213,51 @@
                 img.src = './assets/Carnet.png';
             } catch(e) { /* fallback emoji par défaut, rien à faire */ }
         })();
+
+        /* ══ Œil « observer » : la carte en plein écran, sans aucun élément d'UI ══
+           On réutilise l'illustration déjà résolue dans #cardArtImg (niveau, skin,
+           morph OT compris) pour rester en phase avec ce que le joueur voit. */
+        function openCardFullscreen(event) {
+            if (event) event.stopPropagation();
+            const view = document.getElementById('cardFullscreenView');
+            if (!view) return;
+            // Sécurité : un ancêtre transformé casserait le position:fixed
+            if (view.parentElement !== document.body) document.body.appendChild(view);
+
+            const img      = document.getElementById('cardFullscreenImg');
+            const emoji    = document.getElementById('cardFullscreenEmoji');
+            const artImg   = document.getElementById('cardArtImg');
+            const artEmoji = document.getElementById('cardArtEmoji');
+            const src = artImg ? artImg.getAttribute('src') : '';
+            const artVisible = !!(artImg && src && getComputedStyle(artImg).display !== 'none');
+
+            if (artVisible) {
+                img.src = src;
+                img.style.display = '';
+                emoji.style.display = 'none';
+            } else {
+                // Pas d'illustration : on reprend l'emoji de la carte
+                img.removeAttribute('src');
+                img.style.display = 'none';
+                emoji.textContent = artEmoji ? artEmoji.textContent : '👤';
+                emoji.style.display = '';
+            }
+            view.classList.add('show');
+        }
+
+        function closeCardFullscreen() {
+            const view = document.getElementById('cardFullscreenView');
+            if (view) view.classList.remove('show');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            const view = document.getElementById('cardFullscreenView');
+            if (view && view.classList.contains('show')) {
+                closeCardFullscreen();
+                e.stopPropagation();
+            }
+        }, true);
 
         function updateJournalBlink() {
             const btn = document.getElementById('journalTabBtn');
