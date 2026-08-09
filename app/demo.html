@@ -1852,6 +1852,19 @@
                    box-shadow: 0 0 0 1.5px rgba(255,255,255,0.85), 0 1px 4px rgba(15,23,42,0.35); }
         }
 
+        /* CR test — Action UX 4 : le testeur n'a pas vu qu'on pouvait naviguer
+           entre les visuels. Halo répété sur les pastilles débloquées, éteint
+           au premier tap. Distinct de `unlocking` (bref, non répété). */
+        .ot-tl-node.hint::before { animation: otTlHint 1.6s ease-in-out infinite; }
+        @keyframes otTlHint {
+            0%, 100% { box-shadow: 0 0 0 1.5px rgba(255,255,255,0.85),
+                                   0 0 0 0 rgba(196,181,253,0.7),
+                                   0 1px 4px rgba(15,23,42,0.35); }
+            50%      { box-shadow: 0 0 0 1.5px rgba(255,255,255,0.95),
+                                   0 0 10px 6px rgba(196,181,253,0.55),
+                                   0 1px 4px rgba(15,23,42,0.35); }
+        }
+
         /* Tap sur un état encore verrouillé */
         .ot-tl-node.refused { animation: otTlRefuse 0.36s ease-in-out; }
         @keyframes otTlRefuse {
@@ -6337,6 +6350,32 @@
             50%     { transform: scale(0.82); opacity: 1;   }
         }
 
+        /* CR test — L'instruction du bas ne suffisait pas : le testeur ne savait
+           pas OÙ poser le doigt. Halo pulsant posé sur la nébuleuse elle-même
+           (même centre que le canvas : cy = 42 % de la hauteur). */
+        .ritual-touch-hint {
+            position: absolute; top: 42%; left: 50%;
+            width: 132px; height: 132px; margin: -66px 0 0 -66px;
+            border-radius: 50%; z-index: 2;
+            pointer-events: none;
+            transition: opacity 0.4s;
+        }
+        .ritual-touch-hint.hidden-instr { opacity: 0; }
+        .ritual-touch-hint::before,
+        .ritual-touch-hint::after {
+            content: ''; position: absolute; inset: 0;
+            border-radius: 50%;
+            border: 2px solid rgba(224,176,255,0.85);
+            box-shadow: 0 0 18px rgba(200,130,255,0.55);
+            animation: ritualTouchPulse 2.2s ease-out infinite;
+        }
+        .ritual-touch-hint::after { animation-delay: 1.1s; }
+        @keyframes ritualTouchPulse {
+            0%   { transform: scale(0.55); opacity: 0;   }
+            25%  { opacity: 0.9; }
+            100% { transform: scale(1.15); opacity: 0;   }
+        }
+
         .ritual-engrave-title {
             font-size: 14px; font-weight: bold;
             letter-spacing: 1.5px; color: rgba(255,255,255,0.9);
@@ -7611,6 +7650,10 @@
             justify-content: flex-end;
         }
         #vnOverlay.show { display: flex; }
+        /* Dialogue joué PAR-DESSUS une scène qu'il faut continuer de voir
+           (nébuleuse du rituel). Le fond plein à 0.82 l'éteindrait presque
+           entièrement — on l'allège le temps de ces répliques. */
+        #vnOverlay.vn-over-scene { background: rgba(0,0,0,0.28); }
 
         .vn-backdrop {
             position: absolute; inset: 0;
@@ -7651,6 +7694,18 @@
         .vn-speaker { font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin:0;color:#c4b5fd; }
         .vn-line { font-family:Georgia,serif;font-style:italic;font-size:14px;line-height:1.8;color:rgba(255,255,255,0.92); }
         .vn-tap { position:absolute;bottom:12px;right:18px;font-size:9px;color:rgba(139,92,246,0.6);letter-spacing:1.5px;text-transform:uppercase;animation:obPulse 1.8s infinite; }
+        /* CR test (item H) — écriture progressive. Le texte complet est posé
+           dès le départ, seule l'opacité des caractères change : la mise en
+           page ne bouge pas d'un pixel pendant la frappe. `.vn-w` garde chaque
+           mot insécable, sinon les <span> par caractère laisseraient le
+           navigateur couper les mots en fin de ligne. */
+        .vn-w  { white-space: nowrap; }
+        .vn-ch { opacity: 0; transition: opacity 0.09s linear; }
+        .vn-ch.on { opacity: 1; }
+        /* « Continuer › » n'apparaît qu'une fois la réplique écrite en entier. */
+        /* `animation: none` obligatoire : obPulse anime l'opacité, et une
+           animation l'emporte sur une déclaration normale. */
+        .vn-dialogue-box.vn-typing .vn-tap { opacity: 0; animation: none; transition: opacity 0.2s; }
         .vn-action-btn { width:100%;padding:14px;border-radius:0;border:none;border-top:1px solid rgba(139,92,246,0.3);font-size:15px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.15);color:#c4b5fd;display:none; }
         .vn-action-btn.show { display:block; }
 
@@ -8845,7 +8900,7 @@
             <div class="ritual-clue-label">Indice</div>
             <div class="ritual-clue-icon" id="ritualClueIcon"></div>
             <div class="ritual-clue" id="ritualClueText"></div>
-            <button class="ritual-btn" id="ritualHuntBtn" onclick="ritualGoIncipit()">J'ai trouvé ✦</button>
+            <button class="ritual-btn" id="ritualHuntBtn" onclick="ritualAfterHunt()">J'ai trouvé ✦</button>
         </div>
 
         <!-- Phase 2 : Incipit -->
@@ -8867,6 +8922,8 @@
                 <div class="ritual-nebula-layer ritual-nebula-l3" id="nebulaL3"></div>
             </div>
             <canvas id="ritualCanvas"></canvas>
+            <!-- CR test — halo pulsant sur la zone à toucher -->
+            <div class="ritual-touch-hint" id="ritualTouchHint" aria-hidden="true"></div>
             <!-- Instruction initiale -->
             <div class="ritual-engrave-instruction" id="ritualInstruction">
                 <div class="ritual-engrave-icon" id="ritualEngraveIcon">
@@ -8900,7 +8957,7 @@
                     </svg>
                 </div>
                 <div class="ritual-engrave-title">Stabilise la nébuleuse</div>
-                <div class="ritual-engrave-sub">Pose ton doigt et tiens jusqu'à la stabilisation</div>
+                <div class="ritual-engrave-sub">Pose ton doigt sur la nébuleuse et tiens, sans relâcher</div>
             </div>
             <!-- Barre de progression (pendant le hold) -->
             <div class="ritual-engrave-progress" id="ritualProgress">
@@ -10544,6 +10601,7 @@
             "Tenir pour stabiliser ›": "Hold to stabilize ›",
             "Stabilise la nébuleuse": "Stabilize the nebula",
             "Pose ton doigt et tiens jusqu'à la stabilisation": "Press and hold until it stabilizes",
+            "Pose ton doigt sur la nébuleuse et tiens, sans relâcher": "Press your finger on the nebula and hold, without letting go",
             "Stabilisation en cours…": "Stabilizing…",
             "Carte obtenue": "Card obtained",
             "Carte révélée ✦": "Card revealed ✦",
@@ -10754,6 +10812,38 @@
             "L'Explorium. Il est vide pour l'instant.": "The Explorium. Empty, for now.",
             "Certains fragments que tu collecteras s'y inscriront — ceux qui appartiennent à quelque chose de plus grand.": "Some of the fragments you collect will inscribe themselves here — those that belong to something larger.",
             "La poudre mémorielle réveille ce qui s'était tu. Essaie.": "Memorial dust wakes what had fallen silent. Try it.",
+
+            // ── Parcours guidé — répliques du CR de test (2026-08-09) ──
+            "Pose ton doigt sur la nébuleuse et tiens — jusqu'à ce qu'elle se stabilise.":
+                "Press your finger on the nebula and hold — until it settles.",
+            // Ouverture déplacée sur l'écran de stabilisation : « Approche-toi »
+            // est tombé (le joueur y est déjà), d'où une nouvelle clé.
+            [`Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> flottent à l'intérieur — ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span>.`]:
+                `Oh, you see it? A <span style="color:#B98CE8;font-weight:600">nebula</span>! Several <span style="color:#E09AC0;font-weight:600">presences</span> are drifting inside — this will be your first <span style="color:#F5B841;font-weight:600">card</span>.`,
+            "Je l'ai rattrapée avant qu'elle ne tombe à terre. Je vais lui rendre un peu de mémoire avec ma poudre mémorielle.":
+                "I caught it before it hit the ground. I'm going to give it back a little memory with my memorial dust.",
+            "Elle a quelques souvenirs. Oh… Mais c'est ta carte, tu veux lui en donner toi-même ?":
+                "It has a few memories left. Oh… but it's your card — do you want to give it some yourself?",
+            [`Pour qu'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire.`]:
+                `For a card to remember, give it <span style="color:#A78BFA;font-weight:600">memorial dust</span>. Each dose wakes a little more of its story.`,
+            [`Tiens, je te la rends avec ce que j'ai noté dans le <span style="font-weight:600">carnet</span>.`]:
+                `Here, I'm giving it back to you — along with what I wrote down in the <span style="font-weight:600">notebook</span>.`,
+            "Le carnet ?": "The notebook?",
+            "Toi aussi, tu aurais bien besoin d'un peu de poudre mémorielle ! L'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l'as encore oublié, j'imagine… Bon, garde celui-ci, j'en ai plein.":
+                "You could use a little memorial dust yourself! The Organisation gave us this booklet to write down everything a card might remember! You forgot it again, I suppose… Fine, keep this one, I have plenty.",
+            "Ouvre-le : le chapitre est plein, mais il garde encore des pages voilées. C'est à cette condition qu'il pourra être scellé.":
+                "Open it: the chapter is full, but it still keeps veiled pages. Only then can it be sealed.",
+            "Elle est un peu bavarde, en tout cas elle a encore des choses à dire.":
+                "It's a bit of a chatterbox — in any case it still has things to say.",
+            "D'ailleurs, n'hésite pas à aller chercher des fournitures au Bazar — l'échoppe, un peu plus au Nord. Profites-en pour collecter de la poudre ou des orbes si tu en trouves sur ton chemin.":
+                "By the way, don't hesitate to go and get supplies at the Bazaar — the stall, a little further north. While you're at it, pick up any dust or orbs you find on the way.",
+            "En tout cas, occupe-toi bien d'elle : elle a déjà changé de forme, je ne sais pas si tu avais remarqué.":
+                "Anyway, take good care of it: it has already changed shape — I don't know whether you'd noticed.",
+            "On se retrouve pour l'évènement plus tard ?": "See you later for the event?",
+            "Comment ça ?": "What do you mean?",
+            "QUOI ? Tout ce que je viens de dire, ça ne te dit rien ?": "WHAT? Everything I just said means nothing to you?",
+            "Non…": "No…",
+            "Génial ! Tu seras mon premier disciple !": "Brilliant! You'll be my first disciple!",
 
             // ── Parcours guidé ──
             "Tu l'as recueillie. Mais une carte qu'on vient de réveiller a presque tout oublié — à toi de lui rendre sa mémoire.": "You've taken it in. But a card that has only just been woken has forgotten almost everything — it's up to you to give it back its memory.",
@@ -13232,6 +13322,7 @@
         // ══════════════════════════════════════
 
         // ── Carte tutoriel ──
+        // demo-ot v0.3 — corrections CR test 2026-08-09
         // demo-ot v0.2 — contenu éditorial carte OT (Canelle)
         // DÉMO OT — Carte unique. On conserve l'id 'ob_tutorial_card' (câblé en
         // dur dans le rituel, le guide, la révélation gratuite, la sauvegarde) et
@@ -13566,6 +13657,7 @@
             // Masquer tous les overlays onboarding
             document.getElementById('onboardingOverlay').classList.add('hidden');
             document.getElementById('obNote').classList.remove('show');
+            _vnFinishTyping();   // le skip ferme le VN : couper la frappe en cours
             document.getElementById('vnOverlay').classList.remove('show');
             document.getElementById('obSkipBtn').classList.remove('visible');
 
@@ -13684,21 +13776,33 @@
             if (!document.getElementById('obMarkerStyle')) {
                 const s = document.createElement('style');
                 s.id = 'obMarkerStyle';
-                s.textContent = '@keyframes obMarkerPulse{0%,100%{box-shadow:0 0 0 6px rgba(139,92,246,0.3)}50%{box-shadow:0 0 0 14px rgba(139,92,246,0.1)}}';
+                // obMarkerPulse est partagé (anneaux du guide) : ne pas y toucher.
+                // Le marqueur tutoriel porte désormais une image détourée : un
+                // box-shadow y dessinerait un halo rectangulaire. D'où une
+                // animation propre, sur l'échelle et la lueur portée.
+                s.textContent = '@keyframes obMarkerPulse{0%,100%{box-shadow:0 0 0 6px rgba(139,92,246,0.3)}50%{box-shadow:0 0 0 14px rgba(139,92,246,0.1)}}'
+                    + '@keyframes obTutoCardPulse{'
+                    + '0%,100%{transform:scale(1);filter:drop-shadow(0 0 5px rgba(139,92,246,0.75)) drop-shadow(0 2px 4px rgba(0,0,0,0.55))}'
+                    + '50%{transform:scale(1.09);filter:drop-shadow(0 0 13px rgba(167,139,250,0.95)) drop-shadow(0 2px 4px rgba(0,0,0,0.55))}}';
                 document.head.appendChild(s);
             }
 
+            // Visuel du point : la carte-spirale (RVBA détourée). Pas de pastille
+            // ronde ni de bordure — elles rogneraient le cadre de la carte.
             const el = document.createElement('div');
             el.id = 'obTutorialMarker';
             el.style.cssText = [
-                'width:44px','height:44px','border-radius:50%',
-                'background:linear-gradient(135deg,#8B5CF6,#6D28D9)',
-                'border:3px solid white',
-                'display:flex','align-items:center','justify-content:center',
-                'font-size:20px','cursor:pointer',
-                'animation:obMarkerPulse 2s ease-in-out infinite'
+                'width:52px','height:52px',
+                // Minuscule : c'est la casse suivie par git. Windows ne fait pas
+                // la différence, GitHub Pages si — une majuscule ici passe en
+                // local et donne un 404 en production.
+                'background-image:url(./assets/spiral.png)',
+                'background-size:contain',
+                'background-repeat:no-repeat',
+                'background-position:center',
+                'cursor:pointer',
+                'animation:obTutoCardPulse 2.4s ease-in-out infinite'
             ].join(';');
-            el.textContent = '✦';
 
             if (map) {
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
@@ -13816,21 +13920,15 @@
                 map.getSource('poi-circles').setData({ type: 'FeatureCollection', features: [] });
                 try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'none'); } catch(e) {}
             }
-            // Ouverture retravaillée : plus concrète. Introduit nébuleuse / présences /
-            // carte (personnage·lieu·objet) avec mots-clés colorés, échange jeune fille ↔ joueur.
-            // Couleurs : nébuleuse #B98CE8, présences #E09AC0, carte #F5B841, types #5FC9E8.
-            vnShow([
-                { speaker: 'La jeune fille', html: 'Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> flottent à l\'intérieur. Approche-toi — ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span>.' },
-                { speaker: 'Toi', line: 'Ma quoi ?' },
-                { speaker: 'La jeune fille', html: 'Une <span style="color:#F5B841;font-weight:600">carte</span>. Le nom qu\'on donne à une mémoire qu\'on a réussi à fixer : un <span style="color:#5FC9E8;font-weight:600">personnage</span>, un <span style="color:#5FC9E8;font-weight:600">lieu</span> ou un <span style="color:#5FC9E8;font-weight:600">objet</span> que la ville avait presque oublié.' },
-                { speaker: 'La jeune fille', line: 'Cristallise-la, et découvre ce qu\'elle garde. Elle est à toi.' },
-            ], () => {
-                if (!cardLevels[OB_TUTORIAL_CARD.id]) {
-                    cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
-                }
-                if (!collectedCards.includes(OB_TUTORIAL_CARD.id)) collectedCards.push(OB_TUTORIAL_CARD.id);
-                openCollectRitual(OB_TUTORIAL_CARD);
-            });
+            // L'ouverture (nébuleuse / présences / carte) ne se joue plus ici : elle
+            // a été déplacée sur l'écran de stabilisation, où la nébuleuse est
+            // réellement à l'écran — cf. ritualAfterHunt(). Sur la mappe, la jeune
+            // fille parlait d'une nébuleuse que le joueur ne voyait pas encore.
+            if (!cardLevels[OB_TUTORIAL_CARD.id]) {
+                cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
+            }
+            if (!collectedCards.includes(OB_TUTORIAL_CARD.id)) collectedCards.push(OB_TUTORIAL_CARD.id);
+            openCollectRitual(OB_TUTORIAL_CARD);
         }
 
         // ── Hook ritualClose ──
@@ -14078,16 +14176,41 @@
             const synth = document.getElementById('orbSynthOverlay');
             const blocked = (vn && vn.classList.contains('show')) || (synth && synth.classList.contains('show'));
             if (blocked) return;
-            // Backstop : XP plein au chapitre 2 mais l'événement xp_full a été manqué → sceller.
-            if (_obGuide.step === 'feed_finish_ch2' && cl.level === 1) {
-                if (cl.experience >= getExpNeeded(card, cl.level)) _obAfterXpFull();
+            // ── Rattrapage d'état ───────────────────────────────────────────
+            // Le joueur peut dépasser le guide : l'énergie de la carte se
+            // régénère seule, une orbe peut être utilisée hors de la fiche, un
+            // événement peut se perdre. Les backstops ne couvraient que trois
+            // étapes — un joueur resté sur `get_orb` (le détour orbe) pouvait
+            // remplir puis sceller ses chapitres sans que rien ne se déclenche :
+            // `xp_full` et `sealed` tombaient dans le vide, le guide restait
+            // muet jusqu'à la fin de la partie et la conclusion n'arrivait
+            // jamais. On réconcilie donc sur l'ÉTAT RÉEL de la carte.
+            // Règle : ne jamais reculer, ne rattraper que si l'état du jeu est
+            // objectivement en avance sur l'étape courante. Un `return` après
+            // chaque saut : un seul rattrapage par tick.
+            const _etape = _obGuide.step;
+            const _plein = cl.experience >= getExpNeeded(card, cl.level);
+
+            // Carte achevée (niveau max), d'où que vienne le guide → conclusion.
+            if (cl.level >= MAX_LEVEL) { _obGuideFinish(); return; }
+
+            // Chapitre 2 scellé alors que le guide est resté en amont : on rejoue
+            // le vrai beat de passage au chapitre 3 (Bloc 4) via la machine.
+            if (cl.level === 2 && ['feed_ch2','get_orb','feed_finish_ch2','seal_ch2'].indexOf(_etape) >= 0) {
+                _obGuide.step = 'seal_ch2';
+                _obGuideEvent('sealed');
+                return;
             }
-            // Backstop : XP plein au chapitre 3 mais xp_full manqué → inviter à sceller.
-            if (_obGuide.step === 'feed_ch3' && cl.level === 2) {
-                if (cl.experience >= getExpNeeded(card, cl.level)) _obAfterXpFullCh3();
+
+            // Chapitre 2 plein pendant que le guide attend encore l'orbe ou la
+            // fin du nourrissage → enchaîner sur le scellement (Bloc 2, le carnet).
+            if (cl.level === 1 && _plein && ['feed_ch2','get_orb','feed_finish_ch2'].indexOf(_etape) >= 0) {
+                _obAfterXpFull();
+                return;
             }
-            // Backstop : chapitre 3 scellé (niveau max) mais l'événement manqué → fin.
-            if (_obGuide.step === 'seal_ch3' && cl.level >= MAX_LEVEL) _obGuideFinish();
+
+            // Chapitre 3 plein mais xp_full manqué → inviter à sceller.
+            if (cl.level === 2 && _etape === 'feed_ch3' && _plein) { _obAfterXpFullCh3(); return; }
         }
 
         // Un tick de réconciliation : décide s'il faut un anneau, où, et le recale.
@@ -14164,8 +14287,13 @@
             _obGuide.step = 'go_collections';
             document.getElementById('obSkipBtn').classList.add('visible');
             _obGuideStartLoop();
+            // CR test — Bloc 1. Cette amorce tient lieu de dialogue de récompense :
+            // elle tombe 400 ms après la fermeture du rituel (cf. _obCheckAfterCollect),
+            // inutile d'en ajouter un second au même moment. La carte vient de la
+            // nébuleuse : la jeune fille l'a rattrapée, elle ne l'a pas « trouvée ».
             vnShow([
-                { speaker: 'La jeune fille', line: 'Tu l\'as recueillie. Mais une carte qu\'on vient de réveiller a presque tout oublié — à toi de lui rendre sa mémoire.' },
+                { speaker: 'La jeune fille', line: 'Je l\'ai rattrapée avant qu\'elle ne tombe à terre. Je vais lui rendre un peu de mémoire avec ma poudre mémorielle.' },
+                { speaker: 'La jeune fille', line: 'Elle a quelques souvenirs. Oh… Mais c\'est ta carte, tu veux lui en donner toi-même ?' },
                 { speaker: 'La jeune fille', line: 'Ouvre ta Collection, puis la carte. Tout se passe dans son détail.' },
             ], () => _obGuideRefresh());
         }
@@ -14173,10 +14301,12 @@
         // Transition partagée : on vient d'ouvrir la fiche carte → invite à la nourrir.
         function _obGuideEnterFeed1() {
             _obGuide.step = 'feed_ch2';
+            // CR test — deux répliques retirées ici : le carnet n'est plus révélé
+            // à ce moment (il l'est au Bloc 2, chapitre plein), et l'annonce des
+            // états visuels contredirait le Bloc 4 (« je ne sais pas si tu avais
+            // remarqué »). Ne reste que la mécanique de la poudre.
             vnShow([
-                { speaker: 'La jeune fille', line: 'Je lui ai déjà rendu un peu de sa mémoire — tiens, elle a même déjà quelques souvenirs dans son carnet. À toi de réveiller le reste.' },
-                { speaker: 'La jeune fille', html: 'Pour qu\'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire — regarde son carnet se remplir.' },
-                { speaker: 'La jeune fille', line: 'Et regarde-la, elle. Une carte qui regagne sa mémoire ne garde pas le même visage — les points sous son portrait comptent les états qu\'elle a retrouvés. Un seul, pour l\'instant.' },
+                { speaker: 'La jeune fille', html: 'Pour qu\'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire.' },
             ], () => _obGuideRefresh());
         }
 
@@ -14188,13 +14318,16 @@
             _obGuide.active = false;
             _obGuide.step = null;
             _obGuideStopLoop();
+            // CR test — Bloc 5. La chute « premier disciple » remplace l'adieu
+            // poétique : on ne garde que la réplique de bilan (sans elle, rien
+            // n'acte que la carte est achevée avant l'écran de fin).
             vnShow([
                 { speaker: 'La jeune fille', line: 'Voilà. Cette carte t\'a tout rendu — trois chapitres, pas une page qui manque, et ses trois visages retrouvés. Elle se souvient enfin d\'elle-même.' },
-                { speaker: 'La jeune fille', line: 'Reviens la voir quand tu veux : ses états restent à toi, tu peux la reparcourir d\'un âge à l\'autre. Une mémoire regagnée ne se reperd pas.' },
-                { speaker: 'La jeune fille', line: 'C\'est ça, être explorateur de la mémoire.' },
-                { speaker: 'La jeune fille', line: 'Et il y en a d\'autres. Beaucoup d\'autres — dans les rues, sous les façades, au bord des deux fleuves. Toutes aussi muettes que celle-ci l\'était il y a une heure.' },
-                { speaker: 'La jeune fille', line: 'Je dois repartir : d\'autres voix m\'attendent, ailleurs. Mais on se reverra — je finis toujours par retrouver ceux qui regardent encore.' },
-                { speaker: 'La jeune fille', line: 'Le reste vient en marchant. À toi, désormais.' },
+                { speaker: 'La jeune fille', line: 'On se retrouve pour l\'évènement plus tard ?' },
+                { speaker: 'Toi', line: 'Comment ça ?' },
+                { speaker: 'La jeune fille', line: 'QUOI ? Tout ce que je viens de dire, ça ne te dit rien ?' },
+                { speaker: 'Toi', line: 'Non…' },
+                { speaker: 'La jeune fille', line: 'Génial ! Tu seras mon premier disciple !' },
             ], () => {
                 _obDone = true;
                 _obAct3Done = true;
@@ -14202,6 +14335,43 @@
                 saveProgress();
                 _demoShowEndScreen();
             });
+        }
+
+        // Toast système — récupérée telle quelle de app/index.html (:24944).
+        // Elle avait été perdue en dérivant demo.html : 59 appels la réclamaient,
+        // dont 50 sans garde `typeof`, qui levaient donc une exception et
+        // avortaient leur fonction en plein milieu. Le cas le plus grave était
+        // l'utilisation d'une orbe : l'exception tombait juste avant
+        // `_obGuideEvent('orb_used')`, ce qui rendait le détour orbe du parcours
+        // guidé infranchissable — le guide restait sur `get_orb` pour le reste
+        // de la partie et la conclusion n'arrivait jamais.
+        function showToast(msg, ms) {
+            if (!msg) return;
+            if (!document.getElementById('sysToastStyle')) {
+                const st = document.createElement('style');
+                st.id = 'sysToastStyle';
+                st.textContent = ".sys-toast{position:absolute;top:90px;left:50%;transform:translateX(-50%) translateY(-8px);"
+                    + "z-index:1600;max-width:min(320px,86%);background:rgba(15,12,28,0.92);backdrop-filter:blur(8px);"
+                    + "-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.14);border-radius:24px;"
+                    + "padding:9px 18px;font-size:13px;font-weight:700;color:#fff;text-align:center;line-height:1.4;"
+                    + "box-shadow:0 4px 20px rgba(0,0,0,0.5);opacity:0;transition:opacity .22s ease,transform .22s ease;"
+                    + "pointer-events:none;}"
+                    + ".sys-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}";
+                document.head.appendChild(st);
+            }
+            // Un seul à la fois : le dernier message est le plus pertinent
+            const old = document.getElementById('sysToast');
+            if (old) old.remove();
+            const el = document.createElement('div');
+            el.id = 'sysToast';
+            el.className = 'sys-toast';
+            el.textContent = T(msg);          // i18n : traduit si la langue active est EN
+            (document.getElementById('mainApp') || document.body).appendChild(el);
+            requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+            setTimeout(() => {
+                el.classList.remove('show');
+                setTimeout(() => { if (el.parentNode) el.remove(); }, 260);
+            }, ms || 2400);
         }
 
         // DÉMO OT — Toast "lore" pour les beats scénarisés (épuisement / orbe).
@@ -14254,11 +14424,14 @@
             _obGuide.step = 'seal_ch2';
             const rep = [];
             if (_demoUnrevealedAtLevel() > 0) {
-                // XP au max mais des pages restent voilées : c'est le carnet qui bloque.
-                rep.push({ speaker: 'La jeune fille', line: 'Le chapitre est plein — mais il garde encore des pages voilées. Ouvre son carnet et dévoile-les : c\'est à cette condition qu\'il pourra être scellé.' });
-                if (_demoMissingSupplies() > 0) {
-                    rep.push({ speaker: 'La jeune fille', line: 'L\'échoppe en tient, juste au nord d\'ici. Sers-toi.' });
-                }
+                // CR test — Bloc 2. Le carnet est révélé ICI, pas à l'ouverture de
+                // la fiche : il vient de L'Organisation, il appartient au joueur
+                // (« garde celui-ci »), et l'oubli du joueur le relie à l'Oubli.
+                rep.push({ speaker: 'La jeune fille', html: 'Tiens, je te la rends avec ce que j\'ai noté dans le <span style="font-weight:600">carnet</span>.' });
+                rep.push({ speaker: 'Toi', line: 'Le carnet ?' });
+                rep.push({ speaker: 'La jeune fille', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poudre mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' });
+                // Consigne mécanique conservée : c'est elle qui débloque le scellement.
+                rep.push({ speaker: 'La jeune fille', line: 'Ouvre-le : le chapitre est plein, mais il garde encore des pages voilées. C\'est à cette condition qu\'il pourra être scellé.' });
             } else {
                 rep.push({ speaker: 'La jeune fille', line: 'Le chapitre est plein. Scelle-le : qu\'il prenne racine.' });
             }
@@ -14310,16 +14483,29 @@
             const manque = _demoMissingSupplies();
             if (!_obJournalSeen) {
                 _obJournalSeen = true;
+                // CR test — Bloc 3.
                 const rep = [
-                    { speaker: 'La jeune fille', line: 'Son carnet. Le premier chapitre s\'y est déjà écrit — celui-là, tu peux le lire.' },
+                    { speaker: 'La jeune fille', line: 'Elle est un peu bavarde, en tout cas elle a encore des choses à dire.' },
                     { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poudre : une <span style="color:#FCD34D;font-weight:600">pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">encre</span> pour un texte.' },
                 ];
                 // « Tu en as déjà » seulement s'il peut tout révéler ; sinon on le
-                // renvoie sur la mappe, à l'échoppe.
+                // renvoie sur la mappe, au Bazar.
                 rep.push(manque === 0
                     ? { speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' }
-                    : { speaker: 'La jeune fille', line: 'L\'échoppe en tient, juste au nord d\'ici. Sers-toi.' });
-                vnShow(rep, () => _obGuideRefresh());
+                    // « Bazar » vient du CR, « échoppe » est le mot que porte l'UI
+                    // (Échoppe des Terreaux, 🛖) : les deux, sinon le joueur cherche
+                    // sur la mappe un lieu dont le nom n'existe nulle part.
+                    : { speaker: 'La jeune fille', line: 'D\'ailleurs, n\'hésite pas à aller chercher des fournitures au Bazar — l\'échoppe, un peu plus au Nord. Profites-en pour collecter de la poudre ou des orbes si tu en trouves sur ton chemin.' });
+                vnShow(rep, () => {
+                    // Action UX 3 — s'il lui manque de quoi dévoiler ses pages, le
+                    // carnet n'a plus rien à lui offrir : on le referme sur la fiche
+                    // carte, d'où il pourra repartir vers la mappe. S'il a déjà tout
+                    // en poche, on le laisse dans le carnet : c'est là qu'il agit.
+                    if (_demoMissingSupplies() > 0) {
+                        try { closeJournalScreen(); } catch (e) {}
+                    }
+                    _obGuideRefresh();
+                });
                 return;
             }
             // Ne relancer que s'il reste des pages voilées ET de quoi manquer.
@@ -14464,16 +14650,24 @@
                         // Le chapitre 3 démarre avec l'énergie pleine (sinon 12 clics infaisables).
                         try { restoreCardEnergy(OB_TUTORIAL_CARD.id); } catch (e) {}
                         if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
+                        // CR test — Bloc 4 : la carte a changé de forme. La réplique
+                        // ne dit plus où regarder, c'est le halo sur les pastilles
+                        // (Action UX 4) qui le montre.
                         const rep = [
                             { speaker: 'La jeune fille', line: 'Un chapitre se ferme, un autre s\'ouvre — le dernier de cette carte.' },
-                            { speaker: 'La jeune fille', line: 'Et un état de plus s\'est allumé sous son portrait. Touche les points : elle garde tous ses âges, tu peux revenir les voir quand tu veux.' },
+                            { speaker: 'La jeune fille', line: 'En tout cas, occupe-toi bien d\'elle : elle a déjà changé de forme, je ne sais pas si tu avais remarqué.' },
                         ];
                         if (memorialDust >= _DEMO_DUST_CH3) {
                             rep.push({ speaker: 'La jeune fille', line: 'Il te faudra plus de poudre. Sers-toi de celle que tu as ramassée.' });
                         } else if (_demoDustLeft() > 0) {
                             rep.push({ speaker: 'La jeune fille', line: 'Il t\'en faudra beaucoup — plus que tu n\'en as. Va en récolter sur la mappe avant de continuer.' });
                         }
-                        vnShow(rep, () => _obGuideRefresh());
+                        vnShow(rep, () => {
+                            // Action UX 4 — le halo n'a de sens qu'une fois le VN
+                            // refermé, sinon il pulse derrière l'overlay.
+                            setTimeout(_otTlHintVisuals, 250);
+                            _obGuideRefresh();
+                        });
                     }
                     break;
 
@@ -14639,6 +14833,7 @@
 
         function _vnRender() {
             if (_vnIdx >= _vnQueue.length) {
+                _vnFinishTyping();          // jamais laisser un timer tourner sur un overlay fermé
                 document.getElementById('vnOverlay').classList.remove('show');
                 if (_vnOnDone) _vnOnDone();
                 return;
@@ -14671,9 +14866,86 @@
             // à mots-clés colorés gardent une typographie anglaise correcte.
             if (entry.html) _vnLineEl.innerHTML = T(entry.html);
             else _vnLineEl.textContent = T(entry.line);
+            _vnStartTyping(_vnLineEl);
         }
 
-        function vnAdvance() { _vnIdx++; _vnRender(); }
+        // ── CR test (item H) — écriture progressive ──────────────────────
+        // Le texte (déjà traduit) est posé en entier dans le DOM, puis découpé
+        // en <span> par caractère qu'on rallume un à un. Aucun texte n'est
+        // réécrit pendant la frappe : la mise en page est figée, et l'observer
+        // i18n n'a pas de chaîne partielle à traduire. Un tap pendant la frappe
+        // termine la réplique ; le tap suivant passe à la suivante.
+        let _vnTypeTimer = null;
+        let _vnTypeChars = null;
+
+        const VN_TYPE_MS  = 22;     // cadence visée, par caractère
+        const VN_TYPE_MAX = 3200;   // durée max d'une réplique, quelle que soit sa longueur
+
+        function _vnSplitTextNode(node) {
+            // Un mot = un .vn-w insécable contenant ses .vn-ch ; les blancs
+            // restent des .vn-ch libres, pour que la ligne puisse casser.
+            const frag = document.createDocumentFragment();
+            (node.nodeValue.split(/(\s+)/) || []).forEach(tok => {
+                if (!tok) return;
+                const isSpace = /^\s+$/.test(tok);
+                const host = isSpace ? frag : document.createElement('span');
+                if (!isSpace) host.className = 'vn-w';
+                for (const ch of tok) {
+                    const s = document.createElement('span');
+                    s.className = 'vn-ch';
+                    s.textContent = ch;
+                    host.appendChild(s);
+                }
+                if (!isSpace) frag.appendChild(host);
+            });
+            node.parentNode.replaceChild(frag, node);
+        }
+
+        function _vnStartTyping(el) {
+            if (_vnTypeTimer) cancelAnimationFrame(_vnTypeTimer);
+            _vnTypeTimer = null;
+            if (!el) return;
+            // Collecter les nœuds texte AVANT de les remplacer (le walker ne
+            // survivrait pas à une mutation en cours de parcours).
+            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+            const texts  = [];
+            for (let n = walker.nextNode(); n; n = walker.nextNode()) texts.push(n);
+            texts.forEach(_vnSplitTextNode);
+
+            _vnTypeChars = el.querySelectorAll('.vn-ch');
+            if (!_vnTypeChars.length) return;
+            document.querySelector('.vn-dialogue-box')?.classList.add('vn-typing');
+
+            // Avancement calculé sur le TEMPS ÉCOULÉ, pas sur le nombre de ticks :
+            // le navigateur bride ses timers dès que l'onglet passe en arrière-plan
+            // (~1 Hz). Au retour, la réplique se remet au bon endroit d'un coup
+            // au lieu de finir de s'écrire au ralenti.
+            const total = _vnTypeChars.length;
+            const duree = Math.min(total * VN_TYPE_MS, VN_TYPE_MAX);
+            const t0    = performance.now();
+            let vus     = 0;
+            const step = (now) => {
+                const cible = Math.min(total, Math.floor(((now - t0) / duree) * total));
+                for (; vus < cible; vus++) _vnTypeChars[vus].classList.add('on');
+                if (vus >= total) { _vnFinishTyping(); return; }
+                _vnTypeTimer = requestAnimationFrame(step);
+            };
+            _vnTypeTimer = requestAnimationFrame(step);
+        }
+
+        function _vnFinishTyping() {
+            if (_vnTypeTimer) cancelAnimationFrame(_vnTypeTimer);
+            _vnTypeTimer = null;
+            if (_vnTypeChars) _vnTypeChars.forEach(s => s.classList.add('on'));
+            document.querySelector('.vn-dialogue-box')?.classList.remove('vn-typing');
+        }
+
+        function vnAdvance() {
+            // Frappe en cours → le tap la complète, il ne saute pas la réplique.
+            if (_vnTypeTimer) { _vnFinishTyping(); return; }
+            _vnIdx++;
+            _vnRender();
+        }
 
         let infoMarkers = [];
         let bazarMarkers = [];
@@ -18904,6 +19176,51 @@
             }));
         }
 
+        // DÉMO OT — Routage après « J'ai trouvé ✦ ».
+        // La carte OT n'a pas d'incipit rédigé : on saute entièrement la phase
+        // plutôt que d'afficher un placeholder, et la jeune fille explique le
+        // geste de stabilisation (le sous-titre de l'overlay n'a pas suffi au
+        // test). Toutes les autres cartes gardent le parcours normal.
+        function _ritualSkipsIncipit(card) {
+            if (!card) return false;
+            if (card.id === 'ob_tutorial_card') return true;
+            const inc = (card.incipit || '').trim();
+            return !inc || /^\[.*\]$/.test(inc);
+        }
+
+        function ritualAfterHunt() {
+            if (!_ritualCard) return;
+            if (!_ritualSkipsIncipit(_ritualCard)) { ritualGoIncipit(); return; }
+            // La nébuleuse est montrée D'ABORD, le dialogue vient par-dessus : la
+            // jeune fille commente ce que le joueur a sous les yeux. Le fond du VN
+            // est allégé (vn-over-scene) sans quoi il l'éteindrait à 82 %.
+            // Couleurs : nébuleuse #B98CE8, présences #E09AC0, carte #F5B841,
+            // types #5FC9E8.
+            ritualGoEngrave();
+            const ov = document.getElementById('vnOverlay');
+            ov.classList.add('vn-over-scene');
+            // La consigne de geste et son halo se chevauchaient avec la boîte de
+            // dialogue : on les tient éteints tant qu'elle parle, ils s'allument
+            // à la fermeture — au moment où le joueur doit agir. Opacité forcée
+            // en inline : la phase vient d'être affichée, et la transition CSS
+            // de .hidden-instr restait bloquée sur sa valeur d'avant.
+            const _instr = document.getElementById('ritualInstruction');
+            const _halo  = document.getElementById('ritualTouchHint');
+            if (_instr) _instr.style.opacity = '0';
+            if (_halo)  _halo.style.opacity  = '0';
+            vnShow([
+                { speaker: 'La jeune fille', html: 'Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> flottent à l\'intérieur — ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span>.' },
+                { speaker: 'Toi', line: 'Ma quoi ?' },
+                { speaker: 'La jeune fille', html: 'Une <span style="color:#F5B841;font-weight:600">carte</span>. Le nom qu\'on donne à une mémoire qu\'on a réussi à fixer : un <span style="color:#5FC9E8;font-weight:600">personnage</span>, un <span style="color:#5FC9E8;font-weight:600">lieu</span> ou un <span style="color:#5FC9E8;font-weight:600">objet</span> que la ville avait presque oublié.' },
+                { speaker: 'La jeune fille', line: 'Cristallise-la, et découvre ce qu\'elle garde. Elle est à toi.' },
+                { speaker: 'La jeune fille', line: 'Pose ton doigt sur la nébuleuse et tiens — jusqu\'à ce qu\'elle se stabilise.' },
+            ], () => {
+                ov.classList.remove('vn-over-scene');
+                if (_instr) _instr.style.opacity = '';
+                if (_halo)  _halo.style.opacity  = '';
+            });
+        }
+
         function ritualGoIncipit() {
             if (!_ritualCard) return;
             const card    = _ritualCard;
@@ -18962,6 +19279,7 @@
             document.getElementById('ritualEngrave').style.setProperty('--ritual-color', color);
             document.getElementById('ritualProgress')?.classList.remove('show');
             document.getElementById('ritualInstruction')?.classList.remove('hidden-instr');
+            document.getElementById('ritualTouchHint')?.classList.remove('hidden-instr');
             document.getElementById('ritualProgressFill').style.width = '0%';
             ['nebulaL1','nebulaL2','nebulaL3'].forEach(id => {
                 const el = document.getElementById(id);
@@ -19010,6 +19328,7 @@
                     const prog  = document.getElementById('ritualProgress');
                     if (instr && !instr.classList.contains('hidden-instr')) {
                         instr.classList.add('hidden-instr');
+                        document.getElementById('ritualTouchHint')?.classList.add('hidden-instr');
                         prog?.classList.add('show');
                     }
                     const fill = document.getElementById('ritualProgressFill');
@@ -19026,6 +19345,7 @@
                     if (fill) fill.style.width = `${_ritualHoldProgress * 100}%`;
                     if (_ritualHoldProgress === 0) {
                         document.getElementById('ritualInstruction')?.classList.remove('hidden-instr');
+                        document.getElementById('ritualTouchHint')?.classList.remove('hidden-instr');
                         document.getElementById('ritualProgress')?.classList.remove('show');
                     }
                 }
@@ -19168,7 +19488,10 @@
                     ctx.fillStyle = `rgba(${rgb},0.30)`;
                     ctx.fillRect(0, 0, W, H);
                     ctx.restore();
-                    setTimeout(_ritualGoReveal, 300);
+                    // CR test — conclusion ralentie (~×1.4) : le reveal arrivait
+                    // trop sec après la stabilisation. Seule la fin est ralentie,
+                    // la chasse et le hold gardent leur rythme.
+                    setTimeout(_ritualGoReveal, 450);
                     return;
                 }
                 _ritualEngraveAnimId = requestAnimationFrame(draw);
@@ -19233,8 +19556,10 @@
             }
 
             _ritualShowPhase('ritualReveal');
-            setTimeout(_ritualSpawnParticles, 200);
-            setTimeout(() => ritualClose(), 2800);
+            setTimeout(_ritualSpawnParticles, 300);
+            // CR test — la carte restait trop peu de temps à l'écran : on laisse
+            // le temps de la regarder avant la fermeture automatique.
+            setTimeout(() => ritualClose(), 4000);
         }
 
         function _ritualSpawnParticles() {
@@ -20967,7 +21292,7 @@
                     node.className = 'ot-tl-node';
                     node.type = 'button';
                     node.dataset.idx = String(i);
-                    node.addEventListener('click', (e) => { e.stopPropagation(); _otTlSelect(i); });
+                    node.addEventListener('click', (e) => { e.stopPropagation(); _otTlClearHint(); _otTlSelect(i); });
                     tl.appendChild(node);
                 }
             }
@@ -21000,6 +21325,23 @@
                 if (opts.morph) _otTlMorph(holder, artImg, src);
                 else { artImg.src = src; artImg.style.opacity = '1'; artImg.style.display = 'block'; }
             }
+        }
+
+        // CR test — Action UX 4. Attire l'œil sur les pastilles de visuels quand
+        // un nouvel état vient d'être débloqué. Le halo s'éteint au premier tap
+        // (via _otTlSelect) ou au bout de 8 s, pour ne pas rester à clignoter.
+        let _otTlHintTimer = null;
+        function _otTlHintVisuals() {
+            const nodes = document.querySelectorAll('.ot-tl-node:not(.locked)');
+            if (nodes.length < 2) return;          // rien à parcourir
+            nodes.forEach(n => n.classList.add('hint'));
+            clearTimeout(_otTlHintTimer);
+            _otTlHintTimer = setTimeout(_otTlClearHint, 8000);
+        }
+        function _otTlClearHint() {
+            clearTimeout(_otTlHintTimer);
+            _otTlHintTimer = null;
+            document.querySelectorAll('.ot-tl-node.hint').forEach(n => n.classList.remove('hint'));
         }
 
         // Tap sur une pastille
