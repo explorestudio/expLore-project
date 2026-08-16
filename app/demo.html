@@ -1162,8 +1162,13 @@
             box-shadow: 0 2px 10px rgba(79,70,229,0.3);
         }
 
-        /* Bouton calque quartiers (afficher/masquer contours + titres + %) */
-        .zone-layer-toggle {
+        /* ══════════════════════════════════════════════════════════════
+           PARAMÈTRES — bouton ⚙️ (créneau de l'ancien bouton calques,
+           sous le bouton de vue) et panneau langue · calques · son.
+           Le bouton musique flottant a été absorbé ici : il occupait le
+           même créneau que le journal de quête (top 64 / right 14).
+           ══════════════════════════════════════════════════════════════ */
+        .settings-toggle {
             position: absolute;
             bottom: 130px;
             right: 14px;
@@ -1180,10 +1185,101 @@
             justify-content: center;
             z-index: 500;
             font-size: 20px;
-            transition: transform 0.15s, background 0.2s, opacity 0.2s;
+            transition: transform 0.15s, background 0.2s;
         }
-        .zone-layer-toggle:active { transform: scale(0.88); }
-        .zone-layer-toggle.off { background: rgba(120,110,90,0.22); opacity: 0.55; }
+        .settings-toggle:active { transform: scale(0.88); }
+
+        /* Voile : ferme au clic hors panneau */
+        .settings-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1200;
+            background: rgba(8,6,18,0.45);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .settings-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .settings-panel {
+            position: absolute;
+            right: 14px;
+            bottom: 182px;
+            width: min(268px, calc(100% - 28px));
+            background: rgba(15,15,25,0.94);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            padding: 14px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            transform: translateY(10px) scale(0.97);
+            transition: transform 0.2s ease;
+        }
+        .settings-overlay.open .settings-panel { transform: none; }
+
+        .settings-title {
+            font-size: 10px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 1.2px;
+            color: rgba(255,255,255,0.45);
+            margin-bottom: 12px;
+        }
+        .settings-row { padding: 11px 0; border-top: 1px solid rgba(255,255,255,0.08); }
+        .settings-row:first-of-type { border-top: none; padding-top: 0; }
+        .settings-row:last-of-type { padding-bottom: 0; }
+        .settings-row-label {
+            display: flex; align-items: center; gap: 7px;
+            font-size: 12px; font-weight: 700;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 9px;
+        }
+        /* Langue : segmenté FR / EN. La bascule recharge la page. */
+        .settings-seg { display: flex; gap: 6px; }
+        .settings-seg button {
+            flex: 1; padding: 7px 0;
+            font-family: inherit; font-size: 12px; font-weight: 700;
+            color: rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.07);
+            border: 1px solid transparent; border-radius: 9px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+        .settings-seg button.active {
+            color: #EDE9FE;
+            background: rgba(124,58,237,0.32);
+            border-color: rgba(167,139,250,0.5);
+        }
+        /* Interrupteurs (calque quartiers, musique) */
+        .settings-switch-row {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        }
+        .settings-sub { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.7); }
+        .settings-switch {
+            flex-shrink: 0; position: relative;
+            width: 42px; height: 24px; padding: 0;
+            border: none; border-radius: 999px;
+            background: rgba(255,255,255,0.18);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .settings-switch::after {
+            content: '';
+            position: absolute; top: 3px; left: 3px;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+            transition: transform 0.2s ease;
+        }
+        .settings-switch.on { background: rgba(124,58,237,0.85); }
+        .settings-switch.on::after { transform: translateX(18px); }
+        /* Volume : curseur repris du panneau vitesse (.walk-speed-slider) */
+        .settings-volume { display: flex; align-items: center; gap: 9px; margin-top: 11px; }
+        .settings-volume .walk-speed-slider { flex: 1; }
+        .settings-volume-val {
+            font-size: 11px; font-weight: 700;
+            color: rgba(255,255,255,0.55);
+            min-width: 36px; text-align: right;
+        }
+        .settings-volume.disabled { opacity: 0.35; pointer-events: none; }
 
         /* Panneau vitesse de marche */
         .walk-speed-panel {
@@ -3345,46 +3441,16 @@
         }
 
         /* ══════════════════════════════════════════════════════════════
-           MUSIQUE D'AMBIANCE — bouton de bascule + toast d'invitation
-           Posé sous le compteur de poudre (même créneau que le bouton
-           journal de quête, masqué dans cette démo). Style aligné sur le
-           HUD blanc translucide, pas sur les tokens du carnet : le bouton
-           vit sur la carte, pas dans le carnet.
+           MUSIQUE D'AMBIANCE — toast d'invitation
+           La bascule elle-même vit désormais dans le panneau paramètres
+           (bouton ⚙️) : le toast pointe donc vers ce bouton, en bas à
+           droite. `absolute` et non `fixed` : il doit rester dans le
+           cadre téléphone (.app-container, 390 px centrés sur desktop).
            ══════════════════════════════════════════════════════════════ */
-        /* `absolute` et non `fixed` : le bouton doit rester dans le cadre
-           téléphone (.app-container, 390 px centrés sur desktop). */
-        .bg-music-toggle {
-            position: absolute;
-            top: 64px; right: 14px;
-            z-index: 1000;
-            width: 40px; height: 40px;
-            padding: 0; border: none; border-radius: 50%;
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(6px);
-            color: #6b7280;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.14);
-            transition: transform 0.12s ease, background 0.2s ease, color 0.2s ease;
-        }
-        .bg-music-toggle:hover  { transform: scale(1.05); }
-        .bg-music-toggle:active { transform: scale(0.94); }
-        .bg-music-toggle.on {
-            color: #7C3AED;
-            background: rgba(255,255,255,0.98);
-            box-shadow: 0 2px 12px rgba(124,58,237,0.32);
-        }
-        .bg-music-icon { transition: opacity 0.2s ease, transform 0.2s ease; }
-        .bg-music-toggle.on .bg-music-icon-on { animation: bgMusicPop 0.2s ease-out; }
-        @keyframes bgMusicPop {
-            from { opacity: 0; transform: scale(0.82); }
-            to   { opacity: 1; transform: scale(1); }
-        }
-
-        /* Toast d'invitation : affiché une seule fois, pointe vers le bouton */
+        /* Toast d'invitation : affiché une seule fois, pointe vers ⚙️ */
         .bg-music-invite {
             position: absolute;
-            top: 112px; right: 14px;
+            bottom: 182px; right: 14px;
             z-index: 1001;
             max-width: 240px;
             padding: 11px 14px;
@@ -3395,16 +3461,16 @@
             color: #EDE9FE;
             font-size: 12.5px; font-weight: 600; line-height: 1.4;
             cursor: pointer;
-            opacity: 0; transform: translateY(-6px);
+            opacity: 0; transform: translateY(6px);
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
         .bg-music-invite.show { opacity: 1; transform: translateY(0); }
-        .bg-music-invite::after {   /* flèche pointant vers le bouton */
+        .bg-music-invite::after {   /* flèche pointant vers le bouton ⚙️, en dessous */
             content: '';
-            position: absolute; top: -7px; right: 12px;
+            position: absolute; bottom: -7px; right: 16px;
             border-left: 7px solid transparent;
             border-right: 7px solid transparent;
-            border-bottom: 7px solid rgba(30,27,58,0.96);
+            border-top: 7px solid rgba(20,18,38,0.96);
         }
 
         /* ══════════════════════════════════════════════════════════════
@@ -6176,38 +6242,15 @@
         }
         .ritual-overlay.dark .ritual-card-name { opacity: 1; transform: translateY(0); }
 
+        /* Indice retiré du rituel : le divider reprend la marge basse que
+           portait le bloc indice, sinon le bouton colle au nom de la carte. */
         .ritual-divider {
             width: 36px; height: 1px;
             background: linear-gradient(to right, transparent, rgba(201,168,76,0.55), transparent);
-            margin-bottom: 24px;
+            margin-bottom: 36px;
             opacity: 0; transition: opacity 0.5s 0.9s;
         }
         .ritual-overlay.dark .ritual-divider { opacity: 1; }
-
-        .ritual-clue-label {
-            font-size: 10px; letter-spacing: 2.5px;
-            color: rgba(201,168,76,0.55); text-transform: uppercase;
-            margin-bottom: 10px;
-            opacity: 0; transition: opacity 0.5s 1s;
-        }
-        .ritual-overlay.dark .ritual-clue-label { opacity: 1; }
-
-        .ritual-clue-icon {
-            font-size: 28px; margin-bottom: 10px;
-            opacity: 0; transform: scale(0.7);
-            transition: opacity 0.4s 1.1s, transform 0.4s 1.1s;
-        }
-        .ritual-overlay.dark .ritual-clue-icon { opacity: 1; transform: scale(1); }
-
-        .ritual-clue {
-            font-size: 17px; font-style: italic;
-            color: rgba(255,255,255,0.82); text-align: center;
-            max-width: 280px; line-height: 1.75;
-            margin-bottom: 36px;
-            opacity: 0; transform: translateY(6px);
-            transition: opacity 0.6s 1.2s, transform 0.6s 1.2s;
-        }
-        .ritual-overlay.dark .ritual-clue { opacity: 1; transform: translateY(0); }
 
         .ritual-btn {
             background: none; border-radius: 30px;
@@ -8421,11 +8464,7 @@
                         <button class="avatar-menu-item" onclick="closeAvatarMenu(); openProgressionScreen()">
                             <span>⭐</span> Progression
                         </button>
-                        <!-- Langue : le libellé annonce la langue vers laquelle on bascule
-                             (donc jamais traduit par la table — écrit par applyLanguage). -->
-                        <button class="avatar-menu-item" onclick="toggleLanguage()">
-                            <span>🌐</span> <span id="menuLangLabel">English</span>
-                        </button>
+                        <!-- Langue : déplacée dans le panneau paramètres (bouton ⚙️) -->
                         <button class="avatar-menu-item avatar-menu-item--disabled">
                             <span>🛒</span> Magasin <span class="soon-badge">Bientôt</span>
                         </button>
@@ -8538,10 +8577,11 @@
                 oncontextmenu="toggleSpeedPanel(event)"
                 title="Changer la vue · Appui long pour la vitesse">🔭</button>
 
-            <!-- Bouton calque quartiers : RETIRÉ pour la démo OT (pas de zones) -->
-            <button class="zone-layer-toggle" id="zoneLayerToggleBtn" style="display:none;"
-                onclick="toggleZonesLayer()"
-                title="Afficher / masquer les quartiers">🏘️</button>
+            <!-- Bouton paramètres (créneau de l'ancien bouton calques, qui est
+                 devenu une ligne du panneau — masquée ici, la démo OT n'a pas
+                 de zones). Reste dans .map-hud pour garder son empilement. -->
+            <button class="settings-toggle" id="settingsToggleBtn" type="button"
+                onclick="openSettings()" title="Paramètres" aria-label="Paramètres">⚙️</button>
 
             <!-- Panneau vitesse de marche -->
             <div class="walk-speed-panel" id="walkSpeedPanel">
@@ -8892,14 +8932,11 @@
              RITUEL DE COLLECTE — 4 phases
         ══════════════════════════════════════════ -->
 
-        <!-- Phase 1 : Chasse à l'indice -->
+        <!-- Phase 1 : présentation de la carte (l'indice a été retiré) -->
         <div id="ritualHunt" class="ritual-overlay" role="dialog">
             <div class="ritual-supertype" id="ritualSupertype"></div>
             <div class="ritual-card-name" id="ritualCardName"></div>
             <div class="ritual-divider"></div>
-            <div class="ritual-clue-label">Indice</div>
-            <div class="ritual-clue-icon" id="ritualClueIcon"></div>
-            <div class="ritual-clue" id="ritualClueText"></div>
             <button class="ritual-btn" id="ritualHuntBtn" onclick="ritualAfterHunt()">J'ai trouvé ✦</button>
         </div>
 
@@ -10390,20 +10427,53 @@
         <!-- preload="none" : la piste fait 2,7 Mo et la musique est OFF par
              défaut — on ne télécharge rien tant que le joueur n'active pas. -->
         <audio id="bgMusic" src="./assets/audio/ambient_bg.mp3" loop preload="none"></audio>
-        <button id="bgMusicToggle" class="bg-music-toggle" type="button"
-                onclick="BgMusic.toggle()" aria-label="Activer la musique">
-            <svg class="bg-music-icon bg-music-icon-on" viewBox="0 0 24 24" width="21" height="21" style="display:none">
-                <path d="M9 18V5l12-2v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="6" cy="18" r="3" fill="currentColor"/>
-                <circle cx="18" cy="16" r="3" fill="currentColor"/>
-            </svg>
-            <svg class="bg-music-icon bg-music-icon-off" viewBox="0 0 24 24" width="21" height="21">
-                <path d="M9 18V5l12-2v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
-                <circle cx="6" cy="18" r="3" fill="currentColor" opacity="0.4"/>
-                <circle cx="18" cy="16" r="3" fill="currentColor" opacity="0.4"/>
-                <line x1="3" y1="21" x2="21" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-        </button>
+
+        <!-- ── PARAMÈTRES ── langue · calques · son
+             Le bouton ⚙️ vit dans .map-hud ; le panneau est ici, dans le
+             cadre téléphone, pour passer au-dessus du HUD. -->
+        <div class="settings-overlay" id="settingsOverlay" onclick="handleSettingsBackdrop(event)">
+            <div class="settings-panel">
+                <div class="settings-title">Paramètres</div>
+
+                <!-- Langue : la bascule recharge la page (cf. toggleLanguage) -->
+                <div class="settings-row">
+                    <div class="settings-row-label"><span>🌐</span> Langue</div>
+                    <div class="settings-seg">
+                        <button type="button" id="setLangFr" onclick="setSettingsLang('fr')">Français</button>
+                        <button type="button" id="setLangEn" onclick="setSettingsLang('en')">English</button>
+                    </div>
+                </div>
+
+                <!-- Calques : masqué pour la démo OT (pas de zones) -->
+                <div class="settings-row" id="settingsLayersRow" style="display:none;">
+                    <div class="settings-row-label"><span>🏘️</span> Calques</div>
+                    <div class="settings-switch-row">
+                        <span class="settings-sub">Quartiers</span>
+                        <button type="button" class="settings-switch" id="setZonesSwitch"
+                                onclick="toggleZonesLayer()"
+                                aria-label="Afficher / masquer les quartiers"></button>
+                    </div>
+                </div>
+
+                <!-- Son -->
+                <div class="settings-row">
+                    <div class="settings-row-label"><span>🎵</span> Son</div>
+                    <div class="settings-switch-row">
+                        <span class="settings-sub">Musique d'ambiance</span>
+                        <button type="button" class="settings-switch" id="bgMusicToggle"
+                                onclick="BgMusic.toggle()" aria-label="Activer la musique"></button>
+                    </div>
+                    <div class="settings-volume" id="settingsVolumeRow">
+                        <span class="settings-sub">Volume</span>
+                        <input type="range" class="walk-speed-slider" id="settingsVolumeSlider"
+                               min="0" max="100" step="5" value="35"
+                               oninput="onSettingsVolume(this.value)"
+                               aria-label="Volume de la musique">
+                        <span class="settings-volume-val" id="settingsVolumeVal">35 %</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- ── DOSSIER PHOTO (carnet scrapbook) ── -->
         <div class="jsb-dsr" id="jsbDossier" onclick="closeJsbDossier(event)">
@@ -10558,6 +10628,17 @@
             "🗺️ VUE PLANIFICATION — pan & zoom activés": "🗺️ PLANNING VIEW — pan & zoom enabled",
             "Changer la vue · Appui long pour la vitesse": "Switch view · Long press for speed",
             "Afficher / masquer les quartiers": "Show / hide districts",
+            // ── Panneau paramètres ──
+            "Paramètres": "Settings",
+            "Langue": "Language",
+            "Calques": "Layers",
+            "Quartiers": "Districts",
+            "Son": "Sound",
+            "Musique d'ambiance": "Ambient music",
+            "Volume de la musique": "Music volume",
+            "Activer la musique": "Turn music on",
+            "Désactiver la musique": "Turn music off",
+            "Une ambiance sonore accompagne l'exploration. Tu peux l'activer dans les paramètres.": "An ambient soundtrack goes with your exploration. You can turn it on in the settings.",
             "Vitesse": "Speed",
             "Marche": "Walk",
             "🚶 Lente": "🚶 Slow",
@@ -10596,7 +10677,6 @@
             "Voir →": "View →",
 
             // ── Rituel de collecte ──
-            "Indice": "Clue",
             "J'ai trouvé ✦": "I found it ✦",
             "Tenir pour stabiliser ›": "Hold to stabilize ›",
             "Stabilise la nébuleuse": "Stabilize the nebula",
@@ -13328,8 +13408,8 @@
         // dur dans le rituel, le guide, la révélation gratuite, la sauvegarde) et
         // on rhabille uniquement le contenu. Invisible pour le joueur : il voit
         // « Office du Tourisme » partout. Contenu éditorial : Canelle — 3 arcs
-        // intégrés ; restent à fournir l'incipit, l'indice, l'affiche du
-        // Rectangle et le fronton vide de Mars.
+        // intégrés ; restent à fournir l'incipit, l'affiche du Rectangle et le
+        // fronton vide de Mars.
         // Coordonnées réelles du lieu : 45.75718567058155 / 4.833052975484796.
         const OB_TUTORIAL_CARD = {
             id: 'ob_tutorial_card',
@@ -13339,7 +13419,7 @@
             rarity: 'rare',
             supertype: 'societe',
             incipit: '[Incipit à rédiger — Canelle]',
-            clue: '[Indice à rédiger — Canelle]',
+            // clueIcon reste : il alimente aussi ritualBigIcon et le rendu canvas.
             clueIcon: '✦',
             collections: [],
 
@@ -19051,13 +19131,57 @@
             const vis = _zonesLayerVisible ? 'visible' : 'none';
             try { if (map && map.getLayer && map.getLayer('zones-line')) map.setLayoutProperty('zones-line', 'visibility', vis); } catch(e) {}
             Object.values(_zoneBadges).forEach(b => { if (b && b.el) b.el.style.display = _zonesLayerVisible ? '' : 'none'; });
-            const btn = document.getElementById('zoneLayerToggleBtn');
-            if (btn) btn.classList.toggle('off', !_zonesLayerVisible);
+            const sw = document.getElementById('setZonesSwitch');
+            if (sw) sw.classList.toggle('on', _zonesLayerVisible);
         }
         function toggleZonesLayer() {
             _zonesLayerVisible = !_zonesLayerVisible;
             try { localStorage.setItem('explore_zonesLayerVisible', _zonesLayerVisible ? '1' : '0'); } catch(e) {}
             applyZonesLayerVisibility();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // PARAMÈTRES — langue · calques · son
+        // Le panneau remplace les deux boutons flottants d'avant (calque
+        // quartiers, musique) et l'entrée langue du menu avatar.
+        // ══════════════════════════════════════════════════════════════
+        function openSettings() {
+            const ov = document.getElementById('settingsOverlay');
+            if (!ov) return;
+            syncSettingsPanel();
+            ov.classList.add('open');
+        }
+        function closeSettings() {
+            const ov = document.getElementById('settingsOverlay');
+            if (ov) ov.classList.remove('open');
+        }
+        function handleSettingsBackdrop(e) {
+            if (e.target === e.currentTarget) closeSettings();
+        }
+        // État reflété à l'ouverture seulement : le panneau n'est lu que
+        // quand il est visible, pas besoin d'une synchro permanente.
+        function syncSettingsPanel() {
+            const isEn = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG === 'en');
+            const fr = document.getElementById('setLangFr');
+            const en = document.getElementById('setLangEn');
+            if (fr) fr.classList.toggle('active', !isEn);
+            if (en) en.classList.toggle('active', isEn);
+            const sw = document.getElementById('setZonesSwitch');
+            if (sw) sw.classList.toggle('on', _zonesLayerVisible);
+            if (typeof BgMusic !== 'undefined' && BgMusic.syncSettings) BgMusic.syncSettings();
+        }
+        // Choisir la langue déjà active ne doit rien faire : toggleLanguage
+        // recharge la page.
+        function setSettingsLang(lang) {
+            const isEn = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG === 'en');
+            if ((lang === 'en') === isEn) return;
+            toggleLanguage();
+        }
+        function onSettingsVolume(val) {
+            const pct = Math.max(0, Math.min(100, parseInt(val, 10) || 0));
+            const lbl = document.getElementById('settingsVolumeVal');
+            if (lbl) lbl.textContent = pct + ' %';
+            if (typeof BgMusic !== 'undefined' && BgMusic.setVolume) BgMusic.setVolume(pct / 100);
         }
 
         // ── Points-souvenirs : rendu + marquage ──
@@ -19148,8 +19272,6 @@
 
             const info    = SUPERTYPES[card.supertype] || {};
             const color   = info.color || '#ffffff';
-            const clue    = card.clue    || 'Observe attentivement ce lieu.';
-            const icon    = card.clueIcon || (info.symbol || '✦');
             const incipit = card.incipit || '';
 
             // Injecter la couleur narrative comme variable CSS
@@ -19161,8 +19283,6 @@
             stEl.style.color = color;
 
             document.getElementById('ritualCardName').textContent = card.name;
-            document.getElementById('ritualClueIcon').textContent = icon;
-            document.getElementById('ritualClueText').textContent = `"${clue}"`;
 
             const btn = document.getElementById('ritualHuntBtn');
             btn.style.borderColor = `rgba(${_hexToRgb(color)},0.5)`;
@@ -23411,12 +23531,14 @@
         const BgMusic = (function () {
             const KEY_ENABLED = 'demo_ot_music_enabled';
             const KEY_INVITE  = 'demo_ot_music_invite_shown';
-            const VOL_NORMAL  = 0.35;    // ambiance de fond, pas bande-son
-            const VOL_DUCKED  = 0.035;   // 10 % du volume normal
+            const KEY_VOLUME  = 'demo_ot_music_volume';
+            const VOL_DEFAULT = 0.35;    // ambiance de fond, pas bande-son
+            const DUCK_RATIO  = 0.1;     // 10 % du volume choisi pendant une entrée du carnet
             const FADE_DOWN   = 400;
             const FADE_UP     = 600;
 
-            let audioEl = null, btn = null, iconOn = null, iconOff = null;
+            let audioEl = null, btn = null;
+            let volume  = VOL_DEFAULT;   // volume réglé dans les paramètres
             let enabled = false;
             let pendingStart = false;   // ON persistant, en attente du 1er tap
             let ducked = false;
@@ -23433,10 +23555,10 @@
                 audioEl = document.getElementById('bgMusic');
                 btn     = document.getElementById('bgMusicToggle');
                 if (!audioEl || !btn) return;
-                iconOn  = btn.querySelector('.bg-music-icon-on');
-                iconOff = btn.querySelector('.bg-music-icon-off');
 
-                audioEl.volume = VOL_NORMAL;
+                const v = parseFloat(_read(KEY_VOLUME));
+                volume = (isFinite(v) && v >= 0 && v <= 1) ? v : VOL_DEFAULT;
+                audioEl.volume = volume;
                 enabled = (_read(KEY_ENABLED) === 'true');
                 updateUI();
 
@@ -23452,9 +23574,32 @@
                 _maybeInvite();
             }
 
+            // Volume cible du moment : atténué si une entrée du carnet joue.
+            function _target() {
+                return ducked ? volume * DUCK_RATIO : volume;
+            }
+
+            // Réglage depuis le panneau paramètres.
+            function setVolume(v) {
+                volume = Math.max(0, Math.min(1, parseFloat(v) || 0));
+                _write(KEY_VOLUME, String(volume));
+                if (fadeTimer) { clearInterval(fadeTimer); fadeTimer = null; }
+                if (audioEl) audioEl.volume = _target();
+            }
+
+            // Recale le curseur du panneau paramètres à son ouverture.
+            function syncSettings() {
+                const pct    = Math.round(volume * 100);
+                const slider = document.getElementById('settingsVolumeSlider');
+                const val    = document.getElementById('settingsVolumeVal');
+                if (slider) slider.value = pct;
+                if (val)    val.textContent = pct + ' %';
+                if (btn)    updateUI();
+            }
+
             function _firstTap() {
                 if (pendingStart && enabled) {
-                    audioEl.volume = ducked ? VOL_DUCKED : VOL_NORMAL;
+                    audioEl.volume = _target();
                     audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
                 }
             }
@@ -23466,7 +23611,7 @@
                 _dismissInvite();
                 if (enabled) {
                     // Reprise déjà atténuée si une entrée du carnet joue (cas §7.5)
-                    audioEl.volume = ducked ? VOL_DUCKED : VOL_NORMAL;
+                    audioEl.volume = _target();
                     audioEl.play().catch(function () {});
                     pendingStart = false;
                 } else {
@@ -23477,9 +23622,10 @@
 
             function updateUI() {
                 btn.classList.toggle('on', enabled);
-                if (iconOn)  iconOn.style.display  = enabled ? '' : 'none';
-                if (iconOff) iconOff.style.display = enabled ? 'none' : '';
                 btn.setAttribute('aria-label', enabled ? 'Désactiver la musique' : 'Activer la musique');
+                // Curseur de volume grisé quand la musique est coupée
+                const row = document.getElementById('settingsVolumeRow');
+                if (row) row.classList.toggle('disabled', !enabled);
             }
 
             function _visibility() {
@@ -23516,13 +23662,13 @@
                 document.addEventListener('play', function (e) {
                     if (!isJournalAudio(e.target)) return;
                     ducked = true;
-                    _fadeTo(VOL_DUCKED, FADE_DOWN);
+                    _fadeTo(_target(), FADE_DOWN);
                 }, true);
                 ['pause', 'ended'].forEach(function (evt) {
                     document.addEventListener(evt, function (e) {
                         if (!isJournalAudio(e.target)) return;
                         ducked = false;
-                        _fadeTo(VOL_NORMAL, FADE_UP);
+                        _fadeTo(_target(), FADE_UP);
                     }, true);
                 });
             }
@@ -23555,12 +23701,14 @@
                 el.id = 'bgMusicInvite';
                 el.className = 'bg-music-invite';
                 el.textContent = (typeof T === 'function')
-                    ? T("Une ambiance sonore accompagne l'exploration. Tu peux l'activer ici.")
-                    : "Une ambiance sonore accompagne l'exploration. Tu peux l'activer ici.";
+                    ? T("Une ambiance sonore accompagne l'exploration. Tu peux l'activer dans les paramètres.")
+                    : "Une ambiance sonore accompagne l'exploration. Tu peux l'activer dans les paramètres.";
                 el.addEventListener('click', _dismissInvite);
-                // Dans le cadre téléphone, pas dans <body> : sinon le toast
-                // se place hors du cadre sur desktop.
-                (btn.parentNode || document.body).appendChild(el);
+                // Posé dans le cadre téléphone (parent du panneau paramètres),
+                // pas dans <body> : sinon le toast sort du cadre sur desktop.
+                // Il pointe vers ⚙️, la bascule vivant désormais dans le panneau.
+                const ov = document.getElementById('settingsOverlay');
+                ((ov && ov.parentNode) || document.body).appendChild(el);
                 requestAnimationFrame(function () { el.classList.add('show'); });
                 setTimeout(_dismissInvite, 5000);
             }
@@ -23576,7 +23724,7 @@
                 }, 1200);
             }
 
-            return { init: init, toggle: toggle };
+            return { init: init, toggle: toggle, setVolume: setVolume, syncSettings: syncSettings };
         })();
 
         // ══════════════════════════════════════════════════════════════
