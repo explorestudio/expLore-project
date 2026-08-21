@@ -3081,6 +3081,7 @@
             border: none;
         }
         .journal-level-group-label {
+            display: flex; align-items: baseline; gap: 10px;
             font-family: Georgia, serif;
             font-size: 10px; font-weight: 700;
             text-transform: uppercase; letter-spacing: 3px;
@@ -3088,6 +3089,16 @@
             margin: 20px 0 12px 4px;
             padding-bottom: 6px;
             border-bottom: 1px solid rgba(160,120,50,0.25);
+        }
+        /* Titre de l'arc : dit une fois, en tête de chapitre, au lieu d'être
+           rappelé sur chacune de ses pages. Casse volontaire — capitales et
+           interlettrage du label seraient illisibles sur une phrase entière. */
+        .journal-level-arc {
+            flex: 1; min-width: 0;
+            font-size: 11px; font-weight: 400;
+            font-style: italic; text-transform: none; letter-spacing: 0.2px;
+            text-align: right;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         .journal-level-group.animating {
             animation: overlayReveal 1s cubic-bezier(0.22,1,0.36,1) both;
@@ -3574,9 +3585,9 @@
             font-family: var(--jsb-hand);
             font-size: 16px; line-height: 1.5;
             color: var(--jsb-accent);
+            /* Sans filet vertical : la citation se tient par sa main courante
+               et sa couleur, pas par une barre de bloc-quote. */
             margin: 0 60px 2px 26px;
-            padding-left: 10px;
-            border-left: 2px solid rgba(47,92,58,0.28);
             transform: rotate(-0.6deg);
         }
 
@@ -3604,7 +3615,9 @@
             right: 6px; bottom: 8px;
             width: 88px; height: 88px;
             color: var(--jsb-warm);
-            opacity: 0.34;
+            /* Un peu plus dense que les autres cachets : la grille de lettres
+               du logo a des traits fins, elle disparaissait à 0.34. */
+            opacity: 0.4;
             transform: rotate(-13deg);
             mix-blend-mode: multiply;
         }
@@ -3649,19 +3662,61 @@
             text-align: center; margin: 0 0 6px;
         }
 
-        /* ── Affordance « consulter le dossier » sur une image ── */
-        .jsb-photo.has-dossier { cursor: pointer; }
-        .jsb-photo-badge {
-            position: absolute; right: 10px; bottom: 12px;
-            display: flex; align-items: center; gap: 4px;
-            padding: 3px 8px;
-            background: rgba(44,30,15,0.72);
-            color: #f4e8d0;
-            font-family: var(--jsb-serif); font-size: 9.5px;
-            letter-spacing: 0.6px; border-radius: 2px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        /* ── Dossier photo : pile de tirages ──
+           Une entrée visuelle ne pose plus sa vue à plat : les tirages du
+           dossier sont empilés, légèrement décalés, celui du dessus en entier.
+           Le clic évente la pile puis ouvre la visionneuse — où le swipe fait
+           repartir la photo du dessus sous les autres. Les légendes ne se
+           lisent que là. */
+        .jsb-pile {
+            position: relative;
+            margin: 6px 12px 22px;
+            cursor: pointer;
+            transform: rotate(var(--jsb-rot, -1deg));
+            transition: transform 0.28s cubic-bezier(0.22,0.9,0.3,1);
+            -webkit-tap-highlight-color: transparent;
         }
-        .jsb-photo.has-dossier:active { filter: brightness(0.96); }
+        /* Tirages du dessous : on n'en voit que la tranche. Teintes
+           légèrement différentes — deux tirages d'un même dossier n'ont
+           jamais tout à fait jauni pareil. */
+        .jsb-pile-sheet {
+            position: absolute; inset: 0;
+            background: #f7f0e0;
+            border: 1px solid rgba(160,120,50,0.22);
+            box-shadow: 0 3px 10px -4px rgba(60,35,10,0.4);
+            transition: transform 0.28s cubic-bezier(0.22,0.9,0.3,1);
+        }
+        .jsb-pile-sheet.s2 { transform: rotate(2.6deg) translate(8px, 5px); }
+        .jsb-pile-sheet.s3 { transform: rotate(-4deg)  translate(-9px, 9px);
+                             background: #f2e9d6; }
+        .jsb-pile-photo {
+            position: relative;
+            background: #fbf6ea;
+            padding: 7px 7px 9px;
+            border: 1px solid rgba(160,120,50,0.24);
+            box-shadow: 0 5px 14px -6px rgba(60,35,10,0.5);
+        }
+        .jsb-pile-photo img {
+            width: 100%; height: auto; display: block;
+            border-radius: 1px;
+        }
+        .jsb-pile-photo.no-img .jsb-photo-ph { display: flex; }
+        /* Mention manuscrite du nombre de vues, sur un bout de papier collé */
+        .jsb-pile-count {
+            position: absolute; right: -7px; bottom: -10px; z-index: 2;
+            padding: 2px 10px 3px;
+            background: rgba(253,248,236,0.95);
+            box-shadow: 0 1px 4px rgba(60,35,10,0.3);
+            font-family: var(--jsb-hand);
+            font-size: 12.5px; letter-spacing: 0.2px;
+            color: rgba(52,34,12,0.8);
+            transform: rotate(2.6deg);
+        }
+        /* Éventail joué juste avant l'ouverture : la pile annonce ce qu'elle
+           contient au moment où on la touche. */
+        .jsb-pile.out { transform: rotate(var(--jsb-rot, -1deg)) scale(1.015); }
+        .jsb-pile.out .jsb-pile-sheet.s2 { transform: rotate(7deg)   translate(20px, -3px); }
+        .jsb-pile.out .jsb-pile-sheet.s3 { transform: rotate(-8.5deg) translate(-21px, 3px); }
 
         /* ── Gabarit `image_anecdote_postit` ── */
         .jsb-float-photo {
@@ -4023,11 +4078,6 @@
             font-weight: 600; letter-spacing: 0.5px;
             color: #2c1e0f;
         }
-        .jsb-dsr-sub {
-            display: block; margin-top: 2px;
-            font-weight: 400; font-style: italic; font-size: 10px;
-            color: #6b5238; opacity: 0.75;
-        }
         .jsb-dsr-close {
             flex: 0 0 auto;
             background: none; border: none; padding: 2px 4px;
@@ -4036,21 +4086,32 @@
         }
         .jsb-dsr-stage {
             position: relative; overflow: hidden;
+            height: 232px;
             background: #e8dcc8;
             border: 1px solid rgba(160,120,50,0.25);
             touch-action: pan-y;
         }
-        .jsb-dsr-track {
-            display: flex;
-            transition: transform 0.26s cubic-bezier(0.32,0.72,0,1);
-        }
-        .jsb-dsr-track.dragging { transition: none; }
+        /* Pile de tirages : chaque vue est une carte posée sur la précédente.
+           Le track n'est plus un rail qui coulisse — il ne sert qu'à porter les
+           cartes en position absolue. */
+        .jsb-dsr-track { position: absolute; inset: 0; }
         .jsb-dsr-slide {
-            flex: 0 0 100%; min-width: 100%;
+            position: absolute; left: 14px; right: 14px; top: 12px; bottom: 12px;
             display: flex; align-items: center; justify-content: center;
-            min-height: 150px;
+            background: #fbf6ea; padding: 6px;
+            border: 1px solid rgba(160,120,50,0.26);
+            box-shadow: 0 7px 18px -9px rgba(60,35,10,0.6);
+            transform-origin: 50% 62%;
+            transition: transform 0.3s cubic-bezier(0.22,0.9,0.3,1),
+                        opacity 0.26s ease;
+            will-change: transform;
         }
-        .jsb-dsr-slide img { width: 100%; height: auto; display: block; }
+        .jsb-dsr-slide.dragging { transition: none; }
+        .jsb-dsr-slide img {
+            max-width: 100%; max-height: 100%;
+            width: auto; height: auto; display: block;
+            object-fit: contain;
+        }
         .jsb-dsr-slide .jsb-dsr-missing {
             display: none;
             font-family: Georgia, serif; font-style: italic;
@@ -4351,7 +4412,7 @@
             padding: 14px 16px;
             background: rgba(255,255,255,0.35);
             border-radius: 3px;
-            border-left: 2px solid rgba(160,120,50,0.3);
+            /* Pas de filet vertical — cf. .jsb-quote */
             font-size: 13px; line-height: 1.7;
             transform: rotate(-0.3deg);
         }
@@ -14058,8 +14119,10 @@
             const hl = heartLines[idx];
             if (!hl || !hl.entry) return;
             const entryId = id + '_' + level + '_' + idx;
+            // Même règle qu'à l'unlock normal : le `_type` déclaré par l'entrée
+            // prime sur la rotation par position (cf. unlockJournalEntry).
             const types = ['text', 'visual', 'audio'];
-            const forcedType = types[(level * 3 + idx) % 3];
+            const forcedType = hl.entry._type || types[(level * 3 + idx) % 3];
             unlockJournalEntry(id, level, { id: entryId, ...hl.entry, _type: forcedType });
         }
 
@@ -15177,10 +15240,15 @@
                     photo: null, audio: null, _revealed: true } },
                 { text: "Trois images de moi, prises à trois moments différents. Regarde-les défiler.", heart: true, level: 0,
                   entry: { date: "Arc I · Un point de départ pour découvrir Lyon",
-                    text: "On me visite comme on feuillette un carnet : la façade d'abord, puis le grand écran, puis quelqu'un à qui parler. Trois images, trois façons d'entrer chez moi.",
+                    // Page sans prose : elle ne vaut que par ses images. Le corps
+                    // reste vide, le gabarit n'affiche alors aucun .jsb-body.
+                    text: "",
                     photo: 'placeholder_visual', audio: null, _revealed: true } },
                 { text: "Une partie de moi tient dans ta poche. Emporte-la.", heart: true, level: 0,
-                  entry: { date: "Arc I · Un point de départ pour découvrir Lyon",
+                  // « Me retrouver ailleurs » : une page de liens, donc de l'écrit.
+                  // Sans ce `_type`, la rotation par position en aurait fait une
+                  // entrée audio — une cassette pour une adresse de site.
+                  entry: { date: "Arc I · Un point de départ pour découvrir Lyon", _type: 'text',
                     text: "Je ne tiens pas entièrement dans mes murs. Une partie de moi vit sur un écran, et celle-là, tu peux l'emporter avec toi.",
                     photo: null, audio: null, _revealed: true } },
 
@@ -15202,7 +15270,10 @@
                         + "La sculpture fut retirée en 1956. Deux pavillons presque jumeaux, donc, mais deux symboles opposés : les arts d'un côté, l'autorité militaire de l'autre. Une opposition qui correspond étonnamment bien à leur histoire, même si rien ne permet encore d'affirmer qu'elle avait été pensée ainsi dès l'origine.",
                     photo: 'placeholder_visual', audio: null } },
                 { text: "Maison de Lyon, puis le Rectangle, puis des bureaux. On m'a donné trois noms en un demi-siècle.", heart: true, level: 1,
-                  entry: { date: "Arc II · Un pavillon peut en cacher un autre",
+                  // « Une même mission » : la seule page qui porte une vraie bande
+                  // son. Le type est déclaré plutôt que laissé à la rotation, qui
+                  // le donnait juste par chance à cette position.
+                  entry: { date: "Arc II · Un pavillon peut en cacher un autre", _type: 'audio',
                     text: "Au milieu du XXème siècle, c'est déjà un lieu dédié à la culture lyonnaise. Sous le nom de « Maison de Lyon », le bâtiment est un centre d'art contemporain et un lieu d'exposition municipal. Ce n'est qu'en 1998 qu'il prend le nom du Rectangle. Il accueillera régulièrement des événements liés à la Biennale de Lyon.\n\n"
                         + "Le pavillon a ensuite cessé ses activités artistiques début 2006 pour devenir les bureaux de l'Office du Tourisme de Lyon.",
                     photo: null, audio: null } },
@@ -22119,9 +22190,14 @@
                 const echoContent = cardDef && cardDef.echoEntries && cardDef.echoEntries[entryId]
                     ? cardDef.echoEntries[entryId] : null;
 
+                // Type de fourniture : rotation par position, SAUF si l'entrée
+                // déclare le sien dans CARD_DIALOGUES (`_type`). Une page dont le
+                // contenu impose sa nature — des liens à recopier, une bande son —
+                // ne doit pas dépendre de son rang dans le chapitre.
                 const types = ['text', 'visual', 'audio'];
                 const globalIdx = level * heartsPerLevel + palierIdx;
-                const forcedType = types[globalIdx % 3];
+                const forcedType = (heartLine && heartLine.entry && heartLine.entry._type)
+                    || types[globalIdx % 3];
 
                 const entry = heartLine && heartLine.entry
                     ? { id: entryId, ...heartLine.entry, echoContent, _type: forcedType }
@@ -22847,7 +22923,7 @@
                     template: 'image_citation',
                     title: "Bienvenue à l'Office du Tourisme !",
                     quote: 'Ouvert tous les jours, 9 h – 18 h.',
-                    decorations: ['tape_top', 'stamp_lyon_patrimoine'],
+                    decorations: ['tape_top', 'stamp_onlylyon'],
                 },
                 {
                     // Diaporama : la première photo tient la page, les trois se
@@ -22864,7 +22940,7 @@
                             { src: './assets/Cards/Office_du_tourisme/ot_a1_diapo1_facade.jpg',
                               caption: 'Vous ne savez pas par où commencer ? Entrez.' },
                             { src: './assets/Cards/Office_du_tourisme/ot_a1_diapo2_ecran.jpg',
-                              caption: 'Trouvez des idées adaptées à vos attentes et demandez conseil aux Lyon City Experts.' },
+                              caption: 'Trouvez des idées adaptées à vos attentes.' },
                             { src: './assets/Cards/Office_du_tourisme/ot_a1_diapo3_conseillers.jpg',
                               caption: 'Demandez conseil aux Lyon City Experts.' },
                         ],
@@ -22932,8 +23008,8 @@
                     },
                 },
                 {
-                    // Seule entrée « audio » des neuf : la mécanique force le type
-                    // par position (arc 2, palier 3 → cassette), c'est donc la seule
+                    // Seule entrée « audio » des neuf : son type est déclaré dans
+                    // CARD_DIALOGUES (`_type: 'audio'`), c'est donc la seule
                     // page où une bande a un sens — et la seule où la pastille
                     // cassette peut tourner. L'affiche du Rectangle prévue ici par
                     // Canelle n'étant pas fournie, la page vaut mieux avec une voix
@@ -23075,19 +23151,62 @@
                     // Millésime porté par l'entrée (`stampDate`) ; sans lui, pas de tampon.
                     if (!entry || !entry.stampDate) return '';
                     return '<span class="jsb-deco jsb-stamp-date">' + _jsbEsc(entry.stampDate) + '</span>';
-                case 'stamp_lyon_patrimoine':
+                case 'stamp_onlylyon':
+                    // Cachet ONLYLYON, calé sur le tampon fourni par David
+                    // (« ONLYLYON agencement lion.png ») : deux cercles fins et
+                    // rapprochés, « ONLY » en haut, le lion et « LYON » sur la
+                    // même ligne — l'agencement du logo de la marque —, puis
+                    // « — O.T. — » et « LYON » en arc bas.
+                    // Positions relevées sur l'image et rapportées au rayon du
+                    // cercle, pour que les proportions tiennent quelle que soit
+                    // la taille d'affichage. `textLength` fige la largeur des deux
+                    // mots : sans lui, une substitution de police décalerait le
+                    // lion par rapport au bloc de texte.
+                    // Évocation dessinée, PAS le fichier officiel de la marque :
+                    // si l'Office fournit son vectoriel, le substituer.
                     return '<svg class="jsb-deco jsb-stamp" viewBox="0 0 100 100" aria-hidden="true">'
-                         +   '<defs><path id="jsbArc' + uid + '" fill="none" '
-                         +     'd="M50,50 m-33,0 a33,33 0 1,1 66,0 a33,33 0 1,1 -66,0"/></defs>'
-                         +   '<circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2.6"/>'
-                         +   '<circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="0.9"/>'
-                         +   '<text fill="currentColor" font-family="Georgia, serif" font-size="9.5" letter-spacing="1.4">'
-                         +     '<textPath href="#jsbArc' + uid + '" startOffset="4%">LYON · PATRIMOINE · MÉMOIRE</textPath>'
+                         +   '<defs>'
+                         +     '<path id="jsbArcB' + uid + '" fill="none" '
+                         +       'd="M50,50 m-33,0 a33,33 0 0,0 66,0"/>'
+                         +   '</defs>'
+                         +   '<circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="1.9"/>'
+                         +   '<circle cx="50" cy="50" r="42.6" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+                         +   '<g fill="currentColor" font-family="Georgia, serif" font-weight="600" font-size="16">'
+                         +     '<text x="25.2" y="33" textLength="38.6" lengthAdjust="spacingAndGlyphs">ONLY</text>'
+                         +     '<text x="44.5" y="46" textLength="38.6" lengthAdjust="spacingAndGlyphs">LYON</text>'
+                         +   '</g>'
+                         // Lion : silhouette VECTORISÉE depuis le tampon de référence
+                         // fourni par David (seuillage + contour + simplification), et
+                         // non dessinée à la main — quatre tentatives au jugé donnaient
+                         // un sanglier ou un chat. Repère propre de 52 × 30 unités,
+                         // posé ensuite au centre du cachet ; pour la retoucher, mieux
+                         // vaut repartir de l'image source que déplacer des points.
+                         +   '<g fill="currentColor" transform="translate(10.8,34.6) scale(0.578)">'
+                         +     '<path fill-rule="evenodd" d='
+                         +       '"'
+                         +       'M44.9 0L43.29 0.59L41.96 0.59L39.91 1.51L39.45 2.23L37.91 2.59L37.4 3.56L36.22 4.18L34.68 5.35L34.02 6.33'
+                         +       'L33.25 6.69L21.16 6.28L18.44 6.69L16.14 7.51L15.01 8.17L13.14 9.99L8.22 17.67L7.81 17.78L7.25 18.85'
+                         +       'L5.74 20.31L4.3 21.08L3.18 21.18L2.31 20.77L1.82 20.08L1.77 19.21L2.36 18.52L3.89 18.73L4 18.37L5.43 18.16'
+                         +       'L6.28 17.42L5.33 16.16L4.25 15.7L2.25 16.21L1.15 17.16L0.03 19.16L0.03 20.65L1.02 21.9L1.84 22.31L3.38 22.41'
+                         +       'L5.12 21.95L8.25 19.8L11.25 15.93L11.81 15.83L10.48 19.47L9.07 21.08L8.17 21.57L7.81 22.44L7.86 24.23'
+                         +       'L7.25 26.23L7.25 27.36L7.56 28.64L8.25 29.38L10.96 29.38L12.68 28.69L12.47 27.15L11.73 26.56L10.37 26.28'
+                         +       'L10.63 24.49L11.94 23.08L15.47 20.98L18.24 18.73L18.78 18.8L18.98 20.39L18.26 22.44L17.85 22.7L17.8 23.72'
+                         +       'L20.31 26.9L20.62 27.82L22.75 29.43L25.87 29.38L26.56 28.74L26.15 27.26L25.41 26.77L23.93 26.92L22.62 25.15'
+                         +       'L22.21 23.98L22.21 23.52L24.26 19.88L24.95 17.44L27.26 17.96L31.05 19.49L32.22 19.34L33.17 19.67L33.12 21.21'
+                         +       'L33.89 21.36L33.94 25.41L34.35 26.38L34.3 27.72L35.25 28.92L38.99 29.13L40.19 28.28L39.7 26.82L38.73 26.36'
+                         +       'L37.71 26.41L37.32 25.72L37.37 24.18L38.58 20.83L38.99 20.83L39.09 21.34L40.01 21.18L40.17 21.65L40.75 21.67'
+                         +       'L40.78 22.11L41.57 22.18L44.29 26.79L45.85 28.77L47.54 29.28L50.57 28.87L50.59 27.15L49.49 26.36L48.11 26.46'
+                         +       'L47 24.59L45.42 20.8L45.26 18.9L45.95 18.78L46.08 18.14L46.75 17.67L48.8 13.42L48.7 9.94L49.52 10.3'
+                         +       'L49.59 10.89L50.67 10.89L51.1 10.55L52.03 6.97L52.03 5.58L50.1 4.48L49.67 3.59L48.41 2.95L47.77 1.74'
+                         +       'L46.62 1.05L46.31 0.44L44.9 0Z'
+                         +       '"/>'
+                         +   '</g>'
+                         +   '<text x="50" y="63" text-anchor="middle" fill="currentColor" '
+                         +     'font-family="Georgia, serif" font-size="9" letter-spacing="1.2">— O.T. —</text>'
+                         +   '<text fill="currentColor" font-family="Georgia, serif" font-weight="600" '
+                         +     'font-size="13.5" letter-spacing="1.6">'
+                         +     '<textPath href="#jsbArcB' + uid + '" startOffset="50%" text-anchor="middle">LYON</textPath>'
                          +   '</text>'
-                         +   '<text x="50" y="47" text-anchor="middle" fill="currentColor" '
-                         +     'font-family="Georgia, serif" font-size="11" letter-spacing="1">ARCHIVES</text>'
-                         +   '<text x="50" y="61" text-anchor="middle" fill="currentColor" '
-                         +     'font-family="Georgia, serif" font-size="8.5" letter-spacing="1">— O.T. —</text>'
                          + '</svg>';
                 default:
                     return '';
@@ -23099,30 +23218,62 @@
         function _jsbFrame(src, o) {
             o = o || {};
             const onErr = 'this.style.display=&#39;none&#39;;this.parentNode.classList.add(&#39;no-img&#39;);';
+            // Entrée à dossier : le cadre nu laisse place à la pile de tirages.
+            if (o.dossierKey) return _jsbPile(src, o, onErr);
             let h = '<div class="jsb-photo' + (src ? '' : ' no-img')
-                  + (o.dossierKey ? ' has-dossier' : '') + (o.cls ? ' ' + o.cls : '') + '"'
-                  + ' style="--jsb-rot:' + (o.rot || 0) + 'deg;"';
-            if (o.dossierKey) {
-                h += ' role="button" tabindex="0" aria-label="Consulter le dossier photo"'
-                   + ' onclick="openJsbDossier(\'' + o.dossierKey + '\',' + (o.start || 0) + ')"';
-            }
-            h += '>';
+                  + (o.cls ? ' ' + o.cls : '') + '"'
+                  + ' style="--jsb-rot:' + (o.rot || 0) + 'deg;">';
             if (src) h += '<img src="' + _jsbEsc(src) + '" alt="" onerror="' + onErr + '">';
             h += '<div class="jsb-photo-ph">Image à venir</div>';
-            if (o.dossierKey && o.count) {
-                h += '<span class="jsb-photo-badge">📎 Dossier · ' + o.count + '</span>';
-            }
             h += '</div>';
             return h;
+        }
+
+        // Pile de tirages : celui du dessus en entier, les autres en dessous,
+        // décalés. Les feuilles du dessous ne sont dessinées que si le dossier
+        // en compte assez — une pile « épaisse » pour deux vues mentirait sur
+        // ce qu'elle contient.
+        function _jsbPile(src, o, onErr) {
+            const n = o.count || 0;
+            let h = '<div class="jsb-pile' + (o.cls ? ' ' + o.cls : '') + '"'
+                  + ' style="--jsb-rot:' + (o.rot || 0) + 'deg;"'
+                  + ' role="button" tabindex="0"'
+                  + ' aria-label="Ouvrir le dossier photo — ' + n + ' vue' + (n > 1 ? 's' : '') + '"'
+                  + ' onclick="jsbPileOpen(this,\'' + o.dossierKey + '\',' + (o.start || 0) + ')">';
+            if (n > 2) h += '<span class="jsb-pile-sheet s3"></span>';
+            if (n > 1) h += '<span class="jsb-pile-sheet s2"></span>';
+            h +=   '<div class="jsb-pile-photo' + (src ? '' : ' no-img') + '">';
+            if (src) h += '<img src="' + _jsbEsc(src) + '" alt="" onerror="' + onErr + '">';
+            h +=     '<div class="jsb-photo-ph">Image à venir</div>';
+            h +=   '</div>';
+            // Mention manuscrite, sans emoji : le carnet a déjà son trombone
+            // dessiné, et la police cursive rend mal les glyphes emoji.
+            h +=   '<span class="jsb-pile-count">' + n + ' vue' + (n > 1 ? 's' : '') + '</span>';
+            h += '</div>';
+            return h;
+        }
+
+        // Éventail de la pile puis visionneuse. Le garde-fou `busy` évite qu'un
+        // double tap relance l'animation par-dessus elle-même.
+        function jsbPileOpen(el, key, start) {
+            if (!el) { openJsbDossier(key, start); return; }
+            if (el.dataset.jsbBusy) return;
+            el.dataset.jsbBusy = '1';
+            el.classList.add('out');
+            setTimeout(function () {
+                el.classList.remove('out');
+                delete el.dataset.jsbBusy;
+                openJsbDossier(key, start);
+            }, 240);
         }
 
         // Enregistre le dossier d'une entrée et renvoie sa clé (ou null)
         function _jsbRegisterDossier(entry, ctx) {
             const dsr = entry.dossier;
             if (!dsr || !dsr.photos || !dsr.photos.length) return null;
+            // Pas de sous-titre : la visionneuse ne porte que le titre du dossier.
             _jsbDsrData[ctx.key] = {
                 title: dsr.title || entry.title || 'Dossier',
-                sub: ctx.date || '',
                 photos: dsr.photos,
             };
             return ctx.key;
@@ -23173,9 +23324,25 @@
                  + '</span>';
         }
 
+        // Titre de l'arc, tel que les entrées le portent : « Arc I · <titre> ».
+        // Renvoie la partie utile de la première entrée qui en déclare un.
+        const _JRN_ARC_RE = /^\s*Arc\s+[IVXLCDM0-9]+\s*·\s*(.+)$/i;
+        function _jrnArcTitle(entries) {
+            for (let i = 0; i < (entries || []).length; i++) {
+                const m = _JRN_ARC_RE.exec(entries[i].date || '');
+                if (m) return m[1].trim();
+            }
+            return '';
+        }
+
         function _jsbHead(entry, ctx) {
             let h = _jrnTypeBadge(ctx.type);
-            if (ctx.date)    h += '<div class="jsb-eyebrow">' + _jsbEsc(ctx.date) + '</div>';
+            // Le titre d'arc coiffe désormais le chapitre : le répéter au-dessus de
+            // chaque page revenait à le lire trois fois d'affilée. Une date réelle
+            // (« Lyon, 1808 ») garde sa ligne de contexte.
+            if (ctx.date && !_JRN_ARC_RE.test(ctx.date)) {
+                h += '<div class="jsb-eyebrow">' + _jsbEsc(ctx.date) + '</div>';
+            }
             if (entry.title) h += '<div class="jsb-title">' + _jsbEsc(entry.title) + '</div>';
             return h;
         }
@@ -23194,7 +23361,11 @@
                     count: key ? entry.dossier.photos.length : 0,
                 });
             }
-            if (entry.imageCaption) h += '<div class="jsb-caption">' + _jsbEsc(entry.imageCaption) + '</div>';
+            // Entrée à dossier : la légende se lit dans la visionneuse, pas sous
+            // la pochette — c'est ce qu'on gagne à l'ouvrir.
+            if (entry.imageCaption && !key) {
+                h += '<div class="jsb-caption">' + _jsbEsc(entry.imageCaption) + '</div>';
+            }
             if (entry.body)         h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
             if (entry.quote)        h += '<div class="jsb-quote">« ' + _jsbEsc(entry.quote) + ' »</div>';
             return h + '</div>';
@@ -23734,16 +23905,27 @@
         let _jsbDsrKey  = '';
         let _jsbDsrIdx  = 0;
 
+        // Profondeur visible de la pile : au-delà, les tirages sont éteints.
+        const _JSB_PILE_DEPTH = 3;
+        let _jsbDsrBusy = false;
+
+        function _jsbDsrSlides() {
+            const t = document.getElementById('jsbDsrTrack');
+            return t ? Array.prototype.slice.call(t.children) : [];
+        }
+
         function openJsbDossier(key, startIdx) {
             const data = _jsbDsrData[key];
             const ov   = document.getElementById('jsbDossier');
             if (!data || !ov) return;
 
-            _jsbDsrKey = key;
-            _jsbDsrIdx = Math.min(Math.max(0, startIdx || 0), data.photos.length - 1);
+            _jsbDsrKey  = key;
+            _jsbDsrIdx  = Math.min(Math.max(0, startIdx || 0), data.photos.length - 1);
+            _jsbDsrBusy = false;
 
-            document.getElementById('jsbDsrTitle').innerHTML =
-                _jsbEsc(data.title) + (data.sub ? '<span class="jsb-dsr-sub">' + _jsbEsc(data.sub) + '</span>' : '');
+            // Titre seul : le rappel de l'arc (« Arc I · … ») figure déjà sur la
+            // page du carnet d'où l'on vient, il alourdissait la visionneuse.
+            document.getElementById('jsbDsrTitle').innerHTML = _jsbEsc(data.title);
 
             document.getElementById('jsbDsrTrack').innerHTML = data.photos.map(function (p) {
                 return '<div class="jsb-dsr-slide' + (p.src ? '' : ' miss') + '">'
@@ -23760,7 +23942,7 @@
             }).join('');
 
             _jsbDsrBind();
-            _jsbDsrRender();
+            _jsbDsrRender(true);
             ov.classList.add('open');
         }
 
@@ -23771,61 +23953,120 @@
             if (ov) ov.classList.remove('open');
         }
 
-        function jsbDossierGo(delta) { jsbDossierAt(_jsbDsrIdx + delta); }
+        function jsbDossierGo(delta) { _jsbDsrShift(delta > 0 ? 1 : -1); }
 
+        // Saut direct depuis une pastille : pas d'envoi sous la pile, on
+        // recompose simplement l'ordre.
         function jsbDossierAt(i) {
             const data = _jsbDsrData[_jsbDsrKey];
-            if (!data) return;
-            _jsbDsrIdx = Math.min(Math.max(0, i), data.photos.length - 1);
+            if (!data || _jsbDsrBusy) return;
+            const n = data.photos.length;
+            _jsbDsrIdx = ((i % n) + n) % n;
             _jsbDsrRender();
         }
 
-        function _jsbDsrRender() {
+        // Place chaque tirage selon son rang dans la pile : 0 = dessus.
+        // `instant` repositionne sans transition — c'est ce qui permet à la
+        // photo qui vient de sortir de réapparaître au fond sans la voir voler
+        // en travers de l'écran.
+        function _jsbDsrRender(instant) {
             const data = _jsbDsrData[_jsbDsrKey];
             if (!data) return;
-            const track = document.getElementById('jsbDsrTrack');
-            if (track) track.style.transform = 'translateX(' + (-_jsbDsrIdx * 100) + '%)';
+            const n = data.photos.length;
+            _jsbDsrSlides().forEach(function (el, i) {
+                const p = (i - _jsbDsrIdx + n) % n;
+                if (instant) el.style.transition = 'none';
+                el.style.zIndex    = String(n - p);
+                el.style.opacity   = p > _JSB_PILE_DEPTH ? '0' : '1';
+                el.style.transform = 'translate(' + (p * 7) + 'px,' + (p * 5) + 'px) '
+                                   + 'rotate(' + (p * -1.7) + 'deg) '
+                                   + 'scale(' + (1 - p * 0.035).toFixed(3) + ')';
+                if (instant) { void el.offsetWidth; el.style.transition = ''; }
+            });
+            _jsbDsrSync(_jsbDsrIdx);
+        }
 
+        // Légende et pastilles — mises à jour dès le départ du geste, sans
+        // attendre la fin de l'animation.
+        function _jsbDsrSync(idx) {
+            const data = _jsbDsrData[_jsbDsrKey];
+            if (!data) return;
             const cap = document.getElementById('jsbDsrCaption');
-            if (cap) cap.textContent = data.photos[_jsbDsrIdx].caption || '';
-
+            if (cap) cap.textContent = data.photos[idx].caption || '';
             const dots = document.querySelectorAll('#jsbDsrDots .jsb-dsr-dot');
-            dots.forEach(function (d, i) { d.classList.toggle('on', i === _jsbDsrIdx); });
+            dots.forEach(function (d, i) { d.classList.toggle('on', i === idx); });
+        }
 
-            const prev = document.getElementById('jsbDsrPrev');
-            const next = document.getElementById('jsbDsrNext');
-            if (prev) prev.disabled = (_jsbDsrIdx === 0);
-            if (next) next.disabled = (_jsbDsrIdx === data.photos.length - 1);
+        // Avancer : le tirage du dessus part sur le côté, puis revient au fond
+        // de la pile. Reculer : celui du fond revient sur le dessus par le même
+        // chemin, à l'envers. La pile boucle — pas de fin de course.
+        function _jsbDsrShift(dir) {
+            const data = _jsbDsrData[_jsbDsrKey];
+            if (!data || _jsbDsrBusy) return;
+            const n = data.photos.length;
+            if (n < 2) { _jsbDsrRender(); return; }
+            const slides = _jsbDsrSlides();
+            const target = (_jsbDsrIdx + dir + n) % n;
+            _jsbDsrSync(target);
+
+            if (dir > 0) {
+                const top = slides[_jsbDsrIdx];
+                _jsbDsrBusy = true;
+                top.classList.remove('dragging');
+                top.style.transform = 'translateX(-125%) rotate(-9deg)';
+                top.style.opacity   = '0.2';
+                setTimeout(function () {
+                    _jsbDsrIdx  = target;
+                    _jsbDsrRender(true);
+                    _jsbDsrBusy = false;
+                }, 300);
+            } else {
+                // Le tirage visé est reposé hors champ sans transition, puis
+                // ramené sur le dessus : l'inverse exact de la sortie.
+                const back = slides[target];
+                back.style.transition = 'none';
+                back.style.zIndex     = String(n + 1);
+                back.style.opacity    = '0.2';
+                back.style.transform  = 'translateX(-125%) rotate(-9deg)';
+                void back.offsetWidth;
+                back.style.transition = '';
+                _jsbDsrIdx = target;
+                _jsbDsrRender();
+            }
         }
 
         // Swipe horizontal — lié une seule fois à l'ouverture du premier dossier
         function _jsbDsrBind() {
             const stage = document.getElementById('jsbDsrStage');
-            const track = document.getElementById('jsbDsrTrack');
-            if (!stage || !track || stage.dataset.jsbBound) return;
+            if (!stage || stage.dataset.jsbBound) return;
             stage.dataset.jsbBound = '1';
 
-            let x0 = 0, dx = 0, active = false;
+            let x0 = 0, dx = 0, active = false, top = null;
 
             stage.addEventListener('touchstart', function (e) {
-                if (e.touches.length !== 1) return;
+                if (e.touches.length !== 1 || _jsbDsrBusy) return;
+                top = _jsbDsrSlides()[_jsbDsrIdx];
+                if (!top) return;
                 active = true; x0 = e.touches[0].clientX; dx = 0;
-                track.classList.add('dragging');
+                top.classList.add('dragging');
             }, { passive: true });
 
             stage.addEventListener('touchmove', function (e) {
-                if (!active) return;
+                if (!active || !top) return;
                 dx = e.touches[0].clientX - x0;
-                track.style.transform = 'translateX(calc(' + (-_jsbDsrIdx * 100) + '% + ' + dx + 'px))';
+                // Le tirage suit le doigt et pivote un peu : on sent qu'on
+                // déplace une feuille, pas qu'on fait défiler un rail.
+                top.style.transform = 'translateX(' + dx + 'px) rotate(' + (dx / 24).toFixed(2) + 'deg)';
             }, { passive: true });
 
             stage.addEventListener('touchend', function () {
                 if (!active) return;
                 active = false;
-                track.classList.remove('dragging');
+                if (top) top.classList.remove('dragging');
                 const seuil = Math.min(60, (stage.offsetWidth || 300) * 0.22);
-                if (Math.abs(dx) > seuil) jsbDossierGo(dx < 0 ? 1 : -1);
+                if (Math.abs(dx) > seuil) _jsbDsrShift(dx < 0 ? 1 : -1);
                 else _jsbDsrRender();
+                top = null;
             });
         }
 
@@ -23933,7 +24174,13 @@
                     ? 'border-left:3px solid ' + sealColor + ';background:' + sealColor + '18;'
                     : '';
                 html2 += '<div class="journal-level-group' + (isAnimate ? ' animating' : '') + '" id="journalGroup_' + lvl + '" style="' + sealStyle + '">';
-                html2 += '<div class="journal-level-group-label">' + LEVEL_LABELS[lvl] + '</div>';
+                // Le titre d'arc est porté par les entrées (« Arc I · … ») : on le
+                // remonte ici, une fois, au lieu de le répéter en tête de chaque page.
+                const arcTitle = _jrnArcTitle(lvlEntries);
+                html2 += '<div class="journal-level-group-label">'
+                       +   '<span>' + LEVEL_LABELS[lvl] + '</span>'
+                       +   (arcTitle ? '<span class="journal-level-arc">' + _jsbEsc(arcTitle) + '</span>' : '')
+                       + '</div>';
 
                 lvlEntries.forEach(function(entry, i) {
                     const isNew  = !isClosed && !!entry._isNew;
