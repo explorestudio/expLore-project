@@ -3592,7 +3592,28 @@
         }
 
         /* ── Décorations (CSS pur / SVG inline, aucune image externe) ── */
-        .jsb-deco { position: absolute; pointer-events: none; }
+        /* Le scotch, les cachets et le coin corné sont posés SUR la page :
+           ils passent au-dessus du contenu. La nébuleuse, elle, transparaît
+           sous le texte — d'où les deux niveaux (cf. .jsb-nebula). */
+        .jsb-deco { position: absolute; pointer-events: none; z-index: 2; }
+        .jsb-page > *:not(.jsb-deco) { position: relative; z-index: 1; }
+
+        /* ── Nébuleuse : la carte affleure dans son propre carnet ──
+           Quelques pages seulement en portent une — c'est un frisson, pas un
+           fond d'écran. Trois passes du même tracé (large et pâle, moyenne,
+           fine et nette) tiennent lieu de flou : un filtre SVG coûterait cher
+           au scroll sur mobile. La teinte vient du supertype de la carte,
+           posée sur le carnet en variable au moment du rendu. */
+        .jsb-nebula {
+            z-index: 0;
+            color: var(--jsb-nebula, #8B5CF6);
+            mix-blend-mode: multiply;
+        }
+        /* Confinés près du bord : un ruban qui traverse la colonne de texte
+           cesse d'affleurer, il barre la page. Le léger débord (2 à 6 px) suffit
+           à ce que la volute n'ait pas l'air posée dans un cadre. */
+        .jsb-nebula--edge   { left: -2px; top: 6px; bottom: 6px; width: 64px; }
+        .jsb-nebula--corner { right: -6px; top: -6px; width: 156px; height: 104px; }
         .jsb-tape-top {
             top: -9px; left: 50%;
             width: 92px; height: 22px; margin-left: -46px;
@@ -22923,7 +22944,9 @@
                     template: 'image_citation',
                     title: "Bienvenue à l'Office du Tourisme !",
                     quote: 'Ouvert tous les jours, 9 h – 18 h.',
-                    decorations: ['tape_top', 'stamp_onlylyon'],
+                    // Nébuleuses : trois pages sur neuf, une par arc. Au-delà,
+                    // l'effet cesserait d'être une apparition.
+                    decorations: ['nebula_corner', 'tape_top', 'stamp_onlylyon'],
                 },
                 {
                     // Diaporama : la première photo tient la page, les trois se
@@ -22992,7 +23015,7 @@
                     imageCaption: 'Apollon, sculpté par Joseph-Hugues Fabisch.',
                     quote: "Les arts d'un côté, l'autorité militaire de l'autre.",
                     stampDate: '1956',
-                    decorations: ['tape_corner', 'stamp_date'],
+                    decorations: ['nebula_edge', 'tape_corner', 'stamp_date'],
                     dossier: {
                         title: 'Les frontons',
                         photos: [
@@ -23037,7 +23060,7 @@
                     template: 'image_citation',
                     title: 'Urbaniser la ville autrement',
                     quote: 'ni maison, ni édifice, pour quelque usage que ce puisse être',
-                    decorations: ['corner_fold'],
+                    decorations: ['nebula_edge', 'corner_fold'],
                 },
                 {
                     level: 2, index: 1,
@@ -23133,6 +23156,53 @@
             return (tpl && JSB_TEMPLATES[tpl.template]) ? tpl : null;
         }
 
+        // ── Nébuleuse de page ──
+        // La carte est une mémoire cristallisée : sur quelques pages, sa
+        // nébuleuse affleure derrière l'écriture. Deux tracés seulement —
+        // un ruban qui longe la marge, un autre qui coupe le coin haut —,
+        // et des étoiles à quatre branches semées le long.
+        // Le dégradé fait naître et mourir le ruban dans le papier : sans
+        // lui, les deux bouts se terminaient net, comme un trait de feutre.
+        function _jsbNebula(uid, variant) {
+            const edge = variant === 'edge';
+            const vb   = edge ? '0 0 98 300' : '0 0 172 114';
+            const wisp = edge
+                ? 'M62 4C26 50 80 94 42 146C12 188 64 212 36 296'
+                : 'M2 100C42 74 56 26 112 30C144 32 156 58 170 42';
+            // Étoiles : x, y, rayon. Semées le long du ruban, jamais dessus.
+            const stars = edge
+                ? [[64, 34, 5.5], [36, 118, 3.6], [56, 194, 4.4], [30, 262, 3]]
+                : [[24, 84, 4.2], [76, 44, 5.6], [124, 22, 3.4], [156, 60, 3]];
+            const g = 'jsbNb' + uid;
+            let h = '<svg class="jsb-deco jsb-nebula jsb-nebula--' + variant + '"'
+                  + ' viewBox="' + vb + '" preserveAspectRatio="'
+                  + (edge ? 'xMidYMid slice' : 'xMidYMid meet') + '" aria-hidden="true">'
+                  + '<defs><linearGradient id="' + g + '" x1="0" y1="0" '
+                  +   'x2="' + (edge ? '0' : '1') + '" y2="' + (edge ? '1' : '0') + '">'
+                  +   '<stop offset="0%"   stop-color="currentColor" stop-opacity="0"/>'
+                  +   '<stop offset="30%"  stop-color="currentColor" stop-opacity="1"/>'
+                  +   '<stop offset="68%"  stop-color="currentColor" stop-opacity="0.8"/>'
+                  +   '<stop offset="100%" stop-color="currentColor" stop-opacity="0"/>'
+                  + '</linearGradient></defs>'
+                  + '<g fill="none" stroke="url(#' + g + ')" stroke-linecap="round">'
+                  +   '<path d="' + wisp + '" stroke-width="17" opacity="0.1"/>'
+                  +   '<path d="' + wisp + '" stroke-width="7"  opacity="0.16"/>'
+                  // Le trait fin est le seul vraiment net : au-dessus de 0.3 il
+                  // se lit comme un trait de feutre en travers du texte.
+                  +   '<path d="' + wisp + '" stroke-width="2"  opacity="0.26"/>'
+                  + '</g>';
+            stars.forEach(function (s, i) {
+                const x = s[0], y = s[1], r = s[2], q = r * 0.16;
+                h += '<path opacity="' + (0.5 - i * 0.07).toFixed(2) + '" fill="currentColor" d="'
+                   + 'M' + x + ' ' + (y - r)
+                   + 'Q' + (x + q) + ' ' + (y - q) + ' ' + (x + r) + ' ' + y
+                   + 'Q' + (x + q) + ' ' + (y + q) + ' ' + x + ' ' + (y + r)
+                   + 'Q' + (x - q) + ' ' + (y + q) + ' ' + (x - r) + ' ' + y
+                   + 'Q' + (x - q) + ' ' + (y - q) + ' ' + x + ' ' + (y - r) + 'Z"/>';
+            });
+            return h + '</svg>';
+        }
+
         // ── Décorations : CSS pur ou SVG inline, jamais d'image externe ──
         function _jsbDeco(name, uid, entry) {
             switch (name) {
@@ -23147,6 +23217,10 @@
                          +   '<path d="M15.5 10v22a5.5 5.5 0 0 1-11 0V9a3.6 3.6 0 0 1 7.2 0v21.5a1.9 1.9 0 0 1-3.8 0V12"'
                          +     ' stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>'
                          + '</svg>';
+                case 'nebula_edge':
+                    return _jsbNebula(uid, 'edge');
+                case 'nebula_corner':
+                    return _jsbNebula(uid, 'corner');
                 case 'stamp_date':
                     // Millésime porté par l'entrée (`stampDate`) ; sans lui, pas de tampon.
                     if (!entry || !entry.stampDate) return '';
@@ -24088,6 +24162,11 @@
             if (!notebook) return;
 
             const LEVEL_LABELS = ['Chapitre I', 'Chapitre II', 'Chapitre III'];
+
+            // Teinte des nébuleuses de page : celle du supertype de la carte.
+            // Posée une fois sur le carnet, les pages en héritent.
+            const _stInfo = SUPERTYPES[selectedCard.supertype] || {};
+            notebook.style.setProperty('--jsb-nebula', _stInfo.color || '#8B5CF6');
 
             if (entries.length === 0) {
                 notebook.innerHTML = '<div class="journal-quote">Offre de la poudre à cette carte pour qu\'elle te raconte son histoire...</div>';
