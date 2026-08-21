@@ -10906,8 +10906,8 @@
                 "It has a few memories left. Oh… but it's your card — do you want to give it some yourself?",
             [`Pour qu'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire.`]:
                 `For a card to remember, give it <span style="color:#A78BFA;font-weight:600">memorial dust</span>. Each dose wakes a little more of its story.`,
-            [`Tiens, je te la rends avec ce que j'ai noté dans le <span style="font-weight:600">carnet</span>.`]:
-                `Here, I'm giving it back to you — along with what I wrote down in the <span style="font-weight:600">notebook</span>.`,
+            [`Tiens, je te la rends avec ce que j'ai noté dans le <span style="font-weight:600">📖 carnet</span>.`]:
+                `Here, I'm giving it back to you — along with what I wrote down in the <span style="font-weight:600">📖 notebook</span>.`,
             "Le carnet ?": "The notebook?",
             "Toi aussi, tu aurais bien besoin d'un peu de poudre mémorielle ! L'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l'as encore oublié, j'imagine… Bon, garde celui-ci, j'en ai plein.":
                 "You could use a little memorial dust yourself! The Organisation gave us this booklet to write down everything a card might remember! You forgot it again, I suppose… Fine, keep this one, I have plenty.",
@@ -10945,7 +10945,7 @@
 
             // ── Carnet : économie des fournitures ──
             "Son carnet. Le premier chapitre s'y est déjà écrit — celui-là, tu peux le lire.": "Its notebook. The first chapter is already written there — that one you can read.",
-            "Les pages voilées demandent autre chose que de la poudre : une <span style=\"color:#FCD34D;font-weight:600\">pellicule</span> pour une image, une <span style=\"color:#C4B5FD;font-weight:600\">cassette</span> pour une voix, de l'<span style=\"color:#E0A458;font-weight:600\">encre</span> pour un texte.": "Veiled pages ask for more than dust: a <span style=\"color:#FCD34D;font-weight:600\">film roll</span> for an image, a <span style=\"color:#C4B5FD;font-weight:600\">tape</span> for a voice, <span style=\"color:#E0A458;font-weight:600\">ink</span> for a text.",
+            "Les pages voilées demandent autre chose que de la poudre : une <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span> pour une image, une <span style=\"color:#C4B5FD;font-weight:600\">📼 cassette</span> pour une voix, de l'<span style=\"color:#E0A458;font-weight:600\">🖋️ encre</span> pour un texte.": "Veiled pages ask for more than dust: a <span style=\"color:#FCD34D;font-weight:600\">🎞️ film roll</span> for an image, a <span style=\"color:#C4B5FD;font-weight:600\">📼 tape</span> for a voice, <span style=\"color:#E0A458;font-weight:600\">🖋️ ink</span> for a text.",
             "L'échoppe en tient, juste au nord d'ici. Sers-toi.": "The stall keeps some, just north of here. Help yourself.",
             "Tu en as déjà sur toi. Touche une page voilée pour la révéler.": "You already have some on you. Touch a veiled page to reveal it.",
             "Le chapitre est plein — mais il garde encore des pages voilées. Ouvre son carnet et dévoile-les : c'est à cette condition qu'il pourra être scellé.": "The chapter is full — but it still keeps veiled pages. Open its notebook and reveal them: only then can it be sealed.",
@@ -14517,7 +14517,9 @@
                 // CR test — Bloc 2. Le carnet est révélé ICI, pas à l'ouverture de
                 // la fiche : il vient de L'Organisation, il appartient au joueur
                 // (« garde celui-ci »), et l'oubli du joueur le relie à l'Oubli.
-                rep.push({ speaker: 'La jeune fille', html: 'Tiens, je te la rends avec ce que j\'ai noté dans le <span style="font-weight:600">carnet</span>.' });
+                // 📖 : l'icône que porte le bouton du carnet sur la fiche carte
+                // (cardCarnetIcon) — le joueur cherche ce signe-là.
+                rep.push({ speaker: 'La jeune fille', html: 'Tiens, je te la rends avec ce que j\'ai noté dans le <span style="font-weight:600">📖 carnet</span>.' });
                 rep.push({ speaker: 'Toi', line: 'Le carnet ?' });
                 rep.push({ speaker: 'La jeune fille', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poudre mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' });
                 // Consigne mécanique conservée : c'est elle qui débloque le scellement.
@@ -14576,7 +14578,9 @@
                 // CR test — Bloc 3.
                 const rep = [
                     { speaker: 'La jeune fille', line: 'Elle est un peu bavarde, en tout cas elle a encore des choses à dire.' },
-                    { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poudre : une <span style="color:#FCD34D;font-weight:600">pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">encre</span> pour un texte.' },
+                    // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour que
+                    // la réplique et l'inventaire montrent le même signe.
+                    { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poudre : une <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">📼 cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> pour un texte.' },
                 ];
                 // « Tu en as déjà » seulement s'il peut tout révéler ; sinon on le
                 // renvoie sur la mappe, au Bazar.
@@ -19306,27 +19310,22 @@
             }));
         }
 
-        // DÉMO OT — Routage après « J'ai trouvé ✦ ».
-        // La carte OT n'a pas d'incipit rédigé : on saute entièrement la phase
-        // plutôt que d'afficher un placeholder, et la jeune fille explique le
-        // geste de stabilisation (le sous-titre de l'overlay n'a pas suffi au
-        // test). Toutes les autres cartes gardent le parcours normal.
-        function _ritualSkipsIncipit(card) {
-            if (!card) return false;
-            if (card.id === 'ob_tutorial_card') return true;
-            const inc = (card.incipit || '').trim();
-            return !inc || /^\[.*\]$/.test(inc);
-        }
-
+        // Routage après « J'ai trouvé ✦ ».
+        // La phase incipit a été retirée du parcours : toutes les cartes passent
+        // directement à la stabilisation, et la jeune fille explique le geste
+        // (le sous-titre de l'overlay n'avait pas suffi au test). Les textes
+        // `incipit` restent dans les données des cartes, mais ne sont plus
+        // affichés nulle part.
         function ritualAfterHunt() {
             if (!_ritualCard) return;
-            if (!_ritualSkipsIncipit(_ritualCard)) { ritualGoIncipit(); return; }
+            ritualGoEngrave();
+            // Seule la carte tutoriel porte l'ouverture parlée.
+            if (_ritualCard.id !== 'ob_tutorial_card') return;
             // La nébuleuse est montrée D'ABORD, le dialogue vient par-dessus : la
             // jeune fille commente ce que le joueur a sous les yeux. Le fond du VN
             // est allégé (vn-over-scene) sans quoi il l'éteindrait à 82 %.
             // Couleurs : nébuleuse #B98CE8, présences #E09AC0, carte #F5B841,
             // types #5FC9E8.
-            ritualGoEngrave();
             const ov = document.getElementById('vnOverlay');
             ov.classList.add('vn-over-scene');
             // La consigne de geste et son halo se chevauchaient avec la boîte de

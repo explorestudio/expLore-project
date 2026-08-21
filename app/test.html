@@ -7553,6 +7553,10 @@
             justify-content: flex-end;
         }
         #vnOverlay.show { display: flex; }
+        /* Dialogue joué PAR-DESSUS une scène qu'il faut continuer de voir
+           (nébuleuse du rituel). Le fond plein à 0.82 l'éteindrait presque
+           entièrement — on l'allège le temps de ces répliques. */
+        #vnOverlay.vn-over-scene { background: rgba(0,0,0,0.28); }
 
         .vn-backdrop {
             position: absolute; inset: 0;
@@ -8787,7 +8791,7 @@
             <div class="ritual-supertype" id="ritualSupertype"></div>
             <div class="ritual-card-name" id="ritualCardName"></div>
             <div class="ritual-divider"></div>
-            <button class="ritual-btn" id="ritualHuntBtn" onclick="ritualGoIncipit()">J'ai trouvé ✦</button>
+            <button class="ritual-btn" id="ritualHuntBtn" onclick="ritualAfterHunt()">J'ai trouvé ✦</button>
         </div>
 
         <!-- Phase 2 : Incipit -->
@@ -10977,6 +10981,22 @@
             [`Une <span style="color:#F5B841;font-weight:600">carte</span>. Le nom qu'on donne à une mémoire qu'on a réussi à fixer : un <span style="color:#5FC9E8;font-weight:600">personnage</span>, un <span style="color:#5FC9E8;font-weight:600">lieu</span> ou un <span style="color:#5FC9E8;font-weight:600">objet</span> que la ville avait presque oublié.`]:
                 `A <span style="color:#F5B841;font-weight:600">card</span>. That's the name we give a memory we've managed to hold in place: a <span style="color:#5FC9E8;font-weight:600">character</span>, a <span style="color:#5FC9E8;font-weight:600">place</span> or an <span style="color:#5FC9E8;font-weight:600">object</span> the city had almost forgotten.`,
             "Cristallise-la, et découvre ce qu'elle garde. Elle est à toi.": "Crystallize it, and find out what it keeps. It's yours.",
+            // Ouverture déplacée sur l'écran de stabilisation : « Approche-toi »
+            // est tombé (le joueur y est déjà), d'où une nouvelle clé.
+            [`Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> flottent à l'intérieur. Ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span>.`]:
+                `Oh, you see it? A <span style="color:#B98CE8;font-weight:600">nebula</span>! Several <span style="color:#E09AC0;font-weight:600">presences</span> are drifting inside. This will be your first <span style="color:#F5B841;font-weight:600">card</span>.`,
+            "Pose ton doigt sur la nébuleuse et tiens, jusqu'à ce qu'elle se stabilise.":
+                "Press your finger on the nebula and hold, until it settles.",
+
+            // ── La méprise : la jeune fille croit parler à quelqu'un de L'Organisation ──
+            "Le carnet ?": "The notebook?",
+            "Toi aussi, tu aurais bien besoin d'un peu de poudre mémorielle ! L'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l'as encore oublié, j'imagine… Bon, garde celui-ci, j'en ai plein.":
+                "You could use a little memorial dust yourself! The Organisation gave us this booklet to write down everything a card might remember! You forgot it again, I suppose… Fine, keep this one, I have plenty.",
+            "On se retrouve pour l'évènement plus tard ?": "See you later for the event?",
+            "Comment ça ?": "What do you mean?",
+            "QUOI ? Tout ce que je viens de dire, ça ne te dit rien ?": "WHAT? Everything I just said means nothing to you?",
+            "Non…": "No…",
+            "Génial ! Tu seras mon premier disciple !": "Brilliant! You'll be my first disciple!",
 
             // ── Hints contextuels par écran ──
             "Tes cartes s'organisent ici. Des groupes se forment — des ensembles qui racontent quelque chose de plus grand que chaque fragment.": "Your cards arrange themselves here. Groups form — sets that tell something larger than any single fragment.",
@@ -11035,10 +11055,12 @@
             "Tu l'as recueillie. Mais une carte qu'on vient de réveiller a presque tout oublié — il faut lui rendre sa mémoire.": "You've taken it in. But a card that has only just been woken has forgotten almost everything — its memory has to be given back.",
             "Ouvre ta Collection. Elle t'y attend, désormais.": "Open your Collection. It's waiting for you there now.",
             "Pour qu'une carte se souvienne, il lui faut de la poudre mémorielle. Donne-lui-en — et regarde ce qui remonte.": "For a card to remember, it needs memorial dust. Give it some — and watch what comes back up.",
-            "Tu l'as réveillée. Une page s'est inscrite dans son carnet — il t'appelle.": "You've woken it. A page has written itself in its notebook — it's calling you.",
-            "Cette première page est voilée. Cette fois, c'est moi qui l'écris pour toi — avec mon encre.": "This first page is veiled. This time I'll write it for you — with my ink.",
+            [`Tu l'as réveillée. Une page s'est inscrite dans son <span style="font-weight:600">📖 carnet</span> — il t'appelle.`]:
+                `You've woken it. A page has written itself in its <span style="font-weight:600">📖 notebook</span> — it's calling you.`,
+            "Cette première page est voilée. Cette fois, c'est moi qui l'écris pour toi.": "This first page is veiled. This time I'll write it for you.",
             "Les voix laissent trois sortes de traces : des mots, des images, des sons.": "Voices leave three kinds of traces: words, images, sounds.",
-            "L'encre révèle les mots. La pellicule, les images. La cassette, les sons.": "Ink reveals words. Film, images. Tape, sounds.",
+            [`L'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> révèle les mots. La <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span>, les images. La <span style="color:#C4B5FD;font-weight:600">📼 cassette</span>, les sons.`]:
+                `<span style="color:#E0A458;font-weight:600">🖋️ Ink</span> reveals words. <span style="color:#FCD34D;font-weight:600">🎞️ Film</span>, images. <span style="color:#C4B5FD;font-weight:600">📼 Tape</span>, sounds.`,
             "L'encre révèle les mots. La pellicule, les images. La cassette, les sons. Tu en as quelques-unes — sers-t'en.": "Ink reveals words. Film, images. Tape, sounds. You have a few — use them.",
             "Tu en as déjà sur toi — sers-t'en. Quand tu n'en auras plus, une échoppe en tient toujours.": "You already have some on you — use them. When you run out, a stall always keeps some.",
             "Il ne t'en reste aucune. Les échoppes de la ville en tiennent — cherche-les sur la mappe.": "You have none left. The city's stalls keep some — look for them on the map.",
@@ -14138,21 +14160,43 @@
             if (!document.getElementById('obMarkerStyle')) {
                 const s = document.createElement('style');
                 s.id = 'obMarkerStyle';
-                s.textContent = '@keyframes obMarkerPulse{0%,100%{box-shadow:0 0 0 6px rgba(139,92,246,0.3)}50%{box-shadow:0 0 0 14px rgba(139,92,246,0.1)}}';
+                // obMarkerPulse est partagé (anneaux du guide) : ne pas y toucher.
+                // Le marqueur tutoriel porte désormais une image détourée : un
+                // box-shadow y dessinerait un halo rectangulaire. D'où une
+                // animation propre, sur l'échelle et la lueur portée.
+                s.textContent = '@keyframes obMarkerPulse{0%,100%{box-shadow:0 0 0 6px rgba(139,92,246,0.3)}50%{box-shadow:0 0 0 14px rgba(139,92,246,0.1)}}'
+                    + '@keyframes obTutoCardPulse{'
+                    + '0%,100%{transform:scale(1);filter:drop-shadow(0 0 5px rgba(139,92,246,0.75)) drop-shadow(0 2px 4px rgba(0,0,0,0.55))}'
+                    + '50%{transform:scale(1.09);filter:drop-shadow(0 0 13px rgba(167,139,250,0.95)) drop-shadow(0 2px 4px rgba(0,0,0,0.55))}}';
                 document.head.appendChild(s);
             }
 
+            // Visuel du point : la carte-spirale (RVBA détourée). Pas de pastille
+            // ronde ni de bordure : elles rogneraient le cadre de la carte.
+            //
+            // L'élément RACINE reste nu. MapLibre le positionne en écrivant un
+            // `transform` inline ; une animation CSS posée sur ce même élément
+            // gagne sur l'inline dans la cascade et écrase donc ce positionnement.
+            // Le marqueur se collait au coin haut-gauche de la mappe, hors champ :
+            // on voyait la zone de capture au centre, mais jamais la carte.
+            // Le pouls vit donc sur un enfant, comme pour les marqueurs de POI.
             const el = document.createElement('div');
             el.id = 'obTutorialMarker';
-            el.style.cssText = [
-                'width:44px','height:44px','border-radius:50%',
-                'background:linear-gradient(135deg,#8B5CF6,#6D28D9)',
-                'border:3px solid white',
-                'display:flex','align-items:center','justify-content:center',
-                'font-size:20px','cursor:pointer',
-                'animation:obMarkerPulse 2s ease-in-out infinite'
+            el.style.cssText = 'width:52px;height:52px;cursor:pointer;';
+
+            const elPulse = document.createElement('div');
+            elPulse.style.cssText = [
+                'width:100%','height:100%',
+                // Minuscule : c'est la casse suivie par git. Windows ne fait pas
+                // la différence, GitHub Pages si : une majuscule ici passe en
+                // local et donne un 404 en production.
+                'background-image:url(./assets/spiral.png)',
+                'background-size:contain',
+                'background-repeat:no-repeat',
+                'background-position:center',
+                'animation:obTutoCardPulse 2.4s ease-in-out infinite'
             ].join(';');
-            el.textContent = '✦';
+            el.appendChild(elPulse);
 
             if (map) {
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
@@ -14272,22 +14316,15 @@
                 map.getSource('poi-circles').setData({ type: 'FeatureCollection', features: [] });
                 try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'none'); } catch(e) {}
             }
-            // Ouverture retravaillée : plus concrète. Introduit nébuleuse / présences /
-            // carte (personnage·lieu·objet) avec mots-clés colorés, échange jeune fille ↔ joueur.
-            // Couleurs : nébuleuse #B98CE8, présences #E09AC0, carte #F5B841, types #5FC9E8.
-            vnShow([
-                { speaker: 'La jeune fille', html: 'Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> doivent se trouver à l\'intérieur. Ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span> !' },
-                { speaker: 'Toi', line: 'Ma quoi ?' },
-                { speaker: 'La jeune fille', html: 'Une <span style="color:#F5B841;font-weight:600">carte</span>. C\'est le nom qu\'on donne à une mémoire qu\'on a réussi à fixer : un <span style="color:#5FC9E8;font-weight:600">personnage</span>, un <span style="color:#5FC9E8;font-weight:600">lieu</span> ou un <span style="color:#5FC9E8;font-weight:600">objet</span> que la ville avait presque oublié.' },
-                { speaker: 'La jeune fille', html: 'Celle-ci, tiens : les <span style="color:#F5B841;font-weight:600">clefs de la ville</span>. Trois clefs d\'apparat offertes à un empereur — et qui n\'ouvrent aucune porte. La ville en a fait un symbole, puis les a presque oubliées.' },
-                { speaker: 'La jeune fille', line: 'Approche-toi, et cristallise-la. Elle est à toi.' },
-            ], () => {
-                if (!cardLevels[OB_TUTORIAL_CARD.id]) {
-                    cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
-                }
-                if (!collectedCards.includes(OB_TUTORIAL_CARD.id)) collectedCards.push(OB_TUTORIAL_CARD.id);
-                openCollectRitual(OB_TUTORIAL_CARD);
-            });
+            // L'ouverture (nébuleuse / présences / carte) ne se joue plus ici : elle
+            // a été déplacée sur l'écran de stabilisation, où la nébuleuse est
+            // réellement à l'écran — cf. ritualAfterHunt(). Sur la mappe, la jeune
+            // fille parlait d'une nébuleuse que le joueur ne voyait pas encore.
+            if (!cardLevels[OB_TUTORIAL_CARD.id]) {
+                cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
+            }
+            if (!collectedCards.includes(OB_TUTORIAL_CARD.id)) collectedCards.push(OB_TUTORIAL_CARD.id);
+            openCollectRitual(OB_TUTORIAL_CARD);
         }
 
         // ── Hook ritualClose ──
@@ -14605,7 +14642,13 @@
                 { speaker: 'La jeune fille', html: 'Les <span style="color:#7BD88F;font-weight:600">points d\'information</span>. Des supports que d\'autres ont laissés, incomplets. Tu peux les compléter en y insérant les parchemins que tu récupères en chemin. Une fois assemblés, ils te livrent ce qu\'ils cachaient.' },
                 { speaker: 'La jeune fille', html: 'La ville est faite de <span style="color:#C89039;font-weight:600">quartiers</span>. Chacun a ses <span style="color:#E09AC0;font-weight:600">présences</span>, ses <span style="color:#5FC9E8;font-weight:600">vues</span>, ses <span style="color:#7BD88F;font-weight:600">histoires</span> à découvrir. Tu verras leur avancement se dessiner à mesure que tu les parcours.' },
                 { speaker: 'La jeune fille', line: 'Et là où tu passes, la carte en garde trace — chaque geste que tu poses laisse un petit signe, discret, à sa place exacte. À toi de reconnaître, plus tard, le dessin de ton exploration.' },
-                { speaker: 'La jeune fille', line: 'Je dois partir, maintenant — j\'ai mes propres voix à retrouver, ailleurs. Le reste vient en marchant. À toi, désormais.' },
+                // La chute de la méprise remplace l'adieu : elle réalise ici que le
+                // joueur n'est pas des leurs — et s'en réjouit.
+                { speaker: 'La jeune fille', line: 'On se retrouve pour l\'évènement plus tard ?' },
+                { speaker: 'Toi', line: 'Comment ça ?' },
+                { speaker: 'La jeune fille', line: 'QUOI ? Tout ce que je viens de dire, ça ne te dit rien ?' },
+                { speaker: 'Toi', line: 'Non…' },
+                { speaker: 'La jeune fille', line: 'Génial ! Tu seras mon premier disciple !' },
             ], () => {
                 _obDone = true;
                 _obAct3Done = true;
@@ -14671,8 +14714,15 @@
                 case 'feed1':
                     if (ev === 'entry_unlocked') {
                         _obGuide.step = 'journal1';
+                        // La méprise : elle croit parler à quelqu'un de L'Organisation,
+                        // à qui le carnet a déjà été remis. Le joueur, lui, découvre
+                        // l'objet — et son oubli le relie à l'Oubli.
                         vnShow([
-                            { speaker: 'La jeune fille', line: 'Tu l\'as réveillée. Une page s\'est inscrite dans son carnet — il t\'appelle.' },
+                            // 📖 : l'icône que porte le bouton du carnet sur la fiche
+                            // carte (cardCarnetIcon) — le joueur cherche ce signe-là.
+                            { speaker: 'La jeune fille', html: 'Tu l\'as réveillée. Une page s\'est inscrite dans son <span style="font-weight:600">📖 carnet</span> — il t\'appelle.' },
+                            { speaker: 'Toi', line: 'Le carnet ?' },
+                            { speaker: 'La jeune fille', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poudre mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' },
                         ], () => _obGuideRefresh());
                     } else if (ev === 'xp_full') {
                         _obAfterXpFull();
@@ -14684,7 +14734,7 @@
                         _obGuide.step = 'lesson';
                         _obGuideClearRing();
                         vnShow([
-                            { speaker: 'La jeune fille', line: 'Cette première page est voilée. Cette fois, c\'est moi qui l\'écris pour toi — avec mon encre.' },
+                            { speaker: 'La jeune fille', line: 'Cette première page est voilée. Cette fois, c\'est moi qui l\'écris pour toi.' },
                         ], () => {
                             _obRevealEntryFree(OB_TUTORIAL_CARD.id, OB_TUTORIAL_CARD.id + '_0_0');
                             setTimeout(() => {
@@ -14695,7 +14745,9 @@
                                 const _shop = _obTutoBazarNear();
                                 const _lines = [
                                     { speaker: 'La jeune fille', line: 'Les voix laissent trois sortes de traces : des mots, des images, des sons.' },
-                                    { speaker: 'La jeune fille', line: 'L\'encre révèle les mots. La pellicule, les images. La cassette, les sons.' },
+                                    // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour
+                                    // que la réplique et l'inventaire montrent le même signe.
+                                    { speaker: 'La jeune fille', html: 'L\'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> révèle les mots. La <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span>, les images. La <span style="color:#C4B5FD;font-weight:600">📼 cassette</span>, les sons.' },
                                 ];
                                 if (_sup > 0) {
                                     _lines.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi — sers-t\'en. Quand tu n\'en auras plus, une échoppe en tient toujours.' });
@@ -19200,6 +19252,42 @@
                 el.classList.add('show');
                 if (id === 'ritualHunt') setTimeout(() => el.classList.add('dark'), 30);
             }));
+        }
+
+        // Routage après « J'ai trouvé ✦ ».
+        // La phase incipit a été retirée du parcours : toutes les cartes passent
+        // directement à la stabilisation. Les textes `incipit` restent dans les
+        // données des cartes, mais ne sont plus affichés nulle part.
+        function ritualAfterHunt() {
+            if (!_ritualCard) return;
+            ritualGoEngrave();
+            // Seule la carte tutoriel porte l'ouverture parlée.
+            if (_ritualCard.id !== 'ob_tutorial_card') return;
+            // La nébuleuse est montrée D'ABORD, le dialogue vient par-dessus : la
+            // jeune fille commente ce que le joueur a sous les yeux. Le fond du VN
+            // est allégé (vn-over-scene) sans quoi il l'éteindrait à 82 %.
+            // Couleurs : nébuleuse #B98CE8, présences #E09AC0, carte #F5B841,
+            // types #5FC9E8.
+            const ov = document.getElementById('vnOverlay');
+            ov.classList.add('vn-over-scene');
+            // La consigne de geste se chevauchait avec la boîte de dialogue : on la
+            // tient éteinte tant qu'elle parle, elle se rallume à la fermeture — au
+            // moment où le joueur doit agir. Opacité forcée en inline : la phase
+            // vient d'être affichée, et la transition CSS de .hidden-instr restait
+            // bloquée sur sa valeur d'avant.
+            const _instr = document.getElementById('ritualInstruction');
+            if (_instr) _instr.style.opacity = '0';
+            vnShow([
+                { speaker: 'La jeune fille', html: 'Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> flottent à l\'intérieur. Ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span>.' },
+                { speaker: 'Toi', line: 'Ma quoi ?' },
+                { speaker: 'La jeune fille', html: 'Une <span style="color:#F5B841;font-weight:600">carte</span>. Le nom qu\'on donne à une mémoire qu\'on a réussi à fixer : un <span style="color:#5FC9E8;font-weight:600">personnage</span>, un <span style="color:#5FC9E8;font-weight:600">lieu</span> ou un <span style="color:#5FC9E8;font-weight:600">objet</span> que la ville avait presque oublié.' },
+                { speaker: 'La jeune fille', html: 'Celle-ci, tiens : les <span style="color:#F5B841;font-weight:600">clefs de la ville</span>. Trois clefs d\'apparat offertes à un empereur — et qui n\'ouvrent aucune porte. La ville en a fait un symbole, puis les a presque oubliées.' },
+                { speaker: 'La jeune fille', line: 'Cristallise-la, et découvre ce qu\'elle garde. Elle est à toi.' },
+                { speaker: 'La jeune fille', line: 'Pose ton doigt sur la nébuleuse et tiens, jusqu\'à ce qu\'elle se stabilise.' },
+            ], () => {
+                ov.classList.remove('vn-over-scene');
+                if (_instr) _instr.style.opacity = '';
+            });
         }
 
         function ritualGoIncipit() {
