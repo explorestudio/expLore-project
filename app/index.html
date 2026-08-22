@@ -14163,6 +14163,18 @@
         .vn-speaker { font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin:0;color:#c4b5fd; }
         .vn-line { font-family:Georgia,serif;font-style:italic;font-size:14px;line-height:1.8;color:rgba(255,255,255,0.92); }
         .vn-tap { position:absolute;bottom:12px;right:18px;font-size:9px;color:rgba(139,92,246,0.6);letter-spacing:1.5px;text-transform:uppercase;animation:obPulse 1.8s infinite; }
+        /* Écriture progressive. Le texte complet est posé dès le départ, seule
+           l'opacité des caractères change : la mise en page ne bouge pas d'un
+           pixel pendant la frappe. `.vn-w` garde chaque mot insécable, sinon
+           les <span> par caractère laisseraient le navigateur couper les mots
+           en fin de ligne. */
+        .vn-w  { white-space: nowrap; }
+        .vn-ch { opacity: 0; transition: opacity 0.09s linear; }
+        .vn-ch.on { opacity: 1; }
+        /* « Continuer › » n'apparaît qu'une fois la réplique écrite en entier.
+           `animation: none` obligatoire : obPulse anime l'opacité, et une
+           animation l'emporte sur une déclaration normale. */
+        .vn-dialogue-box.vn-typing .vn-tap { opacity: 0; animation: none; transition: opacity 0.2s; }
         .vn-action-btn { width:100%;padding:14px;border-radius:0;border:none;border-top:1px solid rgba(139,92,246,0.3);font-size:15px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.15);color:#c4b5fd;display:none; }
         .vn-action-btn.show { display:block; }
 
@@ -21301,9 +21313,86 @@
             // à mots-clés colorés gardent une typographie anglaise correcte.
             if (entry.html) _vnLineEl.innerHTML = T(entry.html);
             else _vnLineEl.textContent = T(entry.line);
+            _vnStartTyping(_vnLineEl);
         }
 
-        function vnAdvance() { _vnIdx++; _vnRender(); }
+        // ── Écriture progressive ─────────────────────────────────────────
+        // Le texte (déjà traduit) est posé en entier dans le DOM, puis découpé
+        // en <span> par caractère qu'on rallume un à un. Aucun texte n'est
+        // réécrit pendant la frappe : la mise en page est figée, et l'observer
+        // i18n n'a pas de chaîne partielle à traduire. Un tap pendant la frappe
+        // termine la réplique ; le tap suivant passe à la suivante.
+        let _vnTypeTimer = null;
+        let _vnTypeChars = null;
+
+        const VN_TYPE_MS  = 22;     // cadence visée, par caractère
+        const VN_TYPE_MAX = 3200;   // durée max d'une réplique, quelle que soit sa longueur
+
+        function _vnSplitTextNode(node) {
+            // Un mot = un .vn-w insécable contenant ses .vn-ch ; les blancs
+            // restent des .vn-ch libres, pour que la ligne puisse casser.
+            const frag = document.createDocumentFragment();
+            (node.nodeValue.split(/(\s+)/) || []).forEach(tok => {
+                if (!tok) return;
+                const isSpace = /^\s+$/.test(tok);
+                const host = isSpace ? frag : document.createElement('span');
+                if (!isSpace) host.className = 'vn-w';
+                for (const ch of tok) {
+                    const s = document.createElement('span');
+                    s.className = 'vn-ch';
+                    s.textContent = ch;
+                    host.appendChild(s);
+                }
+                if (!isSpace) frag.appendChild(host);
+            });
+            node.parentNode.replaceChild(frag, node);
+        }
+
+        function _vnStartTyping(el) {
+            if (_vnTypeTimer) cancelAnimationFrame(_vnTypeTimer);
+            _vnTypeTimer = null;
+            if (!el) return;
+            // Collecter les nœuds texte AVANT de les remplacer (le walker ne
+            // survivrait pas à une mutation en cours de parcours).
+            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+            const texts  = [];
+            for (let n = walker.nextNode(); n; n = walker.nextNode()) texts.push(n);
+            texts.forEach(_vnSplitTextNode);
+
+            _vnTypeChars = el.querySelectorAll('.vn-ch');
+            if (!_vnTypeChars.length) return;
+            document.querySelector('.vn-dialogue-box')?.classList.add('vn-typing');
+
+            // Avancement calculé sur le TEMPS ÉCOULÉ, pas sur le nombre de ticks :
+            // le navigateur bride ses timers dès que l'onglet passe en arrière-plan
+            // (~1 Hz). Au retour, la réplique se remet au bon endroit d'un coup
+            // au lieu de finir de s'écrire au ralenti.
+            const total = _vnTypeChars.length;
+            const duree = Math.min(total * VN_TYPE_MS, VN_TYPE_MAX);
+            const t0    = performance.now();
+            let vus     = 0;
+            const step = (now) => {
+                const cible = Math.min(total, Math.floor(((now - t0) / duree) * total));
+                for (; vus < cible; vus++) _vnTypeChars[vus].classList.add('on');
+                if (vus >= total) { _vnFinishTyping(); return; }
+                _vnTypeTimer = requestAnimationFrame(step);
+            };
+            _vnTypeTimer = requestAnimationFrame(step);
+        }
+
+        function _vnFinishTyping() {
+            if (_vnTypeTimer) cancelAnimationFrame(_vnTypeTimer);
+            _vnTypeTimer = null;
+            if (_vnTypeChars) _vnTypeChars.forEach(s => s.classList.add('on'));
+            document.querySelector('.vn-dialogue-box')?.classList.remove('vn-typing');
+        }
+
+        function vnAdvance() {
+            // Frappe en cours → le tap la complète, il ne saute pas la réplique.
+            if (_vnTypeTimer) { _vnFinishTyping(); return; }
+            _vnIdx++;
+            _vnRender();
+        }
 
         let infoMarkers = [];
         let bazarMarkers = [];
@@ -28240,7 +28329,7 @@
         }
 
         // Poudre → seuil franchi → entrée disponible (dialogue supprimé de la poudre)
-        function showDustDialogue(cardId, level) {
+        function showDustDialogue(cardId, level, xpBefore, xpAfter) {
             const card = collectedCards.find(c => c.id === cardId) || selectedCard;
             const rarity = card ? (card.rarity || 'common') : 'common';
             const heartsPerLevel = rarity === 'legendary' ? 4 : rarity === 'rare' ? 3 : 2;
@@ -28248,10 +28337,13 @@
             const cl = cardLevels[cardId];
             if (!cl) return;
             const needed = getExpNeeded(card, level);
-            const xp = cl.experience;
             const cfg = RARITY_CONFIG[rarity] || RARITY_CONFIG.common;
             const increment = cfg.increment || 20;
-            const xpBefore = xp - increment;
+            // Instantanés d'XP fournis par addExperience. Auparavant on relisait
+            // cl.experience ici : un second clic rapide l'avait déjà fait avancer,
+            // le seuil du premier clic était enjambé et son entrée carnet perdue.
+            const xpTo   = (xpAfter  !== undefined) ? xpAfter  : cl.experience;
+            const xpFrom = (xpBefore !== undefined) ? xpBefore : (xpTo - increment);
 
             const thresholds = [];
             for (let i = 1; i <= heartsPerLevel; i++) {
@@ -28261,15 +28353,18 @@
             if (!cl.heartsDone) cl.heartsDone = {};
             if (!cl.heartsDone[level]) cl.heartsDone[level] = [];
 
-            let palierIdx = null;
+            // Tous les seuils franchis, pas seulement le dernier : un incrément
+            // large pouvait en enjamber deux, et seul le dernier donnait une entrée
+            // alors que les deux étaient marqués comme faits.
+            const paliersFranchis = [];
             thresholds.forEach((seuil, i) => {
-                if (xpBefore < seuil && xp >= seuil && !cl.heartsDone[level].includes(i)) {
+                if (xpFrom < seuil && xpTo >= seuil && !cl.heartsDone[level].includes(i)) {
                     cl.heartsDone[level].push(i);
-                    palierIdx = i;
+                    paliersFranchis.push(i);
                 }
             });
 
-            if (palierIdx !== null) {
+            paliersFranchis.forEach((palierIdx, rang) => {
                 const cardName = card ? card.name : 'cette carte';
                 const LEVEL_LABELS = ['Chapitre I', 'Chapitre II', 'Chapitre III'];
                 const label = LEVEL_LABELS[level] || 'Chapitre';
@@ -28295,19 +28390,24 @@
                         return { ...base, text: TF('[Entrée carnet %1 — %2, %3]', palierIdx + 1, T(cardName), T(label)) };
                     })();
 
+                // Déblocage SYNCHRONE de l'entrée : updateCardLevelDisplay, appelé
+                // juste après par addExperience, doit déjà la voir. Sinon le bouton
+                // affiche « Sceller le chapitre » pendant la fenêtre d'attente et un
+                // clic rapide scelle le chapitre avec une entrée en moins.
+                unlockJournalEntry(cardId, level, entry);
                 gainAutoLumen();
-                showMilestoneEffect();
-                // Entrée rendue disponible → bulle automatique couche 2
                 dustBlocked = true;
+                const dernier = (rang === paliersFranchis.length - 1);
+                // Seuls les effets restent différés (350 ms = l'ancien 150 + 200).
                 setTimeout(() => {
-                    unlockJournalEntry(cardId, level, entry);
-                    dustBlocked = false;
+                    showMilestoneEffect();
+                    if (dernier) dustBlocked = false;
                     _triggerLayer2(cardId, entry._type || 'text');
                     if (typeof _obGuide === 'object' && _obGuide.active && cardId === OB_TUTORIAL_CARD.id) {
                         setTimeout(() => _obGuideEvent('entry_unlocked'), 300);
                     }
-                }, 200);
-            }
+                }, 350 + rang * 900);
+            });
         }
 
         // Flavor text par défaut affiché dans la carte, remplacé temporairement par les dialogues
@@ -28709,16 +28809,21 @@
             document.getElementById('dustCounter').textContent = memorialDust;
             document.getElementById('cardDetailDustCounter').textContent = memorialDust;
             cl.dustSpent = (cl.dustSpent || 0) + increment;
+            const xpBefore = cl.experience;
             cl.experience = Math.min(needed, cl.experience + increment);
+            const xpAfter = cl.experience;
 
             const level = cl.level;
+            const cardId = selectedCard.id;
             const xpRatio = cl.experience / needed; // progression dans le palier courant
 
             // Animation particules (pas de texte intermédiaire)
             showDustParticles(xpRatio);
 
-            // Palier franchi ?
-            setTimeout(() => showDustDialogue(selectedCard.id, level), 150);
+            // Palier franchi ? Détection SYNCHRONE, sur des instantanés d'XP figés :
+            // rien n'est relu d'un état global qu'un clic rapide aurait déjà modifié,
+            // et l'entrée carnet existe avant que le bouton ne soit recalculé.
+            showDustDialogue(cardId, level, xpBefore, xpAfter);
 
             updateCardLevelDisplay();
             saveProgress();
@@ -28834,6 +28939,15 @@
             if (cl.level >= MAX_LEVEL) return;
             const needed = getExpNeeded(selectedCard, cl.level);
             if (cl.experience < needed) return;   // XP pas encore au max
+
+            // Garde-fou : le bouton est censé être désactivé tant qu'il reste une
+            // entrée à dévoiler. On revalide ici pour qu'aucun clic ne puisse
+            // sceller un chapitre incomplet.
+            const _entriesNiv = (cardJournalEntries[selectedCard.id] || []).filter(e => e.level === cl.level);
+            if (_entriesNiv.length && !_entriesNiv.every(e => e._revealed)) {
+                updateCardLevelDisplay();
+                return;
+            }
 
             const levelBefore = cl.level;
 

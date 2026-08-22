@@ -22169,7 +22169,7 @@
         }
 
         // Poudre → seuil franchi → entrée disponible (dialogue supprimé de la poudre)
-        function showDustDialogue(cardId, level) {
+        function showDustDialogue(cardId, level, xpBefore, xpAfter) {
             const card = collectedCards.find(c => c.id === cardId) || selectedCard;
             const rarity = card ? (card.rarity || 'common') : 'common';
             const heartsPerLevel = rarity === 'legendary' ? 4 : rarity === 'rare' ? 3 : 2;
@@ -22177,10 +22177,13 @@
             const cl = cardLevels[cardId];
             if (!cl) return;
             const needed = getExpNeeded(card, level);
-            const xp = cl.experience;
             const cfg = RARITY_CONFIG[rarity] || RARITY_CONFIG.common;
             const increment = cfg.increment || 20;
-            const xpBefore = xp - increment;
+            // Instantanés d'XP fournis par addExperience. Auparavant on relisait
+            // cl.experience ici : un second clic rapide l'avait déjà fait avancer,
+            // le seuil du premier clic était enjambé et son entrée carnet perdue.
+            const xpTo   = (xpAfter  !== undefined) ? xpAfter  : cl.experience;
+            const xpFrom = (xpBefore !== undefined) ? xpBefore : (xpTo - increment);
 
             const thresholds = [];
             for (let i = 1; i <= heartsPerLevel; i++) {
@@ -22190,15 +22193,18 @@
             if (!cl.heartsDone) cl.heartsDone = {};
             if (!cl.heartsDone[level]) cl.heartsDone[level] = [];
 
-            let palierIdx = null;
+            // Tous les seuils franchis, pas seulement le dernier : un incrément
+            // large pouvait en enjamber deux, et seul le dernier donnait une entrée
+            // alors que les deux étaient marqués comme faits.
+            const paliersFranchis = [];
             thresholds.forEach((seuil, i) => {
-                if (xpBefore < seuil && xp >= seuil && !cl.heartsDone[level].includes(i)) {
+                if (xpFrom < seuil && xpTo >= seuil && !cl.heartsDone[level].includes(i)) {
                     cl.heartsDone[level].push(i);
-                    palierIdx = i;
+                    paliersFranchis.push(i);
                 }
             });
 
-            if (palierIdx !== null) {
+            paliersFranchis.forEach((palierIdx, rang) => {
                 const cardName = card ? card.name : 'cette carte';
                 const LEVEL_LABELS = ['Chapitre I', 'Chapitre II', 'Chapitre III'];
                 const label = LEVEL_LABELS[level] || 'Chapitre';
@@ -22229,19 +22235,24 @@
                         return { ...base, text: '[Entrée carnet ' + (palierIdx + 1) + ' — ' + cardName + ', ' + label + ']' };
                     })();
 
+                // Déblocage SYNCHRONE de l'entrée : updateCardLevelDisplay, appelé
+                // juste après par addExperience, doit déjà la voir. Sinon le bouton
+                // affiche « Sceller le chapitre » pendant la fenêtre d'attente et un
+                // clic rapide scelle le chapitre avec une entrée en moins.
+                unlockJournalEntry(cardId, level, entry);
                 gainAutoLumen();
-                showMilestoneEffect();
-                // Entrée rendue disponible → bulle automatique couche 2
                 dustBlocked = true;
+                const dernier = (rang === paliersFranchis.length - 1);
+                // Seuls les effets restent différés (350 ms = l'ancien 150 + 200).
                 setTimeout(() => {
-                    unlockJournalEntry(cardId, level, entry);
-                    dustBlocked = false;
+                    showMilestoneEffect();
+                    if (dernier) dustBlocked = false;
                     _triggerLayer2(cardId, entry._type || 'text');
                     if (typeof _obGuide === 'object' && _obGuide.active && cardId === OB_TUTORIAL_CARD.id) {
                         setTimeout(() => _obGuideEvent('entry_unlocked'), 300);
                     }
-                }, 200);
-            }
+                }, 350 + rang * 900);
+            });
         }
 
         // Flavor text par défaut affiché dans la carte, remplacé temporairement par les dialogues
@@ -22644,16 +22655,21 @@
             document.getElementById('dustCounter').textContent = memorialDust;
             document.getElementById('cardDetailDustCounter').textContent = memorialDust;
             cl.dustSpent = (cl.dustSpent || 0) + increment;
+            const xpBefore = cl.experience;
             cl.experience = Math.min(needed, cl.experience + increment);
+            const xpAfter = cl.experience;
 
             const level = cl.level;
+            const cardId = selectedCard.id;
             const xpRatio = cl.experience / needed; // progression dans le palier courant
 
             // Animation particules (pas de texte intermédiaire)
             showDustParticles(xpRatio);
 
-            // Palier franchi ?
-            setTimeout(() => showDustDialogue(selectedCard.id, level), 150);
+            // Palier franchi ? Détection SYNCHRONE, sur des instantanés d'XP figés :
+            // rien n'est relu d'un état global qu'un clic rapide aurait déjà modifié,
+            // et l'entrée carnet existe avant que le bouton ne soit recalculé.
+            showDustDialogue(cardId, level, xpBefore, xpAfter);
 
             updateCardLevelDisplay();
             saveProgress();
@@ -22769,6 +22785,15 @@
             if (cl.level >= MAX_LEVEL) return;
             const needed = getExpNeeded(selectedCard, cl.level);
             if (cl.experience < needed) return;   // XP pas encore au max
+
+            // Garde-fou : le bouton est censé être désactivé tant qu'il reste une
+            // entrée à dévoiler. On revalide ici pour qu'aucun clic ne puisse
+            // sceller un chapitre incomplet.
+            const _entriesNiv = (cardJournalEntries[selectedCard.id] || []).filter(e => e.level === cl.level);
+            if (_entriesNiv.length && !_entriesNiv.every(e => e._revealed)) {
+                updateCardLevelDisplay();
+                return;
+            }
 
             const levelBefore = cl.level;
 
