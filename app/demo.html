@@ -3082,23 +3082,26 @@
         }
         .journal-level-group-label {
             display: flex; align-items: baseline; gap: 10px;
+            /* Le titre d'arc passe à la ligne quand il ne tient plus à côté du
+               numéro de chapitre : à cette taille, l'ellipse mangeait la moitié
+               des titres. */
+            flex-wrap: wrap;
             font-family: Georgia, serif;
-            font-size: 10px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 3px;
-            color: #92400e; opacity: 0.6;
-            margin: 20px 0 12px 4px;
-            padding-bottom: 6px;
+            font-size: 14px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 2.2px;
+            color: #92400e; opacity: 0.72;
+            margin: 26px 0 14px 4px;
+            padding-bottom: 8px;
             border-bottom: 1px solid rgba(160,120,50,0.25);
         }
         /* Titre de l'arc : dit une fois, en tête de chapitre, au lieu d'être
            rappelé sur chacune de ses pages. Casse volontaire — capitales et
            interlettrage du label seraient illisibles sur une phrase entière. */
         .journal-level-arc {
-            flex: 1; min-width: 0;
-            font-size: 11px; font-weight: 400;
+            flex: 1 1 auto; min-width: 58%;
+            font-size: 15px; font-weight: 400; line-height: 1.35;
             font-style: italic; text-transform: none; letter-spacing: 0.2px;
             text-align: right;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         .journal-level-group.animating {
             animation: overlayReveal 1s cubic-bezier(0.22,1,0.36,1) both;
@@ -3541,9 +3544,22 @@
             transform: rotate(var(--jsb-rot, -1deg));
             background: #fbf6ea;
             padding: 7px 7px 8px;
+            /* Marges du cadre reprises en variables : les repères cliquables les
+               retranchent pour se placer sur la PHOTO et non sur le papier. */
+            --jsb-pad-l: 7px; --jsb-pad-t: 7px;
+            --jsb-pad-x: 14px; --jsb-pad-y: 15px;
             border: 1px solid rgba(160,120,50,0.28);
             box-shadow: 0 3px 9px rgba(60,35,10,0.22);
-            margin: 0 4px 12px;
+            margin: 0 2px 12px;
+        }
+        /* Tirage qui porte la page à lui seul : il déborde sur la marge du papier
+           au lieu de s'y ranger. Reste 6 px de blanc de chaque côté — le tirage est
+           posé sur la page, pas collé bord à bord. */
+        .jsb-photo.wide {
+            margin-left: -10px; margin-right: -10px;
+            padding: 5px 5px 6px;
+            --jsb-pad-l: 5px; --jsb-pad-t: 5px;
+            --jsb-pad-x: 10px; --jsb-pad-y: 11px;
         }
         .jsb-photo img {
             width: 100%; height: auto; display: block;
@@ -3562,6 +3578,10 @@
             font-size: 11px; color: rgba(90,62,25,0.6);
         }
         .jsb-photo.no-img .jsb-photo-ph { display: flex; }
+        /* Tirage consultable : rien ne se cache dessous, mais il s'agrandit au tap.
+           Le retrait au doigt suffit à le dire — pas de loupe posée par-dessus. */
+        .jsb-photo.tapable { cursor: pointer; transition: transform 0.18s ease; }
+        .jsb-photo.tapable:active { transform: rotate(var(--jsb-rot)) scale(0.985); }
 
         .jsb-caption {
             font-family: var(--jsb-hand);
@@ -3571,6 +3591,85 @@
             margin: 0 8px 16px;
             transform: rotate(-0.5deg);
         }
+
+        /* ── Cartouches cliquables sur un tirage (légende interactive) ──
+           Plaque de musée : fond sombre, filet doré, lettre crème, reliée à sa
+           cible par un trait fin. Elle nomme le bâtiment à côté de lui, jamais
+           par-dessus. */
+        .jsb-hot-wrap { position: relative; }
+        /* Traits de rappel — sous les plaques, au-dessus de la photo */
+        .jsb-hot-leads {
+            position: absolute; z-index: 2; pointer-events: none;
+            left: var(--jsb-pad-l, 7px); top: var(--jsb-pad-t, 7px);
+            width: calc(100% - var(--jsb-pad-x, 14px));
+            height: calc(100% - var(--jsb-pad-y, 15px));
+        }
+        .jsb-hot-leads line {
+            stroke: rgba(233,198,114,0.9); stroke-width: 1.2;
+        }
+        /* Point de visée : 7 px, posé sur la cible. Il la désigne sans la couvrir
+           — c'est là tout l'écart avec une pastille pleine. */
+        .jsb-hot-pin {
+            position: absolute; z-index: 3; pointer-events: none;
+            left: calc(var(--jsb-pad-l, 7px) + (100% - var(--jsb-pad-x, 14px)) * var(--hx, 0.5));
+            top:  calc(var(--jsb-pad-t, 7px) + (100% - var(--jsb-pad-y, 15px)) * var(--hy, 0.5));
+            width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px;
+            border-radius: 50%;
+            background: #e9c672;
+            box-shadow: 0 0 0 1.5px rgba(28,22,10,0.85), 0 1px 4px rgba(0,0,0,0.6);
+        }
+        .jsb-hot {
+            position: absolute; z-index: 4;
+            left: calc(var(--jsb-pad-l, 7px) + (100% - var(--jsb-pad-x, 14px)) * var(--hx, 0.5));
+            top:  calc(var(--jsb-pad-t, 7px) + (100% - var(--jsb-pad-y, 15px)) * var(--hy, 0.5));
+            transform: translate(-50%, -50%);
+            max-width: calc(100% - var(--jsb-pad-x, 14px) - 8px);
+            padding: 3px 9px 4px;
+            background: rgba(16,13,8,0.92);
+            border: 1.5px solid #b8913f;
+            border-radius: 3px;
+            font-family: var(--jsb-serif);
+            font-size: 10.5px; line-height: 1.25;
+            letter-spacing: 0.3px; white-space: nowrap;
+            color: #f6e6bd;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+            transition: transform 0.16s ease, background 0.2s ease, color 0.2s ease;
+        }
+        /* Le filet bat pour dire « touche-moi » ; la consigne passée, il se tait. */
+        .jsb-hot { animation: jsbHotPulse 2.1s ease-in-out infinite; }
+        .jsb-hot-wrap.touched .jsb-hot { animation: none; }
+        .jsb-hot:active { transform: translate(-50%, -50%) scale(0.95); }
+        .jsb-hot.on {
+            animation: none;
+            background: rgba(120,38,22,0.94);
+            border-color: #f0d089; color: #ffeec6;
+            box-shadow: 0 0 0 1px rgba(240,208,137,0.35), 0 2px 8px rgba(0,0,0,0.55);
+        }
+        @keyframes jsbHotPulse {
+            0%, 100% { box-shadow: 0 1px 5px rgba(0,0,0,0.5); border-color: #b8913f; }
+            50%      { box-shadow: 0 0 9px 2px rgba(233,198,114,0.55), 0 1px 5px rgba(0,0,0,0.5);
+                       border-color: #f0d089; }
+        }
+        /* Les légendes se superposent dans la même case : la hauteur réservée est
+           celle de la plus longue, la page ne saute pas d'un repère à l'autre. */
+        .jsb-hot-caps { display: grid; }
+        .jsb-hot-cap {
+            grid-area: 1 / 1;
+            margin-bottom: 0;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.22s ease;
+        }
+        .jsb-hot-cap.on { opacity: 1; visibility: visible; }
+        .jsb-hot-cap b { font-family: var(--jsb-serif); font-style: italic; color: var(--jsb-warm); }
+        .jsb-hot-sep { font-style: normal; margin: 0 5px; opacity: 0.6; }
+        .jsb-hot-hint {
+            font-family: var(--jsb-serif); font-style: italic;
+            font-size: 10px; letter-spacing: 0.4px;
+            text-align: center; color: var(--jsb-ink-soft);
+            opacity: 0.6; margin: 6px 0 16px;
+            transition: opacity 0.25s ease;
+        }
+        .jsb-hot-wrap.touched .jsb-hot-hint { opacity: 0; }
 
         .jsb-body {
             font-family: var(--jsb-serif);
@@ -3808,21 +3907,56 @@
         }
 
         /* ── Gabarit `two_images_compare` ── */
-        .jsb-compare { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 14px; }
+        /* Deux colonnes dans une page de 390 px : chaque tirage n'a qu'une demi-
+           largeur. On récupère tout ce qu'on peut — gouttière resserrée, débord sur
+           la marge du papier — sinon un fronton panoramique tombe sous 70 px de haut. */
+        .jsb-compare {
+            display: flex; gap: 6px; align-items: flex-start;
+            margin: 4px -10px 14px;
+        }
         .jsb-compare-item {
             position: relative; flex: 1 1 0; min-width: 0;
-            background: #fbf6ea; padding: 5px 5px 6px;
+            background: #fbf6ea; padding: 4px 4px 5px;
             border: 1px solid rgba(160,120,50,0.24);
             box-shadow: 0 2px 6px rgba(60,35,10,0.18);
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.15s ease;
         }
-        .jsb-compare-item img { width: 100%; height: auto; display: block; }
-        .jsb-compare-label {
+        /* Seuls les cadres qui ouvrent une pochette se donnent pour cliquables */
+        .jsb-compare-item[data-key] { cursor: pointer; }
+        .jsb-compare-item[data-key]:active { transform: scale(0.98); }
+        /* Les vues d'un même côté se superposent dans une case de grille commune :
+           format imposé, donc les deux colonnes ont exactement la même hauteur et
+           le passage de l'une à l'autre ne fait pas bouger la page. Les frontons
+           et les pavillons tiennent tous autour de 16/9, le recadrage est minime. */
+        .jsb-compare-stack { display: grid; }
+        .jsb-compare-stack img {
+            grid-area: 1 / 1;
+            width: 100%; height: 100%; display: block;
+            aspect-ratio: 16 / 9; object-fit: cover;
+            opacity: 0; transition: opacity 0.75s ease;
+        }
+        .jsb-compare-stack img.on { opacity: 1; }
+        /* Bandeau du bas : le côté à gauche, le nombre de vues à droite. */
+        .jsb-compare-bar {
             position: absolute; left: 5px; bottom: 6px; right: 5px;
+            display: flex; align-items: baseline; gap: 6px;
             background: rgba(20,14,6,0.82); color: #f4e8d0;
+            padding: 3px 6px;
+        }
+        .jsb-compare-label {
+            flex: 1 1 auto; min-width: 0;
             font-family: var(--jsb-serif); font-size: 9.5px;
             letter-spacing: 0.6px; text-transform: uppercase;
-            padding: 3px 6px; text-align: center;
+            text-align: left;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        /* Seule mention qui dit que le tirage s'ouvre — d'où la couleur d'accent
+           et la main courante, comme sur les piles de tirages du carnet. */
+        .jsb-compare-count {
+            flex: 0 0 auto;
+            font-family: var(--jsb-hand); font-size: 10.5px;
+            color: #e8c877; letter-spacing: 0.2px;
         }
         .jsb-compare-sep {
             align-self: center;
@@ -3981,30 +4115,76 @@
             font-size: 12px; line-height: 1.8; color: var(--jsb-ink-soft);
         }
 
+        /* Voix de l'Organisation : une feuille tapée à la machine, glissée dans
+           le carnet. Ni la prose du scribe, ni la main courante — un document.
+           Courier New là où il existe, sinon la monospace du système : dans les
+           deux cas la chasse fixe suffit à dire « rapport ». */
+        .jsb-body--org {
+            font-family: 'Courier New', Courier, 'Nimbus Mono PS', monospace;
+            font-size: 12px; line-height: 1.7;
+            letter-spacing: 0.2px;
+            text-align: center;
+            -webkit-hyphens: none; hyphens: none;
+            color: rgba(52,36,16,0.82);
+            margin: 4px 4px 16px;
+            padding: 11px 10px 12px;
+            border-top: 1px solid rgba(160,120,50,0.32);
+            border-bottom: 1px solid rgba(160,120,50,0.32);
+        }
+
         /* ── Gabarit `links_screen` : sorties vers le web, hors du carnet ── */
-        .jsb-links { margin: 4px 2px 14px; }
+        /* `z-index: auto` (et non le 1 hérité de `.jsb-page > *`) : sans ça le
+           bloc formerait un contexte d'empilement isolé et le `multiply` du
+           dessin n'aurait plus le papier du carnet pour fond. Même raison plus
+           bas pour l'absence de `transform` sur la ligne et sur le dessin. */
+        .jsb-links { margin: 4px 2px 14px; z-index: auto; }
+        /* La ligne elle-même ne dessine plus rien : le dessin de Canelle est posé
+           à même le papier du carnet, et seul le TEXTE reste dans son cadre. */
         .jsb-link {
             display: flex; align-items: center; gap: 10px;
-            margin-bottom: 10px; padding: 10px 12px;
+            margin-bottom: 14px;
+            text-decoration: none; color: var(--jsb-ink);
+        }
+        /* Emoji de repli : il n'a pas de dessin, on lui garde un rond discret. */
+        .jsb-link-mark {
+            flex: 0 0 auto; width: 58px; height: 58px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(47,92,58,0.35);
+            color: var(--jsb-accent); font-size: 22px;
+        }
+        /* Dessin fourni : plus de rond ni de bord, le tirage est posé sur la page.
+           `multiply` fond son papier crème dans celui du carnet — le trait reste,
+           le fond disparaît. `font-size: 0` masque l'emoji qui dort dessous : il
+           transparaîtrait à travers le fond devenu clair. Le repli reste entier —
+           si l'image manque, son `onerror` retire la classe et l'emoji revient. */
+        .jsb-link-mark.img {
+            border: none; border-radius: 0;
+            position: relative; overflow: visible;
+            font-size: 0;
+        }
+        .jsb-link-mark.img img {
+            position: absolute; inset: -4px;
+            width: calc(100% + 8px); height: calc(100% + 8px);
+            object-fit: contain; display: block;
+            mix-blend-mode: multiply;
+        }
+        /* Le cadre s'est déplacé ici : il ne tient plus que l'écrit. C'est lui,
+           désormais, qui porte la bascule du collage. */
+        .jsb-link-txt {
+            flex: 1 1 auto; min-width: 0; display: block;
+            padding: 9px 11px;
             background: #fbf6ea;
             border: 1px solid rgba(160,120,50,0.26);
             box-shadow: 0 2px 7px rgba(60,35,10,0.16);
-            text-decoration: none; color: var(--jsb-ink);
         }
-        .jsb-link:nth-child(odd)  { transform: rotate(-0.5deg); }
-        .jsb-link:nth-child(even) { transform: rotate(0.6deg); }
-        .jsb-link-mark {
-            flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            border: 1px solid rgba(47,92,58,0.35);
-            color: var(--jsb-accent); font-size: 13px;
-        }
-        .jsb-link-txt { flex: 1 1 auto; min-width: 0; display: block; }
+        .jsb-link:nth-child(odd)  .jsb-link-txt { transform: rotate(-0.5deg); }
+        .jsb-link:nth-child(even) .jsb-link-txt { transform: rotate(0.6deg); }
         .jsb-link-label {
             display: block;
             font-family: var(--jsb-serif); font-size: 11.5px;
             font-weight: 600; letter-spacing: 0.3px;
         }
+        .jsb-link-label .jsb-link-ext { margin-left: 5px; font-size: 11px; }
         .jsb-link-caption {
             display: block;
             font-family: var(--jsb-hand); font-size: 12.5px;
@@ -4065,6 +4245,14 @@
         }
         /* Repère sans événement de ce côté : place tenue, aucun cadre visible */
         .jsb-tl-cell.empty { background: none; border: none; }
+        /* Le même événement des deux côtés : une seule case en travers des deux
+           colonnes. Filet doré sur les deux bords — c'est le nœud, il se voit. */
+        .jsb-tl-cell.both {
+            flex: 1 1 100%;
+            border-left: 2px solid var(--jsb-gold);
+            border-right: 2px solid var(--jsb-gold);
+            background: rgba(255,246,222,0.85);
+        }
         .jsb-tl-ico { flex: 0 0 auto; font-size: 12px; line-height: 1.2; }
 
         /* ══ Dossier photo : consultation plein écran, 1 image à la fois ══ */
@@ -4081,10 +4269,13 @@
             opacity: 1; pointer-events: all;
         }
         .jsb-dsr-inner {
-            width: 90%; max-width: 340px;
+            /* Plus large et moins matelassée qu'avant : sur un fronton panoramique,
+               c'est la LARGEUR qui bride l'image, pas la hauteur. Chaque pixel
+               repris au cadre part dans le tirage. */
+            width: 96%; max-width: 420px;
             background: var(--jsb-paper, #f4e8d0);
             border-radius: 3px;
-            padding: 14px 14px 12px;
+            padding: 12px 10px 10px;
             box-shadow: 0 24px 60px rgba(0,0,0,0.45);
             transform: scale(0.9); transition: transform 0.28s cubic-bezier(0.34,1.3,0.64,1);
         }
@@ -4107,7 +4298,9 @@
         }
         .jsb-dsr-stage {
             position: relative; overflow: hidden;
-            height: 232px;
+            /* Hauteur relative à l'écran : les vues moins panoramiques (la place
+               vue du ciel) étaient rognées par un plafond fixe de 232 px. */
+            height: min(46vh, 320px); min-height: 210px;
             background: #e8dcc8;
             border: 1px solid rgba(160,120,50,0.25);
             touch-action: pan-y;
@@ -4117,9 +4310,9 @@
            cartes en position absolue. */
         .jsb-dsr-track { position: absolute; inset: 0; }
         .jsb-dsr-slide {
-            position: absolute; left: 14px; right: 14px; top: 12px; bottom: 12px;
+            position: absolute; left: 6px; right: 6px; top: 8px; bottom: 8px;
             display: flex; align-items: center; justify-content: center;
-            background: #fbf6ea; padding: 6px;
+            background: #fbf6ea; padding: 4px;
             border: 1px solid rgba(160,120,50,0.26);
             box-shadow: 0 7px 18px -9px rgba(60,35,10,0.6);
             transform-origin: 50% 62%;
@@ -10995,6 +11188,55 @@
                 "You could use a little memorial dust yourself! The Organisation gave us this booklet to write down everything a card might remember! You forgot it again, I suppose… Fine, keep this one, I have plenty.",
             "Ouvre-le : le chapitre est plein, mais il garde encore des pages voilées. C'est à cette condition qu'il pourra être scellé.":
                 "Open it: the chapter is full, but it still keeps veiled pages. Only then can it be sealed.",
+            "Prends le temps de lire ce qu'elle a déjà retrouvé. Le reste viendra après.":
+                "Take the time to read what she has already recovered. The rest can wait.",
+
+            // ── Carnet OT — entrées touchées par les retours de Canelle ──
+            // Le reste du carnet scrapbook n'est pas encore traduit : trou i18n
+            // antérieur, à traiter séparément (cf. audit i18n).
+            "Des infos pratiques 💡": "Practical info 💡",
+            "Vers le site": "To the website",
+            "Vers l'appli": "To the app",
+            "Observe attentivement les deux bâtiments sur la place : beaucoup de ressemblance, mais quelques singularités cristallisées au fil du temps.":
+                "Look closely at the two buildings on the square: much alike, yet with a few singularities crystallized over time.",
+            "Une symétrie occident/orient — photo Michel Djaoui":
+                "An east/west symmetry — photo Michel Djaoui",
+            // Cartouches cliquables de la vue aérienne + légendes qu'ils appellent
+            "Touche les cartouches de la photo.": "Tap the labels on the photo.",
+            "Pavillon Est": "East Pavilion",
+            "Pavillon Ouest": "West Pavilion",
+            "Statue de Louis XIV": "Statue of Louis XIV",
+            "Celui qui accueille : l'Office du Tourisme, portes ouvertes sur la place.":
+                "The one that welcomes you: the Tourist Office, doors open onto the square.",
+            "Son jumeau, sous l'enseigne ONLYLYON. Même gabarit, même fronton — mais tout ne s'y est pas passé pareil.":
+                "Its twin, under the ONLYLYON sign. Same frame, same pediment — but things did not turn out the same there.",
+            "Le point fixe de la place : les deux pavillons l'encadrent à égale distance, un de chaque côté de l'axe.":
+                "The fixed point of the square: the two pavilions frame it at equal distance, one on either side of the axis.",
+            // Note versée par l'Organisation (entrée « Des infos pratiques »)
+            "Rapport fourni par l'Organisation sur les références numériques":
+                "Report filed by the Organization on digital references",
+            "Un site pour préparer votre découverte de Lyon":
+                "A website to prepare your discovery of Lyon",
+            "Lyon City Card — ONLYLYON, sur le Play Store":
+                "Lyon City Card — ONLYLYON, on the Play Store",
+            // Mention du nombre de vues (piles de tirages et vis-à-vis)
+            "2 vues": "2 views",
+            "3 vues": "3 views",
+            "Fronton Est": "East pediment",
+            "Fronton Ouest": "West pediment",
+            "Mars, casqué, sur le fronton est — avant son retrait en 1956.":
+                "Mars, helmeted, on the east pediment — before his removal in 1956.",
+            "Le pavillon est du temps du Corps de Garde, Mars encore en place.":
+                "The east pavilion in the days of the Corps de Garde, Mars still in place.",
+            "Apollon, dieu des arts, de la musique et de la lumière, sur le fronton ouest.":
+                "Apollo, god of the arts, of music and of light, on the west pediment.",
+            "Le pavillon ouest aujourd'hui, sous l'enseigne ONLYLYON.":
+                "The west pavilion today, under the ONLYLYON sign.",
+            "« Côte à côte, sans jamais se croiser mais pourtant liés. »":
+                "“Side by side, never crossing paths, yet bound together.”",
+            "Sites classés, avec la place Bellecour":
+                "Listed sites, along with place Bellecour",
+
             "Elle est un peu bavarde, en tout cas elle a encore des choses à dire.":
                 "It's a bit of a chatterbox — in any case it still has things to say.",
             "D'ailleurs, n'hésite pas à aller chercher des fournitures au Bazar, l'échoppe un peu plus au Nord. Profites-en pour collecter de la poudre ou des orbes si tu en trouves sur ton chemin.":
@@ -11014,13 +11256,14 @@
             [`Pour qu'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire — regarde son carnet se remplir.`]:
                 `For a card to remember, feed it <span style="color:#A78BFA;font-weight:600">memorial dust</span>. Each dose wakes a little of its story — watch its journal fill up.`,
             "Et regarde-la, elle. Une carte qui regagne sa mémoire ne garde pas le même visage — les points sous son portrait comptent les états qu'elle a retrouvés. Un seul, pour l'instant.": "And look at it, too. A card that wins back its memory doesn't keep the same face — the dots beneath its portrait count the states it has recovered. Just one, for now.",
-            "La voilà. Muette, pour l'instant. Ouvre-la.": "There it is. Silent, for now. Open it.",
+            "Elle est bien là, n'hésite pas à l'inspecter.": "There she is — take a look at her.",
             "La carte est épuisée. Cherche de quoi la raviver.": "The card is spent. Find something to revive it.",
             "La voilà à bout de souffle. La mémoire a besoin d'une orbe pour se raviver d'un coup. Il y en a deux tout près, sur la carte. Collecte-les.": "It's out of breath. Memory needs an orb to come back all at once. There are two close by, on the map. Go and collect them.",
             "Profites-en pour ramasser la poudre que tu croiseras : tu en manqueras bientôt.": "While you're at it, pick up any dust you come across: you'll be short of it soon.",
             "La mémoire s'ouvre à nouveau.": "Memory opens again.",
             "Cette version n'est pas encore révélée.": "This version hasn't been revealed yet.",
-            "Elle revit. Continue, mène ce chapitre à son terme.": "It's alive again. Keep going, carry this chapter through to the end.",
+            "Elle retrouve de la force pour te parler. Continue, aide-la à se souvenir et à monter au niveau suivant !":
+                "She's regaining enough strength to speak to you. Keep going — help her remember and reach the next level!",
             "Tu as l'orbe. Pose-la sur la carte pour la raviver.": "You have the orb. Place it on the card to revive it.",
             "Il te manque encore une orbe. Elles t'attendent sur la mappe, tout près. Referme la carte, va les chercher, puis reviens.": "You're still missing an orb. They're waiting for you on the map, close by. Close the card, go and fetch them, then come back.",
             "Les orbes du quartier sont épuisées. Laisse-lui le temps : la mémoire revient d'elle-même, lentement.": "The orbs in this quarter are spent. Give it time: memory returns on its own, slowly.",
@@ -11045,7 +11288,8 @@
             "Le dernier chapitre est plein, et pas une page ne manque. Scelle-le : elle aura regagné toute sa mémoire.": "The last chapter is full, and not a page is missing. Seal it: it will have won back all of its memory.",
 
             // ── Conclusion de la démo ──
-            "Voilà. Cette carte t'a tout rendu : trois chapitres, pas une page qui manque, et ses trois visages retrouvés. Elle se souvient enfin d'elle-même.": "There. This card has given you everything back: three chapters, not a page missing, and its three faces recovered. It remembers itself at last.",
+            "Il semblerait qu'elle t'ait délivré tout ce qu'elle porte en elle. Ton carnet est bien rempli, bravo ! Tu as réussi à conserver sa mémoire.":
+                "It seems she has given you everything she holds within. Your journal is well filled — well done! You've managed to preserve her memory.",
             "Reviens la voir quand tu veux : ses états restent à toi, tu peux la reparcourir d'un âge à l'autre. Une mémoire regagnée ne se reperd pas.": "Come back and see it whenever you like: its states are yours now, you can walk it from one age to another. A memory won back is never lost again.",
             "C'est ça, être explorateur de la mémoire.": "That is what it means to be a memory explorer.",
             "Et il y en a d'autres. Beaucoup d'autres — dans les rues, sous les façades, au bord des deux fleuves. Toutes aussi muettes que celle-ci l'était il y a une heure.": "And there are others. Many others — in the streets, beneath the façades, along the two rivers. All as silent as this one was an hour ago.",
@@ -11780,7 +12024,7 @@
             "[à définir — Confluence, contenu 1]": "[to be defined — Confluence, content 1]",
             "[à définir — Confluence, contenu 2]": "[to be defined — Confluence, content 2]",
             // ── BATTLEPASS_NODES ──
-            "Appareil photo + 10 pellicules": "Camera + 10 film rolls",
+            "Appareil photo": "Camera",
             "Objet unique": "Unique item",
             "+50 Poudre": "+50 Dust",
             "+3 Orbes de mémoire": "+3 Memory orbs",
@@ -13484,14 +13728,17 @@
         // ══════════════════════════════════════
 
         // ── Carte tutoriel ──
+        // demo-ot v0.4 — retours OdT Canelle
         // demo-ot v0.3 — corrections CR test 2026-08-09
         // demo-ot v0.2 — contenu éditorial carte OT (Canelle)
         // DÉMO OT — Carte unique. On conserve l'id 'ob_tutorial_card' (câblé en
         // dur dans le rituel, le guide, la révélation gratuite, la sauvegarde) et
         // on rhabille uniquement le contenu. Invisible pour le joueur : il voit
         // « Office du Tourisme » partout. Contenu éditorial : Canelle — 3 arcs
-        // intégrés ; restent à fournir l'incipit, l'affiche du Rectangle et le
-        // fronton vide de Mars.
+        // intégrés ; restent à fournir l'incipit, l'affiche du Rectangle et les
+        // deux URL OnlyLyon (site + appli) de l'entrée « Des infos pratiques ».
+        // Le fronton vide de Mars n'est plus attendu : la page des frontons montre
+        // désormais l'est (Mars d'époque) face à l'ouest (Apollon).
         // Coordonnées réelles du lieu : 45.75718567058155 / 4.833052975484796.
         const OB_TUTORIAL_CARD = {
             id: 'ob_tutorial_card',
@@ -14240,11 +14487,22 @@
             feed_finish_ch2: '#addExpBtn',
             // Si des pages restent voilées, le bouton de scellement est désactivé :
             // l'anneau doit désigner le carnet, pas un bouton mort.
-            seal_ch2:        () => (_demoUnrevealedAtLevel() > 0 ? '#journalTabBtn' : '#addExpBtn'),
+            seal_ch2:        () => _demoSealRing(),
             feed_ch3:        () => (memorialDust >= 50 ? '#addExpBtn' : _demoBackToMapSelector()),
             // Dernier scellement : même arbitrage que seal_ch2 (carnet d'abord).
-            seal_ch3:        () => (_demoUnrevealedAtLevel() > 0 ? '#journalTabBtn' : '#addExpBtn'),
+            seal_ch3:        () => _demoSealRing(),
         };
+
+        // Retour Canelle (OdT) — Friction A : au palier, l'anneau désignait le carnet
+        // pendant que le dialogue envoyait au Bazar. Trois cas, un seul signal :
+        //   pages voilées + carnet pas encore lu  → le carnet
+        //   pages voilées + carnet lu, mais rien pour les révéler → la sortie vers la mappe
+        //   plus rien de voilé                    → le bouton de scellement
+        function _demoSealRing() {
+            if (_demoUnrevealedAtLevel() <= 0) return '#addExpBtn';
+            if (_obJournalSeen && _demoMissingSupplies() > 0) return _demoBackToMapSelector();
+            return '#journalTabBtn';
+        }
 
         // DÉMO OT — Comment renvoyer le joueur vers la mappe depuis l'écran courant.
         // Carnet et Collection ont un vrai bouton retour : on l'entoure. La fiche
@@ -14496,7 +14754,10 @@
             // poétique : on ne garde que la réplique de bilan (sans elle, rien
             // n'acte que la carte est achevée avant l'écran de fin).
             vnShow([
-                { speaker: 'La jeune fille', line: 'Voilà. Cette carte t\'a tout rendu : trois chapitres, pas une page qui manque, et ses trois visages retrouvés. Elle se souvient enfin d\'elle-même.' },
+                // Retour Canelle (OdT) : le bilan comptable (trois chapitres, trois
+                // visages) doublait ce que l'écran de fin montre déjà. On garde une
+                // félicitation adressée au joueur, sur ce qu'il a préservé.
+                { speaker: 'La jeune fille', line: 'Il semblerait qu\'elle t\'ait délivré tout ce qu\'elle porte en elle. Ton carnet est bien rempli, bravo ! Tu as réussi à conserver sa mémoire.' },
                 { speaker: 'La jeune fille', line: 'On se retrouve pour l\'évènement plus tard ?' },
                 { speaker: 'Toi', line: 'Comment ça ?' },
                 { speaker: 'La jeune fille', line: 'QUOI ? Tout ce que je viens de dire, ça ne te dit rien ?' },
@@ -14655,6 +14916,12 @@
                  + Math.max(0, need.text   - (bagInv.encre      || 0));
         }
 
+        // Retour Canelle (OdT) — Friction B : la première ouverture du carnet
+        // enchaînait aussitôt sur « va au Bazar » PUIS refermait le carnet d'office.
+        // Le joueur n'avait jamais l'occasion de lire ce qui venait d'être dévoilé.
+        // Les deux temps sont désormais séparés : ici on ne fait que l'inviter à
+        // lire ; l'envoi au Bazar attend qu'il referme le carnet de lui-même
+        // (cf. _obJournalExitHint, appelée par closeJournalScreen).
         function _obJournalHint() {
             const manque = _demoMissingSupplies();
             if (!_obJournalSeen) {
@@ -14662,28 +14929,19 @@
                 // CR test — Bloc 3.
                 const rep = [
                     { speaker: 'La jeune fille', line: 'Elle est un peu bavarde, en tout cas elle a encore des choses à dire.' },
+                    { speaker: 'La jeune fille', line: 'Prends le temps de lire ce qu\'elle a déjà retrouvé. Le reste viendra après.' },
                     // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour que
                     // la réplique et l'inventaire montrent le même signe.
                     { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poudre : une <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">📼 cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> pour un texte.' },
                 ];
-                // « Tu en as déjà » seulement s'il peut tout révéler ; sinon on le
-                // renvoie sur la mappe, au Bazar.
-                rep.push(manque === 0
-                    ? { speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' }
-                    // « Bazar » vient du CR, « échoppe » est le mot que porte l'UI
-                    // (Échoppe des Terreaux, 🛖) : les deux, sinon le joueur cherche
-                    // sur la mappe un lieu dont le nom n'existe nulle part.
-                    : { speaker: 'La jeune fille', line: 'D\'ailleurs, n\'hésite pas à aller chercher des fournitures au Bazar, l\'échoppe un peu plus au Nord. Profites-en pour collecter de la poudre ou des orbes si tu en trouves sur ton chemin.' });
-                vnShow(rep, () => {
-                    // Action UX 3 — s'il lui manque de quoi dévoiler ses pages, le
-                    // carnet n'a plus rien à lui offrir : on le referme sur la fiche
-                    // carte, d'où il pourra repartir vers la mappe. S'il a déjà tout
-                    // en poche, on le laisse dans le carnet : c'est là qu'il agit.
-                    if (_demoMissingSupplies() > 0) {
-                        try { closeJournalScreen(); } catch (e) {}
-                    }
-                    _obGuideRefresh();
-                });
+                // S'il a déjà tout en poche, il peut agir sans sortir : on le lui dit
+                // tout de suite. Sinon on ne dit rien de plus ici — l'échoppe attend
+                // qu'il ait fini de lire.
+                if (manque === 0) {
+                    rep.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' });
+                }
+                // Plus de closeJournalScreen() : il reste dans le carnet et le parcourt.
+                vnShow(rep, () => _obGuideRefresh());
                 return;
             }
             // Ne relancer que s'il reste des pages voilées ET de quoi manquer.
@@ -14692,6 +14950,23 @@
                     { speaker: 'La jeune fille', line: 'Ces pages resteront voilées tant que tu n\'auras rien pour les révéler. L\'échoppe est au nord, tout près.' },
                 ], () => _obGuideRefresh());
             }
+        }
+
+        // Retour Canelle (OdT) — second temps du carnet : l'envoi à l'échoppe.
+        // Il ne tombe qu'une fois, à la SORTIE de la première consultation, quand
+        // le joueur a eu le loisir de parcourir ce qui venait d'être dévoilé. Tant
+        // que le carnet suffit à lui seul (rien ne manque), elle se tait.
+        let _obJournalExitSaid = false;
+        function _obJournalExitHint() {
+            if (!_obGuide.active || !_obJournalSeen || _obJournalExitSaid) return;
+            if (_demoMissingSupplies() <= 0) return;
+            _obJournalExitSaid = true;
+            // « Bazar » vient du CR, « échoppe » est le mot que porte l'UI
+            // (Échoppe des Terreaux, 🛖) : les deux, sinon le joueur cherche
+            // sur la mappe un lieu dont le nom n'existe nulle part.
+            vnShow([
+                { speaker: 'La jeune fille', line: 'D\'ailleurs, n\'hésite pas à aller chercher des fournitures au Bazar, l\'échoppe un peu plus au Nord. Profites-en pour collecter de la poudre ou des orbes si tu en trouves sur ton chemin.' },
+            ], () => _obGuideRefresh());
         }
 
         // Entrées non révélées du niveau courant : à XP plein, elles bloquent le
@@ -14743,7 +15018,10 @@
                     if (ev === 'collections') {
                         _obGuide.step = 'go_card';
                         vnShow([
-                            { speaker: 'La jeune fille', line: 'La voilà. Muette, pour l\'instant. Ouvre-la.' },
+                            // Retour Canelle (OdT) : « la première de ta Collection » ne disait
+                            // rien au joueur. On ne nomme plus le rangement, on l'invite à
+                            // regarder la carte — l'anneau désigne déjà la vignette.
+                            { speaker: 'La jeune fille', line: 'Elle est bien là, n\'hésite pas à l\'inspecter.' },
                         ], () => _obGuideRefresh());
                     } else if (ev === 'carddetail') {
                         _obGuideEnterFeed1();
@@ -14787,7 +15065,10 @@
                     if (ev === 'orb_used') {
                         _obGuide.step = 'feed_finish_ch2';
                         vnShow([
-                            { speaker: 'La jeune fille', line: 'Elle revit. Continue, mène ce chapitre à son terme.' },
+                            // Retour Canelle (OdT) : « elle revit » supposait une carte morte,
+                            // alors que la jeune fille l'a déjà ranimée — c'est d'épuisement
+                            // qu'il s'agit. Et « niveau » parle mieux que « chapitre » ici.
+                            { speaker: 'La jeune fille', line: 'Elle retrouve de la force pour te parler. Continue, aide-la à se souvenir et à monter au niveau suivant !' },
                         ], () => { showDemoToast('La mémoire s\'ouvre à nouveau.'); _obGuideRefresh(); });
                     } else if (ev === 'carddetail') {
                         // Cas 1 : l'orbe est déjà en poche → l'utiliser.
@@ -15254,19 +15535,25 @@
                 { text: "Tout le monde passe devant moi. Peu s'arrêtent pour se demander ce que j'étais avant.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
                 { text: "Neuf heures à dix-huit heures, tous les jours. Je n'ai pas des horaires de monument, j'ai des horaires de maison.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
                 { text: "Je suis le Pavillon qui aime accueillir les curieux. Toi compris.", heart: true, level: 0,
-                  entry: { date: "Arc I · Un point de départ pour découvrir Lyon",
+                  // `_type` déclaré sur les neuf entrées : sans lui, la rotation par
+                  // position (cf. showDustDialogue) donnait la nature d'une page au
+                  // hasard de son rang — une frise coûtait une cassette, un diaporama
+                  // de l'encre. La fourniture suit désormais le contenu : photo →
+                  // pellicule, écrit → encre, bande son → cassette.
+                  // Page de prose : de l'encre.
+                  entry: { date: "Arc I · Un point de départ pour découvrir Lyon", _type: 'text',
                     text: "Au cœur de Lyon, je suis le Pavillon qui aime accueillir les curieux : visiteurs, Lyonnais et même toi se croisent avant de repartir explorer la métropole.\n\n"
                         + "J'ouvre mes portes tous les jours de 9 h à 18 h et tu peux trouver en mon sein mes alliés pour t'aider avec des conseils personnalisés, de la documentation, un grand écran, une borne d'information Vélo'v et… du wifi gratuit si tu es à court de data.\n\n"
                         + "Si tu as l'œil tu reconnaîtras un grand chef qui nous a quitté en 2018 ! Il trône très fier à l'intérieur pour faire un selfie si ça te dit ? Quel est son nom ? {{sp:Paul Bocuse}}",
                     photo: null, audio: null, _revealed: true } },
                 { text: "Trois images de moi, prises à trois moments différents. Regarde-les défiler.", heart: true, level: 0,
-                  entry: { date: "Arc I · Un point de départ pour découvrir Lyon",
+                  entry: { date: "Arc I · Un point de départ pour découvrir Lyon", _type: 'visual',
                     // Page sans prose : elle ne vaut que par ses images. Le corps
                     // reste vide, le gabarit n'affiche alors aucun .jsb-body.
                     text: "",
                     photo: 'placeholder_visual', audio: null, _revealed: true } },
                 { text: "Une partie de moi tient dans ta poche. Emporte-la.", heart: true, level: 0,
-                  // « Me retrouver ailleurs » : une page de liens, donc de l'écrit.
+                  // « Des infos pratiques » : une page de liens, donc de l'écrit.
                   // Sans ce `_type`, la rotation par position en aurait fait une
                   // entrée audio — une cassette pour une adresse de site.
                   entry: { date: "Arc I · Un point de départ pour découvrir Lyon", _type: 'text',
@@ -15281,12 +15568,22 @@
                 { text: "Regarde à l'autre bout de la place. Quelqu'un me ressemble beaucoup trop pour que ce soit un hasard.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
                 { text: "Mars veillait sur mon fronton. On l'a décroché en 1956, et personne ne l'a remplacé.", heart: false, level: 1, minLevel: 1, minRevealed: 0 },
                 { text: "Je ne suis pas seul sur cette place. Nous sommes deux, et on nous a voulus semblables.", heart: true, level: 1,
-                  entry: { date: "Arc II · Un pavillon peut en cacher un autre",
-                    text: "Tu me crois seul sur cette place ? Regarde à l'autre bout : un pavillon me fait face, même taille, même allure. Nous avons été pensés comme une paire, un accord de symétrie posé sur Bellecour.\n\n"
-                        + "Un siècle et demi plus tard, nous nous ressemblons encore — à quelques détails près. Ce sont ces détails qui racontent tout.",
+                  // Retour Canelle (OdT) : la prose cède la place aux deux vues. Ce
+                  // que disaient ces deux paragraphes, les images le montrent — et sa
+                  // phrase, portée en légende par le gabarit, le dit en une ligne.
+                  // Corps vide : le gabarit n'affiche alors aucun .jsb-body.
+                  // Deux grandes vues et une légende : c'est une page d'images,
+                  // elle se dévoile à la pellicule.
+                  entry: { date: "Arc II · Un pavillon peut en cacher un autre", _type: 'visual',
+                    text: "",
                     photo: 'placeholder_visual', audio: null } },
                 { text: "Lève les yeux sur les frontons. L'un a gardé son dieu, l'autre a perdu le sien.", heart: true, level: 1,
-                  entry: { date: "Arc II · Un pavillon peut en cacher un autre",
+                  // Entrée textuelle : deux vignettes de comparaison, mais c'est la
+                  // prose qui porte la page (les deux dieux, le retrait de 1956).
+                  // Elle se dévoile donc à l'encre, comme les entrées de l'arc III.
+                  // Sans ce `_type`, `placeholder_visual` en ferait une entrée à
+                  // pellicule — et l'arc II en compterait deux pour une seule photo.
+                  entry: { date: "Arc II · Un pavillon peut en cacher un autre", _type: 'text',
                     text: "Observez les frontons ! L'un porte encore une figure d'Apollon, dieu des arts, de la musique et de la lumière, sculptée par Joseph-Hugues Fabisch. L'autre paraît aujourd'hui beaucoup plus sobre… mais son fronton n'a pas toujours été vide : il était autrefois orné de Mars, dieu de la guerre, rappelant parfaitement son ancienne fonction. Une idée de laquelle ?\n\n"
                         + "La sculpture fut retirée en 1956. Deux pavillons presque jumeaux, donc, mais deux symboles opposés : les arts d'un côté, l'autorité militaire de l'autre. Une opposition qui correspond étonnamment bien à leur histoire, même si rien ne permet encore d'affirmer qu'elle avait été pensée ainsi dès l'origine.",
                     photo: 'placeholder_visual', audio: null } },
@@ -15303,13 +15600,13 @@
                 { text: "Avant la pierre, il y a eu des planches. Et avant les planches, un refus.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
                 { text: "Corps de garde, poste de police, bureau du tourisme : j'ai toujours servi à renseigner quelqu'un. Sur des routes, ou sur des ennemis.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
                 { text: "Cette place a bien failli ne jamais nous connaître.", heart: true, level: 2,
-                  entry: { date: "Arc III · Une histoire de destins liés",
+                  entry: { date: "Arc III · Une histoire de destins liés", _type: 'text',
                     text: "Il faut savoir que cette grande place où tu marches n'a failli jamais connaître ces bâtiments. Une opposition préfectorale rappelle à la ville qu'elle ne peut bâtir aucune maison, ni édifice, soit pour le public ou les particuliers ni même pour quelque usage que ce puisse être.\n\n"
                         + "Cependant, par l'astuce de l'esthétique, un nouveau et joli Corps-de-garde en forme de tente est érigé en mars 1828 du côté de la verdure de la Place Bellecour. Habile ! L'année qui suit, l'homme d'affaires Adrien-Alfred Granier obtient l'autorisation d'élever, à l'autre extrémité, un pavillon de même allure en planches et mortier.\n\n"
                         + "Ce dernier sera un café, il ouvre dès le 21 juin 1829 sous la direction de Garnier et son épouse qu'on appellera « La Reine des Tilleuls », petit clin d'œil pour les arbres se trouvant de ce côté de la place.",
                     photo: null, audio: null } },
                 { text: "Les flammes, puis la faillite, puis un couple qui rachète les ruines. La suite tient en une page.", heart: true, level: 2,
-                  entry: { date: "Arc III · Une histoire de destins liés",
+                  entry: { date: "Arc III · Une histoire de destins liés", _type: 'text',
                     // Le premier bloc est l'anecdote-lettre de Canelle : « >> » la
                     // rend comme une coupure collée dans le carnet.
                     text: ">> Les Pavillons traversent ensuite des années mouvementées. En 1831, le Corps-de-garde disparaît dans les flammes lors de la première révolte des Canuts, tandis que le Pavillon des époux Girard résiste. Il grandit même peu à peu, mais… En 1839, les Girard criblés de dettes, font faillite. La fête était finie !\n"
@@ -15317,8 +15614,11 @@
                         + "Au milieu du XIXème siècle, changement de décor ! Jean-Baptiste Vollot permettra l'impulsion qui mènera à la reconstruction entière des deux pavillons de Bellecour. Fini les constructions légères : sous la direction des architectes René Dardel et Tony Desjardins, le Corps-de-garde et son pendant sont rebâtis en pierre de taille. L'opération coûtera cher, au point que Vollot fera appel à plusieurs investisseurs et artisans lyonnais pour mener le chantier à terme. Le 21 octobre 1856, l'ancien Café du Pavillon renaît sous un nom autrement plus éclatant : la Maison Dorée et le Corps-de-Garde sera bientôt flambant neuf.",
                     photo: null, audio: null } },
                 { text: "Mets nos deux vies côte à côte. Elles se répondent plus qu'elles ne se ressemblent.", heart: true, level: 2,
-                  entry: { date: "Arc III · Une histoire de destins liés",
-                    text: "Mets nos deux histoires l'une à côté de l'autre et suis-les de haut en bas. Ce ne sont pas deux vies parallèles : ce sont deux vies qui se répondent.",
+                  // Retour Canelle (OdT) : le corps expliquait la frise au lieu de la
+                  // laisser parler. Il cède la place à la main courante portée par le
+                  // gabarit (« Côte à côte, sans jamais se croiser mais pourtant liés »).
+                  entry: { date: "Arc III · Une histoire de destins liés", _type: 'text',
+                    text: "",
                     photo: null, audio: null } }
             ],
 
@@ -16440,9 +16740,15 @@
             // Un seul bazar, plein nord de l'OT : c'est la source des fournitures
             // (pellicule / cassette / encre) qui débloquent les entrées du carnet.
             BAZAR_POINTS.length = 0;
+            // Stock calé sur ce que la carte réclame vraiment, une fois chaque page
+            // typée d'après son contenu : 1 pellicule (« Un bâtiment jumeau »),
+            // 4 encres (les frontons + les trois pages de l'arc III) et 1 cassette
+            // (« Une même mission »). Une unité de marge par type — le tirage
+            // aléatoire du scellement ne peut pas être garanti, et le joueur ne
+            // doit jamais rester bloqué faute d'une fourniture.
             BAZAR_POINTS.push({
                 id: 'bazar_ot', name: 'Échoppe de Bellecour', lat: 45.7585, lng: 4.8324,
-                icon: '🛖', stock: { pellicules: 3, encre: 3, cassettes: 3 }
+                icon: '🛖', stock: { pellicules: 2, encre: 5, cassettes: 2 }
             }); // ~100 m plein nord
             CARNET_RESOURCE_POINTS.length = 0;
             SCROLL_POINTS.length = 0;
@@ -22997,61 +23303,126 @@
                 {
                     level: 0, index: 2,
                     template: 'links_screen',
-                    title: 'Me retrouver ailleurs',
-                    // URL OnlyLyon à confirmer avec David : tant que `href` est
-                    // null, la ligne s'affiche mais n'ouvre rien. On n'invente
-                    // aucune adresse. Site pressenti : https://www.lyon-france.com
+                    title: 'Des infos pratiques 💡',
+                    // Seule page du carnet qui ne parle pas de la voix de la carte :
+                    // c'est une note versée au dossier par l'Organisation. D'où le
+                    // `body` déclaré ici — il s'écarte volontairement du texte de
+                    // CARD_DIALOGUES — et `bodyVoice: 'org'`, qui lui donne la
+                    // police des dialogues de la jeune fille au lieu de la prose
+                    // du carnet.
+                    body: "Rapport fourni par l'Organisation sur les références numériques",
+                    bodyVoice: 'org',
+                    // URL confirmées par David (23 août 2026) : le site de l'Office
+                    // du Tourisme, et l'appli « Lyon City Card - ONLYLYON » éditée
+                    // par Otipass sur le Play Store. Un `href` à null laisserait la
+                    // ligne visible mais inerte — on n'invente jamais d'adresse.
+                    // Pastilles dessinées fournies par Canelle ; l'emoji reste en
+                    // repli si le fichier venait à manquer.
                     links: [
-                        { icon: '🌐', label: 'Le site',
+                        { icon: '🌐', iconImage: './assets/Cards/Office_du_tourisme/logo_site.png',
+                          label: 'Vers le site',
                           caption: 'Un site pour préparer votre découverte de Lyon',
-                          href: null },
-                        { icon: '📱', label: "L'application",
-                          caption: 'Une app qui vous accompagne dans Lyon',
-                          href: null },
+                          href: 'https://www.visiterlyon.com' },
+                        { icon: '📱', iconImage: './assets/Cards/Office_du_tourisme/logo_app.png',
+                          label: "Vers l'appli",
+                          caption: 'Lyon City Card — ONLYLYON, sur le Play Store',
+                          href: 'https://play.google.com/store/apps/details?id=com.otipass.lyon' },
                     ],
                     decorations: ['paperclip_top'],
                 },
 
                 // ─── Arc 2 (niveau 1) — « Un pavillon peut en cacher un autre » ───
                 {
+                    // Retour Canelle (OdT) : la comparaison époque/actuel ne tenait pas
+                    // — deux tirages de formats différents pour dire une gémellité. Les
+                    // deux vues qu'elle fournit la disent mieux : les jumeaux de face,
+                    // puis la place vue du ciel qui montre leur symétrie. Le texte se
+                    // lit entre les deux et légende le premier.
+                    // Les tirages époque/actuel ne sont pas perdus : ils passent au
+                    // dossier de l'entrée « Apollon et le fronton vide », chacun du
+                    // bon côté (est / ouest).
                     level: 1, index: 0,
-                    template: 'two_images_compare',
+                    template: 'image_citation',
                     title: 'Un bâtiment jumeau',
-                    imageLeft: './assets/Cards/Office_du_tourisme/ot_a2_pavillon_epoque.png',
-                    imageLeftLabel: 'Autrefois',
-                    imageRight: './assets/Cards/Office_du_tourisme/ot_a2_pavillon_actuel.png',
-                    imageRightLabel: "Aujourd'hui",
+                    image: './assets/Cards/Office_du_tourisme/twin_building.png',
+                    imageCaption: 'Observe attentivement les deux bâtiments sur la place : beaucoup de ressemblance, mais quelques singularités cristallisées au fil du temps.',
+                    imageBelow: './assets/Cards/Office_du_tourisme/place_office.png',
+                    imageBelowCaption: 'Une symétrie occident/orient — photo Michel Djaoui',
+                    // Cartouches posés sur le tirage, à la manière d'une plaque de
+                    // musée : `x`/`y` = la cible désignée (bout de la flèche déjà
+                    // dessinée sur la photo), `lx`/`ly` = le centre de la plaque.
+                    // Tout est en % de l'image (630 × 419), jamais en pixels — le
+                    // cadre se redimensionne avec la page.
+                    // Les plaques sont calées SUR les libellés blancs incrustés dans
+                    // le tirage (illisibles à la taille d'un téléphone) et assez
+                    // larges pour les recouvrir ; elles se tiennent au-dessus des
+                    // toits, pas dessus, pour ne pas cacher les bâtiments.
+                    // Toucher un cartouche change la légende sous la photo ; la
+                    // légende de départ garde le crédit photo.
+                    // `plate` : ce que porte la plaque quand le libellé complet y
+                    // tiendrait mal. « Statue de Louis XIV » barrait un tiers de la
+                    // place ; le nom entier se lit dans la légende, en dessous.
+                    imageBelowHotspots: [
+                        { x: 21.2, y: 18.9, lx: 18.0, ly: 8.0, label: 'Pavillon Est',
+                          text: "Celui qui accueille : l'Office du Tourisme, portes ouvertes sur la place." },
+                        { x: 81.1, y: 18.4, lx: 82.0, ly: 8.0, label: 'Pavillon Ouest',
+                          text: "Son jumeau, sous l'enseigne ONLYLYON. Même gabarit, même fronton — mais tout ne s'y est pas passé pareil." },
+                        { x: 49.6, y: 50.1, lx: 35.0, ly: 54.5,
+                          label: 'Statue de Louis XIV', plate: 'Louis XIV',
+                          text: "Le point fixe de la place : les deux pavillons l'encadrent à égale distance, un de chaque côté de l'axe." },
+                    ],
                     decorations: ['tape_top'],
+                    // Les deux tirages de la page s'agrandissent au tap : les détails
+                    // qu'elle invite à observer ne se voient pas en vignette. Pas de
+                    // pile de tirages ici — la page ne cache aucune vue.
+                    framesOpenDossier: true,
                     dossier: {
                         title: 'Les deux pavillons',
                         photos: [
-                            { src: './assets/Cards/Office_du_tourisme/ot_a2_pavillon_epoque.png',
-                              caption: "Le pavillon au fronton de Mars, sur une photographie ancienne." },
-                            { src: './assets/Cards/Office_du_tourisme/ot_a2_pavillon_actuel.png',
-                              caption: "Son jumeau aujourd'hui, sous l'enseigne ONLYLYON." },
+                            { src: './assets/Cards/Office_du_tourisme/twin_building.png',
+                              caption: "Les deux pavillons de Bellecour, face à face : l'accueil à l'est, les bureaux à l'ouest." },
+                            { src: './assets/Cards/Office_du_tourisme/place_office.png',
+                              caption: "La place vue du ciel — leur symétrie tient toute la largeur de Bellecour. Photo Michel Djaoui." },
                         ],
                     },
                 },
                 {
+                    // Retour Canelle (OdT) : texte inchangé, présentation refaite en
+                    // vis-à-vis — le fronton est / le fronton ouest, comme la page
+                    // « Un bâtiment jumeau » posait ses deux tirages.
+                    // Est = le pavillon de l'Office, dont Mars a été décroché en 1956
+                    // (cf. la frise de l'arc III, colonne est). Ouest = Le Rectangle,
+                    // qui a gardé son Apollon. Chaque côté ouvre le dossier sur SES
+                    // deux vues : le fronton, puis le pavillon entier.
                     level: 1, index: 1,
-                    template: 'image_citation',
+                    template: 'two_images_compare',
                     title: 'Apollon et le fronton vide',
-                    image: './assets/Cards/Office_du_tourisme/ot_a2_fronton_apollon_actuel.png',
-                    imageCaption: 'Apollon, sculpté par Joseph-Hugues Fabisch.',
+                    imageLeft: './assets/Cards/Office_du_tourisme/ot_a2_fronton_mars_epoque.png',
+                    imageLeftLabel: 'Fronton Est',
+                    imageRight: './assets/Cards/Office_du_tourisme/ot_a2_fronton_apollon_actuel.png',
+                    imageRightLabel: 'Fronton Ouest',
                     quote: "Les arts d'un côté, l'autorité militaire de l'autre.",
                     stampDate: '1956',
                     decorations: ['nebula_edge', 'tape_corner', 'stamp_date'],
-                    dossier: {
-                        title: 'Les frontons',
+                    // Une pochette par fronton plutôt qu'une commune : la page oppose
+                    // deux côtés, feuilleter l'un ne doit pas faire glisser vers
+                    // l'autre. Chaque dossier tient le fronton puis son pavillon entier.
+                    dossierLeft: {
+                        title: 'Fronton Est',
+                        photos: [
+                            { src: './assets/Cards/Office_du_tourisme/ot_a2_fronton_mars_epoque.png',
+                              caption: 'Mars, casqué, sur le fronton est — avant son retrait en 1956.' },
+                            { src: './assets/Cards/Office_du_tourisme/ot_a2_pavillon_epoque.png',
+                              caption: "Le pavillon est du temps du Corps de Garde, Mars encore en place." },
+                        ],
+                    },
+                    dossierRight: {
+                        title: 'Fronton Ouest',
                         photos: [
                             { src: './assets/Cards/Office_du_tourisme/ot_a2_fronton_apollon_actuel.png',
-                              caption: "Apollon, dieu des arts, de la musique et de la lumière." },
-                            { src: './assets/Cards/Office_du_tourisme/ot_a2_fronton_mars_epoque.png',
-                              caption: 'Mars, casqué, sur le fronton voisin — avant son retrait.' },
-                            // Image prévue par la fiche, pas encore fournie :
-                            // bascule sur « Image à venir » dans le dossier.
-                            { src: './assets/Cards/Office_du_tourisme/ot_a2_fronton_mars_vide.png',
-                              caption: "Le fronton vide, aujourd'hui : Mars en a été retiré en 1956." },
+                              caption: "Apollon, dieu des arts, de la musique et de la lumière, sur le fronton ouest." },
+                            { src: './assets/Cards/Office_du_tourisme/ot_a2_pavillon_actuel.png',
+                              caption: "Le pavillon ouest aujourd'hui, sous l'enseigne ONLYLYON." },
                         ],
                     },
                 },
@@ -23101,6 +23472,9 @@
                     level: 2, index: 2,
                     template: 'timeline_page',
                     title: 'Deux pavillons, deux destins',
+                    // Retour Canelle (OdT) : la prose explicative devient une main
+                    // courante. La frise n'a pas besoin qu'on lui dise comment se lire.
+                    quote: 'Côte à côte, sans jamais se croiser mais pourtant liés.',
                     columns: ['Pavillon Est', 'Pavillon Ouest'],
                     // Icônes : 🛡️ sécurité · 🍽️ restauration/sociabilité ·
                     // 🧭 tourisme · 🎨 culture · ℹ️ point info · 🗂️ bureau ·
@@ -23116,9 +23490,12 @@
                           ouest: { icon: '🍽️', text: "Développement de l'établissement" } },
                         { when: '1924',
                           est:   { icon: '🧭', text: "Pavillon cédé au Syndicat d'Initiative de Lyon" } },
+                        // Le seul repère où les deux pavillons vivent le même
+                        // événement : une case unique en travers des deux colonnes.
+                        // C'est le nœud qui les lie, tout le reste de la frise les
+                        // tient séparés.
                         { when: '1941',
-                          est:   { icon: '🏛️', text: 'Site classé, avec la place Bellecour' },
-                          ouest: { icon: '🏛️', text: 'Site classé' } },
+                          both:  { icon: '🏛️', text: 'Sites classés, avec la place Bellecour' } },
                         { when: '1945',
                           est:   { icon: '🧭', text: 'Restauration en Maison du Tourisme' } },
                         { when: '1956',
@@ -23319,13 +23696,78 @@
             const onErr = 'this.style.display=&#39;none&#39;;this.parentNode.classList.add(&#39;no-img&#39;);';
             // Entrée à dossier : le cadre nu laisse place à la pile de tirages.
             if (o.dossierKey) return _jsbPile(src, o, onErr);
-            let h = '<div class="jsb-photo' + (src ? '' : ' no-img')
-                  + (o.cls ? ' ' + o.cls : '') + '"'
+            // Cadre simple mais consultable : le tirage s'ouvre en plein écran au
+            // tap, sans prendre l'allure d'une pile. C'est ce qu'il faut quand la
+            // page montre déjà toutes ses vues — il n'y a rien de caché dessous,
+            // seulement de quoi regarder de plus près.
+            let cls = 'jsb-photo';
+            if (!src)      cls += ' no-img';
+            if (o.cls)     cls += ' ' + o.cls;
+            if (o.openKey) cls += ' tapable';
+            let attrs = '';
+            if (o.openKey) {
+                attrs = ' role="button" tabindex="0" aria-label="Agrandir la photo"'
+                      + ' onclick="openJsbDossier(&#39;' + o.openKey + '&#39;,' + (o.openIndex || 0) + ')"';
+            }
+            let h = '<div class="' + cls + '"' + attrs
                   + ' style="--jsb-rot:' + (o.rot || 0) + 'deg;">';
             if (src) h += '<img src="' + _jsbEsc(src) + '" alt="" onerror="' + onErr + '">';
             h += '<div class="jsb-photo-ph">Image à venir</div>';
+            // Cartouches cliquables posés sur le tirage. Trois couches, toutes
+            // calées sur la boîte de l'IMAGE et non du cadre (cf. --jsb-pad-*,
+            // les fractions --hx/--hy/--lx/--ly sont celles de la photo) :
+            //   1. les traits de rappel, en SVG étiré sur la photo ;
+            //   2. les points de visée, minuscules — ils désignent le bâtiment
+            //      sans le masquer, c'est tout leur intérêt ;
+            //   3. les plaques elles-mêmes, posées à l'écart de ce qu'elles
+            //      nomment, comme une étiquette de musée.
+            const hs = o.hotspots || [];
+            if (hs.length) {
+                // `preserveAspectRatio="none"` : le viewBox 0-100 se plaque sur la
+                // photo quelle que soit sa forme, donc les % du gabarit valent
+                // directement des coordonnées. `non-scaling-stroke` garde le trait
+                // fin — sans lui l'étirement l'épaissirait d'un côté.
+                h += '<svg class="jsb-hot-leads" viewBox="0 0 100 100" '
+                   +   'preserveAspectRatio="none" aria-hidden="true">';
+                hs.forEach(function (s) {
+                    h += '<line x1="' + s.lx + '" y1="' + s.ly + '" '
+                       +       'x2="' + s.x  + '" y2="' + s.y  + '" '
+                       +       'vector-effect="non-scaling-stroke"/>';
+                });
+                h += '</svg>';
+                hs.forEach(function (s) {
+                    h += '<span class="jsb-hot-pin" aria-hidden="true" '
+                       +   'style="--hx:' + (s.x / 100) + ';--hy:' + (s.y / 100) + ';"></span>';
+                });
+            }
+            // `stopPropagation` : sur un cadre `tapable`, toucher une plaque ne
+            // doit pas aussi ouvrir la photo en grand.
+            hs.forEach(function (s, i) {
+                h += '<button type="button" class="jsb-hot" '
+                   +   'style="--hx:' + (s.lx / 100) + ';--hy:' + (s.ly / 100) + ';" '
+                   +   'onclick="event.stopPropagation();jsbHotPick(this,' + (i + 1) + ');">'
+                   +   _jsbEsc(s.plate || s.label)
+                   + '</button>';
+            });
             h += '</div>';
             return h;
+        }
+
+        // Un repère touché : il devient le seul actif, et la légende de son rang
+        // remplace celle qui était affichée. Rang 0 = la légende de départ.
+        function jsbHotPick(el, idx) {
+            const wrap = el.closest('.jsb-hot-wrap');
+            if (!wrap) return;
+            const was = el.classList.contains('on');
+            wrap.querySelectorAll('.jsb-hot').forEach(function (b) { b.classList.remove('on'); });
+            // Retoucher le repère actif repose la légende d'origine : on ne reste
+            // pas coincé sur un détail après l'avoir lu.
+            const target = was ? 0 : idx;
+            if (!was) el.classList.add('on');
+            wrap.querySelectorAll('.jsb-hot-cap').forEach(function (c, n) {
+                c.classList.toggle('on', n === target);
+            });
+            wrap.classList.toggle('touched', !was);
         }
 
         // Pile de tirages : celui du dessus en entier, les autres en dessous,
@@ -23367,15 +23809,22 @@
         }
 
         // Enregistre le dossier d'une entrée et renvoie sa clé (ou null)
-        function _jsbRegisterDossier(entry, ctx) {
-            const dsr = entry.dossier;
+        // Enregistre UN dossier sous une clé donnée et renvoie cette clé (ou null).
+        // Une entrée peut en déclarer plusieurs — deux colonnes comparées ont chacune
+        // leur pochette —, d'où la clé passée en paramètre plutôt que déduite.
+        function _jsbPutDossier(dsr, key, fallbackTitle) {
             if (!dsr || !dsr.photos || !dsr.photos.length) return null;
             // Pas de sous-titre : la visionneuse ne porte que le titre du dossier.
-            _jsbDsrData[ctx.key] = {
-                title: dsr.title || entry.title || 'Dossier',
+            _jsbDsrData[key] = {
+                title: dsr.title || fallbackTitle || 'Dossier',
                 photos: dsr.photos,
             };
-            return ctx.key;
+            return key;
+        }
+
+        // Dossier unique d'une entrée, rangé sous la clé de l'entrée elle-même.
+        function _jsbRegisterDossier(entry, ctx) {
+            return _jsbPutDossier(entry.dossier, ctx.key, entry.title);
         }
 
         function _jsbOpen(entry, uid) {
@@ -23451,21 +23900,69 @@
             const uid = ++_jsbUid;
             const key = _jsbRegisterDossier(entry, ctx);
             let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
+            // `framesOpenDossier` : la page montre déjà toutes ses vues. Les cadres
+            // restent des tirages simples — chacun ouvre la visionneuse sur SA photo
+            // — au lieu de se replier en pile, et les légendes restent lisibles en page.
+            const tapOnly = !!entry.framesOpenDossier;
             // Pas de clé `image` → entrée texte-seul : aucun emplacement photo.
             // Chemin renseigné mais fichier absent → repli « Image à venir ».
             if (entry.image) {
                 h += _jsbFrame(entry.image, {
                     rot: ((uid * 37) % 21 - 10) / 10,   // −1.0° à +1.0°, stable par entrée
-                    dossierKey: key,
+                    dossierKey: tapOnly ? null : key,
                     count: key ? entry.dossier.photos.length : 0,
+                    openKey: tapOnly ? key : null,
+                    openIndex: 0,
+                    // Une page qui vaut par ses vues les montre en grand.
+                    cls: tapOnly ? 'wide' : null,
                 });
             }
             // Entrée à dossier : la légende se lit dans la visionneuse, pas sous
-            // la pochette — c'est ce qu'on gagne à l'ouvrir.
-            if (entry.imageCaption && !key) {
+            // la pochette — c'est ce qu'on gagne à l'ouvrir. Sauf en `tapOnly`,
+            // où rien n'est caché : la légende reste sur la page.
+            if (entry.imageCaption && (!key || tapOnly)) {
                 h += '<div class="jsb-caption">' + _jsbEsc(entry.imageCaption) + '</div>';
             }
             if (entry.body)         h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
+            // Seconde vue collée sous le texte : la page se lit alors image →
+            // légende → image, ce que demandait Canelle pour « Un bâtiment jumeau ».
+            // Elle n'a pas de dossier propre : c'est un tirage simple.
+            if (entry.imageBelow) {
+                const spots = entry.imageBelowHotspots || [];
+                if (spots.length) h += '<div class="jsb-hot-wrap">';
+                h += _jsbFrame(entry.imageBelow, {
+                    rot: ((uid * 29) % 19 - 9) / 10,
+                    openKey: tapOnly ? key : null,
+                    openIndex: 1,
+                    cls: tapOnly ? 'wide' : null,
+                    hotspots: spots,
+                });
+                if (spots.length) {
+                    // Toutes les légendes sont écrites dans la page, une seule
+                    // visible : elles se superposent dans la même case de grille.
+                    // Rien n'est injecté au clic — la hauteur ne saute pas, et la
+                    // table I18N les traduit comme n'importe quel texte de la page.
+                    h += '<div class="jsb-hot-caps">';
+                    h +=   '<div class="jsb-caption jsb-hot-cap on">'
+                         +   _jsbEsc(entry.imageBelowCaption || '')
+                         + '</div>';
+                    spots.forEach(function (s) {
+                        // Libellé, tiret et texte dans trois nœuds distincts :
+                        // la table I18N indexe des chaînes entières, un « — »
+                        // collé au texte en ferait une clé introuvable.
+                        h += '<div class="jsb-caption jsb-hot-cap">'
+                           +   '<b>' + _jsbEsc(s.label) + '</b>'
+                           +   '<i class="jsb-hot-sep">—</i>'
+                           +   '<span>' + _jsbEsc(s.text) + '</span>'
+                           + '</div>';
+                    });
+                    h += '</div>';
+                    h += '<div class="jsb-hot-hint">Touche les cartouches de la photo.</div>';
+                    h += '</div>';
+                } else if (entry.imageBelowCaption) {
+                    h += '<div class="jsb-caption">' + _jsbEsc(entry.imageBelowCaption) + '</div>';
+                }
+            }
             if (entry.quote)        h += '<div class="jsb-quote">« ' + _jsbEsc(entry.quote) + ' »</div>';
             return h + '</div>';
         }
@@ -23520,26 +24017,110 @@
         // ── Gabarit 4 : deux images côte à côte, labels en surimpression ──
         function _jsbTwoImages(entry, ctx) {
             const uid = ++_jsbUid;
-            const key = _jsbRegisterDossier(entry, ctx);
+            // Trois cas :
+            //   `dossierLeft` / `dossierRight` → une pochette par colonne. Chaque
+            //     cadre ouvre la sienne à sa première vue, et feuilleter ne fait
+            //     jamais dériver d'un côté vers l'autre.
+            //   `dossier` seul → une pochette commune, le cadre de gauche l'ouvre
+            //     à la 1re vue, celui de droite à la 2e.
+            //   ni l'un ni l'autre → cadres inertes.
+            const kL = _jsbPutDossier(entry.dossierLeft,  ctx.key + '_l', entry.imageLeftLabel)
+                    || _jsbRegisterDossier(entry, ctx);
+            const kR = _jsbPutDossier(entry.dossierRight, ctx.key + '_r', entry.imageRightLabel)
+                    || _jsbRegisterDossier(entry, ctx);
+            // Sur pochette commune, la droite s'ouvre à la 2e vue ; sur pochettes
+            // séparées, chacune repart de la sienne.
+            const iR = entry.dossierRight ? 0 : 1;
             let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
             h += '<div class="jsb-compare">';
-            [[entry.imageLeft, entry.imageLeftLabel, 0], [entry.imageRight, entry.imageRightLabel, 1]]
-                .forEach(function (pair, n) {
-                    if (n === 1) h += '<span class="jsb-compare-sep">↔</span>';
-                    h += '<div class="jsb-compare-item"'
-                       + (key ? ' onclick="openJsbDossier(\'' + key + '\',' + pair[2] + ')"'
-                              + ' role="button" tabindex="0" aria-label="Consulter le dossier photo"' : '')
-                       + '>';
-                    if (pair[0]) {
-                        h += '<img src="' + _jsbEsc(pair[0]) + '" alt="" '
-                           +   'onerror="this.style.display=&#39;none&#39;;">';
-                    }
-                    if (pair[1]) h += '<span class="jsb-compare-label">' + _jsbEsc(pair[1]) + '</span>';
-                    h += '</div>';
-                });
+            // Un côté qui a SA pochette fait défiler ses vues tout seul, en boucle :
+            // le dossier se donne à voir sans qu'on ait à l'ouvrir. Sur pochette
+            // commune, pas de défilement — les deux colonnes puiseraient dans la
+            // même pile et la comparaison n'aurait plus de sens.
+            const sides = [
+                { src: entry.imageLeft,  label: entry.imageLeftLabel,  key: kL, start: 0,
+                  own: entry.dossierLeft },
+                { src: entry.imageRight, label: entry.imageRightLabel, key: kR, start: iR,
+                  own: entry.dossierRight },
+            ];
+            sides.forEach(function (side, n) {
+                if (n === 1) h += '<span class="jsb-compare-sep">↔</span>';
+                const views = (side.own && side.own.photos) ? side.own.photos : [];
+                const auto  = views.length > 1;
+                const nb    = auto ? views.length : 0;
+                h += '<div class="jsb-compare-item' + (auto ? ' auto' : '') + '"'
+                   + (side.key ? ' data-key="' + _jsbEsc(side.key) + '"'
+                          + ' data-i="' + side.start + '" data-phase="' + n + '"'
+                          + ' onclick="jsbCompareOpen(this)"'
+                          + ' role="button" tabindex="0"'
+                          + ' aria-label="Consulter le dossier photo"' : '')
+                   + '>';
+                h +=   '<span class="jsb-compare-stack">';
+                if (auto) {
+                    views.forEach(function (p, i) {
+                        h += '<img class="' + (i === side.start ? 'on' : '') + '" '
+                           +   'src="' + _jsbEsc(p.src) + '" alt="" '
+                           +   'onerror="this.style.visibility=&#39;hidden&#39;;">';
+                    });
+                } else if (side.src) {
+                    h += '<img class="on" src="' + _jsbEsc(side.src) + '" alt="" '
+                       +   'onerror="this.style.visibility=&#39;hidden&#39;;">';
+                }
+                h +=   '</span>';
+                // Bandeau du bas : le côté à gauche, le nombre de vues à droite —
+                // c'est lui qui dit que le tirage s'ouvre.
+                h +=   '<span class="jsb-compare-bar">';
+                h +=     '<span class="jsb-compare-label">' + _jsbEsc(side.label || '') + '</span>';
+                if (nb) h += '<span class="jsb-compare-count">' + nb + ' vue' + (nb > 1 ? 's' : '') + '</span>';
+                h +=   '</span>';
+                h += '</div>';
+            });
             h += '</div>';
-            if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
+            jsbCompareAutoplay();
+            if (entry.body)  h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
+            // Main courante en pied de page, comme sur `image_citation` : une entrée
+            // qui change de gabarit ne doit pas perdre sa citation au passage.
+            if (entry.quote) h += '<div class="jsb-quote">« ' + _jsbEsc(entry.quote) + ' »</div>';
             return h + '</div>';
+        }
+
+        // Ouvre la pochette d'un côté SUR LA VUE AFFICHÉE : le diaporama et la
+        // visionneuse racontent la même chose au même moment.
+        function jsbCompareOpen(el) {
+            if (!el || !el.dataset.key) return;
+            openJsbDossier(el.dataset.key, +el.dataset.i || 0);
+        }
+
+        // Un seul minuteur pour tous les vis-à-vis de la page — le carnet est
+        // reconstruit d'un bloc (`innerHTML`), inutile d'en attacher un par cadre.
+        // Il s'arrête de lui-même quand plus aucun n'est à l'écran.
+        let _jsbCmpTimer = null, _jsbCmpStep = 0, _jsbCmpIdle = 0;
+        function jsbCompareAutoplay() {
+            if (_jsbCmpTimer) return;
+            _jsbCmpIdle = 0;
+            _jsbCmpTimer = setInterval(function () {
+                const items = document.querySelectorAll('.jsb-compare-item.auto');
+                if (!items.length) {
+                    // Deux tours à vide : le carnet est fermé ou refait sans
+                    // vis-à-vis. Le premier tour peut tomber avant le rendu.
+                    if (++_jsbCmpIdle >= 2) { clearInterval(_jsbCmpTimer); _jsbCmpTimer = null; }
+                    return;
+                }
+                _jsbCmpIdle = 0;
+                _jsbCmpStep++;
+                items.forEach(function (it) {
+                    // Décalage d'un tour entre gauche et droite : les deux tirages
+                    // ne basculent jamais ensemble, l'œil suit l'un puis l'autre.
+                    if ((_jsbCmpStep + (+it.dataset.phase || 0)) % 2) return;
+                    const imgs = it.querySelectorAll('.jsb-compare-stack img');
+                    if (imgs.length < 2) return;
+                    const cur = (+it.dataset.i || 0) % imgs.length;
+                    const nxt = (cur + 1) % imgs.length;
+                    imgs[cur].classList.remove('on');
+                    imgs[nxt].classList.add('on');
+                    it.dataset.i = nxt;
+                });
+            }, 1700);
         }
 
         // Cassette du lecteur audio (gabarit `audio_entry`). Même palette que la
@@ -23601,7 +24182,12 @@
         function _jsbLinksScreen(entry, ctx) {
             const uid = ++_jsbUid;
             let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
-            if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
+            // `bodyVoice: 'org'` : le corps n'est pas de la main du scribe, c'est
+            // une note rapportée. Il prend la police des dialogues (cf. .vn-line).
+            if (entry.body) {
+                h += '<div class="jsb-body' + (entry.bodyVoice === 'org' ? ' jsb-body--org' : '') + '">'
+                   + _jsbPara(entry.body) + '</div>';
+            }
             h += '<div class="jsb-links">';
             (entry.links || []).forEach(function (l) {
                 const live = !!l.href;
@@ -23609,13 +24195,28 @@
                     ? '<a class="jsb-link" href="' + _jsbEsc(l.href) + '"'
                       + ' target="_blank" rel="noopener noreferrer">'
                     : '<span class="jsb-link pending">';
-                h +=   '<span class="jsb-link-mark">' + _jsbEsc(l.icon || '◈') + '</span>';
+                // Pastille dessinée si l'entrée en fournit une. L'emoji reste écrit
+                // dessous, masqué par la classe `img` ; si le tirage ne charge pas,
+                // son `onerror` retire la classe et l'emoji réapparaît dans son rond.
+                // Aucun texte injecté dans onerror.
+                h +=   '<span class="jsb-link-mark' + (l.iconImage ? ' img' : '') + '">'
+                     +   _jsbEsc(l.icon || '◈')
+                     +   (l.iconImage
+                            ? '<img src="' + _jsbEsc(l.iconImage) + '" alt="" '
+                              + 'onerror="this.parentNode.classList.remove(&#39;img&#39;);this.remove();">'
+                            : '')
+                     + '</span>';
+                // Le chevron reste DANS le cadre : hors de lui il flotterait sur
+                // le papier, à côté du dessin, sans plus rien désigner.
                 h +=   '<span class="jsb-link-txt">';
-                if (l.label)   h += '<span class="jsb-link-label">' + _jsbEsc(l.label) + '</span>';
+                if (l.label) {
+                    h += '<span class="jsb-link-label">' + _jsbEsc(l.label)
+                       + (live ? '<span class="jsb-link-ext" aria-hidden="true">↗</span>' : '')
+                       + '</span>';
+                }
                 if (l.caption) h += '<span class="jsb-link-caption">' + _jsbEsc(l.caption) + '</span>';
                 if (!live)     h += '<span class="jsb-link-todo">lien à venir</span>';
                 h +=   '</span>';
-                if (live) h += '<span class="jsb-link-ext" aria-hidden="true">↗</span>';
                 h += live ? '</a>' : '</span>';
             });
             h += '</div>';
@@ -23633,6 +24234,9 @@
             const cols = entry.columns || ['Pavillon Est', 'Pavillon Ouest'];
             let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
             if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
+            // Une main courante peut coiffer la frise : c'est elle qui dit le lien
+            // entre les deux colonnes, la frise dit seulement les dates.
+            if (entry.quote) h += '<div class="jsb-quote">« ' + _jsbEsc(entry.quote) + ' »</div>';
             h += '<div class="jsb-tl">';
             h +=   '<div class="jsb-tl-head">'
                  +   '<span>' + _jsbEsc(cols[0]) + '</span>'
@@ -23641,6 +24245,17 @@
             (entry.timeline || []).forEach(function (row) {
                 h += '<div class="jsb-tl-row">';
                 h +=   '<span class="jsb-tl-when">' + _jsbEsc(row.when || '') + '</span>';
+                // `both` : le même événement des deux côtés. Une case unique qui
+                // traverse les deux colonnes — le nœud qui lie les deux pavillons,
+                // là où le reste de la frise les tient séparés.
+                if (row.both) {
+                    h += '<span class="jsb-tl-cell both">'
+                       +   '<span class="jsb-tl-ico" aria-hidden="true">' + _jsbEsc(row.both.icon || '·') + '</span>'
+                       +   '<span>' + _jsbEsc(row.both.text || '') + '</span>'
+                       + '</span>';
+                    h += '</div>';
+                    return;
+                }
                 [row.est, row.ouest].forEach(function (cell) {
                     if (!cell) { h += '<span class="jsb-tl-cell empty"></span>'; return; }
                     h += '<span class="jsb-tl-cell">'
@@ -24795,7 +25410,12 @@
 
         function closeJournalScreen() {
             document.getElementById('journalScreen').classList.remove('show');
-            if (typeof _obGuide === 'object' && _obGuide.active) setTimeout(() => _obGuideRefresh(), 120);
+            if (typeof _obGuide === 'object' && _obGuide.active) {
+                setTimeout(() => _obGuideRefresh(), 120);
+                // Il a fini de lire : c'est maintenant qu'on peut l'envoyer à
+                // l'échoppe, pas à l'ouverture (cf. _obJournalExitHint).
+                if (typeof _obJournalExitHint === 'function') setTimeout(_obJournalExitHint, 320);
+            }
 
             // Capturer le delta avant de réinitialiser
             const delta = window._journalSessionDelta || 0;
@@ -25888,7 +26508,7 @@
         }
 
         const BATTLEPASS_NODES = [
-            { palier:1,  icon:'📷', name:'Appareil photo + 10 pellicules', type:'Objet unique',        xpRequired:0,    milestone:true,
+            { palier:1,  icon:'📷', name:'Appareil photo',            type:'Objet unique',        xpRequired:0,    milestone:true,
               rewardFn: () => { giveCamera(); } },
             { palier:2,  icon:'💜', name:'+50 Poudre',                     type:'Poudre mémorielle',   xpRequired:50,
               rewardFn: () => addDust(50) },
@@ -26049,10 +26669,13 @@
         }
 
         // ── Caméra ──
+        // DÉMO OT — l'appareil photo est offert, les pellicules non. Ce palier est
+        // acquis dès 0 XP (cf. checkBattlepassRewards) : les 10 pellicules qu'il
+        // versait tombaient donc à la première seconde de partie, alors que le
+        // joueur est censé partir les mains vides et passer par l'échoppe.
         function giveCamera() {
             if (hasCamera) return;
             hasCamera  = true;
-            bagInv.pellicules = Math.max(bagInv.pellicules || 0, 10);
             updateCameraHUD();
         }
         function addFilm(n) {
