@@ -4152,21 +4152,52 @@
             border: 1px solid rgba(47,92,58,0.35);
             color: var(--jsb-accent); font-size: 22px;
         }
-        /* Dessin fourni : plus de rond ni de bord, le tirage est posé sur la page.
-           `multiply` fond son papier crème dans celui du carnet — le trait reste,
-           le fond disparaît. `font-size: 0` masque l'emoji qui dort dessous : il
-           transparaîtrait à travers le fond devenu clair. Le repli reste entier —
-           si l'image manque, son `onerror` retire la classe et l'emoji revient. */
+        /* Dessin fourni : il devient la TOUCHE du lien. Une face claire, un double
+           liseré doré, et surtout une tranche sous le bord bas — c'est elle qui dit
+           le relief, donc le bouton. Au doigt, la touche s'enfonce : la tranche
+           disparaît et le dessin descend de 2 px.
+           `multiply` fond le papier du dessin dans la face de la touche — le trait
+           reste, son fond disparaît. `font-size: 0` masque l'emoji qui dort
+           dessous : il transparaîtrait à travers ce fond devenu clair. Le repli
+           reste entier — si l'image manque, son `onerror` retire la classe et
+           l'emoji revient dans son rond. */
         .jsb-link-mark.img {
-            border: none; border-radius: 0;
-            position: relative; overflow: visible;
+            border: 1.5px solid rgba(146,100,30,0.6);
+            border-radius: 7px;
+            background: #fdf8ec;
+            box-shadow:
+                inset 0 0 0 1px rgba(253,248,236,0.95),
+                inset 0 1px 0 rgba(255,255,255,0.7),
+                0 3px 0 rgba(122,86,36,0.5),
+                0 5px 9px rgba(60,35,10,0.24);
+            position: relative; overflow: hidden;
             font-size: 0;
+            cursor: pointer;
+            transition: transform 0.11s ease, box-shadow 0.11s ease;
         }
         .jsb-link-mark.img img {
-            position: absolute; inset: -4px;
-            width: calc(100% + 8px); height: calc(100% + 8px);
+            position: absolute; inset: 4px;
+            width: calc(100% - 8px); height: calc(100% - 8px);
             object-fit: contain; display: block;
             mix-blend-mode: multiply;
+            /* Les deux dessins n'ont pas le même blanc de papier : sans ce
+               rattrapage, une touche sort grise à côté d'une touche crème. */
+            filter: brightness(1.09) contrast(1.06);
+        }
+        /* Enfoncement : la touche descend exactement de la hauteur de sa tranche. */
+        .jsb-link:active .jsb-link-mark.img {
+            transform: translateY(3px);
+            box-shadow:
+                inset 0 0 0 1px rgba(253,248,236,0.95),
+                inset 0 2px 4px rgba(90,62,25,0.28),
+                0 0 0 rgba(122,86,36,0.5),
+                0 1px 3px rgba(60,35,10,0.2);
+        }
+        /* Lien pas encore ouvert : rien à enfoncer, la touche redevient un tirage. */
+        .jsb-link.pending .jsb-link-mark.img {
+            cursor: default;
+            box-shadow: inset 0 0 0 1px rgba(253,248,236,0.95);
+            border-color: rgba(146,100,30,0.3);
         }
         /* Le cadre s'est déplacé ici : il ne tient plus que l'écrit. C'est lui,
            désormais, qui porte la bascule du collage. */
