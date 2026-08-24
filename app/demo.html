@@ -11367,6 +11367,7 @@
             "Les pages voilées demandent autre chose que de la poudre : une <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span> pour une image, une <span style=\"color:#C4B5FD;font-weight:600\">📼 cassette</span> pour une voix, de l'<span style=\"color:#E0A458;font-weight:600\">🖋️ encre</span> pour un texte.": "Veiled pages ask for more than dust: a <span style=\"color:#FCD34D;font-weight:600\">🎞️ film roll</span> for an image, a <span style=\"color:#C4B5FD;font-weight:600\">📼 tape</span> for a voice, <span style=\"color:#E0A458;font-weight:600\">🖋️ ink</span> for a text.",
             "L'échoppe en tient, juste au nord d'ici. Sers-toi.": "The stall keeps some, just north of here. Help yourself.",
             "Tu en as déjà sur toi. Touche une page voilée pour la révéler.": "You already have some on you. Touch a veiled page to reveal it.",
+            "Pour revenir en arrière, touche son image et tu quitteras ce carnet dès que tu le souhaites": "To go back, touch its image and you'll leave this journal whenever you like",
             "Le chapitre est plein — mais il garde encore des pages voilées. Ouvre son carnet et dévoile-les : c'est à cette condition qu'il pourra être scellé.": "The chapter is full — but it still keeps veiled pages. Open its notebook and reveal them: only then can it be sealed.",
             "Garde ton orbe, cette carte n'a plus soif. Ce sont ses pages voilées qui la retiennent : ouvre son carnet.": "Keep your orb, this card is no longer thirsty. It's the veiled pages holding it back: open its notebook.",
             "La voilà à bout de souffle. Tu as déjà une orbe sur toi : pose-la sur la carte, elle se ravivera d'un coup.": "It's out of breath. You already have an orb on you: place it on the card and it will revive at once.",
@@ -14612,8 +14613,19 @@
         //   pages voilées + carnet pas encore lu  → le carnet
         //   pages voilées + carnet lu, mais rien pour les révéler → la sortie vers la mappe
         //   plus rien de voilé                    → le bouton de scellement
+        // S'y ajoute un cas prioritaire, valable une seule fois : tant que le
+        // joueur n'est jamais ressorti du carnet, l'anneau désigne la vignette
+        // que la jeune fille vient de nommer (« touche son image »). Sans lui,
+        // l'anneau se posait sur le bouton pellicule d'à côté — qui sort jusqu'à
+        // la mappe, pas à la carte : sa réplique et le guide montraient deux
+        // boutons différents. Une fois la sortie faite, l'arbitrage d'origine
+        // reprend la main et renvoie au Bazar comme avant.
         function _demoSealRing() {
             if (_demoUnrevealedAtLevel() <= 0) return '#addExpBtn';
+            const jrn = document.getElementById('journalScreen');
+            if (jrn && jrn.classList.contains('show') && !_obJournalBackSeen) {
+                return '#journalScreenCardImage';
+            }
             if (_obJournalSeen && _demoMissingSupplies() > 0) return _demoBackToMapSelector();
             return '#journalTabBtn';
         }
@@ -15039,6 +15051,10 @@
         // des fournitures ; les suivantes n'interviennent que si le joueur est à sec,
         // pour ne jamais répéter une consigne déjà satisfaite.
         let _obJournalSeen = false;
+        // Le joueur est-il déjà ressorti du carnet au moins une fois ? Tant que non,
+        // l'anneau lui montre la vignette de sortie (cf. _demoSealRing) — la consigne
+        // « touche son image » ne vaut que si on lui désigne laquelle.
+        let _obJournalBackSeen = false;
 
         // Entrées encore voilées de la carte tutoriel, et celles que le joueur peut
         // réellement révéler MAINTENANT. Le stock brut ne suffit pas : une pellicule
@@ -15082,6 +15098,14 @@
                 if (manque === 0) {
                     rep.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' });
                 }
+                // Toujours en dernier, quel que soit l'état des fournitures : c'est
+                // la seule chose que le joueur ne peut pas deviner. Le carnet ne se
+                // referme plus d'office (cf. Friction B ci-dessus), donc personne ne
+                // lui a jamais montré la sortie. « Son image » = la vignette de la
+                // carte en haut de l'écran (#journalScreenCardImage), qui ramène à
+                // la carte. Dit une fois, à la première ouverture ; les relances
+                // plus bas ne le répètent pas.
+                rep.push({ speaker: 'La jeune fille', line: 'Pour revenir en arrière, touche son image et tu quitteras ce carnet dès que tu le souhaites' });
                 // Plus de closeJournalScreen() : il reste dans le carnet et le parcourt.
                 vnShow(rep, () => _obGuideRefresh());
                 return;
@@ -25752,6 +25776,9 @@
         function closeJournalScreen() {
             document.getElementById('journalScreen').classList.remove('show');
             if (typeof _obGuide === 'object' && _obGuide.active) {
+                // Sortie faite : l'anneau n'a plus à montrer la vignette, il peut
+                // reprendre son arbitrage normal (échoppe, scellement…).
+                _obJournalBackSeen = true;
                 setTimeout(() => _obGuideRefresh(), 120);
                 // Il a fini de lire : c'est maintenant qu'on peut l'envoyer à
                 // l'échoppe, pas à l'ouverture (cf. _obJournalExitHint).
