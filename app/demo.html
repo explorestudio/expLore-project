@@ -4364,12 +4364,32 @@
             padding: 40px 10px;
         }
         .jsb-dsr-slide.miss .jsb-dsr-missing { display: block; }
+        /* ── Cartouches sur le tirage agrandi ──
+           Un schéma légendé doit le rester en grand. On réutilise les classes
+           de la page (.jsb-hot, .jsb-hot-pin, .jsb-hot-leads) : un seul jeu de
+           styles pour les deux tailles.
+           La couche est calée en JS (_jsbDsrFitHot) sur la boîte RÉELLE de la
+           photo — l'image est centrée et contenue dans la case, ses bords ne
+           sont donc pas ceux du slide. Marges de cadre à zéro : les % du
+           gabarit valent directement des coordonnées dans cette boîte. */
+        .jsb-dsr-hot {
+            position: absolute; left: 0; top: 0; width: 0; height: 0;
+            --jsb-pad-l: 0px; --jsb-pad-t: 0px;
+            --jsb-pad-x: 0px; --jsb-pad-y: 0px;
+            pointer-events: none;
+        }
+        .jsb-dsr-hot .jsb-hot { pointer-events: auto; }
+        /* Le filet bat pour dire « touche-moi » ; la consigne passée, il se tait. */
+        .jsb-dsr-hot.touched .jsb-hot { animation: none; }
         .jsb-dsr-caption {
             font-family: 'Segoe Script', 'Bradley Hand', cursive;
             font-size: 12.5px; line-height: 1.4;
             color: #6b5238; text-align: center;
             min-height: 34px; margin: 8px 4px 4px;
         }
+        /* Légende de cartouche : même composition que sous la photo de la page
+           (nom en italique, tiret, texte), transposée dans la visionneuse. */
+        .jsb-dsr-caption b { font-family: Georgia, serif; font-style: italic; color: #a3402a; }
         .jsb-dsr-nav {
             display: flex; align-items: center; justify-content: space-between;
             gap: 10px;
@@ -7985,6 +8005,12 @@
             font-family: Georgia, serif;
             animation: obPulse 2s ease-in-out infinite;
         }
+        /* Flèche du « continuer » : elle glisse vers la droite et se rallume,
+           là où obPulse ne faisait que baisser l'opacité de tout le bloc. */
+        @keyframes vnTapArrow {
+            0%, 100% { transform: translateX(0);   opacity: 0.65; }
+            50%      { transform: translateX(4px); opacity: 1; }
+        }
         @keyframes obPulse {
             0%,100% { opacity: 0.3; }
             50%      { opacity: 0.7; }
@@ -8042,7 +8068,12 @@
         .vn-speaker-box { display:inline-block;border-radius:6px;border:1px solid rgba(139,92,246,0.4);background:rgba(139,92,246,0.15);padding:3px 12px;margin-bottom:10px; }
         .vn-speaker { font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin:0;color:#c4b5fd; }
         .vn-line { font-family:Georgia,serif;font-style:italic;font-size:14px;line-height:1.8;color:rgba(255,255,255,0.92); }
-        .vn-tap { position:absolute;bottom:12px;right:18px;font-size:9px;color:rgba(139,92,246,0.6);letter-spacing:1.5px;text-transform:uppercase;animation:obPulse 1.8s infinite; }
+        /* Indicateur « continuer ». L'ancien violet (rgba(139,92,246,0.6)) se
+           noyait dans le fond quasi noir de la boîte, et obPulse faisait battre
+           le libellé lui-même : il passait la moitié du temps encore plus pâle.
+           Le libellé se tient maintenant en lavande claire ; seule la flèche bat. */
+        .vn-tap { position:absolute;bottom:11px;right:18px;display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#c4b5fd;letter-spacing:1.5px;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,0.85); }
+        .vn-tap-arrow { display:inline-block;font-size:14px;line-height:1;animation:vnTapArrow 1.4s ease-in-out infinite; }
         /* CR test (item H) — écriture progressive. Le texte complet est posé
            dès le départ, seule l'opacité des caractères change : la mise en
            page ne bouge pas d'un pixel pendant la frappe. `.vn-w` garde chaque
@@ -8054,7 +8085,8 @@
         /* « Continuer › » n'apparaît qu'une fois la réplique écrite en entier. */
         /* `animation: none` obligatoire : obPulse anime l'opacité, et une
            animation l'emporte sur une déclaration normale. */
-        .vn-dialogue-box.vn-typing .vn-tap { opacity: 0; animation: none; transition: opacity 0.2s; }
+        .vn-dialogue-box.vn-typing .vn-tap { opacity: 0; transition: opacity 0.2s; }
+        .vn-dialogue-box.vn-typing .vn-tap-arrow { animation: none; }
         .vn-action-btn { width:100%;padding:14px;border-radius:0;border:none;border-top:1px solid rgba(139,92,246,0.3);font-size:15px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.15);color:#c4b5fd;display:none; }
         .vn-action-btn.show { display:block; }
 
@@ -10730,8 +10762,8 @@
         </div>
 
         <!-- ── MUSIQUE D'AMBIANCE ── -->
-        <!-- preload="none" : la piste fait 2,7 Mo et la musique est OFF par
-             défaut — on ne télécharge rien tant que le joueur n'active pas. -->
+        <!-- preload="none" : la piste fait 2,7 Mo. Elle est ON par défaut, mais
+             ne démarre qu'en fin de cinématique — rien n'est téléchargé avant. -->
         <audio id="bgMusic" src="./assets/audio/ambient_bg.mp3" loop preload="none"></audio>
 
         <!-- ── PARAMÈTRES ── langue · calques · son
@@ -10767,7 +10799,7 @@
                     <div class="settings-switch-row">
                         <span class="settings-sub">Musique d'ambiance</span>
                         <button type="button" class="settings-switch" id="bgMusicToggle"
-                                onclick="BgMusic.toggle()" aria-label="Activer la musique"></button>
+                                onclick="BgMusic.toggle()" aria-label="Désactiver la musique"></button>
                     </div>
                     <div class="settings-volume" id="settingsVolumeRow">
                         <span class="settings-sub">Volume</span>
@@ -10883,7 +10915,7 @@
                         <div class="vn-speaker" id="vnSpeaker"></div>
                     </div>
                     <div class="vn-line" id="vnLine"></div>
-                    <div class="vn-tap">Continuer ›</div>
+                    <div class="vn-tap">Continuer<span class="vn-tap-arrow" aria-hidden="true">›</span></div>
                 </div>
             </div>
             <button class="vn-action-btn" id="vnActionBtn"></button>
@@ -10944,7 +10976,7 @@
             "Volume de la musique": "Music volume",
             "Activer la musique": "Turn music on",
             "Désactiver la musique": "Turn music off",
-            "Une ambiance sonore accompagne l'exploration. Tu peux l'activer dans les paramètres.": "An ambient soundtrack goes with your exploration. You can turn it on in the settings.",
+            "Une ambiance sonore accompagne l'exploration. Tu peux la couper dans les paramètres.": "An ambient soundtrack goes with your exploration. You can turn it off in the settings.",
             "Vitesse": "Speed",
             "Marche": "Walk",
             "🚶 Lente": "🚶 Slow",
@@ -11093,6 +11125,7 @@
             "Fresque": "Fresco",
             "Synthèse du chapitre": "Chapter synthesis",
             "Continuer ›": "Continue ›",
+            "Continuer": "Continue",
             "Continuer →": "Continue →",
 
             // ── Level-up ──
@@ -11272,8 +11305,14 @@
                 "It's a bit of a chatterbox — in any case it still has things to say.",
             "D'ailleurs, n'hésite pas à aller chercher des fournitures au Bazar, l'échoppe un peu plus au Nord. Profites-en pour collecter de la poudre ou des orbes si tu en trouves sur ton chemin.":
                 "By the way, don't hesitate to go and get supplies at the Bazaar, the stall a little further north. While you're at it, pick up any dust or orbs you find on the way.",
-            "En tout cas, occupe-toi bien d'elle : elle a déjà changé de forme, je ne sais pas si tu avais remarqué.":
-                "Anyway, take good care of it: it has already changed shape — I don't know whether you'd noticed.",
+            "Et un troisième visage avec lui. Tu commences à savoir où regarder.":
+                "And a third face with it. You're starting to know where to look.",
+            "Tu as vu ? Elle n'a plus tout à fait le même visage. Une pastille de plus s'est allumée sous son portrait.":
+                "Did you see? It doesn't quite have the same face any more. One more dot has lit up beneath its portrait.",
+            "Touche-la, va la regarder. Chaque chapitre scellé lui en révèle un — c'est comme ça qu'on voit une mémoire revenir.":
+                "Tap it, go and look. Every sealed chapter reveals one more — that's what a memory coming back looks like.",
+            "La voilà à bout de souffle. Pose-lui une orbe, ou laisse-lui le temps : la mémoire revient d'elle-même, lentement.":
+                "It's out of breath. Place an orb on it, or give it time: memory comes back on its own, slowly.",
             "On se retrouve pour l'évènement plus tard ?": "See you later for the event?",
             "Comment ça ?": "What do you mean?",
             "QUOI ? Tout ce que je viens de dire, ça ne te dit rien ?": "WHAT? Everything I just said means nothing to you?",
@@ -14063,6 +14102,10 @@
         }
 
         function finishIntroBD() {
+            // Sortie de la cinématique — « Commencer l'aventure » ou « Passer ».
+            // C'est le geste qui autorise la lecture audio : la musique
+            // d'ambiance démarre ici, et nulle part avant.
+            if (typeof BgMusic !== 'undefined') BgMusic.start();
             _introBDSeen = true;
             if (typeof saveProgress === 'function') saveProgress();
             const cinema = document.getElementById('introBDCinematic');
@@ -14388,7 +14431,7 @@
             if (!_obAct2Done && card.id === OB_TUTORIAL_CARD.id) {
                 _obAct2Done = true;
                 // DÉMO OT : forcer immédiatement l'état de la carte (§5.2) —
-                // ouverte au chapitre 2, proche de la complétion.
+                // ouverte au chapitre I, dont la jeune fille a déjà écrit les pages.
                 _demoSeedCardState();
                 saveProgress();
                 _obRestoreAllPOI();
@@ -14399,17 +14442,25 @@
 
         // ════════════════════════════════════════════════════════════════
         // DÉMO OT — Seeding de l'état initial de la carte (§5.2).
-        // Appelé juste après la collecte : la carte s'ouvre déjà au chapitre 2
-        // (niveau 1), avec 3/3 entrées du ch.1 et 2/3 du ch.2 déjà révélées.
-        // Énergie basse (2/6) pour que le beat « carte épuisée » tombe pile au
-        // clic qui débloque la 3e entrée du chapitre 2.
+        // Appelé juste après la collecte. La carte s'ouvre au CHAPITRE I
+        // (niveau 0) : le joueur voit donc le premier visage, Office1.png, et
+        // c'est lui qui fera apparaître le second en scellant.
+        // Le chapitre I est déjà écrit — la jeune fille l'a noté avant de rendre
+        // la carte : ses 3 entrées sont posées ET dévoilées (`_revealed`), et ses
+        // 3 paliers marqués faits, pour qu'aucun ne se rejoue pendant que le
+        // joueur finit de remplir la barre.
+        // XP à 100/250 : trois doses pour arriver au plein — de quoi voir la
+        // barre monter, sans rallonger la démo.
+        // Énergie à 6/9 : le chapitre I n'épuise pas la carte (3 doses), le beat
+        // « carte épuisée » tombe au chapitre II après 3 doses de plus, soit pile
+        // au clic qui dévoile sa 2e page.
         // ════════════════════════════════════════════════════════════════
         function _demoSeedCardState() {
             const id = OB_TUTORIAL_CARD.id;
-            cardLevels[id] = { level: 1, experience: 300, dustSpent: 550, heartsDone: { 0: [0, 1, 2], 1: [0, 1], 2: [] } };
+            cardLevels[id] = { level: 0, experience: 100, dustSpent: 100, heartsDone: { 0: [0, 1, 2], 1: [], 2: [] } };
             cardJournalEntries[id] = [];
-            [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1]].forEach(([lvl, idx]) => _demoSeedJournalEntry(lvl, idx));
-            cardEnergy[id] = { value: 2, lastTickAt: Date.now() };
+            [[0, 0], [0, 1], [0, 2]].forEach(([lvl, idx]) => _demoSeedJournalEntry(lvl, idx));
+            cardEnergy[id] = { value: 6, lastTickAt: Date.now() };
             saveProgress();
         }
         function _demoSeedJournalEntry(level, idx) {
@@ -14422,7 +14473,10 @@
             // prime sur la rotation par position (cf. unlockJournalEntry).
             const types = ['text', 'visual', 'audio'];
             const forcedType = hl.entry._type || types[(level * 3 + idx) % 3];
-            unlockJournalEntry(id, level, { id: entryId, ...hl.entry, _type: forcedType });
+            // `_revealed` : ces pages-là, la jeune fille les a écrites elle-même.
+            // Le joueur doit les trouver lisibles en ouvrant le carnet, pas voilées
+            // — sinon « j'ai noté tout le premier chapitre » sonne faux.
+            unlockJournalEntry(id, level, { id: entryId, ...hl.entry, _type: forcedType, _revealed: true });
         }
 
 
@@ -14513,6 +14567,11 @@
         const _OB_STEP_RING = {
             go_collections:  '#btnCollections',
             go_card:         '.alb-card.alb-collected',
+            feed_ch1:        '#addExpBtn',
+            // Chapitre I : rien n'est voilé, _demoSealRing renvoie donc toujours
+            // le bouton de scellement. On passe quand même par lui — si le joueur
+            // a dépensé ses fournitures ailleurs, l'arbitrage reste juste.
+            seal_ch1:        () => _demoSealRing(),
             feed_ch2:        '#addExpBtn',
             get_orb:         () => (bagInv.orbes > 0 ? '#addExpBtn' : _demoBackToMapSelector()),
             feed_finish_ch2: '#addExpBtn',
@@ -14630,7 +14689,8 @@
         // dans n'importe quel ordre). Tourne à chaque tick.
         function _obGuideSync() {
             // DÉMO OT : backstop léger. NE termine PLUS au niveau ≥ 1 (la carte
-            // démarre au niveau 1). On ne rattrape que les événements manqués.
+            // démarre au niveau 0, chapitre I). On ne rattrape que les événements
+            // manqués.
             if (!_obGuide.active) return;
             const card = OB_TUTORIAL_CARD;
             const cl = (typeof cardLevels === 'object') ? cardLevels[card.id] : null;
@@ -14657,20 +14717,35 @@
             // Carte achevée (niveau max), d'où que vienne le guide → conclusion.
             if (cl.level >= MAX_LEVEL) { _obGuideFinish(); return; }
 
+            const _AMONT_CH1 = ['feed_ch1', 'seal_ch1'];
+            const _AMONT_CH2 = ['feed_ch2', 'get_orb', 'feed_finish_ch2'];
+
             // Chapitre 2 scellé alors que le guide est resté en amont : on rejoue
             // le vrai beat de passage au chapitre 3 (Bloc 4) via la machine.
-            if (cl.level === 2 && ['feed_ch2','get_orb','feed_finish_ch2','seal_ch2'].indexOf(_etape) >= 0) {
+            if (cl.level === 2 && _AMONT_CH1.concat(_AMONT_CH2, ['seal_ch2']).indexOf(_etape) >= 0) {
                 _obGuide.step = 'seal_ch2';
+                _obGuideEvent('sealed');
+                return;
+            }
+
+            // Chapitre 1 scellé sans que le guide l'ait vu : on rejoue le beat du
+            // second visage, sinon le joueur passe à côté de ce qu'il vient
+            // d'obtenir et le guide reste bloqué en amont pour toute la partie.
+            if (cl.level === 1 && _AMONT_CH1.indexOf(_etape) >= 0) {
+                _obGuide.step = 'seal_ch1';
                 _obGuideEvent('sealed');
                 return;
             }
 
             // Chapitre 2 plein pendant que le guide attend encore l'orbe ou la
             // fin du nourrissage → enchaîner sur le scellement (Bloc 2, le carnet).
-            if (cl.level === 1 && _plein && ['feed_ch2','get_orb','feed_finish_ch2'].indexOf(_etape) >= 0) {
+            if (cl.level === 1 && _plein && _AMONT_CH2.indexOf(_etape) >= 0) {
                 _obAfterXpFull();
                 return;
             }
+
+            // Chapitre 1 plein mais xp_full manqué → inviter à sceller.
+            if (cl.level === 0 && _plein && _etape === 'feed_ch1') { _obAfterXpFullCh1(); return; }
 
             // Chapitre 3 plein mais xp_full manqué → inviter à sceller.
             if (cl.level === 2 && _etape === 'feed_ch3' && _plein) { _obAfterXpFullCh3(); return; }
@@ -14763,11 +14838,11 @@
 
         // Transition partagée : on vient d'ouvrir la fiche carte → invite à la nourrir.
         function _obGuideEnterFeed1() {
-            _obGuide.step = 'feed_ch2';
+            _obGuide.step = 'feed_ch1';
             // CR test — deux répliques retirées ici : le carnet n'est plus révélé
-            // à ce moment (il l'est au Bloc 2, chapitre plein), et l'annonce des
-            // états visuels contredirait le Bloc 4 (« je ne sais pas si tu avais
-            // remarqué »). Ne reste que la mécanique de la poudre.
+            // à ce moment (il l'est au Bloc 2, au chapitre II), et les états
+            // visuels non plus — ils s'annoncent au scellement du chapitre I,
+            // quand le second apparaît vraiment. Ne reste que la poudre.
             vnShow([
                 { speaker: 'La jeune fille', html: 'Pour qu\'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire.' },
             ], () => _obGuideRefresh());
@@ -14882,6 +14957,18 @@
                 ov.style.opacity = '0';
                 setTimeout(() => { if (ov.parentNode) ov.remove(); }, 900);
             };
+        }
+
+        // DÉMO OT — XP du chapitre I au max → inviter à sceller.
+        // Pas de branche « pages voilées » ici : le chapitre I est écrit d'avance
+        // (cf. _demoSeedCardState), le carnet n'a donc rien à retenir. Il n'est pas
+        // non plus offert à ce moment — sa remise appartient au chapitre II, où le
+        // joueur découvrira que la jeune fille y avait déjà tout noté.
+        function _obAfterXpFullCh1() {
+            _obGuide.step = 'seal_ch1';
+            vnShow([
+                { speaker: 'La jeune fille', line: 'Le chapitre est plein. Scelle-le : qu\'il prenne racine.' },
+            ], () => _obGuideRefresh());
         }
 
         // DÉMO OT — XP du chapitre 2 au max → inviter à sceller.
@@ -15045,6 +15132,35 @@
 
             switch (_obGuide.step) {
 
+                case 'feed_ch1':
+                    if (ev === 'xp_full') {
+                        _obAfterXpFullCh1();
+                    } else if (ev === 'energy_empty') {
+                        // Ne devrait pas tomber ici : 6 crans semés pour 3 doses.
+                        // Filet pour une partie reprise plus tard, où l'énergie a pu
+                        // être dépensée ailleurs. On oriente sans changer d'étape —
+                        // le détour orbe appartient au chapitre II.
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'La voilà à bout de souffle. Pose-lui une orbe, ou laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' },
+                        ], () => _obGuideRefresh());
+                    }
+                    break;
+
+                case 'seal_ch1':
+                    if (ev === 'sealed') {
+                        _obGuide.step = 'feed_ch2';
+                        vnShow([
+                            { speaker: 'La jeune fille', line: 'Tu as vu ? Elle n\'a plus tout à fait le même visage. Une pastille de plus s\'est allumée sous son portrait.' },
+                            { speaker: 'La jeune fille', line: 'Touche-la, va la regarder. Chaque chapitre scellé lui en révèle un — c\'est comme ça qu\'on voit une mémoire revenir.' },
+                        ], () => {
+                            // Le halo n'a de sens qu'une fois le VN refermé, sinon il
+                            // pulse derrière l'overlay (même arbitrage qu'au Bloc 4).
+                            setTimeout(_otTlHintVisuals, 250);
+                            _obGuideRefresh();
+                        });
+                    }
+                    break;
+
                 case 'go_collections':
                     if (ev === 'collections') {
                         _obGuide.step = 'go_card';
@@ -15140,12 +15256,13 @@
                         // Le chapitre 3 démarre avec l'énergie pleine (sinon 12 clics infaisables).
                         try { restoreCardEnergy(OB_TUTORIAL_CARD.id); } catch (e) {}
                         if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
-                        // CR test — Bloc 4 : la carte a changé de forme. La réplique
-                        // ne dit plus où regarder, c'est le halo sur les pastilles
-                        // (Action UX 4) qui le montre.
+                        // Bloc 4 : la carte change de forme une seconde fois. Elle
+                        // ne peut plus faire mine de le découvrir — elle l'a montré
+                        // au joueur au scellement du chapitre I. Elle constate, et
+                        // c'est le halo sur les pastilles (Action UX 4) qui désigne.
                         const rep = [
                             { speaker: 'La jeune fille', line: 'Un chapitre se ferme, un autre s\'ouvre — le dernier de cette carte.' },
-                            { speaker: 'La jeune fille', line: 'En tout cas, occupe-toi bien d\'elle : elle a déjà changé de forme, je ne sais pas si tu avais remarqué.' },
+                            { speaker: 'La jeune fille', line: 'Et un troisième visage avec lui. Tu commences à savoir où regarder.' },
                         ];
                         if (memorialDust >= _DEMO_DUST_CH3) {
                             rep.push({ speaker: 'La jeune fille', line: 'Il te faudra plus de poudre. Sers-toi de celle que tu as ramassée.' });
@@ -15509,7 +15626,11 @@
                 name: 'Rare',
                 color: '#3B82F6',
                 shape: 'pentagon',
-                exp: { 0: 250, 1: 520, 2: 800 },
+                // DÉMO OT : le chapitre II se joue désormais en entier (la carte
+                // démarre au chapitre I, cf. _demoSeedCardState). À 520 il coûtait
+                // 11 doses et deux détours orbe — 300, soit 6 doses, tient dans un
+                // seul tank d'énergie après une orbe, et la démo reste courte.
+                exp: { 0: 250, 1: 300, 2: 800 },
                 increment: 50,   // DÉMO OT : +50/clic (au lieu de 20) → ~17 taps sur la boucle, moins fastidieux
 
                 milestones: {
@@ -16459,7 +16580,7 @@
         let cardLevels = {};
         let hasSeenMapointTutorial = false;
         let hasSeenEchoTuto = false;
-        let memorialDust = 250;   // DÉMO OT : poudre initiale calibrée pour finir le chapitre 2 pile (5 clics × 50)
+        let memorialDust = 450;   // DÉMO OT : poudre initiale calibrée pour finir les chapitres 1 ET 2 pile (3 + 6 clics × 50)
         let collectedEchoes = [];
         let placedEchoes = {}; // kept for compat
         let cardJournals = {}; // { cardId: { slot1: supertype, slot2: ..., slot3: ... } }
@@ -16625,7 +16746,7 @@
                 return; // ne pas démarrer l'app : on recharge proprement
             }
             startApp();
-            BgMusic.init();   // musique d'ambiance : OFF par défaut, rien ne démarre ici
+            BgMusic.init();   // musique d'ambiance : ON par défaut, rien ne démarre ici
             setTimeout(() => {
                 initJoystick();
                 // DÉMO OT : GPS totalement désactivé (aucun prompt de géoloc). Joystick uniquement.
@@ -23853,6 +23974,18 @@
             return key;
         }
 
+        // Recopie les cartouches d'un tirage de page sur la MÊME vue du dossier :
+        // agrandir un schéma ne doit pas lui faire perdre sa légende. Une seule
+        // source (les `imageBelowHotspots` de l'entrée), deux affichages.
+        function _jsbDsrHotspots(key, src, spots) {
+            const data = _jsbDsrData[key];
+            if (!data) return;
+            data.photos = data.photos.map(function (p) {
+                if (p.src !== src) return p;
+                return { src: p.src, caption: p.caption, hotspots: spots };
+            });
+        }
+
         // Dossier unique d'une entrée, rangé sous la clé de l'entrée elle-même.
         function _jsbRegisterDossier(entry, ctx) {
             return _jsbPutDossier(entry.dossier, ctx.key, entry.title);
@@ -23935,6 +24068,11 @@
             // restent des tirages simples — chacun ouvre la visionneuse sur SA photo
             // — au lieu de se replier en pile, et les légendes restent lisibles en page.
             const tapOnly = !!entry.framesOpenDossier;
+            // Le tirage du bas porte des cartouches : la visionneuse les reprend
+            // sur la même vue, sinon agrandir la photo la dépouillerait de sa légende.
+            if (key && entry.imageBelow && (entry.imageBelowHotspots || []).length) {
+                _jsbDsrHotspots(key, entry.imageBelow, entry.imageBelowHotspots);
+            }
             // Pas de clé `image` → entrée texte-seul : aucun emplacement photo.
             // Chemin renseigné mais fichier absent → repli « Image à venir ».
             if (entry.image) {
@@ -24439,13 +24577,18 @@
 
         // ══════════════════════════════════════════════════════════════
         // MUSIQUE D'AMBIANCE
-        // OFF par défaut, état persistant, ducking pendant la lecture
+        // ON par défaut, état persistant, ducking pendant la lecture
         // d'une entrée audio du carnet. Jamais de lecture sans geste du
-        // joueur : si l'état persistant est ON, on attend le premier tap.
+        // joueur : le démarrage est le bouton « Commencer l'aventure » en
+        // fin de cinématique (start()). Sur une partie déjà entamée, la
+        // cinématique ne rejoue pas — on reprend au premier tap.
         // ══════════════════════════════════════════════════════════════
         const BgMusic = (function () {
             const KEY_ENABLED = 'demo_ot_music_enabled';
-            const KEY_INVITE  = 'demo_ot_music_invite_shown';
+            // Suffixe v2 : l'ancien toast invitait à ALLUMER la musique. Le sens
+            // s'est inversé — ceux qui avaient déjà vu le premier doivent voir
+            // celui-ci, d'où une clé neuve plutôt qu'un simple changement de texte.
+            const KEY_INVITE  = 'demo_ot_music_invite_shown_v2';
             const KEY_VOLUME  = 'demo_ot_music_volume';
             const VOL_DEFAULT = 0.35;    // ambiance de fond, pas bande-son
             const DUCK_RATIO  = 0.1;     // 10 % du volume choisi pendant une entrée du carnet
@@ -24454,8 +24597,8 @@
 
             let audioEl = null, btn = null;
             let volume  = VOL_DEFAULT;   // volume réglé dans les paramètres
-            let enabled = false;
-            let pendingStart = false;   // ON persistant, en attente du 1er tap
+            let enabled = true;
+            let pendingStart = false;   // ON, en attente d'un geste du joueur
             let ducked = false;
             let fadeTimer = null;
 
@@ -24466,6 +24609,17 @@
                 try { localStorage.setItem(key, val); } catch (e) {}
             }
 
+            // La cinématique d'intro est-elle à l'écran ? Tant qu'elle l'est, on
+            // n'arme pas la reprise au premier tap : le démarrage appartient au
+            // bouton de fin de cinématique.
+            function _introPlaying() {
+                const el = document.getElementById('introBDCinematic');
+                if (!el || el.classList.contains('hidden')) return false;
+                const cs = getComputedStyle(el);
+                return cs.display !== 'none' && cs.visibility !== 'hidden'
+                    && parseFloat(cs.opacity || '1') > 0.05;
+            }
+
             function init() {
                 audioEl = document.getElementById('bgMusic');
                 btn     = document.getElementById('bgMusicToggle');
@@ -24474,14 +24628,13 @@
                 const v = parseFloat(_read(KEY_VOLUME));
                 volume = (isFinite(v) && v >= 0 && v <= 1) ? v : VOL_DEFAULT;
                 audioEl.volume = volume;
-                enabled = (_read(KEY_ENABLED) === 'true');
+                enabled = (_read(KEY_ENABLED) !== 'false');   // ON par défaut
                 updateUI();
 
                 // Politique autoplay : rien ne démarre avant un geste du joueur
                 if (enabled) {
                     pendingStart = true;
-                    document.addEventListener('click',      _firstTap, { once: true, capture: true });
-                    document.addEventListener('touchstart', _firstTap, { once: true, capture: true });
+                    _armFirstTap();
                 }
 
                 document.addEventListener('visibilitychange', _visibility);
@@ -24512,11 +24665,29 @@
                 if (btn)    updateUI();
             }
 
+            // Démarrage explicite — appelé en fin de cinématique d'intro.
+            function start() {
+                if (!audioEl || !enabled) return;
+                audioEl.volume = _target();
+                audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
+            }
+
+            function _armFirstTap() {
+                document.addEventListener('click',      _firstTap, { once: true, capture: true });
+                document.addEventListener('touchstart', _firstTap, { once: true, capture: true });
+            }
+
+            // Reprise au premier geste — pour une partie déjà entamée, où la
+            // cinématique ne rejoue pas. La vérification se fait ICI et non à
+            // l'init : au démarrage, la cinématique n'est pas encore à l'écran
+            // (elle est lancée après un délai), donc l'init ne peut pas savoir.
+            // Un clic pendant la cinématique ne démarre rien et réarme l'écoute :
+            // le démarrage appartient au bouton « Commencer l'aventure ».
             function _firstTap() {
-                if (pendingStart && enabled) {
-                    audioEl.volume = _target();
-                    audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
-                }
+                if (!pendingStart || !enabled) return;
+                if (_introPlaying()) { _armFirstTap(); return; }
+                audioEl.volume = _target();
+                audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
             }
 
             function toggle() {
@@ -24616,8 +24787,8 @@
                 el.id = 'bgMusicInvite';
                 el.className = 'bg-music-invite';
                 el.textContent = (typeof T === 'function')
-                    ? T("Une ambiance sonore accompagne l'exploration. Tu peux l'activer dans les paramètres.")
-                    : "Une ambiance sonore accompagne l'exploration. Tu peux l'activer dans les paramètres.";
+                    ? T("Une ambiance sonore accompagne l'exploration. Tu peux la couper dans les paramètres.")
+                    : "Une ambiance sonore accompagne l'exploration. Tu peux la couper dans les paramètres.";
                 el.addEventListener('click', _dismissInvite);
                 // Posé dans le cadre téléphone (parent du panneau paramètres),
                 // pas dans <body> : sinon le toast sort du cadre sur desktop.
@@ -24630,7 +24801,7 @@
 
             function _maybeInvite() {
                 if (_read(KEY_INVITE) === 'true') return;
-                if (enabled) return;                 // déjà au courant, inutile
+                if (!enabled) return;                // déjà coupée : rien à proposer
                 let tries = 0;
                 const timer = setInterval(function () {
                     tries++;
@@ -24639,7 +24810,8 @@
                 }, 1200);
             }
 
-            return { init: init, toggle: toggle, setVolume: setVolume, syncSettings: syncSettings };
+            return { init: init, start: start, toggle: toggle,
+                     setVolume: setVolume, syncSettings: syncSettings };
         })();
 
         // ══════════════════════════════════════════════════════════════
@@ -24672,13 +24844,15 @@
             // page du carnet d'où l'on vient, il alourdissait la visionneuse.
             document.getElementById('jsbDsrTitle').innerHTML = _jsbEsc(data.title);
 
-            document.getElementById('jsbDsrTrack').innerHTML = data.photos.map(function (p) {
+            const track = document.getElementById('jsbDsrTrack');
+            track.innerHTML = data.photos.map(function (p) {
                 return '<div class="jsb-dsr-slide' + (p.src ? '' : ' miss') + '">'
                      + (p.src
                         ? '<img src="' + _jsbEsc(p.src) + '" alt="" onerror="this.style.display=&#39;none&#39;;'
                           + 'this.parentNode.classList.add(&#39;miss&#39;);">'
                         : '')
                      + '<div class="jsb-dsr-missing">Image à venir</div>'
+                     + _jsbDsrHotLayer(p)
                      + '</div>';
             }).join('');
 
@@ -24686,9 +24860,86 @@
                 return '<span class="jsb-dsr-dot" onclick="jsbDossierAt(' + i + ')"></span>';
             }).join('');
 
+            // La couche de cartouches ne peut se caler qu'une fois la photo
+            // mesurée : au chargement du fichier, ou tout de suite s'il est
+            // déjà en cache.
+            Array.prototype.forEach.call(track.querySelectorAll('img'), function (im) {
+                if (im.complete) _jsbDsrFitHot(im.parentNode);
+                else im.addEventListener('load', function () { _jsbDsrFitHot(im.parentNode); }, { once: true });
+            });
+
             _jsbDsrBind();
             _jsbDsrRender(true);
             ov.classList.add('open');
+        }
+
+        // Couche de cartouches d'une vue de la visionneuse : traits de rappel,
+        // points de visée, plaques — exactement les trois couches de la page.
+        function _jsbDsrHotLayer(p) {
+            const hs = p.hotspots || [];
+            if (!hs.length) return '';
+            let h = '<div class="jsb-dsr-hot">';
+            h += '<svg class="jsb-hot-leads" viewBox="0 0 100 100" '
+               +   'preserveAspectRatio="none" aria-hidden="true">';
+            hs.forEach(function (s) {
+                h += '<line x1="' + s.lx + '" y1="' + s.ly + '" '
+                   +       'x2="' + s.x  + '" y2="' + s.y  + '" '
+                   +       'vector-effect="non-scaling-stroke"/>';
+            });
+            h += '</svg>';
+            hs.forEach(function (s) {
+                h += '<span class="jsb-hot-pin" aria-hidden="true" '
+                   +   'style="--hx:' + (s.x / 100) + ';--hy:' + (s.y / 100) + ';"></span>';
+            });
+            hs.forEach(function (s, i) {
+                // `stopPropagation` : toucher une plaque ne doit pas fermer la
+                // visionneuse ni faire tourner la pile.
+                h += '<button type="button" class="jsb-hot" '
+                   +   'style="--hx:' + (s.lx / 100) + ';--hy:' + (s.ly / 100) + ';" '
+                   +   'onclick="event.stopPropagation();jsbDsrHotPick(this,' + i + ');">'
+                   +   _jsbEsc(s.plate || s.label)
+                   + '</button>';
+            });
+            return h + '</div>';
+        }
+
+        // Cale la couche sur la boîte réelle du tirage. `offsetLeft/Top` sont
+        // relatifs au slide (seul ancêtre positionné) et ignorent la transformée
+        // de la pile — ce sont bien des valeurs de mise en page.
+        function _jsbDsrFitHot(slide) {
+            if (!slide) return;
+            const layer = slide.querySelector('.jsb-dsr-hot');
+            const img   = slide.querySelector('img');
+            if (!layer || !img || !img.offsetWidth) return;
+            layer.style.left   = img.offsetLeft   + 'px';
+            layer.style.top    = img.offsetTop    + 'px';
+            layer.style.width  = img.offsetWidth  + 'px';
+            layer.style.height = img.offsetHeight + 'px';
+        }
+
+        // Un cartouche touché : il devient le seul actif et sa légende remplace
+        // celle de la vue. Retouché, on revient à la légende d'origine — on ne
+        // reste pas coincé sur un détail après l'avoir lu.
+        function jsbDsrHotPick(el, idx) {
+            const layer = el.parentNode;
+            const was   = el.classList.contains('on');
+            Array.prototype.forEach.call(layer.querySelectorAll('.jsb-hot'),
+                function (b) { b.classList.remove('on'); });
+            if (!was) el.classList.add('on');
+            layer.classList.add('touched');
+
+            const cap  = document.getElementById('jsbDsrCaption');
+            const data = _jsbDsrData[_jsbDsrKey];
+            const p    = data && data.photos[_jsbDsrIdx];
+            if (!cap || !p) return;
+            const s = was ? null : (p.hotspots || [])[idx];
+            if (!s) { cap.textContent = p.caption || ''; return; }
+            // Libellé, tiret et texte dans trois nœuds distincts : la table I18N
+            // indexe des chaînes entières, un « — » collé au texte en ferait une
+            // clé introuvable.
+            cap.innerHTML = '<b>' + _jsbEsc(s.label) + '</b>'
+                          + '<i class="jsb-hot-sep">—</i>'
+                          + '<span>' + _jsbEsc(s.text) + '</span>';
         }
 
         function closeJsbDossier(e) {
@@ -24736,6 +24987,10 @@
         function _jsbDsrSync(idx) {
             const data = _jsbDsrData[_jsbDsrKey];
             if (!data) return;
+            // Changement de vue : les cartouches actifs se relâchent et la
+            // légende repart de celle de la photo.
+            document.querySelectorAll('#jsbDsrTrack .jsb-hot.on')
+                .forEach(function (b) { b.classList.remove('on'); });
             const cap = document.getElementById('jsbDsrCaption');
             if (cap) cap.textContent = data.photos[idx].caption || '';
             const dots = document.querySelectorAll('#jsbDsrDots .jsb-dsr-dot');
@@ -24814,6 +25069,14 @@
                 top = null;
             });
         }
+
+        // Rotation de l'écran ou fenêtre redimensionnée : la photo change de
+        // taille, la couche de cartouches doit la suivre.
+        window.addEventListener('resize', function () {
+            const ov = document.getElementById('jsbDossier');
+            if (!ov || !ov.classList.contains('open')) return;
+            _jsbDsrSlides().forEach(_jsbDsrFitHot);
+        });
 
         // Clavier (desktop) : Échap ferme, flèches naviguent
         document.addEventListener('keydown', function (e) {

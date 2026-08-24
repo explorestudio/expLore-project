@@ -7386,6 +7386,12 @@
             font-family: Georgia, serif;
             animation: obPulse 2s ease-in-out infinite;
         }
+        /* Flèche du « continuer » : elle glisse vers la droite et se rallume,
+           là où obPulse ne faisait que baisser l'opacité de tout le bloc. */
+        @keyframes vnTapArrow {
+            0%, 100% { transform: translateX(0);   opacity: 0.65; }
+            50%      { transform: translateX(4px); opacity: 1; }
+        }
         @keyframes obPulse {
             0%,100% { opacity: 0.3; }
             50%      { opacity: 0.7; }
@@ -7437,7 +7443,12 @@
         .vn-speaker-box { display:inline-block;border-radius:6px;border:1px solid rgba(139,92,246,0.4);background:rgba(139,92,246,0.15);padding:3px 12px;margin-bottom:10px; }
         .vn-speaker { font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin:0;color:#c4b5fd; }
         .vn-line { font-family:Georgia,serif;font-style:italic;font-size:14px;line-height:1.8;color:rgba(255,255,255,0.92); }
-        .vn-tap { position:absolute;bottom:12px;right:18px;font-size:9px;color:rgba(139,92,246,0.6);letter-spacing:1.5px;text-transform:uppercase;animation:obPulse 1.8s infinite; }
+        /* Indicateur « continuer ». L'ancien violet (rgba(139,92,246,0.6)) se
+           noyait dans le fond quasi noir de la boîte, et obPulse faisait battre
+           le libellé lui-même : il passait la moitié du temps encore plus pâle.
+           Le libellé se tient maintenant en lavande claire ; seule la flèche bat. */
+        .vn-tap { position:absolute;bottom:11px;right:18px;display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#c4b5fd;letter-spacing:1.5px;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,0.85); }
+        .vn-tap-arrow { display:inline-block;font-size:14px;line-height:1;animation:vnTapArrow 1.4s ease-in-out infinite; }
         .vn-action-btn { width:100%;padding:14px;border-radius:0;border:none;border-top:1px solid rgba(139,92,246,0.3);font-size:15px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.15);color:#c4b5fd;display:none; }
         .vn-action-btn.show { display:block; }
 
@@ -14162,7 +14173,12 @@
         .vn-speaker-box { display:inline-block;border-radius:6px;border:1px solid rgba(139,92,246,0.4);background:rgba(139,92,246,0.15);padding:3px 12px;margin-bottom:10px; }
         .vn-speaker { font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin:0;color:#c4b5fd; }
         .vn-line { font-family:Georgia,serif;font-style:italic;font-size:14px;line-height:1.8;color:rgba(255,255,255,0.92); }
-        .vn-tap { position:absolute;bottom:12px;right:18px;font-size:9px;color:rgba(139,92,246,0.6);letter-spacing:1.5px;text-transform:uppercase;animation:obPulse 1.8s infinite; }
+        /* Indicateur « continuer ». L'ancien violet (rgba(139,92,246,0.6)) se
+           noyait dans le fond quasi noir de la boîte, et obPulse faisait battre
+           le libellé lui-même : il passait la moitié du temps encore plus pâle.
+           Le libellé se tient maintenant en lavande claire ; seule la flèche bat. */
+        .vn-tap { position:absolute;bottom:11px;right:18px;display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#c4b5fd;letter-spacing:1.5px;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,0.85); }
+        .vn-tap-arrow { display:inline-block;font-size:14px;line-height:1;animation:vnTapArrow 1.4s ease-in-out infinite; }
         /* Écriture progressive. Le texte complet est posé dès le départ, seule
            l'opacité des caractères change : la mise en page ne bouge pas d'un
            pixel pendant la frappe. `.vn-w` garde chaque mot insécable, sinon
@@ -14174,7 +14190,8 @@
         /* « Continuer › » n'apparaît qu'une fois la réplique écrite en entier.
            `animation: none` obligatoire : obPulse anime l'opacité, et une
            animation l'emporte sur une déclaration normale. */
-        .vn-dialogue-box.vn-typing .vn-tap { opacity: 0; animation: none; transition: opacity 0.2s; }
+        .vn-dialogue-box.vn-typing .vn-tap { opacity: 0; transition: opacity 0.2s; }
+        .vn-dialogue-box.vn-typing .vn-tap-arrow { animation: none; }
         .vn-action-btn { width:100%;padding:14px;border-radius:0;border:none;border-top:1px solid rgba(139,92,246,0.3);font-size:15px;font-weight:700;cursor:pointer;background:rgba(139,92,246,0.15);color:#c4b5fd;display:none; }
         .vn-action-btn.show { display:block; }
 
@@ -17027,7 +17044,7 @@
                         <div class="vn-speaker" id="vnSpeaker"></div>
                     </div>
                     <div class="vn-line" id="vnLine"></div>
-                    <div class="vn-tap">Continuer ›</div>
+                    <div class="vn-tap">Continuer<span class="vn-tap-arrow" aria-hidden="true">›</span></div>
                 </div>
             </div>
             <button class="vn-action-btn" id="vnActionBtn"></button>
@@ -17232,6 +17249,7 @@
             "Fresque": "Fresco",
             "Synthèse du chapitre": "Chapter synthesis",
             "Continuer ›": "Continue ›",
+            "Continuer": "Continue",
             "Continuer →": "Continue →",
 
             // ── Level-up ──
@@ -21281,6 +21299,7 @@
         const _VN_JEUNEFILLE_IMG = './assets/Character%20Bust%20Icon%20_%20Take%202.png';
         function _vnRender() {
             if (_vnIdx >= _vnQueue.length) {
+                _vnFinishTyping();          // jamais laisser un timer tourner sur un overlay fermé
                 document.getElementById('vnOverlay').classList.remove('show');
                 if (_vnOnDone) _vnOnDone();
                 return;
