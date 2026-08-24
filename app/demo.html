@@ -3650,6 +3650,30 @@
             50%      { box-shadow: 0 0 9px 2px rgba(233,198,114,0.55), 0 1px 5px rgba(0,0,0,0.5);
                        border-color: #f0d089; }
         }
+        /* Plaque déjà peinte dans le tirage — un cartouche qui déclare son gabarit
+           (`w`/`h`) le dit. Le bouton se réduit alors à une zone tactile calée
+           dessus : ni fond, ni filet, ni trait, ni pastille, l'image les porte
+           déjà et les redessiner ferait double. Il ne reste au code que ce que
+           l'image ne peut pas faire — dire que c'est touchable, montrer la plaque
+           active, changer la légende. */
+        .jsb-hot.zone {
+            width:  calc((100% - var(--jsb-pad-x, 14px)) * var(--hw, 0.2));
+            height: calc((100% - var(--jsb-pad-y, 15px)) * var(--hh, 0.1));
+            padding: 0; background: none; border: 0; border-radius: 5px;
+            font-size: 0; color: transparent;
+            animation: jsbHotZonePulse 2.1s ease-in-out infinite;
+        }
+        .jsb-hot.zone.on {
+            animation: none;
+            background: rgba(120,38,22,0.28);
+            box-shadow: 0 0 0 1.5px rgba(240,208,137,0.85),
+                        0 0 12px 3px rgba(233,198,114,0.35);
+        }
+        /* Halo seul : le filet doré appartient à la plaque dessinée, il ne bat pas. */
+        @keyframes jsbHotZonePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(233,198,114,0); }
+            50%      { box-shadow: 0 0 11px 3px rgba(233,198,114,0.45); }
+        }
         /* Les légendes se superposent dans la même case : la hauteur réservée est
            celle de la plus longue, la page ne saute pas d'un repère à l'autre. */
         .jsb-hot-caps { display: grid; }
@@ -23498,28 +23522,33 @@
                     title: 'Un bâtiment jumeau',
                     image: './assets/Cards/Office_du_tourisme/twin_building.png',
                     imageCaption: 'Observe attentivement les deux bâtiments sur la place : beaucoup de ressemblance, mais quelques singularités cristallisées au fil du temps.',
-                    imageBelow: './assets/Cards/Office_du_tourisme/place_office.png',
+                    imageBelow: './assets/Cards/Office_du_tourisme/Office_schema.png',
                     imageBelowCaption: 'Une symétrie occident/orient — photo Michel Djaoui',
-                    // Cartouches posés sur le tirage, à la manière d'une plaque de
-                    // musée : `x`/`y` = la cible désignée (bout de la flèche déjà
-                    // dessinée sur la photo), `lx`/`ly` = le centre de la plaque.
-                    // Tout est en % de l'image (630 × 419), jamais en pixels — le
-                    // cadre se redimensionne avec la page.
-                    // Les plaques sont calées SUR les libellés blancs incrustés dans
-                    // le tirage (illisibles à la taille d'un téléphone) et assez
-                    // larges pour les recouvrir ; elles se tiennent au-dessus des
-                    // toits, pas dessus, pour ne pas cacher les bâtiments.
-                    // Toucher un cartouche change la légende sous la photo ; la
-                    // légende de départ garde le crédit photo.
-                    // `plate` : ce que porte la plaque quand le libellé complet y
-                    // tiendrait mal. « Statue de Louis XIV » barrait un tiers de la
-                    // place ; le nom entier se lit dans la légende, en dessous.
+                    // Le schéma de Canelle porte ses plaques dessinées — trait de
+                    // rappel et pastille de visée compris, dans le même langage que
+                    // les cartouches du code. On ne les redouble donc pas : chaque
+                    // repère est ici une zone tactile transparente posée pile sur
+                    // la plaque peinte. La fonction ne change pas — toucher un
+                    // repère remplace la légende sous la photo, la retoucher rend
+                    // la légende de départ, qui garde le crédit photo.
+                    //   `lx`/`ly` = centre de la plaque dessinée, `w`/`h` = son
+                    //   gabarit (c'est `w` qui dit au moteur « déjà peinte »),
+                    //   `x`/`y` = la cible, conservée pour mémoire.
+                    // Tout est en % de l'image (1449 × 1086), jamais en pixels — le
+                    // cadre se redimensionne avec la page. Valeurs relevées sur le
+                    // fichier, pas estimées à l'œil : si Canelle refait le schéma,
+                    // il faut les reprendre.
+                    // `label` : le nom complet, lu dans la légende et par le lecteur
+                    // d'écran. La plaque, elle, dit « Louis XIV » — c'est l'image
+                    // qui l'écrit, plus le code.
                     imageBelowHotspots: [
-                        { x: 21.2, y: 18.9, lx: 18.0, ly: 8.0, label: 'Pavillon Est',
+                        { x: 19.5, y: 23.5, lx: 20.8, ly: 35.7, w: 28.3, h: 9.9,
+                          label: 'Pavillon Est',
                           text: "Celui qui accueille : l'Office du Tourisme, portes ouvertes sur la place." },
-                        { x: 81.1, y: 18.4, lx: 82.0, ly: 8.0, label: 'Pavillon Ouest',
+                        { x: 84.9, y: 23.5, lx: 83.1, ly: 35.7, w: 30.8, h: 9.9,
+                          label: 'Pavillon Ouest',
                           text: "Son jumeau, sous l'enseigne ONLYLYON. Même gabarit, même fronton — mais tout ne s'y est pas passé pareil." },
-                        { x: 49.6, y: 50.1, lx: 35.0, ly: 54.5,
+                        { x: 52.0, y: 53.3, lx: 52.0, ly: 66.5, w: 30.0, h: 10.3,
                           label: 'Statue de Louis XIV', plate: 'Louis XIV',
                           text: "Le point fixe de la place : les deux pavillons l'encadrent à égale distance, un de chaque côté de l'axe." },
                     ],
@@ -23533,7 +23562,7 @@
                         photos: [
                             { src: './assets/Cards/Office_du_tourisme/twin_building.png',
                               caption: "Les deux pavillons de Bellecour, face à face : l'accueil à l'est, les bureaux à l'ouest." },
-                            { src: './assets/Cards/Office_du_tourisme/place_office.png',
+                            { src: './assets/Cards/Office_du_tourisme/Office_schema.png',
                               caption: "La place vue du ciel — leur symétrie tient toute la largeur de Bellecour. Photo Michel Djaoui." },
                         ],
                     },
@@ -23874,20 +23903,23 @@
             //   3. les plaques elles-mêmes, posées à l'écart de ce qu'elles
             //      nomment, comme une étiquette de musée.
             const hs = o.hotspots || [];
-            if (hs.length) {
+            // Un cartouche qui déclare son gabarit (`w`/`h`) est déjà peint dans le
+            // tirage, trait et pastille compris : on ne dessine que les autres.
+            const toDraw = hs.filter(function (s) { return !s.w; });
+            if (toDraw.length) {
                 // `preserveAspectRatio="none"` : le viewBox 0-100 se plaque sur la
                 // photo quelle que soit sa forme, donc les % du gabarit valent
                 // directement des coordonnées. `non-scaling-stroke` garde le trait
                 // fin — sans lui l'étirement l'épaissirait d'un côté.
                 h += '<svg class="jsb-hot-leads" viewBox="0 0 100 100" '
                    +   'preserveAspectRatio="none" aria-hidden="true">';
-                hs.forEach(function (s) {
+                toDraw.forEach(function (s) {
                     h += '<line x1="' + s.lx + '" y1="' + s.ly + '" '
                        +       'x2="' + s.x  + '" y2="' + s.y  + '" '
                        +       'vector-effect="non-scaling-stroke"/>';
                 });
                 h += '</svg>';
-                hs.forEach(function (s) {
+                toDraw.forEach(function (s) {
                     h += '<span class="jsb-hot-pin" aria-hidden="true" '
                        +   'style="--hx:' + (s.x / 100) + ';--hy:' + (s.y / 100) + ';"></span>';
                 });
@@ -23895,14 +23927,28 @@
             // `stopPropagation` : sur un cadre `tapable`, toucher une plaque ne
             // doit pas aussi ouvrir la photo en grand.
             hs.forEach(function (s, i) {
-                h += '<button type="button" class="jsb-hot" '
-                   +   'style="--hx:' + (s.lx / 100) + ';--hy:' + (s.ly / 100) + ';" '
-                   +   'onclick="event.stopPropagation();jsbHotPick(this,' + (i + 1) + ');">'
-                   +   _jsbEsc(s.plate || s.label)
-                   + '</button>';
+                h += _jsbHotBtn(s, 'jsbHotPick(this,' + (i + 1) + ')');
             });
             h += '</div>';
             return h;
+        }
+
+        // Le bouton d'un cartouche, en page comme en visionneuse — même repère,
+        // même fabrique. Deux formes selon la source de la plaque :
+        //   • plaque du code : le bouton EST la plaque, il en porte le libellé ;
+        //   • plaque peinte dans le tirage (gabarit `w`/`h` en % de l'image) :
+        //     le bouton n'est qu'une zone tactile posée dessus, le libellé passe
+        //     en `aria-label` puisque l'image l'affiche déjà.
+        function _jsbHotBtn(s, call) {
+            const zone = !!s.w;
+            let st = '--hx:' + (s.lx / 100) + ';--hy:' + (s.ly / 100) + ';';
+            if (zone) st += '--hw:' + (s.w / 100) + ';--hh:' + (s.h / 100) + ';';
+            return '<button type="button" class="jsb-hot' + (zone ? ' zone' : '') + '" '
+                 +   'style="' + st + '" '
+                 +   (zone ? 'aria-label="' + _jsbEsc(s.label) + '" ' : '')
+                 +   'onclick="event.stopPropagation();' + call + ';">'
+                 +   (zone ? '' : _jsbEsc(s.plate || s.label))
+                 + '</button>';
         }
 
         // Un repère touché : il devient le seul actif, et la légende de son rang
@@ -24879,26 +24925,27 @@
             const hs = p.hotspots || [];
             if (!hs.length) return '';
             let h = '<div class="jsb-dsr-hot">';
-            h += '<svg class="jsb-hot-leads" viewBox="0 0 100 100" '
-               +   'preserveAspectRatio="none" aria-hidden="true">';
-            hs.forEach(function (s) {
-                h += '<line x1="' + s.lx + '" y1="' + s.ly + '" '
-                   +       'x2="' + s.x  + '" y2="' + s.y  + '" '
-                   +       'vector-effect="non-scaling-stroke"/>';
-            });
-            h += '</svg>';
-            hs.forEach(function (s) {
-                h += '<span class="jsb-hot-pin" aria-hidden="true" '
-                   +   'style="--hx:' + (s.x / 100) + ';--hy:' + (s.y / 100) + ';"></span>';
-            });
+            // Comme en page : ce que le tirage porte déjà (gabarit `w`/`h`) n'est
+            // pas redessiné, seulement rendu touchable.
+            const toDraw = hs.filter(function (s) { return !s.w; });
+            if (toDraw.length) {
+                h += '<svg class="jsb-hot-leads" viewBox="0 0 100 100" '
+                   +   'preserveAspectRatio="none" aria-hidden="true">';
+                toDraw.forEach(function (s) {
+                    h += '<line x1="' + s.lx + '" y1="' + s.ly + '" '
+                       +       'x2="' + s.x  + '" y2="' + s.y  + '" '
+                       +       'vector-effect="non-scaling-stroke"/>';
+                });
+                h += '</svg>';
+                toDraw.forEach(function (s) {
+                    h += '<span class="jsb-hot-pin" aria-hidden="true" '
+                       +   'style="--hx:' + (s.x / 100) + ';--hy:' + (s.y / 100) + ';"></span>';
+                });
+            }
             hs.forEach(function (s, i) {
                 // `stopPropagation` : toucher une plaque ne doit pas fermer la
                 // visionneuse ni faire tourner la pile.
-                h += '<button type="button" class="jsb-hot" '
-                   +   'style="--hx:' + (s.lx / 100) + ';--hy:' + (s.ly / 100) + ';" '
-                   +   'onclick="event.stopPropagation();jsbDsrHotPick(this,' + i + ');">'
-                   +   _jsbEsc(s.plate || s.label)
-                   + '</button>';
+                h += _jsbHotBtn(s, 'jsbDsrHotPick(this,' + i + ')');
             });
             return h + '</div>';
         }
