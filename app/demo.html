@@ -7923,24 +7923,6 @@
             to   { opacity: 1; transform: scale(1); }
         }
 
-        .intro-bd-skip {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.6);
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 6px 12px;
-            border-radius: 14px;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            z-index: 10;
-            backdrop-filter: blur(4px);
-            letter-spacing: 0.5px;
-        }
-        .intro-bd-skip:hover { background: rgba(255,255,255,0.18); color: #fff; }
-
         .intro-bd-tap-hint {
             position: absolute;
             bottom: 22px;
@@ -7989,22 +7971,6 @@
             padding: 40px 32px;
         }
         #onboardingOverlay.hidden { display: none; }
-        #obSkipBtn {
-            position: absolute;
-            top: 16px; right: 16px;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.25);
-            color: rgba(255,255,255,0.55);
-            font-size: 11px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            padding: 6px 14px;
-            border-radius: 20px;
-            cursor: pointer;
-            z-index: 1010;
-            display: none;
-        }
-        #obSkipBtn.visible { display: block; }
 
         .ob-text {
             font-family: Georgia, serif;
@@ -10879,8 +10845,8 @@
             </div>
         </div>
 
-        <!-- Bouton Skip Tutorial -->
-        <button id="obSkipBtn" onclick="_obSkipTutorial()">Passer ›</button>
+        <!-- Bouton « Passer » du tutoriel : retiré. C'était une commodité de test,
+             pas une fonction de jeu — la démo ne doit pas pouvoir être sautée. -->
 
         <!-- ══ SÉLECTEUR DE LANGUE (premier lancement uniquement) ══
              Volontairement bilingue : le joueur n'a pas encore choisi.
@@ -10906,7 +10872,8 @@
              CINÉMATIQUE BD D'INTRODUCTION
              ════════════════════════════════════════════════════════ -->
         <div id="introBDCinematic" class="intro-bd-cinematic hidden">
-            <button class="intro-bd-skip" onclick="skipIntroBD()">Passer ▸</button>
+            <!-- Bouton « Passer » de la cinématique : retiré, même raison que celui
+                 du tutoriel. La BD se parcourt au tap, jusqu'à « Commencer l'aventure ». -->
             <div class="intro-bd-stage" id="introBDStage">
                 <!-- Cases ajoutées dynamiquement par renderIntroBDStep() -->
             </div>
@@ -11159,8 +11126,6 @@
             "Utiliser l'écho": "Use the echo",
 
             // ── Onboarding (habillage seulement — dialogues = étape 2) ──
-            "Passer ›": "Skip ›",
-            "Passer ▸": "Skip ▸",
             "tap pour continuer": "tap to continue",
             "Commencer l'aventure": "Start the adventure",
             "Appuyer pour continuer": "Tap to continue",
@@ -11269,13 +11234,15 @@
                 "It has a few memories left. Oh… but it's your card — do you want to give it some yourself?",
             [`Pour qu'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire.`]:
                 `For a card to remember, give it <span style="color:#A78BFA;font-weight:600">memorial dust</span>. Each dose wakes a little more of its story.`,
-            [`Tiens, je te la rends avec ce que j'ai noté dans le <span style="font-weight:600">📖 carnet</span>.`]:
-                `Here, I'm giving it back to you — along with what I wrote down in the <span style="font-weight:600">📖 notebook</span>.`,
+            // Remise du carnet — déplacée du chapitre II vers la toute première
+            // ouverture du carnet, quel qu'en soit le moment (cf. _obJournalHint).
+            [`Ah, tu l'as trouvé. C'est le <span style="font-weight:600">📖 carnet</span> de la carte — j'y ai noté tout ce qu'elle m'a déjà raconté.`]:
+                `Ah, you found it. That's the card's <span style="font-weight:600">📖 notebook</span> — I wrote down in it everything it has told me so far.`,
             "Le carnet ?": "The notebook?",
             "Toi aussi, tu aurais bien besoin d'un peu de poudre mémorielle ! L'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l'as encore oublié, j'imagine… Bon, garde celui-ci, j'en ai plein.":
                 "You could use a little memorial dust yourself! The Organisation gave us this booklet to write down everything a card might remember! You forgot it again, I suppose… Fine, keep this one, I have plenty.",
-            "Ouvre-le : le chapitre est plein, mais il garde encore des pages voilées. C'est à cette condition qu'il pourra être scellé.":
-                "Open it: the chapter is full, but it still keeps veiled pages. Only then can it be sealed.",
+            [`Le chapitre est plein, mais son <span style="font-weight:600">📖 carnet</span> garde encore des pages voilées. Ouvre-le : c'est à cette condition qu'il pourra être scellé.`]:
+                `The chapter is full, but its <span style="font-weight:600">📖 notebook</span> still keeps veiled pages. Open it: only then can it be sealed.`,
             "Prends le temps de lire ce qu'elle a déjà retrouvé. Le reste viendra après.":
                 "Take the time to read what she has already recovered. The rest can wait.",
 
@@ -11327,8 +11294,11 @@
 
             "Elle est un peu bavarde, en tout cas elle a encore des choses à dire.":
                 "It's a bit of a chatterbox — in any case it still has things to say.",
-            "D'ailleurs, n'hésite pas à aller chercher des fournitures au Bazar, l'échoppe un peu plus au Nord. Profites-en pour collecter de la poudre ou des orbes si tu en trouves sur ton chemin.":
-                "By the way, don't hesitate to go and get supplies at the Bazaar, the stall a little further north. While you're at it, pick up any dust or orbs you find on the way.",
+            "D'ailleurs, n'hésite pas à aller chercher des fournitures au Bazar, l'échoppe un peu plus au Nord. Profites-en pour collecter de la poudre ou une orbe si tu en trouves sur ton chemin.":
+                "By the way, don't hesitate to go and get supplies at the Bazaar, the stall a little further north. While you're at it, pick up any dust or an orb you find on the way.",
+            // Toast d'ouverture du terrain — la mappe se peuple à cet instant précis.
+            "Le quartier s'anime. De quoi glaner, dehors.":
+                "The quarter stirs. There's something to gather out there.",
             "Et un troisième visage avec lui. Tu commences à savoir où regarder.":
                 "And a third face with it. You're starting to know where to look.",
             "Tu as vu ? Elle n'a plus tout à fait le même visage. Une pastille de plus s'est allumée sous son portrait.":
@@ -11352,22 +11322,34 @@
             "Et regarde-la, elle. Une carte qui regagne sa mémoire ne garde pas le même visage — les points sous son portrait comptent les états qu'elle a retrouvés. Un seul, pour l'instant.": "And look at it, too. A card that wins back its memory doesn't keep the same face — the dots beneath its portrait count the states it has recovered. Just one, for now.",
             "Elle est bien là, n'hésite pas à l'inspecter.": "There she is — take a look at her.",
             "La carte est épuisée. Cherche de quoi la raviver.": "The card is spent. Find something to revive it.",
-            "La voilà à bout de souffle. La mémoire a besoin d'une orbe pour se raviver d'un coup. Il y en a deux tout près, sur la carte. Collecte-les.": "It's out of breath. Memory needs an orb to come back all at once. There are two close by, on the map. Go and collect them.",
+            "La voilà à bout de souffle. La mémoire a besoin d'une orbe pour se raviver d'un coup. Il y en a une tout près, sur la mappe. Va la chercher.": "It's out of breath. Memory needs an orb to come back all at once. There's one close by, on the map. Go and fetch it.",
             "Profites-en pour ramasser la poudre que tu croiseras : tu en manqueras bientôt.": "While you're at it, pick up any dust you come across: you'll be short of it soon.",
             "La mémoire s'ouvre à nouveau.": "Memory opens again.",
             "Cette version n'est pas encore révélée.": "This version hasn't been revealed yet.",
             "Elle retrouve de la force pour te parler. Continue, aide-la à se souvenir et à monter au niveau suivant !":
                 "She's regaining enough strength to speak to you. Keep going — help her remember and reach the next level!",
             "Tu as l'orbe. Pose-la sur la carte pour la raviver.": "You have the orb. Place it on the card to revive it.",
-            "Il te manque encore une orbe. Elles t'attendent sur la mappe, tout près. Referme la carte, va les chercher, puis reviens.": "You're still missing an orb. They're waiting for you on the map, close by. Close the card, go and fetch them, then come back.",
+            "Il te manque encore une orbe. Elle t'attend sur la mappe, tout près. Referme la carte, va la chercher, puis reviens.": "You're still missing an orb. It's waiting for you on the map, close by. Close the card, go and fetch it, then come back.",
             "Les orbes du quartier sont épuisées. Laisse-lui le temps : la mémoire revient d'elle-même, lentement.": "The orbs in this quarter are spent. Give it time: memory returns on its own, slowly.",
+
+            // ── Seuil du chapitre III : la carte y entre à bout de souffle ──
+            "Mais la voilà à bout de souffle — elle a tout donné. Pose-lui l'orbe que tu as ramassée : elle se ravivera d'un coup.":
+                "But it's out of breath now — it gave everything. Place the orb you gathered on it: it will revive at once.",
+            "Mais la voilà à bout de souffle — elle a tout donné. Il te faut une orbe pour la raviver : il y en a une sur la mappe, tout près.":
+                "But it's out of breath now — it gave everything. You need an orb to revive it: there's one on the map, close by.",
+            "Mais la voilà à bout de souffle — elle a tout donné. Laisse-lui le temps : la mémoire revient d'elle-même, lentement.":
+                "But it's out of breath now — it gave everything. Give it time: memory comes back on its own, slowly.",
+            "La voilà d'aplomb. Vas-y, ce dernier chapitre est le plus long — elle a beaucoup à dire.":
+                "There, back on its feet. Go ahead — this last chapter is the longest, it has a lot to say.",
+            "Elle dort encore. Referme la carte, va chercher l'orbe sur la mappe, puis reviens la réveiller.":
+                "It's still asleep. Close the card, go and fetch the orb on the map, then come back and wake it.",
 
             // ── Carnet : économie des fournitures ──
             "Son carnet. Le premier chapitre s'y est déjà écrit — celui-là, tu peux le lire.": "Its notebook. The first chapter is already written there — that one you can read.",
             "Les pages voilées demandent autre chose que de la poudre : une <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span> pour une image, une <span style=\"color:#C4B5FD;font-weight:600\">📼 cassette</span> pour une voix, de l'<span style=\"color:#E0A458;font-weight:600\">🖋️ encre</span> pour un texte.": "Veiled pages ask for more than dust: a <span style=\"color:#FCD34D;font-weight:600\">🎞️ film roll</span> for an image, a <span style=\"color:#C4B5FD;font-weight:600\">📼 tape</span> for a voice, <span style=\"color:#E0A458;font-weight:600\">🖋️ ink</span> for a text.",
             "L'échoppe en tient, juste au nord d'ici. Sers-toi.": "The stall keeps some, just north of here. Help yourself.",
             "Tu en as déjà sur toi. Touche une page voilée pour la révéler.": "You already have some on you. Touch a veiled page to reveal it.",
-            "Pour revenir en arrière, touche son image et tu quitteras ce carnet dès que tu le souhaites": "To go back, touch its image and you'll leave this journal whenever you like",
+            "Pour revenir en arrière, touche son image en haut : tu quitteras ce carnet dès que tu le souhaites.": "To go back, touch its image at the top: you'll leave this notebook whenever you like.",
             "Le chapitre est plein — mais il garde encore des pages voilées. Ouvre son carnet et dévoile-les : c'est à cette condition qu'il pourra être scellé.": "The chapter is full — but it still keeps veiled pages. Open its notebook and reveal them: only then can it be sealed.",
             "Garde ton orbe, cette carte n'a plus soif. Ce sont ses pages voilées qui la retiennent : ouvre son carnet.": "Keep your orb, this card is no longer thirsty. It's the veiled pages holding it back: open its notebook.",
             "La voilà à bout de souffle. Tu as déjà une orbe sur toi : pose-la sur la carte, elle se ravivera d'un coup.": "It's out of breath. You already have an orb on you: place it on the card and it will revive at once.",
@@ -14037,9 +14019,8 @@
             cinema.classList.remove('hidden');
             const stage = document.getElementById('introBDStage');
             stage.innerHTML = '';
-            // Tap sur l'écran (sauf bouton skip et bouton start) = avancer
+            // Tap sur l'écran (sauf bouton start) = avancer
             cinema.onclick = (e) => {
-                if (e.target.classList.contains('intro-bd-skip')) return;
                 if (e.target.classList.contains('intro-bd-start')) return;
                 advanceIntroBD();
             };
@@ -14122,14 +14103,10 @@
             });
         }
 
-        function skipIntroBD() {
-            finishIntroBD();
-        }
-
         function finishIntroBD() {
-            // Sortie de la cinématique — « Commencer l'aventure » ou « Passer ».
-            // C'est le geste qui autorise la lecture audio : la musique
-            // d'ambiance démarre ici, et nulle part avant.
+            // Sortie de la cinématique — « Commencer l'aventure », seule issue
+            // depuis le retrait du bouton « Passer ». C'est le geste qui autorise
+            // la lecture audio : la musique d'ambiance démarre ici, et nulle part avant.
             if (typeof BgMusic !== 'undefined') BgMusic.start();
             _introBDSeen = true;
             if (typeof saveProgress === 'function') saveProgress();
@@ -14151,52 +14128,8 @@
             // Plus de lettre manuscrite : le joueur n'a rien "reçu". On enchaîne directement
             // sur le marqueur tutoriel, la jeune fille oriente le joueur en voix vive.
             document.getElementById('onboardingOverlay').classList.add('hidden');
-            document.getElementById('obSkipBtn').classList.add('visible');
             _obHideAllMarkers();
             _obSpawnTutorialMarker();
-        }
-
-        function _obSkipTutorial() {
-            // Nettoyer tous les états onboarding en cours
-            if (window._obProximityCheck) { clearInterval(window._obProximityCheck); window._obProximityCheck = null; }
-            if (window._obTutorialMarker) { window._obTutorialMarker.remove(); window._obTutorialMarker = null; }
-            _obRemoveHighlight();
-
-            // Masquer tous les overlays onboarding
-            document.getElementById('onboardingOverlay').classList.add('hidden');
-            document.getElementById('obNote').classList.remove('show');
-            _vnFinishTyping();   // le skip ferme le VN : couper la frappe en cours
-            document.getElementById('vnOverlay').classList.remove('show');
-            document.getElementById('obSkipBtn').classList.remove('visible');
-
-            // Fermer fiche carte si ouverte par l'onboarding
-            document.getElementById('cardDetailView').classList.remove('show');
-            document.getElementById('journalScreen').classList.remove('show');
-
-            // Restaurer les POIs et terminer
-            // Donner la carte tutoriel même si elle n'a pas été collectée pendant le
-            // tuto passé : elle doit être présente dans la collection, consultable et
-            // améliorable (même état que si elle avait été cristallisée).
-            if (typeof OB_TUTORIAL_CARD === 'object' && OB_TUTORIAL_CARD) {
-                if (!cardLevels[OB_TUTORIAL_CARD.id]) {
-                    cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
-                }
-                if (!collectedCards.includes(OB_TUTORIAL_CARD.id)) collectedCards.push(OB_TUTORIAL_CARD.id);
-            }
-            _obDone = true;
-            _obAct2Done = true;
-            _obAct3Done = true;
-            if (typeof _obGuide === 'object') { _obGuide.active = false; }
-            if (typeof _obGuideStopLoop === 'function') _obGuideStopLoop();
-            try { _obRemoveHighlight(); } catch(e) {}
-            // RDV Bellecour désactivé pour le test 1 (parcours reporté au test 2).
-            // if (typeof _obActivateBellecourQuest === 'function') _obActivateBellecourQuest();
-            // Marquer tous les écrans comme déjà vus pour éviter tout hint contextuel a posteriori
-            if (typeof _obScreenSeen === 'object') {
-                ['collections','bag','journal','mindmap','carddetail'].forEach(k => { _obScreenSeen[k] = true; });
-            }
-            saveProgress();
-            _obRestoreAllPOI();
         }
 
         // Active la quête "RDV Bellecour" : entrée dans le journal de quête,
@@ -14414,6 +14347,10 @@
             updateDustVisibility();
             updateEchoVisibility();
             updateOrbVisibility();
+            // Le balayage `data-ob-hidden` ci-dessus rend TOUT visible, échoppe
+            // comprise. Le verrou du terrain reprend la main juste après : tant
+            // qu'il est fermé, poudre / orbe / échoppe se recachent aussitôt.
+            updateBazarVisibility();
             if (typeof _capUpdate === 'function') _capUpdate();
             updateScrollVisibility();
             updateLootVisibility();
@@ -14476,16 +14413,20 @@
         // joueur finit de remplir la barre.
         // XP à 100/250 : trois doses pour arriver au plein — de quoi voir la
         // barre monter, sans rallonger la démo.
-        // Énergie à 6/9 : le chapitre I n'épuise pas la carte (3 doses), le beat
-        // « carte épuisée » tombe au chapitre II après 3 doses de plus, soit pile
-        // au clic qui dévoile sa 2e page.
+        // Énergie à 9/9 (le plein du niveau 0) : le joueur doit pouvoir dépenser
+        // ses 450 poudres d'une traite avant qu'on le renvoie sur la mappe.
+        // 3 doses au chapitre I (9 → 6), puis 6 au chapitre II (le max du niveau 1
+        // est justement 6) : énergie et poudre tombent à zéro au même clic, celui
+        // qui remplit la barre du chapitre II. Le beat « carte épuisée → orbe » ne
+        // se joue donc plus ici mais à l'ouverture du chapitre III (cf. seal_ch2),
+        // une fois le carnet découvert et l'Échoppe visitée.
         // ════════════════════════════════════════════════════════════════
         function _demoSeedCardState() {
             const id = OB_TUTORIAL_CARD.id;
             cardLevels[id] = { level: 0, experience: 100, dustSpent: 100, heartsDone: { 0: [0, 1, 2], 1: [], 2: [] } };
             cardJournalEntries[id] = [];
             [[0, 0], [0, 1], [0, 2]].forEach(([lvl, idx]) => _demoSeedJournalEntry(lvl, idx));
-            cardEnergy[id] = { value: 6, lastTickAt: Date.now() };
+            cardEnergy[id] = { value: 9, lastTickAt: Date.now() };
             saveProgress();
         }
         function _demoSeedJournalEntry(level, idx) {
@@ -14603,7 +14544,16 @@
             // Si des pages restent voilées, le bouton de scellement est désactivé :
             // l'anneau doit désigner le carnet, pas un bouton mort.
             seal_ch2:        () => _demoSealRing(),
-            feed_ch3:        () => (memorialDust >= 50 ? '#addExpBtn' : _demoBackToMapSelector()),
+            // Chapitre III : la carte y entre à bout de souffle (cf. seal_ch2). Tant
+            // qu'elle l'est, #addExpBtn porte « Utiliser une orbe » — on l'entoure si
+            // le joueur en a une, sinon on le renvoie la chercher sur la mappe. Une
+            // fois ranimée, l'arbitrage d'origine reprend : la poudre.
+            feed_ch3:        () => {
+                let _en = 1;
+                try { _en = getCardEnergyState(OB_TUTORIAL_CARD.id).value; } catch (e) {}
+                if (_en <= 0) return bagInv.orbes > 0 ? '#addExpBtn' : _demoBackToMapSelector();
+                return memorialDust >= 50 ? '#addExpBtn' : _demoBackToMapSelector();
+            },
             // Dernier scellement : même arbitrage que seal_ch2 (carnet d'abord).
             seal_ch3:        () => _demoSealRing(),
         };
@@ -14613,19 +14563,11 @@
         //   pages voilées + carnet pas encore lu  → le carnet
         //   pages voilées + carnet lu, mais rien pour les révéler → la sortie vers la mappe
         //   plus rien de voilé                    → le bouton de scellement
-        // S'y ajoute un cas prioritaire, valable une seule fois : tant que le
-        // joueur n'est jamais ressorti du carnet, l'anneau désigne la vignette
-        // que la jeune fille vient de nommer (« touche son image »). Sans lui,
-        // l'anneau se posait sur le bouton pellicule d'à côté — qui sort jusqu'à
-        // la mappe, pas à la carte : sa réplique et le guide montraient deux
-        // boutons différents. Une fois la sortie faite, l'arbitrage d'origine
-        // reprend la main et renvoie au Bazar comme avant.
+        // Le cas « montrer la sortie du carnet » n'est plus arbitré ici : il vaut à
+        // n'importe quelle étape, y compris avant la première dose de poudre, et vit
+        // donc en tête de _obGuideTick.
         function _demoSealRing() {
             if (_demoUnrevealedAtLevel() <= 0) return '#addExpBtn';
-            const jrn = document.getElementById('journalScreen');
-            if (jrn && jrn.classList.contains('show') && !_obJournalBackSeen) {
-                return '#journalScreenCardImage';
-            }
             if (_obJournalSeen && _demoMissingSupplies() > 0) return _demoBackToMapSelector();
             return '#journalTabBtn';
         }
@@ -14792,7 +14734,19 @@
             if (!_obGuide.active) { _obGuideClearRing(); _demoExitHint(false); _obRingSelector = null; return; }
             _obGuideSync();
             if (!_obGuide.active) { _obGuideClearRing(); _demoExitHint(false); _obRingSelector = null; return; }
-            const rawSel = _OB_STEP_RING[_obGuide.step];
+            // Override prioritaire, valable à toutes les étapes et une seule fois :
+            // pendant la première visite du carnet, l'anneau désigne la vignette de
+            // la carte — celle que la jeune fille vient de nommer (« touche son
+            // image »). Le joueur peut ouvrir le carnet quand il veut, y compris
+            // avant d'avoir nourri quoi que ce soit : l'anneau de l'étape courante
+            // pointerait alors un bouton hors écran, et personne ne lui montrerait
+            // la sortie. Dès qu'il en est ressorti une fois, l'arbitrage normal
+            // reprend la main.
+            const _jrn = document.getElementById('journalScreen');
+            const _jrnUp = _jrn && _jrn.classList.contains('show');
+            const rawSel = (_jrnUp && _obJournalSeen && !_obJournalBackSeen)
+                ? '#journalScreenCardImage'
+                : _OB_STEP_RING[_obGuide.step];
             const selector = (typeof rawSel === 'function' ? rawSel() : rawSel) || null;
             // Pas d'anneau pendant un dialogue VN.
             const vn = document.getElementById('vnOverlay');
@@ -14859,7 +14813,6 @@
         function _obGuideStart() {
             _obGuide.active = true;
             _obGuide.step = 'go_collections';
-            document.getElementById('obSkipBtn').classList.add('visible');
             _obGuideStartLoop();
             // CR test — Bloc 1. Cette amorce tient lieu de dialogue de récompense :
             // elle tombe 400 ms après la fermeture du rituel (cf. _obCheckAfterCollect),
@@ -14908,7 +14861,6 @@
             ], () => {
                 _obDone = true;
                 _obAct3Done = true;
-                document.getElementById('obSkipBtn').classList.remove('visible');
                 saveProgress();
                 _demoShowEndScreen();
             });
@@ -15008,21 +14960,19 @@
         }
 
         // DÉMO OT — XP du chapitre 2 au max → inviter à sceller.
-        // (Les entrées sont auto-révélées : pas d'étape "dévoiler les pages".)
+        // La présentation du carnet ne se joue PLUS ici : le joueur peut l'ouvrir
+        // quand bon lui semble, y compris avant d'avoir donné la moindre dose de
+        // poudre, et se serait alors retrouvé devant un écran que personne ne lui
+        // a présenté. Elle a donc migré dans _obJournalHint, à la toute première
+        // ouverture, quel que soit le moment. Ne reste ici que la consigne
+        // mécanique — celle qui débloque le scellement.
         function _obAfterXpFull() {
             _obGuide.step = 'seal_ch2';
             const rep = [];
             if (_demoUnrevealedAtLevel() > 0) {
-                // CR test — Bloc 2. Le carnet est révélé ICI, pas à l'ouverture de
-                // la fiche : il vient de L'Organisation, il appartient au joueur
-                // (« garde celui-ci »), et l'oubli du joueur le relie à l'Oubli.
                 // 📖 : l'icône que porte le bouton du carnet sur la fiche carte
                 // (cardCarnetIcon) — le joueur cherche ce signe-là.
-                rep.push({ speaker: 'La jeune fille', html: 'Tiens, je te la rends avec ce que j\'ai noté dans le <span style="font-weight:600">📖 carnet</span>.' });
-                rep.push({ speaker: 'Toi', line: 'Le carnet ?' });
-                rep.push({ speaker: 'La jeune fille', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poudre mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' });
-                // Consigne mécanique conservée : c'est elle qui débloque le scellement.
-                rep.push({ speaker: 'La jeune fille', line: 'Ouvre-le : le chapitre est plein, mais il garde encore des pages voilées. C\'est à cette condition qu\'il pourra être scellé.' });
+                rep.push({ speaker: 'La jeune fille', html: 'Le chapitre est plein, mais son <span style="font-weight:600">📖 carnet</span> garde encore des pages voilées. Ouvre-le : c\'est à cette condition qu\'il pourra être scellé.' });
             } else {
                 rep.push({ speaker: 'La jeune fille', line: 'Le chapitre est plein. Scelle-le : qu\'il prenne racine.' });
             }
@@ -15038,6 +14988,7 @@
             if (_demoUnrevealedAtLevel() > 0) {
                 rep.push({ speaker: 'La jeune fille', line: 'Le dernier chapitre est plein, mais son carnet garde encore des pages voilées. Dévoile-les : une mémoire à trous ne se scelle pas.' });
                 if (_demoMissingSupplies() > 0) {
+                    _demoUnlockField();
                     rep.push({ speaker: 'La jeune fille', line: 'L\'échoppe en tient, juste au nord d\'ici. Sers-toi.' });
                 }
             } else {
@@ -15047,25 +14998,32 @@
             vnShow(rep, () => _obGuideRefresh());
         }
 
-        // DÉMO OT — Remarques sur le carnet. La première ouverture explique l'économie
-        // des fournitures ; les suivantes n'interviennent que si le joueur est à sec,
-        // pour ne jamais répéter une consigne déjà satisfaite.
+        // DÉMO OT — Remarques sur le carnet. La toute première ouverture le présente
+        // (d'où il vient, à quoi il sert, comment en ressortir), quel qu'en soit le
+        // moment — le joueur peut y aller avant même d'avoir donné une dose de poudre.
+        // L'économie des fournitures, elle, n'a de sens qu'une fois qu'il existe des
+        // pages voilées : au chapitre I il n'y en a aucune, la consigne attend donc
+        // l'ouverture suivante.
         let _obJournalSeen = false;
         // Le joueur est-il déjà ressorti du carnet au moins une fois ? Tant que non,
-        // l'anneau lui montre la vignette de sortie (cf. _demoSealRing) — la consigne
+        // l'anneau lui montre la vignette de sortie (cf. _obGuideTick) — la consigne
         // « touche son image » ne vaut que si on lui désigne laquelle.
         let _obJournalBackSeen = false;
+        // L'explication des fournitures (pellicule / cassette / encre) a-t-elle été
+        // donnée ? Elle se dit une seule fois, à la première ouverture où des pages
+        // voilées existent réellement.
+        let _obJournalSuppliesSaid = false;
 
         // Entrées encore voilées de la carte tutoriel, et celles que le joueur peut
         // réellement révéler MAINTENANT. Le stock brut ne suffit pas : une pellicule
-        // n'ouvre qu'une entrée visuelle, et le scellement d'un chapitre en offre une
-        // au hasard — d'où des « tu en as déjà » trompeurs.
+        // n'ouvre qu'une entrée visuelle — d'où des « tu en as déjà » trompeurs si
+        // l'on se contentait de compter le sac.
         function _demoVeiledEntries() {
             return (cardJournalEntries[OB_TUTORIAL_CARD.id] || []).filter(e => !e._revealed);
         }
         // Combien de fournitures manquent pour révéler TOUTES les pages voilées.
-        // Compté par type : sceller un chapitre offre une fourniture au hasard, et
-        // une seule pellicule ne suffit pas si deux entrées visuelles sont voilées.
+        // Compté par type : une seule pellicule ne suffit pas si deux entrées
+        // visuelles sont voilées, et l'encre ne remplace pas la cassette.
         function _demoMissingSupplies() {
             const need = { visual: 0, audio: 0, text: 0 };
             _demoVeiledEntries().forEach(e => { need[e._type || 'text'] = (need[e._type || 'text'] || 0) + 1; });
@@ -15080,38 +15038,75 @@
         // Les deux temps sont désormais séparés : ici on ne fait que l'inviter à
         // lire ; l'envoi au Bazar attend qu'il referme le carnet de lui-même
         // (cf. _obJournalExitHint, appelée par closeJournalScreen).
+        //
+        // La présentation du carnet vit ICI, et plus au chapitre II : le bouton 📖
+        // est cliquable dès la fiche carte ouverte, et un joueur curieux y entrait
+        // avant d'avoir donné la moindre dose. Il tombait alors sur des pages qu'on
+        // ne lui avait jamais présentées, puis s'entendait dire, deux chapitres plus
+        // tard, « tiens, voici un carnet » — alors qu'il l'avait déjà lu.
         function _obJournalHint() {
-            const manque = _demoMissingSupplies();
+            const manque  = _demoMissingSupplies();
+            const voilees = _demoVeiledEntries().length;
+            // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour que la
+            // réplique et l'inventaire montrent le même signe.
+            const REPLIQUE_FOURNITURES = { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poudre : une <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">📼 cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> pour un texte.' };
+
             if (!_obJournalSeen) {
                 _obJournalSeen = true;
-                // CR test — Bloc 3.
+                // CR test — Bloc 3, augmenté de la remise du carnet (ex-Bloc 2).
+                // Il vient de L'Organisation, il appartient au joueur (« garde
+                // celui-ci »), et l'oubli du joueur le relie à l'Oubli.
                 const rep = [
+                    { speaker: 'La jeune fille', html: 'Ah, tu l\'as trouvé. C\'est le <span style="font-weight:600">📖 carnet</span> de la carte — j\'y ai noté tout ce qu\'elle m\'a déjà raconté.' },
+                    { speaker: 'Toi', line: 'Le carnet ?' },
+                    { speaker: 'La jeune fille', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poudre mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' },
                     { speaker: 'La jeune fille', line: 'Elle est un peu bavarde, en tout cas elle a encore des choses à dire.' },
                     { speaker: 'La jeune fille', line: 'Prends le temps de lire ce qu\'elle a déjà retrouvé. Le reste viendra après.' },
-                    // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour que
-                    // la réplique et l'inventaire montrent le même signe.
-                    { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poudre : une <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">📼 cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> pour un texte.' },
                 ];
-                // S'il a déjà tout en poche, il peut agir sans sortir : on le lui dit
-                // tout de suite. Sinon on ne dit rien de plus ici — l'échoppe attend
-                // qu'il ait fini de lire.
-                if (manque === 0) {
-                    rep.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' });
+                // L'économie des fournitures n'a de sens que devant une page voilée.
+                // Au chapitre I il n'y en a aucune : inutile d'annoncer une contrainte
+                // que le joueur ne peut pas encore voir — elle attend l'ouverture où
+                // elle deviendra vraie (branche du bas).
+                if (voilees > 0) {
+                    _obJournalSuppliesSaid = true;
+                    rep.push(REPLIQUE_FOURNITURES);
+                    // S'il a déjà tout en poche, il peut agir sans sortir : on le lui
+                    // dit tout de suite. Sinon on ne dit rien de plus ici — l'échoppe
+                    // attend qu'il ait fini de lire.
+                    if (manque === 0) {
+                        rep.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' });
+                    }
                 }
                 // Toujours en dernier, quel que soit l'état des fournitures : c'est
                 // la seule chose que le joueur ne peut pas deviner. Le carnet ne se
                 // referme plus d'office (cf. Friction B ci-dessus), donc personne ne
                 // lui a jamais montré la sortie. « Son image » = la vignette de la
                 // carte en haut de l'écran (#journalScreenCardImage), qui ramène à
-                // la carte. Dit une fois, à la première ouverture ; les relances
-                // plus bas ne le répètent pas.
-                rep.push({ speaker: 'La jeune fille', line: 'Pour revenir en arrière, touche son image et tu quitteras ce carnet dès que tu le souhaites' });
+                // la carte — l'anneau se pose dessus pendant toute cette première
+                // visite (cf. _obGuideTick). Dit une fois, à la première ouverture ;
+                // les relances plus bas ne le répètent pas.
+                rep.push({ speaker: 'La jeune fille', line: 'Pour revenir en arrière, touche son image en haut : tu quitteras ce carnet dès que tu le souhaites.' });
+                try { saveProgress(); } catch (e) {}
                 // Plus de closeJournalScreen() : il reste dans le carnet et le parcourt.
                 vnShow(rep, () => _obGuideRefresh());
                 return;
             }
+
+            // Première ouverture où des pages sont enfin voilées : c'est maintenant
+            // que la consigne des fournitures devient lisible.
+            if (voilees > 0 && !_obJournalSuppliesSaid) {
+                _obJournalSuppliesSaid = true;
+                try { saveProgress(); } catch (e) {}
+                const rep = [REPLIQUE_FOURNITURES];
+                if (manque === 0) {
+                    rep.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' });
+                }
+                vnShow(rep, () => _obGuideRefresh());
+                return;
+            }
+
             // Ne relancer que s'il reste des pages voilées ET de quoi manquer.
-            if (manque > 0 && _demoVeiledEntries().length > 0) {
+            if (manque > 0 && voilees > 0) {
                 vnShow([
                     { speaker: 'La jeune fille', line: 'Ces pages resteront voilées tant que tu n\'auras rien pour les révéler. L\'échoppe est au nord, tout près.' },
                 ], () => _obGuideRefresh());
@@ -15119,20 +15114,43 @@
         }
 
         // Retour Canelle (OdT) — second temps du carnet : l'envoi à l'échoppe.
-        // Il ne tombe qu'une fois, à la SORTIE de la première consultation, quand
-        // le joueur a eu le loisir de parcourir ce qui venait d'être dévoilé. Tant
-        // que le carnet suffit à lui seul (rien ne manque), elle se tait.
+        // Il ne tombe qu'une fois, à la SORTIE de la première consultation où des
+        // pages manquent réellement de fournitures, quand le joueur a eu le loisir
+        // de parcourir ce qui venait d'être dévoilé. Tant que le carnet suffit à
+        // lui seul (rien ne manque), elle se tait — et le terrain reste fermé.
+        //
+        // C'est LE moment où la mappe s'ouvre : la démo l'a gardée vide jusqu'ici
+        // pour que le joueur n'ait rien d'autre à faire que nourrir sa carte et
+        // découvrir son carnet. Elle le renvoie dehors, le terrain se peuple.
         let _obJournalExitSaid = false;
         function _obJournalExitHint() {
             if (!_obGuide.active || !_obJournalSeen || _obJournalExitSaid) return;
             if (_demoMissingSupplies() <= 0) return;
             _obJournalExitSaid = true;
+            _demoUnlockField();
             // « Bazar » vient du CR, « échoppe » est le mot que porte l'UI
-            // (Échoppe des Terreaux, 🛖) : les deux, sinon le joueur cherche
+            // (Échoppe de Bellecour, 🛖) : les deux, sinon le joueur cherche
             // sur la mappe un lieu dont le nom n'existe nulle part.
             vnShow([
-                { speaker: 'La jeune fille', line: 'D\'ailleurs, n\'hésite pas à aller chercher des fournitures au Bazar, l\'échoppe un peu plus au Nord. Profites-en pour collecter de la poudre ou des orbes si tu en trouves sur ton chemin.' },
-            ], () => _obGuideRefresh());
+                { speaker: 'La jeune fille', line: 'D\'ailleurs, n\'hésite pas à aller chercher des fournitures au Bazar, l\'échoppe un peu plus au Nord. Profites-en pour collecter de la poudre ou une orbe si tu en trouves sur ton chemin.' },
+            ], () => { showDemoToast('Le quartier s\'anime. De quoi glaner, dehors.'); _obGuideRefresh(); });
+        }
+
+        // DÉMO OT — Ouverture du terrain. Idempotente : plusieurs répliques peuvent
+        // renvoyer le joueur dehors (l'échoppe, une orbe manquante, la poudre du
+        // chapitre III), la première qui tombe suffit à tout allumer.
+        function _demoUnlockField() {
+            if (_demoFieldReady) return;
+            _demoFieldReady = true;
+            saveProgress();
+            try {
+                updateDustVisibility();
+                updateOrbVisibility();
+                updateBazarVisibility();
+                if (typeof _capUpdate === 'function') _capUpdate();
+                checkNearbyPOI();
+            } catch (e) { console.warn('[expLore] Ouverture du terrain :', e); }
+            console.log('[expLore] Démo OT : terrain ouvert (poudre / orbe / échoppe visibles)');
         }
 
         // Entrées non révélées du niveau courant : à XP plein, elles bloquent le
@@ -15230,8 +15248,12 @@
                     break;
 
                 case 'feed_ch2':
-                    // La carte s'épuise (énergie pré-semée à 2) pile au clic qui
-                    // débloque la 3e entrée du chapitre 2 → détour orbe.
+                    // Filet de sécurité. Dans le parcours nominal cette branche ne
+                    // tombe plus : les 9 crans semés couvrent exactement les 3 doses
+                    // du chapitre I et les 6 du chapitre II, si bien que l'énergie
+                    // et l'XP arrivent au bout au même clic — et `xp_full`, testé en
+                    // premier, l'emporte. Elle ne sert plus qu'aux parties reprises
+                    // où l'énergie a été dépensée ailleurs.
                     if (ev === 'energy_empty') {
                         _obGuide.step = 'get_orb';
                         // Répliques bâties sur l'état réel : ne jamais envoyer chercher
@@ -15240,7 +15262,10 @@
                         if (bagInv.orbes > 0) {
                             rep.push({ speaker: 'La jeune fille', line: 'La voilà à bout de souffle. Tu as déjà une orbe sur toi : pose-la sur la carte, elle se ravivera d\'un coup.' });
                         } else if (_demoOrbsLeft() > 0) {
-                            rep.push({ speaker: 'La jeune fille', line: 'La voilà à bout de souffle. La mémoire a besoin d\'une orbe pour se raviver d\'un coup. Il y en a deux tout près, sur la carte. Collecte-les.' });
+                            // Elle l'envoie dehors : le terrain doit s'ouvrir, sinon
+                            // il chercherait une orbe qu'aucun marqueur ne montre.
+                            _demoUnlockField();
+                            rep.push({ speaker: 'La jeune fille', line: 'La voilà à bout de souffle. La mémoire a besoin d\'une orbe pour se raviver d\'un coup. Il y en a une tout près, sur la mappe. Va la chercher.' });
                         } else {
                             rep.push({ speaker: 'La jeune fille', line: 'Les orbes du quartier sont épuisées. Laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' });
                         }
@@ -15279,8 +15304,9 @@
                                 { speaker: 'La jeune fille', line: 'Tu as l\'orbe. Pose-la sur la carte pour la raviver.' },
                             ], () => _obGuideRefresh());
                         } else if (_demoOrbsLeft() > 0) {
+                            _demoUnlockField();
                             vnShow([
-                                { speaker: 'La jeune fille', line: 'Il te manque encore une orbe. Elles t\'attendent sur la mappe, tout près. Referme la carte, va les chercher, puis reviens.' },
+                                { speaker: 'La jeune fille', line: 'Il te manque encore une orbe. Elle t\'attend sur la mappe, tout près. Referme la carte, va la chercher, puis reviens.' },
                             ], () => _obGuideRefresh());
                         } else {
                             // Plus aucune orbe en poche ni sur la mappe : ne pas envoyer
@@ -15301,8 +15327,12 @@
                 case 'seal_ch2':
                     if (ev === 'sealed') {
                         _obGuide.step = 'feed_ch3';
-                        // Le chapitre 3 démarre avec l'énergie pleine (sinon 12 clics infaisables).
-                        try { restoreCardEnergy(OB_TUTORIAL_CARD.id); } catch (e) {}
+                        // Plus de restoreCardEnergy() ici. Les 9 crans semés au départ
+                        // ont été dépensés jusqu'au dernier pendant les chapitres I et
+                        // II : la carte entre donc au chapitre III à bout de souffle,
+                        // et c'est là que l'orbe trouve son emploi — celle que le
+                        // joueur a ramassée en allant à l'Échoppe. Une fois posée, les
+                        // 20 crans du niveau 2 couvrent largement les 16 doses à venir.
                         if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
                         // Bloc 4 : la carte change de forme une seconde fois. Elle
                         // ne peut plus faire mine de le découvrir — elle l'a montré
@@ -15312,9 +15342,24 @@
                             { speaker: 'La jeune fille', line: 'Un chapitre se ferme, un autre s\'ouvre — le dernier de cette carte.' },
                             { speaker: 'La jeune fille', line: 'Et un troisième visage avec lui. Tu commences à savoir où regarder.' },
                         ];
+                        // L'épuisement se constate avant de parler de poudre : sans
+                        // énergie, la poudre ne sert à rien, et le bouton de la fiche
+                        // affiche « Utiliser une orbe », pas « Ajouter 50 poudre ».
+                        const _en2 = (() => { try { return getCardEnergyState(OB_TUTORIAL_CARD.id).value; } catch (e) { return 1; } })();
+                        if (_en2 <= 0) {
+                            if (bagInv.orbes > 0) {
+                                rep.push({ speaker: 'La jeune fille', line: 'Mais la voilà à bout de souffle — elle a tout donné. Pose-lui l\'orbe que tu as ramassée : elle se ravivera d\'un coup.' });
+                            } else if (_demoOrbsLeft() > 0) {
+                                _demoUnlockField();
+                                rep.push({ speaker: 'La jeune fille', line: 'Mais la voilà à bout de souffle — elle a tout donné. Il te faut une orbe pour la raviver : il y en a une sur la mappe, tout près.' });
+                            } else {
+                                rep.push({ speaker: 'La jeune fille', line: 'Mais la voilà à bout de souffle — elle a tout donné. Laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' });
+                            }
+                        }
                         if (memorialDust >= _DEMO_DUST_CH3) {
                             rep.push({ speaker: 'La jeune fille', line: 'Il te faudra plus de poudre. Sers-toi de celle que tu as ramassée.' });
                         } else if (_demoDustLeft() > 0) {
+                            _demoUnlockField();
                             rep.push({ speaker: 'La jeune fille', line: 'Il t\'en faudra beaucoup, plus que tu n\'en as. Va en récolter sur la mappe avant de continuer.' });
                         }
                         vnShow(rep, () => {
@@ -15332,12 +15377,29 @@
                     // niveau au maximum, et donc la carte à sa mémoire complète.
                     if (ev === 'xp_full') {
                         _obAfterXpFullCh3();
-                    } else if (ev === 'carddetail' && memorialDust < 50 && _demoDustLeft() > 0) {
-                        // Cas 2 : plus de poudre pour finir le chapitre 3 → aller en récolter.
-                        // Silencieux s'il n'en reste plus une seule sur la mappe.
+                    } else if (ev === 'orb_used') {
+                        // L'orbe posée au seuil du chapitre III : la carte repart pour
+                        // 20 crans, largement de quoi encaisser ses 16 doses.
                         vnShow([
-                            { speaker: 'La jeune fille', line: 'Tu n\'as plus de poudre... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.' },
-                        ], () => _obGuideRefresh());
+                            { speaker: 'La jeune fille', line: 'La voilà d\'aplomb. Vas-y, ce dernier chapitre est le plus long — elle a beaucoup à dire.' },
+                        ], () => { showDemoToast('La mémoire s\'ouvre à nouveau.'); _obGuideRefresh(); });
+                    } else if (ev === 'carddetail') {
+                        // La carte ranimée d'abord, la poudre ensuite : sans énergie,
+                        // la poudre ne sert à rien. Silencieux si le joueur a déjà
+                        // tout ce qu'il faut, ou s'il ne reste plus rien à ramasser.
+                        let _en3 = 1;
+                        try { _en3 = getCardEnergyState(OB_TUTORIAL_CARD.id).value; } catch (e) {}
+                        if (_en3 <= 0 && bagInv.orbes <= 0 && _demoOrbsLeft() > 0) {
+                            _demoUnlockField();
+                            vnShow([
+                                { speaker: 'La jeune fille', line: 'Elle dort encore. Referme la carte, va chercher l\'orbe sur la mappe, puis reviens la réveiller.' },
+                            ], () => _obGuideRefresh());
+                        } else if (_en3 > 0 && memorialDust < 50 && _demoDustLeft() > 0) {
+                            _demoUnlockField();
+                            vnShow([
+                                { speaker: 'La jeune fille', line: 'Tu n\'as plus de poudre... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.' },
+                            ], () => _obGuideRefresh());
+                        }
                     }
                     break;
 
@@ -16522,6 +16584,11 @@
                     poiCollectedKind,
                     poiCooldownMs,
                     _suppliesZeroedV1,
+                    _demoFieldReady,
+                    _obJournalSeen,
+                    _obJournalBackSeen,
+                    _obJournalSuppliesSaid,
+                    _obJournalExitSaid,
                 };
                 localStorage.setItem('demo_ot_progress', JSON.stringify(_saveData));
                 console.log('[expLore] Sauvegarde écrite — poudre:', _saveData.memorialDust, 'cartes:', (_saveData.collectedCards||[]).length, '_obDone:', _saveData._obDone);
@@ -16608,6 +16675,14 @@
                 if (Array.isArray(d.collectedCarnetResources)) collectedCarnetResources = d.collectedCarnetResources;
                 if (d._carnetResourceTypeMap) _carnetResourceTypeMap = d._carnetResourceTypeMap;
                 if (d.cardEnergy) cardEnergy = d.cardEnergy;
+                // Verrou du terrain + mémoire des répliques du carnet : sans eux, un
+                // rechargement en cours de démo rouvrait la mappe (ou rejouait la
+                // présentation du carnet) alors que le joueur était déjà passé par là.
+                if (d._demoFieldReady)      _demoFieldReady      = true;
+                if (d._obJournalSeen)       _obJournalSeen       = true;
+                if (d._obJournalBackSeen)   _obJournalBackSeen   = true;
+                if (d._obJournalSuppliesSaid) _obJournalSuppliesSaid = true;
+                if (d._obJournalExitSaid)   _obJournalExitSaid   = true;
                 if (d.poiCollectedAt && typeof d.poiCollectedAt === 'object') poiCollectedAt = d.poiCollectedAt;
                 if (d.poiCollectedKind && typeof d.poiCollectedKind === 'object') poiCollectedKind = d.poiCollectedKind;
                 if (typeof d.poiCooldownMs === 'number' && d.poiCooldownMs > 0) poiCooldownMs = d.poiCooldownMs;
@@ -16622,7 +16697,11 @@
             location.reload();
         }
         function resetOnboarding() {
-            const raw=localStorage.getItem('demo_ot_progress'); if(raw){try{const d=JSON.parse(raw);d._obDone=false;d._obAct2Done=false;d._obAct3Done=false;localStorage.setItem('demo_ot_progress',JSON.stringify(d));}catch(e){}}
+            // Rejouer l'onboarding, c'est rejouer la démo depuis le début : le verrou
+            // du terrain et la mémoire des répliques du carnet doivent retomber avec
+            // le reste, sinon la mappe s'ouvre dès l'acte I et la jeune fille ne
+            // présente plus jamais le carnet.
+            const raw=localStorage.getItem('demo_ot_progress'); if(raw){try{const d=JSON.parse(raw);d._obDone=false;d._obAct2Done=false;d._obAct3Done=false;d._demoFieldReady=false;d._obJournalSeen=false;d._obJournalBackSeen=false;d._obJournalSuppliesSaid=false;d._obJournalExitSaid=false;localStorage.setItem('demo_ot_progress',JSON.stringify(d));}catch(e){}}
             location.reload();
         }
         let cardLevels = {};
@@ -16653,6 +16732,19 @@
         // Marqueur de la remise à zéro ponctuelle des fournitures (voir loadProgress).
         // Une fois posé dans la sauvegarde, le joueur regagne le droit d'en stocker.
         let _suppliesZeroedV1 = false;
+
+        // ════════════════════════════════════════════════════════════════
+        // DÉMO OT — Verrou du terrain.
+        // Tant qu'il est fermé, la mappe ne porte AUCUN collectable : ni poudre,
+        // ni orbe, ni échoppe — marqueurs, cercles au sol et bannières de
+        // proximité compris. Le joueur qui vient de collecter sa carte n'a rien
+        // d'autre à faire que d'aller la nourrir : il dépense ses 450 poudres,
+        // découvre le carnet, et c'est seulement quand la jeune fille le renvoie
+        // dehors (cf. _obJournalExitHint) que le terrain s'ouvre — d'un coup, et
+        // pour la suite de la démo.
+        // ════════════════════════════════════════════════════════════════
+        let _demoFieldReady = false;
+
         let collectedDustPoints = [];
 
         let map = null;
@@ -16826,7 +16918,6 @@
                 // son marqueur.
                 document.getElementById('onboardingOverlay').classList.add('hidden');
                 if (_obGuide.active) {
-                    document.getElementById('obSkipBtn').classList.add('visible');
                     _obGuideStartLoop();
                     setTimeout(_obGuideRefresh, 400);
                 } else if (_obAct2Done) {
@@ -16842,7 +16933,6 @@
             } else {
                 // Tutoriel déjà fait — masquer tous les overlays onboarding
                 document.getElementById('onboardingOverlay').classList.add('hidden');
-                document.getElementById('obSkipBtn').classList.remove('visible');
                 document.getElementById('vnOverlay').classList.remove('show');
                 document.getElementById('obNote').classList.remove('show');
             }
@@ -16858,6 +16948,7 @@
             updateDustVisibility();
             updateEchoVisibility();
             updateOrbVisibility();
+            updateBazarVisibility();   // verrou du terrain (cf. _demoFieldReady)
             if (typeof _capUpdate === 'function') _capUpdate();
             updateScrollVisibility();
             updateLootVisibility();
@@ -16943,8 +17034,8 @@
             // Stock calé sur ce que la carte réclame vraiment, une fois chaque page
             // typée d'après son contenu : 1 pellicule (« Un bâtiment jumeau »),
             // 4 encres (les frontons + les trois pages de l'arc III) et 1 cassette
-            // (« Une même mission »). Une unité de marge par type — le tirage
-            // aléatoire du scellement ne peut pas être garanti, et le joueur ne
+            // (« Une même mission »). Depuis que le scellement n'offre plus rien,
+            // c'est l'unique source du jeu : la marge par type reste, un joueur ne
             // doit jamais rester bloqué faute d'une fourniture.
             BAZAR_POINTS.push({
                 id: 'bazar_ot', name: 'Échoppe de Bellecour', lat: 45.7585, lng: 4.8324,
@@ -16957,16 +17048,19 @@
             INFO_POINTS.length = 0;
             PANNEAU_POINTS.length = 0;
             TEST_ZONES.length = 0;
-            // POI poudre (dose généreuse) + 2 POI orbe, en éventail autour de l'OT.
-            // Deux orbes : la carte peut retomber à court d'énergie une seconde fois,
-            // et le joueur ne doit jamais avoir à attendre la régénération (2 h/cran).
+            // POI poudre (dose généreuse) + 1 POI orbe, en éventail autour de l'OT.
+            // Une seule orbe : la carte ne s'épuise plus qu'une fois, à l'ouverture
+            // du chapitre III (9 crans couvrent les chapitres I et II, les 20 crans
+            // du niveau 2 couvrent les 16 doses du chapitre III). Elle ne peut pas
+            // non plus être gaspillée en route — le bouton ne passe en mode orbe que
+            // si l'énergie est à zéro ET l'XP incomplète, or les deux tombent au
+            // même clic. La seconde orbe n'avait plus d'emploi.
             // Toutes au nord ou à l'est du joueur : la caméra est décalée vers le nord
             // et le pitch écrase la bande sud, où un point passe hors champ.
             DUST_POINTS.length = 0;
             DUST_POINTS.push({ id: 'dust_ot',  lat: 45.7574, lng: 4.8332 }); // ~66 m sud-est
             ORB_POINTS.length = 0;
             ORB_POINTS.push({ id: 'orb_ot',    lat: 45.7581, lng: 4.8318 }); // ~73 m nord-ouest
-            ORB_POINTS.push({ id: 'orb_ot_2',  lat: 45.7581, lng: 4.8334 }); // ~96 m nord-est
             // Grappes narratives + quêtes locales : désactivées pour la démo.
             try { Object.keys(GRAPPE_QUESTS).forEach(k => delete GRAPPE_QUESTS[k]); } catch (e) {}
             try { Object.keys(LOCAL_QUESTS).forEach(k => delete LOCAL_QUESTS[k]); } catch (e) {}
@@ -18622,9 +18716,13 @@
             });
             // Rayons = constantes de collecte réelles : dessiner 50 m là où la collecte
             // se déclenche à 30 m faisait entrer le joueur dans un cercle inopérant.
-            DUST_POINTS.forEach(d => { if (!collectedDustPoints.includes(d.id)) add(d.lng, d.lat, DUST_RADIUS, 'dust'); });
+            // Terrain verrouillé : pas de cercle au sol non plus, sinon la mappe
+            // trahit des points dont les marqueurs sont cachés.
+            if (_demoFieldReady) {
+                DUST_POINTS.forEach(d => { if (!collectedDustPoints.includes(d.id)) add(d.lng, d.lat, DUST_RADIUS, 'dust'); });
+                ORB_POINTS.forEach(o => { if (!collectedOrbs.includes(o.id)) add(o.lng, o.lat, ORB_RADIUS, 'orb'); });
+            }
             ECHO_POINTS.forEach(e => { if (!collectedEchoes.includes(e.id)) add(e.lng, e.lat, ECHO_RADIUS, 'echo'); });
-            ORB_POINTS.forEach(o => { if (!collectedOrbs.includes(o.id)) add(o.lng, o.lat, ORB_RADIUS, 'orb'); });
             SCROLL_POINTS.forEach(s => { if (!collectedScrolls.includes(s.id)) add(s.lng, s.lat, SCROLL_RADIUS, 'scroll'); });
             LOOT_POINTS.forEach(l => { if (!collectedLoots.includes(l.id)) add(l.lng, l.lat, 50, 'loot'); });
             CARNET_RESOURCE_POINTS.forEach(pt => { if (!collectedCarnetResources.includes(pt.id)) add(pt.lng, pt.lat, CARNET_RESOURCE_RADIUS, 'carnet_resource'); });
@@ -19026,8 +19124,8 @@
                 _shouldShowPoiConsole('poi', null);
             }
 
-            // Dust
-            const nearbyDust = DUST_POINTS.find(d =>
+            // Dust — muet tant que le terrain est verrouillé (cf. _demoFieldReady)
+            const nearbyDust = !_demoFieldReady ? null : DUST_POINTS.find(d =>
                 !collectedDustPoints.includes(d.id) &&
                 getDistance(playerPos.lat, playerPos.lng, d.lat, d.lng) <= DUST_RADIUS
             );
@@ -19060,8 +19158,8 @@
                 _shouldShowPoiConsole('echo', null);
             }
 
-            // Orb
-            const nearbyOrb = ORB_POINTS.find(o =>
+            // Orb — muet tant que le terrain est verrouillé (cf. _demoFieldReady)
+            const nearbyOrb = !_demoFieldReady ? null : ORB_POINTS.find(o =>
                 !collectedOrbs.includes(o.id) &&
                 getDistance(playerPos.lat, playerPos.lng, o.lat, o.lng) <= ORB_RADIUS
             );
@@ -19247,7 +19345,8 @@
             if (!_obMapActive()) return;
             const visible = [];
             dustMarkers.forEach(({ marker, el, dust }) => {
-                const show = !collectedDustPoints.includes(dust.id);
+                // Terrain verrouillé (cf. _demoFieldReady) : rien à ramasser encore.
+                const show = _demoFieldReady && !collectedDustPoints.includes(dust.id);
                 el.style.display = show ? 'block' : 'none';
                 if (show) visible.push(dust);
             });
@@ -19286,7 +19385,8 @@
             if (!_obMapActive()) return;
             const visible = [];
             orbMarkers.forEach(({ marker, el, orb }) => {
-                const show = !collectedOrbs.includes(orb.id);
+                // Terrain verrouillé (cf. _demoFieldReady) : rien à ramasser encore.
+                const show = _demoFieldReady && !collectedOrbs.includes(orb.id);
                 el.style.display = show ? 'block' : 'none';
                 if (show) visible.push(orb);
             });
@@ -19297,6 +19397,28 @@
                 });
             }
             _capUpdate();
+        }
+
+        // DÉMO OT — L'échoppe n'a pas d'état « ramassée » : sa seule condition
+        // d'affichage est le verrou du terrain. D'où une fonction à part, appelée
+        // à la création des marqueurs, à la restauration des POI et à l'ouverture
+        // du terrain.
+        function updateBazarVisibility() {
+            bazarMarkers.forEach(({ el }) => {
+                if (!el) return;
+                if (_demoFieldReady) {
+                    el.removeAttribute('data-ob-hidden');
+                    el.style.display = '';
+                } else {
+                    el.dataset.obHidden = 'true';
+                    el.style.display = 'none';
+                }
+            });
+            if (!_demoFieldReady) {
+                const nb = document.getElementById('nearbyBazar');
+                if (nb) nb.classList.add('hidden');
+                currentNearbyBazar = null;
+            }
         }
 
         function updateScrollVisibility() {
@@ -23322,11 +23444,13 @@
 
             // Plus de parchemin au level up : le gain n'a pas de sens ici. Les parchemins
             // se ramassent sur le terrain et servent aux panneaux d'information.
-            // Récompense fourniture au level up
-            const orbRewards = ['pellicules', 'encre', 'cassettes'];
-            const orbReward = orbRewards[levelBefore % 3];
-            bagInv[orbReward] = (bagInv[orbReward] || 0) + 1;
-            if (orbReward === 'pellicules') updateCameraHUD();
+            // DÉMO OT — plus de récompense-fourniture au scellement non plus. Elle
+            // offrait une pellicule dès le chapitre I : le joueur pouvait dévoiler
+            // une page voilée sans jamais être passé par l'Échoppe, et la démo
+            // sautait le seul beat qui justifie le retour sur la mappe. Les
+            // fournitures ont désormais une source unique — l'Échoppe de Bellecour,
+            // dont le stock (2 pellicules / 5 encres / 2 cassettes) couvre les
+            // 1 pellicule + 4 encres + 1 cassette que la carte réclame.
 
                         // Lancer l'overlay de synthèse
             const SYNTH_TEXTS = [
@@ -25779,6 +25903,7 @@
                 // Sortie faite : l'anneau n'a plus à montrer la vignette, il peut
                 // reprendre son arbitrage normal (échoppe, scellement…).
                 _obJournalBackSeen = true;
+                try { saveProgress(); } catch (e) {}
                 setTimeout(() => _obGuideRefresh(), 120);
                 // Il a fini de lire : c'est maintenant qu'on peut l'envoyer à
                 // l'échoppe, pas à l'ouverture (cf. _obJournalExitHint).
@@ -28050,6 +28175,7 @@
                     .addTo(map);
                 bazarMarkers.push({ marker, el, inner, bazar });
             });
+            updateBazarVisibility();
 
             // Vérifier la proximité en continu pour la bannière nearby
             setInterval(() => {
@@ -28057,7 +28183,8 @@
                 const BAZAR_RADIUS = 30;   // aligné sur la poudre et les orbes (30 m)
                 let nearest = null;
                 let nearestDist = Infinity;
-                BAZAR_POINTS.forEach(bazar => {
+                // Terrain verrouillé : l'échoppe n'existe pas encore pour le joueur.
+                if (_demoFieldReady) BAZAR_POINTS.forEach(bazar => {
                     const dist = getDistance(playerPos.lat, playerPos.lng, bazar.lat, bazar.lng);
                     if (dist <= BAZAR_RADIUS && dist < nearestDist) {
                         nearest = bazar;
