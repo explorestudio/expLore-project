@@ -63,6 +63,21 @@
             }
         }
 
+        /* ═══ Correctif hauteur — navigateur uniquement ═══
+           En onglet navigateur, 100vh = hauteur SANS les barres : le bas de l'UI
+           passait donc sous la barre d'adresse / la barre de navigation système.
+           100dvh = hauteur réellement visible, moins l'inset système.
+           Ce bloc ne s'applique QUE en display-mode: browser — l'APK (TWA) et la
+           PWA installée tournent en standalone et gardent le 100vh d'origine. */
+        @media (display-mode: browser) {
+            body {
+                height: calc(100dvh - env(safe-area-inset-bottom, 0px));
+            }
+            .app-container {
+                max-height: calc(100dvh - env(safe-area-inset-bottom, 0px));
+            }
+        }
+
         /* ---- MAP HUD OVERLAY ---- */
         .map-hud {
             position: absolute;
