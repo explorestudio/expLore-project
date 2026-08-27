@@ -10867,6 +10867,7 @@
             "🔄 Relancer le tutoriel": "🔄 Restart the tutorial",
             "Relancer le tutoriel depuis le début ?\n(La progression du reste est conservée.)": "Restart the tutorial from the beginning?\n(The rest of your progress is kept.)",
             "Passer le tutoriel ›": "Skip the tutorial ›",
+            "Plus de poudre mémorielle": "No memorial powder left",
             "Passer ▸": "Skip ▸",
             "tap pour continuer": "tap to continue",
             "Commencer l'aventure": "Start the adventure",
@@ -14175,13 +14176,14 @@
             // Plus de lettre manuscrite : le joueur n'a rien "reçu". On enchaîne directement
             // sur le marqueur tutoriel, la jeune fille oriente le joueur en voix vive.
             document.getElementById('onboardingOverlay').classList.add('hidden');
-            document.getElementById('obSkipBtn').classList.add('visible');
+            _obSkipBtnShow(true);
             _obHideAllMarkers();
             _obSpawnTutorialMarker();
         }
 
         function _obSkipTutorial() {
             // Nettoyer tous les états onboarding en cours
+            _obClearPendingSay();
             if (window._obProximityCheck) { clearInterval(window._obProximityCheck); window._obProximityCheck = null; }
             if (window._obTutorialMarker) { window._obTutorialMarker.remove(); window._obTutorialMarker = null; }
             _obRemoveHighlight();
@@ -14190,7 +14192,7 @@
             document.getElementById('onboardingOverlay').classList.add('hidden');
             document.getElementById('obNote').classList.remove('show');
             document.getElementById('vnOverlay').classList.remove('show');
-            document.getElementById('obSkipBtn').classList.remove('visible');
+            _obSkipBtnShow(false);
 
             // Fermer fiche carte si ouverte par l'onboarding
             document.getElementById('cardDetailView').classList.remove('show');
@@ -14369,9 +14371,9 @@
                 try { map.setLayoutProperty('poi-capture-circles', 'visibility', 'visible'); } catch(e) {}
             }
 
-            // Dialogue initial
+            // Dialogue initial — ancré à la mappe : le repère qu'elle désigne y est.
             setTimeout(() => {
-                vnShow([{ speaker: 'La jeune fille', line: 'Il y a quelque chose là-bas. Pas un lieu, pas un monument — quelque chose de plus discret. Approche-toi.' }], null);
+                _obSay('map', [{ speaker: 'La jeune fille', line: 'Il y a quelque chose là-bas. Pas un lieu, pas un monument — quelque chose de plus discret. Approche-toi.' }], null);
             }, 1200);
 
             // Surveiller la proximité — afficher la bannière quand dans la zone,
@@ -14494,27 +14496,72 @@
                 _obAct2Done = true;
                 saveProgress();
                 _obRestoreAllPOI();
-                _obSpawnTutorialBazar();
+                _obSpawnTutorialResources();
                 // Le tuto NE se termine PLUS à la collecte : on enchaîne sur le parcours
                 // guidé (Collection → poudre → carnet/triplet → énergie/orbe → niveau → adieu).
                 setTimeout(() => _obGuideStart(), 400);
             }
         }
 
-        // ── Échoppe du tutoriel — posée près du joueur à la collecte ──
-        // Les quatre échoppes fixes de Lyon sont trop loin d'un joueur qui
-        // démarre n'importe où : sans celle-ci, le triplet encre / pellicule /
-        // cassette resterait une notion abstraite pendant tout le tutoriel.
-        // Posée au sud-est, à l'opposé du marqueur tutoriel (nord-est), pour
-        // qu'on ne confonde pas les deux repères.
+        // ════════════════════════════════════════════════════════════════
+        // RESSOURCES DU TUTORIEL — posées près du joueur, toujours
+        // ════════════════════════════════════════════════════════════════
+        // Les points fixes de Lyon (échoppes, poudre, orbes) sont trop loin d'un
+        // joueur qui démarre n'importe où, et le joystick le pose au centre-ville
+        // sans rien à portée. Le tutoriel pose donc les siens — une échoppe, un
+        // point de poudre, une orbe — au moment de la collecte de la carte, que
+        // la géolocalisation soit active ou non. Sans eux, la dotation de départ
+        // resserrée (180 poudres, aucune fourniture, aucune orbe) laisserait le
+        // joueur en panne sèche au milieu du chapitre.
+        //
+        // Les trois repères s'écartent du marqueur tutoriel (nord-est) pour qu'on
+        // ne les confonde pas : échoppe au sud-est, poudre au nord-ouest, orbe au
+        // sud-ouest — tous hors du rayon de collecte, il faut marcher.
+        //
+        // Positions mémorisées dans la sauvegarde : un rechargement en plein
+        // tutoriel ne doit pas les déplacer sous les pieds du joueur.
+        let _obTutoSpawn = null;   // { bazar:{lat,lng}, dust:{lat,lng}, orb:{lat,lng} }
+
+        function _obTutoSpawnPoints() {
+            if (_obTutoSpawn) return _obTutoSpawn;
+            if (!playerPos) return null;
+            _obTutoSpawn = {
+                bazar: { lat: playerPos.lat - 0.00055, lng: playerPos.lng + 0.00070 },
+                dust:  { lat: playerPos.lat + 0.00040, lng: playerPos.lng - 0.00060 },
+                orb:   { lat: playerPos.lat - 0.00050, lng: playerPos.lng - 0.00045 },
+            };
+            return _obTutoSpawn;
+        }
+
+        // Point d'entrée unique : appelé à la collecte de la carte tutoriel, et
+        // rejoué au chargement si la partie reprend en plein tutoriel (les
+        // marqueurs ne vivent qu'en mémoire).
+        function _obSpawnTutorialResources() {
+            if (typeof map === 'undefined' || !map) return;
+            if (!_obTutoSpawnPoints()) return;
+            _obSpawnTutorialBazar();
+            _obSpawnTutorialDust();
+            _obSpawnTutorialOrb();
+            // Le verrou du terrain avait éteint ces calques à l'init : les zones
+            // de capture des ressources du tutoriel en ont besoin.
+            ['dust-capture-circles','dust-capture-circles-stroke','orb-circles','orb-circles-stroke'].forEach(id => {
+                try { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); } catch(e) {}
+            });
+            try { updateDustVisibility(); } catch(e) {}
+            try { updateOrbVisibility(); } catch(e) {}
+            if (typeof _capUpdate === 'function') { try { _capUpdate(); } catch(e) {} }
+            try { saveProgress(); } catch (e) {}
+        }
+
         function _obSpawnTutorialBazar() {
             if (BAZAR_POINTS.some(b => b.id === 'bazar_tuto')) return;   // déjà posée
-            if (!playerPos) return;
+            const p = _obTutoSpawnPoints();
+            if (!p) return;
             const bazar = {
                 id: 'bazar_tuto',
                 name: 'Échoppe du passeur',
-                lat: playerPos.lat - 0.00055,
-                lng: playerPos.lng + 0.00070,
+                lat: p.bazar.lat,
+                lng: p.bazar.lng,
                 icon: '🛖',
                 stock: { pellicules: 3, encre: 3, cassettes: 3 },
             };
@@ -14523,6 +14570,101 @@
             // fin du tutoriel, celle-ci doit être visible pendant.
             if (typeof map !== 'undefined' && map) _createBazarMarker(bazar, { alwaysVisible: true });
         }
+
+        // Point de poudre du tutoriel. La marque « tuto » le fait échapper au
+        // verrou du terrain (cf. updateDustVisibility, _capUpdate, checkNearbyPOI),
+        // et « amount » fixe son rendement : un tirage aléatoire à 25 laisserait le
+        // joueur incapable de finir le chapitre (80 poudres restent à dépenser).
+        function _obSpawnTutorialDust() {
+            if (DUST_POINTS.some(d => d.id === 'dust_tuto')) return;
+            const p = _obTutoSpawnPoints();
+            if (!p) return;
+            const dust = { id: 'dust_tuto', lat: p.dust.lat, lng: p.dust.lng, tuto: true, amount: 120 };
+            DUST_POINTS.push(dust);
+            if (collectedDustPoints.includes(dust.id)) return;   // déjà ramassé avant rechargement
+            const el = document.createElement('div');
+            el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
+            const inner = document.createElement('div');
+            inner.id = 'obTutoDustMarker';
+            inner.style.cssText = 'position:absolute;transform:translate(-50%,-62%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+            const icon = document.createElement('div');
+            icon.style.cssText = 'flex-shrink:0;';
+            icon.innerHTML = '<img src="./assets/Powder.png?v=1" style="width:38px;height:38px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
+            inner.appendChild(_buildPoiVisual('dust_dusttuto', {
+                top:    'rgba(192,132,252,0.9)',
+                mid:    'rgba(168,85,247,0.55)',
+                bot:    'rgba(124,58,237,0.85)',
+                glow:   'rgba(192,132,252,0.8)',
+                disk:   'rgba(216,180,254,0.7)',
+                stroke: 'rgba(233,213,255,0.9)'
+            }, icon, 38, 30));
+            el.appendChild(inner);
+            const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+                .setLngLat([dust.lng, dust.lat]).addTo(map);
+            inner.addEventListener('click', () => {
+                if (getDistance(playerPos.lat, playerPos.lng, dust.lat, dust.lng) <= DUST_RADIUS) {
+                    currentNearbyDust = dust;
+                    document.getElementById('nearbyDust').classList.add('hidden');
+                    _animateCollect(inner, () => collectDust());
+                } else {
+                    _showPoiTapFeedback('too_far', false);
+                }
+            });
+            dustMarkers.push({ marker, el, dust });
+            (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatSmall 3s ease-in-out 0.4s infinite';
+        }
+
+        // Orbe du tutoriel. Elle remplace le don de la jeune fille : une orbe
+        // qu'on ramasse soi-même apprend où en trouver d'autres, un cadeau non.
+        function _obSpawnTutorialOrb() {
+            if (ORB_POINTS.some(o => o.id === 'orb_tuto')) return;
+            const p = _obTutoSpawnPoints();
+            if (!p) return;
+            const orb = { id: 'orb_tuto', lat: p.orb.lat, lng: p.orb.lng, tuto: true };
+            ORB_POINTS.push(orb);
+            if (collectedOrbs.includes(orb.id)) return;
+            const el = document.createElement('div');
+            el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
+            const inner = document.createElement('div');
+            inner.id = 'obTutoOrbMarker';
+            inner.style.cssText = 'position:absolute;transform:translate(-50%,-62%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+            const icon = document.createElement('div');
+            icon.style.cssText = 'flex-shrink:0;filter:drop-shadow(0 0 6px rgba(99,102,241,0.8));';
+            icon.innerHTML = ORB_ICON_SVG_TUTO;
+            inner.appendChild(_buildPoiVisual('orb_orbtuto', {
+                top:    'rgba(103,232,249,0.9)',
+                mid:    'rgba(6,182,212,0.55)',
+                bot:    'rgba(8,145,178,0.85)',
+                glow:   'rgba(34,211,238,0.85)',
+                disk:   'rgba(103,232,249,0.7)',
+                stroke: 'rgba(164,244,250,0.9)'
+            }, icon, 28, 55));
+            el.appendChild(inner);
+            const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+                .setLngLat([orb.lng, orb.lat]).addTo(map);
+            inner.addEventListener('click', () => {
+                if (getDistance(playerPos.lat, playerPos.lng, orb.lat, orb.lng) <= ORB_RADIUS) {
+                    currentNearbyOrb = orb;
+                    document.getElementById('nearbyOrb').classList.add('hidden');
+                    _animateCollect(inner, () => collectOrb());
+                } else {
+                    _showPoiTapFeedback('too_far', false);
+                }
+            });
+            orbMarkers.push({ marker, el, orb });
+            (inner.querySelector('.poi-icon-float') || inner).style.animation = 'poiFloatMedium 2.8s ease-in-out 0.2s infinite';
+        }
+
+        // Visuel de l'orbe, identique à celui des orbes ordinaires (les ids de
+        // gradient sont suffixés pour ne pas entrer en collision dans le DOM).
+        const ORB_ICON_SVG_TUTO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none">'
+            + '<circle cx="12" cy="13" r="10" fill="url(#di_o_tuto)"/>'
+            + '<ellipse cx="12" cy="13" rx="10" ry="10" stroke="rgba(103,232,249,0.6)" stroke-width="1"/>'
+            + '<ellipse cx="9" cy="9" rx="3.5" ry="2.5" fill="rgba(255,255,255,0.35)" transform="rotate(-20 9 9)"/>'
+            + '<circle cx="15" cy="16" r="1.2" fill="rgba(255,255,255,0.2)"/>'
+            + '<defs><radialGradient id="di_o_tuto" cx="38%" cy="35%" r="65%">'
+            + '<stop offset="0%" stop-color="#cffafe"/><stop offset="55%" stop-color="#06b6d4"/>'
+            + '<stop offset="100%" stop-color="#164e63"/></radialGradient></defs></svg>';
 
         // Ce qu'il reste réellement à ramasser / dépenser — les répliques du
         // parcours guidé s'appuient dessus plutôt que sur un scénario supposé.
@@ -14658,6 +14800,90 @@
         // _obGuideFinish à chaque tick, la carte étant déjà montée de niveau.
         let _obGuide = { active: false, step: null, outro: false };
 
+        // ════════════════════════════════════════════════════════════════
+        // RÈGLE D'OR — une réplique ne tombe QUE dans l'interface dont elle parle
+        // ════════════════════════════════════════════════════════════════
+        // La jeune fille désignait la longue-vue de la mappe alors que le joueur
+        // était encore dans la fiche carte, et l'échoppe alors qu'il lisait le
+        // carnet : il entendait une consigne pour un écran qu'il n'avait pas sous
+        // les yeux, et l'avait oubliée en y arrivant. Chaque réplique du parcours
+        // guidé déclare désormais son écran ; si le joueur n'y est pas, elle
+        // attend qu'il y entre. Une seule attente à la fois : le parcours est
+        // séquentiel, la dernière demandée remplace la précédente.
+        let _obPendingSay = null;   // { screen, lines, cb }
+        let _obSayTimer   = null;
+
+        // Interfaces reconnues, de la plus haute à la plus basse dans la pile.
+        const _OB_SCREENS = [
+            ['progression', 'progressionScreen'],
+            ['journal',     'journalScreen'],
+            ['carddetail',  'cardDetailView'],
+            ['collections', 'collectionsPanel'],
+            ['bag',         'bagScreen'],
+            ['mindmap',     'mindmapScreen'],
+        ];
+
+        // Où le joueur se trouve-t-il réellement ? 'map' n'est renvoyé que si
+        // AUCUN écran n'est ouvert — rituel de collecte et échoppe compris. Ces
+        // deux-là ne portent pas la classe .show, d'où le repli sur
+        // _isAnyScreenOpen(), qui suit body.dataset.screenOpen.
+        function _obCurrentScreen() {
+            for (let i = 0; i < _OB_SCREENS.length; i++) {
+                const el = document.getElementById(_OB_SCREENS[i][1]);
+                if (el && el.classList.contains('show')) return _OB_SCREENS[i][0];
+            }
+            if (typeof _isAnyScreenOpen === 'function' && _isAnyScreenOpen()) return 'other';
+            return 'map';
+        }
+
+        // Dit `lines` dans l'écran `screen`, maintenant s'il y est, sinon dès
+        // qu'il y entre. screen === 'any' : sans ancrage (comportement d'avant).
+        function _obSay(screen, lines, cb) {
+            if (!screen || screen === 'any') { vnShow(lines, cb || null); return; }
+            _obPendingSay = { screen: screen, lines: lines, cb: cb || null };
+            if (!_obSayTimer) _obSayTimer = setInterval(_obFlushSay, 150);
+            _obFlushSay();
+        }
+
+        function _obFlushSay() {
+            if (!_obPendingSay) {
+                if (_obSayTimer) { clearInterval(_obSayTimer); _obSayTimer = null; }
+                return;
+            }
+            if (_obCurrentScreen() !== _obPendingSay.screen) return;
+            // Ne jamais se superposer à un dialogue déjà à l'écran.
+            const vn = document.getElementById('vnOverlay');
+            if (vn && vn.classList.contains('show')) return;
+            const p = _obPendingSay;
+            _obPendingSay = null;
+            if (_obSayTimer) { clearInterval(_obSayTimer); _obSayTimer = null; }
+            vnShow(p.lines, p.cb);
+        }
+
+        // Annule une réplique en attente (sortie de tutoriel, passage, reset).
+        function _obClearPendingSay() {
+            _obPendingSay = null;
+            if (_obSayTimer) { clearInterval(_obSayTimer); _obSayTimer = null; }
+        }
+
+        // ── Bouton « Passer le tutoriel » : sur la mappe, et nulle part ailleurs ──
+        // Il flottait au-dessus de la Collection, du carnet et de la fiche carte,
+        // où il n'a rien à faire : c'est une sortie de la mappe. _obSkipWanted dit
+        // « le tutoriel est en cours » ; l'affichage réel se décide à chaque tick.
+        let _obSkipWanted = false;
+        let _obSkipTimer  = null;
+        function _obSkipBtnSync() {
+            const btn = document.getElementById('obSkipBtn');
+            if (!btn) return;
+            btn.classList.toggle('visible', _obSkipWanted && _obCurrentScreen() === 'map');
+        }
+        function _obSkipBtnShow(on) {
+            _obSkipWanted = !!on;
+            if (_obSkipWanted && !_obSkipTimer) _obSkipTimer = setInterval(_obSkipBtnSync, 250);
+            if (!_obSkipWanted && _obSkipTimer) { clearInterval(_obSkipTimer); _obSkipTimer = null; }
+            _obSkipBtnSync();
+        }
+
         // ── État du carnet ──────────────────────────────────────────────────
         // Le carnet se présente à sa PREMIÈRE ouverture, quel qu'en soit le
         // moment : le bouton 📖 est cliquable dès la fiche carte ouverte, et un
@@ -14719,12 +14945,24 @@
             journal1:       '#journalTabBtn',
             lesson:         null,
             feed2:          '#addExpBtn',
-            orb:            '#addExpBtn',
-            feed3:          '#addExpBtn',
+            // Étape « gather » : le joueur sort chercher ce qui lui manque. Tant
+            // qu'il est dans un écran on lui montre la sortie ; sur la mappe,
+            // l'orbe posée pour lui — jusqu'à ce qu'il l'ait ramassée.
+            gather:         () => {
+                const back = _obBackToMapSelector();
+                if (back) return back;
+                if ((bagInv.orbes || 0) <= 0) return '#obTutoOrbMarker';
+                return null;
+            },
+            // Ces étapes se jouent devant la carte, mais le joueur en revient
+            // (mappe, carnet) : l'anneau lui montre le chemin du retour plutôt
+            // qu'un bouton hors champ.
+            orb:            () => _obPathToCardSelector(),
+            feed3:          () => _obPathToCardSelector(),
             // Le joueur doit retourner au carnet pour dévoiler les pages qui
             // restent : sans anneau, personne ne lui montrait où.
             reveal_rest:    '#journalTabBtn',
-            seal:           '#addExpBtn',
+            seal:           () => _obPathToCardSelector(),
             // Deux dernières étapes du tuto : la longue-vue puis la progression.
             // Toutes deux vivent sur le HUD de la mappe — l'anneau ne s'allume donc
             // que si le joueur y est revenu, ce que _obElementVisible garantit.
@@ -14767,6 +15005,21 @@
             const cd = document.getElementById('cardDetailView');
             if (cd && cd.classList.contains('show')) return '@exit-hint';
             return null;
+        }
+
+        // Chemin de retour vers la fiche carte, depuis n'importe où : le bouton de
+        // dose s'il est déjà à l'écran, sinon la vignette de la carte dans la
+        // Collection, sinon le bouton Collection du HUD, sinon la sortie de
+        // l'écran courant. Sans ça, une étape qui vise #addExpBtn n'affichait
+        // aucun anneau tant que le joueur n'était pas revenu de lui-même.
+        function _obPathToCardSelector() {
+            const add = document.getElementById('addExpBtn');
+            if (add && _obElementVisible(add)) return '#addExpBtn';
+            const card = document.querySelector('.alb-card.alb-collected');
+            if (card && _obElementVisible(card)) return '.alb-card.alb-collected';
+            const col = document.getElementById('btnCollections');
+            if (col && _obElementVisible(col)) return '#btnCollections';
+            return _obBackToMapSelector();
         }
 
         // Allume / éteint les deux marges de sortie de la fiche carte.
@@ -15033,7 +15286,7 @@
                 // S'il attendait cette ouverture (étape « journal1 »), c'est
                 // maintenant que sa leçon sur les trois sortes de traces tombe —
                 // après la présentation, jamais avant.
-                vnShow(rep, () => {
+                _obSay('journal', rep, () => {
                     _obGuideRefresh();
                     if (typeof _obGuide === 'object' && _obGuide.active) _obGuideEvent('journal');
                 });
@@ -15049,14 +15302,14 @@
                 if (manque === 0) {
                     rep.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' });
                 }
-                vnShow(rep, () => _obGuideRefresh());
+                _obSay('journal', rep, () => _obGuideRefresh());
                 return;
             }
 
             // Ne relancer que s'il reste des pages voilées ET de quoi manquer.
             if (manque > 0 && voilees > 0) {
                 const _shop = _obTutoBazarNear();
-                vnShow([
+                _obSay('journal', [
                     _shop
                         ? { speaker: 'La jeune fille', line: TF('Ces pages resteront voilées tant que tu n\'auras rien pour les révéler. Une échoppe en tient, à %1 mètres d\'ici.', _shop.dist) }
                         : { speaker: 'La jeune fille', line: 'Ces pages resteront voilées tant que tu n\'auras rien pour les révéler. Les échoppes de la ville en tiennent — cherche-les sur la mappe.' },
@@ -15074,10 +15327,41 @@
             if (_obMissingSupplies() <= 0) return;
             _obJournalExitSaid = true;
             const _shop = _obTutoBazarNear();
-            vnShow([
+            // Dehors : la réplique attend donc que le joueur y soit vraiment.
+            _obSay('map', [
                 _shop
                     ? { speaker: 'La jeune fille', line: TF('D\'ailleurs, n\'hésite pas à aller te fournir à l\'échoppe, à %1 mètres d\'ici. Profites-en pour collecter de la poudre ou une orbe si tu en trouves sur ton chemin.', _shop.dist) }
                     : { speaker: 'La jeune fille', line: 'D\'ailleurs, n\'hésite pas à aller te fournir dans une échoppe. Profites-en pour collecter de la poudre ou une orbe si tu en trouves sur ton chemin.' },
+            ], () => _obGuideRefresh());
+        }
+
+        // Ce que la jeune fille envoie chercher dehors à l'étape « gather » :
+        // seulement ce qui manque réellement, jamais un scénario supposé.
+        function _obGatherLines() {
+            const shop = _obTutoBazarNear();
+            const lines = [
+                { speaker: 'La jeune fille', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
+                { speaker: 'La jeune fille', html: 'Ou tu sors. Il y a une <span style="color:#67E8F9;font-weight:600">🔮 orbe mémorielle</span> près d\'ici : elle lui rend toute son énergie d\'un coup. Va la chercher.' },
+            ];
+            if ((memorialDust || 0) < 40) {
+                lines.push({ speaker: 'La jeune fille', html: 'Ta réserve de <span style="color:#C084FC;font-weight:600">poudre</span> est à sec, aussi. Il y en a dehors — ramasses-en en chemin.' });
+            }
+            lines.push(shop
+                ? { speaker: 'La jeune fille', line: TF('Et l\'échoppe est à %1 mètres : c\'est là qu\'on trouve l\'encre, la pellicule et les cassettes. Tes pages voilées en réclameront.', shop.dist) }
+                : { speaker: 'La jeune fille', line: 'Et passe par une échoppe : c\'est là qu\'on trouve l\'encre, la pellicule et les cassettes. Tes pages voilées en réclameront.' });
+            return lines;
+        }
+
+        // Réserve de poudre vide en plein parcours guidé. Le toast tombe dans
+        // l'écran où le joueur vient d'appuyer ; la consigne, elle, attend la
+        // mappe — c'est là qu'il y a de la poudre à ramasser. Dite une seule fois.
+        let _obDustEmptySaid = false;
+        function _obDustEmptyHint() {
+            try { showToast(T('Plus de poudre mémorielle')); } catch (e) {}
+            if (_obDustEmptySaid) return;
+            _obDustEmptySaid = true;
+            _obSay('map', [
+                { speaker: 'La jeune fille', html: 'Ta réserve de <span style="color:#C084FC;font-weight:600">poudre mémorielle</span> est vide. Il y en a dehors, en petits amas violets. Ramasses-en, puis reviens à la carte.' },
             ], () => _obGuideRefresh());
         }
 
@@ -15088,9 +15372,9 @@
             // Un tuto relancé (reset, mode test) ne doit pas hériter du drapeau de
             // sortie de la partie précédente : _obGuideFinish refuserait d'entrer.
             _obGuide.outro = false;
-            document.getElementById('obSkipBtn').classList.add('visible');
+            _obSkipBtnShow(true);
             _obGuideStartLoop();
-            vnShow([
+            _obSay('map', [
                 { speaker: 'La jeune fille', line: 'Tu l\'as recueillie. Mais une carte qu\'on vient de réveiller a presque tout oublié — il faut lui rendre sa mémoire.' },
                 { speaker: 'La jeune fille', line: 'Ouvre ta Collection. Elle t\'y attend, désormais.' },
             ], () => _obGuideRefresh());
@@ -15099,7 +15383,7 @@
         // Transition partagée : on vient d'ouvrir la fiche carte → invite à la nourrir.
         function _obGuideEnterFeed1() {
             _obGuide.step = 'feed1';
-            vnShow([
+            _obSay('carddetail', [
                 { speaker: 'La jeune fille', line: 'Pour qu\'une carte se souvienne, il lui faut de la poudre mémorielle. Donne-lui-en — et regarde ce qui remonte.' },
             ], () => _obGuideRefresh());
         }
@@ -15120,7 +15404,10 @@
             if (!_obGuide.active || _obGuide.outro) return;
             _obGuide.outro = true;
             _obGuide.step = 'spyglass';
-            vnShow([
+            // Ancré à la mappe : le joueur vient de sceller depuis la fiche carte,
+            // et elle lui montre ici la longue-vue du HUD. Elle attend donc qu'il
+            // soit ressorti — l'anneau, lui, désigne la sortie entre-temps.
+            _obSay('map', [
                 { speaker: 'La jeune fille', line: 'Voilà. Ce chapitre ne s\'oubliera plus. C\'est ça, être explorateur de la mémoire.' },
                 // Nommer sans expliquer : le joueur doit savoir que ces choses
                 // existent pour avoir envie de s'en approcher, pas savoir s'en
@@ -15136,7 +15423,7 @@
         // progression. Séparée de _obGuideEvent pour rester appelable directement.
         function _obGuideEnterProgression() {
             _obGuide.step = 'progression';
-            vnShow([
+            _obSay('map', [
                 { speaker: 'La jeune fille', html: 'Voilà. On prend de la hauteur, et la ville se laisse lire. Les <span style="color:#C89039;font-weight:600">quartiers</span> montrent ici leur avancement — ce qu\'il te reste à y trouver.' },
                 { speaker: 'La jeune fille', line: 'C\'est comme ça qu\'on décide où aller. Moi, je commence toujours ma journée par là.' },
                 // ⭐ : la ligne « Progression » du menu de l'avatar.
@@ -15153,7 +15440,9 @@
             _obGuide.step   = null;
             _obGuide.outro  = false;
             _obGuideStopLoop();
-            vnShow([
+            // Sur la mappe, et nulle part ailleurs : elle y désigne un repère, et
+            // c'est là que la ville se peuple à la fermeture du dialogue.
+            _obSay('map', [
                 // RDV Bellecour désactivé pour le test 1 (parcours reporté au test 2) :
                 // les deux répliques de direction sautent avec lui.
                 { speaker: 'La jeune fille', line: 'Et là où tu passes, la carte en garde trace — chaque geste que tu poses laisse un petit signe, discret, à sa place exacte. À toi de reconnaître, plus tard, le dessin de ton exploration.' },
@@ -15165,8 +15454,7 @@
             ], () => {
                 _obDone = true;
                 _obAct3Done = true;
-                const _skip = document.getElementById('obSkipBtn');
-                if (_skip) _skip.classList.remove('visible');
+                _obSkipBtnShow(false);
                 // Le terrain s'ouvre ICI, et nulle part avant : c'est le seul moment
                 // où le tutoriel est réellement allé à son terme. La ville se peuple
                 // d'un coup, au lieu d'être là depuis la collecte de la première carte.
@@ -15189,12 +15477,12 @@
         function _obAfterXpFull() {
             if (_obAllTutorialEntriesRevealed()) {
                 _obGuide.step = 'seal';
-                vnShow([
+                _obSay('carddetail', [
                     { speaker: 'La jeune fille', line: 'Le chapitre est plein, et toutes ses pages dévoilées. Scelle-le — qu\'il prenne racine.' },
                 ], () => _obGuideRefresh());
             } else {
                 _obGuide.step = 'reveal_rest';
-                vnShow([
+                _obSay('carddetail', [
                     { speaker: 'La jeune fille', line: 'Le chapitre est plein — mais des pages restent voilées : une image, un son.' },
                     { speaker: 'La jeune fille', line: 'Ouvre le carnet et dévoile-les toi-même, à la pellicule et à la cassette. Ensuite seulement tu pourras sceller.' },
                 ], () => _obGuideRefresh());
@@ -15214,7 +15502,7 @@
                 case 'go_collections':
                     if (ev === 'collections') {
                         _obGuide.step = 'go_card';
-                        vnShow([
+                        _obSay('collections', [
                             { speaker: 'La jeune fille', line: 'La voilà. Muette, pour l\'instant. Ouvre-la.' },
                         ], () => _obGuideRefresh());
                     } else if (ev === 'carddetail') {
@@ -15238,7 +15526,7 @@
                         // y être entré avant cette étape — on ne lui présente pas un
                         // objet qu'il a déjà lu. Ne reste ici que l'appel : la page
                         // vient de s'inscrire, il faut aller la voir.
-                        vnShow([
+                        _obSay('carddetail', [
                             // 📖 : l'icône que porte le bouton du carnet sur la fiche
                             // carte (cardCarnetIcon) — le joueur cherche ce signe-là.
                             { speaker: 'La jeune fille', html: 'Tu l\'as réveillée. Une page s\'est inscrite dans son <span style="font-weight:600">📖 carnet</span> — il t\'appelle.' },
@@ -15252,7 +15540,7 @@
                     if (ev === 'journal') {
                         _obGuide.step = 'lesson';
                         _obGuideClearRing();
-                        vnShow([
+                        _obSay('journal', [
                             { speaker: 'La jeune fille', line: 'Cette première page est voilée. Cette fois, c\'est moi qui l\'écris pour toi.' },
                         ], () => {
                             _obRevealEntryFree(OB_TUTORIAL_CARD.id, OB_TUTORIAL_CARD.id + '_0_0');
@@ -15276,7 +15564,7 @@
                                     _lines.push({ speaker: 'La jeune fille', line: 'Il ne t\'en reste aucune. Les échoppes de la ville en tiennent — cherche-les sur la mappe.' });
                                 }
                                 _lines.push({ speaker: 'La jeune fille', line: 'Reviens à la carte et continue à la nourrir, puis dévoile toi-même les pages qui s\'ouvriront.' });
-                                vnShow(_lines, () => {
+                                _obSay('journal', _lines, () => {
                                     _obGuide.step = 'feed2';
                                     _obGuideRefresh();
                                 });
@@ -15289,18 +15577,35 @@
 
                 case 'feed2':
                     if (ev === 'energy_empty') {
+                        // L'orbe ne se donne plus : elle se ramasse. Une orbe posée
+                        // dans la main n'apprend rien ; une orbe qu'on va chercher
+                        // apprend où en trouver d'autres. Elle attend sur la mappe
+                        // depuis la collecte de la carte, avec un point de poudre et
+                        // l'échoppe (cf. _obSpawnTutorialResources).
+                        if ((bagInv.orbes || 0) > 0) {
+                            _obGuide.step = 'orb';
+                            if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
+                            _obSay('carddetail', [
+                                { speaker: 'La jeune fille', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
+                                { speaker: 'La jeune fille', line: 'Tu portes déjà une orbe mémorielle. Pose-la sur la carte : elle lui rend toute son énergie d\'un coup.' },
+                            ], () => _obGuideRefresh());
+                        } else {
+                            _obGuide.step = 'gather';
+                            _obSay('map', _obGatherLines(), () => _obGuideRefresh());
+                        }
+                    } else if (ev === 'xp_full') {
+                        _obAfterXpFull();
+                    }
+                    break;
+
+                // Le joueur est dehors : il lui manque l'orbe, souvent la poudre et
+                // les fournitures. Seule l'orbe franchit l'étape — c'est elle qui
+                // rend à la carte de quoi continuer.
+                case 'gather':
+                    if (ev === 'orb_collected') {
                         _obGuide.step = 'orb';
-                        // Ne pas offrir une orbe à qui en a déjà : le cadeau passait
-                        // inaperçu et la réplique sonnait faux. On n'en donne une que
-                        // si le sac est vide.
-                        const _hadOrb = (bagInv.orbes || 0) > 0;
-                        if (!_hadOrb && typeof bagInv === 'object') bagInv.orbes = (bagInv.orbes || 0) + 1;
-                        if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
-                        vnShow([
-                            { speaker: 'La jeune fille', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
-                            _hadOrb
-                                ? { speaker: 'La jeune fille', line: 'Tu portes déjà une orbe mémorielle. Pose-la sur la carte : elle lui rend toute son énergie d\'un coup.' }
-                                : { speaker: 'La jeune fille', line: 'Mais tiens — prends cette orbe mémorielle. Elle lui rend toute son énergie d\'un coup. Utilise-la.' },
+                        _obSay('map', [
+                            { speaker: 'La jeune fille', line: 'Tu l\'as. Retourne à la carte et pose-la dessus : elle lui rendra toute son énergie d\'un coup.' },
                         ], () => _obGuideRefresh());
                     } else if (ev === 'xp_full') {
                         _obAfterXpFull();
@@ -15310,7 +15615,7 @@
                 case 'orb':
                     if (ev === 'orb_used') {
                         _obGuide.step = 'feed3';
-                        vnShow([
+                        _obSay('carddetail', [
                             { speaker: 'La jeune fille', line: 'Elle revit. Continue — mène ce premier chapitre à son terme.' },
                         ], () => _obGuideRefresh());
                     } else if (ev === 'xp_full') {
@@ -15327,7 +15632,7 @@
                 case 'reveal_rest':
                     if (ev === 'all_revealed') {
                         _obGuide.step = 'seal';
-                        vnShow([
+                        _obSay('journal', [
                             { speaker: 'La jeune fille', line: 'Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, scelle-le.' },
                         ], () => _obGuideRefresh());
                     }
@@ -16403,6 +16708,9 @@
                     // Découvertes déjà expliquées (panorama, point d'info, parchemin…).
                     // Persistées : elles survivent au tutoriel et ne se redisent jamais.
                     _obDiscovered,
+                    // Où l'échoppe, la poudre et l'orbe du tutoriel ont été posées :
+                    // un rechargement en plein tutoriel les remet au même endroit.
+                    _obTutoSpawn,
                     _villeDuLivreUnlocked,
                     seenCardIds: [..._seenCardIds],
                     cardJournals,
@@ -16483,6 +16791,7 @@
                 if (d._obJournalBackSeen)     _obJournalBackSeen     = true;
                 if (d._obJournalSuppliesSaid) _obJournalSuppliesSaid = true;
                 if (d._obDiscovered && typeof d._obDiscovered === 'object') _obDiscovered = d._obDiscovered;
+                if (d._obTutoSpawn && typeof d._obTutoSpawn === 'object') _obTutoSpawn = d._obTutoSpawn;
                 if (d._villeDuLivreUnlocked) _villeDuLivreUnlocked = d._villeDuLivreUnlocked;
                 if (d.seenCardIds)  _seenCardIds = new Set(d.seenCardIds);
                 if (d.cardJournals) cardJournals = d.cardJournals;
@@ -16524,6 +16833,19 @@
                     d._obDone = false; d._obAct2Done = false; d._obAct3Done = false;
                     d._obJournalSeen = false; d._obJournalBackSeen = false; d._obJournalSuppliesSaid = false;
                     d._obDiscovered = {};
+                    // L'économie du tutoriel fait partie du tutoriel : la relancer
+                    // avec 5000 poudres en poche et le sac plein de fournitures ne
+                    // rejouerait rien du parcours (panne sèche, échoppe, orbe).
+                    d.memorialDust = 180;
+                    if (d.bagInv && typeof d.bagInv === 'object') {
+                        d.bagInv.orbes = 0;
+                        d.bagInv.pellicules = 0;
+                        d.bagInv.encre = 0;
+                        d.bagInv.cassettes = 0;
+                    }
+                    d._obTutoSpawn = null;
+                    if (Array.isArray(d.collectedDustPoints)) d.collectedDustPoints = d.collectedDustPoints.filter(id => id !== 'dust_tuto');
+                    if (Array.isArray(d.collectedOrbs))       d.collectedOrbs       = d.collectedOrbs.filter(id => id !== 'orb_tuto');
                     d._obGuideActive = false; d._obGuideStep = null; d._obGuideOutroFlag = false;
                     // La carte tutoriel doit redevenir à collecter, sinon son
                     // marqueur ne se repose pas et le guide n'a rien à guider.
@@ -16541,7 +16863,11 @@
         let cardLevels = {};
         let hasSeenMapointTutorial = false;
         let hasSeenEchoTuto = false;
-        let memorialDust = 10000;
+        // Dotation de départ du tutoriel : 180 poudres = exactement les 9 doses
+        // d'énergie d'une carte de niveau 0 (9 × 20). Le chapitre en réclame 13 :
+        // le joueur tombe donc en panne sèche au même instant que la carte, et doit
+        // sortir ramasser de quoi finir (cf. _obSpawnTutorialResources).
+        let memorialDust = 180;
         let collectedEchoes = [];
         let placedEchoes = {}; // kept for compat
         let cardJournals = {}; // { cardId: { slot1: supertype, slot2: ..., slot3: ... } }
@@ -16556,16 +16882,17 @@
             objets:     [],   // [{ id, name, desc, qty }]
             parchemins: [],   // [{ id, name, desc }]
             boussoles:  [],   // [{ id, name, zone, desc, active }]
-            // Dotation de départ resserrée : l'orbe et les fournitures doivent
-            // s'obtenir en jeu, sinon l'échoppe et le don d'orbe du tutoriel
-            // n'ont plus lieu d'être. Une de chaque suffit à comprendre le
-            // principe ; la suite se gagne sur le terrain.
+            // Dotation de départ vide : l'orbe ET les fournitures s'obtiennent sur
+            // le terrain. Avec une de chaque en poche, l'échoppe du tutoriel ne
+            // servait à rien et l'orbe n'était qu'une ligne de dialogue. Le
+            // tutoriel pose les trois sources près du joueur, géolocalisation
+            // active ou non (cf. _obSpawnTutorialResources).
             orbes:               0,
             lumens:              0,
             echoFoldersUnlocked: {},  // { cardId: true }
-            pellicules:          1,   // révèle les entrées visuelles
-            encre:               1,   // révèle les entrées textuelles
-            cassettes:           1,   // révèle les entrées audio
+            pellicules:          0,   // révèle les entrées visuelles
+            encre:               0,   // révèle les entrées textuelles
+            cassettes:           0,   // révèle les entrées audio
         };
         let collectedDustPoints = [];
 
@@ -16743,14 +17070,21 @@
                 // son marqueur.
                 document.getElementById('onboardingOverlay').classList.add('hidden');
                 if (_obGuide.active) {
-                    document.getElementById('obSkipBtn').classList.add('visible');
+                    _obSkipBtnShow(true);
                     _obGuideStartLoop();
                     setTimeout(_obGuideRefresh, 400);
+                    // Les marqueurs du tutoriel ne vivent qu'en mémoire : sans ce
+                    // rappel, un rechargement en plein parcours laissait le joueur
+                    // devant une mappe vide, sans échoppe ni orbe à ramasser. Différé
+                    // pour passer APRÈS initBazarMarkers(), qui tourne juste après
+                    // initApp() dans le même handler — sinon l'échoppe est dupliquée.
+                    setTimeout(_obSpawnTutorialResources, 900);
                 } else if (_obAct2Done) {
                     // Carte tutoriel déjà collectée mais guide éteint : sauvegarde
                     // antérieure à ce correctif. Sans ça le joueur reste bloqué
                     // devant un marqueur qui ne mène nulle part.
                     _obGuideStart();
+                    setTimeout(_obSpawnTutorialResources, 900);
                 } else {
                     startOnboarding();
                 }
@@ -16759,7 +17093,7 @@
             } else {
                 // Tutoriel déjà fait — masquer tous les overlays onboarding
                 document.getElementById('onboardingOverlay').classList.add('hidden');
-                document.getElementById('obSkipBtn').classList.remove('visible');
+                _obSkipBtnShow(false);
                 document.getElementById('vnOverlay').classList.remove('show');
                 document.getElementById('obNote').classList.remove('show');
             }
@@ -18488,11 +18822,16 @@
         }
 
         function _capUpdate() {
-            // Verrou du terrain : sinon les cercles de capture se dessinaient sur
-            // la mappe pendant le parcours guidé, pour des marqueurs invisibles.
-            if (!_obFieldOpen()) { _capZones = []; return; }
             _capZones = [];
             const add = (lng, lat, r, type) => _capZones.push({ lng, lat, r, type, color: _CAP_COLORS[type] || '#ffffff' });
+            // Verrou du terrain : sinon les cercles de capture se dessinaient sur
+            // la mappe pendant le parcours guidé, pour des marqueurs invisibles.
+            // Seules les ressources posées pour le tutoriel dessinent la leur.
+            if (!_obFieldOpen()) {
+                DUST_POINTS.forEach(d => { if (d.tuto && !collectedDustPoints.includes(d.id)) add(d.lng, d.lat, DUST_RADIUS, 'dust'); });
+                ORB_POINTS.forEach(o => { if (o.tuto && !collectedOrbs.includes(o.id)) add(o.lng, o.lat, ORB_RADIUS, 'orb'); });
+                return;
+            }
             POIS.forEach(poi => {
                 const st = getPoiThematicStatus(poi);
                 if (st === 'local' && !collectedCards.includes(poi.localCardId)) add(poi.lng, poi.lat, 50, 'poi_local');
@@ -18930,7 +19269,10 @@
             }
 
             // Dust
-            const nearbyDust = !_fieldOpen ? null : DUST_POINTS.find(d =>
+            // Le verrou du terrain laisse passer les ressources du tutoriel : sans
+            // leur bannière, le joueur voit le marqueur mais ne peut rien en faire.
+            const nearbyDust = DUST_POINTS.find(d =>
+                (_fieldOpen || d.tuto) &&
                 !collectedDustPoints.includes(d.id) &&
                 getDistance(playerPos.lat, playerPos.lng, d.lat, d.lng) <= DUST_RADIUS
             );
@@ -18964,7 +19306,8 @@
             }
 
             // Orb
-            const nearbyOrb = !_fieldOpen ? null : ORB_POINTS.find(o =>
+            const nearbyOrb = ORB_POINTS.find(o =>
+                (_fieldOpen || o.tuto) &&
                 !collectedOrbs.includes(o.id) &&
                 getDistance(playerPos.lat, playerPos.lng, o.lat, o.lng) <= ORB_RADIUS
             );
@@ -19148,10 +19491,13 @@
         }
 
         function updateDustVisibility() {
-            // Verrou du terrain : rien ne s'affiche avant la fin du tutoriel.
-            if (!_obFieldOpen()) return;
+            // Verrou du terrain : rien ne s'affiche avant la fin du tutoriel —
+            // sauf le point de poudre posé pour le tutoriel lui-même, sans lequel
+            // le joueur n'aurait aucun moyen de finir son premier chapitre.
+            const _open = _obFieldOpen();
             const visible = [];
             dustMarkers.forEach(({ marker, el, dust }) => {
+                if (!_open && !dust.tuto) return;
                 const show = !collectedDustPoints.includes(dust.id);
                 el.style.display = show ? 'block' : 'none';
                 if (show) visible.push(dust);
@@ -19189,10 +19535,13 @@
             }
         }
         function updateOrbVisibility() {
-            // Verrou du terrain : rien ne s'affiche avant la fin du tutoriel.
-            if (!_obFieldOpen()) return;
+            // Verrou du terrain : rien ne s'affiche avant la fin du tutoriel —
+            // sauf l'orbe posée pour le tutoriel, que la jeune fille envoie
+            // chercher quand la carte s'épuise.
+            const _open = _obFieldOpen();
             const visible = [];
             orbMarkers.forEach(({ marker, el, orb }) => {
+                if (!_open && !orb.tuto) return;
                 const show = !collectedOrbs.includes(orb.id);
                 el.style.display = show ? 'block' : 'none';
                 if (show) visible.push(orb);
@@ -21384,15 +21733,24 @@
 
         function collectDust() {
             if (!currentNearbyDust) return;
-            if (!_obDone) { _obDone = true; _obAct2Done = true; _obAct3Done = true; console.log('[expLore] _obDone forcé à true via collectDust'); }
-            collectedDustPoints.push(currentNearbyDust.id);
-            markPoiCollected(currentNearbyDust.id, 'dust');
-            const amount = Math.floor(Math.random() * (MAX_DUST_DROP - MIN_DUST_DROP + 1)) + MIN_DUST_DROP;
+            // Le forçage de _obDone qui vivait ici terminait le tutoriel d'un coup :
+            // il datait d'une époque où aucune poudre n'était ramassable avant la
+            // fin du tuto. Le point de poudre du tutoriel se ramasse EN plein
+            // tutoriel — le forcer ici couperait le parcours guidé net.
+            const _dust = currentNearbyDust;
+            collectedDustPoints.push(_dust.id);
+            markPoiCollected(_dust.id, 'dust');
+            // Rendement fixe pour le point du tutoriel (cf. _obSpawnTutorialDust) :
+            // un tirage bas laisserait le joueur incapable de finir son chapitre.
+            const amount = _dust.amount || (Math.floor(Math.random() * (MAX_DUST_DROP - MIN_DUST_DROP + 1)) + MIN_DUST_DROP);
             memorialDust += amount;
             document.getElementById('dustCounter').textContent = memorialDust;
             updateDustVisibility();
             checkNearbyPOI();
             saveProgress();
+            if (typeof _obGuide === 'object' && _obGuide.active) {
+                setTimeout(() => { try { _obGuideEvent('dust_collected'); _obGuideRefresh(); } catch(e) {} }, 300);
+            }
             // Toast poudre
             const ex = document.getElementById('dustCollectToast');
             if (ex) ex.remove();
@@ -21467,13 +21825,17 @@
         }
         function collectOrb() {
             if (!currentNearbyOrb) return;
-            if (!_obDone) { _obDone = true; _obAct2Done = true; _obAct3Done = true; }
+            // Même raison que dans collectDust : l'orbe du tutoriel se ramasse
+            // pendant le tutoriel, forcer _obDone ici y mettrait fin.
             collectedOrbs.push(currentNearbyOrb.id);
             markPoiCollected(currentNearbyOrb.id, 'orbs');
             bagInv.orbes += 1;
             updateOrbVisibility();
             checkNearbyPOI();
             saveProgress();
+            if (typeof _obGuide === 'object' && _obGuide.active) {
+                setTimeout(() => { try { _obGuideEvent('orb_collected'); _obGuideRefresh(); } catch(e) {} }, 300);
+            }
             // Toast
             const toast = document.createElement('div');
             toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#312E81,#1e1b4b);color:#A5B4FC;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:700;z-index:9999;border:1px solid rgba(99,102,241,0.5);box-shadow:0 4px 16px rgba(99,102,241,0.4);pointer-events:none;';
@@ -23140,7 +23502,14 @@
             // Incrément selon rareté
             const cfg = RARITY_CONFIG[selectedCard.rarity] || RARITY_CONFIG.common;
             const increment = cfg.increment || 20;
-            if (memorialDust < increment) return;
+            if (memorialDust < increment) {
+                // Filet du parcours guidé : sans un mot, le bouton cessait de
+                // répondre et rien ne disait pourquoi. Le toast tombe ici, dans la
+                // fiche carte ; la consigne d'aller ramasser attend la mappe.
+                if (typeof _obGuide === 'object' && _obGuide.active
+                    && selectedCard.id === OB_TUTORIAL_CARD.id) _obDustEmptyHint();
+                return;
+            }
 
             memorialDust -= increment;
             // Consommer 1 cran d'énergie
