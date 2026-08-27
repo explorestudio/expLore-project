@@ -1574,6 +1574,48 @@
             .card-info-panel { margin-left: -18px; margin-right: -18px; }
         }
 
+        /* ── Sortie de la fiche carte, montrée par le guide ──────────────
+           La fiche se ferme en touchant le fond de part et d'autre de la
+           carte (cf. handleCardDetailBackdropClick). Plutôt qu'un bouton
+           parallèle, le guide allume ces deux bandes : elles montrent le
+           geste réel. Décoratives — pointer-events:none, le clic passe au
+           travers et c'est bien le backdrop qui ferme. */
+        .ob-exit-hint {
+            position: absolute;
+            top: 0; bottom: 0;
+            width: calc(50% - 150px);
+            min-width: 36px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+        @media (max-width: 360px) {
+            .ob-exit-hint { width: calc(50% - 135px); }
+        }
+        .ob-exit-hint.show { animation: obExitPulse 1.9s ease-in-out infinite; }
+        .ob-exit-hint.left  { left: 0;  background: linear-gradient(to right, rgba(139,92,246,0.32), rgba(139,92,246,0)); }
+        .ob-exit-hint.right { right: 0; background: linear-gradient(to left,  rgba(139,92,246,0.32), rgba(139,92,246,0)); }
+        .ob-exit-hint-arrow {
+            font-size: 20px; line-height: 1; color: #EDE9FE;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.65);
+        }
+        /* Vertical : la marge ne fait qu'une quarantaine de pixels de large. */
+        .ob-exit-hint-label {
+            writing-mode: vertical-rl;
+            font-size: 10px; font-weight: 700; letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(237,233,254,0.92);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.65);
+        }
+        .ob-exit-hint.left .ob-exit-hint-label { transform: rotate(180deg); }
+        @keyframes obExitPulse { 0%, 100% { opacity: 0.42; } 50% { opacity: 1; } }
+
         @keyframes cardDetailSlideUp {
             from { opacity: 0; transform: scale(0.90) translateY(24px); }
             to   { opacity: 1; transform: scale(1)    translateY(0); }
@@ -7514,15 +7556,27 @@
             padding: 40px 32px;
         }
         #onboardingOverlay.hidden { display: none; }
+        /* Bouton « Passer le tutoriel ».
+           Il était en haut à droite (top:16 right:16), c'est-à-dire exactement
+           sous le compteur de poudre, que .map-hud pose au même endroit : les
+           deux se chevauchaient. Il passe au centre, juste sous le bandeau de
+           version (top:12, ~15px de haut) — le seul couloir libre en haut de
+           l'écran, entre l'avatar à gauche et la poudre à droite.
+           C'est aussi la seule sortie de secours du tutoriel : il doit rester
+           lisible, d'où un contraste un peu relevé par rapport à avant. */
         #obSkipBtn {
             position: absolute;
-            top: 16px; right: 16px;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.25);
-            color: rgba(255,255,255,0.55);
+            top: 36px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.28);
+            color: rgba(255,255,255,0.78);
             font-size: 11px;
             letter-spacing: 1px;
             text-transform: uppercase;
+            white-space: nowrap;
             padding: 6px 14px;
             border-radius: 20px;
             cursor: pointer;
@@ -7530,6 +7584,7 @@
             display: none;
         }
         #obSkipBtn.visible { display: block; }
+        #obSkipBtn:active { transform: translateX(-50%) scale(0.94); }
 
         .ob-text {
             font-family: Georgia, serif;
@@ -8626,6 +8681,7 @@
                     <button onclick="testToggleCompleteZones()" class="test-action-btn">🗺️ Compléter les zones (aperçu)</button>
                     <button onclick="testRefillCardEnergy()" class="test-action-btn">⚡ Restaurer énergie toutes cartes</button>
                     <button onclick="testFastForwardCardEnergy()" class="test-action-btn">⏩ +2h sur énergie cartes</button>
+                    <button onclick="resetOnboarding()" class="test-action-btn">🔄 Relancer le tutoriel</button>
                     <button onclick="resetProgress()" class="test-action-btn test-action-btn--danger">⚠️ Réinitialiser la progression</button>
                 </div>
 
@@ -10500,7 +10556,9 @@
         </div>
 
         <!-- Bouton Skip Tutorial -->
-        <button id="obSkipBtn" onclick="_obSkipTutorial()">Passer ›</button>
+        <!-- Seule sortie de secours du tutoriel : tant qu'il n'est pas fini, la
+             mappe est vide (cf. _obFieldOpen). Le libellé le dit explicitement. -->
+        <button id="obSkipBtn" onclick="_obSkipTutorial()">Passer le tutoriel ›</button>
 
         <!-- ══ ONBOARDING ══ -->
 
@@ -10590,6 +10648,39 @@
 
         // Table FR → EN. La clé est la chaîne française EXACTE (après trim).
         const I18N_EN = {
+            // ══ Tutoriel lissé : carnet, longue-vue, progression, découvertes ══
+            // Le carnet, présenté à sa première ouverture (cf. _obJournalHint)
+            "Ah, tu l'as trouvé. C'est le <span style=\"font-weight:600\">📖 carnet</span> de la carte — j'y ai noté tout ce qu'elle m'a déjà raconté.": "Ah, you found it. That is the card's <span style=\"font-weight:600\">📖 notebook</span> — I noted down everything it has already told me.",
+            "Elle est un peu bavarde, en tout cas elle a encore des choses à dire.": "It is a bit of a talker — either way, it still has things to say.",
+            "Prends le temps de lire ce qu'elle a déjà retrouvé. Le reste viendra après.": "Take the time to read what it has already recovered. The rest will come after.",
+            "Pour revenir en arrière, touche son image en haut : tu quitteras ce carnet dès que tu le souhaites.": "To go back, touch its picture at the top: you can leave this notebook whenever you like.",
+            "Les pages voilées demandent autre chose que de la poudre : une <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span> pour une image, une <span style=\"color:#C4B5FD;font-weight:600\">📼 cassette</span> pour une voix, de l'<span style=\"color:#E0A458;font-weight:600\">🖋️ encre</span> pour un texte.": "Veiled pages ask for something other than dust: a <span style=\"color:#FCD34D;font-weight:600\">🎞️ roll of film</span> for an image, a <span style=\"color:#C4B5FD;font-weight:600\">📼 tape</span> for a voice, <span style=\"color:#E0A458;font-weight:600\">🖋️ ink</span> for a text.",
+            "Ces pages resteront voilées tant que tu n'auras rien pour les révéler. Une échoppe en tient, à %1 mètres d'ici.": "These pages will stay veiled until you have something to reveal them with. A stall keeps some, %1 metres from here.",
+            "Ces pages resteront voilées tant que tu n'auras rien pour les révéler. Les échoppes de la ville en tiennent — cherche-les sur la mappe.": "These pages will stay veiled until you have something to reveal them with. The city's stalls keep some — look for them on the map.",
+            "D'ailleurs, n'hésite pas à aller te fournir à l'échoppe, à %1 mètres d'ici. Profites-en pour collecter de la poudre ou une orbe si tu en trouves sur ton chemin.": "And do go stock up at the stall, %1 metres from here. While you are out, pick up dust or an orb if you come across any on the way.",
+            "D'ailleurs, n'hésite pas à aller te fournir dans une échoppe. Profites-en pour collecter de la poudre ou une orbe si tu en trouves sur ton chemin.": "And do go stock up at a stall. While you are out, pick up dust or an orb if you come across any on the way.",
+            // Étape « journal1 » et leçon des trois traces
+            "Tu l'as réveillée. Une page s'est inscrite dans son <span style=\"font-weight:600\">📖 carnet</span> — il t'appelle.": "You have woken it. A page has written itself into its <span style=\"font-weight:600\">📖 notebook</span> — it is calling you.",
+            "L'<span style=\"color:#E0A458;font-weight:600\">🖋️ encre</span> révèle les mots. La <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span>, les images. La <span style=\"color:#C4B5FD;font-weight:600\">📼 cassette</span>, les sons. Tu en as quelques-unes — sers-t'en.": "<span style=\"color:#E0A458;font-weight:600\">🖋️ Ink</span> reveals words. <span style=\"color:#FCD34D;font-weight:600\">🎞️ Film</span>, images. A <span style=\"color:#C4B5FD;font-weight:600\">📼 tape</span>, sounds. You have a few — use them.",
+            "L'<span style=\"color:#E0A458;font-weight:600\">🖋️ encre</span> révèle les mots. La <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span>, les images. La <span style=\"color:#C4B5FD;font-weight:600\">📼 cassette</span>, les sons.": "<span style=\"color:#E0A458;font-weight:600\">🖋️ Ink</span> reveals words. <span style=\"color:#FCD34D;font-weight:600\">🎞️ Film</span>, images. A <span style=\"color:#C4B5FD;font-weight:600\">📼 tape</span>, sounds.",
+            // Acte I — la nébuleuse et la première carte
+            "Oh, tu la vois ? Une <span style=\"color:#B98CE8;font-weight:600\">nébuleuse</span> ! Plusieurs <span style=\"color:#E09AC0;font-weight:600\">présences</span> flottent à l'intérieur. Ce sera ta première <span style=\"color:#F5B841;font-weight:600\">carte</span>.": "Oh, do you see it? A <span style=\"color:#B98CE8;font-weight:600\">nebula</span>! Several <span style=\"color:#E09AC0;font-weight:600\">presences</span> drift inside. This will be your first <span style=\"color:#F5B841;font-weight:600\">card</span>.",
+            "Une <span style=\"color:#F5B841;font-weight:600\">carte</span>. Le nom qu'on donne à une mémoire qu'on a réussi à fixer : un <span style=\"color:#5FC9E8;font-weight:600\">personnage</span>, un <span style=\"color:#5FC9E8;font-weight:600\">lieu</span> ou un <span style=\"color:#5FC9E8;font-weight:600\">objet</span> que la ville avait presque oublié.": "A <span style=\"color:#F5B841;font-weight:600\">card</span>. The name we give a memory we have managed to fix in place: a <span style=\"color:#5FC9E8;font-weight:600\">figure</span>, a <span style=\"color:#5FC9E8;font-weight:600\">place</span> or an <span style=\"color:#5FC9E8;font-weight:600\">object</span> the city had all but forgotten.",
+            // Sortie du tutoriel — nommer, puis la longue-vue et la progression
+            "Trois choses t'attendent en marchant : des <span style=\"color:#B98CE8;font-weight:600\">nébuleuses</span> comme celle-ci, des <span style=\"color:#5FC9E8;font-weight:600\">panoramas</span>, des <span style=\"color:#7BD88F;font-weight:600\">points d'information</span>. Tu verras bien ce qu'ils te veulent.": "Three things await you as you walk: <span style=\"color:#B98CE8;font-weight:600\">nebulae</span> like this one, <span style=\"color:#5FC9E8;font-weight:600\">panoramas</span>, <span style=\"color:#7BD88F;font-weight:600\">info points</span>. You will find out soon enough what they want from you.",
+            "Une dernière chose. Cette <span style=\"font-weight:600\">🔭 longue-vue</span>, sur la mappe — touche-la.": "One last thing. That <span style=\"font-weight:600\">🔭 spyglass</span>, on the map — touch it.",
+            "Voilà. On prend de la hauteur, et la ville se laisse lire. Les <span style=\"color:#C89039;font-weight:600\">quartiers</span> montrent ici leur avancement — ce qu'il te reste à y trouver.": "There. You gain height, and the city lets itself be read. The <span style=\"color:#C89039;font-weight:600\">districts</span> show their progress here — what you have left to find in them.",
+            "C'est comme ça qu'on décide où aller. Moi, je commence toujours ma journée par là.": "That is how you decide where to go. Myself, I always start my day there.",
+            "Et sous ton portrait, il y a ta <span style=\"font-weight:600\">⭐ progression</span> : ce que la marche te rapporte, et ce qu'elle débloquera. Jette-y un œil.": "And under your portrait there is your <span style=\"font-weight:600\">⭐ progress</span>: what the walking earns you, and what it will unlock. Have a look.",
+            // Découvertes de terrain (cf. _obDiscover)
+            "Un <span style=\"color:#5FC9E8;font-weight:600\">panorama</span>. Ce sont des lieux où le regard porte — un pont, une crête, une vue qu'on ne voit qu'en s'arrêtant.": "A <span style=\"color:#5FC9E8;font-weight:600\">panorama</span>. These are places where the eye carries — a bridge, a ridge, a view you only see if you stop.",
+            "Cadre, et prends la photo. Elle rejoindra ton studio, avec la date et ce que tu en auras noté. C'est ta mémoire à toi, celle-là — pas celle des cartes.": "Frame it, and take the photo. It will join your studio, with the date and whatever you noted about it. That memory is yours — not the cards'.",
+            "Chaque emplacement vide attend le sien. Rien ne presse — le panneau ne s'en ira pas.": "Each empty slot is waiting for its own. No hurry — the board is not going anywhere.",
+            "Un <span style=\"color:#EBCC7E;font-weight:600\">parchemin</span>. Il ne te dira rien tout seul : c'est une pièce, pas un texte.": "A <span style=\"color:#EBCC7E;font-weight:600\">scroll</span>. It will tell you nothing on its own: it is a piece, not a text.",
+            "Garde-le. Il s'insère dans les points d'information de la ville, ces panneaux à moitié effacés. Tu en trouveras d'autres en marchant, et en faisant progresser tes cartes.": "Keep it. It slots into the city's info points, those half-faded boards. You will find more by walking, and by advancing your cards.",
+            "Un <span style=\"color:#C89039;font-weight:600\">quartier</span>. Chacun a ses présences, ses vues, ses histoires — et tu vois ici ce qu'il t'en reste à trouver.": "A <span style=\"color:#C89039;font-weight:600\">district</span>. Each has its presences, its views, its stories — and here you see what you have left to find in it.",
+            "Personne ne t'oblige à en finir un avant d'aller voir ailleurs. Mais c'est agréable, de voir une part de ville se remplir.": "Nobody makes you finish one before looking elsewhere. But it is a pleasant thing, watching a part of the city fill up.",
+
             // ── HUD & menu avatar ──
             "Nv. 1": "Lv. 1",
             "Nv.1": "Lv.1",
@@ -10773,6 +10864,9 @@
 
             // ── Onboarding (habillage seulement — dialogues = étape 2) ──
             "Passer ›": "Skip ›",
+            "🔄 Relancer le tutoriel": "🔄 Restart the tutorial",
+            "Relancer le tutoriel depuis le début ?\n(La progression du reste est conservée.)": "Restart the tutorial from the beginning?\n(The rest of your progress is kept.)",
+            "Passer le tutoriel ›": "Skip the tutorial ›",
             "Passer ▸": "Skip ▸",
             "tap pour continuer": "tap to continue",
             "Commencer l'aventure": "Start the adventure",
@@ -13809,6 +13903,19 @@
         // des marqueurs actifs avant le dernier dialogue. _obDone ne passe à true qu'à ce
         // dernier dialogue — trop tard. _obAct2Done marque le bon moment.
         function _obMapActive() { return _obDone || _obAct2Done; }
+
+        // ── Verrou du terrain ────────────────────────────────────────────────
+        // Rien de ramassable ni de consultable n'existe sur la mappe tant que le
+        // tutoriel n'est pas allé à son terme OU n'a pas été passé. _obMapActive()
+        // ne suffisait pas : il bascule dès la collecte de la carte tutoriel, donc
+        // en plein parcours guidé — la ville se peuplait pendant que la jeune fille
+        // demandait au joueur de s'occuper d'une seule carte.
+        //
+        // Seule exception, volontaire : l'échoppe du tutoriel (bazar_tuto, posée
+        // avec alwaysVisible), sans laquelle l'étape des fournitures serait bloquée.
+        // Le joueur a de la poudre en réserve dès le départ : rien d'autre ne lui
+        // manque pendant le guide.
+        function _obFieldOpen() { return !!_obDone; }
         let _obSpawnLat    = 0;
         let _obSpawnLng    = 0;
 
@@ -14111,6 +14218,13 @@
             if (typeof _obScreenSeen === 'object') {
                 ['collections','bag','journal','mindmap','carddetail'].forEach(k => { _obScreenSeen[k] = true; });
             }
+            // Le carnet ne se présentera plus : celui qui passe le tutoriel n'a pas
+            // à s'entendre remettre un objet trois écrans plus loin. Les découvertes
+            // de terrain (_obDiscovered), elles, restent ouvertes — un panorama ou un
+            // point d'information croisé plus tard mérite toujours son explication.
+            _obJournalSeen         = true;
+            _obJournalBackSeen     = true;
+            _obJournalSuppliesSaid = true;
             saveProgress();
             _obRestoreAllPOI();
         }
@@ -14312,6 +14426,11 @@
             if (window._obProximityCheck) { clearInterval(window._obProximityCheck); window._obProximityCheck = null; }
             // Cacher la bannière du marqueur tutoriel si encore visible
             document.getElementById('nearbyPOI').classList.add('hidden');
+            // Le nettoyage ci-dessus doit avoir lieu dès la collecte de la carte
+            // tutoriel. Le dévoilement du terrain, lui, attend la fin réelle du
+            // tutoriel (cf. _obFieldOpen) : cette fonction est appelée aux deux
+            // moments, elle s'arrête ici tant que le verrou tient.
+            if (!_obFieldOpen()) return;
             document.querySelectorAll('[data-ob-hidden="true"]').forEach(el => {
                 el.removeAttribute('data-ob-hidden');
                 el.style.display = '';
@@ -14451,6 +14570,11 @@
 
         // Appelé depuis openJournalScreen()
         function _obOnOpenJournal() {
+            // Le carnet se présente à sa TOUTE première ouverture, que le guide soit
+            // actif ou non : le joueur peut y entrer par curiosité avant que le guide
+            // l'y invite, et il ne faut pas qu'on lui présente un objet qu'il a déjà
+            // dans les mains. _obJournalHint enchaîne ensuite sur l'étape du guide.
+            if (!_obJournalSeen) { _obJournalHint(); return; }
             if (_obGuide.active) { _obGuideEvent('journal'); _obGuideRefresh(); return; }
             _obContextualHint('journal', [
                 { speaker: 'La jeune fille', line: 'Les fragments que tu réveilles laissent des traces. Certaines te surprendront.' },
@@ -14475,12 +14599,101 @@
         }
 
         // ════════════════════════════════════════════════════════════════
+        // DÉCOUVERTES DE TERRAIN — la jeune fille n'explique un objet que le
+        // jour où le joueur le touche pour la première fois.
+        //
+        // Le tutoriel se contente de NOMMER ces choses (cf. _obGuideFinish) :
+        // panoramas, points d'information, parchemins, quartiers. Les expliquer
+        // toutes d'affilée pendant l'adieu, c'était livrer quatre modes d'emploi
+        // pour des objets que le joueur n'avait pas encore vus — il les avait
+        // oubliés avant d'en croiser un. Chacune attend donc sa rencontre.
+        //
+        // Passe par _obDiscover : jamais gaté par _obDone (un panorama trouvé
+        // trois semaines après le tutoriel mérite encore son explication) et
+        // persisté (il ne la reverra pas à la quatrième photo).
+        // ════════════════════════════════════════════════════════════════
+
+        // Appelé depuis openViewfinder() — premier panorama cadré.
+        function _obOnOpenViewfinder() {
+            _obDiscover('panorama', [
+                { speaker: 'La jeune fille', html: 'Un <span style="color:#5FC9E8;font-weight:600">panorama</span>. Ce sont des lieux où le regard porte — un pont, une crête, une vue qu\'on ne voit qu\'en s\'arrêtant.' },
+                { speaker: 'La jeune fille', line: 'Cadre, et prends la photo. Elle rejoindra ton studio, avec la date et ce que tu en auras noté. C\'est ta mémoire à toi, celle-là — pas celle des cartes.' },
+            ]);
+        }
+
+        // Appelé depuis openPanneauScreen() — premier point d'information ouvert.
+        // La réplique reprend mot pour mot celle qui vivait dans l'adieu : sa
+        // traduction anglaise existe déjà, elle n'avait plus de source française.
+        function _obOnOpenPanneau() {
+            _obDiscover('panneau', [
+                { speaker: 'La jeune fille', html: 'Les <span style="color:#7BD88F;font-weight:600">points d\'information</span>. Des supports que d\'autres ont laissés, incomplets. Tu peux les compléter en y insérant les parchemins que tu récupères en chemin. Une fois assemblés, ils te livrent ce qu\'ils cachaient.' },
+                { speaker: 'La jeune fille', line: 'Chaque emplacement vide attend le sien. Rien ne presse — le panneau ne s\'en ira pas.' },
+            ]);
+        }
+
+        // Appelé depuis collectScroll() — premier parchemin ramassé.
+        function _obOnCollectScroll() {
+            _obDiscover('scroll', [
+                { speaker: 'La jeune fille', html: 'Un <span style="color:#EBCC7E;font-weight:600">parchemin</span>. Il ne te dira rien tout seul : c\'est une pièce, pas un texte.' },
+                { speaker: 'La jeune fille', line: 'Garde-le. Il s\'insère dans les points d\'information de la ville, ces panneaux à moitié effacés. Tu en trouveras d\'autres en marchant, et en faisant progresser tes cartes.' },
+            ]);
+        }
+
+        // Appelé depuis openZoneDetail() — premier badge de quartier consulté.
+        function _obOnOpenZoneDetail() {
+            _obDiscover('zone', [
+                { speaker: 'La jeune fille', html: 'Un <span style="color:#C89039;font-weight:600">quartier</span>. Chacun a ses présences, ses vues, ses histoires — et tu vois ici ce qu\'il t\'en reste à trouver.' },
+                { speaker: 'La jeune fille', line: 'Personne ne t\'oblige à en finir un avant d\'aller voir ailleurs. Mais c\'est agréable, de voir une part de ville se remplir.' },
+            ]);
+        }
+
+        // ════════════════════════════════════════════════════════════════
         // PARCOURS GUIDÉ POST-COLLECTE — la jeune fille guide le joueur à
         // travers Collection → poudre → carnet (triplet encre/pellicule/
         // cassette) → énergie qui infuse → orbe → passage de niveau → adieu.
         // Machine à états pilotée par _obGuideEvent(event).
         // ════════════════════════════════════════════════════════════════
-        let _obGuide = { active: false, step: null };
+        // `outro` : le guide est entré dans sa séquence de sortie (longue-vue →
+        // progression → chute). Sans ce drapeau, _obGuideSync rappellerait
+        // _obGuideFinish à chaque tick, la carte étant déjà montée de niveau.
+        let _obGuide = { active: false, step: null, outro: false };
+
+        // ── État du carnet ──────────────────────────────────────────────────
+        // Le carnet se présente à sa PREMIÈRE ouverture, quel qu'en soit le
+        // moment : le bouton 📖 est cliquable dès la fiche carte ouverte, et un
+        // joueur curieux y entrait avant d'avoir donné la moindre dose. Il tombait
+        // alors sur des pages qu'on ne lui avait jamais présentées, puis
+        // s'entendait dire, une étape plus tard, « tiens, voici un carnet » —
+        // alors qu'il l'avait déjà lu. Cf. _obJournalHint.
+        let _obJournalSeen         = false;   // le carnet a-t-il été présenté ?
+        let _obJournalBackSeen     = false;   // le joueur en est-il ressorti une fois ?
+        let _obJournalSuppliesSaid = false;   // l'économie encre/pellicule/cassette a-t-elle été dite ?
+
+        // ── Découvertes à la curiosité ──────────────────────────────────────
+        // Distinct de _obContextualHint, qui ne vaut QUE pendant le tutoriel
+        // (il se tait dès _obDone). Ici : les explications que la jeune fille
+        // donne la première fois que le joueur touche un objet du terrain —
+        // un panorama, un point d'information, un parchemin, un badge de
+        // quartier. Le tutoriel ne les présente pas : ils sont laissés à la
+        // curiosité, et c'est leur découverte qui déclenche l'explication.
+        // Conséquences : jamais gaté par _obDone, et persisté — un joueur qui
+        // trouve son premier panorama trois semaines plus tard doit encore
+        // l'obtenir, et ne pas le revoir à la quatrième photo.
+        let _obDiscovered = {};
+
+        function _obDiscover(key, lines) {
+            if (_obDiscovered[key]) return;
+            // Pendant le tutoriel guidé on se tait : le guide a la parole et deux
+            // dialogues qui se recouvrent perdent le joueur. La découverte n'est
+            // pas consommée — elle retombera à la prochaine visite, hors tutoriel.
+            if (typeof _obGuide === 'object' && _obGuide.active) return;
+            const vn = document.getElementById('vnOverlay');
+            if (vn && vn.classList.contains('show')) return;
+            _obDiscovered[key] = true;
+            try { saveProgress(); } catch (e) {}
+            // Petit délai pour laisser l'écran s'ouvrir visuellement.
+            setTimeout(() => { try { vnShow(lines, null); } catch (e) {} }, 600);
+        }
 
         function _obGuideRing(selector) {
             setTimeout(() => { try { _obRingOnly(selector); } catch(e) {} }, 60);
@@ -14495,6 +14708,10 @@
         // énumérer : on se fie à la visibilité réelle du DOM.
 
         // Étape → sélecteur unique de la cible à entourer (null = aucun anneau).
+        // Valeur = sélecteur CSS, OU fonction renvoyant un sélecteur (cible
+        // dynamique : la bonne cible dépend alors de l'état du sac ou de l'écran
+        // ouvert). Sentinelle '@exit-hint' : pas d'anneau mais les deux marges de
+        // sortie de la fiche carte (cf. _obExitHint).
         const _OB_STEP_RING = {
             go_collections: '#btnCollections',
             go_card:        '.alb-card.alb-collected',
@@ -14504,9 +14721,80 @@
             feed2:          '#addExpBtn',
             orb:            '#addExpBtn',
             feed3:          '#addExpBtn',
-            reveal_rest:    null,
+            // Le joueur doit retourner au carnet pour dévoiler les pages qui
+            // restent : sans anneau, personne ne lui montrait où.
+            reveal_rest:    '#journalTabBtn',
             seal:           '#addExpBtn',
+            // Deux dernières étapes du tuto : la longue-vue puis la progression.
+            // Toutes deux vivent sur le HUD de la mappe — l'anneau ne s'allume donc
+            // que si le joueur y est revenu, ce que _obElementVisible garantit.
+            // Les deux étapes de sortie visent le HUD de la mappe — or le joueur
+            // vient de sceller depuis la fiche carte : il est DANS un écran quand
+            // l'adieu tombe. Tant qu'il n'en est pas sorti, l'anneau désigne la
+            // sortie, pas une cible hors champ (sans quoi il n'y avait aucun
+            // signal du tout et le tutoriel semblait s'arrêter là).
+            spyglass:       () => {
+                const btn = document.getElementById('viewToggleBtn');
+                if (btn && _obElementVisible(btn)) return '#viewToggleBtn';
+                return _obBackToMapSelector();
+            },
+            // Même règle, plus un relais : la Progression est au fond du menu de
+            // l'avatar. Tant qu'il est fermé on désigne le portrait, une fois
+            // ouvert la ligne elle-même — sinon l'anneau restait sur un bouton
+            // déjà pressé pendant que le joueur cherchait quoi toucher.
+            progression:    () => {
+                const menu = document.getElementById('avatarMenu');
+                if (menu && !menu.classList.contains('hidden')) {
+                    return '.avatar-menu-item[onclick*="openProgressionScreen"]';
+                }
+                const btn = document.getElementById('avatarBtn');
+                if (btn && _obElementVisible(btn)) return '#avatarBtn';
+                return _obBackToMapSelector();
+            },
         };
+
+        // ── Montrer la sortie de l'écran courant ────────────────────────────
+        // Carnet et Collection ont un vrai bouton retour : on l'entoure. La fiche
+        // carte n'en a pas — elle se ferme en touchant le fond de part et d'autre
+        // de la carte : on renvoie la sentinelle '@exit-hint', que _obGuideTick
+        // traduit en surlignage des deux marges plutôt qu'en anneau.
+        function _obBackToMapSelector() {
+            const cands = ['.journal-screen-back', '.alb-back'];
+            for (let i = 0; i < cands.length; i++) {
+                const el = document.querySelector(cands[i]);
+                if (el && _obElementVisible(el)) return cands[i];
+            }
+            const cd = document.getElementById('cardDetailView');
+            if (cd && cd.classList.contains('show')) return '@exit-hint';
+            return null;
+        }
+
+        // Allume / éteint les deux marges de sortie de la fiche carte.
+        // Les bandes sont créées à la première demande et restent dans le DOM.
+        function _obExitHint(on) {
+            const view = document.getElementById('cardDetailView');
+            if (!view) return;
+            let hints = view.querySelectorAll('.ob-exit-hint');
+            if (!hints.length) {
+                if (!on) return;                       // rien à éteindre
+                ['left', 'right'].forEach(side => {
+                    const el = document.createElement('div');
+                    el.className = 'ob-exit-hint ' + side;
+                    el.setAttribute('aria-hidden', 'true');   // doublon visuel du geste
+                    el.innerHTML = '<span class="ob-exit-hint-arrow"></span>'
+                                 + '<span class="ob-exit-hint-label"></span>';
+                    el.querySelector('.ob-exit-hint-arrow').textContent = (side === 'left' ? '←' : '→');
+                    view.appendChild(el);
+                });
+                hints = view.querySelectorAll('.ob-exit-hint');
+            }
+            // Libellé réécrit à chaque allumage : la langue a pu changer depuis.
+            if (on) hints.forEach(el => {
+                const lab = el.querySelector('.ob-exit-hint-label');
+                if (lab) lab.textContent = T('Mappe');
+            });
+            hints.forEach(el => el.classList.toggle('show', !!on));
+        }
 
         let _obRingSelector = null;   // sélecteur actuellement entouré
         let _obGuideTimer   = null;   // handle de la boucle
@@ -14588,13 +14876,34 @@
 
         // Un tick de réconciliation : décide s'il faut un anneau, où, et le recale.
         function _obGuideTick() {
-            if (!_obGuide.active) { _obGuideClearRing(); _obRingSelector = null; return; }
+            if (!_obGuide.active) { _obGuideClearRing(); _obExitHint(false); _obRingSelector = null; return; }
             _obGuideSync();
-            if (!_obGuide.active) { _obGuideClearRing(); _obRingSelector = null; return; }
-            const selector = _OB_STEP_RING[_obGuide.step] || null;
+            if (!_obGuide.active) { _obGuideClearRing(); _obExitHint(false); _obRingSelector = null; return; }
+            // Override prioritaire, valable à toutes les étapes et une seule fois :
+            // pendant la première visite du carnet, l'anneau désigne la vignette de
+            // la carte — celle que la jeune fille vient de nommer (« touche son
+            // image »). Le joueur peut ouvrir le carnet quand il veut, y compris
+            // avant d'avoir nourri quoi que ce soit : l'anneau de l'étape courante
+            // pointerait alors un bouton hors écran, et personne ne lui montrerait
+            // la sortie. Dès qu'il en est ressorti une fois, l'arbitrage normal
+            // reprend la main.
+            const _jrn   = document.getElementById('journalScreen');
+            const _jrnUp = _jrn && _jrn.classList.contains('show');
+            const rawSel = (_jrnUp && _obJournalSeen && !_obJournalBackSeen)
+                ? '#journalScreenCardImage'
+                : _OB_STEP_RING[_obGuide.step];
+            const selector = (typeof rawSel === 'function' ? rawSel() : rawSel) || null;
             // Pas d'anneau pendant un dialogue VN.
             const vn = document.getElementById('vnOverlay');
             const vnUp = vn && vn.classList.contains('show');
+            // Sortie de la fiche carte : pas d'anneau (aucun bouton à entourer),
+            // on allume les deux marges du fond à la place.
+            if (selector === '@exit-hint') {
+                if (_obRingSelector !== null) { _obGuideClearRing(); _obRingSelector = null; }
+                _obExitHint(!vnUp);
+                return;
+            }
+            _obExitHint(false);
             let el = (selector && !vnUp) ? document.querySelector(selector) : null;
             if (el && !_obElementVisible(el)) el = null;
             if (!el) {
@@ -14616,6 +14925,7 @@
         function _obGuideStopLoop() {
             if (_obGuideTimer) { clearInterval(_obGuideTimer); _obGuideTimer = null; }
             _obGuideClearRing();
+            _obExitHint(false);
             _obRingSelector = null;
         }
 
@@ -14644,10 +14954,140 @@
             return entries.length > 0 && entries.every(e => e._revealed);
         }
 
+        // ── Le carnet, présenté à sa première ouverture ─────────────────────
+        // Entrées encore voilées de la carte tutoriel, et ce qu'il manque pour
+        // toutes les révéler. Le stock brut du sac ne suffit pas à répondre :
+        // une pellicule n'ouvre qu'une entrée visuelle, l'encre ne remplace pas
+        // la cassette — d'où des « tu en as déjà » trompeurs si l'on se
+        // contentait de compter _obSuppliesTotal().
+        function _obVeiledEntries() {
+            return (cardJournalEntries[OB_TUTORIAL_CARD.id] || []).filter(e => !e._revealed);
+        }
+        function _obMissingSupplies() {
+            const need = { visual: 0, audio: 0, text: 0 };
+            _obVeiledEntries().forEach(e => { need[e._type || 'text'] = (need[e._type || 'text'] || 0) + 1; });
+            return Math.max(0, need.visual - (bagInv.pellicules || 0))
+                 + Math.max(0, need.audio  - (bagInv.cassettes  || 0))
+                 + Math.max(0, need.text   - (bagInv.encre      || 0));
+        }
+
+        // La présentation du carnet vit ICI, et plus dans l'étape « journal1 » du
+        // guide : le bouton 📖 est cliquable dès la fiche carte ouverte, et un
+        // joueur curieux y entrait avant d'avoir donné la moindre dose. Il tombait
+        // alors sur des pages qu'on ne lui avait jamais présentées, puis
+        // s'entendait dire, une étape plus tard, « tiens, voici un carnet » —
+        // alors qu'il l'avait déjà lu.
+        //
+        // On ne fait qu'inviter à lire : l'envoi à l'échoppe attend que le joueur
+        // referme le carnet de lui-même (cf. _obJournalExitHint). Enchaîner les
+        // deux ne lui laissait jamais l'occasion de parcourir ce qui venait
+        // d'être dévoilé.
+        function _obJournalHint() {
+            const manque  = _obMissingSupplies();
+            // Les entrées de la carte tutoriel sont voilées dès le départ : un joueur
+            // qui ouvre le carnet par curiosité, avant d'avoir nourri la carte, en
+            // voit donc tout de suite. Mais l'étape « lesson » du guide enseigne
+            // encore les trois fournitures un peu plus tard — l'annoncer ici serait
+            // la dire deux fois. Tant que le guide n'a pas franchi cette étape, on
+            // le laisse faire : la présentation du carnet se tient, sans la leçon.
+            const _guideVaEnseigner = _obGuide.active
+                && ['go_collections', 'go_card', 'feed1', 'journal1'].indexOf(_obGuide.step) !== -1;
+            const voilees = _guideVaEnseigner ? 0 : _obVeiledEntries().length;
+            // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour que la
+            // réplique et l'inventaire montrent le même signe.
+            const REPLIQUE_FOURNITURES = { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poudre : une <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">📼 cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> pour un texte.' };
+
+            if (!_obJournalSeen) {
+                _obJournalSeen = true;
+                // Il vient de L'Organisation, il appartient au joueur (« garde
+                // celui-ci »), et l'oubli du joueur le relie à l'Oubli.
+                const rep = [
+                    { speaker: 'La jeune fille', html: 'Ah, tu l\'as trouvé. C\'est le <span style="font-weight:600">📖 carnet</span> de la carte — j\'y ai noté tout ce qu\'elle m\'a déjà raconté.' },
+                    { speaker: 'Toi', line: 'Le carnet ?' },
+                    { speaker: 'La jeune fille', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poudre mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' },
+                    { speaker: 'La jeune fille', line: 'Elle est un peu bavarde, en tout cas elle a encore des choses à dire.' },
+                    { speaker: 'La jeune fille', line: 'Prends le temps de lire ce qu\'elle a déjà retrouvé. Le reste viendra après.' },
+                ];
+                // L'économie des fournitures n'a de sens que devant une page voilée :
+                // inutile d'annoncer une contrainte que le joueur ne peut pas encore
+                // voir — elle attend l'ouverture où elle deviendra vraie (plus bas).
+                if (voilees > 0) {
+                    _obJournalSuppliesSaid = true;
+                    rep.push(REPLIQUE_FOURNITURES);
+                    // S'il a déjà tout en poche, il peut agir sans sortir : on le lui
+                    // dit tout de suite. Sinon on ne dit rien de plus ici — l'échoppe
+                    // attend qu'il ait fini de lire.
+                    if (manque === 0) {
+                        rep.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' });
+                    }
+                }
+                // Toujours en dernier, quel que soit l'état des fournitures : c'est
+                // la seule chose que le joueur ne peut pas deviner. Le carnet ne se
+                // referme pas d'office, donc personne ne lui a jamais montré la
+                // sortie. « Son image » = la vignette de la carte en haut de l'écran
+                // (#journalScreenCardImage), qui ramène à la carte — l'anneau se pose
+                // dessus pendant toute cette première visite (cf. _obGuideTick).
+                rep.push({ speaker: 'La jeune fille', line: 'Pour revenir en arrière, touche son image en haut : tu quitteras ce carnet dès que tu le souhaites.' });
+                try { saveProgress(); } catch (e) {}
+                // Enchaînement : la présentation finie, on rend la main au guide.
+                // S'il attendait cette ouverture (étape « journal1 »), c'est
+                // maintenant que sa leçon sur les trois sortes de traces tombe —
+                // après la présentation, jamais avant.
+                vnShow(rep, () => {
+                    _obGuideRefresh();
+                    if (typeof _obGuide === 'object' && _obGuide.active) _obGuideEvent('journal');
+                });
+                return;
+            }
+
+            // Première ouverture où des pages sont enfin voilées : c'est maintenant
+            // que la consigne des fournitures devient lisible.
+            if (voilees > 0 && !_obJournalSuppliesSaid) {
+                _obJournalSuppliesSaid = true;
+                try { saveProgress(); } catch (e) {}
+                const rep = [REPLIQUE_FOURNITURES];
+                if (manque === 0) {
+                    rep.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' });
+                }
+                vnShow(rep, () => _obGuideRefresh());
+                return;
+            }
+
+            // Ne relancer que s'il reste des pages voilées ET de quoi manquer.
+            if (manque > 0 && voilees > 0) {
+                const _shop = _obTutoBazarNear();
+                vnShow([
+                    _shop
+                        ? { speaker: 'La jeune fille', line: TF('Ces pages resteront voilées tant que tu n\'auras rien pour les révéler. Une échoppe en tient, à %1 mètres d\'ici.', _shop.dist) }
+                        : { speaker: 'La jeune fille', line: 'Ces pages resteront voilées tant que tu n\'auras rien pour les révéler. Les échoppes de la ville en tiennent — cherche-les sur la mappe.' },
+                ], () => _obGuideRefresh());
+            }
+        }
+
+        // Second temps du carnet : l'envoi à l'échoppe. Il ne tombe qu'une fois, à
+        // la SORTIE de la première consultation où des pages manquent réellement de
+        // fournitures, quand le joueur a eu le loisir de parcourir ce qui venait
+        // d'être dévoilé. Tant que le carnet suffit à lui seul, elle se tait.
+        let _obJournalExitSaid = false;
+        function _obJournalExitHint() {
+            if (!_obGuide.active || !_obJournalSeen || _obJournalExitSaid) return;
+            if (_obMissingSupplies() <= 0) return;
+            _obJournalExitSaid = true;
+            const _shop = _obTutoBazarNear();
+            vnShow([
+                _shop
+                    ? { speaker: 'La jeune fille', line: TF('D\'ailleurs, n\'hésite pas à aller te fournir à l\'échoppe, à %1 mètres d\'ici. Profites-en pour collecter de la poudre ou une orbe si tu en trouves sur ton chemin.', _shop.dist) }
+                    : { speaker: 'La jeune fille', line: 'D\'ailleurs, n\'hésite pas à aller te fournir dans une échoppe. Profites-en pour collecter de la poudre ou une orbe si tu en trouves sur ton chemin.' },
+            ], () => _obGuideRefresh());
+        }
+
         // Démarrage — appelé à la fermeture du rituel de collecte
         function _obGuideStart() {
             _obGuide.active = true;
             _obGuide.step = 'go_collections';
+            // Un tuto relancé (reset, mode test) ne doit pas hériter du drapeau de
+            // sortie de la partie précédente : _obGuideFinish refuserait d'entrer.
+            _obGuide.outro = false;
             document.getElementById('obSkipBtn').classList.add('visible');
             _obGuideStartLoop();
             vnShow([
@@ -14666,24 +15106,57 @@
 
         // Fin du tuto : adieu de la jeune fille + activation du RDV Bellecour.
         // Appelable depuis n'importe quelle étape (scellement), idempotent.
+        // Le chapitre est scellé : la jeune fille nomme ce qui attend dehors, puis
+        // montre les deux outils du HUD avant de partir. Elle NE nomme que les
+        // points d'intérêt — comment ils s'utilisent est laissé à la curiosité du
+        // joueur : c'est sa première rencontre avec chacun qui déclenchera
+        // l'explication (cf. _obDiscover). Deux étapes suivent encore : la
+        // longue-vue puis la progression, chacune avec son anneau sur le HUD.
+        // Le guide reste donc actif jusqu'à _obGuideOutro().
+        //
+        // Appelable depuis n'importe quelle étape (scellement) et à chaque tick de
+        // _obGuideSync : _obGuide.outro garantit qu'on n'entre qu'une fois.
         function _obGuideFinish() {
-            if (!_obGuide.active) return;
-            _obGuide.active = false;
-            _obGuide.step = null;
-            _obGuideStopLoop();
+            if (!_obGuide.active || _obGuide.outro) return;
+            _obGuide.outro = true;
+            _obGuide.step = 'spyglass';
             vnShow([
                 { speaker: 'La jeune fille', line: 'Voilà. Ce chapitre ne s\'oubliera plus. C\'est ça, être explorateur de la mémoire.' },
-                // ── Onboarding : les trois types de points (nébuleuses/cartes, panoramas,
-                //    points d'info), puis zones + points-souvenirs (v3). Sans Bellecour.
-                { speaker: 'La jeune fille', line: 'Avant que je parte, écoute. Trois choses t\'attendent en marchant.' },
-                // Mots-clés colorés : nébuleuses, présences, cartes, panoramas, points d'information, quartiers.
-                { speaker: 'La jeune fille', html: 'Les <span style="color:#B98CE8;font-weight:600">nébuleuses</span>. Elles apparaissent sur ta carte comme des points lumineux, à des lieux précis de la ville. Recueille les <span style="color:#E09AC0;font-weight:600">présences</span> qu\'elles renferment, et elles deviennent des <span style="color:#F5B841;font-weight:600">cartes</span> — chacune a une histoire à te rendre, une fois que tu lui auras donné le temps de s\'en souvenir.' },
-                { speaker: 'La jeune fille', html: 'Les <span style="color:#5FC9E8;font-weight:600">panoramas</span>. Ce sont des lieux où le regard porte — un pont, une crête, une vue qu\'on ne voit qu\'en s\'arrêtant. Quand tu y prends la photo, l\'Ordre garde mémoire de ce que tu as vu.' },
-                { speaker: 'La jeune fille', html: 'Les <span style="color:#7BD88F;font-weight:600">points d\'information</span>. Des supports que d\'autres ont laissés, incomplets. Tu peux les compléter en y insérant les parchemins que tu récupères en chemin. Une fois assemblés, ils te livrent ce qu\'ils cachaient.' },
-                { speaker: 'La jeune fille', html: 'La ville est faite de <span style="color:#C89039;font-weight:600">quartiers</span>. Chacun a ses <span style="color:#E09AC0;font-weight:600">présences</span>, ses <span style="color:#5FC9E8;font-weight:600">vues</span>, ses <span style="color:#7BD88F;font-weight:600">histoires</span> à découvrir. Tu verras leur avancement se dessiner à mesure que tu les parcours.' },
+                // Nommer sans expliquer : le joueur doit savoir que ces choses
+                // existent pour avoir envie de s'en approcher, pas savoir s'en
+                // servir avant de les avoir vues.
+                { speaker: 'La jeune fille', html: 'Trois choses t\'attendent en marchant : des <span style="color:#B98CE8;font-weight:600">nébuleuses</span> comme celle-ci, des <span style="color:#5FC9E8;font-weight:600">panoramas</span>, des <span style="color:#7BD88F;font-weight:600">points d\'information</span>. Tu verras bien ce qu\'ils te veulent.' },
+                // 🔭 : l'emoji que porte réellement #viewToggleBtn sur la mappe.
+                { speaker: 'La jeune fille', html: 'Une dernière chose. Cette <span style="font-weight:600">🔭 longue-vue</span>, sur la mappe — touche-la.' },
+            ], () => _obGuideRefresh());
+        }
+
+        // Étape « spyglass » franchie : le joueur vient de basculer en vue
+        // planification. On lui dit ce qu'il a sous les yeux, puis on désigne la
+        // progression. Séparée de _obGuideEvent pour rester appelable directement.
+        function _obGuideEnterProgression() {
+            _obGuide.step = 'progression';
+            vnShow([
+                { speaker: 'La jeune fille', html: 'Voilà. On prend de la hauteur, et la ville se laisse lire. Les <span style="color:#C89039;font-weight:600">quartiers</span> montrent ici leur avancement — ce qu\'il te reste à y trouver.' },
+                { speaker: 'La jeune fille', line: 'C\'est comme ça qu\'on décide où aller. Moi, je commence toujours ma journée par là.' },
+                // ⭐ : la ligne « Progression » du menu de l'avatar.
+                { speaker: 'La jeune fille', html: 'Et sous ton portrait, il y a ta <span style="font-weight:600">⭐ progression</span> : ce que la marche te rapporte, et ce qu\'elle débloquera. Jette-y un œil.' },
+            ], () => _obGuideRefresh());
+        }
+
+        // Vraie fin du guide : la chute de la méprise (elle réalise ici que le
+        // joueur n'est pas des leurs) puis l'extinction. C'est ici, et seulement
+        // ici, que _obDone bascule — plus à la sortie du scellement.
+        function _obGuideOutro() {
+            if (!_obGuide.active) return;
+            _obGuide.active = false;
+            _obGuide.step   = null;
+            _obGuide.outro  = false;
+            _obGuideStopLoop();
+            vnShow([
+                // RDV Bellecour désactivé pour le test 1 (parcours reporté au test 2) :
+                // les deux répliques de direction sautent avec lui.
                 { speaker: 'La jeune fille', line: 'Et là où tu passes, la carte en garde trace — chaque geste que tu poses laisse un petit signe, discret, à sa place exacte. À toi de reconnaître, plus tard, le dessin de ton exploration.' },
-                // La chute de la méprise remplace l'adieu : elle réalise ici que le
-                // joueur n'est pas des leurs — et s'en réjouit.
                 { speaker: 'La jeune fille', line: 'On se retrouve pour l\'évènement plus tard ?' },
                 { speaker: 'Toi', line: 'Comment ça ?' },
                 { speaker: 'La jeune fille', line: 'QUOI ? Tout ce que je viens de dire, ça ne te dit rien ?' },
@@ -14692,7 +15165,12 @@
             ], () => {
                 _obDone = true;
                 _obAct3Done = true;
-                document.getElementById('obSkipBtn').classList.remove('visible');
+                const _skip = document.getElementById('obSkipBtn');
+                if (_skip) _skip.classList.remove('visible');
+                // Le terrain s'ouvre ICI, et nulle part avant : c'est le seul moment
+                // où le tutoriel est réellement allé à son terme. La ville se peuple
+                // d'un coup, au lieu d'être là depuis la collecte de la première carte.
+                _obRestoreAllPOI();
                 // Filet de sécurité : garantir que la carte tutoriel est bien possédée
                 // (présente, consultable, améliorable), quel que soit le chemin suivi.
                 if (typeof OB_TUTORIAL_CARD === 'object' && OB_TUTORIAL_CARD) {
@@ -14754,15 +15232,16 @@
                 case 'feed1':
                     if (ev === 'entry_unlocked') {
                         _obGuide.step = 'journal1';
-                        // La méprise : elle croit parler à quelqu'un de L'Organisation,
-                        // à qui le carnet a déjà été remis. Le joueur, lui, découvre
-                        // l'objet — et son oubli le relie à l'Oubli.
+                        // La remise du carnet (« Le carnet ? » / « garde celui-ci »)
+                        // ne se dit plus ici : elle a migré dans _obJournalHint, à la
+                        // première ouverture réelle du carnet. Un joueur curieux peut
+                        // y être entré avant cette étape — on ne lui présente pas un
+                        // objet qu'il a déjà lu. Ne reste ici que l'appel : la page
+                        // vient de s'inscrire, il faut aller la voir.
                         vnShow([
                             // 📖 : l'icône que porte le bouton du carnet sur la fiche
                             // carte (cardCarnetIcon) — le joueur cherche ce signe-là.
                             { speaker: 'La jeune fille', html: 'Tu l\'as réveillée. Une page s\'est inscrite dans son <span style="font-weight:600">📖 carnet</span> — il t\'appelle.' },
-                            { speaker: 'Toi', line: 'Le carnet ?' },
-                            { speaker: 'La jeune fille', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poudre mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' },
                         ], () => _obGuideRefresh());
                     } else if (ev === 'xp_full') {
                         _obAfterXpFull();
@@ -14855,6 +15334,22 @@
                     break;
 
                 // 'seal' : le scellement est géré en tête de fonction (ev === 'sealed').
+
+                // ── Séquence de sortie ──────────────────────────────────────
+                // Deux gestes, deux anneaux : la longue-vue puis la progression.
+                // Le joueur peut les ignorer (le bouton « Passer » reste offert),
+                // mais l'anneau ne le lâche pas tant qu'il n'a pas touché.
+                case 'spyglass':
+                    // Émis par toggleMapView() au passage en vue planification —
+                    // pas au retour en vue rapprochée : c'est la hauteur qu'on
+                    // lui montre, et il vient de l'atteindre.
+                    if (ev === 'map_planning') { _obGuideEnterProgression(); }
+                    break;
+
+                case 'progression':
+                    // Émis par openProgressionScreen().
+                    if (ev === 'progression') { _obGuideOutro(); }
+                    break;
             }
         }
 
@@ -15895,9 +16390,19 @@
                     _introBDSeen,
                     _obGuideActive: _obGuide.active,
                     _obGuideStep: _obGuide.step,
+                    // Sans lui, un rechargement pendant la séquence de sortie
+                    // rejouait l'adieu en entier à chaque fois.
+                    _obGuideOutroFlag: _obGuide.outro,
                     _obDone,
                     _obAct2Done,
                     _obAct3Done,
+                    // Carnet : présenté / quitté une fois / économie des fournitures dite.
+                    _obJournalSeen,
+                    _obJournalBackSeen,
+                    _obJournalSuppliesSaid,
+                    // Découvertes déjà expliquées (panorama, point d'info, parchemin…).
+                    // Persistées : elles survivent au tutoriel et ne se redisent jamais.
+                    _obDiscovered,
                     _villeDuLivreUnlocked,
                     seenCardIds: [..._seenCardIds],
                     cardJournals,
@@ -15969,11 +16474,15 @@
                 // Sauvegardes antérieures à ce champ : si la carte tutoriel a déjà
                 // été collectée, la BD a forcément été vue.
                 if (d._introBDSeen || d._obAct2Done) _introBDSeen = true;
-                if (d._obGuideActive) { _obGuide.active = true; _obGuide.step = d._obGuideStep || null; }
+                if (d._obGuideActive) { _obGuide.active = true; _obGuide.step = d._obGuideStep || null; _obGuide.outro = !!d._obGuideOutroFlag; }
                 console.log('[expLore] loadProgress _obDone raw:', d._obDone, typeof d._obDone);
                 if (d._obDone)    _obDone    = d._obDone;
                 if (d._obAct2Done) _obAct2Done = d._obAct2Done;
                 if (d._obAct3Done) _obAct3Done = d._obAct3Done;
+                if (d._obJournalSeen)         _obJournalSeen         = true;
+                if (d._obJournalBackSeen)     _obJournalBackSeen     = true;
+                if (d._obJournalSuppliesSaid) _obJournalSuppliesSaid = true;
+                if (d._obDiscovered && typeof d._obDiscovered === 'object') _obDiscovered = d._obDiscovered;
                 if (d._villeDuLivreUnlocked) _villeDuLivreUnlocked = d._villeDuLivreUnlocked;
                 if (d.seenCardIds)  _seenCardIds = new Set(d.seenCardIds);
                 if (d.cardJournals) cardJournals = d.cardJournals;
@@ -15995,8 +16504,38 @@
             localStorage.removeItem('lyon_cards_progress');
             location.reload();
         }
+        // Relance le tutoriel sans effacer le reste de la progression. Utile
+        // maintenant que le terrain est verrouillé tant que le tutoriel n'est pas
+        // fini (cf. _obFieldOpen) : sans ce bouton, la seule façon de le rejouer
+        // était le reset complet.
+        //
+        // Trois familles d'état à remettre à zéro, sinon la relance part de
+        // travers : les drapeaux d'onboarding, l'état du parcours guidé (un
+        // _obGuideStep resté en mémoire ferait reprendre le guide au milieu), et
+        // la carte tutoriel elle-même (déjà en collection, son marqueur ne
+        // réapparaîtrait pas). _introBDSeen n'est PAS touché : la cinématique a
+        // son propre bouton de relecture.
         function resetOnboarding() {
-            const raw=localStorage.getItem('lyon_cards_progress'); if(raw){try{const d=JSON.parse(raw);d._obDone=false;d._obAct2Done=false;d._obAct3Done=false;localStorage.setItem('lyon_cards_progress',JSON.stringify(d));}catch(e){}}
+            if (!confirm(T('Relancer le tutoriel depuis le début ?\n(La progression du reste est conservée.)'))) return;
+            const raw = localStorage.getItem('lyon_cards_progress');
+            if (raw) {
+                try {
+                    const d = JSON.parse(raw);
+                    d._obDone = false; d._obAct2Done = false; d._obAct3Done = false;
+                    d._obJournalSeen = false; d._obJournalBackSeen = false; d._obJournalSuppliesSaid = false;
+                    d._obDiscovered = {};
+                    d._obGuideActive = false; d._obGuideStep = null; d._obGuideOutroFlag = false;
+                    // La carte tutoriel doit redevenir à collecter, sinon son
+                    // marqueur ne se repose pas et le guide n'a rien à guider.
+                    const tid = (typeof OB_TUTORIAL_CARD === 'object' && OB_TUTORIAL_CARD) ? OB_TUTORIAL_CARD.id : null;
+                    if (tid) {
+                        if (Array.isArray(d.collectedCards)) d.collectedCards = d.collectedCards.filter(id => id !== tid);
+                        if (d.cardLevels && d.cardLevels[tid]) delete d.cardLevels[tid];
+                        if (d.cardJournals && d.cardJournals[tid]) delete d.cardJournals[tid];
+                    }
+                    localStorage.setItem('lyon_cards_progress', JSON.stringify(d));
+                } catch (e) { console.warn('[expLore] resetOnboarding :', e); }
+            }
             location.reload();
         }
         let cardLevels = {};
@@ -17949,7 +18488,9 @@
         }
 
         function _capUpdate() {
-            if (!_obMapActive()) { _capZones = []; return; }
+            // Verrou du terrain : sinon les cercles de capture se dessinaient sur
+            // la mappe pendant le parcours guidé, pour des marqueurs invisibles.
+            if (!_obFieldOpen()) { _capZones = []; return; }
             _capZones = [];
             const add = (lng, lat, r, type) => _capZones.push({ lng, lat, r, type, color: _CAP_COLORS[type] || '#ffffff' });
             POIS.forEach(poi => {
@@ -18266,10 +18807,21 @@
 
         function _showNearbyConsoles() {
             document.body.dataset.screenOpen = '0';
-            // Réinitialiser l'état edge-trigger pour permettre la réaffichage des consoles
-            // si le joueur est encore dans une zone à portée
-            if (typeof _poiEntered === 'object') {
-                Object.keys(_poiEntered).forEach(k => { _poiEntered[k] = null; });
+            // Le joueur doit BOUGER pour revoir une console. En revenant d'un écran,
+            // on marque comme déjà vues les zones où il se trouve encore : sans quoi
+            // un simple aller-retour vers une interface faisait resurgir la console
+            // de l'objet qu'il venait de laisser, encore et encore, sans qu'il ait
+            // fait un pas. Sortir de la zone puis y revenir remet le compteur à zéro
+            // (cf. _shouldShowPoiConsole, qui efface le « dismissed » à l'entrée).
+            //
+            // C'est l'inverse exact de ce que faisait ce bloc avant : il remettait
+            // _poiEntered à null, ce qui rendait chaque retour sur la mappe
+            // équivalent à une nouvelle entrée dans la zone.
+            if (typeof _poiEntered === 'object' && typeof _poiDismissed === 'object') {
+                Object.keys(_poiEntered).forEach(k => {
+                    const id = _poiEntered[k];
+                    if (id && _poiDismissed[k]) _poiDismissed[k].add(id);
+                });
             }
             // Réafficher les pins de quête
             if (typeof _showQuestPins === 'function') _showQuestPins();
@@ -18285,11 +18837,15 @@
         // Et : si le joueur ferme la console (cf hideNearbyXXX), on marque comme "déjà vu"
         const _poiEntered = {
             poi: null, dust: null, echo: null, orb: null,
-            scroll: null, loot: null, info: null, bazar: null, carnetResource: null
+            scroll: null, loot: null, info: null, bazar: null, carnetResource: null,
+            // Les panneaux n'avaient aucun edge-trigger : leur console se réaffichait
+            // à chaque passage de checkNearbyPanneau, donc à chaque retour d'écran.
+            panneau: null
         };
         const _poiDismissed = {
             poi: new Set(), dust: new Set(), echo: new Set(), orb: new Set(),
-            scroll: new Set(), loot: new Set(), info: new Set(), bazar: new Set(), carnetResource: new Set()
+            scroll: new Set(), loot: new Set(), info: new Set(), bazar: new Set(), carnetResource: new Set(),
+            panneau: new Set()
         };
         // Helper : un POI doit-il afficher sa console ?
         // Oui si on vient d'entrer (l'id a changé) ET qu'on n'a pas dismissed cette session
@@ -18319,12 +18875,17 @@
             // Pendant l'onboarding, ne pas écraser la bannière du marqueur tutoriel
             if (!_obMapActive()) return;
             const _screenBlocked = _isAnyScreenOpen();
+            // Verrou du terrain : tant que le tutoriel n'est pas fini, aucune console
+            // de ramassage ne doit s'ouvrir — les marqueurs sont cachés, détecter ce
+            // qu'ils portent reviendrait à proposer de collecter l'invisible.
+            // L'échoppe fait exception : celle du tutoriel doit rester utilisable.
+            const _fieldOpen = _obFieldOpen();
             // POI — gestion locale + thématique
             currentNearbyPOI = null;
             currentNearbyThematic = null;
             const nearbyDiv = document.getElementById('nearbyPOI');
 
-            const nearbyPoi = POIS.find(poi =>
+            const nearbyPoi = !_fieldOpen ? null : POIS.find(poi =>
                 getDistance(playerPos.lat, playerPos.lng, poi.lat, poi.lng) <= COLLECTION_RADIUS
             );
 
@@ -18369,7 +18930,7 @@
             }
 
             // Dust
-            const nearbyDust = DUST_POINTS.find(d =>
+            const nearbyDust = !_fieldOpen ? null : DUST_POINTS.find(d =>
                 !collectedDustPoints.includes(d.id) &&
                 getDistance(playerPos.lat, playerPos.lng, d.lat, d.lng) <= DUST_RADIUS
             );
@@ -18385,7 +18946,7 @@
             }
 
             // Echo
-            const nearbyEcho = ECHOES_DISABLED ? null : ECHO_POINTS.find(e =>
+            const nearbyEcho = (ECHOES_DISABLED || !_fieldOpen) ? null : ECHO_POINTS.find(e =>
                 !collectedEchoes.includes(e.id) &&
                 getDistance(playerPos.lat, playerPos.lng, e.lat, e.lng) <= ECHO_RADIUS
             );
@@ -18403,7 +18964,7 @@
             }
 
             // Orb
-            const nearbyOrb = ORB_POINTS.find(o =>
+            const nearbyOrb = !_fieldOpen ? null : ORB_POINTS.find(o =>
                 !collectedOrbs.includes(o.id) &&
                 getDistance(playerPos.lat, playerPos.lng, o.lat, o.lng) <= ORB_RADIUS
             );
@@ -18419,7 +18980,7 @@
             }
 
             // Scroll
-            const nearbyScroll = SCROLL_POINTS.find(s =>
+            const nearbyScroll = !_fieldOpen ? null : SCROLL_POINTS.find(s =>
                 !collectedScrolls.includes(s.id) &&
                 getDistance(playerPos.lat, playerPos.lng, s.lat, s.lng) <= SCROLL_RADIUS
             );
@@ -18436,7 +18997,7 @@
             }
 
             // Loot mystère
-            const nearbyLoot = LOOT_POINTS.find(l =>
+            const nearbyLoot = !_fieldOpen ? null : LOOT_POINTS.find(l =>
                 !collectedLoots.includes(l.id) &&
                 getDistance(playerPos.lat, playerPos.lng, l.lat, l.lng) <= SCROLL_RADIUS
             );
@@ -18452,7 +19013,7 @@
             }
 
             // Carnet resource (cassette / pellicule / encre)
-            const nearbyCR = CARNET_RESOURCE_POINTS.find(pt =>
+            const nearbyCR = !_fieldOpen ? null : CARNET_RESOURCE_POINTS.find(pt =>
                 !collectedCarnetResources.includes(pt.id) &&
                 getDistance(playerPos.lat, playerPos.lng, pt.lat, pt.lng) <= CARNET_RESOURCE_RADIUS
             );
@@ -18474,7 +19035,7 @@
 
             // Info points — halo ready + prompt TAP à portée
             currentNearbyInfo = null;
-            infoMarkers.forEach(({ el, inner, info }) => {
+            (_fieldOpen ? infoMarkers : []).forEach(({ el, inner, info }) => {
                 const alreadySaved = museumCollection.some(m => m.infoId === info.id);
                 if (alreadySaved) return;
                 const dist = getDistance(playerPos.lat, playerPos.lng, info.lat, info.lng);
@@ -18507,7 +19068,8 @@
         // ==================== VISIBILITY ====================
 
         function updatePOIVisibility() {
-            if (!_obMapActive()) return;
+            // Verrou du terrain : rien ne s'affiche avant la fin du tutoriel.
+            if (!_obFieldOpen()) return;
             const allCards = Object.values(COLLECTIONS).flatMap(c => c.cards);
             const circleFeatures = [];
 
@@ -18586,7 +19148,8 @@
         }
 
         function updateDustVisibility() {
-            if (!_obMapActive()) return;
+            // Verrou du terrain : rien ne s'affiche avant la fin du tutoriel.
+            if (!_obFieldOpen()) return;
             const visible = [];
             dustMarkers.forEach(({ marker, el, dust }) => {
                 const show = !collectedDustPoints.includes(dust.id);
@@ -18606,7 +19169,8 @@
         }
 
         function updateEchoVisibility() {
-            if (!_obMapActive()) return;
+            // Verrou du terrain : rien ne s'affiche avant la fin du tutoriel.
+            if (!_obFieldOpen()) return;
             const visible = [];
             echoMarkers.forEach(({ marker, el, echo }) => {
                 // §3.4 : échos masqués pour le test 1.
@@ -18625,7 +19189,8 @@
             }
         }
         function updateOrbVisibility() {
-            if (!_obMapActive()) return;
+            // Verrou du terrain : rien ne s'affiche avant la fin du tutoriel.
+            if (!_obFieldOpen()) return;
             const visible = [];
             orbMarkers.forEach(({ marker, el, orb }) => {
                 const show = !collectedOrbs.includes(orb.id);
@@ -18642,7 +19207,8 @@
         }
 
         function updateScrollVisibility() {
-            if (!_obMapActive()) return;
+            // Verrou du terrain : rien ne s'affiche avant la fin du tutoriel.
+            if (!_obFieldOpen()) return;
             const visible = [];
             scrollMarkers.forEach(({ marker, el, scroll }) => {
                 const show = !collectedScrolls.includes(scroll.id);
@@ -18660,7 +19226,8 @@
         }
 
         function updateCarnetResourceVisibility() {
-            if (!_obMapActive()) return;
+            // Verrou du terrain : rien ne s'affiche avant la fin du tutoriel.
+            if (!_obFieldOpen()) return;
             const visible = [];
             carnetResourceMarkers.forEach(({ el, pt, type: _oldType }) => {
                 const collected = collectedCarnetResources.includes(pt.id);
@@ -18693,7 +19260,8 @@
         }
 
         function updateLootVisibility() {
-            if (!_obMapActive()) return;
+            // Verrou du terrain : rien ne s'affiche avant la fin du tutoriel.
+            if (!_obFieldOpen()) return;
             const visible = [];
             lootMarkers.forEach(({ el, loot }) => {
                 const show = !collectedLoots.includes(loot.id);
@@ -19179,6 +19747,7 @@
         function openZoneDetail(zoneId) {
             const zone = TEST_ZONES.find(z => z.id === zoneId);
             if (!zone) return;
+            if (typeof _obOnOpenZoneDetail === 'function') _obOnOpenZoneDetail();
             _injectZoneDetailCSS();
             const c = computeZoneCompletion(zone);
             const d = c.detail;
@@ -20781,6 +21350,11 @@
                     banner.style.animation = '';
                 }
             }
+            // Le guide attend ce geste à son étape « spyglass ». On ne signale que
+            // le passage EN vue planification : c'est la hauteur qu'on lui montre.
+            if (isPlanning && typeof _obGuideEvent === 'function') {
+                try { _obGuideEvent('map_planning'); _obGuideRefresh(); } catch (e) {}
+            }
         }
 
         function collectCarnetResource() {
@@ -20915,6 +21489,7 @@
             collectedScrolls.push(scroll.id);
             markPoiCollected(scroll.id, 'scrolls');
             markVisitedPoint('scroll', scroll.id); // v3 : point-souvenir (n'affecte pas le % zone)
+            if (typeof _obOnCollectScroll === 'function') _obOnCollectScroll();
             bagInv.parchemins.push({ id: scroll.id, name: 'Parchemin', desc: TF("Trouvé près de %1 lors de ton exploration.", scroll.name) });
             updateScrollVisibility();
             updateLootVisibility();
@@ -24124,7 +24699,16 @@
 
         function closeJournalScreen() {
             document.getElementById('journalScreen').classList.remove('show');
-            if (typeof _obGuide === 'object' && _obGuide.active) setTimeout(() => _obGuideRefresh(), 120);
+            if (typeof _obGuide === 'object' && _obGuide.active) {
+                // Sortie faite : l'anneau n'a plus à montrer la vignette de la carte,
+                // il peut reprendre l'arbitrage normal de l'étape courante.
+                _obJournalBackSeen = true;
+                try { saveProgress(); } catch (e) {}
+                setTimeout(() => _obGuideRefresh(), 120);
+                // Il a fini de lire : c'est maintenant qu'on peut l'envoyer à
+                // l'échoppe, pas à l'ouverture (cf. _obJournalExitHint).
+                if (typeof _obJournalExitHint === 'function') setTimeout(_obJournalExitHint, 320);
+            }
 
             // Capturer le delta avant de réinitialiser
             const delta = window._journalSessionDelta || 0;
@@ -26003,6 +26587,10 @@
             refreshProgDistanceUI();
             switchProgTab('battlepass');
             document.getElementById('progressionScreen').classList.add('show');
+            // Dernière étape du guide : c'est ce geste qui déclenche la chute.
+            if (typeof _obGuide === 'object' && _obGuide.active) {
+                try { _obGuideEvent('progression'); _obGuideRefresh(); } catch (e) {}
+            }
         }
         function closeProgressionScreen() { document.getElementById('progressionScreen').classList.remove('show'); }
 
@@ -26279,6 +26867,8 @@
 
         function checkNearbyPanneau() {
             currentNearbyPanneau = null;
+            // Verrou du terrain : les panneaux n'existent qu'après le tutoriel.
+            if (!_obFieldOpen()) { const _d = document.getElementById('nearbyPanneau'); if (_d) _d.classList.add('hidden'); return; }
             const nearbyDiv = document.getElementById('nearbyPanneau');
             panneauMarkers.forEach(({ inner, pan }) => {
                 const dist = getDistance(playerPos.lat, playerPos.lng, pan.lat, pan.lng);
@@ -26301,15 +26891,24 @@
                 const { filled, total } = getPanneauProgress(currentNearbyPanneau.id);
                 document.getElementById('panneauNearbySlots').textContent =
                     filled === total ? '✓ Complété' : TF('%1/%2 parchemins insérés', filled, total);
-                nearbyDiv.classList.remove('hidden');
+                // Même edge-trigger que les autres consoles : on n'apparaît qu'à
+                // l'entrée dans la zone, et pas au retour d'un écran (le joueur
+                // doit avoir bougé). Le « else if » plutôt qu'un « else » : hors
+                // écran ouvert, une console déjà posée n'a pas à se refermer.
+                const _blocked = typeof _isAnyScreenOpen === 'function' && _isAnyScreenOpen();
+                const _show = _shouldShowPoiConsole('panneau', currentNearbyPanneau.id) && !_blocked;
+                if (_show) nearbyDiv.classList.remove('hidden');
+                else if (_blocked) nearbyDiv.classList.add('hidden');
             } else {
                 nearbyDiv.classList.add('hidden');
+                _shouldShowPoiConsole('panneau', null);
             }
         }
 
         function openPanneauScreen() {
             _hideAllNearbyConsoles();
             if (!currentNearbyPanneau) return;
+            if (typeof _obOnOpenPanneau === 'function') _obOnOpenPanneau();
             const pan   = currentNearbyPanneau;
             const state = getPanneauState(pan.id);
             const CLABELS = { simple: 'Point simple', moyen: 'Point moyen', important: 'Point important' };
@@ -26531,6 +27130,10 @@
                 let nearest = null;
                 let nearestDist = Infinity;
                 BAZAR_POINTS.forEach(bazar => {
+                    // Verrou du terrain : seule l'échoppe du tutoriel compte tant que
+                    // le tutoriel dure — les autres sont posées mais invisibles, et
+                    // proposer d'entrer dans une échoppe qu'on ne voit pas n'a pas de sens.
+                    if (!_obFieldOpen() && bazar.id !== 'bazar_tuto') return;
                     const dist = getDistance(playerPos.lat, playerPos.lng, bazar.lat, bazar.lng);
                     if (dist <= BAZAR_RADIUS && dist < nearestDist) {
                         nearest = bazar;
@@ -26610,11 +27213,12 @@
         function closeBazarScreen() {
             _showNearbyConsoles();
             // Le joueur vient de fermer l'échoppe : sa console ne doit pas se
-            // rouvrir dans la seconde. _showNearbyConsoles() a remis à zéro
-            // l'edge-trigger de tous les types — on le rétablit pour le bazar
-            // seul et on le marque comme vu. La console ne reviendra qu'après
-            // être sorti de la zone puis y être revenu ; entre-temps, le
-            // marqueur sur la mappe reste le chemin de retour.
+            // rouvrir dans la seconde. C'est désormais la règle générale —
+            // _showNearbyConsoles() marque comme vues toutes les zones où le
+            // joueur se trouve encore — mais on garde ce marquage explicite : il
+            // vaut aussi quand la console a été fermée sans écran ouvert.
+            // Elle ne reviendra qu'après être sorti de la zone puis y être
+            // revenu ; entre-temps, le marqueur sur la mappe reste le chemin de retour.
             if (currentNearbyBazar) {
                 _poiEntered.bazar = currentNearbyBazar.id;
                 window._dismissPoiConsole('bazar', currentNearbyBazar.id);
@@ -26732,6 +27336,7 @@
         function openViewfinder(info) {
             currentViewfinderInfo = info;
             vfZoom = 1;
+            if (typeof _obOnOpenViewfinder === 'function') _obOnOpenViewfinder();
 
             // Illustration
             const illus = INFO_ILLUSTRATIONS[info.id] || getFallbackIllustration(info.icon);

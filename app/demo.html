@@ -19036,10 +19036,21 @@
 
         function _showNearbyConsoles() {
             document.body.dataset.screenOpen = '0';
-            // Réinitialiser l'état edge-trigger pour permettre la réaffichage des consoles
-            // si le joueur est encore dans une zone à portée
-            if (typeof _poiEntered === 'object') {
-                Object.keys(_poiEntered).forEach(k => { _poiEntered[k] = null; });
+            // Le joueur doit BOUGER pour revoir une console. En revenant d'un écran,
+            // on marque comme déjà vues les zones où il se trouve encore : sans quoi
+            // un simple aller-retour vers une interface faisait resurgir la console
+            // de l'objet qu'il venait de laisser, encore et encore, sans qu'il ait
+            // fait un pas. Sortir de la zone puis y revenir remet le compteur à zéro
+            // (cf. _shouldShowPoiConsole, qui efface le « dismissed » à l'entrée).
+            //
+            // C'est l'inverse exact de ce que faisait ce bloc avant : il remettait
+            // _poiEntered à null, ce qui rendait chaque retour sur la mappe
+            // équivalent à une nouvelle entrée dans la zone.
+            if (typeof _poiEntered === 'object' && typeof _poiDismissed === 'object') {
+                Object.keys(_poiEntered).forEach(k => {
+                    const id = _poiEntered[k];
+                    if (id && _poiDismissed[k]) _poiDismissed[k].add(id);
+                });
             }
             // Réafficher les pins de quête
             if (typeof _showQuestPins === 'function') _showQuestPins();
@@ -19055,11 +19066,15 @@
         // Et : si le joueur ferme la console (cf hideNearbyXXX), on marque comme "déjà vu"
         const _poiEntered = {
             poi: null, dust: null, echo: null, orb: null,
-            scroll: null, loot: null, info: null, bazar: null, carnetResource: null
+            scroll: null, loot: null, info: null, bazar: null, carnetResource: null,
+            // Les panneaux n'avaient aucun edge-trigger : leur console se réaffichait
+            // à chaque passage de checkNearbyPanneau, donc à chaque retour d'écran.
+            panneau: null
         };
         const _poiDismissed = {
             poi: new Set(), dust: new Set(), echo: new Set(), orb: new Set(),
-            scroll: new Set(), loot: new Set(), info: new Set(), bazar: new Set(), carnetResource: new Set()
+            scroll: new Set(), loot: new Set(), info: new Set(), bazar: new Set(), carnetResource: new Set(),
+            panneau: new Set()
         };
         // Helper : un POI doit-il afficher sa console ?
         // Oui si on vient d'entrer (l'id a changé) ET qu'on n'a pas dismissed cette session
@@ -27974,9 +27989,17 @@
                 const { filled, total } = getPanneauProgress(currentNearbyPanneau.id);
                 document.getElementById('panneauNearbySlots').textContent =
                     filled === total ? '✓ Complété' : filled + '/' + total + ' parchemins insérés';
-                nearbyDiv.classList.remove('hidden');
+                // Même edge-trigger que les autres consoles : on n'apparaît qu'à
+                // l'entrée dans la zone, et pas au retour d'un écran (le joueur
+                // doit avoir bougé). Le « else if » plutôt qu'un « else » : hors
+                // écran ouvert, une console déjà posée n'a pas à se refermer.
+                const _blocked = typeof _isAnyScreenOpen === 'function' && _isAnyScreenOpen();
+                const _show = _shouldShowPoiConsole('panneau', currentNearbyPanneau.id) && !_blocked;
+                if (_show) nearbyDiv.classList.remove('hidden');
+                else if (_blocked) nearbyDiv.classList.add('hidden');
             } else {
                 nearbyDiv.classList.add('hidden');
+                _shouldShowPoiConsole('panneau', null);
             }
         }
 
