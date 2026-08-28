@@ -14346,11 +14346,12 @@
             _obSpawnTutorialBazar();
             _obSpawnTutorialDust();
             _obSpawnTutorialOrb();
-            // Le verrou du terrain avait éteint ces calques à l'init : les zones
-            // de capture des ressources du tutoriel en ont besoin.
-            ['dust-capture-circles','dust-capture-circles-stroke','orb-circles','orb-circles-stroke'].forEach(id => {
-                try { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); } catch(e) {}
-            });
+            // Aucun calque MapLibre à rallumer ici. Les zones de capture sont
+            // dessinées par captureCanvas (cf. _capUpdate / _capDraw), dont la
+            // boucle tourne dès _initAppAfterLang et qui connaît déjà la poudre
+            // et l'orbe du tutoriel. Les calques 'dust-capture-circles' /
+            // 'orb-circles' sont l'ancien rendu, laissé éteint : les rallumer
+            // superposait une seconde zone à la première.
             try { updateDustVisibility(); } catch(e) {}
             try { updateOrbVisibility(); } catch(e) {}
             if (typeof _capUpdate === 'function') { try { _capUpdate(); } catch(e) {} }
