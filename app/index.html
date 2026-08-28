@@ -20865,6 +20865,42 @@
         }
 
 
+        // ── Helper partagé : visuel d'un POI collectable ────────────────────
+        // Il vivait DANS createMap(), donc invisible depuis le reste du script :
+        // _obSpawnTutorialDust / _obSpawnTutorialOrb levaient un ReferenceError,
+        // l'orbe et la poudre du tutoriel n'étaient jamais posées et le parcours
+        // guidé mourait au même appel (plus aucune réplique de la jeune fille).
+        // Remonté ici, au premier niveau, pour être visible partout.
+        // Cylindre/faisceau supprimé — icône centrée directement sur le point géo.
+        function _buildPoiVisual(pid, colors, iconEl, iconSize, cylHeight) {
+            const sz = iconSize || 52;
+
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'display:flex;align-items:center;justify-content:center;position:relative;';
+
+            iconEl.style.width  = sz + 'px';
+            iconEl.style.height = sz + 'px';
+            iconEl.style.position = 'relative';
+            iconEl.style.zIndex = '2';
+            iconEl.style.display = 'flex';
+            iconEl.style.alignItems = 'center';
+            iconEl.style.justifyContent = 'center';
+            const _child = iconEl.firstElementChild;
+            if (_child) {
+                _child.style.width  = '100%';
+                _child.style.height = '100%';
+                _child.style.display = 'block';
+            }
+
+            const iconFloat = document.createElement('div');
+            iconFloat.className = 'poi-icon-float';
+            iconFloat.style.cssText = 'display:flex;align-items:center;justify-content:center;';
+            iconFloat.appendChild(iconEl);
+            wrap.appendChild(iconFloat);
+
+            return wrap;
+        }
+
         // ════════════════════════════════════════════════════════════════
         // RESSOURCES DU TUTORIEL — posées près du joueur, toujours
         // ════════════════════════════════════════════════════════════════
@@ -21303,10 +21339,10 @@
         const _OB_STEP_RING = {
             go_collections: '#btnCollections',
             go_card:        '.alb-card.alb-collected',
-            feed1:          '#addExpBtn',
+            feed1:          () => _obFeedRing(),
             journal1:       '#journalTabBtn',
             lesson:         null,
-            feed2:          '#addExpBtn',
+            feed2:          () => _obFeedRing(),
             // Étape « gather » : le joueur sort chercher ce qui lui manque. Tant
             // qu'il est dans un écran on lui montre la sortie ; sur la mappe,
             // l'orbe posée pour lui — jusqu'à ce qu'il l'ait ramassée.
@@ -21319,8 +21355,8 @@
             // Ces étapes se jouent devant la carte, mais le joueur en revient
             // (mappe, carnet) : l'anneau lui montre le chemin du retour plutôt
             // qu'un bouton hors champ.
-            orb:            () => _obPathToCardSelector(),
-            feed3:          () => _obPathToCardSelector(),
+            orb:            () => ((bagInv.orbes || 0) > 0 ? _obPathToCardSelector() : _obOutOfStockRing('orb')),
+            feed3:          () => _obFeedRing(),
             // Le joueur doit retourner au carnet pour dévoiler les pages qui
             // restent : sans anneau, personne ne lui montrait où.
             reveal_rest:    '#journalTabBtn',
@@ -21366,6 +21402,47 @@
             }
             const cd = document.getElementById('cardDetailView');
             if (cd && cd.classList.contains('show')) return '@exit-hint';
+            return null;
+        }
+
+        // ── Nourrir la carte, ou sortir en chercher de quoi le faire ────────
+        // Le bouton de dose n'a de sens que si le joueur a de quoi s'en servir.
+        // À sec — plus de poudre, ou la carte épuisée sans orbe en poche —
+        // l'anneau désignait quand même un bouton mort : personne ne montrait
+        // au joueur qu'il fallait ressortir. On lui montre la sortie à la place
+        // (les deux marges de la fiche carte, cf. _obExitHint), puis, une fois
+        // dehors, la ressource qui lui manque.
+        function _obFeedRing() {
+            let _en = 1;
+            try { _en = getCardEnergyState(OB_TUTORIAL_CARD.id).value; } catch (e) {}
+            if (_en <= 0) {
+                return (bagInv.orbes || 0) > 0 ? _obPathToCardSelector() : _obOutOfStockRing('orb');
+            }
+            return (memorialDust || 0) >= _obDoseCost() ? _obPathToCardSelector() : _obOutOfStockRing('dust');
+        }
+
+        // Coût d'une dose : celui qu'applique réellement addExperience(), et non
+        // un chiffre recopié qui se démentirait au premier réglage de rareté.
+        function _obDoseCost() {
+            try {
+                const cfg = RARITY_CONFIG[OB_TUTORIAL_CARD.rarity] || RARITY_CONFIG.common;
+                return cfg.increment || 20;
+            } catch (e) { return 50; }
+        }
+
+        // Il manque quelque chose et ça se ramasse dehors : dans un écran, on
+        // montre la sortie ; sur la mappe, le repère posé pour le tutoriel —
+        // l'orbe d'abord (elle seule débloque une carte épuisée), sinon la poudre.
+        function _obOutOfStockRing(want) {
+            const back = _obBackToMapSelector();
+            if (back) return back;
+            const orbLeft  = (bagInv.orbes || 0) <= 0
+                && ORB_POINTS.some(o => o.tuto && !collectedOrbs.includes(o.id));
+            const dustLeft = DUST_POINTS.some(d => d.tuto && !collectedDustPoints.includes(d.id));
+            const first  = want === 'orb' ? orbLeft : dustLeft;
+            const second = want === 'orb' ? dustLeft : orbLeft;
+            if (first)  return want === 'orb' ? '#obTutoOrbMarker'  : '#obTutoDustMarker';
+            if (second) return want === 'orb' ? '#obTutoDustMarker' : '#obTutoOrbMarker';
             return null;
         }
 
@@ -24065,38 +24142,6 @@
             }); // end map.on('load')
 
             map.on('zoom', updateAvatarScale);
-
-
-        // ── Helper : construit le visuel icône simple pour un POI collectable ──
-        // Cylindre/faisceau supprimé — icône centrée directement sur le point géo
-        function _buildPoiVisual(pid, colors, iconEl, iconSize, cylHeight) {
-            const sz = iconSize || 52;
-
-            const wrap = document.createElement('div');
-            wrap.style.cssText = 'display:flex;align-items:center;justify-content:center;position:relative;';
-
-            iconEl.style.width  = sz + 'px';
-            iconEl.style.height = sz + 'px';
-            iconEl.style.position = 'relative';
-            iconEl.style.zIndex = '2';
-            iconEl.style.display = 'flex';
-            iconEl.style.alignItems = 'center';
-            iconEl.style.justifyContent = 'center';
-            const _child = iconEl.firstElementChild;
-            if (_child) {
-                _child.style.width  = '100%';
-                _child.style.height = '100%';
-                _child.style.display = 'block';
-            }
-
-            const iconFloat = document.createElement('div');
-            iconFloat.className = 'poi-icon-float';
-            iconFloat.style.cssText = 'display:flex;align-items:center;justify-content:center;';
-            iconFloat.appendChild(iconEl);
-            wrap.appendChild(iconFloat);
-
-            return wrap;
-        }
 
             POIS.forEach(poi => {
                 const el = document.createElement('div');
@@ -33759,7 +33804,7 @@
         // (échoppe du tutoriel, cf. _obSpawnTutorialBazar).
         function _createBazarMarker(bazar, opts) {
             opts = opts || {};
-            const BAZAR_RADIUS = 80;
+            const BAZAR_RADIUS = 30;   // aligné sur la poudre et les orbes (30 m)
                 const el = document.createElement('div');
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:pointer;';
                 el.title = bazar.name;
@@ -33804,7 +33849,7 @@
             // Vérifier la proximité en continu pour la bannière nearby
             setInterval(() => {
                 if (!playerPos || !_obMapActive()) return;
-                const BAZAR_RADIUS = 80;
+                const BAZAR_RADIUS = 30;   // aligné sur la poudre et les orbes (30 m)
                 let nearest = null;
                 let nearestDist = Infinity;
                 BAZAR_POINTS.forEach(bazar => {
