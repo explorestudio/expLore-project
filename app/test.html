@@ -11199,6 +11199,8 @@
             "L'encre révèle les mots. La pellicule, les images. La cassette, les sons. Tu en as quelques-unes — sers-t'en.": "Ink reveals words. Film, images. Tape, sounds. You have a few — use them.",
             "Tu en as déjà sur toi — sers-t'en. Quand tu n'en auras plus, une échoppe en tient toujours.": "You already have some on you — use them. When you run out, a stall always keeps some.",
             "Il ne t'en reste aucune. Les échoppes de la ville en tiennent — cherche-les sur la mappe.": "You have none left. The city's stalls keep some — look for them on the map.",
+            [`Tu vois ces petits amas violets, sur la mappe ? C'est de la <span style="color:#C084FC;font-weight:600">poudre mémorielle</span>. Ramasse-la en passant : les cartes en réclament sans cesse.`]:
+                `Do you see those little violet clusters on the map? That's <span style="color:#C084FC;font-weight:600">memorial dust</span>. Pick it up as you go: cards ask for it endlessly.`,
             "Reviens à la carte et continue à la nourrir, puis dévoile toi-même les pages qui s'ouvriront.": "Come back to the card and keep feeding it, then reveal for yourself the pages that open.",
             "La carte s'épuise. La mémoire a besoin d'infuser — il faudrait attendre des heures qu'elle se ravive d'elle-même.": "The card is running out. Memory needs to steep — it would take hours for it to revive on its own.",
             "Mais tiens — prends cette orbe mémorielle. Elle lui rend toute son énergie d'un coup. Utilise-la.": "But here — take this memory orb. It gives back all its energy at once. Use it.",
@@ -15069,19 +15071,18 @@
         }
 
         // Il manque quelque chose et ça se ramasse dehors : dans un écran, on
-        // montre la sortie ; sur la mappe, le repère posé pour le tutoriel —
-        // l'orbe d'abord (elle seule débloque une carte épuisée), sinon la poudre.
+        // montre la sortie ; sur la mappe, l'orbe posée pour le tutoriel — et elle
+        // seule. Rien ne dit d'elle-même qu'une orbe ranime une carte épuisée,
+        // alors qu'un amas de poudre se remarque tout seul : un anneau par-dessus
+        // n'apprendrait rien et encombrerait l'écran. Un mot de la jeune fille y
+        // suffit, dit une fois (cf. _obDustSpotTick).
+        // want : 'orb' quand c'est l'énergie qui manque, sinon la poudre.
         function _obOutOfStockRing(want) {
             const back = _obBackToMapSelector();
             if (back) return back;
-            const orbLeft  = (bagInv.orbes || 0) <= 0
-                && ORB_POINTS.some(o => o.tuto && !collectedOrbs.includes(o.id));
-            const dustLeft = DUST_POINTS.some(d => d.tuto && !collectedDustPoints.includes(d.id));
-            const first  = want === 'orb' ? orbLeft : dustLeft;
-            const second = want === 'orb' ? dustLeft : orbLeft;
-            if (first)  return want === 'orb' ? '#obTutoOrbMarker'  : '#obTutoDustMarker';
-            if (second) return want === 'orb' ? '#obTutoDustMarker' : '#obTutoOrbMarker';
-            return null;
+            if (want !== 'orb' || (bagInv.orbes || 0) > 0) return null;
+            return ORB_POINTS.some(o => o.tuto && !collectedOrbs.includes(o.id))
+                ? '#obTutoOrbMarker' : null;
         }
 
         // Chemin de retour vers la fiche carte, depuis n'importe où : le bouton de
@@ -15209,6 +15210,7 @@
             if (!_obGuide.active) { _obGuideClearRing(); _obExitHint(false); _obRingSelector = null; return; }
             _obGuideSync();
             if (!_obGuide.active) { _obGuideClearRing(); _obExitHint(false); _obRingSelector = null; return; }
+            _obDustSpotTick();
             // Override prioritaire, valable à toutes les étapes et une seule fois :
             // pendant la première visite du carnet, l'anneau désigne la vignette de
             // la carte — celle que la jeune fille vient de nommer (« touche son
@@ -15439,6 +15441,32 @@
             _obDustEmptySaid = true;
             _obSay('map', [
                 { speaker: 'La jeune fille', html: 'Ta réserve de <span style="color:#C084FC;font-weight:600">poudre mémorielle</span> est vide. Il y en a dehors, en petits amas violets. Ramasses-en, puis reviens à la carte.' },
+            ], () => _obGuideRefresh());
+        }
+
+        // ── Les amas de poudre, remarqués d'eux-mêmes ───────────────────────
+        // Ils ne portent aucun anneau (cf. _obOutOfStockRing) : posés en pleine
+        // mappe, ils se repèrent seuls. Reste à dire une fois que ça se ramasse,
+        // la première fois que le joueur ressort de ses écrans et en a un sous
+        // les yeux. Jamais par-dessus une réplique en cours ou en attente : le
+        // parcours guidé garde la priorité. Comme _obDustEmptySaid, le drapeau
+        // ne vit que le temps de la session — un tutoriel repris depuis une
+        // sauvegarde redira la phrase, ce qui vaut mieux que de la taire.
+        let _obDustSpotSaid = false;
+        function _obDustSpotTick() {
+            if (_obDustSpotSaid || !_obGuide.active || _obPendingSay) return;
+            // 'go_collections' : le joueur n'a pas encore quitté la mappe, la
+            // réplique d'ouverture vient à peine de tomber. On attend son retour.
+            if (_obGuide.step === 'go_collections') return;
+            if (_obCurrentScreen() !== 'map') return;
+            const vn = document.getElementById('vnOverlay');
+            if (vn && vn.classList.contains('show')) return;
+            if (!DUST_POINTS.some(d => d.tuto && !collectedDustPoints.includes(d.id))) return;
+            const mk = document.getElementById('obTutoDustMarker');
+            if (!mk || !_obElementVisible(mk)) return;
+            _obDustSpotSaid = true;
+            _obSay('map', [
+                { speaker: 'La jeune fille', html: 'Tu vois ces petits amas violets, sur la mappe ? C\'est de la <span style="color:#C084FC;font-weight:600">poudre mémorielle</span>. Ramasse-la en passant : les cartes en réclament sans cesse.' },
             ], () => _obGuideRefresh());
         }
 
@@ -16448,86 +16476,6 @@
             const now = Date.now();
             let changed = false;
 
-        // ── Helper : construit le visuel cylindre+tige+disque pour un POI collectable ──
-        // colors: { top, mid, bot, glow, disk, stroke }
-        // iconEl: element DOM à placer en haut (img ou div svg existant)
-        function _buildPoiVisual(pid, colors, iconEl, iconSize) {
-            const sz = iconSize || 52;
-            const NS = 'http://www.w3.org/2000/svg';
-
-            const wrap = document.createElement('div');
-            wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;position:relative;';
-
-            // Icône
-            iconEl.style.width  = sz + 'px';
-            iconEl.style.height = sz + 'px';
-            iconEl.style.position = 'relative';
-            iconEl.style.zIndex = '2';
-            wrap.appendChild(iconEl);
-
-            // SVG cylindre
-            const svg = document.createElementNS(NS, 'svg');
-            svg.setAttribute('viewBox', '0 0 50 46');
-            svg.style.cssText = 'width:50px;height:46px;margin-top:-5px;overflow:visible;';
-
-            const defs = document.createElementNS(NS, 'defs');
-
-            // Gradient corps
-            const lg = document.createElementNS(NS, 'linearGradient');
-            lg.id = 'cyl_' + pid; lg.setAttribute('x1','0%'); lg.setAttribute('y1','0%'); lg.setAttribute('x2','0%'); lg.setAttribute('y2','100%');
-            [['0%','rgba(0,0,0,0)'],['20%',colors.top],['65%',colors.mid],['100%',colors.bot]].forEach(([o,c]) => {
-                const s = document.createElementNS(NS,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); lg.appendChild(s);
-            });
-            defs.appendChild(lg);
-
-            // Gradient disque bas
-            const rg = document.createElementNS(NS, 'radialGradient');
-            rg.id = 'disk_' + pid; rg.setAttribute('cx','50%'); rg.setAttribute('cy','50%'); rg.setAttribute('r','50%');
-            [['0%',colors.disk],['55%',colors.mid],['100%','transparent']].forEach(([o,c]) => {
-                const s = document.createElementNS(NS,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); rg.appendChild(s);
-            });
-            defs.appendChild(rg);
-
-            // Glow filter
-
-            svg.appendChild(defs);
-
-            // Corps trapèze
-            const body = document.createElementNS(NS, 'path');
-            body.setAttribute('d', 'M23,2 L27,2 L29,42 L21,42 Z');
-            body.setAttribute('fill', 'url(#cyl_' + pid + ')');
-            svg.appendChild(body);
-
-            // Bords lumineux
-            [[23,2,21,42],[27,2,29,42]].forEach(([x1,y1,x2,y2]) => {
-                const l = document.createElementNS(NS,'line');
-                l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
-                l.setAttribute('stroke', colors.stroke); l.setAttribute('stroke-width','0.8');
-                svg.appendChild(l);
-            });
-
-            // Ellipse haut
-            const eTop = document.createElementNS(NS,'ellipse');
-            eTop.setAttribute('cx','25'); eTop.setAttribute('cy','2'); eTop.setAttribute('rx','5'); eTop.setAttribute('ry','2');
-            eTop.setAttribute('fill', colors.top);
-            svg.appendChild(eTop);
-
-            // Ellipse bas remplie
-            const eBotF = document.createElementNS(NS,'ellipse');
-            eBotF.setAttribute('cx','25'); eBotF.setAttribute('cy','42'); eBotF.setAttribute('rx','12'); eBotF.setAttribute('ry','4.5');
-            eBotF.setAttribute('fill','url(#disk_' + pid + ')');
-            svg.appendChild(eBotF);
-
-            // Contour ellipse bas
-            const eBotS = document.createElementNS(NS,'ellipse');
-            eBotS.setAttribute('cx','25'); eBotS.setAttribute('cy','42'); eBotS.setAttribute('rx','12'); eBotS.setAttribute('ry','4.5');
-            eBotS.setAttribute('fill','none'); eBotS.setAttribute('stroke', colors.stroke); eBotS.setAttribute('stroke-width','1.5');
-            svg.appendChild(eBotS);
-
-            wrap.appendChild(svg);
-            return wrap;
-        }
-
             POIS.forEach(poi => {
                 if (!poi.localCardId) return;
                 if (!collectedCards.includes(poi.localCardId)) return;
@@ -16552,88 +16500,7 @@
             setInterval(() => {
                 const now = Date.now();
                 let needsRefresh = false;
-    
-        // ── Helper : construit le visuel cylindre+tige+disque pour un POI collectable ──
-        // colors: { top, mid, bot, glow, disk, stroke }
-        // iconEl: element DOM à placer en haut (img ou div svg existant)
-        function _buildPoiVisual(pid, colors, iconEl, iconSize) {
-            const sz = iconSize || 52;
-            const NS = 'http://www.w3.org/2000/svg';
-
-            const wrap = document.createElement('div');
-            wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;position:relative;';
-
-            // Icône
-            iconEl.style.width  = sz + 'px';
-            iconEl.style.height = sz + 'px';
-            iconEl.style.position = 'relative';
-            iconEl.style.zIndex = '2';
-            wrap.appendChild(iconEl);
-
-            // SVG cylindre
-            const svg = document.createElementNS(NS, 'svg');
-            svg.setAttribute('viewBox', '0 0 50 46');
-            svg.style.cssText = 'width:50px;height:46px;margin-top:-5px;overflow:visible;';
-
-            const defs = document.createElementNS(NS, 'defs');
-
-            // Gradient corps
-            const lg = document.createElementNS(NS, 'linearGradient');
-            lg.id = 'cyl_' + pid; lg.setAttribute('x1','0%'); lg.setAttribute('y1','0%'); lg.setAttribute('x2','0%'); lg.setAttribute('y2','100%');
-            [['0%','rgba(0,0,0,0)'],['20%',colors.top],['65%',colors.mid],['100%',colors.bot]].forEach(([o,c]) => {
-                const s = document.createElementNS(NS,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); lg.appendChild(s);
-            });
-            defs.appendChild(lg);
-
-            // Gradient disque bas
-            const rg = document.createElementNS(NS, 'radialGradient');
-            rg.id = 'disk_' + pid; rg.setAttribute('cx','50%'); rg.setAttribute('cy','50%'); rg.setAttribute('r','50%');
-            [['0%',colors.disk],['55%',colors.mid],['100%','transparent']].forEach(([o,c]) => {
-                const s = document.createElementNS(NS,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); rg.appendChild(s);
-            });
-            defs.appendChild(rg);
-
-            // Glow filter
-
-            svg.appendChild(defs);
-
-            // Corps trapèze
-            const body = document.createElementNS(NS, 'path');
-            body.setAttribute('d', 'M23,2 L27,2 L29,42 L21,42 Z');
-            body.setAttribute('fill', 'url(#cyl_' + pid + ')');
-            svg.appendChild(body);
-
-            // Bords lumineux
-            [[23,2,21,42],[27,2,29,42]].forEach(([x1,y1,x2,y2]) => {
-                const l = document.createElementNS(NS,'line');
-                l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
-                l.setAttribute('stroke', colors.stroke); l.setAttribute('stroke-width','0.8');
-                svg.appendChild(l);
-            });
-
-            // Ellipse haut
-            const eTop = document.createElementNS(NS,'ellipse');
-            eTop.setAttribute('cx','25'); eTop.setAttribute('cy','2'); eTop.setAttribute('rx','5'); eTop.setAttribute('ry','2');
-            eTop.setAttribute('fill', colors.top);
-            svg.appendChild(eTop);
-
-            // Ellipse bas remplie
-            const eBotF = document.createElementNS(NS,'ellipse');
-            eBotF.setAttribute('cx','25'); eBotF.setAttribute('cy','42'); eBotF.setAttribute('rx','12'); eBotF.setAttribute('ry','4.5');
-            eBotF.setAttribute('fill','url(#disk_' + pid + ')');
-            svg.appendChild(eBotF);
-
-            // Contour ellipse bas
-            const eBotS = document.createElementNS(NS,'ellipse');
-            eBotS.setAttribute('cx','25'); eBotS.setAttribute('cy','42'); eBotS.setAttribute('rx','12'); eBotS.setAttribute('ry','4.5');
-            eBotS.setAttribute('fill','none'); eBotS.setAttribute('stroke', colors.stroke); eBotS.setAttribute('stroke-width','1.5');
-            svg.appendChild(eBotS);
-
-            wrap.appendChild(svg);
-            return wrap;
-        }
-
-            POIS.forEach(poi => {
+                POIS.forEach(poi => {
                     if (!poi.localCardId) return;
                     if (!collectedCards.includes(poi.localCardId)) return;
                     const state = thematicState[poi.id];

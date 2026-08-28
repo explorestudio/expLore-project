@@ -7,7 +7,7 @@
    À INCRÉMENTER à chaque mise à jour des assets
    (sinon les utilisateurs garderont les anciennes images en cache) */
 
-const CACHE_VERSION = 'v25';
+const CACHE_VERSION = 'v26';
 const CACHE_NAME = `explore-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
