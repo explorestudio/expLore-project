@@ -298,8 +298,14 @@
             pointer-events: auto;
             cursor: pointer;
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
-            z-index: 50;
-            position: relative;
+            /* Ni position ni z-index ici. Cette classe est posée sur l'élément
+               RACINE du marqueur : « position: relative » écrasait le
+               « position: absolute » de .maplibregl-marker (même spécificité,
+               notre feuille passe après celle de MapLibre). L'épingle repassait
+               dans le flux, prenait toute la largeur du conteneur (390 px) et
+               le translate(-50%) de MapLibre la décalait alors de ~195 px :
+               elle atterrissait à côté de sa zone de validation, parfois hors
+               cadre. Le z-index, lui, la faisait sortir de la mappe. */
         }
         .quest-pin-marker {
             width: 36px; height: 36px;
@@ -518,6 +524,14 @@
         #map {
             flex: 1;
             position: relative;
+            /* Contexte d'empilement propre à la mappe. Sans lui (z-index auto),
+               un marqueur portant un z-index se compare aux ENFANTS DE
+               .app-container : l'épingle de quête à 500 passait par-dessus le
+               HUD (z 30) et par-dessus tout écran sous 500 — Collection (200),
+               fragment d'archive (210), Explorium (450)... Isolé ici, aucun
+               marqueur ne peut plus sortir de la mappe. */
+            z-index: 0;
+            isolation: isolate;
             /* Map fills full space since HUD is overlaid */
         }
 
@@ -15797,19 +15811,28 @@
         const ISOMETRIC_TILT = 50;
         const ISOMETRIC_HEADING = 0;  // keep north-up like Waze default
 
-        // Génère un polygone ellipse en coords géo, aplati selon le pitch isométrique
-        // radiusM = rayon en mètres, pitch = inclinaison caméra (0=top, 90=horizontal)
+        // Génère un polygone circulaire en coordonnées géo.
+        // radiusM = rayon en mètres. L'argument « pitch » n'est plus utilisé
+        // mais reste dans la signature : tous les appels le passent.
+        //
+        // Il aplatissait auparavant le cercle de 0,45 en coordonnées GÉO, alors
+        // que la caméra applique déjà sa propre perspective au rendu : la zone
+        // était donc aplatie deux fois. Mesuré à pitch 50 sur une zone de quête
+        // de 80 m : 56 px de haut à l'écran au lieu des 125 px du géofence réel
+        // (ratio 0,29 contre 0,652 — et 0,38 pour les zones dessinées sur le
+        // captureCanvas). Le joueur voyait une ellipse fine et se faisait
+        // valider bien en dehors. Un vrai cercle géographique colle au géofence
+        // (getDistance <= rayon) à n'importe quelle inclinaison, vue
+        // planification à pitch 0 comprise.
         function _geoEllipse(lng, lat, radiusM, pitch, steps) {
             steps = steps || 48;
-            const pitchRad = (pitch || 67.5) * Math.PI / 180;
-            const scaleY = 0.45; // aplatissement vertical selon pitch
             const coords = [];
             const mPerDegLat = 111320;
             const mPerDegLng = 111320 * Math.cos(lat * Math.PI / 180);
             for (let i = 0; i <= steps; i++) {
                 const angle = (i / steps) * Math.PI * 2;
                 const dx = Math.cos(angle) * radiusM / mPerDegLng;
-                const dy = Math.sin(angle) * radiusM * scaleY / mPerDegLat;
+                const dy = Math.sin(angle) * radiusM / mPerDegLat;
                 coords.push([lng + dx, lat + dy]);
             }
             return coords;
@@ -18465,13 +18488,37 @@
             carnet_resource:  '#F59E0B',
         };
 
+        let _capResizeBound = false;
         function _capInit() {
             const cv = document.getElementById('captureCanvas');
             if (!cv) return;
             const resize = () => { cv.width = cv.offsetWidth || window.innerWidth; cv.height = cv.offsetHeight || window.innerHeight; };
             resize();
-            window.addEventListener('resize', resize);
+            // _capStart() est rappelé à chaque reprise de partie : sans ce
+            // garde-fou, un listener resize de plus s'empilait à chaque fois.
+            if (!_capResizeBound) {
+                window.addEventListener('resize', resize);
+                _capResizeBound = true;
+            }
             _capCtx = cv.getContext('2d');
+        }
+
+        // Ids des points dont le MARQUEUR est réellement posé sur la mappe.
+        // Une zone de capture ne doit jamais se dessiner sans son icône : les
+        // échos sont désactivés (ECHOES_DISABLED) et les POI « disabled » ou
+        // « gated » sont masqués, mais leurs cercles continuaient d'être
+        // tracés — 20 zones d'écho pour zéro marqueur, 27 zones de POI pour 22
+        // marqueurs. C'est la source unique de vérité : la visibilité est
+        // décidée par updateXxxVisibility(), on la relit au lieu de la
+        // redéduire (et de diverger).
+        function _capVisibleIds(list, key) {
+            const ids = new Set();
+            (list || []).forEach(m => {
+                if (!m || !m.el || !m[key]) return;
+                if (m.el.style.display === 'none') return;
+                ids.add(m[key].id);
+            });
+            return ids;
         }
 
         function _capUpdate() {
@@ -18485,20 +18532,30 @@
                 ORB_POINTS.forEach(o => { if (o.tuto && !collectedOrbs.includes(o.id)) add(o.lng, o.lat, ORB_RADIUS, 'orb'); });
                 return;
             }
+            const vPoi    = _capVisibleIds(typeof poiMarkers    !== 'undefined' ? poiMarkers    : [], 'poi');
+            const vDust   = _capVisibleIds(typeof dustMarkers   !== 'undefined' ? dustMarkers   : [], 'dust');
+            const vEcho   = _capVisibleIds(typeof echoMarkers   !== 'undefined' ? echoMarkers   : [], 'echo');
+            const vOrb    = _capVisibleIds(typeof orbMarkers    !== 'undefined' ? orbMarkers    : [], 'orb');
+            const vScroll = _capVisibleIds(typeof scrollMarkers !== 'undefined' ? scrollMarkers : [], 'scroll');
+            const vLoot   = _capVisibleIds(typeof lootMarkers   !== 'undefined' ? lootMarkers   : [], 'loot');
+            const vCarnet = _capVisibleIds(typeof carnetResourceMarkers !== 'undefined' ? carnetResourceMarkers : [], 'pt');
             POIS.forEach(poi => {
+                if (!vPoi.has(poi.id)) return;
                 const st = getPoiThematicStatus(poi);
-                if (st === 'local' && !collectedCards.includes(poi.localCardId)) add(poi.lng, poi.lat, 50, 'poi_local');
-                else if (st === 'thematic_available') add(poi.lng, poi.lat, 50, 'poi_thematic');
-                else if (st === 'cooldown') add(poi.lng, poi.lat, 50, 'poi_cooldown');
+                if (st === 'local' && !collectedCards.includes(poi.localCardId)) add(poi.lng, poi.lat, COLLECTION_RADIUS, 'poi_local');
+                else if (st === 'thematic_available') add(poi.lng, poi.lat, COLLECTION_RADIUS, 'poi_thematic');
+                else if (st === 'cooldown') add(poi.lng, poi.lat, COLLECTION_RADIUS, 'poi_cooldown');
             });
             // Rayons = constantes de collecte réelles : dessiner 50 m là où la collecte
             // se déclenche à 30 m faisait entrer le joueur dans un cercle inopérant.
-            DUST_POINTS.forEach(d => { if (!collectedDustPoints.includes(d.id)) add(d.lng, d.lat, DUST_RADIUS, 'dust'); });
-            ECHO_POINTS.forEach(e => { if (!collectedEchoes.includes(e.id)) add(e.lng, e.lat, ECHO_RADIUS, 'echo'); });
-            ORB_POINTS.forEach(o => { if (!collectedOrbs.includes(o.id)) add(o.lng, o.lat, ORB_RADIUS, 'orb'); });
-            SCROLL_POINTS.forEach(s => { if (!collectedScrolls.includes(s.id)) add(s.lng, s.lat, SCROLL_RADIUS, 'scroll'); });
-            LOOT_POINTS.forEach(l => { if (!collectedLoots.includes(l.id)) add(l.lng, l.lat, 50, 'loot'); });
-            CARNET_RESOURCE_POINTS.forEach(pt => { if (!collectedCarnetResources.includes(pt.id)) add(pt.lng, pt.lat, CARNET_RESOURCE_RADIUS, 'carnet_resource'); });
+            // Les loots se ramassent au rayon des parchemins (cf. checkNearbyPOI et
+            // le clic du marqueur) : ils étaient dessinés à 50 m pour 20 m réels.
+            DUST_POINTS.forEach(d => { if (vDust.has(d.id) && !collectedDustPoints.includes(d.id)) add(d.lng, d.lat, DUST_RADIUS, 'dust'); });
+            ECHO_POINTS.forEach(e => { if (vEcho.has(e.id) && !collectedEchoes.includes(e.id)) add(e.lng, e.lat, ECHO_RADIUS, 'echo'); });
+            ORB_POINTS.forEach(o => { if (vOrb.has(o.id) && !collectedOrbs.includes(o.id)) add(o.lng, o.lat, ORB_RADIUS, 'orb'); });
+            SCROLL_POINTS.forEach(s => { if (vScroll.has(s.id) && !collectedScrolls.includes(s.id)) add(s.lng, s.lat, SCROLL_RADIUS, 'scroll'); });
+            LOOT_POINTS.forEach(l => { if (vLoot.has(l.id) && !collectedLoots.includes(l.id)) add(l.lng, l.lat, SCROLL_RADIUS, 'loot'); });
+            CARNET_RESOURCE_POINTS.forEach(pt => { if (vCarnet.has(pt.id) && !collectedCarnetResources.includes(pt.id)) add(pt.lng, pt.lat, CARNET_RESOURCE_RADIUS, 'carnet_resource'); });
         }
 
         function _capDraw() {
@@ -18509,8 +18566,19 @@
             const currentZoom = map.getZoom();
             const zoneOpacity = Math.max(0, Math.min(1, (currentZoom - 15.5) / 0.8));
             if (zoneOpacity <= 0) { _capAnim = requestAnimationFrame(_capDraw); return; }
-            // Isometrie coherente : ratio fixe pour vue top-down legerement inclinee
-            const RATIO_Y = 0.38;
+            // Isométrie réelle : le rapport hauteur/largeur d'un cercle au sol
+            // dépend de l'inclinaison de la caméra. Un ratio fixe (0,38)
+            // désaccordait les zones du captureCanvas des polygones dessinés par
+            // MapLibre, et les décollait du géofence dès que le pitch bougeait.
+            // On le mesure sur la projection courante, une fois par frame.
+            const _cC = map.getCenter();
+            const _cCenter = map.project(_cC);
+            const _cLat = _cC.lat;
+            const _cNorth = map.project([_cC.lng, _cLat + 50 / 111320]);
+            const _cEast  = map.project([_cC.lng + 50 / (111320 * Math.cos(_cLat * Math.PI / 180)), _cLat]);
+            const _rxRef = Math.abs(_cEast.x - _cCenter.x);
+            const _ryRef = Math.abs(_cNorth.y - _cCenter.y);
+            const RATIO_Y = (_rxRef > 0.5 && isFinite(_ryRef)) ? Math.max(0.12, Math.min(1, _ryRef / _rxRef)) : 0.38;
             // Seuils min par type : evite que la zone depasse l icone au zoom large
             const MIN_RX = { poi_local:32, poi_thematic:32, poi_cooldown:32, dust:20, orb:20, echo:28, scroll:18, loot:18, carnet_resource:18 };
             // Opacite remplissage par type
@@ -18787,8 +18855,13 @@
             setTimeout(() => { if (el.parentNode) el.remove(); }, 1600);
         }
 
+        // Compteur, pas booléen : deux écrans empilés (Collection puis
+        // Explorium) puis fermeture de celui du dessus remettait le drapeau à
+        // 0 alors que le premier était encore ouvert — les épingles de quête et
+        // les consoles de ramassage resurgissaient par-dessus lui.
         function _hideAllNearbyConsoles() {
-            document.body.dataset.screenOpen = '1';
+            const _n = parseInt(document.body.dataset.screenOpen, 10);
+            document.body.dataset.screenOpen = String((isNaN(_n) ? 0 : _n) + 1);
             ['nearbyPOI','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyLoot','nearbyBazar','nearbyInfo','nearbyPanneau','nearbyCarnetResource'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
@@ -18798,7 +18871,11 @@
         }
 
         function _showNearbyConsoles() {
-            document.body.dataset.screenOpen = '0';
+            const _n = parseInt(document.body.dataset.screenOpen, 10);
+            const _rest = Math.max(0, (isNaN(_n) ? 1 : _n) - 1);
+            document.body.dataset.screenOpen = String(_rest);
+            // Un écran reste ouvert dessous : ne rien redonner à voir.
+            if (_rest > 0) return;
             // Le joueur doit BOUGER pour revoir une console. En revenant d'un écran,
             // on marque comme déjà vues les zones où il se trouve encore : sans quoi
             // un simple aller-retour vers une interface faisait resurgir la console
@@ -18820,7 +18897,8 @@
         }
 
         function _isAnyScreenOpen() {
-            return document.body.dataset.screenOpen === '1';
+            const _n = parseInt(document.body.dataset.screenOpen, 10);
+            return !isNaN(_n) && _n > 0;
         }
 
         // ── Edge-trigger pour les consoles de POI ──
@@ -19141,6 +19219,10 @@
                     ]);
                 }
             }
+            // Les zones du captureCanvas suivent la visibilité qu'on vient de
+            // fixer : sans cet appel, elles ne se rafraîchissaient qu'au
+            // prochain updateDust/Orb/Scroll/Loot.
+            if (typeof _capUpdate === 'function') _capUpdate();
         }
 
         function updateDustVisibility() {
@@ -22249,6 +22331,15 @@
             const src = _cardDetailSource;
             _cardDetailSource = null;
             selectedCard = null;
+
+            // Restauration inconditionnelle. Ces deux écrans sont neutralisés à
+            // l'ouverture de la fiche (ils servent de fond) et n'étaient rendus
+            // qu'à la branche correspondante : si la source changeait entre
+            // temps, la Collection restait visible mais morte au toucher.
+            const _cp = document.getElementById('collectionsPanel');
+            if (_cp) _cp.style.pointerEvents = '';
+            const _mm = document.getElementById('mindmapScreen');
+            if (_mm) _mm.style.pointerEvents = '';
 
             if (src === 'bag' || cardDetailOpenedFromBag) {
                 cardDetailOpenedFromBag = false;
@@ -29482,13 +29573,15 @@
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([etape.objectifGeo.lng, etape.objectifGeo.lat])
                     .addTo(map);
-                // Forcer le marker au-dessus des autres POI
+                // Au-dessus des autres marqueurs, mais DANS la mappe.
+                // Avant : z-index 500 sur le marqueur (il se comparait aux
+                // écrans et passait par-dessus) et sur son parent — ce dernier
+                // sans effet, .maplibregl-canvas-container étant en position
+                // static. #map isole désormais son empilement : un petit
+                // z-index suffit et ne peut plus déborder.
                 try {
                     const wrap = marker.getElement();
-                    if (wrap && wrap.parentElement) {
-                        wrap.style.zIndex = '500';
-                        wrap.parentElement.style.zIndex = '500';
-                    }
+                    if (wrap) wrap.style.zIndex = '2';
                 } catch(e){}
                 _questPinMarkers.push({ marker, el, grappeId, etapeId: etape.id });
             });
@@ -32897,7 +32990,12 @@
                 return;
             }
             // Garder source pour le retour (le back doit revenir à la V2)
-            window._cardDetailSource = 'voutV2';
+            // _cardDetailSource est un « let » de ce même script : passer par
+            // window créait une SECONDE variable, jamais lue par
+            // closeCardDetail(). La branche voutV2 était morte et la fermeture
+            // retombait sur la source précédente — fermer une carte ouverte
+            // depuis l'Explorium rouvrait le sac.
+            _cardDetailSource = 'voutV2';
             openCardDetail(card);
         }
 
