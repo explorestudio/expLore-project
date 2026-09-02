@@ -10751,6 +10751,7 @@
             "✦ Quête": "✦ Quest",
             "Tu es à l'endroit recherché": "You've reached the right place",
             "Valider la quête": "Complete the quest",
+            "Accepter et valider": "Accept and complete",
             "Objet mystère": "Mystery item",
             "Appuie pour continuer": "Tap to continue",
             "Parchemin obtenu": "Scroll obtained",
@@ -18355,8 +18356,14 @@
         }
 
         function addTestDust(n) {
-            bagInv.dust = (bagInv.dust || 0) + n;
+            // La réserve du joueur vit dans memorialDust, pas dans bagInv : le bouton
+            // alimentait une clé fantôme et « Donner de la poudre » restait grisé.
+            memorialDust += n;
+            const _hud = document.getElementById('dustCounter');
+            if (_hud) _hud.textContent = memorialDust;
             saveProgress();
+            if (typeof selectedCard !== 'undefined' && selectedCard
+                && typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
             refreshTestState();
             showToast('✨ +' + n + ' poudre ajoutée');
         }
@@ -18419,19 +18426,25 @@
         }
 
         function testLevelUpGrappeCards() {
-            // Toutes les cartes utilisées par les 4 grappes
-            const ids = [
-                // passeurs
-                'tc_imprimerie','tc_gutenberg','tc_bibliotheque','tc_ibn_battuta','card18','card1',
-                // mesure_monde
-                'tc_microscope','tc_darwin','tc_linne','tc_marie_curie','card15','tc_herbier',
-                // memoire_formes
-                'tc_masque','tc_commedia','card4','tc_moliere','card2',
-                // pouvoir_lieux
-                'tc_cabinet','tc_academie','card17','card21','card12'
-            ];
+            // Les IDs sont dérivés des prérequis réels de GRAPPE_QUESTS (déjà patchés
+            // par v2PatchGrappeQuests). L'ancienne liste en dur ignorait la grappe
+            // « Lyon, ville du livre » et les acteurs-monde de la Voûte V2 : leurs
+            // étapes restaient verrouillées après un clic sur le bouton.
+            const ids = new Set();
+            Object.values(GRAPPE_QUESTS).forEach(grappe => {
+                ((grappe.quete && grappe.quete.etapes) || []).forEach(etape => {
+                    (etape.prerequis || []).forEach(req => ids.add(req.cardId));
+                });
+            });
+            // Verrou du tutoriel : il appartient à l'onboarding, on ne le force pas.
+            ids.delete('__tuto_lock__');
             let entriesAdded = 0;
             ids.forEach(id => {
+                // Acteurs-monde de la Voûte V2 : ils ont leur propre voie de déblocage
+                if (typeof V2_NEW_ACTORS !== 'undefined' && V2_NEW_ACTORS[id]) {
+                    if (typeof v2MarkWorldActorEncountered === 'function') v2MarkWorldActorEncountered(id);
+                    return;
+                }
                 if (!collectedCards.includes(id)) collectedCards.push(id);
                 if (!cardLevels[id]) cardLevels[id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
                 cardLevels[id].level = 3;
@@ -18461,7 +18474,9 @@
                 });
             });
             saveProgress();
-            showToast('⭐ Cartes grappe LV3 + ' + entriesAdded + ' entrées carnet');
+            if (typeof refreshMindmapState === 'function') refreshMindmapState();
+            if (typeof updateQuestMarkers === 'function') updateQuestMarkers();
+            showToast('⭐ ' + ids.size + ' acteurs de grappe LV3 + ' + entriesAdded + ' entrées carnet');
         }
 
         // Force la validation de la première quête active trouvée (test sans GPS)
@@ -18585,7 +18600,7 @@
                 'Météo : ' + (_testWeather || 'réelle'),
                 'Parchemins : ' + (bagInv.parchemins ? bagInv.parchemins.length : 0),
                 'Orbes : ' + (bagInv.orbes || 0),
-                'Poudre : ' + (bagInv.dust || 0),
+                'Poudre : ' + memorialDust,
                 'Lumens : ' + (bagInv.lumens || 0),
                 'Cartes collectées : ' + collectedCards.length,
             ].join('<br>');
@@ -19122,7 +19137,7 @@
         function _hideAllNearbyConsoles() {
             const _n = parseInt(document.body.dataset.screenOpen, 10);
             document.body.dataset.screenOpen = String((isNaN(_n) ? 0 : _n) + 1);
-            ['nearbyPOI','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyLoot','nearbyBazar','nearbyInfo','nearbyPanneau','nearbyCarnetResource'].forEach(id => {
+            ['nearbyQuest','nearbyPOI','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyLoot','nearbyBazar','nearbyInfo','nearbyPanneau','nearbyCarnetResource'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
@@ -22170,6 +22185,10 @@
 
         function renderCollectionsList() {
             const listDiv = document.getElementById('collectionsList');
+            // L'album a remplacé #collectionsList : ce rendu legacy n'a plus de
+            // conteneur et faisait planter addTestCards() (« Débloquer toutes les
+            // cartes ») avant le refresh de l'UI. On délègue au shim album.
+            if (!listDiv) { albSwitchTab(typeof _albCurrentTab !== 'undefined' ? (_albCurrentTab || 'cards') : 'cards'); return; }
             listDiv.innerHTML = '';
 
             const activeTab = currentColMainTab || 'collections';
@@ -29932,32 +29951,37 @@
             Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
                 grappe.quete.etapes.forEach(etape => {
                     const status = _getEtapeStatus(gid, etape);
-                    if (status !== 'active') return;
+                    // Une étape « disponible » (prérequis remplis, pas encore acceptée)
+                    // ouvre aussi la console : arriver sur place suffit, le joueur n'a
+                    // plus à repasser par l'Explorium pour accepter avant de valider.
+                    if (status !== 'active' && status !== 'available') return;
                     if (!etape.objectifGeo) return;
                     const dist = getDistance(
                         playerPos.lat, playerPos.lng,
                         etape.objectifGeo.lat, etape.objectifGeo.lng
                     );
-                    const radius = etape.objectifGeo.rayon || 50;
-                    if (dist <= radius) {
-                        if (!inZone || dist < inZone.dist) {
-                            inZone = { gid, grappe, etape, dist };
-                        }
-                    }
+                    // Même rayon que le bouton « tu es sur place » de l'Explorium.
+                    const radius = etape.objectifGeo.rayon || 80;
+                    if (dist > radius) return;
+                    // Une quête acceptée passe devant une simple disponible.
+                    const better = !inZone
+                        || (status === 'active' && inZone.status !== 'active')
+                        || (status === inZone.status && dist < inZone.dist);
+                    if (better) inZone = { gid, grappe, etape, dist, status };
                 });
             });
 
             if (inZone && !(_isAnyScreenOpen && _isAnyScreenOpen())) {
                 // Ouvrir la console de validation (au lieu de valider automatiquement)
-                _showNearbyQuestConsole(inZone.gid, inZone.grappe, inZone.etape);
+                _showNearbyQuestConsole(inZone.gid, inZone.grappe, inZone.etape, inZone.status);
             } else {
                 _hideNearbyQuestConsole();
             }
         }
 
         let _currentNearbyQuest = null;
-        function _showNearbyQuestConsole(gid, grappe, etape) {
-            _currentNearbyQuest = { gid, etapeId: etape.id };
+        function _showNearbyQuestConsole(gid, grappe, etape, status) {
+            _currentNearbyQuest = { gid, etapeId: etape.id, status: status || 'active' };
             const div = document.getElementById('nearbyQuest');
             if (!div) return;
             const nameEl = document.getElementById('nearbyQuestName');
@@ -29965,10 +29989,15 @@
             const btn = document.getElementById('nearbyQuestBtn');
             if (nameEl) nameEl.textContent = '✦ ' + T(etape.titre || 'Quête');
             if (descEl) descEl.textContent = etape.objectifGeo?.nom || 'Tu es à l\'endroit recherché';
+            // Étape jamais acceptée : le bouton fait accepter ET valider d'un geste.
+            if (btn) btn.textContent = (status === 'available')
+                ? T('Accepter et valider')
+                : T('Valider la quête');
             // Couleur de la grappe sur le bouton + bordure
             if (btn) btn.style.background = grappe.color || '#d9a441';
             div.style.borderColor = grappe.color || '#d9a441';
             div.classList.remove('hidden');
+            if (typeof stackNearbyPanels === 'function') stackNearbyPanels();
         }
         function _hideNearbyQuestConsole() {
             _currentNearbyQuest = null;
@@ -29977,8 +30006,12 @@
         }
         function validateNearbyQuest() {
             if (!_currentNearbyQuest) return;
-            const { gid, etapeId } = _currentNearbyQuest;
+            const { gid, etapeId, status } = _currentNearbyQuest;
             _hideNearbyQuestConsole();
+            // Étape pas encore acceptée : on l'accepte sur place avant de la valider.
+            if (status === 'available' && typeof _acceptQuestEtape === 'function') {
+                _acceptQuestEtape(gid, etapeId);
+            }
             // Flux habituel : complétion → Explorium + fresque
             _completeQuestEtape(gid, etapeId);
         }
