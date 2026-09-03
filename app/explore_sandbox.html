@@ -238,6 +238,8 @@
   .btn:hover{border-color:var(--ochre)}
   .btn.primary{background:var(--sage);border-color:var(--sage);color:#0e1014;font-weight:700}
   .btn.primary:disabled{background:#3a4034;border-color:#3a4034;color:#6f7568;cursor:not-allowed}
+  .btn:not(.primary):disabled{opacity:.4;cursor:not-allowed}
+  .btn:not(.primary):disabled:hover{border-color:var(--line)}
   .btn-row{display:flex;gap:8px}.btn-row .btn{margin-top:8px}
   .log{margin-top:13px;background:#0e1014;border:1px solid var(--line);border-radius:6px;padding:10px;font-size:11.5px;line-height:1.5;height:120px;overflow-y:auto;color:#b8b2a2}
   .log .e{margin-bottom:4px;padding-bottom:4px;border-bottom:1px dotted #232831}
@@ -250,6 +252,30 @@
   .modal p{font-size:14px;line-height:1.55;margin-bottom:8px}
   .modal .frag{font-style:italic;color:#5a5444;border-left:3px solid var(--ochre);padding-left:12px;text-align:left;margin:13px 0;font-size:13.5px}
   .modal .btn{background:var(--ink);color:var(--paper);max-width:220px;margin:8px auto 0}
+
+  /* ---- Lieu-tutoriel « Le seuil » ---- */
+  /* Pas de calque sombre plein écran : il masquerait les jauges, qu'il faut apprendre à lire.
+     On grise seulement ce qui n'est pas autorisé à l'étape courante. */
+  .card.tuto-off{opacity:.3;filter:grayscale(1);pointer-events:none}
+  .tuto-target{outline:2px solid var(--ochre);outline-offset:3px}
+  .cell.tuto-cell{box-shadow:0 0 0 2px var(--ochre),0 0 14px rgba(192,138,46,.55);animation:tutoCell 1.7s ease-in-out infinite}
+  @keyframes tutoCell{0%,100%{box-shadow:0 0 0 2px var(--ochre),0 0 6px rgba(192,138,46,.35)}
+                      50%{box-shadow:0 0 0 3px var(--ochre),0 0 20px rgba(192,138,46,.8)}}
+  .tuto-bubble{position:fixed;z-index:600;width:290px;max-width:calc(100vw - 16px);
+    background:var(--paper);color:var(--paperink);border:2px solid var(--ochre);border-radius:10px;
+    padding:11px 13px 9px;font-size:13px;line-height:1.5;box-shadow:0 12px 34px rgba(0,0,0,.5);display:none}
+  .tuto-bubble.show{display:block}
+  .tuto-bubble .tb-step{font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    color:#8a7c58;font-weight:700;margin-bottom:2px}
+  .tuto-bubble .tb-titre{font-weight:700;font-size:14px;margin-bottom:5px}
+  .tuto-bubble b{color:#6d4f14}
+  .tuto-bubble .tb-skip{display:block;margin:9px 0 0 auto;font-size:11.5px;color:#8a7c58;
+    background:none;border:0;cursor:pointer;font-family:inherit;text-decoration:underline;padding:2px 0}
+  .tuto-bubble .tb-arrow{position:absolute;width:0;height:0;border:9px solid transparent}
+  .tuto-bubble.below .tb-arrow{top:-20px;border-bottom-color:var(--ochre)}
+  .tuto-bubble.above .tb-arrow{bottom:-20px;border-top-color:var(--ochre)}
+  .tuto-bubble.left .tb-arrow{right:-20px;border-left-color:var(--ochre)}
+  .tuto-bubble.right .tb-arrow{left:-20px;border-right-color:var(--ochre)}
 </style>
 </head>
 <body>
@@ -296,6 +322,7 @@
 </div>
 
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="tuto-bubble" id="tuto-bubble"></div>
 <div class="card-modal-bg" id="card-modal"><div class="card-detail" id="card-detail"></div></div>
 
 <script>
@@ -306,6 +333,38 @@ const GENERIC_KEYS = ['oubli','doute','discorde'];
 
 /* ============================ DONNÉES : 3 PUZZLES ============================ */
 const PUZZLES = [
+{
+  id:'seuil', _tuto:true, title:'0. Le seuil', perTurn:2, areaAuras:true,
+  scene:'Le seuil',
+  sub:'Une rue sans nom, un jour sans date. Apprends les gestes : l’Oubli doit redescendre à 2.',
+  law:{ text:'Aucune loi ici — le seuil est un lieu neutre, fait pour apprendre.' },
+  gauges:[
+    {key:'oubli', nm:'Oubli', start:8, mode:'down', target:2, danger:12, dispMax:12},
+  ],
+  map:[
+    '.F.',
+    '...',
+    '...',
+  ],
+  legend:{
+    'F':{type:'foyer', gauge:'oubli', delta:1, ent:'🌫️', label:'La brume'},
+  },
+  dotation:[
+    {id:'t_temoin', name:'Le témoin', role:'Symbole', type:'Personnage', sup:'histoire', ic:'👵',
+     ef:'**Immédiat** : −2 Oubli.', portee:'Sa case',
+     effect:{oubli:-2}, amplifiable:true},
+    {id:'t_passeuse', name:'La passeuse', role:'Amplificateur', type:'Personnage', sup:'arts · histoire', ic:'🔑',
+     ef:'**Aura d’amplification (zone)** : ×2 l’effet des présences voisines.', portee:'Aura (×2)',
+     aura:'amplify'},
+    {id:'t_archiviste', name:'L’archiviste', role:'Influenceur', type:'Personnage', sup:'science · histoire', ic:'🗄️',
+     ef:'**Immédiat** : −1 Oubli. **Aura d’inversion** : retourne l’effet d’une présence voisine.', portee:'Sa case + aura (inverse)',
+     effect:{oubli:-1}, amplifiable:true, aura:'invert'},
+    {id:'t_presse', name:'La presse', role:'Propagateur', type:'Objet', sup:'science · société', ic:'🗜️',
+     ef:'**Immédiat** : répète l’effet à la pose de la présence hôte.', portee:'Sur un personnage',
+     special:'propagate'},
+  ],
+  fragment:'« Tout lieu commence par un seuil. Celui-ci ne mène nulle part : il apprend à marcher. »',
+},
 {
   id:'merciere', title:'Rue Mercière', perTurn:2, areaAuras:true,
   scene:'Rue Mercière, sous la censure',
@@ -780,6 +839,7 @@ let P, gauges, gMeta, grid, ROWS, COLS, hand, sel, turn, left, finished, memoire
 
 function loadPuzzle(idx){
   P = PUZZLES[idx];
+  tutoStep = P._tuto ? 0 : -1;          // le tutoriel ne vit que sur son propre lieu
   gMeta = {}; gauges = {};
   P.gauges.forEach(g=>{ gMeta[g.key]=g; gauges[g.key]=g.start; });
   ROWS = P.map.length; COLS = P.map[0].length;
@@ -801,6 +861,7 @@ function loadPuzzle(idx){
   renderTabs(idx); renderHeader(); renderAll();
   document.getElementById('gen-row').style.display = P._gen ? 'flex' : 'none';
   document.getElementById('inspector').innerHTML='<div class="insp-row insp-empty">'+t('Touche une carte ou une case pour voir ses propriétés.')+'</div>';
+  tutoRender();
 }
 
 /* ============================ HELPERS ============================ */
@@ -901,7 +962,7 @@ function enterPendingTarget(r,c,type,card){
       : '<div class="insp-row"><b>'+t('Cible l’aura')+'</b> — '+t('touche une case surlignée pour choisir ce que')+' «&nbsp;'+card.name+'&nbsp;» '+t('va')+' '+verbe+'.</div>';
   document.getElementById('inspector').innerHTML=label;
 }
-function bindAuraTarget(tr,tc){
+function bindAuraTargetCore(tr,tc){
   if(!pendingTarget) return;
   const {r,c,type,card,elig}=pendingTarget;
   if(!elig.some(p=>p.r===tr&&p.c===tc)) return;
@@ -1035,10 +1096,11 @@ function computeEffects(card,r,c){
 /* ============================ RENDU ============================ */
 function renderTabs(idx){ const el=document.getElementById('tabs'); el.innerHTML='';
   PUZZLES.forEach((p,i)=>{ const b=document.createElement('div'); b.className='tab'+(i===idx?' active':'');
-    b.textContent=(i+1)+'. '+t(p.title); b.onclick=()=>loadPuzzle(i); el.appendChild(b); }); }
+    const n=PUZZLES.slice(0,i).filter(q=>!q._tuto).length+1;   // le tutoriel ne consomme pas de numéro
+    b.textContent=(p._tuto?'':n+'. ')+t(p.title); b.onclick=()=>loadPuzzle(i); el.appendChild(b); }); }
 
 function renderHeader(){ document.getElementById('scene').textContent=t(P.scene);
-  document.getElementById('sub').textContent=tEf(P.sub);
+  document.getElementById('sub').innerHTML=tEf(P.sub);   // tEf injecte les icônes de jauge : c'est du HTML
   document.getElementById('law').innerHTML='<span class="law-tag">'+t('Loi du lieu')+'</span>'+tEf(P.law.text);
   // légende contextuelle
   const lg=document.getElementById('legend'); let h='';
@@ -1152,6 +1214,8 @@ function renderGrid(){ const el=document.getElementById('grid'); el.innerHTML=''
     if(cell.type==='void'){ div.className='cell void'; div.dataset.r=r; div.dataset.c=c; el.appendChild(div); continue; }
     const isValid=valid.some(p=>p.r===r&&p.c===c); if(isValid) div.classList.add('valid');
     const isTarget=targets.some(p=>p.r===r&&p.c===c); if(isTarget) div.classList.add('target');
+    // tutoriel : la case attendue est surlignée en permanence, même sans carte sélectionnée
+    { const stt=tutoNow(); if(stt && stt.restrict.cells.some(p=>p.r===r&&p.c===c)) div.classList.add('tuto-cell'); }
     if(pendingTarget && pendingTarget.r===r && pendingTarget.c===c) div.classList.add('aura-source');
     const ampHere=auraAt(r,c,'amplify');
     const k=auraKindAt(r,c); if(k) div.classList.add('aura-'+k);
@@ -1247,6 +1311,7 @@ const KEYWORDS={
   'Présence':'Effet continu tant que la carte reste sur la grille (synonyme de "tant que présent").',
   'Aura d’amplification ciblée':'À la pose, choisis un voisin ortho (carte ou foyer). Tant que la carte est présente, l’effet du voisin choisi est multiplié ×2.',
   'Aura d’amplification (zone)':'Tant que la carte est présente, l’effet de tous les voisins ortho (cartes ET foyers) est multiplié ×2. Pas de choix de cible — affecte la zone entière.',
+  'Aura d’inversion':'Tant que la carte est présente, l’effet des présences voisines est inversé (signe retourné). Forme en zone, sans choix de cible.',
   'Aura d’inversion ciblée':'À la pose, choisis un voisin (carte ou foyer). Tant que la carte est présente, l’effet du voisin choisi est inversé (signe retourné). Si la carte porteuse est elle-même amplifiée, l’inversion est doublée.',
   'Aura d’annulation ciblée':'À la pose, choisis un voisin (carte ou foyer). Tant que la carte est présente, l’effet du voisin choisi est annulé (0).',
   'Greffe':'(Mot-clef obsolète — les objets se posent désormais sur les entités sans verbe spécial.)',
@@ -1577,6 +1642,39 @@ const I18N={
   '**Immédiat** : trace une **Ligne verte** (ligne ou colonne). S’applique aussitôt à chaque entité présente sur la ligne (personnages + foyers, hors pièges). Toute carte posée ensuite sur une case verte applique aussi son effet.':{en:'**Immediate**: trace a **Green line** (row or column). Applies immediately to every entity present on the line (characters + sources, excluding traps). Any card placed later on a green cell also applies its effect.'},
   '**Immédiat** : **Échange** — choisis un foyer ou aspect (n’importe où sur le plateau) ou un personnage adjacent, vous permutez vos places.':{en:'**Immediate**: **Swap** — choose a source or aspect (anywhere on the board) or an adjacent character, you swap places.'},
   'Plateau (Échange long)':{en:'Board (Long swap)'},
+  // ===== Lieu-tutoriel « Le seuil » =====
+  '0. Le seuil':{en:'0. The threshold'},
+  'Le seuil':{en:'The threshold'},
+  'Une rue sans nom, un jour sans date. Apprends les gestes : l’Oubli doit redescendre à 2.':{en:'A street with no name, a day with no date. Learn the gestures: Oblivion must fall back to 2.'},
+  'Aucune loi ici — le seuil est un lieu neutre, fait pour apprendre.':{en:'No rule here — the threshold is a neutral place, made for learning.'},
+  '« Tout lieu commence par un seuil. Celui-ci ne mène nulle part : il apprend à marcher. »':{en:'“Every place begins with a threshold. This one leads nowhere: it teaches you to walk.”'},
+  'La brume':{en:'The mist'},
+  'La presse':{en:'The press'},
+  '**Aura d’amplification (zone)** : ×2 l’effet des présences voisines.':{en:'**Amplification aura (zone)**: ×2 the effect of neighboring presences.'},
+  '**Immédiat** : −1 Oubli. **Aura d’inversion** : retourne l’effet d’une présence voisine.':{en:'**Immediate**: −1 Oblivion. **Inversion aura**: flips the effect of a neighboring presence.'},
+  '**Immédiat** : répète l’effet à la pose de la présence hôte.':{en:'**Immediate**: repeats the host presence’s on-play effect.'},
+  'Aura d’inversion':{en:'Inversion aura'},
+  'Étape':{en:'Step'},
+  'Passer le tutoriel':{en:'Skip tutorial'},
+  'Commencer Rue Mercière':{en:'Start Mercière Street'},
+  'Le seuil est franchi':{en:'The threshold is crossed'},
+  'Poser, amplifier, inverser, greffer : tu as la grammaire. La suite se joue sur des lieux réels.':{en:'Play, amplify, invert, graft: you have the grammar. The rest is played on real places.'},
+  // titres d'étapes
+  'Poser':{en:'Play'},
+  'Le tick':{en:'The tick'},
+  'Amplifier':{en:'Amplify'},
+  'Inverser':{en:'Invert'},
+  'Retourner':{en:'Flip'},
+  'Greffer':{en:'Graft'},
+  'Valider':{en:'Validate'},
+  // textes des bulles
+  'L’Oubli est à 8. Il doit redescendre à 2. Glisse **Le témoin** sur la case surlignée : son effet **Immédiat** s’applique une fois, à la pose.':{en:'Oblivion is at 8. It must fall back to 2. Drag **The witness** onto the highlighted cell: its **Immediate** effect applies once, on play.'},
+  '−2, une seule fois. Mais **La brume** est une présence : elle agit à chaque fin de tour. Termine le tour pour la voir pousser.':{en:'−2, once only. But **The mist** is a presence: it acts at every end of turn. End the turn to watch it push.'},
+  '+1. Il va falloir plus fort. Pose **La passeuse** à côté du témoin : son **Aura d’amplification** double l’effet des présences voisines.':{en:'+1. You will need something stronger. Play **The keeper** next to the witness: her **Amplification aura** doubles the effect of neighboring presences.'},
+  'Poser ne suffira pas éternellement. Pose **L’archiviste** contre La brume : son **Aura d’inversion** retourne l’effet d’une présence voisine. Regarde le chiffre de La brume changer de signe.':{en:'Playing cards will not be enough forever. Play **The archivist** against The mist: its **Inversion aura** flips the effect of a neighboring presence. Watch The mist’s number change sign.'},
+  'La brume efface maintenant l’Oubli au lieu de le nourrir. Termine le tour.':{en:'The mist now erases Oblivion instead of feeding it. End the turn.'},
+  'Un **Objet** ne se pose pas sur une case vide : il se greffe sur une présence. Pose **La presse** sur Le témoin — elle répète son effet, et La passeuse le double encore.':{en:'An **Object** is not played on an empty cell: it grafts onto a presence. Play **The press** on The witness — it repeats his effect, and The keeper doubles it again.'},
+  'L’Oubli est retombé. **Valide la scène.** Tu sais poser, amplifier, inverser et greffer : c’est toute la grammaire du jeu.':{en:'Oblivion has fallen. **Validate the scene.** You can play, amplify, invert and graft: that is the whole grammar of the game.'},
   // === Inspector et logs : termes manquants ===
   'Déplacement':{en:'Movement'},
   'Spawn':{en:'Spawn'},
@@ -1595,6 +1693,7 @@ const KEYWORDS_EN={
   'While present':'Continuous effect while the card stays on the grid.',
   'Targeted amplification aura':'On placement, pick an ortho neighbor (card or foyer). While the card is present, the neighbor’s effect is ×2.',
   'Amplification aura (zone)':'While present, the effect of all ortho neighbors (cards AND foyers) is ×2. No target choice — affects the entire zone.',
+  'Inversion aura':'While the card is present, the effect of neighboring presences is inverted (sign flipped). Zone form, no target choice.',
   'Targeted inversion aura':'On placement, pick a neighbor. While the card is present, the neighbor’s effect is inverted. If the card itself is amplified, the inversion is doubled.',
   'Targeted cancel aura':'On placement, pick a neighbor. While the card is present, the neighbor’s effect is cancelled (0).',
   'Graft':'This object attaches to an existing card or element. It modifies or completes its behavior without taking a free cell.',
@@ -1672,6 +1771,8 @@ function formatEf(text){ if(!text) return '';
 function renderHand(){ const el=document.getElementById('hand'); el.innerHTML='';
   hand.forEach(card=>{ const d=document.createElement('div');
     d.className='card '+(card.type==='Objet'?'t-objet':'t-perso')+(sel&&sel.id===card.id?' sel':'');
+    d.dataset.cardId = card.id;                                   // sert aussi d'ancre au tutoriel
+    if(!tutoAllowsCard(card.id)) d.classList.add('tuto-off');
     const pips = supPips(card.sup);
     const supLabel = card.sup ? `<span class="chip-sup-text" title="${card.sup}">${pips}<i>${card.sup}</i></span>` : '';
     d.innerHTML=`<span class="ic">${card.ic}</span><div class="body"><div class="cn">${t(card.name)}</div><div class="role"><span class="chip ${card.type==='Objet'?'chip-o':'chip-p'}">${t(card.type)}</span> ${t(card.role)} ${supLabel}</div><div class="ef">${formatEf(tEf(card.ef, true))}</div></div>`;
@@ -1679,7 +1780,7 @@ function renderHand(){ const el=document.getElementById('hand'); el.innerHTML=''
     // pointerdown : initialise un état "potentiel drag" — pas encore confirmé
     // Si le pointeur bouge de plus de 8px avant pointerup → c'est un drag : on crée un fantôme qui suit le doigt/curseur
     // Si pas de mouvement → c'est un tap : on ouvre la modale grand format
-    d.onpointerdown=(e)=>{ if(finished||pendingTarget) return;
+    d.onpointerdown=(e)=>{ if(finished||pendingTarget||!tutoAllowsCard(card.id)) return;
       if(e.pointerType==='mouse' && e.button!==0) return;
       const rect=d.getBoundingClientRect();
       dragState={card, cardEl:d, ghost:null, startX:e.clientX, startY:e.clientY,
@@ -1692,7 +1793,9 @@ function renderHand(){ const el=document.getElementById('hand'); el.innerHTML=''
 function renderTurn(){ document.getElementById('turn').textContent=turn; document.getElementById('left').textContent=left; }
 function renderLog(){ const el=document.getElementById('log'); el.innerHTML='';
   logEntries.slice(-40).reverse().forEach(e=>{ const d=document.createElement('div'); d.className='e'+(e.law?' law':''); d.innerHTML=e.t; el.appendChild(d); }); }
-function renderValidate(){ document.getElementById('validate').disabled=!objectiveMet(); }
+function renderValidate(){ const st=tutoNow();
+  document.getElementById('validate').disabled = !objectiveMet() || !!(st && st.restrict.validate===false);
+  document.getElementById('endturn').disabled  = !!(st && st.restrict.endTurn===false); }
 
 /* ============================ INSPECTEUR ============================ */
 function selectCard(card){ if(finished||pendingTarget) return;
@@ -1876,6 +1979,127 @@ function inspectCell(r,c){ const cell=grid[r][c],el=document.getElementById('ins
   }
 }
 
+/* ============================ LIEU-TUTORIEL « Le seuil » ============================
+   Le lieu EST le tutoriel : pas de calque, pas de bouton « suivant ». Chaque étape
+   n'autorise qu'un seul geste, et c'est ce geste qui la valide.
+   Trois champs par étape : ce qu'on montre (ancre, texte), ce qu'on autorise (restrict),
+   ce qui fait avancer (done). */
+const TUTO_STEPS = [
+  { id:'poser', titre:'Poser',
+    texte:'L’Oubli est à 8. Il doit redescendre à 2. Glisse **Le témoin** sur la case surlignée : son effet **Immédiat** s’applique une fois, à la pose.',
+    ancre:'card:t_temoin',
+    restrict:{ cards:['t_temoin'], cells:[{r:1,c:1}], endTurn:false, validate:false },
+    done:()=> !!grid[1][1].card },
+  { id:'tick', titre:'Le tick',
+    texte:'−2, une seule fois. Mais **La brume** est une présence : elle agit à chaque fin de tour. Termine le tour pour la voir pousser.',
+    ancre:'#endturn',
+    restrict:{ cards:[], cells:[], endTurn:true, validate:false },
+    done:()=> turn===2 },
+  { id:'amplifier', titre:'Amplifier',
+    texte:'+1. Il va falloir plus fort. Pose **La passeuse** à côté du témoin : son **Aura d’amplification** double l’effet des présences voisines.',
+    ancre:'card:t_passeuse',
+    restrict:{ cards:['t_passeuse'], cells:[{r:1,c:0}], endTurn:false, validate:false },
+    done:()=> !!grid[1][0].card },
+  { id:'inverser', titre:'Inverser',
+    texte:'Poser ne suffira pas éternellement. Pose **L’archiviste** contre La brume : son **Aura d’inversion** retourne l’effet d’une présence voisine. Regarde le chiffre de La brume changer de signe.',
+    ancre:'card:t_archiviste',
+    restrict:{ cards:['t_archiviste'], cells:[{r:0,c:2}], endTurn:false, validate:false },
+    done:()=> !!grid[0][2].card },
+  { id:'retourner', titre:'Retourner',
+    texte:'La brume efface maintenant l’Oubli au lieu de le nourrir. Termine le tour.',
+    ancre:'cell:0,1',
+    restrict:{ cards:[], cells:[], endTurn:true, validate:false },
+    done:()=> turn===3 },
+  { id:'greffer', titre:'Greffer',
+    texte:'Un **Objet** ne se pose pas sur une case vide : il se greffe sur une présence. Pose **La presse** sur Le témoin — elle répète son effet, et La passeuse le double encore.',
+    ancre:'card:t_presse',
+    restrict:{ cards:['t_presse'], cells:[{r:1,c:1}], endTurn:false, validate:false },
+    done:()=>{ const h=grid[1][1].card; return !!(h && h.equips && h.equips.length); } },
+  { id:'valider', titre:'Valider',
+    texte:'L’Oubli est retombé. **Valide la scène.** Tu sais poser, amplifier, inverser et greffer : c’est toute la grammaire du jeu.',
+    ancre:'#validate',
+    restrict:{ cards:[], cells:[], endTurn:false, validate:true } },
+];
+let tutoStep = -1;                       // index de l'étape courante ; -1 = inactif ou terminé
+function tutoActive(){ return tutoStep>=0 && !!P && !!P._tuto && tutoStep<TUTO_STEPS.length; }
+function tutoNow(){ return tutoActive() ? TUTO_STEPS[tutoStep] : null; }
+function tutoAllowsCard(id){ const st=tutoNow(); return !st || st.restrict.cards.indexOf(id)>=0; }
+// 'card:<id>' · 'cell:<r>,<c>' · sélecteur CSS direct
+function tutoAnchorEl(ancre){
+  if(!ancre) return null;
+  if(ancre.indexOf('card:')===0) return document.querySelector('.card[data-card-id="'+ancre.slice(5)+'"]');
+  if(ancre.indexOf('cell:')===0){ const p=ancre.slice(5).split(',');
+    return document.querySelector('.cell[data-r="'+p[0]+'"][data-c="'+p[1]+'"]'); }
+  return document.querySelector(ancre);
+}
+// le gras du brief marque le mot enseigné : pas de tooltip de mot-clef ici, juste du gras
+function tutoTexte(s){ return tEf(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>'); }
+function tutoRender(){
+  const bulle=document.getElementById('tuto-bubble');
+  document.querySelectorAll('.tuto-target').forEach(el=>el.classList.remove('tuto-target'));
+  const st=tutoNow();
+  if(!st){ bulle.classList.remove('show'); return; }
+  bulle.innerHTML='<div class="tb-arrow"></div>'
+    +'<div class="tb-step">'+t('Étape')+' '+(tutoStep+1)+'/'+TUTO_STEPS.length+'</div>'
+    +'<div class="tb-titre">'+t(st.titre)+'</div>'
+    +'<div class="tb-texte">'+tutoTexte(st.texte)+'</div>'
+    +'<button class="tb-skip" id="tuto-skip">'+t('Passer le tutoriel')+'</button>';
+  bulle.classList.add('show');
+  document.getElementById('tuto-skip').onclick=tutoSkip;
+  const cible=tutoAnchorEl(st.ancre);
+  const vw=window.innerWidth, vh=window.innerHeight;
+  const bw=bulle.offsetWidth, bh=bulle.offsetHeight;
+  if(!cible){                            // ancre absente : on centre plutôt que de planter
+    console.warn('[tuto] ancre introuvable : '+st.ancre+' — bulle centrée');
+    bulle.classList.remove('above','below');
+    bulle.style.left=Math.max(8,(vw-bw)/2)+'px'; bulle.style.top=Math.max(8,(vh-bh)/2)+'px';
+    return;
+  }
+  cible.classList.add('tuto-target');
+  const r=cible.getBoundingClientRect();
+  const fleche=bulle.querySelector('.tb-arrow');
+  bulle.classList.remove('above','below','left','right');
+  if(fleche){ fleche.style.left=''; fleche.style.top=''; }
+  // La bulle ne doit jamais recouvrir ni le plateau, ni les jauges, ni le reste de la main.
+  const plateau = cible.closest && cible.closest('.board-area');
+  const poseX = (left)=>{ const l=Math.max(8, Math.min(left, vw-bw-8)); bulle.style.left=l+'px';
+    if(fleche) fleche.style.left=Math.max(12, Math.min(r.left + r.width/2 - l - 9, bw-30))+'px'; };
+  const poseY = (top)=>{ const tp=Math.max(8, Math.min(top, vh-bh-8)); bulle.style.top=tp+'px';
+    if(fleche) fleche.style.top=Math.max(12, Math.min(r.top + r.height/2 - tp - 9, bh-30))+'px'; };
+  if(r.left > vw*0.55 && r.left > bw+24){
+    // ancre dans le panneau de droite (la main, les boutons) : à sa gauche
+    bulle.classList.add('left');
+    bulle.style.left=Math.max(8, r.left-bw-16)+'px';
+    poseY(r.top + r.height/2 - bh/2);
+  } else if(plateau && plateau.getBoundingClientRect().bottom + bh + 20 < vh){
+    // ancre sur le plateau : sous le plateau entier, pour laisser jauges et grille visibles
+    bulle.classList.add('below');
+    poseX(r.left + r.width/2 - bw/2);
+    bulle.style.top=(plateau.getBoundingClientRect().bottom + 14)+'px';
+  } else {
+    const dessous = r.bottom + bh + 20 < vh;
+    bulle.classList.add(dessous?'below':'above');
+    poseX(r.left + r.width/2 - bw/2);
+    bulle.style.top=(dessous ? r.bottom+14 : Math.max(8, r.top-bh-14))+'px';
+  }
+}
+function tutoCheck(){
+  if(!tutoActive()) return;
+  const st=TUTO_STEPS[tutoStep];
+  if(st && st.done && st.done()){ tutoStep++; renderAll(); }   // re-rendu : le gating a changé
+  tutoRender();
+}
+function tutoSkip(){ tutoStep=-1; tutoRender(); loadPuzzle(1); }
+window.addEventListener('resize',tutoRender);
+window.addEventListener('scroll',tutoRender,true);
+
+/* ---- Les quatre points d'accroche : gardes + avancement.
+       Les fonctions de jeu sont inchangées, seulement enveloppées. ---- */
+function placeAt(r,c){ placeAtCore(r,c); tutoCheck(); }
+function endTurn(){ const st=tutoNow(); if(st && st.restrict.endTurn===false) return; endTurnCore(); tutoCheck(); }
+function validate(){ const st=tutoNow(); if(st && st.restrict.validate===false) return; validateCore(); tutoCheck(); }
+function bindAuraTarget(tr,tc){ bindAuraTargetCore(tr,tc); tutoCheck(); }
+
 /* ============================ JEU ============================ */
 function validCells(card){ const out=[];
   const targeted = !P.areaAuras;
@@ -1903,6 +2127,13 @@ function validCells(card){ const out=[];
         out.push({r,c});
       }
     }
+  }
+  // gating du lieu-tutoriel : une seule carte et une seule case autorisées par étape.
+  // validCells étant l'unique source des cases jouables (rendu, clic ET drag), filtrer ici suffit.
+  const st=tutoNow();
+  if(st){
+    if(st.restrict.cards.indexOf(card.id)<0) return [];
+    return out.filter(p=>st.restrict.cells.some(q=>q.r===p.r&&q.c===p.c));
   }
   return out;
 }
@@ -1967,7 +2198,7 @@ function clearPreview(){ renderGauges(); }
 // Tracking du dernier personnage joué par le joueur (pour le mot-clef Rappel)
 let lastPersonnagePlayed=null;
 
-function placeAt(r,c){
+function placeAtCore(r,c){
   if(finished||!sel||left<=0||pendingTarget) return;
   const card=sel;
   if(card.type==='Objet'){
@@ -2066,7 +2297,7 @@ function triggerAdjacentReactives(r,c,causeLabel){
   });
 }
 
-function endTurn(){
+function endTurnCore(){
   if(finished||pendingTarget) return;
   // 1) réveils éventuels (mot-clef Dormant)
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){ const cell=grid[r][c]; const dorm=kw(cell,'dormant');
@@ -2145,8 +2376,16 @@ function checkState(){ renderValidate();
     if(g.mode==='up'&&v<=g.danger) return lose(g.nm+' s’est éteinte : plus rien ne tient.'); }
   // (dotation épuisée n'est plus une défaite : les cartes persistantes continuent à agir, le joueur peut attendre que les conditions de victoire soient atteintes ou subir le danger)
 }
-function validate(){ if(pendingTarget) return; if(objectiveMet()) win(); }
+function validateCore(){ if(pendingTarget) return; if(objectiveMet()) win(); }
 function win(){ finished=true; const m=document.getElementById('modal');
+  if(P._tuto){                                    // fin du tutoriel : on enchaîne sur un vrai lieu
+    tutoStep=-1; tutoRender();
+    m.innerHTML='<h3>'+t('Le seuil est franchi')+'</h3>'
+      +'<div class="frag">'+t(P.fragment)+'</div>'
+      +'<p>'+t('Poser, amplifier, inverser, greffer : tu as la grammaire. La suite se joue sur des lieux réels.')+'</p>'
+      +'<button class="btn" onclick="loadPuzzle(1)">'+t('Commencer Rue Mercière')+'</button>';
+    document.getElementById('overlay').classList.add('show'); return;
+  }
   const frag = memoireGrabbed?`<div class="frag">${P.fragment}</div><p>Scène rétablie <b>et mémoire exhumée</b>. Complétion totale.</p>`
     :`<p>Scène rétablie. La <b>mémoire enfouie</b> est restée scellée — reviens mieux équipé pour l’exhumer.</p>`;
   m.innerHTML=`<h3>La rue se souvient</h3>${frag}<button class="btn" onclick="loadPuzzle(PUZZLES.indexOf(P))">Rejouer</button>`;
@@ -2213,6 +2452,7 @@ function applyI18n(){
   document.getElementById('lang-toggle').textContent=LANG==='fr'?'EN':'FR';
   // re-render complet pour propager LANG dans tabs/header/cartes/inspecteur
   if(typeof renderAll==='function') renderAll();
+  if(typeof tutoRender==='function') tutoRender();   // la bulle et son ancre sont recréées par le re-rendu
 }
 document.getElementById('lang-toggle').onclick=()=>{LANG=LANG==='fr'?'en':'fr';applyI18n();};
 
