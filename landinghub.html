@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ExpLore · Viens essayer</title>
+<meta name="description" content="L'avant-première du jeu d'exploration de Lyon. Essaie la démo, rejoins le Discord, deviens testeur terrain.">
+<meta name="theme-color" content="#0e0c18">
+<link rel="icon" href="./app/icons/icon-192.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ExpLore · Viens essayer">
+<meta property="og:description" content="L'avant-première du jeu d'exploration de Lyon.">
+<meta property="og:url" content="https://explorestudio.github.io/expLore-project/landinghub.html">
+<meta property="og:image" content="https://explorestudio.github.io/expLore-project/app/icons/icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400;1,600&family=DM+Mono:wght@300;400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* Tokens repris du site vitrine, pour continuité visuelle stricte */
+:root {
+  --ink: #0e0c18;
+  --gold: #c9913a;
+  --gold-light: #e8c06a;
+  --violet: 107,79,160;
+  --text: #f0ece2;
+  --text-dim: rgba(240,236,226,0.62);
+  --text-faint: rgba(240,236,226,0.34);
+  --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --sans: 'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'DM Mono', ui-monospace, 'Courier New', monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* ---------- Fond : etoiles CSS + halos violets ---------- */
+/* Tuiles de radial-gradient repetees : responsive, aucune image, aucun JS */
+.sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+
+.stars { position: absolute; inset: -10%; }
+
+.stars.s1 {
+  background-image:
+    radial-gradient(1.4px 1.4px at 18% 24%, rgba(240,236,226,0.55), transparent),
+    radial-gradient(1.1px 1.1px at 72% 61%, rgba(240,236,226,0.42), transparent),
+    radial-gradient(1.6px 1.6px at 41% 83%, rgba(232,192,106,0.40), transparent);
+  background-size: 217px 199px, 331px 287px, 263px 241px;
+  animation: twinkleA 7s ease-in-out infinite;
+}
+
+.stars.s2 {
+  background-image:
+    radial-gradient(1px 1px at 63% 17%, rgba(240,236,226,0.38), transparent),
+    radial-gradient(1.3px 1.3px at 29% 52%, rgba(240,236,226,0.30), transparent),
+    radial-gradient(0.9px 0.9px at 86% 78%, rgba(201,145,58,0.34), transparent);
+  background-size: 149px 163px, 289px 311px, 191px 173px;
+  animation: twinkleB 9s ease-in-out infinite;
+}
+
+@keyframes twinkleA { 0%,100% { opacity:0.85; } 50% { opacity:0.45; } }
+@keyframes twinkleB { 0%,100% { opacity:0.50; } 50% { opacity:0.90; } }
+
+.glow { position: absolute; border-radius: 50%; filter: blur(40px); }
+.glow.g1 {
+  width: 340px; height: 340px; top: -110px; right: -120px;
+  background: radial-gradient(circle, rgba(var(--violet),0.30) 0%, rgba(201,145,58,0.07) 45%, transparent 70%);
+}
+.glow.g2 {
+  width: 300px; height: 300px; bottom: -130px; left: -110px;
+  background: radial-gradient(circle, rgba(var(--violet),0.22) 0%, transparent 70%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stars.s1, .stars.s2 { animation: none; }
+}
+
+/* ---------- Colonne centrale ---------- */
+.wrap {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 34px 26px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 30px;
+  text-align: center;
+}
+
+/* ---------- En-tete ---------- */
+.logo {
+  font-family: var(--serif);
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--text);
+  line-height: 1;
+}
+.logo .l { color: var(--gold); }
+
+.eyebrow {
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.sparkle { width: 11px; height: 11px; fill: var(--gold); flex-shrink: 0; }
+
+/* ---------- Accroche ---------- */
+.hook {
+  font-family: var(--serif);
+  font-size: 33px;
+  font-weight: 300;
+  line-height: 1.24;
+  letter-spacing: 0.5px;
+}
+.hook em { font-style: italic; color: var(--gold); }
+
+.sub {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.baseline {
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* ---------- Actions ---------- */
+.actions { display: flex; flex-direction: column; gap: 18px; }
+
+.act { display: block; text-decoration: none; }
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 17px 24px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  border-radius: 2px;
+  transition: background 0.22s, border-color 0.22s, color 0.22s, transform 0.22s;
+}
+
+.btn-primary {
+  background: var(--gold);
+  color: var(--ink);
+  box-shadow: 0 0 34px rgba(201,145,58,0.22);
+}
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(201,145,58,0.42);
+}
+.btn-secondary:hover { border-color: var(--gold); color: var(--gold-light); }
+
+.hint {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
+/* Action tertiaire : lien texte, volontairement plus discret */
+.act-third {
+  display: inline-block;
+  min-height: 44px;
+  padding: 11px 4px 0;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.22s;
+}
+.act-third span { color: var(--gold); border-bottom: 1px solid rgba(201,145,58,0.35); padding-bottom: 2px; }
+.act-third:hover span { color: var(--gold-light); border-bottom-color: var(--gold-light); }
+
+/* ---------- Separateur + lien vitrine ---------- */
+.sep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: rgba(201,145,58,0.28);
+}
+.sep::before, .sep::after {
+  content: '';
+  height: 1px;
+  width: 54px;
+  background: linear-gradient(90deg, transparent, rgba(201,145,58,0.3), transparent);
+}
+
+.more {
+  display: inline-block;
+  min-height: 44px;
+  padding-top: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-decoration: none;
+  transition: color 0.22s;
+}
+.more:hover { color: var(--gold); }
+
+/* ---------- Pied de page ---------- */
+.foot {
+  position: relative;
+  z-index: 1;
+  padding: 0 26px calc(24px + env(safe-area-inset-bottom));
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  color: var(--text-faint);
+}
+.foot a { color: inherit; text-decoration: none; transition: color 0.22s; }
+.foot a:hover { color: var(--gold); }
+.foot .dot { opacity: 0.45; margin: 0 8px; }
+
+/* ---------- Ecrans courts / grands ---------- */
+@media (max-height: 700px) {
+  .wrap { gap: 24px; padding-top: 26px; }
+  .logo { font-size: 34px; }
+  .hook { font-size: 28px; }
+  .actions { gap: 15px; }
+}
+
+@media (min-width: 520px) {
+  .logo { font-size: 44px; }
+  .hook { font-size: 36px; }
+}
+
+:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 3px; }
+</style>
+</head>
+<body>
+
+<div class="sky" aria-hidden="true">
+  <span class="stars s1"></span>
+  <span class="stars s2"></span>
+  <span class="glow g1"></span>
+  <span class="glow g2"></span>
+</div>
+
+<main class="wrap">
+
+  <!-- En-tete -->
+  <header>
+    <div class="logo">Exp<span class="l">L</span>ore</div>
+    <p class="eyebrow">
+      <svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>
+      En avant-première · Lyon
+    </p>
+  </header>
+
+  <!-- Accroche -->
+  <section>
+    <h1 class="hook">Viens <em>essayer</em> ExpLore.</h1>
+    <p class="sub">L'avant-première du jeu d'exploration de Lyon.</p>
+    <p class="baseline">Explorer · Collectionner · Découvrir</p>
+  </section>
+
+  <!-- Trois actions, par ordre de priorite -->
+  <section class="actions">
+
+    <div>
+      <a class="act" href="./app/demo.html" aria-label="Essayer la démo d'ExpLore">
+        <span class="btn btn-primary">Essayer la démo</span>
+      </a>
+      <p class="hint">Sans inscription, en quelques minutes.</p>
+    </div>
+
+    <div>
+      <a class="act" href="https://discord.gg/dtYbQKjRca" target="_blank" rel="noopener" aria-label="Rejoindre le Discord d'ExpLore, nouvel onglet">
+        <span class="btn btn-secondary">Rejoindre le Discord</span>
+      </a>
+      <p class="hint">La communauté et les premiers testeurs.</p>
+    </div>
+
+    <div>
+      <!-- A REMPLACER : lien repondant public du Google Form (bouton Envoyer), jamais le lien /edit -->
+      <a class="act-third" href="https://forms.gle/XXXX" target="_blank" rel="noopener" aria-label="Candidater comme testeur terrain à Lyon, nouvel onglet">
+        Tu es à Lyon ? <span>Deviens testeur terrain</span>
+      </a>
+      <p class="hint">Pour explorer la vraie carte, dehors.</p>
+    </div>
+
+  </section>
+
+  <!-- Separateur + approfondissement -->
+  <section>
+    <div class="sep" aria-hidden="true">
+      <svg class="sparkle" viewBox="0 0 24 24"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>
+    </div>
+    <a class="more" href="https://explorestudio.github.io/expLore-project/" target="_blank" rel="noopener" aria-label="En savoir plus sur le projet ExpLore, nouvel onglet">En savoir plus sur le projet</a>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <a href="https://www.instagram.com/explorestudiofr/" target="_blank" rel="noopener">@explorestudiofr</a>
+  <span class="dot">·</span>
+  Fait à Lyon
+</footer>
+
+</body>
+</html>
