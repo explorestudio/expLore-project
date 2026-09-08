@@ -11406,6 +11406,13 @@
             "Fin de la démonstration": "End of the demo",
             "Merci d'avoir exploré.": "Thank you for exploring.",
             "Revenir à la carte": "Back to the map",
+            "Bravo, tu as terminé l'aperçu.": "Well done, you've finished the preview.",
+            "Ceci n'est qu'un aperçu jouable, découvert assis. La vraie expérience se vit dehors, en marchant dans Lyon.": "This is only a playable preview, discovered sitting down. The real experience happens outside, walking through Lyon.",
+            "Donner mon avis (quelques minutes)": "Give my feedback (a few minutes)",
+            "Rejoindre le Discord": "Join the Discord",
+            "En savoir plus": "Learn more",
+            "Fermer le formulaire": "Close the form",
+            "Formulaire d'avis sur la démo": "Demo feedback form",
 
             // ══════════ CARNET ══════════
 
@@ -14938,6 +14945,13 @@
         }
 
         // DÉMO OT — Écran de fin plein écran (§5.8).
+        // Point de conversion : le retour du joueur (formulaire Google en iframe)
+        // et le Discord. L'iframe n'est construite qu'au clic sur « Donner mon
+        // avis » : inutile de charger un gros embed si le joueur n'en veut pas.
+        // Le formulaire est cross-origin, la page ne peut donc PAS savoir s'il a
+        // été validé — aucun remerciement conditionnel, aucune détection.
+        const DEMO_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfKQljDoZrThWdV5lQtRz7Dtl_mlPkE_y8POQKUanjrhUVolQ/viewform?embedded=true';
+
         function _demoShowEndScreen() {
             if (document.getElementById('demoEndScreen')) return;
             const ov = document.createElement('div');
@@ -14945,18 +14959,72 @@
             ov.style.cssText = [
                 'position:fixed', 'inset:0', 'z-index:100000',
                 'background:radial-gradient(circle at 50% 40%, #1b1636 0%, #0a0814 100%)',
-                'display:flex', 'flex-direction:column', 'align-items:center', 'justify-content:center',
-                'text-align:center', 'padding:32px', 'gap:16px',
+                'display:flex', 'text-align:center',
+                'padding:24px 20px calc(24px + env(safe-area-inset-bottom))',
+                'overflow-y:auto', '-webkit-overflow-scrolling:touch',
                 'opacity:0', 'transition:opacity 0.9s ease'
             ].join(';');
+
+            // Socle commun aux deux actions : zone tactile confortable au pouce.
+            const btn = 'display:flex;align-items:center;justify-content:center;width:100%;'
+                      + 'box-sizing:border-box;min-height:52px;padding:15px 20px;border-radius:26px;'
+                      + 'font-family:inherit;font-size:14px;font-weight:700;letter-spacing:0.4px;'
+                      + 'cursor:pointer;text-decoration:none;';
+            const lien = 'background:none;border:none;font-family:inherit;font-size:12.5px;'
+                       + 'color:rgba(237,233,254,0.55);text-decoration:none;cursor:pointer;padding:6px 2px;';
+            const sparkle = '<svg viewBox="0 0 24 24" aria-hidden="true" style="width:14px;height:14px;fill:#F5B841;opacity:0.85;">'
+                          + '<path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>';
+
             ov.innerHTML =
-                '<div style="font-size:26px;color:#F5B841;font-weight:700;letter-spacing:1px;">Fin de la démonstration</div>' +
-                '<div style="font-size:16px;color:#EDE9FE;opacity:0.9;">Merci d\'avoir exploré.</div>' +
-                '<div style="margin-top:24px;font-size:12px;color:rgba(237,233,254,0.55);letter-spacing:2px;text-transform:uppercase;">ExpLoreStudio · ExpLore</div>' +
-                '<button id="demoEndClose" style="margin-top:28px;background:rgba(245,184,65,0.14);border:1px solid rgba(245,184,65,0.5);color:#F5B841;padding:10px 26px;border-radius:22px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px;">Revenir à la carte</button>';
+                '<div id="demoEndMain" style="margin:auto;width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px 0;">' +
+                    sparkle +
+                    '<div style="font-family:Georgia,\'Times New Roman\',serif;font-size:27px;line-height:1.25;color:#F5B841;font-weight:700;">Bravo, tu as terminé l\'aperçu.</div>' +
+                    '<div style="font-size:15px;line-height:1.6;color:#EDE9FE;opacity:0.82;">Ceci n\'est qu\'un aperçu jouable, découvert assis. La vraie expérience se vit dehors, en marchant dans Lyon.</div>' +
+                    '<div style="width:100%;margin-top:12px;display:flex;flex-direction:column;gap:12px;">' +
+                        '<button id="demoEndFeedback" style="' + btn + 'background:linear-gradient(135deg,#F5B841,#d99b2a);border:none;color:#1b1636;box-shadow:0 6px 22px rgba(245,184,65,0.26);">Donner mon avis (quelques minutes)</button>' +
+                        '<a href="https://discord.gg/dtYbQKjRca" target="_blank" rel="noopener" style="' + btn + 'background:rgba(237,233,254,0.06);border:1px solid rgba(237,233,254,0.26);color:#EDE9FE;">Rejoindre le Discord</a>' +
+                    '</div>' +
+                    '<div style="margin-top:8px;display:flex;align-items:center;gap:14px;">' +
+                        '<a href="https://explorestudio.github.io/expLore-project/" target="_blank" rel="noopener" style="' + lien + '">En savoir plus</a>' +
+                        '<span aria-hidden="true" style="color:#EDE9FE;opacity:0.25;">·</span>' +
+                        '<button id="demoEndClose" style="' + lien + '">Revenir à la carte</button>' +
+                    '</div>' +
+                    '<div style="margin-top:16px;font-size:11px;color:rgba(237,233,254,0.42);letter-spacing:2px;text-transform:uppercase;">ExpLoreStudio · ExpLore</div>' +
+                '</div>' +
+                '<div id="demoEndForm" style="display:none;margin:auto;width:100%;max-width:560px;">' +
+                    '<button id="demoEndFormBack" style="' + lien + 'display:inline-flex;align-items:center;gap:7px;min-height:44px;">' +
+                        '<span aria-hidden="true" style="font-size:16px;line-height:1;">‹</span>Fermer le formulaire</button>' +
+                    '<div id="demoEndFormSlot" style="margin-top:8px;border-radius:14px;overflow:hidden;border:1px solid rgba(245,184,65,0.22);background:#f3f1ea;"></div>' +
+                '</div>';
+
             document.body.appendChild(ov);
             requestAnimationFrame(() => { ov.style.opacity = '1'; });
-            document.getElementById('demoEndClose').onclick = () => {
+
+            const vueMain = ov.querySelector('#demoEndMain');
+            const vueForm = ov.querySelector('#demoEndForm');
+
+            ov.querySelector('#demoEndFeedback').onclick = () => {
+                const slot = ov.querySelector('#demoEndFormSlot');
+                if (!slot.firstChild) {                       // construite une seule fois
+                    const fr = document.createElement('iframe');
+                    fr.src = DEMO_FORM_URL;
+                    fr.title = 'Formulaire d\'avis sur la démo';
+                    fr.setAttribute('loading', 'lazy');
+                    fr.style.cssText = 'display:block;width:100%;height:76vh;min-height:420px;border:0;';
+                    slot.appendChild(fr);
+                }
+                vueMain.style.display = 'none';
+                vueForm.style.display = 'block';
+                ov.scrollTop = 0;
+            };
+
+            ov.querySelector('#demoEndFormBack').onclick = () => {
+                vueForm.style.display = 'none';
+                vueMain.style.display = 'flex';
+                ov.scrollTop = 0;
+            };
+
+            ov.querySelector('#demoEndClose').onclick = () => {
                 ov.style.opacity = '0';
                 setTimeout(() => { if (ov.parentNode) ov.remove(); }, 900);
             };
