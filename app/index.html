@@ -11063,11 +11063,20 @@
                 "You could use a little memorial dust yourself! The Organisation gave us this booklet to write down everything a card might remember! You forgot it again, I suppose… Fine, keep this one, I have plenty.",
             "Avant que je parte, une direction : va place Bellecour. Là-bas, des voix se cherchent. Quand tu en croiseras une, quelque chose s'ouvrira.":
                 "Before I go, one direction: head to place Bellecour. Voices are searching for each other there. When you cross one, something will open.",
-            "On se retrouve pour l'évènement plus tard ?": "See you later for the event?",
-            "Comment ça ?": "What do you mean?",
-            "QUOI ? Tout ce que je viens de dire, ça ne te dit rien ?": "WHAT? Everything I just said means nothing to you?",
-            "Non…": "No…",
-            "Génial ! Tu seras mon premier disciple !": "Brilliant! You'll be my first disciple!",
+            "Et voilà le chapitre complet ! Tu t'en sors drôlement bien, pour quelqu'un qui oublie tout.":
+                "And there's the chapter complete! You're doing remarkably well, for someone who forgets everything.",
+            "Quand je te vois faire, ça semble si facile, je ne sais pas où tu en es du quartier que tu dois couvrir mais moi j'ai à peine commencé… Tant de cartes et leur mémoire à réunir et si peu de temps, pfiou":
+                "Watching you, it looks so easy. I've no idea how far you've got with the quarter you're covering, but I've barely started… So many cards and so much memory to gather, and so little time, phew",
+            "Pourquoi tu me regardes comme ça ? Cette expression, mais… C'est de l'incompréhension ! Tu n'es pas de l'Organisation, toi, hein ?":
+                "Why are you looking at me like that? That expression, but… that's bewilderment! You're not with the Organisation, are you?",
+            "Oh la boulette… Oh. Oh, mais c'est encore mieux ! Un don pareil, et sans même le savoir !":
+                "Oh, my mistake… Oh. Oh, but this is even better! A gift like that, and without even knowing it!",
+            "Allez, c'est officiel : tu es mon tout premier disciple. Un explorateur de la mémoire, un vrai.":
+                "Right, it's official: you are my very first disciple. A memory explorer, a real one.",
+            "Toi tu as la ville, moi j'ai le carnet. Dénichons ces mémoires une par une, et tu stabilises, je note. Ça me sauverait, franchement !":
+                "You have the city, I have the journal. Let's unearth those memories one by one — you stabilize, I write. It would save me, honestly!",
+            "Dès qu'on a tout réuni, tu viens avec moi le rendre à l'Organisation ? Ça va leur faire tout drôle !":
+                "Once we've gathered it all, will you come with me to give it back to the Organisation? That'll give them a turn!",
 
             // ── Hints contextuels par écran ──
             "Tes cartes s'organisent ici. Des groupes se forment — des ensembles qui racontent quelque chose de plus grand que chaque fragment.": "Your cards arrange themselves here. Groups form — sets that tell something larger than any single fragment.",
@@ -15319,8 +15328,12 @@
         }
 
         // Vraie fin du guide : la chute de la méprise (elle réalise ici que le
-        // joueur n'est pas des leurs) puis l'extinction. C'est ici, et seulement
-        // ici, que _obDone bascule — plus à la sortie du scellement.
+        // joueur n'est pas des leurs), puis le pacte — il stabilise, elle note —
+        // et l'accroche de suite (rendre le carnet à l'Organisation). Aligné sur
+        // la conclusion de app/demo.html, à ceci près qu'un seul chapitre est
+        // scellé ici : elle salue le chapitre, pas le carnet entier.
+        // C'est ici, et seulement ici, que _obDone bascule — plus à la sortie
+        // du scellement.
         function _obGuideOutro() {
             if (!_obGuide.active) return;
             _obGuide.active = false;
@@ -15330,13 +15343,15 @@
             // Sur la mappe, et nulle part ailleurs : elle y désigne un repère, et
             // c'est là que la ville se peuple à la fermeture du dialogue.
             _obSay('map', [
+                { speaker: 'La jeune fille', line: 'Et voilà le chapitre complet ! Tu t\'en sors drôlement bien, pour quelqu\'un qui oublie tout.' },
+                { speaker: 'La jeune fille', line: 'Quand je te vois faire, ça semble si facile, je ne sais pas où tu en es du quartier que tu dois couvrir mais moi j\'ai à peine commencé… Tant de cartes et leur mémoire à réunir et si peu de temps, pfiou' },
+                { speaker: 'La jeune fille', line: 'Pourquoi tu me regardes comme ça ? Cette expression, mais… C\'est de l\'incompréhension ! Tu n\'es pas de l\'Organisation, toi, hein ?' },
+                { speaker: 'La jeune fille', line: 'Oh la boulette… Oh. Oh, mais c\'est encore mieux ! Un don pareil, et sans même le savoir !' },
+                { speaker: 'La jeune fille', line: 'Allez, c\'est officiel : tu es mon tout premier disciple. Un explorateur de la mémoire, un vrai.' },
+                { speaker: 'La jeune fille', line: 'Toi tu as la ville, moi j\'ai le carnet. Dénichons ces mémoires une par une, et tu stabilises, je note. Ça me sauverait, franchement !' },
+                { speaker: 'La jeune fille', line: 'Dès qu\'on a tout réuni, tu viens avec moi le rendre à l\'Organisation ? Ça va leur faire tout drôle !' },
                 { speaker: 'La jeune fille', line: 'Avant que je parte, une direction : va place Bellecour. Là-bas, des voix se cherchent. Quand tu en croiseras une, quelque chose s\'ouvrira.' },
                 { speaker: 'La jeune fille', line: 'Tu retrouveras ce rendez-vous dans ton journal, et un repère t\'attend sur la carte. À toi, désormais.' },
-                { speaker: 'La jeune fille', line: 'On se retrouve pour l\'évènement plus tard ?' },
-                { speaker: 'Toi', line: 'Comment ça ?' },
-                { speaker: 'La jeune fille', line: 'QUOI ? Tout ce que je viens de dire, ça ne te dit rien ?' },
-                { speaker: 'Toi', line: 'Non…' },
-                { speaker: 'La jeune fille', line: 'Génial ! Tu seras mon premier disciple !' },
             ], () => {
                 _obDone = true;
                 _obAct3Done = true;
