@@ -16985,7 +16985,7 @@
         let gpsActive = false;
 
         let joystickActive = false;
-        let joystickInterval = null;
+        let _joyRAF = null;                     // boucle rAF du déplacement joystick
         let joystickDirection = { x: 0, y: 0 };
 
 
@@ -18023,6 +18023,10 @@
         const CAM_NORTH_OFFSET = 0.0008;
 
         let _cameraMoving = false;
+        // Bascule de vue (longue-vue) en cours : tant qu'elle vole, personne ne
+        // recentre la caméra — la recentrer couperait l'animation en plein vol.
+        let _viewTransition = false;
+        let _viewTransitionTimer = null;
         // ===== Animation de glissement du personnage (style Maps) =====
         // Les points GPS arrivent par paliers (zone morte anti-dérive) ; pour éviter
         // l'effet "téléportation", on fait GLISSER le marqueur de sa position
@@ -18124,7 +18128,9 @@
             _dispLat = ll.lat; _dispLng = ll.lng;
             _setAvatarFacing(_dispLng - prevLng);
             playerMarker.setLngLat([_dispLng, _dispLat]);
-            if (!_cameraMoving) {
+            // _viewTransition : pendant la bascule de la longue-vue, le suivi GPS
+            // recentrait à chaque frame et coupait l'animation. Il attend son tour.
+            if (!_cameraMoving && !_viewTransition) {
                 const offset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
                 map.easeTo({ center: [_dispLng, _dispLat + offset], duration: 0, easing: x => x });
             }
@@ -18149,18 +18155,22 @@
             _dispLat = playerPos.lat;
             _dispLng = playerPos.lng;
             playerMarker.setLngLat([playerPos.lng, playerPos.lat]);
-            if (_cameraMoving) return;
-            _cameraMoving = true;
+            // Une animation caméra pilotée (bascule de vue) est prioritaire.
+            if (_cameraMoving || _viewTransition) return;
+            // Caméra posée sur le personnage, sans animation : l'easeTo de 120 ms
+            // verrouillé 100 ms faisait courir la mappe derrière le marqueur, qui
+            // lui sautait à chaque tick — d'où le tremblement. Même principe que
+            // _kalTick côté GPS : on pose, on n'anime pas. Le lissage vient de la
+            // fréquence d'appel (rAF, cf. startJoystickMovement).
             const currentPitch = _mapViewMode === 'far' ? MAP_VIEW.far.pitch : ISOMETRIC_TILT;
             const offset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
             map.easeTo({
                 center:  [playerPos.lng, playerPos.lat + offset],
                 pitch:   currentPitch,
                 bearing: ISOMETRIC_HEADING,
-                duration: 120,
+                duration: 0,
                 easing: t => t
             });
-            setTimeout(() => { _cameraMoving = false; }, 100);
         }
 
         // Déplacement via GPS : on alimente le filtre de Kalman (lissage + prédiction).
@@ -19034,7 +19044,7 @@
                 joystickActive = false;
                 const av = document.getElementById('playerAvatar');
                 if (av) av.classList.remove('avatar-walking');
-                if (joystickInterval) { clearInterval(joystickInterval); joystickInterval = null; }
+                if (_joyRAF) { cancelAnimationFrame(_joyRAF); _joyRAF = null; }
             }
 
             base.addEventListener('touchstart', handleStart, { passive: false });
@@ -19045,12 +19055,29 @@
             document.addEventListener('mouseup', handleEnd);
         }
 
+        // Le setInterval de 50 ms déplaçait le personnage 20 fois par seconde : sur
+        // un écran à 60 Hz, un pas tous les trois rendus — d'où le saccadement. On
+        // avance désormais à la fréquence de l'écran, proportionnellement au temps
+        // réellement écoulé (dt), pour que la vitesse reste identique quel que soit
+        // le taux de rafraîchissement.
+        // La logique de jeu (proximité des points, compteurs de distance) reste à
+        // 20 Hz : la passer à 60 Hz triplerait le coût sans rien lisser du tout.
         function startJoystickMovement() {
-            joystickInterval = setInterval(() => {
-                if (!joystickActive || gpsActive) return;
-                const speed = MOVE_SPEED * _walkSpeed;
-                const prevLat = playerPos.lat;
-                const prevLng = playerPos.lng;
+            if (_joyRAF) cancelAnimationFrame(_joyRAF);
+            let last = performance.now();
+            let acc  = 0;                    // temps cumulé depuis le dernier tick logique
+            let logicLat = playerPos.lat;    // position au dernier tick logique
+            let logicLng = playerPos.lng;
+            const boucle = () => {
+                if (!joystickActive) { _joyRAF = null; return; }
+                _joyRAF = requestAnimationFrame(boucle);
+                const now = performance.now();
+                // Retour d'un onglet en arrière-plan : on ne rattrape pas le retard
+                // d'un coup, sinon le personnage se téléporte.
+                const dt = Math.min(now - last, 100);
+                last = now;
+                if (gpsActive) return;
+                const speed = MOVE_SPEED * _walkSpeed * (dt / 50);
                 playerPos = {
                     lat: playerPos.lat + joystickDirection.y * speed,
                     lng: playerPos.lng + joystickDirection.x * speed
@@ -19058,10 +19085,17 @@
                 if (playerMarker && map) {
                     updatePlayerOnMap();
                 }
-                checkNearbyPOI();
-                // Tracker distance — calcul Haversine entre la position avant et après le tick
-                _trackDistanceFromJoystick(prevLat, prevLng, playerPos.lat, playerPos.lng);
-            }, 50);
+                acc += dt;
+                if (acc >= 50) {
+                    acc = 0;
+                    checkNearbyPOI();
+                    // Tracker distance — Haversine entre les deux derniers ticks logiques
+                    _trackDistanceFromJoystick(logicLat, logicLng, playerPos.lat, playerPos.lng);
+                    logicLat = playerPos.lat;
+                    logicLng = playerPos.lng;
+                }
+            };
+            _joyRAF = requestAnimationFrame(boucle);
         }
 
         // Incrémente les compteurs distance pour un déplacement joystick (pas de filtres anti-cheat)
@@ -21687,11 +21721,16 @@
             const v   = MAP_VIEW[_mapViewMode];
             const btn = document.getElementById('viewToggleBtn');
             const toggleOffset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
+            const DUREE_BASCULE = 600;
+            // Le joystick et le GPS recentraient la caméra pendant le vol, ce qui
+            // coupait l'animation net à chaque pas. Ils s'effacent le temps du trajet.
+            _viewTransition = true;
+            if (_viewTransitionTimer) { clearTimeout(_viewTransitionTimer); _viewTransitionTimer = null; }
             map.easeTo({
                 center:  [playerPos.lng, playerPos.lat + toggleOffset],
                 pitch:   v.pitch,
                 zoom:    v.zoom,
-                duration: 600,
+                duration: DUREE_BASCULE,
                 easing: t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t
             });
             if (btn) {
@@ -21701,7 +21740,18 @@
             }
             // Mode planification
             const isPlanning = _mapViewMode === 'far';
-            document.body.classList.toggle('planning-mode', isPlanning);
+            // .planning-mode masque les ressources au sol (poudre, échos, orbes…).
+            // On les cache dès le départ du dézoom, mais on ne les rend qu'à
+            // l'arrivée du rezoom : les rendre au départ affichait toute la poudre
+            // de la ville pendant les 600 ms où la caméra était encore au large.
+            // Bénéfice au passage : bien moins de marqueurs à repositionner
+            // pendant le vol, donc une bascule plus fluide dans les deux sens.
+            if (isPlanning) document.body.classList.add('planning-mode');
+            _viewTransitionTimer = setTimeout(() => {
+                _viewTransitionTimer = null;
+                _viewTransition = false;
+                if (!isPlanning) document.body.classList.remove('planning-mode');
+            }, DUREE_BASCULE + 20);
             // Activer le pan & zoom en mode planning, les désactiver autrement
             if (isPlanning) {
                 map.dragPan.enable();
