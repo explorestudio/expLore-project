@@ -509,6 +509,7 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
     <li><a href="#how" data-fr="Comment ça marche" data-en="How it works">Comment ça marche</a></li>
     <li><a href="#partners" data-fr="Partenaires" data-en="Partners">Partenaires</a></li>
     <li><a href="#about" data-fr="À propos" data-en="About">À propos</a></li>
+    <li><a href="#discord" data-fr="Communauté" data-en="Community">Communauté</a></li>
   </ul>
   <button class="lang-btn" id="langBtn" onclick="toggleLang()">EN</button>
   <button class="burger" id="burgerBtn" aria-label="Menu" onclick="toggleMobileNav()">
@@ -521,6 +522,7 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
   <a href="#how" onclick="closeMobileNav()">Comment ça marche</a>
   <a href="#waitlist" onclick="closeMobileNav()">Liste d'attente</a>
   <a href="#about" onclick="closeMobileNav()">À propos</a>
+  <a href="#discord" onclick="closeMobileNav()">Communauté</a>
 </div>
 <!-- HERO -->
 <section id="hero">
@@ -1125,7 +1127,7 @@ document.addEventListener('mousemove', function(e) {
 
 // Lien nav actif au scroll
 (function() {
-  var sections = ['concept','how','partners','about'];
+  var sections = ['concept','how','partners','about','discord'];
   var links = {};
   sections.forEach(function(id) {
     var a = document.querySelector('.nav-links a[href="#' + id + '"]');

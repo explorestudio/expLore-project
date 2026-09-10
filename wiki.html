@@ -274,11 +274,30 @@ body::after {
   text-transform: uppercase;
 }
 
+/* ── Planche illustrée d'une entrée ── */
+.entry-fig {
+  float: left;
+  width: 104px; height: 104px;
+  margin: 0.2rem 1.1rem 0.6rem 0;
+  object-fit: cover;
+  border: 1px solid var(--gold-dim);
+  background: rgba(0,0,0,0.35);
+  filter: saturate(0.85) contrast(0.95);
+  transition: border-color 0.35s ease, filter 0.35s ease;
+}
+.entry:hover .entry-fig { border-color: var(--gold); filter: none; }
+/* Emblème sur fond clair : inversé pour tenir sur le noir des archives */
+.entry-fig.is-emblem { filter: invert(1) saturate(0.85); }
+.entry:hover .entry-fig.is-emblem { filter: invert(1); }
+/* Le flottant ne doit pas déborder de la fiche */
+.entry::after { content: ''; display: block; clear: both; }
+
 @media (max-width: 720px) {
   #nav { padding: 1rem 1.4rem; }
   #nav .nav-links { display: none; }
   #header, .category, #footer { padding-left: 1.4rem; padding-right: 1.4rem; }
   .entries { grid-template-columns: 1fr; }
+  .entry-fig { width: 84px; height: 84px; }
 }
 </style>
 </head>
@@ -293,6 +312,7 @@ body::after {
     <li><a href="index.html#how">Comment ça marche</a></li>
     <li><a href="index.html#partners">Partenaires</a></li>
     <li><a href="index.html#about">À propos</a></li>
+    <li><a href="index.html#discord">Communauté</a></li>
   </ul>
   <button class="lang-btn">EN</button>
 </nav>
@@ -323,6 +343,7 @@ body::after {
     <article class="entry">
       <span class="entry-status">Consultable</span>
       <h3>La poudre mémorielle</h3>
+      <img class="entry-fig" src="https://explorestudio.github.io/expLore-project/poudre-memorielle.png" alt="Poudre mémorielle en suspension">
       <p>
         Substance impalpable, issue de l'oubli naturel des êtres vivants. Elle est continuellement
         recyclée — la mémoire qui s'efface ne disparaît pas, elle se transforme et se redistribue
@@ -360,6 +381,7 @@ body::after {
     <article class="entry">
       <span class="entry-status">Consultable</span>
       <h3>La noosynthèse</h3>
+      <img class="entry-fig is-emblem" src="https://explorestudio.github.io/expLore-project/noosynthese.png" alt="Emblème de la noosynthèse">
       <p>
         Discipline technique qui consiste à extraire une voix singulière — une <em>présence</em> —
         depuis une nébuleuse. C'est sur les avancées de la noosynthèse que reposent les outils
@@ -386,6 +408,7 @@ body::after {
       <span class="entry-status">Consultable</span>
       <h3>Les cartes</h3>
       <p class="entry-aka">À l'origine : « tablettes mnésiques »</p>
+      <img class="entry-fig" src="https://explorestudio.github.io/expLore-project/carte.png" alt="Carte non stabilisée">
       <p>
         Contenants destinés à accueillir une <em>présence</em> extraite d'une nébuleuse,
         par noosynthèse. Une carte fraîchement recueillie est dite <em>non stabilisée</em> :
@@ -405,6 +428,7 @@ body::after {
     <article class="entry">
       <span class="entry-status">Consultable</span>
       <h3>Les orbes</h3>
+      <img class="entry-fig" src="https://explorestudio.github.io/expLore-project/orbe.png" alt="Orbe mémorielle">
       <p>
         Invention récente de l'organisation. Outil d'accélération du processus d'absorption,
         capable d'infuser durablement la poudre mémorielle dans certains matériaux solides
