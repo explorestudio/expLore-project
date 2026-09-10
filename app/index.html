@@ -15286,7 +15286,11 @@
 
         // Fin du tuto : adieu de la jeune fille + activation du RDV Bellecour.
         // Appelable depuis n'importe quelle étape (scellement), idempotent.
-        // Le chapitre est scellé : la jeune fille nomme ce qui attend dehors, puis
+        // Le chapitre est scellé : c'est ICI que se joue la conclusion écrite pour
+        // app/demo.html — la chute de la méprise (elle réalise qu'il n'est pas de
+        // l'Organisation), le pacte (il stabilise, elle note) et l'accroche de
+        // suite. Elle salue le chapitre, pas le carnet entier : un seul est scellé
+        // dans le proto. Elle nomme ensuite ce qui attend dehors, puis
         // montre les deux outils du HUD avant de partir. Elle NE nomme que les
         // points d'intérêt — comment ils s'utilisent est laissé à la curiosité du
         // joueur : c'est sa première rencontre avec chacun qui déclenchera
@@ -15305,6 +15309,18 @@
             // soit ressorti — l'anneau, lui, désigne la sortie entre-temps.
             _obSay('map', [
                 { speaker: 'La jeune fille', line: 'Voilà. Ce chapitre ne s\'oubliera plus. C\'est ça, être explorateur de la mémoire.' },
+                // La chute de la méprise et le pacte tiennent ici, au scellement :
+                // « Et voilà le chapitre complet ! » salue le geste que le joueur
+                // vient de poser. Ces répliques étaient jusqu'ici dans
+                // _obGuideOutro, deux étapes de HUD plus loin — elles y félicitaient
+                // le joueur pour un chapitre scellé depuis longtemps.
+                { speaker: 'La jeune fille', line: 'Et voilà le chapitre complet ! Tu t\'en sors drôlement bien, pour quelqu\'un qui oublie tout.' },
+                { speaker: 'La jeune fille', line: 'Quand je te vois faire, ça semble si facile, je ne sais pas où tu en es du quartier que tu dois couvrir mais moi j\'ai à peine commencé… Tant de cartes et leur mémoire à réunir et si peu de temps, pfiou' },
+                { speaker: 'La jeune fille', line: 'Pourquoi tu me regardes comme ça ? Cette expression, mais… C\'est de l\'incompréhension ! Tu n\'es pas de l\'Organisation, toi, hein ?' },
+                { speaker: 'La jeune fille', line: 'Oh la boulette… Oh. Oh, mais c\'est encore mieux ! Un don pareil, et sans même le savoir !' },
+                { speaker: 'La jeune fille', line: 'Allez, c\'est officiel : tu es mon tout premier disciple. Un explorateur de la mémoire, un vrai.' },
+                { speaker: 'La jeune fille', line: 'Toi tu as la ville, moi j\'ai le carnet. Dénichons ces mémoires une par une, et tu stabilises, je note. Ça me sauverait, franchement !' },
+                { speaker: 'La jeune fille', line: 'Dès qu\'on a tout réuni, tu viens avec moi le rendre à l\'Organisation ? Ça va leur faire tout drôle !' },
                 // Nommer sans expliquer : le joueur doit savoir que ces choses
                 // existent pour avoir envie de s'en approcher, pas savoir s'en
                 // servir avant de les avoir vues.
@@ -15327,11 +15343,9 @@
             ], () => _obGuideRefresh());
         }
 
-        // Vraie fin du guide : la chute de la méprise (elle réalise ici que le
-        // joueur n'est pas des leurs), puis le pacte — il stabilise, elle note —
-        // et l'accroche de suite (rendre le carnet à l'Organisation). Aligné sur
-        // la conclusion de app/demo.html, à ceci près qu'un seul chapitre est
-        // scellé ici : elle salue le chapitre, pas le carnet entier.
+        // Vraie fin du guide : la conclusion (méprise, pacte, accroche de suite) a
+        // été dite au scellement, dans _obGuideFinish. Ne reste ici que le départ
+        // — la direction de Bellecour — et l'extinction.
         // C'est ici, et seulement ici, que _obDone bascule — plus à la sortie
         // du scellement.
         function _obGuideOutro() {
@@ -15343,13 +15357,6 @@
             // Sur la mappe, et nulle part ailleurs : elle y désigne un repère, et
             // c'est là que la ville se peuple à la fermeture du dialogue.
             _obSay('map', [
-                { speaker: 'La jeune fille', line: 'Et voilà le chapitre complet ! Tu t\'en sors drôlement bien, pour quelqu\'un qui oublie tout.' },
-                { speaker: 'La jeune fille', line: 'Quand je te vois faire, ça semble si facile, je ne sais pas où tu en es du quartier que tu dois couvrir mais moi j\'ai à peine commencé… Tant de cartes et leur mémoire à réunir et si peu de temps, pfiou' },
-                { speaker: 'La jeune fille', line: 'Pourquoi tu me regardes comme ça ? Cette expression, mais… C\'est de l\'incompréhension ! Tu n\'es pas de l\'Organisation, toi, hein ?' },
-                { speaker: 'La jeune fille', line: 'Oh la boulette… Oh. Oh, mais c\'est encore mieux ! Un don pareil, et sans même le savoir !' },
-                { speaker: 'La jeune fille', line: 'Allez, c\'est officiel : tu es mon tout premier disciple. Un explorateur de la mémoire, un vrai.' },
-                { speaker: 'La jeune fille', line: 'Toi tu as la ville, moi j\'ai le carnet. Dénichons ces mémoires une par une, et tu stabilises, je note. Ça me sauverait, franchement !' },
-                { speaker: 'La jeune fille', line: 'Dès qu\'on a tout réuni, tu viens avec moi le rendre à l\'Organisation ? Ça va leur faire tout drôle !' },
                 { speaker: 'La jeune fille', line: 'Avant que je parte, une direction : va place Bellecour. Là-bas, des voix se cherchent. Quand tu en croiseras une, quelque chose s\'ouvrira.' },
                 { speaker: 'La jeune fille', line: 'Tu retrouveras ce rendez-vous dans ton journal, et un repère t\'attend sur la carte. À toi, désormais.' },
             ], () => {

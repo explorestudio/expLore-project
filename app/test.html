@@ -12844,6 +12844,17 @@
             },
         };
 
+        // ── Cartes reportées au test 2 (parcours Bellecour / « ville du livre ») ──
+        // Leurs POI portent déjà disabled: 'test_2_bellecour' : elles sont donc
+        // introuvables sur le terrain, mais elles occupaient encore une vignette
+        // « Non découvertes » dans l'album et gonflaient les compteurs. On les
+        // retire de getAllCards() — même logique que pour les POI, sans rien
+        // supprimer : réactivation en vidant ce tableau.
+        const CARTES_TEST_2_BELLECOUR = [
+            'card_louise_labe', 'card_gryphe', 'card_dolet',
+            'card_presse_doloire', 'card_palais_st_jean',
+        ];
+
         // ── Périmètre de test (informatif, NON restrictif) ──
         // Matérialise la zone du test 1 sur la carte pour cadrer les attentes des
         // testeurs. Aucun POI/ressource/mécanique n'est bloqué à l'extérieur :
@@ -15520,7 +15531,11 @@
 
         // Fin du tuto : adieu de la jeune fille + activation du RDV Bellecour.
         // Appelable depuis n'importe quelle étape (scellement), idempotent.
-        // Le chapitre est scellé : la jeune fille nomme ce qui attend dehors, puis
+        // Le chapitre est scellé : c'est ICI que se joue la conclusion écrite pour
+        // app/demo.html — la chute de la méprise (elle réalise qu'il n'est pas de
+        // l'Organisation), le pacte (il stabilise, elle note) et l'accroche de
+        // suite. Elle salue le chapitre, pas le carnet entier : un seul est scellé
+        // dans le proto. Elle nomme ensuite ce qui attend dehors, puis
         // montre les deux outils du HUD avant de partir. Elle NE nomme que les
         // points d'intérêt — comment ils s'utilisent est laissé à la curiosité du
         // joueur : c'est sa première rencontre avec chacun qui déclenchera
@@ -15539,6 +15554,18 @@
             // soit ressorti — l'anneau, lui, désigne la sortie entre-temps.
             _obSay('map', [
                 { speaker: 'La jeune fille', line: 'Voilà. Ce chapitre ne s\'oubliera plus. C\'est ça, être explorateur de la mémoire.' },
+                // La chute de la méprise et le pacte tiennent ici, au scellement :
+                // « Et voilà le chapitre complet ! » salue le geste que le joueur
+                // vient de poser. Ces répliques étaient jusqu'ici dans
+                // _obGuideOutro, deux étapes de HUD plus loin — elles y félicitaient
+                // le joueur pour un chapitre scellé depuis longtemps.
+                { speaker: 'La jeune fille', line: 'Et voilà le chapitre complet ! Tu t\'en sors drôlement bien, pour quelqu\'un qui oublie tout.' },
+                { speaker: 'La jeune fille', line: 'Quand je te vois faire, ça semble si facile, je ne sais pas où tu en es du quartier que tu dois couvrir mais moi j\'ai à peine commencé… Tant de cartes et leur mémoire à réunir et si peu de temps, pfiou' },
+                { speaker: 'La jeune fille', line: 'Pourquoi tu me regardes comme ça ? Cette expression, mais… C\'est de l\'incompréhension ! Tu n\'es pas de l\'Organisation, toi, hein ?' },
+                { speaker: 'La jeune fille', line: 'Oh la boulette… Oh. Oh, mais c\'est encore mieux ! Un don pareil, et sans même le savoir !' },
+                { speaker: 'La jeune fille', line: 'Allez, c\'est officiel : tu es mon tout premier disciple. Un explorateur de la mémoire, un vrai.' },
+                { speaker: 'La jeune fille', line: 'Toi tu as la ville, moi j\'ai le carnet. Dénichons ces mémoires une par une, et tu stabilises, je note. Ça me sauverait, franchement !' },
+                { speaker: 'La jeune fille', line: 'Dès qu\'on a tout réuni, tu viens avec moi le rendre à l\'Organisation ? Ça va leur faire tout drôle !' },
                 // Nommer sans expliquer : le joueur doit savoir que ces choses
                 // existent pour avoir envie de s'en approcher, pas savoir s'en
                 // servir avant de les avoir vues.
@@ -15561,11 +15588,9 @@
             ], () => _obGuideRefresh());
         }
 
-        // Vraie fin du guide : la chute de la méprise (elle réalise ici que le
-        // joueur n'est pas des leurs), puis le pacte — il stabilise, elle note —
-        // et l'accroche de suite (rendre le carnet à l'Organisation). Aligné sur
-        // la conclusion de app/demo.html, à ceci près qu'un seul chapitre est
-        // scellé ici : elle salue le chapitre, pas le carnet entier.
+        // Vraie fin du guide : la conclusion (méprise, pacte, accroche de suite) a
+        // été dite au scellement, dans _obGuideFinish. Ne reste ici que la dernière
+        // note — les traces que le joueur laisse derrière lui — et l'extinction.
         // C'est ici, et seulement ici, que _obDone bascule — plus à la sortie
         // du scellement.
         function _obGuideOutro() {
@@ -15580,13 +15605,6 @@
                 // RDV Bellecour désactivé pour le test 1 (parcours reporté au test 2) :
                 // les deux répliques de direction sautent avec lui.
                 { speaker: 'La jeune fille', line: 'Et là où tu passes, la carte en garde trace — chaque geste que tu poses laisse un petit signe, discret, à sa place exacte. À toi de reconnaître, plus tard, le dessin de ton exploration.' },
-                { speaker: 'La jeune fille', line: 'Et voilà le chapitre complet ! Tu t\'en sors drôlement bien, pour quelqu\'un qui oublie tout.' },
-                { speaker: 'La jeune fille', line: 'Quand je te vois faire, ça semble si facile, je ne sais pas où tu en es du quartier que tu dois couvrir mais moi j\'ai à peine commencé… Tant de cartes et leur mémoire à réunir et si peu de temps, pfiou' },
-                { speaker: 'La jeune fille', line: 'Pourquoi tu me regardes comme ça ? Cette expression, mais… C\'est de l\'incompréhension ! Tu n\'es pas de l\'Organisation, toi, hein ?' },
-                { speaker: 'La jeune fille', line: 'Oh la boulette… Oh. Oh, mais c\'est encore mieux ! Un don pareil, et sans même le savoir !' },
-                { speaker: 'La jeune fille', line: 'Allez, c\'est officiel : tu es mon tout premier disciple. Un explorateur de la mémoire, un vrai.' },
-                { speaker: 'La jeune fille', line: 'Toi tu as la ville, moi j\'ai le carnet. Dénichons ces mémoires une par une, et tu stabilises, je note. Ça me sauverait, franchement !' },
-                { speaker: 'La jeune fille', line: 'Dès qu\'on a tout réuni, tu viens avec moi le rendre à l\'Organisation ? Ça va leur faire tout drôle !' },
             ], () => {
                 _obDone = true;
                 _obAct3Done = true;
@@ -22239,6 +22257,7 @@
             const seen = new Set();
             return Object.values(COLLECTIONS)
                 .flatMap(col => col.cards)
+                .filter(c => CARTES_TEST_2_BELLECOUR.indexOf(c.id) === -1)
                 .filter(c => seen.has(c.id) ? false : seen.add(c.id));
         }
 
@@ -27020,8 +27039,11 @@
             renderJournalBio();
         }
 
+        // Redéfinition tardive de getAllCards (:22256) : c'est celle-ci qui gagne à
+        // l'exécution, elle doit donc porter le même filtre test 2.
         function getAllCards() {
-            return Object.values(COLLECTIONS).flatMap(c => c.cards || []);
+            return Object.values(COLLECTIONS).flatMap(c => c.cards || [])
+                .filter(c => CARTES_TEST_2_BELLECOUR.indexOf(c.id) === -1);
         }
 
         // ── Progression Screen ──
@@ -30150,8 +30172,12 @@
         }
 
         function showVaultNotification() {
-            // Affiche tous les dots "nouveau" liés à l'Explorium (action-bar, collections, journal)
-            document.querySelectorAll('.vault-notif-dot').forEach(d => { d.style.display = 'block'; });
+            // Neutralisée pour le test 1 : pas de pastille rouge sur l'Explorium.
+            // L'onglet n'ouvre que le fragment d'archive scellé — appeler le joueur
+            // vers un écran qui ne montrera rien n'a pas de sens. La fonction reste
+            // en place (une dizaine d'appelants) ; pour la réactiver, remettre la
+            // ligne ci-dessous :
+            // document.querySelectorAll('.vault-notif-dot').forEach(d => { d.style.display = 'block'; });
         }
 
         function clearVaultNotification() {
