@@ -16446,8 +16446,21 @@
         let _appReady = false;
         let _resetting = false;   // true pendant un reset : bloque toute sauvegarde
 
+        // Déclaré ici, et non plus près des variables GPS : saveProgress s'en sert
+        // dès sa première ligne et doit pouvoir le lire sans risque de zone morte.
+        let _progressLoaded = false;
+
         function saveProgress() {
             if (_resetting) return;  // un reset est en cours : ne rien réécrire dans le storage
+            // Ne jamais écrire une sauvegarde qu'on n'a pas encore lue. initApp()
+            // n'est appelé que sur l'évènement 'load' de MapLibre, et startGPS peut
+            // tourner avant : dans cette fenêtre, toutes les variables de progression
+            // valent leur défaut (0 carte, poudre de départ, _obDone false). Un seul
+            // appel à saveProgress() écraserait la partie.
+            if (!_progressLoaded) {
+                console.warn('[expLore] saveProgress ignoré : sauvegarde pas encore chargée');
+                return;
+            }
             try {
                 // Ne jamais rétrograder _obDone de true à false
                 const _existingRaw = localStorage.getItem('lyon_cards_progress');
@@ -16460,11 +16473,11 @@
                             _obAct2Done = true;
                             _obAct3Done = true;
                         }
-                        // Ne jamais rétrograder memorialDust ou les collections
-                        if (_existing.memorialDust > memorialDust) {
-                            console.log('[expLore] saveProgress: memorialDust protégé', _existing.memorialDust, '→', memorialDust, 'bloqué');
-                            return;
-                        }
+                        // Pas de garde sur memorialDust : la poudre baisse normalement
+                        // (dépense sur une carte, échoppe). L'ancienne garde bloquait alors
+                        // TOUTE sauvegarde jusqu'à ce que la réserve remonte au-dessus du
+                        // dernier montant enregistré. L'écrasement au démarrage, qu'elle
+                        // visait, est couvert par _progressLoaded en tête de fonction.
                         // Ne jamais rétrograder les collections (cartes, poudre, orbes, etc)
                         // Sauf si la régression est intentionnelle (reset, test) — alors on log mais on continue
                         const _existingCards = (_existing.collectedCards || []).length;
@@ -16817,7 +16830,6 @@
         let selectedCard = null;
 
         let gpsWatchId = null;
-        let _progressLoaded = false;
         let gpsActive = false;
 
         let joystickActive = false;

@@ -16605,11 +16605,11 @@
                             _obAct2Done = true;
                             _obAct3Done = true;
                         }
-                        // Ne jamais rétrograder memorialDust ou les collections
-                        if (_existing.memorialDust > memorialDust) {
-                            console.log('[expLore] saveProgress: memorialDust protégé', _existing.memorialDust, '→', memorialDust, 'bloqué');
-                            return;
-                        }
+                        // Pas de garde sur memorialDust : la poudre baisse normalement
+                        // (dépense sur une carte, échoppe). L'ancienne garde bloquait alors
+                        // TOUTE sauvegarde jusqu'à ce que la réserve remonte au-dessus du
+                        // dernier montant enregistré. L'écrasement au démarrage, qu'elle
+                        // visait, est couvert par _progressLoaded en tête de fonction.
                         // Ne jamais rétrograder les collections (cartes, poudre, orbes, etc)
                         // Sauf si la régression est intentionnelle (reset, test) — alors on log mais on continue
                         const _existingCards = (_existing.collectedCards || []).length;
