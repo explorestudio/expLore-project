@@ -8404,11 +8404,13 @@
            INTRO ANIMÉE (v2) — aucune image, tout dessiné en code
            ═══════════════════════════════════════════════════════ */
         #intro2Overlay{
-            --i2-ink:#0d1220;
-            --i2-paper:#e8dfd0;
-            --i2-dust:#9fc4e8;
-            --i2-warm:#e3c48f;
-            --i2-line:#cdbfa8;
+            --i2-ink:#0d1220;        /* fond */
+            --i2-paper:#e8dfd0;      /* texte */
+            --i2-dust:#a78bfa;       /* poussière, lavande */
+            --i2-dust-hi:#ddd6fe;    /* éclats de poussière */
+            --i2-glow:#7c3aed;       /* halo des nébuleuses */
+            --i2-warm:#e3c48f;       /* voix et traits dessinés */
+            --i2-line:#cdbfa8;       /* horizon et marcheurs */
             --i2-serif:'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,serif;
             /* --jsb-hand est déclarée sur .jsb-page (le carnet) : hors de portée
                d'ici. Même pile de polices, redéclarée localement. */
@@ -14061,7 +14063,6 @@
             let overlay, textEl, hintEl, startEl, horizonEl, says;
             let cv, ctx, W = 0, H = 0, dpr = 1;
             let parts = [], walkers = [], mode = 'drift', t = 0;
-            let focus = { x: 0, y: 0, r: 0 };
             let walkAlpha = 0, walkTarget = 0;
             // Sol commun à l'horizon, aux marcheurs et à la poussière qui retombe,
             // et taille des marcheurs : les deux se déduisent de la géométrie de
@@ -14084,9 +14085,6 @@
                 W = cv.clientWidth; H = cv.clientHeight;
                 cv.width = W * dpr; cv.height = H * dpr;
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-                focus.x = W * 0.5;
-                focus.y = H * 0.58;
-                focus.r = Math.min(W, H) * 0.14;
                 fitHorizon();
                 // Les marcheurs posaient les pieds à H * 0.80, une constante sans
                 // rapport avec l'horizon : ils marchaient au-dessus des toits.
@@ -14095,6 +14093,8 @@
                 const g = horizonGeom();
                 ground = H - g.svgH * (1 - 236 / 300);
                 walkH  = g.svgH * 0.42;
+                placeNebulas();
+                placeCurrents();
             }
 
             /* Horizon : on montre d'autant plus de panorama que l'ecran est large.
@@ -14127,13 +14127,23 @@
                         a: 0.12 + Math.random() * 0.45,
                         ph: Math.random() * Math.PI * 2,
                         sp: 0.4 + Math.random() * 1.1,
-                        warm: Math.random() < 0.18
+                        hi: Math.random() < 0.20,   // éclat : lavande plus claire
+                        n: -1,                       // nébuleuse assignée en gather
+                        // ~15 % rejoignent un courant de poudre à partir du 2e temps
+                        cb: i % 7 === 0 ? i : -1,    // bande (modulo le nombre de courants)
+                        co: (Math.random() - .5) * 0.035,   // écart à la bande, en fraction de H
+                        cs: 0.8 + Math.random() * 0.45       // vitesse propre
                     });
                 }
             }
 
             function spawnDust(x, y) {
-                if (parts.length >= CAP) parts.shift();
+                // Plafond atteint : on retire la plus ancienne poussière ordinaire,
+                // jamais une particule de courant (sinon les courants s'éteignent).
+                if (parts.length >= CAP) {
+                    const k = parts.findIndex(q => q.cb < 0);
+                    parts.splice(k < 0 ? 0 : k, 1);
+                }
                 parts.push({
                     x, y,
                     vx: (Math.random() - .5) * .10,
@@ -14142,8 +14152,99 @@
                     a: 0.30 + Math.random() * 0.35,
                     ph: Math.random() * Math.PI * 2,
                     sp: 0.4 + Math.random() * 1.1,
-                    warm: Math.random() < 0.30
+                    hi: Math.random() < 0.20,
+                    n: -1, cb: -1
                 });
+                // Émise pendant gather : rattachée tout de suite à sa nébuleuse.
+                if (mode === 'gather' || mode === 'presence') assignNebula(parts[parts.length - 1]);
+            }
+
+            /* ── Nébuleuses ──
+               Trois dépôts posés sur la ville, à des hauteurs inégales.
+               La deuxième, la plus dense, devient le point de convergence. */
+            const NEB_DEF = [
+                { fx: 0.22, lift: 0.04, fr: 0.09, max: 0.70, br: 0.55, ph: 0.0 },
+                { fx: 0.52, lift: 0.09, fr: 0.13, max: 1.00, br: 0.42, ph: 2.1 },
+                { fx: 0.78, lift: 0.05, fr: 0.08, max: 0.60, br: 0.67, ph: 4.0 }
+            ];
+            let nebulas = NEB_DEF.map(() => ({ x: 0, y: 0, r: 0, d: 0 }));
+            let rise = 0;          // montée de la nébuleuse centrale, 0 → 1
+            let modeT = 0;         // temps écoulé dans le mode courant
+
+            function placeNebulas() {
+                const m = Math.min(W, H);
+                NEB_DEF.forEach((def, i) => {
+                    const nb = nebulas[i];
+                    nb.x = W * def.fx;
+                    nb.y = ground - H * def.lift - (i === 1 ? H * 0.06 * rise : 0);
+                    nb.r = m * def.fr;
+                });
+            }
+
+            /* ── Courants de poudre ──
+               Bandes ondulantes au-dessus de la ville, que suivent les particules
+               de courant à partir du 2e temps. En gather, elles se déversent
+               dans les nébuleuses et y tourbillonnent. */
+            let currents = [];
+            let curOn = 0;         // présence des courants, 0 → 1 dès settle
+
+            function placeCurrents() {
+                const lifts = W < 520 ? [0.14, 0.26] : [0.14, 0.26, 0.40];
+                const sp = (0.7 + W * 0.0006) * (reduce ? 0.5 : 1);
+                currents = lifts.map((l, i) => ({
+                    y: ground - H * l,
+                    amp: H * 0.03,
+                    k: 6.2832 / (W * 0.8),
+                    w: 0.35 + i * 0.12,
+                    ph: i * 1.9,
+                    v: sp * (i % 2 ? -1 : 1)
+                }));
+            }
+
+            function assignNebula(p) {
+                let best = 0, bd = Infinity;
+                nebulas.forEach((nb, i) => {
+                    const d = Math.hypot(nb.x - p.x, nb.y - p.y);
+                    if (d < bd) { bd = d; best = i; }
+                });
+                p.n = best;
+                p.mig = -1;
+            }
+
+            function enterGather() {
+                modeT = 0;
+                parts.forEach(assignNebula);
+            }
+
+            function enterPresence() {
+                modeT = 0;
+                // Une partie des particules latérales migre vers la centrale,
+                // chacune à son heure ; le reste garde les latérales visibles.
+                parts.forEach(p => {
+                    if (p.n < 0) assignNebula(p);
+                    p.mig = (p.n !== 1 && Math.random() < 0.65) ? Math.random() * (reduce ? 1.5 : 8) : -1;
+                });
+            }
+
+            function drawNebulas() {
+                const ramp = reduce ? 1 : 6;
+                for (let i = 0; i < nebulas.length; i++) {
+                    const def = NEB_DEF[i], nb = nebulas[i];
+                    let target = 0;
+                    if (mode === 'gather') target = def.max * Math.min(1, modeT / ramp);
+                    else if (mode === 'presence') target = i === 1 ? 1 : def.max * 0.45;
+                    nb.d += (target - nb.d) * (mode === 'presence' ? 0.01 : 0.05);
+                    if (nb.d < 0.005) continue;
+                    const breath = 0.82 + 0.18 * Math.sin(t * def.br + def.ph);
+                    const al = 0.22 * nb.d * breath;
+                    const R = nb.r * 2.2;
+                    const g = ctx.createRadialGradient(nb.x, nb.y, 0, nb.x, nb.y, R);
+                    g.addColorStop(0,    'rgba(124,58,237,' + al.toFixed(3) + ')');
+                    g.addColorStop(0.35, 'rgba(124,58,237,' + (al * 0.6).toFixed(3) + ')');
+                    g.addColorStop(1,    'rgba(124,58,237,0)');
+                    ctx.fillStyle = g;
+                    ctx.fillRect(nb.x - R, nb.y - R, R * 2, R * 2);
+                }
             }
 
             /* ── Marcheurs ── */
@@ -14210,10 +14311,44 @@
                 walkTarget = (mode === 'drift') ? 1 : (mode === 'settle') ? 0.85
                            : (mode === 'gather') ? 0.35 : 0;
                 walkAlpha += (walkTarget - walkAlpha) * 0.012;
+
+                modeT += 0.016;
+                if (mode === 'presence' && rise < 1) {
+                    rise = Math.min(1, rise + 0.016 / (reduce ? 1 : 4));
+                    placeNebulas();
+                }
+                // Ordre : nébuleuses, marcheurs, particules. Le voile violet ne
+                // passe jamais sur le trait papier.
+                drawNebulas();
                 drawWalkers();
 
+                curOn += ((mode === 'drift' ? 0 : 1) - curOn) * 0.01;
+                ctx.lineCap = 'round';
+
                 for (const p of parts) {
-                    if (mode === 'drift') {
+                    const isCur = p.cb >= 0 && curOn > 0.01;
+                    if (isCur && mode === 'settle') {
+                        // Suit sa bande : vitesse horizontale commune, ondulation
+                        // verticale ; le pilotage progressif (curOn) évite tout à-coup.
+                        const c = currents[p.cb % currents.length];
+                        const ty = c.y + H * p.co + c.amp * Math.sin(p.x * c.k + t * c.w + c.ph);
+                        const k = 0.03 * curOn;
+                        p.vx += (c.v * p.cs - p.vx) * k;
+                        p.vy += ((ty - p.y) * 0.02 - p.vy) * k;
+                        p.x += p.vx; p.y += p.vy;
+                    } else if (isCur) {
+                        // gather / presence : se déverse dans sa nébuleuse et y tourbillonne.
+                        if (p.n < 0) assignNebula(p);
+                        if (p.mig >= 0 && modeT >= p.mig) { p.n = 1; p.mig = -1; }
+                        const nb = nebulas[p.n];
+                        const dx = nb.x - p.x, dy = nb.y - p.y;
+                        const d = Math.hypot(dx, dy) || 1;
+                        const s = reduce ? 0.5 : 1;
+                        p.vx += (dx / d) * 0.016 * s; p.vy += (dy / d) * 0.016 * s;
+                        p.vx += (-dy / d) * 0.010 * s; p.vy += (dx / d) * 0.010 * s;
+                        p.vx *= 0.975; p.vy *= 0.975;
+                        p.x += p.vx; p.y += p.vy;
+                    } else if (mode === 'drift') {
                         p.x += p.vx; p.y += p.vy;
                     } else if (mode === 'settle') {
                         p.vy += 0.0016;
@@ -14222,14 +14357,17 @@
                         const floor = ground;
                         if (p.y > floor) { p.y = floor - Math.random() * 2; p.vy *= -0.12; }
                     } else {
-                        const dx = focus.x - p.x, dy = focus.y - p.y;
+                        if (p.n < 0) assignNebula(p);
+                        if (p.mig >= 0 && modeT >= p.mig) { p.n = 1; p.mig = -1; }
+                        const nb = nebulas[p.n];
+                        const dx = nb.x - p.x, dy = nb.y - p.y;
                         const d = Math.hypot(dx, dy) || 1;
                         const pull = mode === 'presence' ? 0.0075 : 0.0040;
                         p.vx += (dx / d) * pull; p.vy += (dy / d) * pull;
                         p.vx += (-dy / d) * 0.0016; p.vy += (dx / d) * 0.0016;
                         p.vx *= 0.975; p.vy *= 0.975;
                         p.x += p.vx; p.y += p.vy;
-                        if (d < focus.r * 0.55) { p.vx *= 0.94; p.vy *= 0.94; }
+                        if (d < nb.r * 0.55) { p.vx *= 0.94; p.vy *= 0.94; }
                     }
 
                     if (p.x < -12) p.x = W + 12;
@@ -14239,21 +14377,40 @@
 
                     const tw = 0.55 + 0.45 * Math.sin(t * p.sp + p.ph);
                     const al = p.a * tw * (mode === 'presence' ? 1.25 : 1);
+                    if (isCur) {
+                        // Violet franc (#8b5cf6) atteint progressivement depuis la
+                        // lavande, plus une traînée courte proportionnelle à la vitesse.
+                        const r = Math.round(167 - 28 * curOn), g = Math.round(139 - 47 * curOn);
+                        const ca = Math.min(0.9, al + 0.25 * curOn).toFixed(3);
+                        const col = 'rgba(' + r + ',' + g + ',' + (250 - Math.round(4 * curOn)) + ',' + ca + ')';
+                        const L = 7 * curOn;
+                        ctx.strokeStyle = col;
+                        ctx.lineWidth = p.r * 1.3;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x - p.vx * L, p.y - p.vy * L);
+                        ctx.lineTo(p.x, p.y);
+                        ctx.stroke();
+                        continue;
+                    }
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.r, 0, 6.2832);
-                    ctx.fillStyle = p.warm
-                        ? 'rgba(227,196,143,' + al.toFixed(3) + ')'
-                        : 'rgba(186,214,240,' + al.toFixed(3) + ')';
+                    ctx.fillStyle = p.hi
+                        ? 'rgba(221,214,254,' + al.toFixed(3) + ')'
+                        : 'rgba(167,139,250,' + al.toFixed(3) + ')';
                     ctx.fill();
                 }
 
                 if (mode === 'presence') {
+                    // Halo de fin sur la nébuleuse centrale ; rayon 2,2× (et non
+                    // 2,6×) pour ne pas avaler le bouton « Commencer ».
+                    const c = nebulas[1];
                     const pulse = 1 + 0.06 * Math.sin(t * 1.25);
-                    const g = ctx.createRadialGradient(focus.x, focus.y, 0, focus.x, focus.y, focus.r * 2.6 * pulse);
-                    g.addColorStop(0, 'rgba(159,196,232,0.16)');
-                    g.addColorStop(1, 'rgba(159,196,232,0)');
+                    const R = c.r * 2.2 * pulse;
+                    const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, R);
+                    g.addColorStop(0, 'rgba(124,58,237,0.20)');
+                    g.addColorStop(1, 'rgba(124,58,237,0)');
                     ctx.fillStyle = g;
-                    ctx.fillRect(focus.x - focus.r * 3, focus.y - focus.r * 3, focus.r * 6, focus.r * 6);
+                    ctx.fillRect(c.x - R, c.y - R, R * 2, R * 2);
                 }
 
                 rafId = requestAnimationFrame(step);
@@ -14292,6 +14449,8 @@
                     const b = BEATS[beat];
                     mode = b.mode;
                     if (beat === 1) horizonEl.classList.add('on');
+                    if (mode === 'gather') enterGather();
+                    if (mode === 'presence') enterPresence();
 
                     if (b.mode === 'presence') {
                         says.forEach((el, i) =>
@@ -14327,6 +14486,7 @@
                 hintEl.classList.remove('on');
 
                 beat = -1; busy = false; mode = 'drift'; t = 0; walkAlpha = 0;
+                rise = 0; modeT = 0; curOn = 0; nebulas.forEach(nb => { nb.d = 0; });
                 running = true;
                 resize(); seed(); seedWalkers();
 
