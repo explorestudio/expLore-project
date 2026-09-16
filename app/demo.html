@@ -8873,7 +8873,7 @@
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
-                <img src="./assets/Powder.png" alt="poudre" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
+                <img src="./assets/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
                 <span id="dustCounter">0</span>
             </div>
 
@@ -9061,7 +9061,7 @@
                     <button onclick="addTestCards()" class="test-action-btn">🃏 Débloquer toutes les cartes</button>
                     <button onclick="addTestScrolls(5)" class="test-action-btn">📜 +5 parchemins</button>
                     <button onclick="addTestOrbes(3)" class="test-action-btn">🔮 +3 orbes</button>
-                    <button onclick="addTestDust(500)" class="test-action-btn">✨ +500 poudre</button>
+                    <button onclick="addTestDust(500)" class="test-action-btn">✨ +500 poussière</button>
                     <button onclick="addFilm(3)" class="test-action-btn">🎞️ +3 pellicules</button>
                     <button onclick="bagInv.encre=(bagInv.encre||0)+3;saveProgress();showToast('🖋️ +3 encres');" class="test-action-btn">🖋️ +3 encres</button>
                     <button onclick="bagInv.cassettes=(bagInv.cassettes||0)+3;saveProgress();showToast('📼 +3 cassettes');" class="test-action-btn">📼 +3 cassettes</button>
@@ -9082,7 +9082,7 @@
                 <!-- Cooldown POI ressources (respawn) -->
                 <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);">
                     <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">Cooldown POI ressources</div>
-                    <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4;">Délai avant qu'un POI collectable (poudre, écho, orbe, loot, parchemin, carnet) réapparaisse à sa position.</div>
+                    <div style="font-size:11px;color:#6b7280;margin-bottom:8px;line-height:1.4;">Délai avant qu'un POI collectable (poussière, écho, orbe, loot, parchemin, carnet) réapparaisse à sa position.</div>
                     <div style="display:flex;flex-wrap:wrap;gap:6px;">
                         <button onclick="setPoiCooldown(10*1000, '10s')" class="test-action-btn" style="flex:1 0 auto;padding:6px 10px;">10s</button>
                         <button onclick="setPoiCooldown(30*1000, '30s')" class="test-action-btn" style="flex:1 0 auto;padding:6px 10px;">30s</button>
@@ -9176,11 +9176,11 @@
             <div id="nearbyDust" class="nearby-poi hidden" style="background: #F3E8FF; border-color: #A855F7;">
                 <div class="nearby-poi-header">
                     <div>
-                        <div class="nearby-poi-name" style="color: #7C3AED;"><img src="./assets/Powder.png" alt="poudre" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> Poudre mémorielle</div>
+                        <div class="nearby-poi-name" style="color: #7C3AED;"><img src="./assets/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> Poussière mémorielle</div>
                         <div class="nearby-poi-distance" style="color: #9333EA;">À portée de collecte!</div>
                     </div>
                 </div>
-                <button onclick="collectDust()" class="collect-btn" style="background: #A855F7;">Collecter la poudre</button>
+                <button onclick="collectDust()" class="collect-btn" style="background: #A855F7;">Collecter la poussière</button>
             </div>
 
             <div id="nearbyCarnetResource" class="nearby-poi hidden" style="background: #FEF3C7; border-color: #D97706;">
@@ -9504,7 +9504,7 @@
 
                             <!-- Contenu droit -->
                             <div class="card-vtab-content">
-                                <!-- ── Pane CARTE : niveau, XP, énergie, poudre, orbes, carnet ── -->
+                                <!-- ── Pane CARTE : niveau, XP, énergie, poussière, orbes, carnet ── -->
                                 <div class="card-vtab-pane active" id="cardPaneCard">
                                     <div class="card-level-block">
                                         <!-- Ligne 1 : Niveau + XP (pleine largeur) -->
@@ -9526,12 +9526,12 @@
                                         <!-- Petit texte d'invitation contextuel -->
                                         <div class="card-rest-hint" id="cardRestHint" style="display:none;"></div>
                                         <button id="addExpBtn" class="card-level-up-btn" onclick="addExperience()" disabled>
-                                            Ajouter 50 poudre (+EXP)
+                                            Ajouter 50 poussière (+EXP)
                                         </button>
-                                        <!-- Ligne 2 : ressources (poudre + orbes + carnet) -->
+                                        <!-- Ligne 2 : ressources (poussière + orbes + carnet) -->
                                         <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:8px;">
                                             <div style="display:flex;align-items:center;gap:4px;background:#f3f0ff;border-radius:14px;padding:3px 8px;font-size:12px;font-weight:700;color:#7c3aed;">
-                                                <img src="./assets/Powder.png" alt="poudre" style="width:13px;height:13px;object-fit:contain;pointer-events:none;" draggable="false">
+                                                <img src="./assets/Powder.png" alt="poussière" style="width:13px;height:13px;object-fit:contain;pointer-events:none;" draggable="false">
                                                 <span id="cardDetailDustCounter">0</span>
                                             </div>
                                             <div style="display:flex;align-items:center;gap:4px;background:#ecfeff;border-radius:14px;padding:3px 8px;font-size:12px;font-weight:700;color:#0891b2;">
@@ -9822,7 +9822,7 @@
                     <span class="studio-card-name" id="studioCardName"></span>
                 </div>
                 <div class="studio-dust-display">
-                    <img src="./assets/Powder.png" alt="poudre" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
+                    <img src="./assets/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
                     <span id="studioDustCounter">0</span>
                 </div>
             </div>
@@ -10965,7 +10965,7 @@
             "Magasin": "Shop",
             "Mode test": "Test mode",
             "Sac": "Bag",
-            "poudre": "dust",
+            "poussière": "dust",
             "Quête": "Quest",
             "Journal de quête": "Quest log",
             "Tes objectifs en cours": "Your current objectives",
@@ -10999,8 +10999,8 @@
             "Fournitures disponibles": "Supplies available",
             "Consulter": "View",
             "Consulter le panneau": "Read the sign",
-            "Poudre mémorielle": "Memorial dust",
-            "Collecter la poudre": "Collect the dust",
+            "Poussière mémorielle": "Memorial dust",
+            "Collecter la poussière": "Collect the dust",
             "📼 Ressource de carnet": "📼 Journal resource",
             "Collecter": "Collect",
             "✨ Écho": "✨ Echo",
@@ -11230,11 +11230,11 @@
 
             // ── Hints contextuels par écran ──
             "Tes cartes s'organisent ici. Des groupes se forment : des ensembles qui racontent quelque chose de plus grand que chaque fragment.": "Your cards arrange themselves here. Groups form: sets that tell something larger than any single fragment.",
-            "La poudre, les échos, les orbes. Tout ce que tu accumules en explorant.": "Dust, echoes, orbs. Everything you gather as you explore.",
+            "La poussière, les échos, les orbes. Tout ce que tu accumules en explorant.": "Dust, echoes, orbs. Everything you gather as you explore.",
             "Les fragments que tu réveilles laissent des traces. Certaines te surprendront.": "The fragments you wake leave traces. Some of them will surprise you.",
             "L'Explorium. Il est vide pour l'instant.": "The Explorium. Empty, for now.",
             "Certains fragments que tu collecteras s'y inscriront. Ceux qui appartiennent à quelque chose de plus grand.": "Some of the fragments you collect will inscribe themselves here. The ones that belong to something larger.",
-            "La poudre mémorielle réveille ce qui s'était tu. Essaie.": "Memorial dust wakes what had fallen silent. Try it.",
+            "La poussière mémorielle réveille ce qui s'était tu. Essaie.": "Memorial dust wakes what had fallen silent. Try it.",
 
             // ── Parcours guidé — répliques du CR de test (2026-08-09) ──
             "Pose ton doigt sur la nébuleuse et tiens, jusqu'à ce qu'elle se stabilise.":
@@ -11243,18 +11243,18 @@
             // est tombé (le joueur y est déjà), d'où une nouvelle clé.
             [`Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> flottent à l'intérieur. Ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span>.`]:
                 `Oh, you see it? A <span style="color:#B98CE8;font-weight:600">nebula</span>! Several <span style="color:#E09AC0;font-weight:600">presences</span> are drifting inside. This will be your first <span style="color:#F5B841;font-weight:600">card</span>.`,
-            "Je l'ai rattrapée avant qu'elle ne tombe à terre. Je vais lui rendre un peu de mémoire avec ma poudre mémorielle.":
+            "Je l'ai rattrapée avant qu'elle ne tombe à terre. Je vais lui rendre un peu de mémoire avec ma poussière mémorielle.":
                 "I caught it before it hit the ground. I'm going to give it back a little memory with my memorial dust.",
             "Elle a quelques souvenirs. Oh… Mais c'est ta carte, tu veux lui en donner toi-même ?":
                 "It has a few memories left. Oh… but it's your card — do you want to give it some yourself?",
-            [`Pour qu'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire.`]:
+            [`Pour qu'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poussière mémorielle</span>. Chaque dose réveille un peu son histoire.`]:
                 `For a card to remember, give it <span style="color:#A78BFA;font-weight:600">memorial dust</span>. Each dose wakes a little more of its story.`,
             // Remise du carnet — déplacée du chapitre II vers la toute première
             // ouverture du carnet, quel qu'en soit le moment (cf. _obJournalHint).
             [`Ah, tu l'as trouvé. C'est le <span style="font-weight:600">📖 carnet</span> de la carte — j'y ai noté tout ce qu'elle m'a déjà raconté.`]:
                 `Ah, you found it. That's the card's <span style="font-weight:600">📖 notebook</span> — I wrote down in it everything it has told me so far.`,
             "Le carnet ?": "The notebook?",
-            "Toi aussi, tu aurais bien besoin d'un peu de poudre mémorielle ! L'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l'as encore oublié, j'imagine… Bon, garde celui-ci, j'en ai plein.":
+            "Toi aussi, tu aurais bien besoin d'un peu de poussière mémorielle ! L'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l'as encore oublié, j'imagine… Bon, garde celui-ci, j'en ai plein.":
                 "You could use a little memorial dust yourself! The Organisation gave us this booklet to write down everything a card might remember! You forgot it again, I suppose… Fine, keep this one, I have plenty.",
             [`Le chapitre est plein, mais son <span style="font-weight:600">📖 carnet</span> garde encore des pages voilées. Ouvre-le : c'est à cette condition qu'il pourra être scellé.`]:
                 `The chapter is full, but its <span style="font-weight:600">📖 notebook</span> still keeps veiled pages. Open it: only then can it be sealed.`,
@@ -11309,7 +11309,7 @@
 
             "Elle est un peu bavarde, en tout cas elle a encore des choses à dire.":
                 "It's a bit of a chatterbox — in any case it still has things to say.",
-            "D'ailleurs, n'hésite pas à aller chercher des fournitures au Bazar, l'échoppe un peu plus au Nord. Profites-en pour collecter de la poudre ou une orbe si tu en trouves sur ton chemin.":
+            "D'ailleurs, n'hésite pas à aller chercher des fournitures au Bazar, l'échoppe un peu plus au Nord. Profites-en pour collecter de la poussière ou une orbe si tu en trouves sur ton chemin.":
                 "By the way, don't hesitate to go and get supplies at the Bazaar, the stall a little further north. While you're at it, pick up any dust or an orb you find on the way.",
             // Toast d'ouverture du terrain — la mappe se peuple à cet instant précis.
             "Le quartier s'anime. De quoi glaner, dehors.":
@@ -11327,13 +11327,13 @@
             "Tu l'as recueillie. Mais une carte qu'on vient de réveiller a presque tout oublié — à toi de lui rendre sa mémoire.": "You've taken it in. But a card that has only just been woken has forgotten almost everything — it's up to you to give it back its memory.",
             "Ouvre ta Collection, puis la carte. Tout se passe dans son détail.": "Open your Collection, then the card. Everything happens in its detail view.",
             "Je lui ai déjà rendu un peu de sa mémoire — tiens, elle a même déjà quelques souvenirs dans son carnet. À toi de réveiller le reste.": "I've already given it back a little of its memory — look, it even has a few recollections in its journal. The rest is yours to wake.",
-            [`Pour qu'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire — regarde son carnet se remplir.`]:
+            [`Pour qu'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poussière mémorielle</span>. Chaque dose réveille un peu son histoire — regarde son carnet se remplir.`]:
                 `For a card to remember, feed it <span style="color:#A78BFA;font-weight:600">memorial dust</span>. Each dose wakes a little of its story — watch its journal fill up.`,
             "Et regarde-la, elle. Une carte qui regagne sa mémoire ne garde pas le même visage — les points sous son portrait comptent les états qu'elle a retrouvés. Un seul, pour l'instant.": "And look at it, too. A card that wins back its memory doesn't keep the same face — the dots beneath its portrait count the states it has recovered. Just one, for now.",
             "Elle est bien là, n'hésite pas à l'inspecter.": "There she is — take a look at her.",
             "La carte est épuisée. Cherche de quoi la raviver.": "The card is spent. Find something to revive it.",
             "La voilà à bout de souffle. La mémoire a besoin d'une orbe pour se raviver d'un coup. Il y en a une tout près, sur la mappe. Va la chercher.": "It's out of breath. Memory needs an orb to come back all at once. There's one close by, on the map. Go and fetch it.",
-            "Profites-en pour ramasser la poudre que tu croiseras : tu en manqueras bientôt.": "While you're at it, pick up any dust you come across: you'll be short of it soon.",
+            "Profites-en pour ramasser la poussière que tu croiseras : tu en manqueras bientôt.": "While you're at it, pick up any dust you come across: you'll be short of it soon.",
             "La mémoire s'ouvre à nouveau.": "Memory opens again.",
             "Cette version n'est pas encore révélée.": "This version hasn't been revealed yet.",
             "Elle retrouve de la force pour te parler. Continue, aide-la à se souvenir et à monter au niveau suivant !":
@@ -11356,7 +11356,7 @@
 
             // ── Carnet : économie des fournitures ──
             "Son carnet. Le premier chapitre s'y est déjà écrit — celui-là, tu peux le lire.": "Its notebook. The first chapter is already written there — that one you can read.",
-            "Les pages voilées demandent autre chose que de la poudre : une <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span> pour une image, une <span style=\"color:#C4B5FD;font-weight:600\">📼 cassette</span> pour une voix, de l'<span style=\"color:#E0A458;font-weight:600\">🖋️ encre</span> pour un texte.": "Veiled pages ask for more than dust: a <span style=\"color:#FCD34D;font-weight:600\">🎞️ film roll</span> for an image, a <span style=\"color:#C4B5FD;font-weight:600\">📼 tape</span> for a voice, <span style=\"color:#E0A458;font-weight:600\">🖋️ ink</span> for a text.",
+            "Les pages voilées demandent autre chose que de la poussière : une <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span> pour une image, une <span style=\"color:#C4B5FD;font-weight:600\">📼 cassette</span> pour une voix, de l'<span style=\"color:#E0A458;font-weight:600\">🖋️ encre</span> pour un texte.": "Veiled pages ask for more than dust: a <span style=\"color:#FCD34D;font-weight:600\">🎞️ film roll</span> for an image, a <span style=\"color:#C4B5FD;font-weight:600\">📼 tape</span> for a voice, <span style=\"color:#E0A458;font-weight:600\">🖋️ ink</span> for a text.",
             "L'échoppe en tient, juste au nord d'ici. Sers-toi.": "The stall keeps some, just north of here. Help yourself.",
             "Tu en as déjà sur toi. Touche une page voilée pour la révéler.": "You already have some on you. Touch a veiled page to reveal it.",
             "Pour revenir en arrière, touche son image en haut : tu quitteras ce carnet dès que tu le souhaites.": "To go back, touch its image at the top: you'll leave this notebook whenever you like.",
@@ -11368,8 +11368,8 @@
             "Échoppe de Bellecour": "Bellecour Stall",
             "Le chapitre est plein. Scelle-le : qu'il prenne racine.": "The chapter is full. Seal it — let it take root.",
             "Un chapitre se ferme, un autre s'ouvre — le dernier de cette carte.": "One chapter closes, another opens — the last of this card.",
-            "Il te faudra plus de poudre. Sers-toi de celle que tu as ramassée.": "You'll need more dust. Use what you've gathered.",
-            "Tu n'as plus de poudre... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.": "You're out of dust... Close the card, go and gather some on the map, then come back and finish this last chapter.",
+            "Il te faudra plus de poussière. Sers-toi de celle que tu as ramassée.": "You'll need more dust. Use what you've gathered.",
+            "Tu n'as plus de poussière... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.": "You're out of dust... Close the card, go and gather some on the map, then come back and finish this last chapter.",
             "Et un état de plus s'est allumé sous son portrait. Touche les points : elle garde tous ses âges, tu peux revenir les voir quand tu veux.": "And one more state has lit up beneath its portrait. Touch the dots: it keeps all its ages, you can come back and see them whenever you like.",
             "Le dernier chapitre est plein, mais son carnet garde encore des pages voilées. Dévoile-les : une mémoire à trous ne se scelle pas.": "The last chapter is full, but its notebook still keeps veiled pages. Reveal them: a memory full of holes cannot be sealed.",
             "Le dernier chapitre est plein, et pas une page ne manque. Scelle-le : elle aura regagné toute sa mémoire.": "The last chapter is full, and not a page is missing. Seal it: it will have won back all of its memory.",
@@ -11759,7 +11759,7 @@
             "Attends... quelque chose remonte...": "Wait... something is surfacing...",
             "Un peu plus et je verrai clairement...": "A little more and I'll see it clearly...",
             "Oui... oui, je me souviens...": "Yes... yes, I remember...",
-            "La poudre réveille des souvenirs enfouis...": "The dust wakes buried memories...",
+            "La poussière réveille des souvenirs enfouis...": "The dust wakes buried memories...",
             "C'est flou, mais ça revient...": "It's blurred, but it's coming back...",
             "Encore un peu... je sens que c'est important...": "A little more... I feel this one matters...",
             // ── CARD_FLAVOR_TEXTS ──
@@ -11893,10 +11893,10 @@
             "Collecter 5 cartes différentes": "Collect 5 different cards",
             "Grand Explorateur": "Great Explorer",
             "Collecter 15 cartes différentes": "Collect 15 different cards",
-            "Collecteur de poudre": "Dust collector",
-            "Accumuler 100 poudres au total": "Accumulate 100 dust in total",
+            "Collecteur de poussière": "Dust collector",
+            "Accumuler 100 poussières au total": "Accumulate 100 dust in total",
             "Riche en mémoire": "Rich in memory",
-            "Accumuler 500 poudres au total": "Accumulate 500 dust in total",
+            "Accumuler 500 poussières au total": "Accumulate 500 dust in total",
             "Premier Écho": "First Echo",
             "Collecter votre premier écho": "Collect your first echo",
             "Résonance": "Resonance",
@@ -11909,7 +11909,7 @@
             "Première évolution": "First evolution",
             "Faire monter une carte de niveau": "Level up a card",
             "Investisseur": "Investor",
-            "Dépenser 200 poudres sur les cartes": "Spend 200 dust on cards",
+            "Dépenser 200 poussières sur les cartes": "Spend 200 dust on cards",
             "Maîtrise totale": "Total mastery",
             "Atteindre le niveau max sur une carte": "Reach max level on a card",
             "Collectionneur": "Collector",
@@ -12133,23 +12133,23 @@
             // ── BATTLEPASS_NODES ──
             "Appareil photo": "Camera",
             "Objet unique": "Unique item",
-            "+50 Poudre": "+50 Dust",
+            "+50 Poussière": "+50 Dust",
             "+3 Orbes de mémoire": "+3 Memory orbs",
             "Orbes": "Orbs",
             "Carte bonus : Guignol": "Bonus card: Guignol",
             "Carte rare": "Rare card",
-            "+100 Poudre": "+100 Dust",
+            "+100 Poussière": "+100 Dust",
             "Skin Aurora": "Aurora skin",
             "Skin de carte": "Card skin",
             "Badge Flâneur": "Flâneur badge",
             "Titre spécial": "Special title",
-            "+150 Poudre": "+150 Dust",
+            "+150 Poussière": "+150 Dust",
             "+5 pellicules": "+5 film rolls",
             "Fournitures": "Supplies",
             "Cadre Fer": "Iron frame",
             "Cadre musée": "Museum frame",
             "+2 Orbes de mémoire": "+2 Memory orbs",
-            "+200 Poudre": "+200 Dust",
+            "+200 Poussière": "+200 Dust",
             "Titre : Gardien de Fourvière": "Title: Guardian of Fourvière",
             "+5 encres": "+5 inks",
             "+5 cassettes": "+5 tapes",
@@ -12157,7 +12157,7 @@
             "Skin Crépuscule": "Dusk skin",
             "Titre : Passeur de Mémoire": "Title: Bearer of Memory",
             "Titre légendaire": "Legendary title",
-            "+300 Poudre": "+300 Dust",
+            "+300 Poussière": "+300 Dust",
             "+1 Orbe de mémoire": "+1 Memory orb",
             "Cadre Cuivre": "Copper frame",
             "Skin Sépia": "Sepia skin",
@@ -12165,11 +12165,11 @@
             "Cadre Argent": "Silver frame",
             "Skin Nebula": "Nebula skin",
             "+8 cassettes": "+8 tapes",
-            "+800 Poudre": "+800 Dust",
+            "+800 Poussière": "+800 Dust",
             "+12 pellicules": "+12 film rolls",
             "Avatar : Gardien des Étoiles": "Avatar: Guardian of the Stars",
             "Avatar légendaire": "Legendary avatar",
-            "+600 Poudre": "+600 Dust",
+            "+600 Poussière": "+600 Dust",
             "Skin Lyon Antique": "Ancient Lyon skin",
             "Skin légendaire": "Legendary skin",
             "Carte Secrète : ???": "Secret Card: ???",
@@ -12192,7 +12192,7 @@
             "Fauteuil de lecture": "Reading armchair",
             "Un fauteuil confortable pour relire vos carnets et méditer sur vos découvertes lyonnaises.": "A comfortable armchair for rereading your journals and musing on your Lyon discoveries.",
             "Lampe à mémoire": "Memory lamp",
-            "Sa lumière s'intensifie avec chaque poudre mémorielle collectée. Elle illumine vos souvenirs.": "Its light grows stronger with every memorial dust you collect. It illuminates your recollections.",
+            "Sa lumière s'intensifie avec chaque poussière mémorielle collectée. Elle illumine vos souvenirs.": "Its light grows stronger with every memorial dust you collect. It illuminates your recollections.",
             "Miroir de réflexion": "Mirror of reflection",
             "Reflète les échos que vous avez récoltés. Regardez-y pour voir les connexions entre vos cartes.": "Reflects the echoes you have gathered. Look into it to see the connections between your cards.",
             "Globe de Lyon": "Globe of Lyon",
@@ -12202,7 +12202,7 @@
             "Harpe lyonnaise": "Lyonnais harp",
             "Joue les mélodies associées à vos cartes de type Arts. Chaque note est un souvenir.": "Plays the melodies linked to your Arts cards. Every note is a memory.",
             "Chaudron alchimique": "Alchemical cauldron",
-            "Permet de fusionner des poudres mémorielles pour créer des échos rares. En cours de développement...": "Lets you fuse memorial dust to create rare echoes. Still in development...",
+            "Permet de fusionner des poussières mémorielles pour créer des échos rares. En cours de développement...": "Lets you fuse memorial dust to create rare echoes. Still in development...",
             // ── GRAPPE_QUESTS ──
             "Les premiers pas": "The first steps",
             "La direction de la jeune fille": "The girl's direction",
@@ -12395,7 +12395,7 @@
             "(simulée)": "(simulated)",
             "(réelle)": "(real)",
             "réelle": "real",
-            "Poudre à portée !": "Dust within range!",
+            "Poussière à portée !": "Dust within range!",
             "Orbe à portée !": "Orb within range!",
             "Trouvé dans un objet mystère.": "Found in a mystery item.",
             "Elle est là. Sourde et muette encore, mais elle est là. Reste avec elle un instant — elle a besoin de temps pour se souvenir.": "It's here. Still deaf and mute, but it's here. Stay with it a moment — it needs time to remember.",
@@ -13904,7 +13904,7 @@
         let _obSpawnLng    = 0;
 
         // La mappe doit se réveiller dès la collecte de la carte tutoriel, pas à la fin du tutoriel :
-        // le parcours guidé envoie le joueur chercher une orbe et de la poudre, ce qui exige
+        // le parcours guidé envoie le joueur chercher une orbe et de la poussière, ce qui exige
         // zones de capture, bannières de collecte et marqueurs actifs. _obDone ne passe à true
         // qu'au tout dernier dialogue — trop tard. _obAct2Done marque le bon moment.
         function _obMapActive() { return _obDone || _obAct2Done; }
@@ -13960,7 +13960,7 @@
                       narration: 'Elles permettent d\'obtenir une carte, vestige d\'une figure, d\'un lieu ou d\'un objet important de notre Histoire dont il faudra prendre soin', narrationPos: 'bottom' }
                 ]
             },
-            // ───── ÉTAPE 4 : case 5 en grand (poudre récoltée) ─────
+            // ───── ÉTAPE 4 : case 5 en grand (poussière récoltée) ─────
             {
                 cases: [
                     { id: 'c1', img: 'assets/intro/case1.png', pos: { top: '3%', left: '4%', width: '22%', height: '14%' } },
@@ -14379,7 +14379,7 @@
             updateOrbVisibility();
             // Le balayage `data-ob-hidden` ci-dessus rend TOUT visible, échoppe
             // comprise. Le verrou du terrain reprend la main juste après : tant
-            // qu'il est fermé, poudre / orbe / échoppe se recachent aussitôt.
+            // qu'il est fermé, poussière / orbe / échoppe se recachent aussitôt.
             updateBazarVisibility();
             if (typeof _capUpdate === 'function') _capUpdate();
             updateScrollVisibility();
@@ -14444,9 +14444,9 @@
         // XP à 100/250 : trois doses pour arriver au plein — de quoi voir la
         // barre monter, sans rallonger la démo.
         // Énergie à 9/9 (le plein du niveau 0) : le joueur doit pouvoir dépenser
-        // ses 450 poudres d'une traite avant qu'on le renvoie sur la mappe.
+        // ses 450 poussières d'une traite avant qu'on le renvoie sur la mappe.
         // 3 doses au chapitre I (9 → 6), puis 6 au chapitre II (le max du niveau 1
-        // est justement 6) : énergie et poudre tombent à zéro au même clic, celui
+        // est justement 6) : énergie et poussière tombent à zéro au même clic, celui
         // qui remplit la barre du chapitre II. Le beat « carte épuisée → orbe » ne
         // se joue donc plus ici mais à l'ouverture du chapitre III (cf. seal_ch2),
         // une fois le carnet découvert et l'Échoppe visitée.
@@ -14504,7 +14504,7 @@
         // Appelé depuis openBagScreen()
         function _obOnOpenBag() {
             _obContextualHint('bag', [
-                { speaker: 'La jeune fille', line: 'La poudre, les échos, les orbes. Tout ce que tu accumules en explorant.' },
+                { speaker: 'La jeune fille', line: 'La poussière, les échos, les orbes. Tout ce que tu accumules en explorant.' },
             ]);
         }
 
@@ -14529,13 +14529,13 @@
         function _obOnOpenCardDetail() {
             if (_obGuide.active) { _obGuideEvent('carddetail'); _obGuideRefresh(); return; }
             _obContextualHint('carddetail', [
-                { speaker: 'La jeune fille', line: 'La poudre mémorielle réveille ce qui s\'était tu. Essaie.' },
+                { speaker: 'La jeune fille', line: 'La poussière mémorielle réveille ce qui s\'était tu. Essaie.' },
             ]);
         }
 
         // ════════════════════════════════════════════════════════════════
         // PARCOURS GUIDÉ POST-COLLECTE — la jeune fille guide le joueur à
-        // travers Collection → poudre → carnet (triplet encre/pellicule/
+        // travers Collection → poussière → carnet (triplet encre/pellicule/
         // cassette) → énergie qui infuse → orbe → passage de niveau → adieu.
         // Machine à états pilotée par _obGuideEvent(event).
         // ════════════════════════════════════════════════════════════════
@@ -14577,7 +14577,7 @@
             // Chapitre III : la carte y entre à bout de souffle (cf. seal_ch2). Tant
             // qu'elle l'est, #addExpBtn porte « Utiliser une orbe » — on l'entoure si
             // le joueur en a une, sinon on le renvoie la chercher sur la mappe. Une
-            // fois ranimée, l'arbitrage d'origine reprend : la poudre.
+            // fois ranimée, l'arbitrage d'origine reprend : la poussière.
             feed_ch3:        () => {
                 let _en = 1;
                 try { _en = getCardEnergyState(OB_TUTORIAL_CARD.id).value; } catch (e) {}
@@ -14594,7 +14594,7 @@
         //   pages voilées + carnet lu, mais rien pour les révéler → la sortie vers la mappe
         //   plus rien de voilé                    → le bouton de scellement
         // Le cas « montrer la sortie du carnet » n'est plus arbitré ici : il vaut à
-        // n'importe quelle étape, y compris avant la première dose de poudre, et vit
+        // n'importe quelle étape, y compris avant la première dose de poussière, et vit
         // donc en tête de _obGuideTick.
         function _demoSealRing() {
             if (_demoUnrevealedAtLevel() <= 0) return '#addExpBtn';
@@ -14849,7 +14849,7 @@
             // inutile d'en ajouter un second au même moment. La carte vient de la
             // nébuleuse : la jeune fille l'a rattrapée, elle ne l'a pas « trouvée ».
             vnShow([
-                { speaker: 'La jeune fille', line: 'Je l\'ai rattrapée avant qu\'elle ne tombe à terre. Je vais lui rendre un peu de mémoire avec ma poudre mémorielle.' },
+                { speaker: 'La jeune fille', line: 'Je l\'ai rattrapée avant qu\'elle ne tombe à terre. Je vais lui rendre un peu de mémoire avec ma poussière mémorielle.' },
                 { speaker: 'La jeune fille', line: 'Elle a quelques souvenirs. Oh… Mais c\'est ta carte, tu veux lui en donner toi-même ?' },
                 { speaker: 'La jeune fille', line: 'Ouvre ta Collection, puis la carte. Tout se passe dans son détail.' },
             ], () => _obGuideRefresh());
@@ -14861,9 +14861,9 @@
             // CR test — deux répliques retirées ici : le carnet n'est plus révélé
             // à ce moment (il l'est au Bloc 2, au chapitre II), et les états
             // visuels non plus — ils s'annoncent au scellement du chapitre I,
-            // quand le second apparaît vraiment. Ne reste que la poudre.
+            // quand le second apparaît vraiment. Ne reste que la poussière.
             vnShow([
-                { speaker: 'La jeune fille', html: 'Pour qu\'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poudre mémorielle</span>. Chaque dose réveille un peu son histoire.' },
+                { speaker: 'La jeune fille', html: 'Pour qu\'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poussière mémorielle</span>. Chaque dose réveille un peu son histoire.' },
             ], () => _obGuideRefresh());
         }
 
@@ -15053,7 +15053,7 @@
         // DÉMO OT — XP du chapitre 2 au max → inviter à sceller.
         // La présentation du carnet ne se joue PLUS ici : le joueur peut l'ouvrir
         // quand bon lui semble, y compris avant d'avoir donné la moindre dose de
-        // poudre, et se serait alors retrouvé devant un écran que personne ne lui
+        // poussière, et se serait alors retrouvé devant un écran que personne ne lui
         // a présenté. Elle a donc migré dans _obJournalHint, à la toute première
         // ouverture, quel que soit le moment. Ne reste ici que la consigne
         // mécanique — celle qui débloque le scellement.
@@ -15091,7 +15091,7 @@
 
         // DÉMO OT — Remarques sur le carnet. La toute première ouverture le présente
         // (d'où il vient, à quoi il sert, comment en ressortir), quel qu'en soit le
-        // moment — le joueur peut y aller avant même d'avoir donné une dose de poudre.
+        // moment — le joueur peut y aller avant même d'avoir donné une dose de poussière.
         // L'économie des fournitures, elle, n'a de sens qu'une fois qu'il existe des
         // pages voilées : au chapitre I il n'y en a aucune, la consigne attend donc
         // l'ouverture suivante.
@@ -15140,7 +15140,7 @@
             const voilees = _demoVeiledEntries().length;
             // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour que la
             // réplique et l'inventaire montrent le même signe.
-            const REPLIQUE_FOURNITURES = { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poudre : une <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">📼 cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> pour un texte.' };
+            const REPLIQUE_FOURNITURES = { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poussière : une <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">📼 cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> pour un texte.' };
 
             if (!_obJournalSeen) {
                 _obJournalSeen = true;
@@ -15150,7 +15150,7 @@
                 const rep = [
                     { speaker: 'La jeune fille', html: 'Ah, tu l\'as trouvé. C\'est le <span style="font-weight:600">📖 carnet</span> de la carte — j\'y ai noté tout ce qu\'elle m\'a déjà raconté.' },
                     { speaker: 'Toi', line: 'Le carnet ?' },
-                    { speaker: 'La jeune fille', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poudre mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' },
+                    { speaker: 'La jeune fille', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poussière mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' },
                     { speaker: 'La jeune fille', line: 'Elle est un peu bavarde, en tout cas elle a encore des choses à dire.' },
                     { speaker: 'La jeune fille', line: 'Prends le temps de lire ce qu\'elle a déjà retrouvé. Le reste viendra après.' },
                 ];
@@ -15223,12 +15223,12 @@
             // (Échoppe de Bellecour, 🛖) : les deux, sinon le joueur cherche
             // sur la mappe un lieu dont le nom n'existe nulle part.
             vnShow([
-                { speaker: 'La jeune fille', line: 'D\'ailleurs, n\'hésite pas à aller chercher des fournitures au Bazar, l\'échoppe un peu plus au Nord. Profites-en pour collecter de la poudre ou une orbe si tu en trouves sur ton chemin.' },
+                { speaker: 'La jeune fille', line: 'D\'ailleurs, n\'hésite pas à aller chercher des fournitures au Bazar, l\'échoppe un peu plus au Nord. Profites-en pour collecter de la poussière ou une orbe si tu en trouves sur ton chemin.' },
             ], () => { showDemoToast('Le quartier s\'anime. De quoi glaner, dehors.'); _obGuideRefresh(); });
         }
 
         // DÉMO OT — Ouverture du terrain. Idempotente : plusieurs répliques peuvent
-        // renvoyer le joueur dehors (l'échoppe, une orbe manquante, la poudre du
+        // renvoyer le joueur dehors (l'échoppe, une orbe manquante, la poussière du
         // chapitre III), la première qui tombe suffit à tout allumer.
         function _demoUnlockField() {
             if (_demoFieldReady) return;
@@ -15241,11 +15241,11 @@
                 if (typeof _capUpdate === 'function') _capUpdate();
                 checkNearbyPOI();
             } catch (e) { console.warn('[expLore] Ouverture du terrain :', e); }
-            console.log('[expLore] Démo OT : terrain ouvert (poudre / orbe / échoppe visibles)');
+            console.log('[expLore] Démo OT : terrain ouvert (poussière / orbe / échoppe visibles)');
         }
 
         // Entrées non révélées du niveau courant : à XP plein, elles bloquent le
-        // scellement (cf. updateCardLevelDisplay). Ni l'orbe ni la poudre n'y changent
+        // scellement (cf. updateCardLevelDisplay). Ni l'orbe ni la poussière n'y changent
         // quoi que ce soit — les relances doivent donc renvoyer vers le carnet.
         function _demoUnrevealedAtLevel() {
             const cl = cardLevels[OB_TUTORIAL_CARD.id];
@@ -15261,7 +15261,7 @@
                 && _demoUnrevealedAtLevel() > 0;
         }
 
-        // Poudre nécessaire au chapitre 3 : exp[2] = 800 à +50 par dose.
+        // Poussière nécessaire au chapitre 3 : exp[2] = 800 à +50 par dose.
         // Sert de seuil aux relances « il t'en faudra plus ».
         const _DEMO_DUST_CH3 = 800;
 
@@ -15283,7 +15283,7 @@
             if (!_obGuide.active) return;
 
             // Le carnet a sa propre économie (pellicule / cassette / encre), distincte
-            // de la poudre. La remarque vaut à n'importe quelle étape du parcours :
+            // de la poussière. La remarque vaut à n'importe quelle étape du parcours :
             // on la traite avant le switch.
             if (ev === 'journal') { _obJournalHint(); return; }
 
@@ -15361,7 +15361,7 @@
                             rep.push({ speaker: 'La jeune fille', line: 'Les orbes du quartier sont épuisées. Laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' });
                         }
                         if (memorialDust < _DEMO_DUST_CH3 && _demoDustLeft() > 0) {
-                            rep.push({ speaker: 'La jeune fille', line: 'Profites-en pour ramasser la poudre que tu croiseras : tu en manqueras bientôt.' });
+                            rep.push({ speaker: 'La jeune fille', line: 'Profites-en pour ramasser la poussière que tu croiseras : tu en manqueras bientôt.' });
                         }
                         // Toast APRÈS le dialogue : sa durée de vie (4,2 s) est plus courte
                         // que la lecture des répliques, il expirait sans être vu.
@@ -15433,9 +15433,9 @@
                             { speaker: 'La jeune fille', line: 'Un chapitre se ferme, un autre s\'ouvre — le dernier de cette carte.' },
                             { speaker: 'La jeune fille', line: 'Et un troisième visage avec lui. Tu commences à savoir où regarder.' },
                         ];
-                        // L'épuisement se constate avant de parler de poudre : sans
-                        // énergie, la poudre ne sert à rien, et le bouton de la fiche
-                        // affiche « Utiliser une orbe », pas « Ajouter 50 poudre ».
+                        // L'épuisement se constate avant de parler de poussière : sans
+                        // énergie, la poussière ne sert à rien, et le bouton de la fiche
+                        // affiche « Utiliser une orbe », pas « Ajouter 50 poussière ».
                         const _en2 = (() => { try { return getCardEnergyState(OB_TUTORIAL_CARD.id).value; } catch (e) { return 1; } })();
                         if (_en2 <= 0) {
                             if (bagInv.orbes > 0) {
@@ -15448,7 +15448,7 @@
                             }
                         }
                         if (memorialDust >= _DEMO_DUST_CH3) {
-                            rep.push({ speaker: 'La jeune fille', line: 'Il te faudra plus de poudre. Sers-toi de celle que tu as ramassée.' });
+                            rep.push({ speaker: 'La jeune fille', line: 'Il te faudra plus de poussière. Sers-toi de celle que tu as ramassée.' });
                         } else if (_demoDustLeft() > 0) {
                             _demoUnlockField();
                             rep.push({ speaker: 'La jeune fille', line: 'Il t\'en faudra beaucoup, plus que tu n\'en as. Va en récolter sur la mappe avant de continuer.' });
@@ -15475,8 +15475,8 @@
                             { speaker: 'La jeune fille', line: 'La voilà d\'aplomb. Vas-y, ce dernier chapitre est le plus long — elle a beaucoup à dire.' },
                         ], () => { showDemoToast('La mémoire s\'ouvre à nouveau.'); _obGuideRefresh(); });
                     } else if (ev === 'carddetail') {
-                        // La carte ranimée d'abord, la poudre ensuite : sans énergie,
-                        // la poudre ne sert à rien. Silencieux si le joueur a déjà
+                        // La carte ranimée d'abord, la poussière ensuite : sans énergie,
+                        // la poussière ne sert à rien. Silencieux si le joueur a déjà
                         // tout ce qu'il faut, ou s'il ne reste plus rien à ramasser.
                         let _en3 = 1;
                         try { _en3 = getCardEnergyState(OB_TUTORIAL_CARD.id).value; } catch (e) {}
@@ -15488,7 +15488,7 @@
                         } else if (_en3 > 0 && memorialDust < 50 && _demoDustLeft() > 0) {
                             _demoUnlockField();
                             vnShow([
-                                { speaker: 'La jeune fille', line: 'Tu n\'as plus de poudre... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.' },
+                                { speaker: 'La jeune fille', line: 'Tu n\'as plus de poussière... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.' },
                             ], () => _obGuideRefresh());
                         }
                     }
@@ -15796,13 +15796,13 @@
         }
         const DUST_INCREMENT = 20;
 
-        // Lignes de remémoration — déclenchées entre les trivias quand on donne de la poudre
+        // Lignes de remémoration — déclenchées entre les trivias quand on donne de la poussière
         const MEMORY_LINES = [
             "Aaaah... la mémoire me revient...",
             "Attends... quelque chose remonte...",
             "Un peu plus et je verrai clairement...",
             "Oui... oui, je me souviens...",
-            "La poudre réveille des souvenirs enfouis...",
+            "La poussière réveille des souvenirs enfouis...",
             "C'est flou, mais ça revient...",
             "Encore un peu... je sens que c'est important...",
         ];
@@ -16419,7 +16419,7 @@
                     changed = true;
                 }
             });
-            if (changed) { console.log('[expLore] refreshThematicDraws → save, _obDone=', _obDone, 'poudre=', memorialDust); saveProgress(); updatePOIVisibility(); checkNearbyPOI(); }
+            if (changed) { console.log('[expLore] refreshThematicDraws → save, _obDone=', _obDone, 'poussière=', memorialDust); saveProgress(); updatePOIVisibility(); checkNearbyPOI(); }
         }
 
         // Interval de vérification des cooldowns (toutes les 5s)
@@ -16586,7 +16586,7 @@
             // Ne jamais écrire une sauvegarde qu'on n'a pas encore lue. initApp()
             // n'est appelé que sur l'évènement 'load' de MapLibre : entre l'ouverture
             // de la page et ce moment, toutes les variables de progression valent
-            // leur défaut (0 carte, 0 poudre, _obDone false). Un seul appel à
+            // leur défaut (0 carte, 0 poussière, _obDone false). Un seul appel à
             // saveProgress() dans cette fenêtre écrase la partie. Les garde-fous
             // en dessous ne couvrent pas le cas d'un joueur encore en tutoriel.
             if (!_progressLoaded) {
@@ -16605,12 +16605,12 @@
                             _obAct2Done = true;
                             _obAct3Done = true;
                         }
-                        // Pas de garde sur memorialDust : la poudre baisse normalement
+                        // Pas de garde sur memorialDust : la poussière baisse normalement
                         // (dépense sur une carte, échoppe). L'ancienne garde bloquait alors
                         // TOUTE sauvegarde jusqu'à ce que la réserve remonte au-dessus du
                         // dernier montant enregistré. L'écrasement au démarrage, qu'elle
                         // visait, est couvert par _progressLoaded en tête de fonction.
-                        // Ne jamais rétrograder les collections (cartes, poudre, orbes, etc)
+                        // Ne jamais rétrograder les collections (cartes, poussière, orbes, etc)
                         // Sauf si la régression est intentionnelle (reset, test) — alors on log mais on continue
                         const _existingCards = (_existing.collectedCards || []).length;
                         const _currentCards  = (collectedCards || []).length;
@@ -16682,7 +16682,7 @@
                     _obJournalExitSaid,
                 };
                 localStorage.setItem('demo_ot_progress', JSON.stringify(_saveData));
-                console.log('[expLore] Sauvegarde écrite — poudre:', _saveData.memorialDust, 'cartes:', (_saveData.collectedCards||[]).length, '_obDone:', _saveData._obDone);
+                console.log('[expLore] Sauvegarde écrite — poussière:', _saveData.memorialDust, 'cartes:', (_saveData.collectedCards||[]).length, '_obDone:', _saveData._obDone);
             } catch(e) { console.error('[expLore] Erreur saveProgress:', e); }
         }
 
@@ -16691,7 +16691,7 @@
                 const raw = localStorage.getItem('demo_ot_progress');
                 if (!raw) { console.log('[expLore] Aucune sauvegarde trouvée'); _progressLoaded = true; return; }
                 const d = JSON.parse(raw);
-                console.log('[expLore] Sauvegarde chargée — _obDone:', d._obDone, 'cartes:', (d.collectedCards||[]).length, 'poudre:', d.memorialDust);
+                console.log('[expLore] Sauvegarde chargée — _obDone:', d._obDone, 'cartes:', (d.collectedCards||[]).length, 'poussière:', d.memorialDust);
                 if (d.collectedCards)        collectedCards      = d.collectedCards;
                 if (d.collectedEchoes)       collectedEchoes     = d.collectedEchoes;
                 if (d.collectedDustPoints)   collectedDustPoints = d.collectedDustPoints;
@@ -16798,7 +16798,7 @@
         let cardLevels = {};
         let hasSeenMapointTutorial = false;
         let hasSeenEchoTuto = false;
-        let memorialDust = 450;   // DÉMO OT : poudre initiale calibrée pour finir les chapitres 1 ET 2 pile (3 + 6 clics × 50)
+        let memorialDust = 450;   // DÉMO OT : poussière initiale calibrée pour finir les chapitres 1 ET 2 pile (3 + 6 clics × 50)
         let collectedEchoes = [];
         let placedEchoes = {}; // kept for compat
         let cardJournals = {}; // { cardId: { slot1: supertype, slot2: ..., slot3: ... } }
@@ -16826,10 +16826,10 @@
 
         // ════════════════════════════════════════════════════════════════
         // DÉMO OT — Verrou du terrain.
-        // Tant qu'il est fermé, la mappe ne porte AUCUN collectable : ni poudre,
+        // Tant qu'il est fermé, la mappe ne porte AUCUN collectable : ni poussière,
         // ni orbe, ni échoppe — marqueurs, cercles au sol et bannières de
         // proximité compris. Le joueur qui vient de collecter sa carte n'a rien
-        // d'autre à faire que d'aller la nourrir : il dépense ses 450 poudres,
+        // d'autre à faire que d'aller la nourrir : il dépense ses 450 poussières,
         // découvre le carnet, et c'est seulement quand la jeune fille le renvoie
         // dehors (cf. _obJournalExitHint) que le terrain s'ouvre — d'un coup, et
         // pour la suite de la démo.
@@ -16986,7 +16986,7 @@
 
         function initApp() {
             loadProgress();
-            console.log('[expLore] initApp après loadProgress — _obDone:', _obDone, 'poudre:', memorialDust);
+            console.log('[expLore] initApp après loadProgress — _obDone:', _obDone, 'poussière:', memorialDust);
             // ── Langue : au tout premier lancement, on suspend le démarrage
             // le temps du choix. La suite reprend dans chooseLanguage().
             let _savedLang = null;
@@ -17055,7 +17055,7 @@
             updateAvatarMenuXP();
             updateCameraHUD();
             _appReady = true;
-            console.log('[expLore] App prête — _obDone:', _obDone, 'poudre:', memorialDust);
+            console.log('[expLore] App prête — _obDone:', _obDone, 'poussière:', memorialDust);
             // Sauvegarde automatique
             setInterval(() => { if (_appReady) saveProgress(); }, 3000);
             // Mise à jour du journal de quête
@@ -17113,7 +17113,7 @@
             // ─────────────────────────────────────────────────────────────
             // DÉMO OT — Neutralisation des points ambiants du prototype.
             // La démo ne présente qu'UNE carte (nébuleuse tutorielle) + 3 POI
-            // (poudre, 2 orbes). On vide ici tous les tableaux de points hérités
+            // (poussière, 2 orbes). On vide ici tous les tableaux de points hérités
             // de test.html et on injecte les 2 seuls POI de la démo.
             // (Les gros littéraux restent intacts plus haut — override propre,
             //  réversible en retirant ce bloc.)
@@ -17139,7 +17139,7 @@
             INFO_POINTS.length = 0;
             PANNEAU_POINTS.length = 0;
             TEST_ZONES.length = 0;
-            // POI poudre (dose généreuse) + 1 POI orbe, en éventail autour de l'OT.
+            // POI poussière (dose généreuse) + 1 POI orbe, en éventail autour de l'OT.
             // Une seule orbe : la carte ne s'épuise plus qu'une fois, à l'ouverture
             // du chapitre III (9 crans couvrent les chapitres I et II, les 20 crans
             // du niveau 2 couvrent les 16 doses du chapitre III). Elle ne peut pas
@@ -17768,7 +17768,7 @@
             });
 
 
-            // ---- Dust markers — powder icon (triangle pile) ----
+            // ---- Dust markers — dust icon (triangle pile) ----
             DUST_POINTS.forEach(dust => {
                 const el = document.createElement('div');
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
@@ -18385,7 +18385,7 @@
             bagInv.dust = (bagInv.dust || 0) + n;
             saveProgress();
             refreshTestState();
-            showToast('✨ +' + n + ' poudre ajoutée');
+            showToast('✨ +' + n + ' poussière ajoutée');
         }
 
         function testRefillCardEnergy() {
@@ -18633,7 +18633,7 @@
                 'Météo : ' + (_testWeather || 'réelle'),
                 'Parchemins : ' + (bagInv.parchemins ? bagInv.parchemins.length : 0),
                 'Orbes : ' + (bagInv.orbes || 0),
-                'Poudre : ' + (bagInv.dust || 0),
+                'Poussière : ' + (bagInv.dust || 0),
                 'Lumens : ' + (bagInv.lumens || 0),
                 'Cartes collectées : ' + collectedCards.length,
             ].join('<br>');
@@ -18747,7 +18747,7 @@
         // Couleurs des zones de capture adaptées à la condition (résistent au filtre CSS)
         // Correspondance exacte cylindres ↔ zones :
         // Carte     : cylindre orange    #F97316 / #FB923C nuit
-        // Poudre    : cylindre violet    #A855F7 / #D946EF nuit
+        // Poussière    : cylindre violet    #A855F7 / #D946EF nuit
         // Écho      : cylindre vert      #10B981 / #34D399 nuit
         // Orbe      : cylindre cyan      #06B6D4 / #22D3EE nuit
         // Parchemin : cylindre ambre     #F59E0B / #FBBF24 nuit
@@ -19113,7 +19113,7 @@
             const msgs = {
                 too_far:  { text: 'Rapproche-toi !', icon: '📍', color: 'rgba(239,68,68,0.95)' },
                 poi:      { text: 'Carte à portée !', icon: '✦', color: 'rgba(249,115,22,0.95)' },
-                dust:     { text: 'Poudre à portée !', icon: '✦', color: 'rgba(168,85,247,0.95)' },
+                dust:     { text: 'Poussière à portée !', icon: '✦', color: 'rgba(168,85,247,0.95)' },
                 orb:      { text: 'Orbe à portée !', icon: '✦', color: 'rgba(6,182,212,0.95)' },
                 scroll:   { text: 'Parchemin à portée !', icon: '✦', color: 'rgba(245,158,11,0.95)' },
                 loot:     { text: 'Mystère à portée !', icon: '✦', color: 'rgba(234,88,12,0.95)' },
@@ -19630,17 +19630,17 @@
             _capUpdate();
         }
 
-        // Icône poudre mémorielle — PNG centralisé (./assets/Powder.png)
+        // Icône poussière mémorielle — PNG centralisé (./assets/Powder.png)
         function dustIconHtml(size) {
             const s = size || 22;
-            return `<img src="./assets/Powder.png" alt="poudre" style="width:${s}px;height:${s}px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">`;
+            return `<img src="./assets/Powder.png" alt="poussière" style="width:${s}px;height:${s}px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">`;
         }
         // Variante "halo" pour les écrans de récompense (avec drop-shadow violet)
-        const DUST_SVG_ICON = `<img src="./assets/Powder.png" alt="poudre" style="width:64px;height:64px;object-fit:contain;display:inline-block;filter:drop-shadow(0 0 10px rgba(168,85,247,0.8));pointer-events:none;" draggable="false">`;
+        const DUST_SVG_ICON = `<img src="./assets/Powder.png" alt="poussière" style="width:64px;height:64px;object-fit:contain;display:inline-block;filter:drop-shadow(0 0 10px rgba(168,85,247,0.8));pointer-events:none;" draggable="false">`;
 
         // Table de loot — pondérée
         const LOOT_TABLE = [
-            { weight: 30, give: () => { memorialDust += 50; document.getElementById('dustCounter').textContent = memorialDust; saveProgress(); return { iconHtml: DUST_SVG_ICON, label: '+50 poudre mémorielle' }; } },
+            { weight: 30, give: () => { memorialDust += 50; document.getElementById('dustCounter').textContent = memorialDust; saveProgress(); return { iconHtml: DUST_SVG_ICON, label: '+50 poussière mémorielle' }; } },
             { weight: 18, give: () => { addFilm(1); return { iconHtml: '🎞️', label: '+1 pellicule' }; } },
             { weight: 18, give: () => { bagInv.encre = (bagInv.encre||0)+1; saveProgress(); return { iconHtml: '🖋️', label: '+1 encre' }; } },
             { weight: 18, give: () => { bagInv.cassettes = (bagInv.cassettes||0)+1; saveProgress(); return { iconHtml: '📼', label: '+1 cassette' }; } },
@@ -19882,7 +19882,7 @@
         }
 
         // % de complétion d'une zone : cartes-lieu capturées + panoramas + points d'info.
-        // (parchemins/poudre/orbes/mystères ne comptent pas — trop volatils.)
+        // (parchemins/poussière/orbes/mystères ne comptent pas — trop volatils.)
         function computeZoneCompletion(zone) {
             const inZone = obj => pointInPolygonLatLng({ lat: obj.lat, lng: obj.lng }, zone.polygon);
             const cartes     = POIS.filter(p => !p.disabled && inZone(p)); // POI désactivés (Bellecour) exclus
@@ -20718,7 +20718,7 @@
                 action: { icon: "💜", label: "Utiliser pour un level up" },
                 getItems() {
                     return [{ id: "orbe", icon: "🔮", name: "Orbe de mémoire", sub: "Consommable · Level up", qty: bagInv.orbes,
-                        desc: "Concentré de poudre mémorielle. Glisse-le dans le carnet d'une carte pour valider le passage de niveau et sceller le chapitre narratif." }];
+                        desc: "Concentré de poussière mémorielle. Glisse-le dans le carnet d'une carte pour valider le passage de niveau et sceller le chapitre narratif." }];
                 }
             },
             {
@@ -20938,7 +20938,7 @@
             if (eligibleCards.length === 0) {
                 cardsHtml = `<div style="color:#9ca3af;text-align:center;padding:32px 20px;font-size:13px;">
                     Aucune carte n'est prête à évoluer.<br>
-                    <span style="color:#6b7280;font-size:11px;">Donne de la poudre à tes cartes pour remplir leur jauge.</span>
+                    <span style="color:#6b7280;font-size:11px;">Donne de la poussière à tes cartes pour remplir leur jauge.</span>
                 </div>`;
             } else {
                 cardsHtml += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7280;padding:0 16px 8px;">Prêtes à évoluer (${eligibleCards.length})</div>`;
@@ -21120,7 +21120,7 @@
                                 justify-content:center;font-size:20px;flex-shrink:0;filter:grayscale(0.6);">${info.symbol}</div>
                             <div style="flex:1;min-width:0;">
                                 <div style="font-size:13px;font-weight:700;color:white;">${c.name}</div>
-                                <div style="font-size:11px;color:#9ca3af;margin-top:2px;">Offre de la poudre pour révéler le fragment</div>
+                                <div style="font-size:11px;color:#9ca3af;margin-top:2px;">Offre de la poussière pour révéler le fragment</div>
                             </div>
                         </div>`).join('');
                 }
@@ -21584,9 +21584,9 @@
             }
             // Mode planification
             const isPlanning = _mapViewMode === 'far';
-            // .planning-mode masque les ressources au sol (poudre, échos, orbes…).
+            // .planning-mode masque les ressources au sol (poussière, échos, orbes…).
             // On les cache dès le départ du dézoom, mais on ne les rend qu'à
-            // l'arrivée du rezoom : les rendre au départ affichait toute la poudre
+            // l'arrivée du rezoom : les rendre au départ affichait toute la poussière
             // de la ville pendant les 600 ms où la caméra était encore au large.
             // Bénéfice au passage : bien moins de marqueurs à repositionner
             // pendant le vol, donc une bascule plus fluide dans les deux sens.
@@ -21651,7 +21651,7 @@
             collectedDustPoints.push(currentNearbyDust.id);
             markPoiCollected(currentNearbyDust.id, 'dust');
             _demoCheckEveil();
-            // DÉMO OT : dose fixe et généreuse. Le chapitre 3 coûte 800 poudre
+            // DÉMO OT : dose fixe et généreuse. Le chapitre 3 coûte 800 poussière
             // (exp[2] = 800 à +50/clic, soit 16 clics) — 800 par ramassage ne laissait
             // aucune marge, 1000 permet de finir même en n'en ramassant qu'une.
             const amount = 1000;
@@ -21660,7 +21660,7 @@
             updateDustVisibility();
             checkNearbyPOI();
             saveProgress();
-            // Toast poudre
+            // Toast poussière
             const ex = document.getElementById('dustCollectToast');
             if (ex) ex.remove();
             const toast = document.createElement('div');
@@ -21676,7 +21676,7 @@
                 'display:flex','align-items:center','gap:8px',
                 'animation:filmToastAnim 2.8s ease forwards'
             ].join(';');
-            toast.innerHTML = `${dustIconHtml(20)}<span>+${amount} poudre mémorielle</span>`;
+            toast.innerHTML = `${dustIconHtml(20)}<span>+${amount} poussière mémorielle</span>`;
             document.body.appendChild(toast);
             setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
         }
@@ -22776,14 +22776,14 @@
                     btn.disabled = !canAdd;
                     btn.onclick = canAdd ? addExperience : null;
                     btn.textContent = canAdd
-                        ? `💜 Donner de la poudre`
-                        : `💜 Poudre insuffisante (${memorialDust}/${increment})`;
+                        ? `💜 Donner de la poussière`
+                        : `💜 Poussière insuffisante (${memorialDust}/${increment})`;
                 }
             }
         }
 
         // ── État interne dialogue ──
-        // dustGivenThisLevel[cardId] = nb de fois qu'on a donné de la poudre au niveau courant
+        // dustGivenThisLevel[cardId] = nb de fois qu'on a donné de la poussière au niveau courant
         // heartUnlocked[cardId][level][heartIdx] = true si cette ligne cœur est débloquée
         const dustGivenThisLevel = {};
         const heartUnlocked = {};
@@ -22877,7 +22877,7 @@
             saveProgress();
         }
 
-        // ── Couche 2 — Poudre franchit un seuil (bulle automatique) ──
+        // ── Couche 2 — Poussière franchit un seuil (bulle automatique) ──
         // Appelée depuis showDustDialogue quand une entrée devient disponible
         function _triggerLayer2(cardId, entryType) {
             if (!selectedCard || selectedCard.id !== cardId) return;
@@ -22952,7 +22952,7 @@
             }
         }
 
-        // Poudre → seuil franchi → entrée disponible (dialogue supprimé de la poudre)
+        // Poussière → seuil franchi → entrée disponible (dialogue supprimé de la poussière)
         function showDustDialogue(cardId, level, xpBefore, xpAfter) {
             const card = collectedCards.find(c => c.id === cardId) || selectedCard;
             const rarity = card ? (card.rarity || 'common') : 'common';
@@ -23359,7 +23359,7 @@
             return e;
         }
 
-        // Consomme 1 cran d'énergie (appelé après chaque dépense de poudre)
+        // Consomme 1 cran d'énergie (appelé après chaque dépense de poussière)
         function consumeCardEnergy(cardId) {
             const e = getCardEnergyState(cardId);
             const max = getCardEnergyMax(cardId);
@@ -25454,7 +25454,7 @@
             notebook.style.setProperty('--jsb-nebula', _stInfo.color || '#8B5CF6');
 
             if (entries.length === 0) {
-                notebook.innerHTML = '<div class="journal-quote">Offre de la poudre à cette carte pour qu\'elle te raconte son histoire...</div>';
+                notebook.innerHTML = '<div class="journal-quote">Offre de la poussière à cette carte pour qu\'elle te raconte son histoire...</div>';
                 return;
             }
 
@@ -26128,7 +26128,7 @@
             lamp: {
                 icon: '🕯️',
                 name: 'Lampe à mémoire',
-                desc: 'Sa lumière s\'intensifie avec chaque poudre mémorielle collectée. Elle illumine vos souvenirs.'
+                desc: 'Sa lumière s\'intensifie avec chaque poussière mémorielle collectée. Elle illumine vos souvenirs.'
             },
             mirror: {
                 icon: '🔮',
@@ -26153,7 +26153,7 @@
             cauldron: {
                 icon: '💧',
                 name: 'Chaudron alchimique',
-                desc: 'Permet de fusionner des poudres mémorielles pour créer des échos rares. En cours de développement...'
+                desc: 'Permet de fusionner des poussières mémorielles pour créer des échos rares. En cours de développement...'
             }
         };
 
@@ -26497,8 +26497,8 @@
             if (memorialDust < price) {
                 const tooltip = document.getElementById('studioTooltip');
                 document.getElementById('tooltipIcon').textContent = '💜';
-                document.getElementById('tooltipName').textContent = 'Poudre insuffisante';
-                document.getElementById('tooltipDesc').textContent = `Il vous faut ${price} poudres mémorielle pour débloquer cet objet. Vous en avez ${memorialDust}.`;
+                document.getElementById('tooltipName').textContent = 'Poussière insuffisante';
+                document.getElementById('tooltipDesc').textContent = `Il vous faut ${price} poussières mémorielle pour débloquer cet objet. Vous en avez ${memorialDust}.`;
                 tooltip.classList.remove('hidden');
                 return;
             }
@@ -27159,19 +27159,19 @@
         const BATTLEPASS_NODES = [
             { palier:1,  icon:'📷', name:'Appareil photo',            type:'Objet unique',        xpRequired:0,    milestone:true,
               rewardFn: () => { giveCamera(); } },
-            { palier:2,  icon:'💜', name:'+50 Poudre',                     type:'Poudre mémorielle',   xpRequired:50,
+            { palier:2,  icon:'💜', name:'+50 Poussière',                     type:'Poussière mémorielle',   xpRequired:50,
               rewardFn: () => addDust(50) },
             { palier:3,  icon:'🔮', name:'+3 Orbes de mémoire',           type:'Orbes',                xpRequired:85,
               rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+3; saveProgress(); showToast('🔮 +3 orbes de mémoire'); } },
             { palier:4,  icon:'🎴', name:'Carte bonus : Guignol',           type:'Carte rare',           xpRequired:120 },
-            { palier:5,  icon:'💜', name:'+100 Poudre',                     type:'Poudre mémorielle',   xpRequired:220,
+            { palier:5,  icon:'💜', name:'+100 Poussière',                     type:'Poussière mémorielle',   xpRequired:220,
               rewardFn: () => addDust(100) },
             { palier:6,  icon:'🎨', name:'Skin Aurora',                     type:'Skin de carte',        xpRequired:350,
               rewardFn: () => unlockSkin('aurora') },
             { palier:7,  icon:'🔮', name:'+3 Orbes de mémoire',           type:'Orbes',                xpRequired:425,
               rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+3; saveProgress(); showToast('🔮 +3 orbes de mémoire'); } },
             { palier:8,  icon:'⭐', name:'Badge Flâneur',                   type:'Titre spécial',        xpRequired:500,  milestone:true },
-            { palier:9,  icon:'💜', name:'+150 Poudre',                     type:'Poudre mémorielle',   xpRequired:680,
+            { palier:9,  icon:'💜', name:'+150 Poussière',                     type:'Poussière mémorielle',   xpRequired:680,
               rewardFn: () => addDust(150) },
             { palier:10, icon:'🎞️', name:'+5 pellicules',                   type:'Fournitures',          xpRequired:880,
               rewardFn: () => addFilm(5) },
@@ -27179,7 +27179,7 @@
               rewardFn: () => unlockFrame('fer') },
             { palier:12, icon:'🔮', name:'+2 Orbes de mémoire',           type:'Orbes',                xpRequired:1225,
               rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+2; saveProgress(); showToast('🔮 +2 orbes de mémoire'); } },
-            { palier:13, icon:'💜', name:'+200 Poudre',                     type:'Poudre mémorielle',   xpRequired:1350,
+            { palier:13, icon:'💜', name:'+200 Poussière',                     type:'Poussière mémorielle',   xpRequired:1350,
               rewardFn: () => addDust(200) },
             { palier:14, icon:'🦁', name:'Titre : Gardien de Fourvière',    type:'Titre spécial',        xpRequired:1620, milestone:true,
               rewardFn: () => addDust(350) },
@@ -27194,7 +27194,7 @@
             { palier:19, icon:'🎨', name:'Skin Crépuscule',                 type:'Skin de carte',        xpRequired:3000,
               rewardFn: () => unlockSkin('crepuscule') },
             { palier:20, icon:'👑', name:'Titre : Passeur de Mémoire',      type:'Titre légendaire',     xpRequired:3420, milestone:true },
-            { palier:21, icon:'💜', name:'+300 Poudre',                     type:'Poudre mémorielle',   xpRequired:3870,
+            { palier:21, icon:'💜', name:'+300 Poussière',                     type:'Poussière mémorielle',   xpRequired:3870,
               rewardFn: () => addDust(300) },
             { palier:22, icon:'🔮', name:'+1 Orbe de mémoire',            type:'Orbes',                xpRequired:4110,
               rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+1; saveProgress(); showToast('🔮 +1 orbe de mémoire'); } },
@@ -27212,14 +27212,14 @@
               rewardFn: () => unlockSkin('nebula') },
             { palier:29, icon:'📼', name:'+8 cassettes',                    type:'Fournitures',          xpRequired:7200,
               rewardFn: () => { bagInv.cassettes = (bagInv.cassettes||0)+8; saveProgress(); showToast('📼 +8 cassettes'); } },
-            { palier:30, icon:'💜', name:'+800 Poudre',                     type:'Poudre mémorielle',   xpRequired:7860,
+            { palier:30, icon:'💜', name:'+800 Poussière',                     type:'Poussière mémorielle',   xpRequired:7860,
               rewardFn: () => addDust(800) },
             { palier:31, icon:'🎞️', name:'+12 pellicules',                  type:'Fournitures',          xpRequired:8550,
               rewardFn: () => addFilm(12) },
             { palier:32, icon:'🔮', name:'+1 Orbe de mémoire',            type:'Orbes',                xpRequired:8910,
               rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+1; saveProgress(); showToast('🔮 +1 orbe de mémoire'); } },
             { palier:33, icon:'👑', name:'Avatar : Gardien des Étoiles',    type:'Avatar légendaire',    xpRequired:9270, milestone:true },
-            { palier:34, icon:'💜', name:'+600 Poudre',                     type:'Poudre mémorielle',   xpRequired:10020,
+            { palier:34, icon:'💜', name:'+600 Poussière',                     type:'Poussière mémorielle',   xpRequired:10020,
               rewardFn: () => addDust(600) },
             { palier:35, icon:'🎨', name:'Skin Lyon Antique',               type:'Skin légendaire',      xpRequired:10800,
               rewardFn: () => unlockSkin('lyon_antique') },
@@ -27235,14 +27235,14 @@
             { id:'ach_first_card', cat:'Explorateur', icon:'🎴', name:'Première découverte', desc:'Collecter votre première carte',       xpReward:20,  goal:1,   stat:'cards' },
             { id:'ach_cards5',     cat:'Explorateur', icon:'🗺️', name:'Aventurier',          desc:'Collecter 5 cartes différentes',       xpReward:50,  goal:5,   stat:'cards' },
             { id:'ach_cards15',    cat:'Explorateur', icon:'🧭', name:'Grand Explorateur',   desc:'Collecter 15 cartes différentes',      xpReward:150, goal:15,  stat:'cards' },
-            { id:'ach_dust100',    cat:'Explorateur', icon:'💜', name:'Collecteur de poudre',desc:'Accumuler 100 poudres au total',       xpReward:30,  goal:100, stat:'dust_total' },
-            { id:'ach_dust500',    cat:'Explorateur', icon:'💫', name:'Riche en mémoire',    desc:'Accumuler 500 poudres au total',       xpReward:80,  goal:500, stat:'dust_total' },
+            { id:'ach_dust100',    cat:'Explorateur', icon:'💜', name:'Collecteur de poussière',desc:'Accumuler 100 poussières au total',       xpReward:30,  goal:100, stat:'dust_total' },
+            { id:'ach_dust500',    cat:'Explorateur', icon:'💫', name:'Riche en mémoire',    desc:'Accumuler 500 poussières au total',       xpReward:80,  goal:500, stat:'dust_total' },
             { id:'ach_first_echo', cat:'Archiviste',  icon:'✨', name:'Premier Écho',        desc:'Collecter votre premier écho',         xpReward:20,  goal:1,   stat:'echoes' },
             { id:'ach_echoes5',    cat:'Archiviste',  icon:'🔮', name:'Résonance',           desc:'Collecter 5 échos',                    xpReward:60,  goal:5,   stat:'echoes' },
             { id:'ach_echoes10',   cat:'Archiviste',  icon:'🌀', name:"Maître des Échos",    desc:'Collecter 10 échos',                   xpReward:120, goal:10,  stat:'echoes' },
             { id:'ach_place_echo', cat:'Archiviste',  icon:'📖', name:'Premier Souvenir',    desc:'Placer un écho dans un carnet',        xpReward:30,  goal:1,   stat:'echoes_placed' },
             { id:'ach_level_card', cat:'Alchimiste',  icon:'⬆️', name:'Première évolution',  desc:'Faire monter une carte de niveau',     xpReward:40,  goal:1,   stat:'card_levels' },
-            { id:'ach_dust_spent', cat:'Alchimiste',  icon:'🔥', name:'Investisseur',        desc:'Dépenser 200 poudres sur les cartes',  xpReward:70,  goal:200, stat:'dust_spent' },
+            { id:'ach_dust_spent', cat:'Alchimiste',  icon:'🔥', name:'Investisseur',        desc:'Dépenser 200 poussières sur les cartes',  xpReward:70,  goal:200, stat:'dust_spent' },
             { id:'ach_max_level',  cat:'Alchimiste',  icon:'💎', name:'Maîtrise totale',     desc:'Atteindre le niveau max sur une carte', xpReward:200, goal:1,   stat:'max_level_cards' },
             { id:'ach_collection', cat:'Collectionneur', icon:'📦', name:'Passion Cartes',   desc:'Compléter une collection entière',     xpReward:250, goal:1,   stat:'collections_done' },
             { id:'ach_legendary',  cat:'Collectionneur', icon:'🌟', name:'Légendaire !',     desc:'Collecter une carte légendaire',       xpReward:100, goal:1,   stat:'legendary_cards' },
@@ -27255,12 +27255,12 @@
         ];
         // DÉMO OT — On ne conserve que 2 succès dédiés à la démo.
         //  · Premiers pas : quelques mètres parcourus (stat distance auto-suivie).
-        //  · L'éveil de la carte : chapitre 3 atteint ET orbe ET poudre collectées
+        //  · L'éveil de la carte : chapitre 3 atteint ET orbe ET poussière collectées
         //    (ordre libre) — via un stat de synthèse demo_eveil.
         ACHIEVEMENTS_DATA.length = 0;
         ACHIEVEMENTS_DATA.push(
             { id:'ach_first_steps', cat:'Explorateur', icon:'👣', name:'Premiers pas',        desc:'Faire tes premiers pas dans Lyon',              xpReward:0, goal:150, stat:'distance_total' },
-            { id:'ach_eveil',       cat:'Alchimiste',  icon:'✦', name:"L'éveil de la carte", desc:'Carte au niveau 2, orbe et poudre récoltées',   xpReward:0, goal:1,  stat:'demo_eveil' }
+            { id:'ach_eveil',       cat:'Alchimiste',  icon:'✦', name:"L'éveil de la carte", desc:'Carte au niveau 2, orbe et poussière récoltées',   xpReward:0, goal:1,  stat:'demo_eveil' }
         );
 
         // ── State ──
@@ -27694,7 +27694,7 @@
             });
         }
         // DÉMO OT — Succès « L'éveil de la carte » : chapitre 3 atteint (carte niv.≥2)
-        // ET orbe ET poudre collectées, dans n'importe quel ordre.
+        // ET orbe ET poussière collectées, dans n'importe quel ordre.
         function _demoCheckEveil() {
             try {
                 const cl = cardLevels[OB_TUTORIAL_CARD.id];
@@ -28268,10 +28268,10 @@
             state.lootboxOpened = true;
 
             const rewards = {
-                1: [{ icon: '💜', label: '50 poudre',  fn: () => { memorialDust += 50;  document.getElementById('dustCounter').textContent = memorialDust; } }],
-                2: [{ icon: '💜', label: '100 poudre', fn: () => { memorialDust += 100; document.getElementById('dustCounter').textContent = memorialDust; } },
+                1: [{ icon: '💜', label: '50 poussière',  fn: () => { memorialDust += 50;  document.getElementById('dustCounter').textContent = memorialDust; } }],
+                2: [{ icon: '💜', label: '100 poussière', fn: () => { memorialDust += 100; document.getElementById('dustCounter').textContent = memorialDust; } },
                     { icon: '✨', label: '1 Lumen',    fn: () => gainAutoLumen() }],
-                3: [{ icon: '💜', label: '200 poudre', fn: () => { memorialDust += 200; document.getElementById('dustCounter').textContent = memorialDust; } },
+                3: [{ icon: '💜', label: '200 poussière', fn: () => { memorialDust += 200; document.getElementById('dustCounter').textContent = memorialDust; } },
                     { icon: '✨', label: '2 Lumens',   fn: () => { gainAutoLumen(); gainAutoLumen(); } },
                     { icon: '🔮', label: '1 Orbe',     fn: () => { bagInv.orbes += 1; } }]
             };
@@ -28300,7 +28300,7 @@
         }
 
         function initBazarMarkers() {
-            const BAZAR_RADIUS = 30;   // aligné sur la poudre et les orbes (30 m)
+            const BAZAR_RADIUS = 30;   // aligné sur la poussière et les orbes (30 m)
             BAZAR_POINTS.forEach(bazar => {
                 const el = document.createElement('div');
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:pointer;';
@@ -28344,7 +28344,7 @@
             // Vérifier la proximité en continu pour la bannière nearby
             setInterval(() => {
                 if (!playerPos || !_obMapActive()) return;
-                const BAZAR_RADIUS = 30;   // aligné sur la poudre et les orbes (30 m)
+                const BAZAR_RADIUS = 30;   // aligné sur la poussière et les orbes (30 m)
                 let nearest = null;
                 let nearestDist = Infinity;
                 // Terrain verrouillé : l'échoppe n'existe pas encore pour le joueur.
