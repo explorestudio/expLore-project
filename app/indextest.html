@@ -8519,11 +8519,13 @@
         #intro2Hint{
             position:absolute;left:0;right:0;
             bottom:max(1.6rem,env(safe-area-inset-bottom));
-            text-align:center;font-size:.82rem;letter-spacing:.14em;
+            text-align:center;font-size:.92rem;letter-spacing:.14em;
             text-transform:lowercase;opacity:0;transition:opacity 1s ease;
-            pointer-events:none;color:var(--i2-line);
+            pointer-events:none;color:var(--i2-paper);
+            text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 14px rgba(0,0,0,.7);
         }
-        #intro2Hint.on{opacity:.34}
+        /* .34 se perdait dans la poussière : lisible, sans voler la vedette au texte */
+        #intro2Hint.on{opacity:.78}
         #intro2Start{
             position:absolute;left:50%;bottom:12vh;transform:translate(-50%,10px);
             background:transparent;color:var(--i2-paper);
@@ -14111,6 +14113,14 @@
                 const g = horizonGeom();
                 ground = H - g.svgH * (1 - 236 / 300);
                 walkH  = g.svgH * 0.42;
+                // « tap pour continuer » : sur téléphone, le trottoir est à ~35 px
+                // du bas et le texte tombait sur les jambes des marcheurs. S'il n'a
+                // pas la place sous le sol, on le remonte au-dessus de leurs têtes.
+                if (hintEl) {
+                    const sousSol = H - ground;
+                    const teteMax = walkH * 1.28 * 1.03;   // plus grand marcheur (sc ≤ 1.28), tête comprise
+                    hintEl.style.bottom = sousSol >= 48 ? '' : Math.round(sousSol + teteMax + 14) + 'px';
+                }
                 placeNebulas();
                 placeCurrents();
             }
