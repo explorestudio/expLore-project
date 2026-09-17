@@ -5,6 +5,20 @@
     <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.4.1/dist/maplibre-gl.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.4.1/dist/maplibre-gl.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <script>
+        /* Hauteur réellement visible, mesurée en JS : dans un onglet Chrome ouvert
+           depuis une autre app (Instagram, Discord…), 100vh / 100dvh ne suivent pas
+           toujours la barre d'outils et le bas de l'UI était coupé.
+           En APK / PWA installée, innerHeight = 100vh : rendu inchangé. */
+        (function () {
+            function majHauteur() {
+                document.documentElement.style.setProperty('--vh-reel', window.innerHeight + 'px');
+            }
+            majHauteur();
+            window.addEventListener('resize', majHauteur);
+            window.addEventListener('orientationchange', majHauteur);
+        })();
+    </script>
 
     <!-- ═══════════ PWA ═══════════ -->
     <link rel="manifest" href="./manifest.json">
@@ -67,14 +81,20 @@
            En onglet navigateur, 100vh = hauteur SANS les barres : le bas de l'UI
            passait donc sous la barre d'adresse / la barre de navigation système.
            100dvh = hauteur réellement visible, moins l'inset système.
-           Ce bloc ne s'applique QUE en display-mode: browser — l'APK (TWA) et la
+           Le retrait de l'inset ne s'applique QU'en display-mode: browser — l'APK (TWA) et la
            PWA installée tournent en standalone et gardent le 100vh d'origine. */
+        body {
+            height: var(--vh-reel, 100vh);
+        }
+        .app-container {
+            max-height: var(--vh-reel, 100vh);
+        }
         @media (display-mode: browser) {
             body {
-                height: calc(100dvh - env(safe-area-inset-bottom, 0px));
+                height: calc(var(--vh-reel, 100dvh) - env(safe-area-inset-bottom, 0px));
             }
             .app-container {
-                max-height: calc(100dvh - env(safe-area-inset-bottom, 0px));
+                max-height: calc(var(--vh-reel, 100dvh) - env(safe-area-inset-bottom, 0px));
             }
         }
 
