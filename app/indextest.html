@@ -8634,6 +8634,174 @@
         /* ═══════════════════════════════════════════════════════════
            FRESQUE — diapositive de tableaux narratifs
            ═══════════════════════════════════════════════════════════ */
+        /* ═══════════ VERRIÈRE ═══════════
+           Chaque panneau empile six couches, toujours dans le même ordre. Les cinq
+           états ne changent QUE des opacités : le SVG n'est jamais reconstruit, et
+           les transitions deviennent gratuites. */
+        .verriere-screen {
+            position: absolute; inset: 0;
+            background: #070b18;   /* l'encre du prototype ; le halo est dans le SVG */
+            display: none; flex-direction: column;
+            z-index: 362; color: #f4ecdb;
+            font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+            overflow: hidden;
+        }
+        .verriere-screen.show { display: flex; }
+        .verriere-header {
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px 12px 10px; flex-shrink: 0; z-index: 3;
+            background: linear-gradient(180deg, rgba(8,7,10,0.98) 0%, rgba(8,7,10,0.55) 80%, transparent 100%);
+        }
+        .verriere-back {
+            width: 30px; height: 30px; border: none; background: transparent;
+            color: rgba(244,236,219,0.55); font-size: 22px; cursor: pointer;
+            flex-shrink: 0; line-height: 1;
+        }
+        .verriere-title-block { flex: 1; min-width: 0; }
+        .verriere-eyebrow {
+            font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+            color: rgba(217,164,65,0.72); font-family: 'Helvetica Neue', sans-serif;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .verriere-title {
+            font-size: 15px; font-weight: 700; margin-top: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .verriere-compteur {
+            flex-shrink: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+            color: rgba(244,236,219,0.82); font-family: 'Helvetica Neue', sans-serif;
+            border: 1px solid rgba(217,164,65,0.35); border-radius: 12px; padding: 3px 10px;
+        }
+        .verriere-stage { flex: 1; position: relative; overflow: hidden; min-height: 0; }
+        .verriere-svg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: block; touch-action: manipulation;
+        }
+        /* Poussière violette en surimpression : peu de chose, mais c'est elle qui
+           relie visuellement la verrière au reste de l'Explorium. */
+        .verriere-dust { position: absolute; inset: 0; pointer-events: none; }
+
+        /* ── Les cinq états : un pur jeu d'opacités sur des calques tous présents
+           dès la construction. Règles reprises du prototype validé, valeurs
+           inchangées ; seule la portée est restreinte à #verriereSvg, parce que
+           « .col », « .noir » et « .gris » nus dans une feuille de 37 000 lignes
+           finiraient par entrer en collision. */
+        #verriereSvg .pane { cursor: pointer; }
+        #verriereSvg .pane .col  { opacity: 0; transition: opacity .7s ease; }  /* verre en couleur */
+        #verriereSvg .pane .gris { opacity: 0; transition: opacity .7s ease; }  /* grisaille */
+        #verriereSvg .pane .noir { opacity: 1; transition: opacity .7s ease; }  /* verre éteint */
+        #verriereSvg .pane .rim  { opacity: 0; transition: opacity .5s ease; }  /* liseré doré */
+
+        #verriereSvg .pane[data-s="entrevu"] .gris { opacity: .42; }
+        #verriereSvg .pane[data-s="entrevu"] .noir { opacity: .55; }
+        #verriereSvg .pane[data-s="pret"]    .gris { opacity: .6; }
+        #verriereSvg .pane[data-s="pret"]    .noir { opacity: .34; }
+        #verriereSvg .pane[data-s="pret"]    .rim  { opacity: 1; animation: puls 2.1s ease-in-out infinite; }
+        #verriereSvg .pane[data-s="encours"] .gris { opacity: .6; }
+        #verriereSvg .pane[data-s="encours"] .noir { opacity: .34; }
+        #verriereSvg .pane[data-s="encours"] .rim  { opacity: .75; }
+        #verriereSvg .pane[data-s="obtenu"]  .col  { opacity: 1; }
+        #verriereSvg .pane[data-s="obtenu"]  .noir { opacity: 0; }
+        @keyframes puls { 0%,100% { opacity: .35; } 50% { opacity: 1; } }
+
+        /* Allumage d'un panneau nouvellement obtenu, au retour dans l'Explorium */
+        #verriereSvg .pane.vr-allumage .col { animation: vrAllumage 1600ms ease-out; }
+        @keyframes vrAllumage {
+            0%   { opacity: 0; filter: brightness(3); }
+            35%  { opacity: 1; filter: brightness(2.2); }
+            100% { opacity: 1; filter: brightness(1); }
+        }
+
+        /* Mise en lumière de toute la verrière, une seule fois, au complet */
+        .verriere-eclat {
+            position: absolute; inset: 0; pointer-events: none; opacity: 0;
+            background: radial-gradient(ellipse at 50% 45%, rgba(255,236,190,0.55) 0%, rgba(255,214,140,0.18) 45%, transparent 72%);
+        }
+        .verriere-eclat.actif { animation: vrEclat 2000ms ease-in-out; }
+        @keyframes vrEclat {
+            0%   { opacity: 0; }
+            25%  { opacity: 1; }
+            70%  { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* ── Volet montant ── */
+        .verriere-volet {
+            position: absolute; left: 0; right: 0; bottom: 0;
+            max-height: 62%; display: flex; flex-direction: column;
+            background: linear-gradient(180deg, #14111b 0%, #0b0910 100%);
+            border-top: 1px solid rgba(217,164,65,0.32);
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -12px 34px rgba(0,0,0,0.6);
+            transform: translateY(102%);
+            transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 4;
+        }
+        .verriere-volet.show { transform: translateY(0); }
+        .verriere-volet-poignee {
+            width: 38px; height: 4px; border-radius: 2px; flex-shrink: 0;
+            background: rgba(244,236,219,0.22); margin: 9px auto 4px;
+        }
+        .verriere-volet-corps { overflow-y: auto; padding: 6px 18px 4px; -webkit-overflow-scrolling: touch; }
+        .verriere-volet-retour {
+            flex-shrink: 0; margin: 10px 18px 16px;
+            padding: 11px 14px; border-radius: 10px; cursor: pointer;
+            background: rgba(255,255,255,0.05); color: rgba(244,236,219,0.8);
+            border: 1px solid rgba(244,236,219,0.18);
+            font-family: 'Helvetica Neue', sans-serif;
+            font-size: 12px; font-weight: 600; letter-spacing: 0.06em;
+        }
+        .verriere-volet-retour:active { background: rgba(255,255,255,0.1); }
+
+        /* ── Contenu du volet ── */
+        .vr-volet-etat {
+            font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+            font-family: 'Helvetica Neue', sans-serif; color: rgba(217,164,65,0.75);
+        }
+        .vr-volet-titre { font-size: 18px; font-weight: 700; margin: 5px 0 2px; }
+        .vr-volet-ancrage {
+            font-size: 11px; color: rgba(244,236,219,0.55);
+            font-family: 'Helvetica Neue', sans-serif; margin-bottom: 9px;
+        }
+        .vr-volet-texte { font-size: 14px; line-height: 1.62; color: rgba(244,236,219,0.9); }
+        .vr-volet-note {
+            font-size: 13.5px; line-height: 1.6; color: rgba(244,236,219,0.72); font-style: italic;
+        }
+        .vr-volet-soustitre {
+            font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+            font-family: 'Helvetica Neue', sans-serif; color: rgba(244,236,219,0.42);
+            margin: 14px 0 7px;
+        }
+        .vr-acteur {
+            display: flex; align-items: center; gap: 9px;
+            padding: 7px 10px; margin-bottom: 6px; border-radius: 8px;
+            background: rgba(255,255,255,0.035);
+            border: 1px solid rgba(244,236,219,0.08);
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+        .vr-acteur.ok { border-color: rgba(52,211,153,0.42); background: rgba(52,211,153,0.07); }
+        .vr-acteur-pastille { font-size: 13px; flex-shrink: 0; width: 15px; text-align: center; }
+        .vr-acteur-nom { flex: 1; font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .vr-acteur-niveau {
+            flex-shrink: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+            color: rgba(244,236,219,0.62);
+            border: 1px solid rgba(244,236,219,0.2); border-radius: 9px; padding: 2px 7px;
+        }
+        .vr-acteur.ok .vr-acteur-niveau { color: rgba(52,211,153,0.95); border-color: rgba(52,211,153,0.45); }
+        .vr-volet-btn {
+            display: block; width: 100%; margin-top: 13px;
+            padding: 13px 14px; border-radius: 10px; cursor: pointer;
+            font-family: 'Helvetica Neue', sans-serif;
+            font-size: 13px; font-weight: 700; letter-spacing: 0.05em;
+            background: linear-gradient(135deg, #d9a441 0%, #b8862c 100%);
+            color: #1a1206; border: none;
+        }
+        .vr-volet-btn.secondaire {
+            background: rgba(255,255,255,0.06); color: rgba(244,236,219,0.85);
+            border: 1px solid rgba(217,164,65,0.4);
+        }
+        .vr-volet-btn:active { filter: brightness(1.15); }
+
         .fresque-modal {
             position: absolute;
             inset: 0;
@@ -9344,6 +9512,10 @@
                     <button onclick="testRevealJournal('card_dolet')" class="test-action-btn">📓 Révéler le carnet Dolet</button>
                     <button onclick="testRevealJournal('card_office_tourisme')" class="test-action-btn">📓 Révéler le carnet OT</button>
                     <button onclick="testQueueGrappeLumens()" class="test-action-btn">✨ Éclairer hidden points (grappe)</button>
+                    <button onclick="testOuvrirVerriere()" class="test-action-btn">🪟 Ouvrir la verrière</button>
+                    <button onclick="testDebloquerPanneau()" class="test-action-btn">🪟 Débloquer un panneau</button>
+                    <button onclick="testCyclerPanneau()" class="test-action-btn" id="btnTestCyclePanneau">🪟 Cycler l'état d'un panneau</button>
+                    <button onclick="testVerriereVierge()" class="test-action-btn">🪟 Verrière vierge</button>
                     <button onclick="testLevelUpGrappeCards()" class="test-action-btn">⭐ Cartes grappe LV3 (test quête)</button>
                     <button onclick="testCompleteAllGrappeQuests()" class="test-action-btn">🏆 Terminer toutes étapes grappe</button>
                     <button onclick="testForceCompleteCurrentQuest()" class="test-action-btn">⚡ Forcer validation quête active</button>
@@ -11052,6 +11224,51 @@
                     <button class="fresque-nav-btn" onclick="fresquePrev()" id="fresquePrevBtn">‹</button>
                     <div class="fresque-counter" id="fresqueCounter"></div>
                     <button class="fresque-nav-btn" onclick="fresqueNext()" id="fresqueNextBtn">›</button>
+                </div>
+            </div>
+
+            <!-- ═══ VERRIÈRE — le support recomposé d'une grappe ═══
+                 L'histoire se voit avant d'être possédée : le plomb dessine la place
+                 de chaque média manquant. Accessible dès le premier jour, même vide. -->
+            <div class="verriere-screen" id="verriereScreen">
+                <div class="verriere-header">
+                    <button class="verriere-back" onclick="fermerVerriere()" aria-label="Fermer">&#8592;</button>
+                    <div class="verriere-title-block">
+                        <div class="verriere-eyebrow" id="verriereEyebrow">Verrière</div>
+                        <div class="verriere-title" id="verriereTitle"></div>
+                    </div>
+                    <div class="verriere-compteur" id="verriereCompteur">0 / 0</div>
+                </div>
+                <div class="verriere-stage" id="verriereStage">
+                    <svg class="verriere-svg" id="verriereSvg" xmlns="http://www.w3.org/2000/svg"
+                         preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                            <radialGradient id="rayon" cx=".5" cy=".3" r=".75">
+                                <stop offset="0" stop-color="#8b7ae8" stop-opacity=".3"/>
+                                <stop offset="1" stop-color="#8b7ae8" stop-opacity="0"/>
+                            </radialGradient>
+                            <!-- C'est ce filtre qui donne l'irrégularité du vitrail.
+                                 Il s'applique au GROUPE des panneaux, pas à chacun. -->
+                            <filter id="verre">
+                                <feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="9" result="n"/>
+                                <feDisplacementMap in="SourceGraphic" in2="n" scale="4"/>
+                            </filter>
+                        </defs>
+                        <!-- Fond, halo de lumière derrière la verrière, puis maçonnerie -->
+                        <g id="verriereDecor"></g>
+                        <g id="verrierePanneaux" filter="url(#verre)"></g>
+                        <!-- Réseau de plomb traversant, non cliquable -->
+                        <g id="verriereReseau" stroke="#2b2f4d" stroke-width="9" fill="none"
+                           stroke-linecap="round" pointer-events="none"></g>
+                    </svg>
+                    <canvas class="verriere-dust" id="verriereDust"></canvas>
+                    <div class="verriere-eclat" id="verriereEclat"></div>
+                </div>
+                <!-- Volet montant : aucun état n'est une impasse muette -->
+                <div class="verriere-volet" id="verriereVolet">
+                    <div class="verriere-volet-poignee"></div>
+                    <div class="verriere-volet-corps" id="verriereVoletCorps"></div>
+                    <button class="verriere-volet-retour" onclick="verriereDezoomer()">Retour à la verrière</button>
                 </div>
             </div>
 
@@ -18049,6 +18266,11 @@
                     cardJournals,
                     grappeQuestState,
                     grappeBDUnlocked,
+                    // Verrière : panneaux dont l'allumage a déjà été vu, et mise en
+                    // lumière du complet déjà jouée. Sans eux, l'animation se rejoue
+                    // à chaque visite et la pastille ne s'éteint jamais.
+                    verriereVues,
+                    verriereEclatVu,
                     collectedCarnetResources,
                     _carnetResourceTypeMap,
                     cardEnergy,
@@ -18136,6 +18358,8 @@
                 if (d.cardJournals) cardJournals = d.cardJournals;
                 if (d.grappeQuestState) grappeQuestState = d.grappeQuestState;
                 if (d.grappeBDUnlocked) grappeBDUnlocked = d.grappeBDUnlocked;
+                if (d.verriereVues)     verriereVues     = d.verriereVues;
+                if (d.verriereEclatVu)  verriereEclatVu  = d.verriereEclatVu;
                 if (Array.isArray(d.collectedCarnetResources)) collectedCarnetResources = d.collectedCarnetResources;
                 if (d._carnetResourceTypeMap) _carnetResourceTypeMap = d._carnetResourceTypeMap;
                 if (d.cardEnergy) cardEnergy = d.cardEnergy;
@@ -19922,6 +20146,77 @@
             ];
             saveProgress();
             showToast('✨ Lumens en attente — ouvre l\'Explorium');
+        }
+
+        // ── Mode test : verrière ────────────────────────────────────
+        const TEST_VERRIERE_GRAPPE = 'ville_du_livre';
+
+        function testOuvrirVerriere() {
+            ouvrirVerriere(TEST_VERRIERE_GRAPPE);
+        }
+
+        // Accorde la case suivante de la grappe de test
+        function testDebloquerPanneau() {
+            const gid = TEST_VERRIERE_GRAPPE;
+            const grappe = GRAPPE_QUESTS[gid];
+            const geo = verriereGeometrie(gid);
+            if (!grappeQuestState[gid]) grappeQuestState[gid] = {};
+            if (!grappeBDUnlocked[gid]) grappeBDUnlocked[gid] = [];
+            const suivant = geo.panneaux.find(p => {
+                const t = _verriereEtapeDeCase(gid, p.caseId);
+                return t && grappeQuestState[gid][t.etape.id] !== 'completed';
+            });
+            if (!suivant) { showToast('🪟 Verrière déjà complète'); return; }
+            const t = _verriereEtapeDeCase(gid, suivant.caseId);
+            grappeQuestState[gid][t.etape.id] = 'completed';
+            (t.etape.rewardCases || []).forEach(cid => {
+                if (!grappeBDUnlocked[gid].includes(cid)) grappeBDUnlocked[gid].push(cid);
+            });
+            saveProgress();
+            if (verriereState.grappeId === gid) verriereRafraichirEtats();
+            if (typeof showVaultNotification === 'function') showVaultNotification();
+            showToast('🪟 Panneau accordé — ' + T(suivant.caseId));
+        }
+
+        // Fait parcourir à un panneau la chaîne des cinq états
+        const _TEST_CHAINE_ETATS = ['inconnu', 'entrevu', 'pret', 'encours', 'obtenu'];
+        let _testEtatIdx = -1;
+        function testCyclerPanneau() {
+            const gid = TEST_VERRIERE_GRAPPE;
+            _testEtatIdx++;
+            const btn = document.getElementById('btnTestCyclePanneau');
+            if (_testEtatIdx >= _TEST_CHAINE_ETATS.length) {
+                _testEtatIdx = -1;
+                delete _vrForcage[gid];
+                if (btn) btn.textContent = '🪟 Cycler l\'état d\'un panneau';
+                showToast('🪟 Panneau 1 — état réel rétabli');
+            } else {
+                const etat = _TEST_CHAINE_ETATS[_testEtatIdx];
+                _vrForcage[gid] = { 0: etat };
+                if (btn) btn.textContent = '🪟 Panneau 1 : ' + etat;
+                showToast('🪟 Panneau 1 forcé en « ' + etat + ' »');
+            }
+            if (verriereState.grappeId === gid) verriereRafraichirEtats();
+        }
+
+        // Remet toutes les cases de la grappe à zéro : l'état du premier jour
+        function testVerriereVierge() {
+            const gid = TEST_VERRIERE_GRAPPE;
+            delete grappeQuestState[gid];
+            delete grappeBDUnlocked[gid];
+            delete verriereVues[gid];
+            delete verriereEclatVu[gid];
+            delete _vrForcage[gid];
+            _testEtatIdx = -1;
+            const btn = document.getElementById('btnTestCyclePanneau');
+            if (btn) btn.textContent = '🪟 Cycler l\'état d\'un panneau';
+            if (window._selectedQuestKey && window._selectedQuestKey.startsWith(gid + ':')) {
+                window._selectedQuestKey = null;
+            }
+            saveProgress();
+            try { updateQuestMarkers(); } catch (_) {}
+            if (verriereState.grappeId === gid) verriereRafraichirEtats();
+            showToast('🪟 Verrière remise à vierge');
         }
 
         async function resetProgress() {
@@ -31764,6 +32059,17 @@
             passeurs: {
                 title: 'Les passeurs',
                 color: '#34d399',
+                verriere: {
+                    skin: 'vitrail',
+                    viewBox: [0, 0, 600, 940],
+                    panneaux: [
+                        { caseId: 'p_case1', box: [86, 750, 196, 150], forme: 'rect' },
+                        { caseId: 'p_case2', box: [318, 750, 196, 150], forme: 'rect' },
+                        { caseId: 'p_case3', box: [86, 580, 196, 150], forme: 'rect' },
+                        { caseId: 'p_case4', box: [318, 580, 196, 150], forme: 'rect' },
+                        { caseId: 'p_case5', box: [188, 316, 224, 224], forme: 'rond' },
+                    ],
+                },
                 bd: {
                     totalCases: 5,
                     cases: [
@@ -31891,6 +32197,19 @@
             memoire_formes: {
                 title: 'La mémoire des formes',
                 color: '#f472b6',
+                // Habillage déclaré mais non implémenté : doit retomber sur 'vitrail'
+                // avec un message en console. C'est le cas de test du repli.
+                verriere: {
+                    skin: 'jacquard',
+                    viewBox: [0, 0, 600, 940],
+                    panneaux: [
+                        { caseId: 'mf_case1', box: [86, 750, 196, 150], forme: 'rect' },
+                        { caseId: 'mf_case2', box: [318, 750, 196, 150], forme: 'rect' },
+                        { caseId: 'mf_case3', box: [86, 580, 196, 150], forme: 'rect' },
+                        { caseId: 'mf_case4', box: [318, 580, 196, 150], forme: 'rect' },
+                        { caseId: 'mf_case5', box: [188, 316, 224, 224], forme: 'rond' },
+                    ],
+                },
                 bd: {
                     totalCases: 5,
                     cases: [
@@ -32015,6 +32334,27 @@
             ville_du_livre: {
                 title: 'Lyon, ville du livre',
                 color: '#b45309',
+                // Lecture DE BAS EN HAUT : le premier média occupe le bas à gauche,
+                // le dernier la rosace au sommet. Le joueur monte vers la réponse.
+                // Verres et motifs vivent ici, dans les données, jamais dans le moteur.
+                // Les teintes sont volontairement sourdes : un verre de vitrail est
+                // sombre et dense, il ne devient lumineux que par contraste avec le
+                // plomb et l'obscurité alentour.
+                verriere: {
+                    skin: 'imprimeur',
+                    viewBox: [0, 0, 600, 940],
+                    panneaux: [
+                        { caseId: 'vdl_case1', box: [86, 750, 196, 150], forme: 'rect', glass: '#6b3fa0', pic: 'presse' },
+                        { caseId: 'vdl_case2', box: [318, 750, 196, 150], forme: 'rect', glass: '#1f4f66', pic: 'lettre' },
+                        { caseId: 'vdl_case3', box: [86, 580, 196, 150], forme: 'rect', glass: '#1b3a6b', pic: 'foule' },
+                        { caseId: 'vdl_case4', box: [318, 580, 196, 150], forme: 'rect', glass: '#2f6b57', pic: 'plume' },
+                        { caseId: 'vdl_case5', box: [86, 410, 196, 150], forme: 'rect', glass: '#3a1f4d', pic: 'flamme' },
+                        { caseId: 'vdl_case6', box: [318, 410, 196, 150], forme: 'rect', glass: '#1f2d52', pic: 'flamme' },
+                        // La rosace est un panneau comme les autres, avec ses cinq
+                        // états et son motif, et non un décor.
+                        { caseId: 'vdl_case7', box: [188, 146, 224, 224], forme: 'rond', glass: '#1d2f66', pic: 'livre' },
+                    ],
+                },
                 bd: {
                     totalCases: 7,
                     cases: [
@@ -32195,10 +32535,12 @@
                                 }
                             });
                             saveProgress();
-                            // Ouvrir la fresque automatiquement, scrollée sur l'étape qu'on vient de compléter
+                            // Validation sur place → le média s'ouvre immédiatement, en
+                            // plein écran. Le joueur est devant le lieu : c'est le meilleur
+                            // moment de lecture, et c'est la récompense. Une seule fois.
                             setTimeout(() => {
                                 const etapeIdx = grappe.quete.etapes.findIndex(e => e.id === etapeId);
-                                openFresqueModal(grappeId, etapeIdx >= 0 ? etapeIdx : 0);
+                                verriereOuvrirSurMedia(grappeId, etapeIdx >= 0 ? etapeIdx : 0);
                             }, 400);
                         }
                     });
@@ -32215,9 +32557,10 @@
                     }
                 });
                 saveProgress();
+                // Même règle que ci-dessus : le média s'ouvre sur place, une seule fois.
                 setTimeout(() => {
                     const etapeIdx = grappe.quete.etapes.findIndex(e => e.id === etapeId);
-                    openFresqueModal(grappeId, etapeIdx >= 0 ? etapeIdx : 0);
+                    verriereOuvrirSurMedia(grappeId, etapeIdx >= 0 ? etapeIdx : 0);
                 }, 400);
             } else {
                 saveProgress();
@@ -33241,6 +33584,15 @@
             fresqueBtn.textContent = TF('🖼 Voir la fresque (%1/%2)', fresqueCompletedCount, fresqueTotalEtapes);
             fresqueBtn.onclick = () => openFresqueModal(grappeId);
             body.appendChild(fresqueBtn);
+
+            // Verrière — vouée à remplacer la fresque. Les deux coexistent le temps
+            // de la comparaison (lot 6 du brief).
+            const verriereBtn = document.createElement('button');
+            verriereBtn.className = 'gq-bd-btn';
+            verriereBtn.style.marginTop = '8px';
+            verriereBtn.textContent = TF('🪟 Voir la verrière (%1/%2)', fresqueCompletedCount, fresqueTotalEtapes);
+            verriereBtn.onclick = () => ouvrirVerriere(grappeId);
+            body.appendChild(verriereBtn);
         }
 
         function openGrappeBDModal(grappeId, newlyRevealedIds) {
@@ -36595,12 +36947,14 @@
             if (!screen || !screen.classList.contains('show')) return;
             // Vérifier qu'aucun écran enfant n'est encore ouvert au-dessus de l'Explorium
             const fresque = document.getElementById('fresqueModal');
+            const verriere = document.getElementById('verriereScreen');
             const grappeModal = document.getElementById('grappeQuestModal');
             const cardDetail = document.getElementById('cardDetailView');
             const fresqueOpen = fresque && fresque.classList.contains('show');
+            const verriereOpen = verriere && verriere.classList.contains('show');
             const grappeOpen = grappeModal && grappeModal.classList.contains('show');
             const cardOpen = cardDetail && cardDetail.classList.contains('show');
-            if (fresqueOpen || grappeOpen || cardOpen) return;
+            if (fresqueOpen || verriereOpen || grappeOpen || cardOpen) return;
             // Si la séquence est explicitement suppressée (post-validation gère son propre timing), on attend
             if (window._v2SuppressLumenSequence) return;
             // Sync au cas où de nouveaux lumens ont été gagnés, puis lancer la séquence si pending
@@ -36611,6 +36965,7 @@
                     const sc = document.getElementById('voutV2Screen');
                     if (sc && sc.classList.contains('show')
                         && !(document.getElementById('fresqueModal')?.classList.contains('show'))
+                        && !(document.getElementById('verriereScreen')?.classList.contains('show'))
                         && !(document.getElementById('grappeQuestModal')?.classList.contains('show'))
                         && !(document.getElementById('cardDetailView')?.classList.contains('show'))
                         && v2PendingLumens.length > 0 && !v2LumenSequencePlaying) {
@@ -36625,6 +36980,681 @@
         // Remplace l'ancienne BD. Chaque tableau = un média/étape de la grappe.
         // Médias non complétés = voilés (consultables mais grisés + cadenas).
         // ═══════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
+        // VERRIÈRE — le support recomposé d'une grappe
+        // L'histoire recomposée se voit AVANT d'être possédée : le plomb dessine la
+        // place de chaque média manquant, et le joueur mesure d'un coup d'œil ce qui
+        // lui reste à trouver. Le moteur ne connaît aucune grappe en particulier :
+        // géométrie, habillage, acteurs et textes viennent tous des données.
+        // ═══════════════════════════════════════════════════════════
+
+        const VERRIERE_SKINS_ADMIS = ['vitrail', 'imprimeur', 'jacquard', 'atlas'];
+
+        // Un habillage fournit la couleur du verre et le pictogramme par défaut,
+        // pour les panneaux qui ne portent pas les leurs. L'encadrement de plomb est
+        // commun à toute la verrière.
+        const VERRIERE_SKINS = {
+            vitrail: {
+                verres: ['#6b3fa0', '#1f4f66', '#1b3a6b', '#2f6b57', '#3a1f4d', '#1f2d52', '#1d2f66'],
+                pics:   ['presse', 'lettre', 'foule', 'plume', 'flamme', 'livre'],
+            },
+            // Même système de rendu ; seule la palette par défaut change. Les panneaux
+            // de « Lyon, ville du livre » portent de toute façon leurs propres valeurs.
+            imprimeur: {
+                verres: ['#6b3fa0', '#1f4f66', '#1b3a6b', '#2f6b57', '#3a1f4d', '#1f2d52', '#1d2f66'],
+                pics:   ['presse', 'lettre', 'foule', 'plume', 'flamme', 'livre'],
+            },
+        };
+
+        function verriereSkin(nom) {
+            if (VERRIERE_SKINS[nom]) return VERRIERE_SKINS[nom];
+            if (VERRIERE_SKINS_ADMIS.includes(nom)) {
+                console.warn('[Verrière] Habillage « ' + nom + ' » déclaré mais non implémenté — repli sur « vitrail ».');
+            } else if (nom) {
+                console.warn('[Verrière] Habillage inconnu « ' + nom + ' » — repli sur « vitrail ».');
+            }
+            return VERRIERE_SKINS.vitrail;
+        }
+
+        // ── Géométrie : déclarée, ou grille par défaut ──────────────
+        // Deux colonnes de rectangles de bas en haut, plus une forme ronde au sommet
+        // si le nombre de cases est impair. Aucune grappe ne reste sans verrière.
+        function _verriereGrilleParDefaut(cases) {
+            const N = cases.length;
+            const impair = (N % 2 === 1);
+            const nbRect = impair ? N - 1 : N;
+            const W = 196, H = 150, X1 = 86, X2 = 318, YBAS = 750, PAS = 170;
+            const panneaux = [];
+            for (let i = 0; i < nbRect; i++) {
+                const rang = Math.floor(i / 2), col = i % 2;
+                panneaux.push({
+                    caseId: cases[i].id,
+                    box: [col ? X2 : X1, YBAS - rang * PAS, W, H],
+                    forme: 'rect',
+                });
+            }
+            if (impair) {
+                const rangs = Math.ceil(nbRect / 2);
+                const yRosace = rangs > 0 ? (YBAS - (rangs - 1) * PAS) - 264 : 560;
+                panneaux.push({
+                    caseId: cases[N - 1].id,
+                    box: [188, Math.max(40, yRosace), 224, 224],
+                    forme: 'rond',
+                });
+            }
+            return panneaux;
+        }
+
+        function verriereGeometrie(grappeId) {
+            const grappe = GRAPPE_QUESTS[grappeId];
+            const cases = (grappe && grappe.bd && grappe.bd.cases) || [];
+            const decl = grappe && grappe.verriere;
+            if (decl && Array.isArray(decl.panneaux) && decl.panneaux.length) {
+                return {
+                    viewBox: decl.viewBox || [0, 0, 600, 940],
+                    panneaux: decl.panneaux,
+                    skinNom: decl.skin || 'vitrail',
+                };
+            }
+            return { viewBox: [0, 0, 600, 940], panneaux: _verriereGrilleParDefaut(cases), skinNom: 'vitrail' };
+        }
+
+        // ── Les cinq états ─────────────────────────────────────────
+        function _verriereEtapeDeCase(grappeId, caseId) {
+            const etapes = (GRAPPE_QUESTS[grappeId] && GRAPPE_QUESTS[grappeId].quete
+                            && GRAPPE_QUESTS[grappeId].quete.etapes) || [];
+            for (let i = 0; i < etapes.length; i++) {
+                if ((etapes[i].rewardCases || []).includes(caseId)) return { etape: etapes[i], idx: i };
+            }
+            return null;
+        }
+
+        function verriereEtatBrut(grappeId, caseId) {
+            const t = _verriereEtapeDeCase(grappeId, caseId);
+            if (!t) return 'inconnu';
+            const st = _getEtapeStatus(grappeId, t.etape);
+            if (st === 'completed') return 'obtenu';
+            if (st === 'active')    return 'encours';
+            if (st === 'available') return 'pret';
+            // Verrouillé : reste à savoir si le joueur possède AU MOINS un acteur.
+            // C'est la frontière entre « aucune de ses voix » et « la scène se devine ».
+            const auMoinsUn = (t.etape.prerequis || []).some(r => collectedCards.includes(r.cardId));
+            return auMoinsUn ? 'entrevu' : 'inconnu';
+        }
+
+        // Règle d'amorçage : le panneau qui suit le dernier obtenu passe d'inconnu à
+        // entrevu — et sur une verrière neuve, c'est le premier. Le joueur repart
+        // toujours avec une chose visible à désirer. État dérivé, rien n'est stocké.
+        // Forçage du mode test : { grappeId: { indexPanneau: état } }. Permet de
+        // vérifier les cinq rendus sans réunir les prérequis.
+        let _vrForcage = {};
+
+        function verriereEtats(grappeId, panneaux) {
+            const etats = panneaux.map(p => verriereEtatBrut(grappeId, p.caseId));
+            let dernierObtenu = -1;
+            etats.forEach((e, i) => { if (e === 'obtenu') dernierObtenu = i; });
+            const suivant = dernierObtenu + 1;
+            if (suivant < etats.length && etats[suivant] === 'inconnu') etats[suivant] = 'entrevu';
+            // Le forçage de test s'applique EN DERNIER, sinon l'amorçage repromeut
+            // aussitôt un panneau qu'on voulait voir en « inconnu ».
+            const forces = _vrForcage[grappeId];
+            if (forces) Object.entries(forces).forEach(([i, e]) => { etats[i] = e; });
+            return etats;
+        }
+
+        // ── État d'écran + mémoire des panneaux déjà vus allumés ────
+        let verriereState = {
+            grappeId: null, skin: null, geo: null, etats: [],
+            panneauOuvert: null, viewBoxBase: null, animId: null,
+        };
+        // { grappeId: [caseId…] } — panneaux dont l'allumage a déjà été vu dans la
+        // verrière. Sert à n'animer qu'une fois, et à éteindre la pastille.
+        let verriereVues = {};
+        // { grappeId: true } — mise en lumière du complet déjà jouée.
+        let verriereEclatVu = {};
+
+        let SVGNS_VR = 'http://www.w3.org/2000/svg';
+        function _vrEl(nom, attrs) {
+            const el = document.createElementNS(SVGNS_VR, nom);
+            Object.entries(attrs || {}).forEach(([k, v]) => el.setAttribute(k, v));
+            return el;
+        }
+
+        // ── Pictogrammes : les motifs dessinés pour cette grappe ────
+        // Tracés simples, sans dépendance externe, choisis par les données.
+        function _vrPic(kind, x, y, w, h, color, op) {
+            const NS = SVGNS_VR;
+            const g = document.createElementNS(NS, 'g');
+            g.setAttribute('opacity', op);
+            const S_ = (d, sw) => {
+                const p = document.createElementNS(NS, 'path');
+                p.setAttribute('d', d);
+                p.setAttribute('fill', 'none'); p.setAttribute('stroke', color);
+                p.setAttribute('stroke-width', sw || 7);
+                p.setAttribute('stroke-linecap', 'round');
+                p.setAttribute('stroke-linejoin', 'round');
+                g.appendChild(p);
+            };
+            const cx = x + w / 2, cy = y + h / 2;
+            if (kind === 'presse') {
+                S_('M' + (cx-46) + ' ' + (cy-46) + ' v92 M' + (cx+46) + ' ' + (cy-46) + ' v92 M' + (cx-52) + ' ' + (cy-42) + ' h104 M' + (cx-50) + ' ' + cy + ' h100 M' + (cx-48) + ' ' + (cy+40) + ' h96 M' + cx + ' ' + (cy-46) + ' v-18', 9);
+            } else if (kind === 'lettre') {
+                S_('M' + (cx-26) + ' ' + (cy-30) + ' a15 15 0 1 0 .1 0 M' + (cx-26) + ' ' + (cy-14) + ' v34 M' + (cx-26) + ' ' + (cy+20) + ' l-14 26 M' + (cx-26) + ' ' + (cy+20) + ' l14 24 M' + (cx-26) + ' ' + (cy-2) + ' l32 8');
+                S_('M' + (cx+14) + ' ' + (cy-6) + ' h42 v34 h-42 z M' + (cx+35) + ' ' + (cy-6) + ' v34', 5);
+            } else if (kind === 'foule') {
+                [-46, 0, 44].forEach((dx, i) => S_('M' + (cx+dx) + ' ' + (cy-34) + ' a13 13 0 1 0 .1 0 M' + (cx+dx) + ' ' + (cy-20) + ' v32 M' + (cx+dx) + ' ' + (cy+12) + ' l-12 28 M' + (cx+dx) + ' ' + (cy+12) + ' l12 26', 6 - i * 0.4));
+            } else if (kind === 'plume') {
+                S_('M' + (cx-24) + ' ' + (cy-30) + ' a15 15 0 1 0 .1 0 M' + (cx-24) + ' ' + (cy-14) + ' v40 M' + (cx-24) + ' ' + (cy+26) + ' l-14 26 M' + (cx-24) + ' ' + (cy+26) + ' l14 24 M' + (cx-10) + ' ' + (cy-4) + ' l40 -30 M' + (cx+30) + ' ' + (cy-34) + ' l-8 18');
+            } else if (kind === 'flamme') {
+                const p = document.createElementNS(NS, 'path');
+                p.setAttribute('d', 'M' + (cx-22) + ' ' + (cy+44) + ' q26 -56 -2 -88 q52 22 40 66 q20 -18 14 -42 q30 42 6 64 z');
+                p.setAttribute('fill', color);
+                g.appendChild(p);
+            } else if (kind === 'livre') {
+                S_('M' + (cx-44) + ' ' + (cy-32) + ' h88 v76 h-88 z M' + cx + ' ' + (cy-32) + ' v76', 8);
+                S_('M' + (cx-30) + ' ' + (cy-14) + ' h22 M' + (cx-30) + ' ' + (cy+2) + ' h22 M' + (cx+10) + ' ' + (cy-14) + ' h22 M' + (cx+10) + ' ' + (cy+2) + ' h22', 5);
+            }
+            return g;
+        }
+
+        // ── Décor : fond, halo de lumière derrière la verrière, maçonnerie ──
+        function _verriereDessinerDecor(vb) {
+            const decor = document.getElementById('verriereDecor');
+            decor.innerHTML = '';
+            const W = vb[2], H = vb[3];
+            decor.appendChild(_vrEl('rect', { width: W, height: H, fill: '#070b18' }));
+            decor.appendChild(_vrEl('ellipse', {
+                cx: W / 2, cy: H * 0.351, rx: W * 0.567, ry: H * 0.447, fill: 'url(#rayon)',
+            }));
+            const gExt = _vrEl('g', { fill: '#171a2b', stroke: '#232741', 'stroke-width': 3 });
+            gExt.appendChild(_vrEl('path', { d: 'M40 940 L40 300 A260 260 0 0 1 560 300 L560 940 Z' }));
+            decor.appendChild(gExt);
+            const gInt = _vrEl('g', { fill: '#0c1020' });
+            gInt.appendChild(_vrEl('path', { d: 'M62 940 L62 306 A238 238 0 0 1 538 306 L538 940 Z' }));
+            decor.appendChild(gInt);
+        }
+
+        // ── Réseau de plomb traversant, non cliquable ───────────────
+        // Déduit de la géométrie : une verticale entre les deux colonnes, sous la
+        // rosace, et une horizontale dans chaque gouttière entre deux rangs. Sur la
+        // disposition à sept panneaux, cela redonne exactement les tracés du
+        // prototype — M300 380 V900, M86 740 H514, M86 570 H514 — tout en restant
+        // juste pour les grappes qui ont moins de cases.
+        function _verriereDessinerReseau(panneaux) {
+            const reseau = document.getElementById('verriereReseau');
+            reseau.innerHTML = '';
+            const rects = panneaux.filter(p => p.forme !== 'rond');
+            if (!rects.length) return;
+            const ronds = panneaux.filter(p => p.forme === 'rond');
+            const xMin = Math.min(...rects.map(p => p.box[0]));
+            const xMax = Math.max(...rects.map(p => p.box[0] + p.box[2]));
+            const milieu = (xMin + xMax) / 2;
+            const rangs = [...new Set(rects.map(p => p.box[1]))].sort((a, b) => a - b);
+            const hautRects = rangs[0];
+            const basRects = Math.max(...rects.map(p => p.box[1] + p.box[3]));
+            const basRosace = ronds.length ? Math.max(...ronds.map(p => p.box[1] + p.box[3])) : hautRects;
+            const depart = ronds.length ? basRosace + 10 : hautRects;
+            reseau.appendChild(_vrEl('path', { d: 'M' + milieu + ' ' + depart + ' V' + basRects }));
+            for (let i = 0; i < rangs.length - 1; i++) {
+                const rang = rects.find(p => p.box[1] === rangs[i]);
+                const gouttiere = (rangs[i] + rang.box[3] + rangs[i + 1]) / 2;
+                reseau.appendChild(_vrEl('path', { d: 'M' + xMin + ' ' + gouttiere + ' H' + xMax }));
+            }
+        }
+
+        // ── Construction d'un panneau ───────────────────────────────
+        // L'ordre des calques est impératif : fond mort, verre en couleur avec
+        // pictogramme clair, pictogramme en grisaille, verre éteint, liseré doré,
+        // encadrement de plomb. C'est cet ordre qui permet aux cinq états de n'être
+        // qu'un jeu d'opacités.
+        function _verriereConstruire() {
+            const NS = SVGNS_VR;
+            const svg = document.getElementById('verriereSvg');
+            const panes = document.getElementById('verrierePanneaux');
+            const { geo, skin, etats } = verriereState;
+            panes.innerHTML = '';
+            const vb = geo.viewBox;
+            verriereState.viewBoxBase = vb.slice();
+            svg.setAttribute('viewBox', vb.join(' '));
+            _verriereDessinerDecor(vb);
+            _verriereDessinerReseau(geo.panneaux);
+
+            geo.panneaux.forEach((p, i) => {
+                const [x, y, w, h] = p.box;
+                const g = document.createElementNS(NS, 'g');
+                g.setAttribute('class', 'pane');
+                g.setAttribute('data-i', i);
+                g.setAttribute('data-s', etats[i]);
+
+                const shape = (cls, fill, op) => {
+                    let e;
+                    if (p.forme === 'rond') {
+                        e = document.createElementNS(NS, 'circle');
+                        e.setAttribute('cx', x + w / 2); e.setAttribute('cy', y + h / 2);
+                        e.setAttribute('r', w / 2);
+                    } else {
+                        e = document.createElementNS(NS, 'rect');
+                        e.setAttribute('x', x); e.setAttribute('y', y);
+                        e.setAttribute('width', w); e.setAttribute('height', h);
+                    }
+                    e.setAttribute('fill', fill);
+                    if (cls) e.setAttribute('class', cls);
+                    if (op !== undefined) e.setAttribute('opacity', op);
+                    return e;
+                };
+
+                const verre = p.glass || skin.verres[i % skin.verres.length];
+                const motif = p.pic || skin.pics[i % skin.pics.length];
+
+                // fond mort
+                g.appendChild(shape(null, '#0b0e1c'));
+
+                // verre en couleur + pictogramme clair
+                const col = document.createElementNS(NS, 'g'); col.setAttribute('class', 'col');
+                col.appendChild(shape(null, verre));
+                col.appendChild(_vrPic(motif, x, y, w, h, '#e8dfd0', 0.92));
+                g.appendChild(col);
+
+                // grisaille : le dessin sans la couleur
+                const gr = document.createElementNS(NS, 'g'); gr.setAttribute('class', 'gris');
+                gr.appendChild(_vrPic(motif, x, y, w, h, '#8f97b8', 0.9));
+                g.appendChild(gr);
+
+                // verre éteint
+                g.appendChild(shape('noir', '#090c18'));
+
+                // liseré : 12 et non 5. L'encadrement de plomb qui vient juste après
+                // fait 8 et se centre sur le même tracé — à 5, le liseré doré était
+                // intégralement recouvert, et « prêt » comme « en cours » devenaient
+                // indiscernables. À 12, il déborde de 2 de chaque côté du plomb et se
+                // lit comme un halo, sans toucher à l'ordre impératif des calques.
+                const rim = shape('rim', 'none');
+                rim.setAttribute('stroke', '#d6a317'); rim.setAttribute('stroke-width', '12');
+                g.appendChild(rim);
+
+                // encadrement de plomb
+                const lead = shape(null, 'none');
+                lead.setAttribute('stroke', '#2b2f4d'); lead.setAttribute('stroke-width', '8');
+                g.appendChild(lead);
+
+                g.addEventListener('click', () => verriereTapPanneau(i));
+                panes.appendChild(g);
+            });
+        }
+
+        // Rafraîchit les états SANS reconstruire le SVG : c'est tout l'intérêt du
+        // jeu d'opacités piloté par data-s.
+        function verriereRafraichirEtats() {
+            const { grappeId, geo } = verriereState;
+            if (!grappeId) return;
+            verriereState.etats = verriereEtats(grappeId, geo.panneaux);
+            document.querySelectorAll('#verrierePanneaux .pane').forEach(g => {
+                const i = parseInt(g.getAttribute('data-i'), 10);
+                g.setAttribute('data-s', verriereState.etats[i]);
+            });
+            _verriereMajCompteur();
+        }
+
+        function _verriereMajCompteur() {
+            const obtenus = verriereState.etats.filter(e => e === 'obtenu').length;
+            const el = document.getElementById('verriereCompteur');
+            // Doit afficher zéro sans broncher : une verrière vide est un état normal.
+            if (el) el.textContent = obtenus + ' / ' + verriereState.etats.length;
+        }
+
+        // ── Ouverture / fermeture ──────────────────────────────────
+        // Aucune condition d'ouverture : une verrière sans aucun média obtenu est un
+        // état normal, pas un état d'erreur.
+        function ouvrirVerriere(grappeId, focusIdx) {
+            const grappe = GRAPPE_QUESTS[grappeId];
+            if (!grappe) { showToast('Cette grappe n\'a pas de verrière'); return; }
+
+            // Placer l'écran dans #mainApp pour qu'il passe au-dessus de l'Explorium
+            const screen = document.getElementById('verriereScreen');
+            const mainApp = document.getElementById('mainApp');
+            if (screen && mainApp && screen.parentElement !== mainApp) mainApp.appendChild(screen);
+
+            const geo = verriereGeometrie(grappeId);
+            verriereState.grappeId = grappeId;
+            verriereState.geo = geo;
+            verriereState.skin = verriereSkin(geo.skinNom);
+            verriereState.etats = verriereEtats(grappeId, geo.panneaux);
+            verriereState.panneauOuvert = null;
+
+            document.getElementById('verriereEyebrow').textContent =
+                TF('Verrière · %1', T(grappe.title).toUpperCase());
+            document.getElementById('verriereTitle').textContent =
+                (grappe.quete && grappe.quete.titre) || grappe.title;
+
+            _verriereConstruire();
+            _verriereMajCompteur();
+            _verriereFermerVolet();
+            screen.classList.add('show');
+            _verriereDustDemarrer();
+
+            // Allumage des panneaux obtenus depuis la dernière visite, puis extinction
+            // de la pastille. Le média reste consultable au tap, jamais imposé.
+            setTimeout(() => _verriereJouerAllumages(grappeId), 260);
+
+            // Focalisation éventuelle : on ouvre au plan large PUIS on zoome.
+            if (typeof focusIdx === 'number' && focusIdx >= 0) {
+                const i = _verriereIndexDeEtape(grappeId, focusIdx);
+                if (i >= 0) setTimeout(() => verriereTapPanneau(i), 620);
+            }
+        }
+
+        // L'index d'étape de la quête → l'index de panneau correspondant
+        function _verriereIndexDeEtape(grappeId, etapeIdx) {
+            const etapes = (GRAPPE_QUESTS[grappeId].quete || {}).etapes || [];
+            const etape = etapes[etapeIdx];
+            if (!etape) return -1;
+            const cases = etape.rewardCases || [];
+            return verriereState.geo.panneaux.findIndex(p => cases.includes(p.caseId));
+        }
+
+        function fermerVerriere() {
+            const screen = document.getElementById('verriereScreen');
+            if (screen) screen.classList.remove('show');
+            _verriereDustArreter();
+            _verriereFermerVolet();
+            _verriereArreterAnim();
+            verriereState.panneauOuvert = null;
+            // Reprise de la logique de closeFresqueModal : sans elle, la cinématique
+            // des lumens reste bloquée après une validation.
+            if (window._v2SuppressLumenSequence) {
+                window._v2SuppressLumenSequence = false;
+                const v2 = document.getElementById('voutV2Screen');
+                if (v2 && v2.classList.contains('show') && v2PendingLumens.length > 0) {
+                    setTimeout(() => v2PlayPendingLumensSequence(), 350);
+                }
+                return;
+            }
+            if (typeof v2OnReturnToExplorium === 'function') v2OnReturnToExplorium();
+        }
+
+        // ── Allumage des nouveaux panneaux + mise en lumière au complet ──
+        function _verriereJouerAllumages(grappeId) {
+            if (!verriereVues[grappeId]) verriereVues[grappeId] = [];
+            const vues = verriereVues[grappeId];
+            let nouveaux = 0;
+            verriereState.geo.panneaux.forEach((pan, i) => {
+                if (verriereState.etats[i] !== 'obtenu') return;
+                if (vues.includes(pan.caseId)) return;
+                vues.push(pan.caseId);
+                nouveaux++;
+                const g = document.querySelector('#verrierePanneaux .pane[data-i="' + i + '"]');
+                if (g) {
+                    g.classList.add('vr-allumage');
+                    setTimeout(() => g.classList.remove('vr-allumage'), 1700);
+                }
+            });
+            if (nouveaux) {
+                // La pastille a fait son travail : elle ramenait le joueur ici.
+                if (typeof clearVaultNotification === 'function') clearVaultNotification();
+                try { saveProgress(); } catch (_) {}
+            }
+            // Le passage du dernier panneau au complet : une seule fois, deux secondes.
+            const tousObtenus = verriereState.etats.length > 0
+                && verriereState.etats.every(e => e === 'obtenu');
+            if (tousObtenus && !verriereEclatVu[grappeId]) {
+                verriereEclatVu[grappeId] = true;
+                try { saveProgress(); } catch (_) {}
+                const eclat = document.getElementById('verriereEclat');
+                if (eclat) {
+                    eclat.classList.remove('actif');
+                    void eclat.offsetWidth;
+                    eclat.classList.add('actif');
+                    setTimeout(() => eclat.classList.remove('actif'), 2100);
+                }
+            }
+        }
+
+        // ── Zoom du viewBox vers un panneau, et retour ─────────────
+        function _verriereArreterAnim() {
+            if (verriereState.animId) { cancelAnimationFrame(verriereState.animId); verriereState.animId = null; }
+        }
+
+        function _verriereAnimerViewBox(vers, duree) {
+            const svg = document.getElementById('verriereSvg');
+            if (!svg) return Promise.resolve();
+            _verriereArreterAnim();
+            const de = (svg.getAttribute('viewBox') || verriereState.viewBoxBase.join(' '))
+                .split(/[\s,]+/).map(Number);
+            const t0 = performance.now();
+            return new Promise(resolve => {
+                let fini = false;
+                const terminer = () => {
+                    if (fini) return;
+                    fini = true;
+                    clearTimeout(filet);
+                    verriereState.animId = null;
+                    svg.setAttribute('viewBox', vers.map(n => n.toFixed(2)).join(' '));
+                    resolve();
+                };
+                // Filet : requestAnimationFrame est suspendu quand l'app passe en
+                // arrière-plan. Sans lui, un joueur qui sort de l'app pendant le zoom
+                // revient sur une verrière figée dont le volet ne s'ouvrira jamais.
+                const filet = setTimeout(terminer, duree + 200);
+                function pas(now) {
+                    if (fini) return;
+                    const t = Math.min(1, (now - t0) / duree);
+                    // Interpolation douce du prototype : k*k*(3-2*k)
+                    const k = t * t * (3 - 2 * t);
+                    const v = de.map((d, i) => d + (vers[i] - d) * k);
+                    svg.setAttribute('viewBox', v.map(n => n.toFixed(2)).join(' '));
+                    if (t < 1) verriereState.animId = requestAnimationFrame(pas);
+                    else terminer();
+                }
+                verriereState.animId = requestAnimationFrame(pas);
+            });
+        }
+
+        function verriereTapPanneau(i) {
+            const pan = verriereState.geo.panneaux[i];
+            if (!pan) return;
+            verriereState.panneauOuvert = i;
+            const [x, y, w, h] = pan.box;
+            // Boîte du panneau plus une marge fixe de 34, comme le prototype.
+            const m = 34;
+            _verriereAnimerViewBox([x - m, y - m, w + m * 2, h + m * 2], 620)
+                .then(() => _verriereOuvrirVolet(i));
+        }
+
+        function verriereDezoomer() {
+            _verriereFermerVolet();
+            verriereState.panneauOuvert = null;
+            _verriereAnimerViewBox(verriereState.viewBoxBase.slice(), 620);
+        }
+
+        function _verriereFermerVolet() {
+            const v = document.getElementById('verriereVolet');
+            if (v) v.classList.remove('show');
+        }
+
+        // ── Poussière ──────────────────────────────────────────────
+        // Une soixantaine de particules qui montent lentement, violettes pour
+        // l'essentiel. C'est peu de chose, et c'est ce qui relie visuellement la
+        // verrière au reste de l'Explorium.
+        let _vrDustRaf = 0, _vrDustW = 0, _vrDustH = 0, _vrDustQ = [], _vrDustT = 0;
+        function _verriereDustTaille() {
+            const cv = document.getElementById('verriereDust');
+            if (!cv || !cv.parentElement) return false;
+            const r = cv.parentElement.getBoundingClientRect();
+            if (r.width < 2 || r.height < 2) return false;
+            if (Math.abs(r.width - _vrDustW) < 1 && Math.abs(r.height - _vrDustH) < 1) return true;
+            const d = Math.min(window.devicePixelRatio || 1, 2);
+            _vrDustW = r.width; _vrDustH = r.height;
+            cv.width = _vrDustW * d; cv.height = _vrDustH * d;
+            cv.style.width = _vrDustW + 'px'; cv.style.height = _vrDustH + 'px';
+            cv.getContext('2d').setTransform(d, 0, 0, d, 0, 0);
+            _vrDustQ = Array.from({ length: Math.round(Math.min(60, _vrDustW * _vrDustH / 13000)) }, () => ({
+                x: Math.random() * _vrDustW, y: Math.random() * _vrDustH,
+                vx: (Math.random() - 0.5) * 0.09, vy: -0.03 - Math.random() * 0.09,
+                r: 0.5 + Math.random() * 1.2, a: 0.12 + Math.random() * 0.3,
+                hi: Math.random() < 0.25, ph: Math.random() * 6.28, sp: 0.4 + Math.random(),
+            }));
+            return true;
+        }
+        function _verriereDustBoucle() {
+            const ecran = document.getElementById('verriereScreen');
+            // On ne consomme rien quand la verrière est fermée.
+            if (!ecran || !ecran.classList.contains('show')) { _vrDustRaf = 0; return; }
+            const cv = document.getElementById('verriereDust');
+            if (!_verriereDustTaille()) { _vrDustRaf = requestAnimationFrame(_verriereDustBoucle); return; }
+            const ctx = cv.getContext('2d');
+            _vrDustT += 0.016;
+            ctx.clearRect(0, 0, _vrDustW, _vrDustH);
+            for (const p of _vrDustQ) {
+                p.x += p.vx; p.y += p.vy;
+                if (p.y < -8) { p.y = _vrDustH + 8; p.x = Math.random() * _vrDustW; }
+                const a = p.a * (0.6 + 0.4 * Math.sin(_vrDustT * p.sp + p.ph));
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832);
+                ctx.fillStyle = (p.hi ? 'rgba(221,214,254,' : 'rgba(167,139,250,') + a.toFixed(3) + ')';
+                ctx.fill();
+            }
+            _vrDustRaf = requestAnimationFrame(_verriereDustBoucle);
+        }
+        function _verriereDustDemarrer() {
+            if (_vrDustRaf) return;
+            _vrDustW = 0; _vrDustH = 0;   // force le recalcul à l'ouverture
+            _vrDustRaf = requestAnimationFrame(_verriereDustBoucle);
+        }
+        function _verriereDustArreter() {
+            if (_vrDustRaf) { cancelAnimationFrame(_vrDustRaf); _vrDustRaf = 0; }
+        }
+
+        // ── Contenu du volet, selon l'état ─────────────────────────
+        function _vrNomCarte(cardId) {
+            if (typeof V2_NEW_ACTORS !== 'undefined' && V2_NEW_ACTORS[cardId]) {
+                return V2_NEW_ACTORS[cardId].name;
+            }
+            const c = Object.values(COLLECTIONS).flatMap(cc => cc.cards).find(cc => cc.id === cardId);
+            return c ? c.name : cardId;
+        }
+
+        // Liste des acteurs, ceux qu'on a et ceux qui manquent, avec le niveau exigé.
+        // On NOMME les acteurs manquants : tout l'intérêt de l'état « entrevu » est que
+        // le joueur sache exactement ce qui lui manque. La modale de quête, elle, masque
+        // encore les cartes non collectées derrière « ??? ».
+        function _vrListeActeurs(etape) {
+            const lignes = (etape.prerequis || []).map(req => {
+                const possede = collectedCards.includes(req.cardId);
+                const niveau = possede ? ((cardLevels[req.cardId] || {}).level || 0) : 0;
+                const min = req.minLevel || 0;
+                const ok = possede && niveau >= min;
+                // « LV1 / 0 » se lisait comme « niveau 1 sur 0 » : on nomme l'exigence.
+                // Un minLevel à 0 ne demande rien d'autre que de posséder la carte.
+                let chip;
+                if (!possede)   chip = min > 0 ? 'exige LV' + min : 'à collecter';
+                else if (ok)    chip = 'LV' + niveau;
+                else            chip = 'LV' + niveau + ' · exige LV' + min;
+                return '<div class="vr-acteur' + (ok ? ' ok' : '') + '">'
+                    + '<span class="vr-acteur-pastille">' + (ok ? '✦' : (possede ? '◔' : '·')) + '</span>'
+                    + '<span class="vr-acteur-nom">' + T(_vrNomCarte(req.cardId)) + '</span>'
+                    + '<span class="vr-acteur-niveau">' + chip + '</span>'
+                    + '</div>';
+            });
+            return lignes.join('');
+        }
+
+        function _verriereOuvrirVolet(i) {
+            const { grappeId, geo, etats } = verriereState;
+            const pan = geo.panneaux[i];
+            const etat = etats[i];
+            const t = _verriereEtapeDeCase(grappeId, pan.caseId);
+            const etape = t ? t.etape : null;
+            const bdCase = ((GRAPPE_QUESTS[grappeId].bd || {}).cases || []).find(c => c.id === pan.caseId);
+            const lieu = etape && etape.objectifGeo ? etape.objectifGeo.nom : null;
+            const corps = document.getElementById('verriereVoletCorps');
+            const titre = (bdCase && bdCase.title) || (etape && etape.titre) || '—';
+            let html = '';
+
+            if (etat === 'obtenu') {
+                html = '<div class="vr-volet-etat">Média obtenu</div>'
+                    + '<div class="vr-volet-titre">' + titre + '</div>'
+                    + (lieu ? '<div class="vr-volet-ancrage">📍 ' + lieu + '</div>' : '')
+                    + '<div class="vr-volet-texte">' + ((bdCase && bdCase.text) || '') + '</div>';
+
+            } else if (etat === 'encours') {
+                html = '<div class="vr-volet-etat">Quête en cours</div>'
+                    + '<div class="vr-volet-titre">' + ((etape && etape.titre) || titre) + '</div>'
+                    + (lieu ? '<div class="vr-volet-ancrage">📍 ' + lieu + '</div>' : '')
+                    + '<div class="vr-volet-note">' + ((etape && etape.indice) || '') + '</div>'
+                    + '<button class="vr-volet-btn" onclick="verriereVoirSurCarte(' + i + ')">Voir sur la carte</button>';
+
+            } else if (etat === 'pret') {
+                html = '<div class="vr-volet-etat">Acteurs réunis</div>'
+                    + '<div class="vr-volet-titre">' + ((etape && etape.titre) || titre) + '</div>'
+                    + (lieu ? '<div class="vr-volet-ancrage">📍 ' + lieu + '</div>' : '')
+                    + '<div class="vr-volet-note">' + ((etape && etape.indice) || '') + '</div>'
+                    + '<div class="vr-volet-soustitre">Les voix réunies</div>'
+                    + (etape ? _vrListeActeurs(etape) : '')
+                    + '<button class="vr-volet-btn" onclick="verriereSuivreQuete(' + i + ')">Suivre cette quête</button>';
+
+            } else if (etat === 'entrevu') {
+                html = '<div class="vr-volet-etat">La scène se devine</div>'
+                    + '<div class="vr-volet-titre">' + titre + '</div>'
+                    + '<div class="vr-volet-note">Tu en tiens déjà une voix. Il en manque d\'autres pour que la scène se lise.</div>'
+                    + '<div class="vr-volet-soustitre">Les voix de ce panneau</div>'
+                    + (etape ? _vrListeActeurs(etape) : '');
+
+            } else {
+                // inconnu — jamais une impasse muette
+                html = '<div class="vr-volet-etat">Verre éteint</div>'
+                    + '<div class="vr-volet-titre">' + titre + '</div>'
+                    + '<div class="vr-volet-note">Aucune de ses voix ne t\'est encore apparue. '
+                    + 'Le plomb garde sa place : ce panneau t\'attend, mais rien ne s\'y lit encore.</div>';
+            }
+
+            corps.innerHTML = html;
+            corps.scrollTop = 0;
+            document.getElementById('verriereVolet').classList.add('show');
+        }
+
+        // ── Parcours de quête ──────────────────────────────────────
+        // Prendre la quête se fait depuis la verrière, et nulle part ailleurs : c'est
+        // le seul endroit où le joueur voit en même temps ce qu'il va apprendre et
+        // pourquoi ces cartes-là sont liées.
+        function verriereSuivreQuete(i) {
+            const { grappeId, geo } = verriereState;
+            const pan = geo.panneaux[i];
+            const t = _verriereEtapeDeCase(grappeId, pan.caseId);
+            if (!t) return;
+            // Pose le marqueur sur la carte et crée l'entrée de journal, comme aujourd'hui.
+            _acceptQuestEtape(grappeId, t.etape.id);
+            window._selectedQuestKey = grappeId + ':' + t.etape.id;
+            try { saveProgress(); } catch (_) {}
+            try { updateQuestMarkers(); } catch (_) {}
+            try { updateQuestCompass(); } catch (_) {}
+            try { renderQuestJournal(); } catch (_) {}
+            verriereRafraichirEtats();
+            _verriereOuvrirVolet(i);   // le panneau est passé en « en cours »
+        }
+
+        function verriereVoirSurCarte(i) {
+            const { grappeId, geo } = verriereState;
+            const pan = geo.panneaux[i];
+            const t = _verriereEtapeDeCase(grappeId, pan.caseId);
+            if (!t) return;
+            window._selectedQuestKey = grappeId + ':' + t.etape.id;
+            try { saveProgress(); } catch (_) {}
+            try { updateQuestMarkers(); } catch (_) {}
+            try { updateQuestCompass(); } catch (_) {}
+            fermerVerriere();
+            if (typeof closeVoutV2 === 'function') closeVoutV2();
+            if (typeof closeMindmap === 'function') closeMindmap();
+            const geoObj = t.etape.objectifGeo;
+            if (geoObj && typeof map !== 'undefined' && map && typeof map.flyTo === 'function') {
+                try { map.flyTo({ center: [geoObj.lng, geoObj.lat], zoom: 16.2, duration: 1400 }); } catch (_) {}
+            }
+            if (typeof showToast === 'function' && geoObj) showToast('🧭 Cap sur ' + geoObj.nom);
+        }
+
+        // Ouverture automatique du média à la validation — une seule fois.
+        function verriereOuvrirSurMedia(grappeId, etapeIdx) {
+            ouvrirVerriere(grappeId, etapeIdx);
+        }
+
         let fresqueState = {
             grappeId: null,
             currentIdx: 0,
