@@ -83,7 +83,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stars.s1, .stars.s2 { animation: none; }
+  .stars.s1, .stars.s2, .live::before { animation: none; }
 }
 
 /* ---------- Colonne centrale ---------- */
@@ -188,6 +188,32 @@ body {
 }
 .btn-secondary:hover { border-color: var(--gold); color: var(--gold-light); }
 
+.btn-ico {
+  width: 18px; height: 18px; margin-right: 11px; flex-shrink: 0;
+  fill: none; stroke: currentColor; stroke-width: 1.7;
+}
+.btn-ico .fill { fill: currentColor; stroke: none; }
+
+/* Boutons communauté : fond sombre, bordure et logo aux couleurs de marque (atténué pour laisser la démo en tête) */
+.btn-discord { color: var(--text); border: 1px solid rgba(88,101,242,0.6); }
+.btn-discord .btn-ico { color: #5865F2; }
+.btn-discord:hover { border-color: #5865F2; background: rgba(88,101,242,0.1); }
+.btn-insta {
+  color: var(--text);
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--ink), var(--ink)) padding-box,
+    linear-gradient(45deg,#fdc45c,#f77737,#e1306c,#c13584,#833ab4) border-box;
+}
+.btn-insta:hover {
+  background:
+    linear-gradient(rgba(225,48,108,0.1), rgba(225,48,108,0.1)) padding-box,
+    linear-gradient(var(--ink), var(--ink)) padding-box,
+    linear-gradient(45deg,#fdc45c,#f77737,#e1306c,#c13584,#833ab4) border-box;
+}
+.btn-insta .btn-ico { stroke: url(#ig-grad); }
+.btn-insta .btn-ico .fill { fill: url(#ig-grad); }
+
 .hint {
   margin-top: 8px;
   font-size: 12px;
@@ -208,6 +234,15 @@ body {
 }
 .act-third span { color: var(--gold); border-bottom: 1px solid rgba(201,145,58,0.35); padding-bottom: 2px; }
 .act-third:hover span { color: var(--gold-light); border-bottom-color: var(--gold-light); }
+
+/* Badge « session en cours » : point doré qui pulse */
+.live { color: var(--gold); margin-right: 6px; }
+.live::before {
+  content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 6px;
+  border-radius: 50%; background: var(--gold); vertical-align: 1px;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 50% { opacity: 0.3; } }
 
 /* ---------- Separateur + lien vitrine ---------- */
 .sep {
@@ -308,17 +343,38 @@ body {
 
     <div>
       <a class="act" href="https://discord.gg/dtYbQKjRca" target="_blank" rel="noopener" aria-label="Rejoindre le Discord d'ExpLore, nouvel onglet">
-        <span class="btn btn-secondary">Rejoindre le Discord</span>
+        <span class="btn btn-discord">
+          <svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M19.3 5.3A16.6 16.6 0 0 0 15.2 4l-.5 1a15.3 15.3 0 0 0-5.4 0l-.5-1a16.6 16.6 0 0 0-4.1 1.3C2.1 9.2 1.4 13 1.8 16.7a16.7 16.7 0 0 0 5 2.5l1.1-1.7a10.8 10.8 0 0 1-1.7-.8l.4-.3a11.9 11.9 0 0 0 10.8 0l.4.3a10.8 10.8 0 0 1-1.7.8l1.1 1.7a16.7 16.7 0 0 0 5-2.5c.5-4.3-.8-8.1-2.9-11.4ZM8.7 14.5c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg>
+          Rejoindre le Discord
+        </span>
       </a>
       <p class="hint">La communauté et les premiers testeurs.</p>
     </div>
 
     <div>
-      <!-- A REMPLACER : lien repondant public du Google Form (bouton Envoyer), jamais le lien /edit -->
-      <a class="act-third" href="https://forms.gle/XXXX" target="_blank" rel="noopener" aria-label="Candidater comme testeur terrain à Lyon, nouvel onglet">
-        Tu es à Lyon ? <span>Deviens testeur terrain</span>
+      <a class="act" href="https://www.instagram.com/explorestudiofr/" target="_blank" rel="noopener" aria-label="Suivre ExpLore sur Instagram, nouvel onglet">
+        <span class="btn btn-insta">
+          <svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="ig-grad" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#fdc45c"/><stop offset=".35" stop-color="#f77737"/><stop offset=".6" stop-color="#e1306c"/><stop offset="1" stop-color="#833ab4"/></linearGradient></defs><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1" class="fill"/></svg>
+          Suivre sur Instagram
+        </span>
       </a>
-      <p class="hint">Pour explorer la vraie carte, dehors.</p>
+      <p class="hint">@explorestudiofr · partage tes explorations, suis les coulisses.</p>
+    </div>
+
+    <!-- SESSION DE TEST : affiché jusqu'à la date data-fin (incluse), puis remplacé automatiquement par le bloc « hors session ».
+         Nouvelle session : changer le lien du formulaire, le texte et la date data-fin. -->
+    <div id="test-session" data-fin="2026-10-24">
+      <a class="act-third" href="https://docs.google.com/forms/d/e/1FAIpQLScS5u3_C0sXMenpSuy9Pzp22pjF51Cw-qdzUU7putWiKPNcRg/viewform" target="_blank" rel="noopener" aria-label="S'inscrire à la session de test à Bellecour, nouvel onglet">
+        Tu es à Lyon ? <span>Inscris-toi au test Bellecour</span>
+      </a>
+      <p class="hint"><span class="live">Session en cours</span> Pour explorer la vraie carte, dehors.</p>
+    </div>
+
+    <div id="test-hors-session" hidden>
+      <a class="act-third" href="https://discord.gg/dtYbQKjRca" target="_blank" rel="noopener" aria-label="Être prévenu des prochaines sessions de test, Discord, nouvel onglet">
+        Tu es à Lyon ? <span>Sois prévenu des prochains tests</span>
+      </a>
+      <p class="hint">Les sessions terrain sont annoncées sur le Discord et Instagram.</p>
     </div>
 
   </section>
@@ -338,6 +394,18 @@ body {
   <span class="dot">·</span>
   Fait à Lyon
 </footer>
+
+<script>
+// Session de test : passé la date de fin (incluse), on bascule sur le bloc « hors session »
+(function () {
+  var session = document.getElementById('test-session');
+  var fin = new Date(session.dataset.fin + 'T23:59:59');
+  if (new Date() > fin) {
+    session.hidden = true;
+    document.getElementById('test-hors-session').hidden = false;
+  }
+})();
+</script>
 
 </body>
 </html>
