@@ -9084,129 +9084,109 @@
         }
         .lang-select-flag { font-size: 24px; line-height: 1; }
         /* ═══════════════════════════════════════════════════════
-           INTRO ANIMÉE (v2) — aucune image, tout dessiné en code
+           INTRO ANIMÉE — aucune image, tout dessiné en code
+           Transposée du brief (annexe) : identifiants préfixés intro2*,
+           tout le CSS scopé sous #intro2Overlay.
            ═══════════════════════════════════════════════════════ */
         #intro2Overlay{
-            --i2-ink:#0d1220;        /* fond */
-            --i2-paper:#e8dfd0;      /* texte */
-            --i2-dust:#a78bfa;       /* poussière, lavande */
-            --i2-dust-hi:#ddd6fe;    /* éclats de poussière */
-            --i2-glow:#7c3aed;       /* halo des nébuleuses */
-            --i2-warm:#e3c48f;       /* voix et traits dessinés */
-            --i2-line:#cdbfa8;       /* horizon et marcheurs */
-            --i2-serif:'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,serif;
-            /* --jsb-hand est déclarée sur .jsb-page (le carnet) : hors de portée
-               d'ici. Même pile de polices, redéclarée localement. */
-            --jsb-hand:'Segoe Script','Bradley Hand','Snell Roundhand','Comic Sans MS',cursive;
+            --i2-ink:#050817;
+            --i2-paper:#e8dfd0;
+            --i2-violet:#a78bfa;
+            --i2-violet-hi:#ddd6fe;
+            --i2-gold:#d6a317;
+            --i2-gold-soft:#e3c48f;
+            --i2-serif:'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,'Times New Roman',serif;
+            --i2-hand:'Segoe Script','Bradley Hand','Snell Roundhand',cursive;
             position:fixed;inset:0;z-index:12000;
-            background:var(--i2-ink);
-            color:var(--i2-paper);
-            font-family:var(--i2-serif);
-            overflow:hidden;
-            cursor:pointer;
-            -webkit-tap-highlight-color:transparent;
-            user-select:none;
+            background:var(--i2-ink);color:var(--i2-paper);font-family:var(--i2-serif);
+            overflow:hidden;overscroll-behavior:none;
+            cursor:pointer;user-select:none;
         }
         #intro2Overlay.hidden{display:none}
+        #intro2Overlay,#intro2Overlay *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        #intro2Overlay *{margin:0;padding:0}
         #intro2Canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 
         #intro2Grain{
             position:absolute;inset:-50%;width:200%;height:200%;
-            pointer-events:none;opacity:.16;mix-blend-mode:overlay;
+            pointer-events:none;opacity:.14;mix-blend-mode:overlay;
             background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
-            animation:intro2Grain 1.1s steps(4) infinite;
+            animation:intro2GrainShift 1.1s steps(4) infinite;
         }
-        @keyframes intro2Grain{
+        @keyframes intro2GrainShift{
             0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}
-            50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-2%)}
-            100%{transform:translate(0,0)}
+            50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-2%)}100%{transform:translate(0,0)}
         }
-        #intro2Vignette{
-            position:absolute;inset:0;pointer-events:none;
-            background:radial-gradient(ellipse at 50% 45%,transparent 35%,rgba(0,0,0,.55) 100%);
-        }
-        #intro2Horizon{
-            position:absolute;left:0;right:0;bottom:0;
-            /* width explicite : sans elle, left/right ne suffisent pas pour un
-               élément remplacé — le SVG prenait sa largeur intrinsèque (hauteur
-               × ratio du viewBox, soit ~906 px) et laissait le reste vide.
-               La hauteur découle maintenant du viewBox, ajusté dans resize(). */
-            width:100%;height:auto;pointer-events:none;
-            opacity:0;transform:translateY(14px);
-            transition:opacity 2.4s ease,transform 2.4s ease;
-        }
-        #intro2Horizon.on{opacity:.62;transform:translateY(0)}
+        #intro2Fadein{position:absolute;inset:0;background:#000;pointer-events:none;z-index:9;
+            opacity:1;transition:opacity 1.6s ease}
+        #intro2Fadein.off{opacity:0}
+        #intro2Vignette{position:absolute;inset:0;pointer-events:none;
+            background:radial-gradient(ellipse at 50% 46%,transparent 34%,rgba(0,0,0,.5) 100%)}
 
-        #intro2Text{
-            position:absolute;left:0;right:0;top:50%;
-            transform:translateY(-50%);
-            padding:0 2rem;text-align:center;pointer-events:none;
-        }
+        /* Texte */
+        #intro2Text{position:absolute;left:0;right:0;top:38%;padding:0 2rem;text-align:center;pointer-events:none}
         #intro2Overlay .i2-line{
-            display:block;
-            font-size:clamp(1.25rem,5.2vw,2rem);
-            line-height:1.5;letter-spacing:.012em;
+            display:block;font-size:clamp(1.15rem,4.6vw,1.75rem);line-height:1.5;
             opacity:0;filter:blur(6px);transform:translateY(10px);
-            transition:opacity 1.5s ease,filter 1.5s ease,transform 1.5s ease;
-            text-shadow:0 2px 18px rgba(0,0,0,.6);
+            transition:opacity 1.2s ease,filter 1.2s ease,transform 1.2s ease;
+            text-shadow:0 2px 18px rgba(0,0,0,.65);
         }
-        #intro2Overlay .i2-line.on{opacity:.94;filter:blur(0);transform:translateY(0)}
-        #intro2Overlay .i2-line.out{opacity:0;filter:blur(5px);transform:translateY(-8px);transition-duration:.9s}
-        #intro2Overlay .i2-line + .i2-line{margin-top:.55rem}
-        #intro2Overlay .i2-line em{font-style:italic;color:var(--i2-dust)}
+        #intro2Overlay .i2-line.on{opacity:.95;filter:blur(0);transform:translateY(0)}
+        #intro2Overlay .i2-line.out{opacity:0;filter:blur(5px);transform:translateY(-8px);transition-duration:.7s}
+        #intro2Overlay .i2-line + .i2-line{margin-top:.5rem}
+        #intro2Overlay .i2-line em{font-style:italic;color:var(--i2-violet-hi)}
 
-        #intro2Voice{
-            position:absolute;left:0;right:0;bottom:19vh;
-            padding:0 2rem;text-align:center;pointer-events:none;
-        }
+        /* Chuchotement */
+        #intro2Voice{position:absolute;left:0;right:0;top:30%;padding:0 2rem;text-align:center;pointer-events:none}
         #intro2Overlay .i2-say{
-            display:block;
-            font-family:var(--jsb-hand);
-            font-size:clamp(1.7rem,7.5vw,2.6rem);
-            color:var(--i2-warm);
+            display:block;font-family:var(--i2-hand);
+            font-size:clamp(1.5rem,6.6vw,2.3rem);color:var(--i2-gold-soft);
             opacity:0;transform:translateY(12px) rotate(-.6deg);
-            transition:opacity .8s ease,transform .8s ease;
-            text-shadow:0 2px 14px rgba(0,0,0,.7);
+            transition:opacity .9s ease,transform .9s ease;
+            text-shadow:0 0 22px rgba(167,139,250,.45),0 2px 14px rgba(0,0,0,.7);
         }
         #intro2Overlay .i2-say:nth-child(2){transform:translateY(12px) rotate(.5deg)}
         #intro2Overlay .i2-say.on{opacity:1;transform:translateY(0) rotate(-.6deg)}
         #intro2Overlay .i2-say:nth-child(2).on{transform:translateY(0) rotate(.5deg)}
 
-        #intro2Skip{
-            position:absolute;top:max(1rem,env(safe-area-inset-top));right:1rem;
-            background:none;border:0;color:var(--i2-paper);opacity:.38;
-            font-family:var(--i2-serif);font-size:.95rem;letter-spacing:.06em;
-            padding:.6rem .8rem;cursor:pointer;z-index:5;
+        /* Marque */
+        #intro2Brand{
+            position:absolute;left:0;right:0;top:11%;text-align:center;pointer-events:none;
+            font-size:clamp(2.6rem,11vw,4.4rem);letter-spacing:-.02em;line-height:1;
+            opacity:0;transition:opacity 1.4s ease;
         }
-        #intro2Skip:hover{opacity:.75}
-        #intro2Hint{
-            position:absolute;left:0;right:0;
-            bottom:max(1.6rem,env(safe-area-inset-bottom));
-            text-align:center;font-size:.92rem;letter-spacing:.14em;
-            text-transform:lowercase;opacity:0;transition:opacity 1s ease;
-            pointer-events:none;color:var(--i2-paper);
-            text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 14px rgba(0,0,0,.7);
+        #intro2Brand.on{opacity:1}
+        #intro2BrandA{color:var(--i2-paper)}
+        #intro2BrandB,#intro2Overlay .i2-brandB{color:var(--i2-gold)}
+        #intro2BrandGap{display:inline-block;color:var(--i2-gold)}
+        #intro2BrandO{opacity:0;transition:opacity .5s ease}
+        #intro2BrandO.on{opacity:1}
+
+        /* Commandes */
+        #intro2Skip{position:absolute;top:max(1rem,env(safe-area-inset-top));right:1.1rem;
+            background:none;border:0;color:var(--i2-paper);opacity:.35;font-family:var(--i2-serif);
+            font-size:.95rem;letter-spacing:.05em;padding:.6rem .7rem;cursor:pointer;z-index:5}
+        #intro2Skip:hover{opacity:.7}
+        #intro2Next{
+            position:absolute;right:1.2rem;bottom:max(1.6rem,env(safe-area-inset-bottom));
+            background:none;border:0;color:var(--i2-paper);
+            font-family:var(--i2-serif);font-size:clamp(1rem,3.4vw,1.2rem);letter-spacing:.03em;
+            padding:.9rem .6rem;cursor:pointer;opacity:0;transition:opacity .7s ease;z-index:6;
         }
-        /* .34 se perdait dans la poussière : lisible, sans voler la vedette au texte */
-        #intro2Hint.on{opacity:.78}
+        #intro2Next.on{opacity:.9}
         #intro2Start{
-            position:absolute;left:50%;bottom:12vh;transform:translate(-50%,10px);
-            background:transparent;color:var(--i2-paper);
-            border:1px solid rgba(232,223,208,.42);border-radius:999px;
-            font-family:var(--i2-serif);font-size:1.05rem;letter-spacing:.07em;
-            padding:.85rem 2.1rem;cursor:pointer;
-            opacity:0;pointer-events:none;
-            transition:opacity 1s ease,transform 1s ease,background .3s ease;
-            z-index:6;
+            position:absolute;left:50%;bottom:16%;transform:translate(-50%,10px);
+            background:rgba(57,24,86,.3);color:var(--i2-paper);
+            border:1px solid rgba(232,223,208,.45);border-radius:999px;
+            font-family:var(--i2-serif);font-size:clamp(1rem,3.6vw,1.2rem);letter-spacing:.06em;
+            padding:.85rem 2.2rem;cursor:pointer;opacity:0;pointer-events:none;
+            transition:opacity 1s ease,transform 1s ease,box-shadow .8s ease;z-index:7;
         }
-        #intro2Start.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
-        #intro2Start:hover{background:rgba(232,223,208,.09)}
+        #intro2Start.on{opacity:1;transform:translate(-50%,0);pointer-events:auto;box-shadow:0 0 34px rgba(137,69,232,.28)}
 
         @media (prefers-reduced-motion:reduce){
             #intro2Grain{animation:none}
-            #intro2Overlay .i2-line,
-            #intro2Overlay .i2-say,
-            #intro2Horizon,#intro2Start{transition-duration:.35s}
+            #intro2Overlay .i2-line,#intro2Overlay .i2-say,#intro2Brand,#intro2Start{transition-duration:.3s}
         }
 
         </style>
@@ -11473,71 +11453,21 @@
             <button class="intro-bd-start" id="introBDStart" onclick="finishIntroBD()" style="display:none;">Commencer l'aventure</button>
         </div>
 
-        <!-- ═══ INTRO ANIMÉE (v2) ═══ -->
+        <!-- ═══ INTRO ANIMÉE ═══ -->
         <div id="intro2Overlay" class="hidden">
             <canvas id="intro2Canvas"></canvas>
 
-            <!-- Horizon panoramique : 2400 unites de large, le motif d'origine
-                 (colline de Fourvière, tour métallique) au centre, des volets de
-                 part et d'autre. resize() ajuste le viewBox : plus l'ecran est
-                 large, plus on en montre, sans jamais deformer ni laisser de vide. -->
-            <svg id="intro2Horizon" viewBox="0 0 2400 300" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-                <defs>
-                    <filter id="intro2Rough" x="-20%" y="-20%" width="140%" height="140%">
-                        <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="3" seed="7" result="n"/>
-                        <feDisplacementMap in="SourceGraphic" in2="n" scale="4.5" xChannelSelector="R" yChannelSelector="G"/>
-                    </filter>
-                </defs>
-                <g filter="url(#intro2Rough)" fill="none" stroke="#cdbfa8" stroke-width="1.7"
-                   stroke-linecap="round" stroke-linejoin="round">
-
-                    <!-- ── Volet gauche : rejoint le motif central en (800, 214) ── -->
-                    <path d="M0 220 L68 212 L132 222 L198 210 L264 220 L330 208 L396 218 L462 206 L528 216 L596 204 L662 214 L730 208 L800 214"/>
-                    <path d="M84 214 L104 196 L124 214 M124 214 L144 200 L164 214"/>
-                    <path d="M232 216 L232 168 L248 168 L248 216 M240 168 L240 154"/>
-                    <path d="M366 214 L366 184 L388 184 L388 214 M400 216 L400 194 L418 194 L418 216"/>
-                    <path d="M552 210 L556 160 L560 210 M553 186 L559 186"/>
-                    <path d="M676 212 L696 194 L716 212"/>
-
-                    <!-- ── Motif d'origine, inchangé, décalé au centre ── -->
-                    <g transform="translate(800,0)">
-                        <path d="M0 214 L96 206 L150 190 L214 196 L268 176 L322 186 L382 170 L452 182 L520 168 L596 180 L664 172 L740 184 L800 178"/>
-                        <path d="M150 190 L168 150 L182 150 L186 128 L191 150 L205 150 L222 190"/>
-                        <path d="M168 150 L205 150"/>
-                        <path d="M176 150 L176 190 M198 150 L198 190"/>
-                        <path d="M262 176 L268 118 L274 176 M264 160 L272 160 M263 146 L273 146 M268 118 L268 106"/>
-                        <path d="M332 186 L352 168 L372 186 M372 186 L392 172 L412 186"/>
-                        <path d="M418 182 L438 166 L458 182"/>
-                        <path d="M560 180 L560 140 L584 140 L584 180"/>
-                        <path d="M572 140 L572 126"/>
-                        <path d="M626 178 L626 152 L644 152 L644 178"/>
-                    </g>
-
-                    <!-- ── Volet droit : repart de (1600, 178) ── -->
-                    <path d="M1600 178 L1666 188 L1732 176 L1800 186 L1868 174 L1934 184 L2000 172 L2068 182 L2134 174 L2200 184 L2270 176 L2340 184 L2400 178"/>
-                    <path d="M1684 184 L1684 152 L1708 152 L1708 184 M1696 152 L1696 140"/>
-                    <path d="M1816 182 L1836 164 L1856 182 M1856 182 L1876 168 L1896 182"/>
-                    <path d="M1984 174 L1988 122 L1992 174 M1985 150 L1991 150"/>
-                    <path d="M2096 178 L2096 150 L2118 150 L2118 178 M2130 180 L2130 160 L2150 160 L2150 180"/>
-                    <path d="M2252 180 L2252 146 L2266 146 L2266 180 M2259 146 L2259 132"/>
-                    <path d="M2336 182 L2354 166 L2372 182"/>
-
-                    <!-- ── Lignes de fuite, sur toute la largeur ── -->
-                    <path d="M0 236 L2400 230" stroke-width="1.1" opacity=".55"/>
-                    <path d="M0 252 L2400 246" stroke-width="0.9" opacity=".32"/>
-                </g>
-            </svg>
-
+            <div id="intro2Brand"><span id="intro2BrandA">Exp</span><span id="intro2BrandB">L</span><span id="intro2BrandGap"><span id="intro2BrandO">o</span></span><span class="i2-brandB">re</span></div>
             <div id="intro2Text" aria-live="polite"></div>
-
             <div id="intro2Voice">
-                <span class="i2-say" id="intro2Say1">Hé, toi,</span>
-                <span class="i2-say" id="intro2Say2">tu le vois aussi ?</span>
+                <span class="i2-say" id="intro2Say1">Hé toi,</span>
+                <span class="i2-say" id="intro2Say2">tu la vois aussi ?</span>
             </div>
 
+            <div id="intro2Fadein"></div>
             <div id="intro2Grain"></div>
             <div id="intro2Vignette"></div>
-            <div id="intro2Hint">tap pour continuer</div>
+            <button id="intro2Next">Suite &gt;</button>
             <button id="intro2Start" onclick="finishIntroBD()">Commencer</button>
             <button id="intro2Skip" onclick="skipIntroBD()">passer</button>
         </div>
@@ -11604,16 +11534,15 @@
 
         // Table FR → EN. La clé est la chaîne française EXACTE (après trim).
         const I18N_EN = {
-            // ── Intro animée (v2) ──
-            "Ce que nous oublions ne disparaît pas,": "What we forget does not disappear,",
-            "mais reste là, autour de nous.": "but lingers here, all around us.",
-            "Il existe des endroits privilégiés": "There are special places",
-            "où l'oubli persiste jusqu'à <em>prendre forme</em>.": "where forgetting endures until it <em>takes shape</em>.",
-            "Hé, toi,": "Hey, you,",
-            "tu le vois aussi ?": "you see it too?",
+            // ── Intro animée ──
+            "Ce que nous oublions ne disparaît pas.": "What we forget does not disappear.",
+            "Une matière reste là, autour de nous.": "Something stays behind, all around us.",
+            "Elle s'attache à des endroits.": "It clings to certain places.",
+            "Hé toi,": "Hey, you.",
+            "tu la vois aussi ?": "you see it too?",
+            "Suite >": "Next >",
             "Commencer": "Begin",
             "passer": "skip",
-            "tap pour continuer": "tap to continue",
             // ══ Tutoriel lissé : carnet, longue-vue, progression, découvertes ══
             // Le carnet, présenté à sa première ouverture (cf. _obJournalHint)
             "Ah, tu l'as trouvé. C'est le <span style=\"font-weight:600\">📖 carnet</span> de la carte — j'y ai noté tout ce qu'elle m'a déjà raconté.": "Ah, you found it. That is the card's <span style=\"font-weight:600\">📖 notebook</span> — I noted down everything it has already told me.",
@@ -14826,488 +14755,623 @@
         // Définition des étapes : à chaque tap, l'écran évolue
         // Chaque case a une position en % (top, left, width, height)
         // ainsi qu'un contenu (image, narration, bulle de dialogue)
-        // ═════════════════════════════════════════════════════
-        // INTRO ANIMÉE (v2) — poussière, marcheurs, horizon
+        // ═══════════════════════════════════════════════════════
+        // INTRO ANIMÉE — poussière, marcheurs, ville, nébuleuse,
+        // passant à la tête d'or, anneau qui devient le o d'ExpLore.
+        // Transposée du brief (annexe) sans retouche de la chorégraphie.
         // Aucune image, aucune ressource externe.
         // API : Intro2.start() / Intro2.stop()
-        // ═════════════════════════════════════════════════════
+        // Les boutons « Commencer » et « passer » appellent finishIntroBD() /
+        // skipIntroBD(), qui font le fondu de l'overlay puis Intro2.stop().
+        // ═══════════════════════════════════════════════════════
         const Intro2 = (function () {
+            'use strict';
+
+            /* ═══════════ Séquence ═══════════
+               Action et texte ne se superposent jamais :
+               un temps montre, le temps suivant nomme.                     */
             const BEATS = [
-                { mode: 'drift',    lines: ["Ce que nous oublions ne disparaît pas,"] },
-                { mode: 'settle',   lines: ["mais reste là, autour de nous."] },
-                { mode: 'gather',   lines: ["Il existe des endroits privilégiés", "où l'oubli persiste jusqu'à <em>prendre forme</em>."] },
-                { mode: 'presence', lines: [] }
+                { kind:'action', lines:[] },                                                    // la ville apparaît, les gens marchent
+                { kind:'text',   lines:["Ce que nous oublions ne disparaît pas."] },
+                { kind:'action', lines:[] },                                                    // la poussière sort des têtes
+                { kind:'text',   lines:["Une matière reste là, autour de nous."] },
+                { kind:'action', lines:[] },                                                    // l'accrétion commence
+                { kind:'text',   lines:["Elle s'attache à des endroits."] },
+                { kind:'exit',   lines:[] },                                                    // la nébuleuse, le passant s'approche
+                { kind:'voice',  lines:[] },                                                    // Hé, toi
+                { kind:'brand',  lines:[] }
             ];
 
             const $ = id => document.getElementById(id);
-            let overlay, textEl, hintEl, startEl, horizonEl, says;
-            let cv, ctx, W = 0, H = 0, dpr = 1;
-            let parts = [], walkers = [], mode = 'drift', t = 0;
-            let walkAlpha = 0, walkTarget = 0;
-            // Sol commun à l'horizon, aux marcheurs et à la poussière qui retombe,
-            // et taille des marcheurs : les deux se déduisent de la géométrie de
-            // l'horizon, donc le rapport passant/maison ne bouge plus d'un format
-            // à l'autre. Calculés dans resize().
-            let ground = 0, walkH = 0;
-            const CAP = 240;
+            // Éléments résolus dans start() : le module est défini une fois,
+            // l'intro peut être rejouée depuis le panneau de test.
+            let overlay, textEl, nextEl, startEl, brandEl, gapEl, oEl, fadeEl, says;
+            let reduce = false;
 
-            let running = false, beat = -1, busy = false;
-            let timers = [], rafId = 0, reduce = false;
-            let onResize = null, onKey = null, onTap = null;
+            let beat=-1, busy=false, timers=[], phaseAt=0, canAdvance=false;
+            const later=(fn,ms)=>{const id=setTimeout(fn,ms);timers.push(id);return id;};
+            const clearTimers=()=>{timers.forEach(id=>{clearTimeout(id);clearInterval(id);});timers=[];};
+            const since=()=>performance.now()-phaseAt;
+            const smooth=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x);};
 
-            function later(fn, ms) { const id = setTimeout(fn, ms); timers.push(id); return id; }
-            function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+            /* ═══════════ Scène ═══════════ */
+            let cv, ctx;
+            let W=0,H=0,dpr=1,t=0,groundY=0;
+            let stars=[], motes=[], walkers=[], docked=[], blobs=[], windows=[];
+            let startedAt=0;
+            let emitting=false, seeking=false, deposit=0;
+            let ring=null, cardAt=0;
+            const CAP=300;
 
-            /* ── Dimensions ── */
-            function resize() {
-                if (!cv) return;
-                dpr = Math.min(window.devicePixelRatio || 1, 2);
-                W = cv.clientWidth; H = cv.clientHeight;
-                cv.width = W * dpr; cv.height = H * dpr;
-                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-                fitHorizon();
-                // Les marcheurs posaient les pieds à H * 0.80, une constante sans
-                // rapport avec l'horizon : ils marchaient au-dessus des toits.
-                // Leur sol est désormais la ligne de fuite basse du SVG (y = 236
-                // sur 300 dans le viewBox), celle qui se lit comme un trottoir.
-                const g = horizonGeom();
-                ground = H - g.svgH * (1 - 236 / 300);
-                walkH  = g.svgH * 0.42;
-                // « tap pour continuer » : sur téléphone, le trottoir est à ~35 px
-                // du bas et le texte tombait sur les jambes des marcheurs. S'il n'a
-                // pas la place sous le sol, on le remonte au-dessus de leurs têtes.
-                if (hintEl) {
-                    const sousSol = H - ground;
-                    const teteMax = walkH * 1.28 * 1.03;   // plus grand marcheur (sc ≤ 1.28), tête comprise
-                    hintEl.style.bottom = sousSol >= 48 ? '' : Math.round(sousSol + teteMax + 14) + 'px';
-                }
-                placeNebulas();
-                placeCurrents();
+            /* Silhouette de ville, normalisée. Dessinée dans le canvas et non en SVG :
+               marcheurs, poussière et horizon partagent ainsi le même repère.      */
+            const SKY=[[0,.800],[.07,.796],[.12,.788],[.16,.799],[.22,.790],[.27,.799],
+                       [.33,.788],[.40,.795],[.46,.789],[.53,.797],[.60,.790],[.67,.794],
+                       [.74,.788],[.81,.797],[.88,.791],[.94,.786],[1,.793]];
+            const NEB={x:.615,y:0};
+
+            function resize(){
+                dpr=Math.min(window.devicePixelRatio||1,2);
+                W=cv.clientWidth; H=cv.clientHeight;
+                cv.width=W*dpr; cv.height=H*dpr;
+                ctx.setTransform(dpr,0,0,dpr,0,0);
+                groundY=H*.80;
+                NEB.y=groundY-H*.048;
             }
 
-            /* Horizon : on montre d'autant plus de panorama que l'ecran est large.
-               Le viewBox garde le ratio de la boîte (hauteur auto en CSS), donc
-               aucune déformation, aucun rognage, et jamais de vide sur les côtés.
-               Plancher à 720 : en dessous, sur un téléphone étroit, les bâtiments
-               deviendraient trop petits pour se lire. */
-            function horizonGeom() {
-                const vbW = Math.max(720, Math.min(2400, Math.round(W * 1.3)));
-                return { vbW: vbW, svgH: W * 300 / vbW };   // height:auto suit le viewBox
-            }
-
-            function fitHorizon() {
-                const el = document.getElementById('intro2Horizon');
-                if (!el || !W) return;
-                const vbW = horizonGeom().vbW;
-                el.setAttribute('viewBox', Math.round((2400 - vbW) / 2) + ' 0 ' + vbW + ' 300');
-            }
-
-            /* ── Poussière ── */
-            function seed() {
-                const n = Math.round(Math.min(190, Math.max(70, (W * H) / 5200)));
-                parts = [];
-                for (let i = 0; i < n; i++) {
-                    parts.push({
-                        x: Math.random() * W, y: Math.random() * H,
-                        vx: (Math.random() - .5) * .12,
-                        vy: -0.02 - Math.random() * 0.10,
-                        r: 0.5 + Math.random() * 1.5,
-                        a: 0.12 + Math.random() * 0.45,
-                        ph: Math.random() * Math.PI * 2,
-                        sp: 0.4 + Math.random() * 1.1,
-                        hi: Math.random() < 0.20,   // éclat : lavande plus claire
-                        n: -1,                       // nébuleuse assignée en gather
-                        // ~15 % rejoignent un courant de poussière à partir du 2e temps
-                        cb: i % 7 === 0 ? i : -1,    // bande (modulo le nombre de courants)
-                        co: (Math.random() - .5) * 0.035,   // écart à la bande, en fraction de H
-                        cs: 0.8 + Math.random() * 0.45       // vitesse propre
-                    });
-                }
-            }
-
-            function spawnDust(x, y) {
-                // Plafond atteint : on retire la plus ancienne poussière ordinaire,
-                // jamais une particule de courant (sinon les courants s'éteignent).
-                if (parts.length >= CAP) {
-                    const k = parts.findIndex(q => q.cb < 0);
-                    parts.splice(k < 0 ? 0 : k, 1);
-                }
-                parts.push({
-                    x, y,
-                    vx: (Math.random() - .5) * .10,
-                    vy: -0.05 - Math.random() * 0.09,
-                    r: 0.6 + Math.random() * 1.2,
-                    a: 0.30 + Math.random() * 0.35,
-                    ph: Math.random() * Math.PI * 2,
-                    sp: 0.4 + Math.random() * 1.1,
-                    hi: Math.random() < 0.20,
-                    n: -1, cb: -1
-                });
-                // Émise pendant gather : rattachée tout de suite à sa nébuleuse.
-                if (mode === 'gather' || mode === 'presence') assignNebula(parts[parts.length - 1]);
-            }
-
-            /* ── Nébuleuses ──
-               Trois dépôts posés sur la ville, à des hauteurs inégales.
-               La deuxième, la plus dense, devient le point de convergence. */
-            const NEB_DEF = [
-                { fx: 0.22, lift: 0.04, fr: 0.09, max: 0.70, br: 0.55, ph: 0.0 },
-                { fx: 0.52, lift: 0.09, fr: 0.13, max: 1.00, br: 0.42, ph: 2.1 },
-                { fx: 0.78, lift: 0.05, fr: 0.08, max: 0.60, br: 0.67, ph: 4.0 }
-            ];
-            let nebulas = NEB_DEF.map(() => ({ x: 0, y: 0, r: 0, d: 0 }));
-            let rise = 0;          // montée de la nébuleuse centrale, 0 → 1
-            let modeT = 0;         // temps écoulé dans le mode courant
-
-            function placeNebulas() {
-                const m = Math.min(W, H);
-                NEB_DEF.forEach((def, i) => {
-                    const nb = nebulas[i];
-                    nb.x = W * def.fx;
-                    nb.y = ground - H * def.lift - (i === 1 ? H * 0.06 * rise : 0);
-                    nb.r = m * def.fr;
-                });
-            }
-
-            /* ── Courants de poussière ──
-               Bandes ondulantes au-dessus de la ville, que suivent les particules
-               de courant à partir du 2e temps. En gather, elles se déversent
-               dans les nébuleuses et y tourbillonnent. */
-            let currents = [];
-            let curOn = 0;         // présence des courants, 0 → 1 dès settle
-
-            function placeCurrents() {
-                const lifts = W < 520 ? [0.14, 0.26] : [0.14, 0.26, 0.40];
-                const sp = (0.7 + W * 0.0006) * (reduce ? 0.5 : 1);
-                currents = lifts.map((l, i) => ({
-                    y: ground - H * l,
-                    amp: H * 0.03,
-                    k: 6.2832 / (W * 0.8),
-                    w: 0.35 + i * 0.12,
-                    ph: i * 1.9,
-                    v: sp * (i % 2 ? -1 : 1)
+            function seedBlobs(){
+                // Sept masses molles, décentrées et de tailles inégales. Leur recouvrement
+                // fait la silhouette : aucune n'a de contour propre.
+                blobs=Array.from({length:7},(_,i)=>({
+                    dx:(Math.random()-.5)*1.5,
+                    dy:(Math.random()-.5)*.85,
+                    rs:.55+Math.random()*.85,
+                    sp:.10+Math.random()*.22,
+                    ph:Math.random()*6.283,
+                    amp:.10+Math.random()*.22,
+                    w:.55+Math.random()*.5
                 }));
             }
 
-            function assignNebula(p) {
-                let best = 0, bd = Infinity;
-                nebulas.forEach((nb, i) => {
-                    const d = Math.hypot(nb.x - p.x, nb.y - p.y);
-                    if (d < bd) { bd = d; best = i; }
-                });
-                p.n = best;
-                p.mig = -1;
-            }
-
-            function enterGather() {
-                modeT = 0;
-                parts.forEach(assignNebula);
-            }
-
-            function enterPresence() {
-                modeT = 0;
-                // Une partie des particules latérales migre vers la centrale,
-                // chacune à son heure ; le reste garde les latérales visibles.
-                parts.forEach(p => {
-                    if (p.n < 0) assignNebula(p);
-                    p.mig = (p.n !== 1 && Math.random() < 0.65) ? Math.random() * (reduce ? 1.5 : 8) : -1;
-                });
-            }
-
-            function drawNebulas() {
-                const ramp = reduce ? 1 : 6;
-                for (let i = 0; i < nebulas.length; i++) {
-                    const def = NEB_DEF[i], nb = nebulas[i];
-                    let target = 0;
-                    if (mode === 'gather') target = def.max * Math.min(1, modeT / ramp);
-                    else if (mode === 'presence') target = i === 1 ? 1 : def.max * 0.45;
-                    nb.d += (target - nb.d) * (mode === 'presence' ? 0.01 : 0.05);
-                    if (nb.d < 0.005) continue;
-                    const breath = 0.82 + 0.18 * Math.sin(t * def.br + def.ph);
-                    const al = 0.22 * nb.d * breath;
-                    const R = nb.r * 2.2;
-                    const g = ctx.createRadialGradient(nb.x, nb.y, 0, nb.x, nb.y, R);
-                    g.addColorStop(0,    'rgba(124,58,237,' + al.toFixed(3) + ')');
-                    g.addColorStop(0.35, 'rgba(124,58,237,' + (al * 0.6).toFixed(3) + ')');
-                    g.addColorStop(1,    'rgba(124,58,237,0)');
-                    ctx.fillStyle = g;
-                    ctx.fillRect(nb.x - R, nb.y - R, R * 2, R * 2);
-                }
-            }
-
-            /* ── Marcheurs ── */
-            function seedWalkers() {
-                const n = W < 520 ? 3 : 5;
-                walkers = [];
-                for (let i = 0; i < n; i++) {
-                    const dir = Math.random() < .5 ? 1 : -1;
-                    walkers.push({
-                        x: Math.random() * W, dir,
-                        sp: (0.16 + Math.random() * 0.16) * dir,
-                        sc: 0.78 + Math.random() * 0.5,
-                        ph: Math.random() * Math.PI * 2,
-                        next: 1.2 + Math.random() * 2.6
+            function seedAmbient(){
+                // Point 2 du découpage : le premier plan montre déjà de la poussière en
+                // suspension, avant que l'on comprenne d'où elle vient.
+                motes=[];
+                for(let i=0;i<42;i++){
+                    motes.push({
+                        x:Math.random()*W, y:H*(.22+Math.random()*.62),
+                        vx:(Math.random()-.5)*.10, vy:-.03-Math.random()*.06,
+                        r:.7+Math.random()*1.2, a:.28+Math.random()*.3,
+                        hi:Math.random()<.22, ph:Math.random()*6.283, sp:.4+Math.random()*1,
+                        life:1
                     });
                 }
             }
 
-            function drawWalkers() {
-                if (walkAlpha < 0.01) return;
-                const base = ground;
-                ctx.save();
-                ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-                for (const w of walkers) {
-                    const h = walkH * w.sc;
-                    const gait = Math.sin(t * 2.3 + w.ph);
-                    const bob = Math.abs(Math.cos(t * 2.3 + w.ph)) * h * 0.035;
-                    // Le balancement soulève le corps, jamais les appuis : avec
-                    // les pieds sur y, chaque pas les décollait du sol.
-                    const x = w.x, y = base - bob;
-                    const headR = h * 0.13;
-                    ctx.strokeStyle = 'rgba(205,191,168,' + (walkAlpha * 0.5).toFixed(3) + ')';
-                    ctx.lineWidth = Math.max(1, h * 0.055);
-                    ctx.beginPath(); ctx.arc(x, y - h * 0.90, headR, 0, 6.2832); ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(x, y - h * 0.77); ctx.lineTo(x - w.dir * h * 0.04, y - h * 0.38);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(x - w.dir * h * 0.04, y - h * 0.38); ctx.lineTo(x + gait * h * 0.16, base);
-                    ctx.moveTo(x - w.dir * h * 0.04, y - h * 0.38); ctx.lineTo(x - gait * h * 0.16, base);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(x, y - h * 0.68); ctx.lineTo(x - gait * h * 0.13, y - h * 0.40);
-                    ctx.stroke();
+            function seedWindows(){
+                // Fenêtres des immeubles : elles s'allument et s'éteignent lentement,
+                // ce qui donne à la ville une vie propre sans rien ajouter au dessin.
+                const cells=[];
+                const push=(x0,x1,y0,y1,cols,rows)=>{
+                    for(let i=0;i<cols;i++) for(let j=0;j<rows;j++)
+                        cells.push({ x:x0+(x1-x0)*(i+.5)/cols, y:y0+(y1-y0)*(j+.5)/rows,
+                                     w:(x1-x0)/cols*.42, h:(y1-y0)/rows*.36 });
+                };
+                push(.590,.641,.732,.784,3,4);      // grand bâtiment
+                push(.804,.825,.762,.790,2,3);      // tour au loin
+                windows=cells.map(c=>({...c, on:Math.random()<.45, next:1+Math.random()*9}));
+            }
 
-                    w.x += w.sp;
-                    if (w.x < -40) w.x = W + 30;
-                    if (w.x > W + 40) w.x = -30;
-                    w.next -= 0.016;
-                    if (w.next <= 0 && mode !== 'presence') {
-                        w.next = 1.6 + Math.random() * 3.2;
-                        spawnDust(x + (Math.random() - .5) * headR, y - h * 0.92);
+            function seedStars(){
+                stars=Array.from({length:70},()=>({
+                    x:Math.random(), y:.04+Math.random()*.68,
+                    r:.3+Math.random()*1.1, a:.10+Math.random()*.4,
+                    sp:.4+Math.random()*1.4, ph:Math.random()*6.283
+                }));
+            }
+
+            function seedWalkers(){
+                const n = W<520?4:5;
+                walkers=[];
+                for(let i=0;i<n;i++){
+                    const dir = Math.random()<.5?1:-1;
+                    walkers.push({
+                        x:(i+.5)/n*W + (Math.random()-.5)*W*.1,
+                        dir, sp:(.16+Math.random()*.14)*dir,
+                        sc:.8+Math.random()*.45, ph:Math.random()*6.283,
+                        next:.5+Math.random()*1.4, alpha:1,
+                        headY:0, headR:6,
+                        amp:1, gold:false, chosen:false, leaving:false, stopping:false, target:null
+                    });
+                }
+            }
+
+            /* ── Poussière ── */
+            function emit(x,y){
+                if(motes.length>=CAP) motes.shift();
+                motes.push({
+                    x, y,
+                    vx:(Math.random()-.5)*.22,
+                    vy:-.22-Math.random()*.22,
+                    r:.9+Math.random()*1.4,
+                    a:.55+Math.random()*.4,
+                    hi:Math.random()<.28,
+                    ph:Math.random()*6.283, sp:.5+Math.random()*1.1,
+                    life:0
+                });
+            }
+            function dock(){
+                docked.push({ ang:Math.random()*6.283, rad:Math.random(), sp:.15+Math.random()*.5,
+                              r:.7+Math.random()*1.1, hi:Math.random()<.4 });
+                deposit++;
+            }
+            function nebRadius(){ return Math.min(W,H)*(.035+Math.min(deposit,110)*.0011); }
+
+            /* ── Dessin ── */
+            function drawSky(){
+                const g=ctx.createRadialGradient(W*.5,H*.56,0,W*.5,H*.5,Math.max(W,H)*.78);
+                g.addColorStop(0,'#111a39'); g.addColorStop(.45,'#0a1026'); g.addColorStop(1,'#050817');
+                ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+                for(const s of stars){
+                    const a=s.a*(.7+.3*Math.sin(t*s.sp+s.ph));
+                    ctx.fillStyle='rgba(173,175,214,'+a.toFixed(3)+')';
+                    ctx.beginPath(); ctx.arc(s.x*W,s.y*H,s.r,0,6.2832); ctx.fill();
+                }
+            }
+
+            function drawCity(fade){
+                ctx.save();
+                ctx.globalAlpha=1-fade;
+                ctx.strokeStyle='rgba(205,191,168,.58)';
+                ctx.lineWidth=1.1; ctx.lineCap='round'; ctx.lineJoin='round';
+
+                ctx.beginPath();
+                SKY.forEach((p,i)=>{ const x=p[0]*W,y=p[1]*H; i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+                ctx.stroke();
+
+                const g=groundY, seg=(x1,y1,x2,y2)=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();};
+
+                seg(.10*W,.788*H,.125*W,.742*H); seg(.125*W,.742*H,.15*W,.788*H);
+                seg(.132*W,.742*H,.132*W,.726*H);
+                seg(.235*W,.790*H,.245*W,.735*H); seg(.245*W,.735*H,.255*W,.790*H);
+                seg(.239*W,.762*H,.251*W,.762*H); seg(.245*W,.735*H,.245*W,.726*H);
+                seg(.33*W,.788*H,.355*W,.770*H); seg(.355*W,.770*H,.38*W,.788*H);
+                seg(.39*W,.792*H,.415*W,.774*H); seg(.415*W,.774*H,.44*W,.792*H);
+                seg(.585*W,.790*H,.585*W,.724*H); seg(.585*W,.724*H,.645*W,.724*H);
+                seg(.645*W,.724*H,.645*W,.790*H); seg(.612*W,.724*H,.612*W,.712*H);
+                seg(.80*W,.795*H,.80*W,.755*H); seg(.80*W,.755*H,.828*W,.755*H); seg(.828*W,.755*H,.828*W,.795*H);
+
+                ctx.globalAlpha=(1-fade)*.5; seg(0,g+H*.016,W,g+H*.013);
+                ctx.globalAlpha=(1-fade)*.28; seg(0,g+H*.028,W,g+H*.025);
+
+                ctx.globalAlpha=1-fade;
+                for(const win of windows){
+                    win.next-=.016;
+                    if(win.next<=0){ win.on=!win.on; win.next=3+Math.random()*12; }
+                    win.a=(win.a===undefined?0:win.a)+((win.on?1:0)-(win.a||0))*.02;
+                    if(win.a>.01){
+                        ctx.fillStyle='rgba(227,196,143,'+(win.a*.5).toFixed(3)+')';
+                        ctx.fillRect(win.x*W,win.y*H,Math.max(1.2,win.w*W),Math.max(1.4,win.h*H));
                     }
                 }
                 ctx.restore();
             }
 
-            /* ── Boucle ── */
-            function step() {
-                if (!running) return;
-                t += 0.016;
-                ctx.clearRect(0, 0, W, H);
-
-                walkTarget = (mode === 'drift') ? 1 : (mode === 'settle') ? 0.85
-                           : (mode === 'gather') ? 0.35 : 0;
-                walkAlpha += (walkTarget - walkAlpha) * 0.012;
-
-                modeT += 0.016;
-                if (mode === 'presence' && rise < 1) {
-                    rise = Math.min(1, rise + 0.016 / (reduce ? 1 : 4));
-                    placeNebulas();
-                }
-                // Ordre : nébuleuses, marcheurs, particules. Le voile violet ne
-                // passe jamais sur le trait papier.
-                drawNebulas();
-                drawWalkers();
-
-                curOn += ((mode === 'drift' ? 0 : 1) - curOn) * 0.01;
-                ctx.lineCap = 'round';
-
-                for (const p of parts) {
-                    const isCur = p.cb >= 0 && curOn > 0.01;
-                    if (isCur && mode === 'settle') {
-                        // Suit sa bande : vitesse horizontale commune, ondulation
-                        // verticale ; le pilotage progressif (curOn) évite tout à-coup.
-                        const c = currents[p.cb % currents.length];
-                        const ty = c.y + H * p.co + c.amp * Math.sin(p.x * c.k + t * c.w + c.ph);
-                        const k = 0.03 * curOn;
-                        p.vx += (c.v * p.cs - p.vx) * k;
-                        p.vy += ((ty - p.y) * 0.02 - p.vy) * k;
-                        p.x += p.vx; p.y += p.vy;
-                    } else if (isCur) {
-                        // gather / presence : se déverse dans sa nébuleuse et y tourbillonne.
-                        if (p.n < 0) assignNebula(p);
-                        if (p.mig >= 0 && modeT >= p.mig) { p.n = 1; p.mig = -1; }
-                        const nb = nebulas[p.n];
-                        const dx = nb.x - p.x, dy = nb.y - p.y;
-                        const d = Math.hypot(dx, dy) || 1;
-                        const s = reduce ? 0.5 : 1;
-                        p.vx += (dx / d) * 0.016 * s; p.vy += (dy / d) * 0.016 * s;
-                        p.vx += (-dy / d) * 0.010 * s; p.vy += (dx / d) * 0.010 * s;
-                        p.vx *= 0.975; p.vy *= 0.975;
-                        p.x += p.vx; p.y += p.vy;
-                    } else if (mode === 'drift') {
-                        p.x += p.vx; p.y += p.vy;
-                    } else if (mode === 'settle') {
-                        p.vy += 0.0016;
-                        p.vy = Math.min(p.vy, 0.34);
-                        p.x += p.vx * 0.7; p.y += p.vy;
-                        const floor = ground;
-                        if (p.y > floor) { p.y = floor - Math.random() * 2; p.vy *= -0.12; }
+            function drawWalker(w){
+                const h=Math.min(H,W)*.085*w.sc;
+                const amp=(w.amp===undefined?1:w.amp);
+                const gait=Math.sin(t*2.3+w.ph)*amp, bob=Math.abs(Math.cos(t*2.3+w.ph))*h*.035*amp;
+                const x=w.x, y=groundY-bob, R=h*.13;
+                w.headY=y-h*.90; w.headR=R;
+                if(w.alpha<=.01 && !(w.chosen && !ring)) return;
+                ctx.save();
+                ctx.globalAlpha=(w.chosen && !ring) ? Math.max(w.alpha,.0) : w.alpha;
+                ctx.lineCap='round'; ctx.lineJoin='round';
+                ctx.lineWidth=Math.max(1,h*.055);
+                if(!(w.chosen && ring)){
+                    if(w.gold){
+                        ctx.save();
+                        ctx.strokeStyle='rgba(214,163,23,.78)';
+                        ctx.shadowColor='rgba(214,163,23,.45)'; ctx.shadowBlur=10;
+                        ctx.beginPath(); ctx.arc(x,w.headY,R,0,6.2832); ctx.stroke();
+                        ctx.restore();
                     } else {
-                        if (p.n < 0) assignNebula(p);
-                        if (p.mig >= 0 && modeT >= p.mig) { p.n = 1; p.mig = -1; }
-                        const nb = nebulas[p.n];
-                        const dx = nb.x - p.x, dy = nb.y - p.y;
-                        const d = Math.hypot(dx, dy) || 1;
-                        const pull = mode === 'presence' ? 0.0075 : 0.0040;
-                        p.vx += (dx / d) * pull; p.vy += (dy / d) * pull;
-                        p.vx += (-dy / d) * 0.0016; p.vy += (dx / d) * 0.0016;
-                        p.vx *= 0.975; p.vy *= 0.975;
-                        p.x += p.vx; p.y += p.vy;
-                        if (d < nb.r * 0.55) { p.vx *= 0.94; p.vy *= 0.94; }
+                        ctx.strokeStyle='rgba(205,191,168,.52)';
+                        ctx.beginPath(); ctx.arc(x,w.headY,R,0,6.2832); ctx.stroke();
                     }
+                }
+                ctx.strokeStyle='rgba(205,191,168,.52)';
+                ctx.beginPath(); ctx.moveTo(x,y-h*.77); ctx.lineTo(x-w.dir*h*.04,y-h*.38); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x-w.dir*h*.04,y-h*.38); ctx.lineTo(x+gait*h*.16,y);
+                ctx.moveTo(x-w.dir*h*.04,y-h*.38); ctx.lineTo(x-gait*h*.16,y);
+                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x,y-h*.68); ctx.lineTo(x-gait*h*.13,y-h*.40); ctx.stroke();
+                ctx.restore();
+            }
 
-                    if (p.x < -12) p.x = W + 12;
-                    if (p.x > W + 12) p.x = -12;
-                    if (p.y < -12) { p.y = H + 12; p.vy = -0.02 - Math.random() * 0.1; }
-                    if (p.y > H + 40 && mode === 'drift') p.y = -10;
-
-                    const tw = 0.55 + 0.45 * Math.sin(t * p.sp + p.ph);
-                    const al = p.a * tw * (mode === 'presence' ? 1.25 : 1);
-                    if (isCur) {
-                        // Violet franc (#8b5cf6) atteint progressivement depuis la
-                        // lavande, plus une traînée courte proportionnelle à la vitesse.
-                        const r = Math.round(167 - 28 * curOn), g = Math.round(139 - 47 * curOn);
-                        const ca = Math.min(0.9, al + 0.25 * curOn).toFixed(3);
-                        const col = 'rgba(' + r + ',' + g + ',' + (250 - Math.round(4 * curOn)) + ',' + ca + ')';
-                        const L = 7 * curOn;
-                        ctx.strokeStyle = col;
-                        ctx.lineWidth = p.r * 1.3;
-                        ctx.beginPath();
-                        ctx.moveTo(p.x - p.vx * L, p.y - p.vy * L);
-                        ctx.lineTo(p.x, p.y);
-                        ctx.stroke();
-                        continue;
+            function stepWalkers(){
+                for(const w of walkers){
+                    if(w.target!==null){
+                        const d=w.target-w.x;
+                        if(Math.abs(d)<2.5){
+                            w.sp=0; w.x=w.target; w.target=null;
+                            w.dir=Math.sign(NEB.x*W-w.x)||1;                 // il fait face à la nébuleuse
+                            if(w.chosen && !cardAt) cardAt=performance.now()+700;
+                        }
+                        else w.sp=Math.sign(d)*Math.min(.9,Math.abs(d)*.02+.12);
+                        if(w.sp) w.dir=Math.sign(w.sp);
                     }
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, 6.2832);
-                    ctx.fillStyle = p.hi
-                        ? 'rgba(221,214,254,' + al.toFixed(3) + ')'
-                        : 'rgba(167,139,250,' + al.toFixed(3) + ')';
+                    else if(w.stopping) w.sp*=.94;
+                    else if(w.leaving){ w.sp*=1.012; w.alpha=Math.max(0,w.alpha-.006); }
+                    w.amp=(w.amp===undefined?1:w.amp)+((Math.abs(w.sp)>.02?1:0)-(w.amp===undefined?1:w.amp))*.06;
+                    w.x+=w.sp;
+                    // Le passant qui rejoint la nébuleuse ne boucle pas : il naît hors cadre
+                    // à droite, et un rebouclage le ferait réapparaître à gauche.
+                    if(!w.leaving && !w.stopping && w.target===null && !w.chosen){
+                        if(w.x<-40) w.x=W+30;
+                        if(w.x>W+40) w.x=-30;
+                    }
+                    drawWalker(w);
+                    if(emitting && !w.leaving && w.alpha>.3){
+                        w.next-=.016;
+                        if(w.next<=0){
+                            w.next=.55+Math.random()*1.3;
+                            emit(w.x+(Math.random()-.5)*w.headR*1.4, w.headY-w.headR*.8);
+                        }
+                    }
+                }
+            }
+
+            function stepMotes(){
+                for(let i=motes.length-1;i>=0;i--){
+                    const m=motes[i];
+                    m.life+=.016;
+                    if(seeking){
+                        const dx=NEB.x*W-m.x, dy=NEB.y-m.y, d=Math.hypot(dx,dy)||1;
+                        m.vx+=(dx/d)*.020; m.vy+=(dy/d)*.020;
+                        m.vx+=(-dy/d)*.004; m.vy+=(dx/d)*.004;
+                        m.vx*=.975; m.vy*=.975;
+                        if(d<nebRadius()*.8){ motes.splice(i,1); dock(); continue; }
+                    } else {
+                        m.vy+=.0012;
+                        m.vx*=.995; m.vy*=.995;
+                    }
+                    m.x+=m.vx; m.y+=m.vy;
+                    if(m.y>groundY+6){ m.y=groundY+6; m.vy*=-.1; }
+                    const tw=.6+.4*Math.sin(t*m.sp+m.ph);
+                    const a=m.a*tw*Math.min(1,m.life*1.6);
+                    ctx.beginPath(); ctx.arc(m.x,m.y,m.r,0,6.2832);
+                    ctx.fillStyle=(m.hi?'rgba(221,214,254,':'rgba(167,139,250,')+a.toFixed(3)+')';
                     ctx.fill();
                 }
+            }
 
-                if (mode === 'presence') {
-                    // Halo de fin sur la nébuleuse centrale ; rayon 2,2× (et non
-                    // 2,6×) pour ne pas avaler le bouton « Commencer ».
-                    const c = nebulas[1];
-                    const pulse = 1 + 0.06 * Math.sin(t * 1.25);
-                    const R = c.r * 2.2 * pulse;
-                    const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, R);
-                    g.addColorStop(0, 'rgba(124,58,237,0.20)');
-                    g.addColorStop(1, 'rgba(124,58,237,0)');
-                    ctx.fillStyle = g;
-                    ctx.fillRect(c.x - R, c.y - R, R * 2, R * 2);
+            function drawNebula(){
+                if(deposit<1) return;
+                const r=nebRadius(), x=NEB.x*W, y=NEB.y;
+                const k=Math.min(1,deposit/45);
+
+                ctx.save();
+                ctx.globalCompositeOperation='lighter';   // les masses se mêlent au ciel
+
+                // voile très large, sans bord perceptible
+                const veil=ctx.createRadialGradient(x,y,0,x,y,r*5.2);
+                veil.addColorStop(0,'rgba(104,52,190,'+(.10*k).toFixed(3)+')');
+                veil.addColorStop(.55,'rgba(94,40,170,'+(.04*k).toFixed(3)+')');
+                veil.addColorStop(1,'rgba(80,30,150,0)');
+                ctx.fillStyle=veil;
+                ctx.fillRect(x-r*5.4,y-r*5.4,r*10.8,r*10.8);
+
+                // masses molles, dérive lente et respiration désynchronisée
+                for(const b of blobs){
+                    const br=r*b.rs*(1+b.amp*Math.sin(t*b.sp*2.1+b.ph));
+                    const bx=x+b.dx*r*(1+.10*Math.sin(t*b.sp+b.ph));
+                    const by=y+b.dy*r*(1+.14*Math.cos(t*b.sp*1.3+b.ph));
+                    const g=ctx.createRadialGradient(bx,by,0,bx,by,br*2.4);
+                    g.addColorStop(0,'rgba(150,84,240,'+(.115*k*b.w).toFixed(3)+')');
+                    g.addColorStop(.35,'rgba(126,60,216,'+(.070*k*b.w).toFixed(3)+')');
+                    g.addColorStop(.7,'rgba(100,42,180,'+(.026*k*b.w).toFixed(3)+')');
+                    g.addColorStop(1,'rgba(90,35,165,0)');
+                    ctx.fillStyle=g;
+                    ctx.fillRect(bx-br*2.5,by-br*2.5,br*5,br*5);
                 }
+                ctx.restore();
 
-                rafId = requestAnimationFrame(step);
+                for(const d of docked){
+                    const ang=d.ang+t*d.sp*.35;
+                    const px=x+Math.cos(ang)*r*d.rad*1.5;
+                    const py=y+Math.sin(ang*1.25)*r*d.rad*.95;
+                    const a=(d.hi?.7:.4)*(.6+.4*Math.sin(t*d.sp+d.ang));
+                    ctx.beginPath(); ctx.arc(px,py,d.r,0,6.2832);
+                    ctx.fillStyle=(d.hi?'rgba(238,230,255,':'rgba(176,144,255,')+a.toFixed(3)+')';
+                    ctx.fill();
+                }
             }
 
-            /* ── Texte ── */
-            function clearLines(done) {
-                const olds = [...textEl.children];
-                if (!olds.length) { done && done(); return; }
-                olds.forEach(el => { el.classList.remove('on'); el.classList.add('out'); });
-                later(() => { olds.forEach(el => el.remove()); done && done(); }, reduce ? 200 : 900);
+            function drawCard(){
+                if(!cardAt) return;
+                const w=walkers.find(v=>v.chosen);
+                if(!w) return;
+                const k=smooth(0,900,performance.now()-cardAt);
+                if(k<=0) return;
+                const h=Math.min(H,W)*.085*w.sc;
+                const side=w.dir||((w.x<NEB.x*W)?1:-1);        // la carte se tient du côté où il regarde
+                const x=w.x+side*h*.34, y=(groundY-h*.40)+(1-k)*h*.30;
+                const cw=h*.30, ch=cw*1.45, rot=side*(.34-.12*k);
+                const a=k*Math.max(0,Math.min(1,w.alpha));
+                ctx.save();
+                ctx.globalAlpha=a;
+                ctx.translate(x,y); ctx.rotate(rot);
+                const g=ctx.createLinearGradient(0,-ch/2,0,ch/2);
+                g.addColorStop(0,'rgba(120,60,200,.34)'); g.addColorStop(1,'rgba(70,32,140,.22)');
+                ctx.fillStyle=g;
+                ctx.fillRect(-cw/2,-ch/2,cw,ch);
+                ctx.lineWidth=Math.max(1,cw*.075);
+                ctx.strokeStyle='rgba(214,163,23,.72)';
+                ctx.strokeRect(-cw/2,-ch/2,cw,ch);
+                ctx.strokeStyle='rgba(221,214,254,.45)';
+                ctx.lineWidth=Math.max(.8,cw*.045);
+                ctx.strokeRect(-cw*.36,-ch*.36,cw*.72,ch*.72);
+                ctx.beginPath();                                // petite spirale, comme sur vos cartes
+                for(let i=0;i<34;i++){
+                    const an=i*.42, rr=cw*.035*an*.42;
+                    const px=Math.cos(an)*rr, py=Math.sin(an)*rr*1.15;
+                    i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+                }
+                ctx.strokeStyle='rgba(221,214,254,.6)'; ctx.lineWidth=Math.max(.7,cw*.035); ctx.stroke();
+                ctx.restore();
             }
 
-            function showLines(lines, done) {
-                lines.forEach((html, i) => {
-                    const el = document.createElement('span');
-                    el.className = 'i2-line';
-                    // T() AVANT insertion : la clé de la 3e ligne porte la balise
-                    // <em>, que translateNode ne verrait jamais d'un seul tenant.
-                    el.innerHTML = T(html);
+            function drawRing(){
+                if(!ring) return;
+                ctx.save();
+                ctx.lineWidth=ring.lw;
+                ctx.strokeStyle='rgba('+ring.col+','+ring.a.toFixed(3)+')';
+                if(ring.glow>0){
+                    ctx.shadowColor='rgba(214,163,23,'+(ring.glow*.7).toFixed(3)+')';
+                    ctx.shadowBlur=24*ring.glow;
+                }
+                ctx.beginPath();
+                ctx.ellipse(ring.x,ring.y,Math.max(.5,ring.rx-ring.lw/2),Math.max(.5,ring.ry-ring.lw/2),0,0,6.2832);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            /* ═══════════ Boucle ═══════════ */
+            // running : testé en tête de frame() et de fly(). Faux hors de
+            // l'intro, pour que le canvas ne demande plus aucune frame.
+            let running=false, rafId=0, ringRaf=0;
+            function frame(){
+                if(!running) return;
+                t+=.016;
+                const appear = smooth(500,3400,performance.now()-startedAt);
+                const cityFade = 1-appear + ((beat>=8) ? smooth(300,2600,since())*.5 : 0);
+                drawSky();
+                drawCity(Math.min(1,cityFade));
+                drawNebula();
+                stepWalkers();
+                stepMotes();
+                drawCard();
+                drawRing();
+                rafId=requestAnimationFrame(frame);
+            }
+
+            /* ═══════════ Texte ═══════════ */
+            function clearLines(done){
+                const olds=[...textEl.children];
+                if(!olds.length){ done&&done(); return; }
+                olds.forEach(el=>{el.classList.remove('on');el.classList.add('out');});
+                later(()=>{olds.forEach(el=>el.remove()); done&&done();}, reduce?180:760);
+            }
+            function showLines(lines,done){
+                lines.forEach((html,i)=>{
+                    const el=document.createElement('span');
+                    el.className='i2-line'; el.innerHTML=T(html);
                     textEl.appendChild(el);
-                    later(() => el.classList.add('on'), reduce ? 40 * i : 260 + i * 900);
+                    later(()=>el.classList.add('on'), reduce?40*i:200+i*800);
                 });
-                later(() => done && done(), reduce ? 300 : 600 + lines.length * 900);
+                later(()=>done&&done(), reduce?260:520+lines.length*800);
             }
 
-            /* ── Enchaînement ── */
-            function advance() {
-                if (!running || busy) return;
-                if (beat >= BEATS.length - 1) return;
-                busy = true;
-                hintEl.classList.remove('on');
+            /* ═══════════ Anneau final ═══════════ */
+            function launchRing(){
+                const w = walkers.find(v=>v.chosen);
+                if(!w) return;
 
-                clearLines(() => {
-                    beat++;
-                    const b = BEATS[beat];
-                    mode = b.mode;
-                    if (beat === 1) horizonEl.classList.add('on');
-                    if (mode === 'gather') enterGather();
-                    if (mode === 'presence') enterPresence();
+                // On mesure le O réel de la police plutôt que de deviner : l'anneau doit
+                // s'emboîter dans le mot, pas se poser à côté.
+                const rect=gapEl.getBoundingClientRect(), box=cv.getBoundingClientRect();
+                const cs=getComputedStyle(oEl);
+                let rx=rect.width*.42, ry=rx, cx=rect.left-box.left+rect.width/2,
+                    cy=rect.top-box.top+rect.height*.55, lw=rx*.26;
+                try{
+                    ctx.save();
+                    ctx.font=cs.fontStyle+' '+cs.fontWeight+' '+cs.fontSize+' '+cs.fontFamily;
+                    const m=ctx.measureText('o');
+                    const fAsc=m.fontBoundingBoxAscent, fDesc=m.fontBoundingBoxDescent;
+                    const iAsc=m.actualBoundingBoxAscent, iDesc=m.actualBoundingBoxDescent;
+                    const iL=m.actualBoundingBoxLeft, iR=m.actualBoundingBoxRight;
+                    if(iAsc && fAsc){
+                        const baseline=rect.top-box.top+(rect.height-(fAsc+fDesc))/2+fAsc;
+                        ry=(iAsc+iDesc)/2;
+                        cy=baseline-(iAsc-iDesc)/2;
+                        rx=(iL+iR)/2 || rect.width*.42;
+                        cx=rect.left-box.left+(iR-iL)/2+ (rect.width-(iL+iR))/2;
+                        lw=Math.max(2,ry*.24);
+                    }
+                    ctx.restore();
+                }catch(e){}
 
-                    if (b.mode === 'presence') {
-                        says.forEach((el, i) =>
-                            later(() => el.classList.add('on'), reduce ? 100 + i * 150 : 1500 + i * 1250));
-                        later(() => startEl.classList.add('on'), reduce ? 500 : 4200);
-                        busy = false;
+                const from={x:w.x, y:w.headY, r:w.headR};
+                ring={x:from.x,y:from.y,rx:from.r,ry:from.r,lw:Math.max(1.4,from.r*.30),
+                      a:.55,col:'205,191,168',glow:0};
+                const T0=performance.now(), DUR=reduce?400:1900;
+                const c0=[205,191,168], c1=[214,163,23];
+
+                (function fly(){
+                    if(!ring || !running) return;
+                    const k=Math.min(1,(performance.now()-T0)/DUR);
+                    const e=k*k*(3-2*k);
+                    ring.x=from.x+(cx-from.x)*e;
+                    ring.y=from.y+(cy-from.y)*e - Math.sin(e*Math.PI)*H*.06;
+                    ring.rx=from.r+(rx-from.r)*e;
+                    ring.ry=from.r+(ry-from.r)*e;
+                    ring.lw=Math.max(1.4,from.r*.30+(lw-from.r*.30)*e);
+                    ring.a=.55+.45*e;
+                    ring.glow=smooth(.25,.75,k);
+                    const mix=smooth(.2,.8,k);
+                    ring.col=c0.map((v,i)=>Math.round(v+(c1[i]-v)*mix)).join(',');
+                    if(k<1) ringRaf=requestAnimationFrame(fly);
+                    else {
+                        // Relais : le vrai O typographique prend la place de l'anneau.
+                        oEl.classList.add('on');
+                        const fade=setInterval(()=>{
+                            if(!ring){ clearInterval(fade); return; }
+                            ring.a-=.06; ring.glow=Math.max(0,ring.glow-.05);
+                            if(ring.a<=0){ ring=null; clearInterval(fade); }
+                        },16);
+                        timers.push(fade);
+                    }
+                })();
+
+                later(()=>brandEl.classList.add('on'), reduce?200:1150);
+                later(()=>startEl.classList.add('on'), reduce?400:2700);
+            }
+
+            /* ═══════════ Enchaînement ═══════════ */
+            function advance(){
+                if(!running || !canAdvance || busy || beat>=BEATS.length-1) return;
+                busy=true; canAdvance=false; nextEl.classList.remove('on');
+
+                clearLines(()=>{
+                    beat++; phaseAt=performance.now();
+                    const b=BEATS[beat];
+
+                    if(beat===2) emitting=true;                       // point 8 : la poussière sort des têtes
+                    if(beat===4){                                     // point 12 : accrétion à un endroit
+                        seeking=true;
+                        for(const w of walkers) w.next=Math.min(w.next,.3);
+                    }
+                    if(beat===5) for(const w of walkers) w.leaving=true;   // les silhouettes quittent le cadre et ne reviennent pas
+
+                    if(b.kind==='exit'){
+                        // La nébuleuse a pris forme. Un passant à la tête d'or entre par la
+                        // droite et s'arrête juste devant elle, au pied du bâtiment.
+                        for(let i=0;i<26;i++) dock();                   // l'accrétion devient nébuleuse
+                        const h=Math.min(H,W)*.085;
+                        walkers.push({
+                            x:W+h*.8, dir:-1, sp:-.4, sc:1.02, ph:Math.random()*6.283,
+                            next:.6, alpha:1, headY:0, headR:h*.13,
+                            amp:1, gold:true, chosen:true, leaving:false, stopping:false,
+                            target:NEB.x*W-Math.max(W*.15,Math.min(H,W)*.17)
+                        });
+                        // Point 16 : on n'ouvre la suite qu'une fois la carte sortie.
+                        (function waitCard(){
+                            if(cardAt && performance.now()-cardAt > (reduce?200:1150)){
+                                busy=false; nextEl.classList.add('on'); canAdvance=true;
+                            } else later(waitCard,150);
+                        })();
                         return;
                     }
-                    showLines(b.lines, () => { busy = false; hintEl.classList.add('on'); });
+
+                    if(b.kind==='voice'){
+                        says.forEach((el,i)=>later(()=>el.classList.add('on'), reduce?100+i*120:400+i*1000));
+                        later(()=>{ busy=false; nextEl.classList.add('on'); canAdvance=true; }, reduce?400:2300);
+                        return;
+                    }
+
+                    if(b.kind==='brand'){
+                        says.forEach(el=>el.classList.remove('on'));
+                        emitting=false;
+                        const g=walkers.find(w=>w.chosen);
+                        if(g){
+                            const f=setInterval(()=>{ g.alpha-=.035; if(g.alpha<=0){g.alpha=0;clearInterval(f);} },16);
+                            timers.push(f);
+                        }
+                        later(launchRing, reduce?100:900);
+                        busy=false;
+                        return;
+                    }
+
+                    if(b.kind==='action'){
+                        later(()=>{ busy=false; nextEl.classList.add('on'); canAdvance=true; }, reduce?300:1900);
+                        return;
+                    }
+
+                    showLines(b.lines,()=>{ busy=false; nextEl.classList.add('on'); canAdvance=true; });
                 });
             }
 
+            /* ═══════════ Entrées ═══════════ */
+            let onTap=null, onNext=null, onKey=null, onResize=null;
+
             /* ── API ── */
-            function start() {
-                overlay   = $('intro2Overlay');
-                textEl    = $('intro2Text');
-                hintEl    = $('intro2Hint');
-                startEl   = $('intro2Start');
-                horizonEl = $('intro2Horizon');
-                says      = [$('intro2Say1'), $('intro2Say2')];
-                cv        = $('intro2Canvas');
-                ctx       = cv.getContext('2d');
-                reduce    = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            function start(){
+                overlay = $('intro2Overlay');
+                textEl  = $('intro2Text');
+                nextEl  = $('intro2Next');
+                startEl = $('intro2Start');
+                brandEl = $('intro2Brand');
+                gapEl   = $('intro2BrandGap');
+                oEl     = $('intro2BrandO');
+                fadeEl  = $('intro2Fadein');
+                says    = [$('intro2Say1'),$('intro2Say2')];
+                cv      = $('intro2Canvas');
+                ctx     = cv.getContext('2d');
+                reduce  = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
                 stop(true);                       // remise à zéro propre
                 overlay.classList.remove('hidden');
-                overlay.style.opacity = '';
-                overlay.style.transition = '';
-                textEl.innerHTML = '';
-                says.forEach(el => el.classList.remove('on'));
-                startEl.classList.remove('on');
-                horizonEl.classList.remove('on');
-                hintEl.classList.remove('on');
+                overlay.style.opacity=''; overlay.style.transition='';
+                textEl.innerHTML=''; says.forEach(el=>el.classList.remove('on'));
+                brandEl.classList.remove('on'); startEl.classList.remove('on');
+                oEl.classList.remove('on'); nextEl.classList.remove('on');
+                // Retour au noir sans transition, pour que le fondu d'entrée rejoue.
+                fadeEl.style.transition='none'; fadeEl.classList.remove('off');
+                void fadeEl.offsetWidth; fadeEl.style.transition='';
 
-                beat = -1; busy = false; mode = 'drift'; t = 0; walkAlpha = 0;
-                rise = 0; modeT = 0; curOn = 0; nebulas.forEach(nb => { nb.d = 0; });
-                running = true;
-                resize(); seed(); seedWalkers();
+                beat=-1; busy=false; canAdvance=false; emitting=false; seeking=false; deposit=0;
+                motes=[]; docked=[]; ring=null; cardAt=0; t=0;
+                running=true;
+                resize(); seedStars(); seedWalkers(); seedBlobs(); seedWindows(); seedAmbient();
+                startedAt=performance.now();
 
-                onTap = (e) => {
-                    if (e.target.id === 'intro2Start' || e.target.id === 'intro2Skip') return;
+                onTap=e=>{
+                    if(e.target.id==='intro2Start'||e.target.id==='intro2Skip') return;
                     advance();
                 };
-                onResize = () => { resize(); seedWalkers(); };
-                onKey = (e) => {
-                    if (!running) return;
-                    if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); advance(); }
+                onNext=e=>{e.stopPropagation();advance();};
+                onKey=e=>{
+                    if(!running) return;
+                    if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight'){e.preventDefault();advance();}
                 };
-                overlay.addEventListener('click', onTap);
-                window.addEventListener('resize', onResize);
-                window.addEventListener('keydown', onKey);
+                onResize=()=>{resize();};
+                overlay.addEventListener('click',onTap);
+                nextEl.addEventListener('click',onNext);
+                window.addEventListener('keydown',onKey);
+                window.addEventListener('resize',onResize);
 
-                rafId = requestAnimationFrame(step);
-                later(advance, 600);
+                later(()=>fadeEl.classList.add('off'),120);
+                rafId=requestAnimationFrame(frame);
+                canAdvance=true; later(()=>{canAdvance=true;advance();},2000);
             }
 
-            function stop(silent) {
-                running = false;
-                if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+            function stop(silent){
+                running=false;
+                if(rafId){ cancelAnimationFrame(rafId); rafId=0; }
+                if(ringRaf){ cancelAnimationFrame(ringRaf); ringRaf=0; }
                 clearTimers();
                 const ov = overlay || $('intro2Overlay');
-                if (ov) {
-                    if (onTap) ov.removeEventListener('click', onTap);
-                    if (!silent) ov.classList.add('hidden');
+                if(ov){
+                    if(onTap) ov.removeEventListener('click',onTap);
+                    if(!silent) ov.classList.add('hidden');
                 }
-                if (onResize) window.removeEventListener('resize', onResize);
-                if (onKey) window.removeEventListener('keydown', onKey);
-                onTap = onResize = onKey = null;
-                parts = []; walkers = [];
+                if(nextEl && onNext) nextEl.removeEventListener('click',onNext);
+                if(onKey) window.removeEventListener('keydown',onKey);
+                if(onResize) window.removeEventListener('resize',onResize);
+                onTap=onNext=onKey=onResize=null;
+                motes=[]; docked=[]; walkers=[]; ring=null;
             }
 
             return { start, stop };
@@ -15430,15 +15494,17 @@
         // Sauvegardé : évite de rejouer la cinématique après un rechargement en
         // plein tutoriel (bascule de langue, cf. toggleLanguage).
         let _introBDSeen = false;
-        let _introVariant = 'v2';   // 'v1' = cinématique BD, 'v2' = intro animée
+        let _introVariant = 'anim';   // 'bd' = cinématique BD, 'anim' = intro animée
 
         function startIntroBD() {
-            if (_introVariant === 'v2') {
+            if (_introVariant === 'anim') {
                 document.getElementById('introBDCinematic').classList.add('hidden');
                 Intro2.start();
                 return;
             }
-            document.getElementById('intro2Overlay').classList.add('hidden');
+            // Bascule depuis le panneau de test : l'intro animée peut tourner,
+            // on l'arrête (boucle, minuteurs, écouteurs) avant de lancer la BD.
+            Intro2.stop();
             _introBDStep = 0;
             _introBDCaseEls = {};
             const cinema = document.getElementById('introBDCinematic');
@@ -15537,7 +15603,7 @@
         }
 
         function finishIntroBD() {
-            if (_introVariant === 'v2') { _intro2Finish(); return; }
+            if (_introVariant === 'anim') { _intro2Finish(); return; }
             // Sortie de la cinématique — « Commencer l'aventure » ou « Passer ».
             // C'est le geste qui autorise la lecture audio : la musique
             // d'ambiance démarre ici, et nulle part avant.
@@ -15557,16 +15623,16 @@
         }
 
         function testToggleIntroVariant() {
-            _introVariant = (_introVariant === 'v2') ? 'v1' : 'v2';
+            _introVariant = (_introVariant === 'anim') ? 'bd' : 'anim';
             if (typeof saveProgress === 'function') saveProgress();
             _refreshIntroVariantBtn();
-            showToast(_introVariant === 'v2' ? '🎞️ Intro animée' : '🎬 Cinématique BD');
+            showToast(_introVariant === 'anim' ? '🎞️ Intro animée' : '🎬 Cinématique BD');
             startIntroBD();
         }
 
         function _refreshIntroVariantBtn() {
             const b = document.getElementById('btnIntroVariant');
-            if (b) b.textContent = (_introVariant === 'v2') ? '🎞️ Intro : animée' : '🎞️ Intro : BD';
+            if (b) b.textContent = (_introVariant === 'anim') ? '🎞️ Intro : animée' : '🎞️ Intro : BD';
         }
 
         function _intro2Finish() {
@@ -18337,7 +18403,8 @@
                 // Sauvegardes antérieures à ce champ : si la carte tutoriel a déjà
                 // été collectée, la BD a forcément été vue.
                 if (d._introBDSeen || d._obAct2Done) _introBDSeen = true;
-                                if (d._introVariant) _introVariant = d._introVariant;
+                // Anciennes valeurs 'v1' / 'v2' converties en 'bd' / 'anim'.
+                if (d._introVariant) _introVariant = ({ v1: 'bd', v2: 'anim' })[d._introVariant] || d._introVariant;
                 if (d._obGuideActive) { _obGuide.active = true; _obGuide.step = d._obGuideStep || null; _obGuide.outro = !!d._obGuideOutroFlag; }
                 console.log('[expLore] loadProgress _obDone raw:', d._obDone, typeof d._obDone);
                 if (d._obDone)    _obDone    = d._obDone;
@@ -26104,11 +26171,14 @@
             // n'arme pas la reprise au premier tap : le démarrage appartient au
             // bouton de fin de cinématique.
             function _introPlaying() {
-                const el = document.getElementById('introBDCinematic');
-                if (!el || el.classList.contains('hidden')) return false;
-                const cs = getComputedStyle(el);
-                return cs.display !== 'none' && cs.visibility !== 'hidden'
-                    && parseFloat(cs.opacity || '1') > 0.05;
+                // Les deux variantes d'intro : cinématique BD et intro animée.
+                return ['introBDCinematic', 'intro2Overlay'].some(id => {
+                    const el = document.getElementById(id);
+                    if (!el || el.classList.contains('hidden')) return false;
+                    const cs = getComputedStyle(el);
+                    return cs.display !== 'none' && cs.visibility !== 'hidden'
+                        && parseFloat(cs.opacity || '1') > 0.05;
+                });
             }
 
             function init() {
