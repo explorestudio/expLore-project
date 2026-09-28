@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ExpLore · Viens essayer</title>
-<meta name="description" content="L'avant-première du jeu d'exploration de Lyon. Essaie la démo, rejoins le Discord, deviens testeur terrain.">
+<meta name="description" content="L'avant-première du jeu d'exploration de Lyon. Deviens testeur terrain, rejoins le Discord, essaie la démo.">
 <meta name="theme-color" content="#0e0c18">
 <link rel="icon" href="./app/icons/icon-192.png">
 <meta property="og:type" content="website">
@@ -117,7 +117,7 @@ body {
 .eyebrow {
   margin-top: 14px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -131,7 +131,7 @@ body {
 /* ---------- Accroche ---------- */
 .hook {
   font-family: var(--serif);
-  font-size: 33px;
+  font-size: 34px;
   font-weight: 300;
   line-height: 1.24;
   letter-spacing: 0.5px;
@@ -140,7 +140,7 @@ body {
 
 .sub {
   margin-top: 12px;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.6;
   color: var(--text-dim);
 }
@@ -148,7 +148,7 @@ body {
 .baseline {
   margin-top: 16px;
   font-family: var(--mono);
-  font-size: 9.5px;
+  font-size: 12px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
   color: var(--text-faint);
@@ -166,7 +166,7 @@ body {
   min-height: 56px;
   padding: 17px 24px;
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   letter-spacing: 2.2px;
   text-transform: uppercase;
@@ -194,7 +194,7 @@ body {
 }
 .btn-ico .fill { fill: currentColor; stroke: none; }
 
-/* Boutons communauté : fond sombre, bordure et logo aux couleurs de marque (atténué pour laisser la démo en tête) */
+/* Boutons communauté : fond sombre, bordure et logo aux couleurs de marque (atténué pour laisser l'inscription au test en tête) */
 .btn-discord { color: var(--text); border: 1px solid rgba(88,101,242,0.6); }
 .btn-discord .btn-ico { color: #5865F2; }
 .btn-discord:hover { border-color: #5865F2; background: rgba(88,101,242,0.1); }
@@ -216,7 +216,7 @@ body {
 
 .hint {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5;
   color: var(--text-faint);
 }
@@ -226,7 +226,7 @@ body {
   display: inline-block;
   min-height: 44px;
   padding: 11px 4px 0;
-  font-size: 13.5px;
+  font-size: 15px;
   color: var(--text-dim);
   text-decoration: none;
   border-bottom: 1px solid transparent;
@@ -264,7 +264,7 @@ body {
   min-height: 44px;
   padding-top: 12px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 1.6px;
   text-transform: uppercase;
   color: var(--text-faint);
@@ -280,7 +280,7 @@ body {
   padding: 0 26px calc(24px + env(safe-area-inset-bottom));
   text-align: center;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1.8px;
   color: var(--text-faint);
 }
@@ -292,13 +292,13 @@ body {
 @media (max-height: 700px) {
   .wrap { gap: 24px; padding-top: 26px; }
   .logo { font-size: 34px; }
-  .hook { font-size: 28px; }
+  .hook { font-size: 30px; }
   .actions { gap: 15px; }
 }
 
 @media (min-width: 520px) {
   .logo { font-size: 44px; }
-  .hook { font-size: 36px; }
+  .hook { font-size: 38px; }
 }
 
 :focus-visible { outline: 2px solid var(--gold-light); outline-offset: 3px; }
@@ -317,7 +317,7 @@ body {
 
   <!-- En-tete -->
   <header>
-    <div class="logo">Exp<span class="l">L</span>ore</div>
+    <div class="logo">Exp<span class="l">Lore</span></div>
     <p class="eyebrow">
       <svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>
       En avant-première · Lyon
@@ -334,11 +334,14 @@ body {
   <!-- Trois actions, par ordre de priorite -->
   <section class="actions">
 
-    <div>
-      <a class="act" href="./app/demo.html" aria-label="Essayer la démo d'ExpLore">
-        <span class="btn btn-primary">Essayer la démo</span>
+    <!-- SESSION DE TEST : affiché jusqu'à la date data-fin (incluse), puis remplacé automatiquement par le bloc « hors session ».
+         Nouvelle session : changer le lien du formulaire, le texte et la date data-fin.
+         Fin de session : remettre la démo en bouton jaune en tête (le bloc « hors session » est en bas). -->
+    <div id="test-session" data-fin="2026-10-24">
+      <a class="act" href="https://docs.google.com/forms/d/e/1FAIpQLScS5u3_C0sXMenpSuy9Pzp22pjF51Cw-qdzUU7putWiKPNcRg/viewform" target="_blank" rel="noopener" aria-label="S'inscrire à la session de test à Bellecour, nouvel onglet">
+        <span class="btn btn-primary">Inscris-toi au test Bellecour</span>
       </a>
-      <p class="hint">Sans inscription, en quelques minutes.</p>
+      <p class="hint"><span class="live">Session en cours</span> Tu es à Lyon ? Viens explorer la vraie carte, dehors.</p>
     </div>
 
     <div>
@@ -361,13 +364,11 @@ body {
       <p class="hint">@explorestudiofr · partage tes explorations, suis les coulisses.</p>
     </div>
 
-    <!-- SESSION DE TEST : affiché jusqu'à la date data-fin (incluse), puis remplacé automatiquement par le bloc « hors session ».
-         Nouvelle session : changer le lien du formulaire, le texte et la date data-fin. -->
-    <div id="test-session" data-fin="2026-10-24">
-      <a class="act-third" href="https://docs.google.com/forms/d/e/1FAIpQLScS5u3_C0sXMenpSuy9Pzp22pjF51Cw-qdzUU7putWiKPNcRg/viewform" target="_blank" rel="noopener" aria-label="S'inscrire à la session de test à Bellecour, nouvel onglet">
-        Tu es à Lyon ? <span>Inscris-toi au test Bellecour</span>
+    <div>
+      <a class="act-third" href="./app/demo.html" aria-label="Essayer la démo d'ExpLore">
+        Pas à Lyon ? <span>Essaie la démo</span>
       </a>
-      <p class="hint"><span class="live">Session en cours</span> Pour explorer la vraie carte, dehors.</p>
+      <p class="hint">Sans inscription, en quelques minutes.</p>
     </div>
 
     <div id="test-hors-session" hidden>
