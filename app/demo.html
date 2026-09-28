@@ -8793,6 +8793,111 @@
             box-shadow: 0 8px 26px rgba(88,28,135,0.55);
         }
         .lang-select-flag { font-size: 24px; line-height: 1; }
+        /* ═══════════════════════════════════════════════════════
+           INTRO ANIMÉE — aucune image, tout dessiné en code
+           Transposée du brief (annexe) : identifiants préfixés intro2*,
+           tout le CSS scopé sous #intro2Overlay.
+           ═══════════════════════════════════════════════════════ */
+        #intro2Overlay{
+            --i2-ink:#050817;
+            --i2-paper:#e8dfd0;
+            --i2-violet:#a78bfa;
+            --i2-violet-hi:#ddd6fe;
+            --i2-gold:#d6a317;
+            --i2-gold-soft:#e3c48f;
+            --i2-serif:'Iowan Old Style','Palatino Linotype','Book Antiqua',Georgia,'Times New Roman',serif;
+            --i2-hand:'Segoe Script','Bradley Hand','Snell Roundhand',cursive;
+            position:fixed;inset:0;z-index:12000;
+            background:var(--i2-ink);color:var(--i2-paper);font-family:var(--i2-serif);
+            overflow:hidden;overscroll-behavior:none;
+            cursor:pointer;user-select:none;
+        }
+        #intro2Overlay.hidden{display:none}
+        #intro2Overlay,#intro2Overlay *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        #intro2Overlay *{margin:0;padding:0}
+        #intro2Canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+        #intro2Grain{
+            position:absolute;inset:-50%;width:200%;height:200%;
+            pointer-events:none;opacity:.14;mix-blend-mode:overlay;
+            background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+            animation:intro2GrainShift 1.1s steps(4) infinite;
+        }
+        @keyframes intro2GrainShift{
+            0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}
+            50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-2%)}100%{transform:translate(0,0)}
+        }
+        #intro2Fadein{position:absolute;inset:0;background:#000;pointer-events:none;z-index:9;
+            opacity:1;transition:opacity 1.6s ease}
+        #intro2Fadein.off{opacity:0}
+        #intro2Vignette{position:absolute;inset:0;pointer-events:none;
+            background:radial-gradient(ellipse at 50% 46%,transparent 34%,rgba(0,0,0,.5) 100%)}
+
+        /* Texte */
+        #intro2Text{position:absolute;left:0;right:0;top:38%;padding:0 2rem;text-align:center;pointer-events:none}
+        #intro2Overlay .i2-line{
+            display:block;font-size:clamp(1.15rem,4.6vw,1.75rem);line-height:1.5;
+            opacity:0;filter:blur(6px);transform:translateY(10px);
+            transition:opacity 1.2s ease,filter 1.2s ease,transform 1.2s ease;
+            text-shadow:0 2px 18px rgba(0,0,0,.65);
+        }
+        #intro2Overlay .i2-line.on{opacity:.95;filter:blur(0);transform:translateY(0)}
+        #intro2Overlay .i2-line.out{opacity:0;filter:blur(5px);transform:translateY(-8px);transition-duration:.7s}
+        #intro2Overlay .i2-line + .i2-line{margin-top:.5rem}
+        #intro2Overlay .i2-line em{font-style:italic;color:var(--i2-violet-hi)}
+
+        /* Chuchotement */
+        #intro2Voice{position:absolute;left:0;right:0;top:30%;padding:0 2rem;text-align:center;pointer-events:none}
+        #intro2Overlay .i2-say{
+            display:block;font-family:var(--i2-hand);
+            font-size:clamp(1.5rem,6.6vw,2.3rem);color:var(--i2-gold-soft);
+            opacity:0;transform:translateY(12px) rotate(-.6deg);
+            transition:opacity .9s ease,transform .9s ease;
+            text-shadow:0 0 22px rgba(167,139,250,.45),0 2px 14px rgba(0,0,0,.7);
+        }
+        #intro2Overlay .i2-say:nth-child(2){transform:translateY(12px) rotate(.5deg)}
+        #intro2Overlay .i2-say.on{opacity:1;transform:translateY(0) rotate(-.6deg)}
+        #intro2Overlay .i2-say:nth-child(2).on{transform:translateY(0) rotate(.5deg)}
+
+        /* Marque */
+        #intro2Brand{
+            position:absolute;left:0;right:0;top:11%;text-align:center;pointer-events:none;
+            font-size:clamp(2.6rem,11vw,4.4rem);letter-spacing:-.02em;line-height:1;
+            opacity:0;transition:opacity 1.4s ease;
+        }
+        #intro2Brand.on{opacity:1}
+        #intro2BrandA{color:var(--i2-paper)}
+        #intro2BrandB,#intro2Overlay .i2-brandB{color:var(--i2-gold)}
+        #intro2BrandGap{display:inline-block;color:var(--i2-gold)}
+        #intro2BrandO{opacity:0;transition:opacity .5s ease}
+        #intro2BrandO.on{opacity:1}
+
+        /* Commandes */
+        #intro2Skip{position:absolute;top:max(1rem,env(safe-area-inset-top));right:1.1rem;
+            background:none;border:0;color:var(--i2-paper);opacity:.35;font-family:var(--i2-serif);
+            font-size:.95rem;letter-spacing:.05em;padding:.6rem .7rem;cursor:pointer;z-index:5}
+        #intro2Skip:hover{opacity:.7}
+        #intro2Next{
+            position:absolute;right:1.2rem;bottom:max(1.6rem,env(safe-area-inset-bottom));
+            background:none;border:0;color:var(--i2-paper);
+            font-family:var(--i2-serif);font-size:clamp(1rem,3.4vw,1.2rem);letter-spacing:.03em;
+            padding:.9rem .6rem;cursor:pointer;opacity:0;transition:opacity .7s ease;z-index:6;
+        }
+        #intro2Next.on{opacity:.9}
+        #intro2Start{
+            position:absolute;left:50%;bottom:16%;transform:translate(-50%,10px);
+            background:rgba(57,24,86,.3);color:var(--i2-paper);
+            border:1px solid rgba(232,223,208,.45);border-radius:999px;
+            font-family:var(--i2-serif);font-size:clamp(1rem,3.6vw,1.2rem);letter-spacing:.06em;
+            padding:.85rem 2.2rem;cursor:pointer;opacity:0;pointer-events:none;
+            transition:opacity 1s ease,transform 1s ease,box-shadow .8s ease;z-index:7;
+        }
+        #intro2Start.on{opacity:1;transform:translate(-50%,0);pointer-events:auto;box-shadow:0 0 34px rgba(137,69,232,.28)}
+
+        @media (prefers-reduced-motion:reduce){
+            #intro2Grain{animation:none}
+            #intro2Overlay .i2-line,#intro2Overlay .i2-say,#intro2Brand,#intro2Start{transition-duration:.3s}
+        }
 
         </style>
 </head>
@@ -9093,7 +9198,8 @@
                     <button onclick="testLevelUpGrappeCards()" class="test-action-btn">⭐ Cartes grappe LV3 (test quête)</button>
                     <button onclick="testCompleteAllGrappeQuests()" class="test-action-btn">🏆 Terminer toutes étapes grappe</button>
                     <button onclick="testForceCompleteCurrentQuest()" class="test-action-btn">⚡ Forcer validation quête active</button>
-                    <button onclick="startIntroBD()" class="test-action-btn">🎬 Rejouer cinématique BD</button>
+                    <button onclick="startIntroBD()" class="test-action-btn">🎬 Rejouer l'intro</button>
+                    <button onclick="testToggleIntroVariant()" class="test-action-btn" id="btnIntroVariant">🎞️ Intro : animée</button>
                     <button onclick="testRefillCardEnergy()" class="test-action-btn">⚡ Restaurer énergie toutes cartes</button>
                     <button onclick="testFastForwardCardEnergy()" class="test-action-btn">⏩ +2h sur énergie cartes</button>
                     <button onclick="resetProgress()" class="test-action-btn test-action-btn--danger">⚠️ Réinitialiser la progression</button>
@@ -10916,6 +11022,25 @@
             <button class="intro-bd-start" id="introBDStart" onclick="finishIntroBD()" style="display:none;">Commencer l'aventure</button>
         </div>
 
+        <!-- ═══ INTRO ANIMÉE ═══ -->
+        <div id="intro2Overlay" class="hidden">
+            <canvas id="intro2Canvas"></canvas>
+
+            <div id="intro2Brand"><span id="intro2BrandA">Exp</span><span id="intro2BrandB">L</span><span id="intro2BrandGap"><span id="intro2BrandO">o</span></span><span class="i2-brandB">re</span></div>
+            <div id="intro2Text" aria-live="polite"></div>
+            <div id="intro2Voice">
+                <span class="i2-say" id="intro2Say1">Hé toi,</span>
+                <span class="i2-say" id="intro2Say2">tu la vois aussi ?</span>
+            </div>
+
+            <div id="intro2Fadein"></div>
+            <div id="intro2Grain"></div>
+            <div id="intro2Vignette"></div>
+            <button id="intro2Next">Suite &gt;</button>
+            <button id="intro2Start" onclick="finishIntroBD()">Commencer</button>
+            <button id="intro2Skip" onclick="skipIntroBD()">passer</button>
+        </div>
+
         <div id="onboardingOverlay" class="hidden">
             <div class="ob-text" id="obText"></div>
             <div class="ob-tap-hint">Appuyer pour continuer</div>
@@ -11164,6 +11289,16 @@
             "tap pour continuer": "tap to continue",
             "Commencer l'aventure": "Start the adventure",
             "Appuyer pour continuer": "Tap to continue",
+
+            // ── Intro animée ──
+            "Ce que nous oublions ne disparaît pas.": "What we forget does not disappear.",
+            "Une matière reste là, autour de nous.": "Something stays behind, all around us.",
+            "Elle s'attache à des endroits.": "It clings to certain places.",
+            "Hé toi,": "Hey, you.",
+            "tu la vois aussi ?": "you see it too?",
+            "Suite >": "Next >",
+            "Commencer": "Begin",
+            "passer": "skip",
 
             // ── Toasts ──
             "🔓 Caméra déverrouillée": "🔓 Camera unlocked",
@@ -13937,6 +14072,628 @@
             "Mais toi... tu regardes encore."
         ];
 
+        // ═══════════════════════════════════════════════════════
+        // INTRO ANIMÉE — poussière, marcheurs, ville, nébuleuse,
+        // passant à la tête d'or, anneau qui devient le o d'ExpLore.
+        // Transposée du brief (annexe) sans retouche de la chorégraphie.
+        // Aucune image, aucune ressource externe.
+        // API : Intro2.start() / Intro2.stop()
+        // Les boutons « Commencer » et « passer » appellent finishIntroBD() /
+        // skipIntroBD(), qui font le fondu de l'overlay puis Intro2.stop().
+        // ═══════════════════════════════════════════════════════
+        const Intro2 = (function () {
+            'use strict';
+
+            /* ═══════════ Séquence ═══════════
+               Action et texte ne se superposent jamais :
+               un temps montre, le temps suivant nomme.                     */
+            const BEATS = [
+                { kind:'action', lines:[] },                                                    // la ville apparaît, les gens marchent
+                { kind:'text',   lines:["Ce que nous oublions ne disparaît pas."] },
+                { kind:'action', lines:[] },                                                    // la poussière sort des têtes
+                { kind:'text',   lines:["Une matière reste là, autour de nous."] },
+                { kind:'action', lines:[] },                                                    // l'accrétion commence
+                { kind:'text',   lines:["Elle s'attache à des endroits."] },
+                { kind:'exit',   lines:[] },                                                    // la nébuleuse, le passant s'approche
+                { kind:'voice',  lines:[] },                                                    // Hé, toi
+                { kind:'brand',  lines:[] }
+            ];
+
+            const $ = id => document.getElementById(id);
+            // Éléments résolus dans start() : le module est défini une fois,
+            // l'intro peut être rejouée depuis le panneau de test.
+            let overlay, textEl, nextEl, startEl, brandEl, gapEl, oEl, fadeEl, says;
+            let reduce = false;
+
+            let beat=-1, busy=false, timers=[], phaseAt=0, canAdvance=false;
+            const later=(fn,ms)=>{const id=setTimeout(fn,ms);timers.push(id);return id;};
+            const clearTimers=()=>{timers.forEach(id=>{clearTimeout(id);clearInterval(id);});timers=[];};
+            const since=()=>performance.now()-phaseAt;
+            const smooth=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x);};
+
+            /* ═══════════ Scène ═══════════ */
+            let cv, ctx;
+            let W=0,H=0,dpr=1,t=0,groundY=0;
+            let stars=[], motes=[], walkers=[], docked=[], blobs=[], windows=[];
+            let startedAt=0;
+            let emitting=false, seeking=false, deposit=0;
+            let ring=null, cardAt=0;
+            const CAP=300;
+
+            /* Silhouette de ville, normalisée. Dessinée dans le canvas et non en SVG :
+               marcheurs, poussière et horizon partagent ainsi le même repère.      */
+            const SKY=[[0,.800],[.07,.796],[.12,.788],[.16,.799],[.22,.790],[.27,.799],
+                       [.33,.788],[.40,.795],[.46,.789],[.53,.797],[.60,.790],[.67,.794],
+                       [.74,.788],[.81,.797],[.88,.791],[.94,.786],[1,.793]];
+            const NEB={x:.615,y:0};
+
+            function resize(){
+                dpr=Math.min(window.devicePixelRatio||1,2);
+                W=cv.clientWidth; H=cv.clientHeight;
+                cv.width=W*dpr; cv.height=H*dpr;
+                ctx.setTransform(dpr,0,0,dpr,0,0);
+                groundY=H*.80;
+                NEB.y=groundY-H*.048;
+            }
+
+            function seedBlobs(){
+                // Sept masses molles, décentrées et de tailles inégales. Leur recouvrement
+                // fait la silhouette : aucune n'a de contour propre.
+                blobs=Array.from({length:7},(_,i)=>({
+                    dx:(Math.random()-.5)*1.5,
+                    dy:(Math.random()-.5)*.85,
+                    rs:.55+Math.random()*.85,
+                    sp:.10+Math.random()*.22,
+                    ph:Math.random()*6.283,
+                    amp:.10+Math.random()*.22,
+                    w:.55+Math.random()*.5
+                }));
+            }
+
+            function seedAmbient(){
+                // Point 2 du découpage : le premier plan montre déjà de la poussière en
+                // suspension, avant que l'on comprenne d'où elle vient.
+                motes=[];
+                for(let i=0;i<42;i++){
+                    motes.push({
+                        x:Math.random()*W, y:H*(.22+Math.random()*.62),
+                        vx:(Math.random()-.5)*.10, vy:-.03-Math.random()*.06,
+                        r:.7+Math.random()*1.2, a:.28+Math.random()*.3,
+                        hi:Math.random()<.22, ph:Math.random()*6.283, sp:.4+Math.random()*1,
+                        life:1
+                    });
+                }
+            }
+
+            function seedWindows(){
+                // Fenêtres des immeubles : elles s'allument et s'éteignent lentement,
+                // ce qui donne à la ville une vie propre sans rien ajouter au dessin.
+                const cells=[];
+                const push=(x0,x1,y0,y1,cols,rows)=>{
+                    for(let i=0;i<cols;i++) for(let j=0;j<rows;j++)
+                        cells.push({ x:x0+(x1-x0)*(i+.5)/cols, y:y0+(y1-y0)*(j+.5)/rows,
+                                     w:(x1-x0)/cols*.42, h:(y1-y0)/rows*.36 });
+                };
+                push(.590,.641,.732,.784,3,4);      // grand bâtiment
+                push(.804,.825,.762,.790,2,3);      // tour au loin
+                windows=cells.map(c=>({...c, on:Math.random()<.45, next:1+Math.random()*9}));
+            }
+
+            function seedStars(){
+                stars=Array.from({length:70},()=>({
+                    x:Math.random(), y:.04+Math.random()*.68,
+                    r:.3+Math.random()*1.1, a:.10+Math.random()*.4,
+                    sp:.4+Math.random()*1.4, ph:Math.random()*6.283
+                }));
+            }
+
+            function seedWalkers(){
+                const n = W<520?4:5;
+                walkers=[];
+                for(let i=0;i<n;i++){
+                    const dir = Math.random()<.5?1:-1;
+                    walkers.push({
+                        x:(i+.5)/n*W + (Math.random()-.5)*W*.1,
+                        dir, sp:(.16+Math.random()*.14)*dir,
+                        sc:.8+Math.random()*.45, ph:Math.random()*6.283,
+                        next:.5+Math.random()*1.4, alpha:1,
+                        headY:0, headR:6,
+                        amp:1, gold:false, chosen:false, leaving:false, stopping:false, target:null
+                    });
+                }
+            }
+
+            /* ── Poussière ── */
+            function emit(x,y){
+                if(motes.length>=CAP) motes.shift();
+                motes.push({
+                    x, y,
+                    vx:(Math.random()-.5)*.22,
+                    vy:-.22-Math.random()*.22,
+                    r:.9+Math.random()*1.4,
+                    a:.55+Math.random()*.4,
+                    hi:Math.random()<.28,
+                    ph:Math.random()*6.283, sp:.5+Math.random()*1.1,
+                    life:0
+                });
+            }
+            function dock(){
+                docked.push({ ang:Math.random()*6.283, rad:Math.random(), sp:.15+Math.random()*.5,
+                              r:.7+Math.random()*1.1, hi:Math.random()<.4 });
+                deposit++;
+            }
+            function nebRadius(){ return Math.min(W,H)*(.035+Math.min(deposit,110)*.0011); }
+
+            /* ── Dessin ── */
+            function drawSky(){
+                const g=ctx.createRadialGradient(W*.5,H*.56,0,W*.5,H*.5,Math.max(W,H)*.78);
+                g.addColorStop(0,'#111a39'); g.addColorStop(.45,'#0a1026'); g.addColorStop(1,'#050817');
+                ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+                for(const s of stars){
+                    const a=s.a*(.7+.3*Math.sin(t*s.sp+s.ph));
+                    ctx.fillStyle='rgba(173,175,214,'+a.toFixed(3)+')';
+                    ctx.beginPath(); ctx.arc(s.x*W,s.y*H,s.r,0,6.2832); ctx.fill();
+                }
+            }
+
+            function drawCity(fade){
+                ctx.save();
+                ctx.globalAlpha=1-fade;
+                ctx.strokeStyle='rgba(205,191,168,.58)';
+                ctx.lineWidth=1.1; ctx.lineCap='round'; ctx.lineJoin='round';
+
+                ctx.beginPath();
+                SKY.forEach((p,i)=>{ const x=p[0]*W,y=p[1]*H; i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+                ctx.stroke();
+
+                const g=groundY, seg=(x1,y1,x2,y2)=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();};
+
+                seg(.10*W,.788*H,.125*W,.742*H); seg(.125*W,.742*H,.15*W,.788*H);
+                seg(.132*W,.742*H,.132*W,.726*H);
+                seg(.235*W,.790*H,.245*W,.735*H); seg(.245*W,.735*H,.255*W,.790*H);
+                seg(.239*W,.762*H,.251*W,.762*H); seg(.245*W,.735*H,.245*W,.726*H);
+                seg(.33*W,.788*H,.355*W,.770*H); seg(.355*W,.770*H,.38*W,.788*H);
+                seg(.39*W,.792*H,.415*W,.774*H); seg(.415*W,.774*H,.44*W,.792*H);
+                seg(.585*W,.790*H,.585*W,.724*H); seg(.585*W,.724*H,.645*W,.724*H);
+                seg(.645*W,.724*H,.645*W,.790*H); seg(.612*W,.724*H,.612*W,.712*H);
+                seg(.80*W,.795*H,.80*W,.755*H); seg(.80*W,.755*H,.828*W,.755*H); seg(.828*W,.755*H,.828*W,.795*H);
+
+                ctx.globalAlpha=(1-fade)*.5; seg(0,g+H*.016,W,g+H*.013);
+                ctx.globalAlpha=(1-fade)*.28; seg(0,g+H*.028,W,g+H*.025);
+
+                ctx.globalAlpha=1-fade;
+                for(const win of windows){
+                    win.next-=.016;
+                    if(win.next<=0){ win.on=!win.on; win.next=3+Math.random()*12; }
+                    win.a=(win.a===undefined?0:win.a)+((win.on?1:0)-(win.a||0))*.02;
+                    if(win.a>.01){
+                        ctx.fillStyle='rgba(227,196,143,'+(win.a*.5).toFixed(3)+')';
+                        ctx.fillRect(win.x*W,win.y*H,Math.max(1.2,win.w*W),Math.max(1.4,win.h*H));
+                    }
+                }
+                ctx.restore();
+            }
+
+            function drawWalker(w){
+                const h=Math.min(H,W)*.085*w.sc;
+                const amp=(w.amp===undefined?1:w.amp);
+                const gait=Math.sin(t*2.3+w.ph)*amp, bob=Math.abs(Math.cos(t*2.3+w.ph))*h*.035*amp;
+                const x=w.x, y=groundY-bob, R=h*.13;
+                w.headY=y-h*.90; w.headR=R;
+                if(w.alpha<=.01 && !(w.chosen && !ring)) return;
+                ctx.save();
+                ctx.globalAlpha=(w.chosen && !ring) ? Math.max(w.alpha,.0) : w.alpha;
+                ctx.lineCap='round'; ctx.lineJoin='round';
+                ctx.lineWidth=Math.max(1,h*.055);
+                if(!(w.chosen && ring)){
+                    if(w.gold){
+                        ctx.save();
+                        ctx.strokeStyle='rgba(214,163,23,.78)';
+                        ctx.shadowColor='rgba(214,163,23,.45)'; ctx.shadowBlur=10;
+                        ctx.beginPath(); ctx.arc(x,w.headY,R,0,6.2832); ctx.stroke();
+                        ctx.restore();
+                    } else {
+                        ctx.strokeStyle='rgba(205,191,168,.52)';
+                        ctx.beginPath(); ctx.arc(x,w.headY,R,0,6.2832); ctx.stroke();
+                    }
+                }
+                ctx.strokeStyle='rgba(205,191,168,.52)';
+                ctx.beginPath(); ctx.moveTo(x,y-h*.77); ctx.lineTo(x-w.dir*h*.04,y-h*.38); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x-w.dir*h*.04,y-h*.38); ctx.lineTo(x+gait*h*.16,y);
+                ctx.moveTo(x-w.dir*h*.04,y-h*.38); ctx.lineTo(x-gait*h*.16,y);
+                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x,y-h*.68); ctx.lineTo(x-gait*h*.13,y-h*.40); ctx.stroke();
+                ctx.restore();
+            }
+
+            function stepWalkers(){
+                for(const w of walkers){
+                    if(w.target!==null){
+                        const d=w.target-w.x;
+                        if(Math.abs(d)<2.5){
+                            w.sp=0; w.x=w.target; w.target=null;
+                            w.dir=Math.sign(NEB.x*W-w.x)||1;                 // il fait face à la nébuleuse
+                            if(w.chosen && !cardAt) cardAt=performance.now()+700;
+                        }
+                        else w.sp=Math.sign(d)*Math.min(.9,Math.abs(d)*.02+.12);
+                        if(w.sp) w.dir=Math.sign(w.sp);
+                    }
+                    else if(w.stopping) w.sp*=.94;
+                    else if(w.leaving){ w.sp*=1.012; w.alpha=Math.max(0,w.alpha-.006); }
+                    w.amp=(w.amp===undefined?1:w.amp)+((Math.abs(w.sp)>.02?1:0)-(w.amp===undefined?1:w.amp))*.06;
+                    w.x+=w.sp;
+                    // Le passant qui rejoint la nébuleuse ne boucle pas : il naît hors cadre
+                    // à droite, et un rebouclage le ferait réapparaître à gauche.
+                    if(!w.leaving && !w.stopping && w.target===null && !w.chosen){
+                        if(w.x<-40) w.x=W+30;
+                        if(w.x>W+40) w.x=-30;
+                    }
+                    drawWalker(w);
+                    if(emitting && !w.leaving && w.alpha>.3){
+                        w.next-=.016;
+                        if(w.next<=0){
+                            w.next=.55+Math.random()*1.3;
+                            emit(w.x+(Math.random()-.5)*w.headR*1.4, w.headY-w.headR*.8);
+                        }
+                    }
+                }
+            }
+
+            function stepMotes(){
+                for(let i=motes.length-1;i>=0;i--){
+                    const m=motes[i];
+                    m.life+=.016;
+                    if(seeking){
+                        const dx=NEB.x*W-m.x, dy=NEB.y-m.y, d=Math.hypot(dx,dy)||1;
+                        m.vx+=(dx/d)*.020; m.vy+=(dy/d)*.020;
+                        m.vx+=(-dy/d)*.004; m.vy+=(dx/d)*.004;
+                        m.vx*=.975; m.vy*=.975;
+                        if(d<nebRadius()*.8){ motes.splice(i,1); dock(); continue; }
+                    } else {
+                        m.vy+=.0012;
+                        m.vx*=.995; m.vy*=.995;
+                    }
+                    m.x+=m.vx; m.y+=m.vy;
+                    if(m.y>groundY+6){ m.y=groundY+6; m.vy*=-.1; }
+                    const tw=.6+.4*Math.sin(t*m.sp+m.ph);
+                    const a=m.a*tw*Math.min(1,m.life*1.6);
+                    ctx.beginPath(); ctx.arc(m.x,m.y,m.r,0,6.2832);
+                    ctx.fillStyle=(m.hi?'rgba(221,214,254,':'rgba(167,139,250,')+a.toFixed(3)+')';
+                    ctx.fill();
+                }
+            }
+
+            function drawNebula(){
+                if(deposit<1) return;
+                const r=nebRadius(), x=NEB.x*W, y=NEB.y;
+                const k=Math.min(1,deposit/45);
+
+                ctx.save();
+                ctx.globalCompositeOperation='lighter';   // les masses se mêlent au ciel
+
+                // voile très large, sans bord perceptible
+                const veil=ctx.createRadialGradient(x,y,0,x,y,r*5.2);
+                veil.addColorStop(0,'rgba(104,52,190,'+(.10*k).toFixed(3)+')');
+                veil.addColorStop(.55,'rgba(94,40,170,'+(.04*k).toFixed(3)+')');
+                veil.addColorStop(1,'rgba(80,30,150,0)');
+                ctx.fillStyle=veil;
+                ctx.fillRect(x-r*5.4,y-r*5.4,r*10.8,r*10.8);
+
+                // masses molles, dérive lente et respiration désynchronisée
+                for(const b of blobs){
+                    const br=r*b.rs*(1+b.amp*Math.sin(t*b.sp*2.1+b.ph));
+                    const bx=x+b.dx*r*(1+.10*Math.sin(t*b.sp+b.ph));
+                    const by=y+b.dy*r*(1+.14*Math.cos(t*b.sp*1.3+b.ph));
+                    const g=ctx.createRadialGradient(bx,by,0,bx,by,br*2.4);
+                    g.addColorStop(0,'rgba(150,84,240,'+(.115*k*b.w).toFixed(3)+')');
+                    g.addColorStop(.35,'rgba(126,60,216,'+(.070*k*b.w).toFixed(3)+')');
+                    g.addColorStop(.7,'rgba(100,42,180,'+(.026*k*b.w).toFixed(3)+')');
+                    g.addColorStop(1,'rgba(90,35,165,0)');
+                    ctx.fillStyle=g;
+                    ctx.fillRect(bx-br*2.5,by-br*2.5,br*5,br*5);
+                }
+                ctx.restore();
+
+                for(const d of docked){
+                    const ang=d.ang+t*d.sp*.35;
+                    const px=x+Math.cos(ang)*r*d.rad*1.5;
+                    const py=y+Math.sin(ang*1.25)*r*d.rad*.95;
+                    const a=(d.hi?.7:.4)*(.6+.4*Math.sin(t*d.sp+d.ang));
+                    ctx.beginPath(); ctx.arc(px,py,d.r,0,6.2832);
+                    ctx.fillStyle=(d.hi?'rgba(238,230,255,':'rgba(176,144,255,')+a.toFixed(3)+')';
+                    ctx.fill();
+                }
+            }
+
+            function drawCard(){
+                if(!cardAt) return;
+                const w=walkers.find(v=>v.chosen);
+                if(!w) return;
+                const k=smooth(0,900,performance.now()-cardAt);
+                if(k<=0) return;
+                const h=Math.min(H,W)*.085*w.sc;
+                const side=w.dir||((w.x<NEB.x*W)?1:-1);        // la carte se tient du côté où il regarde
+                const x=w.x+side*h*.34, y=(groundY-h*.40)+(1-k)*h*.30;
+                const cw=h*.30, ch=cw*1.45, rot=side*(.34-.12*k);
+                const a=k*Math.max(0,Math.min(1,w.alpha));
+                ctx.save();
+                ctx.globalAlpha=a;
+                ctx.translate(x,y); ctx.rotate(rot);
+                const g=ctx.createLinearGradient(0,-ch/2,0,ch/2);
+                g.addColorStop(0,'rgba(120,60,200,.34)'); g.addColorStop(1,'rgba(70,32,140,.22)');
+                ctx.fillStyle=g;
+                ctx.fillRect(-cw/2,-ch/2,cw,ch);
+                ctx.lineWidth=Math.max(1,cw*.075);
+                ctx.strokeStyle='rgba(214,163,23,.72)';
+                ctx.strokeRect(-cw/2,-ch/2,cw,ch);
+                ctx.strokeStyle='rgba(221,214,254,.45)';
+                ctx.lineWidth=Math.max(.8,cw*.045);
+                ctx.strokeRect(-cw*.36,-ch*.36,cw*.72,ch*.72);
+                ctx.beginPath();                                // petite spirale, comme sur vos cartes
+                for(let i=0;i<34;i++){
+                    const an=i*.42, rr=cw*.035*an*.42;
+                    const px=Math.cos(an)*rr, py=Math.sin(an)*rr*1.15;
+                    i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+                }
+                ctx.strokeStyle='rgba(221,214,254,.6)'; ctx.lineWidth=Math.max(.7,cw*.035); ctx.stroke();
+                ctx.restore();
+            }
+
+            function drawRing(){
+                if(!ring) return;
+                ctx.save();
+                ctx.lineWidth=ring.lw;
+                ctx.strokeStyle='rgba('+ring.col+','+ring.a.toFixed(3)+')';
+                if(ring.glow>0){
+                    ctx.shadowColor='rgba(214,163,23,'+(ring.glow*.7).toFixed(3)+')';
+                    ctx.shadowBlur=24*ring.glow;
+                }
+                ctx.beginPath();
+                ctx.ellipse(ring.x,ring.y,Math.max(.5,ring.rx-ring.lw/2),Math.max(.5,ring.ry-ring.lw/2),0,0,6.2832);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            /* ═══════════ Boucle ═══════════ */
+            // running : testé en tête de frame() et de fly(). Faux hors de
+            // l'intro, pour que le canvas ne demande plus aucune frame.
+            let running=false, rafId=0, ringRaf=0;
+            function frame(){
+                if(!running) return;
+                t+=.016;
+                const appear = smooth(500,3400,performance.now()-startedAt);
+                const cityFade = 1-appear + ((beat>=8) ? smooth(300,2600,since())*.5 : 0);
+                drawSky();
+                drawCity(Math.min(1,cityFade));
+                drawNebula();
+                stepWalkers();
+                stepMotes();
+                drawCard();
+                drawRing();
+                rafId=requestAnimationFrame(frame);
+            }
+
+            /* ═══════════ Texte ═══════════ */
+            function clearLines(done){
+                const olds=[...textEl.children];
+                if(!olds.length){ done&&done(); return; }
+                olds.forEach(el=>{el.classList.remove('on');el.classList.add('out');});
+                later(()=>{olds.forEach(el=>el.remove()); done&&done();}, reduce?180:760);
+            }
+            function showLines(lines,done){
+                lines.forEach((html,i)=>{
+                    const el=document.createElement('span');
+                    el.className='i2-line'; el.innerHTML=T(html);
+                    textEl.appendChild(el);
+                    later(()=>el.classList.add('on'), reduce?40*i:200+i*800);
+                });
+                later(()=>done&&done(), reduce?260:520+lines.length*800);
+            }
+
+            /* ═══════════ Anneau final ═══════════ */
+            function launchRing(){
+                const w = walkers.find(v=>v.chosen);
+                if(!w) return;
+
+                // On mesure le O réel de la police plutôt que de deviner : l'anneau doit
+                // s'emboîter dans le mot, pas se poser à côté.
+                const rect=gapEl.getBoundingClientRect(), box=cv.getBoundingClientRect();
+                const cs=getComputedStyle(oEl);
+                let rx=rect.width*.42, ry=rx, cx=rect.left-box.left+rect.width/2,
+                    cy=rect.top-box.top+rect.height*.55, lw=rx*.26;
+                try{
+                    ctx.save();
+                    ctx.font=cs.fontStyle+' '+cs.fontWeight+' '+cs.fontSize+' '+cs.fontFamily;
+                    const m=ctx.measureText('o');
+                    const fAsc=m.fontBoundingBoxAscent, fDesc=m.fontBoundingBoxDescent;
+                    const iAsc=m.actualBoundingBoxAscent, iDesc=m.actualBoundingBoxDescent;
+                    const iL=m.actualBoundingBoxLeft, iR=m.actualBoundingBoxRight;
+                    if(iAsc && fAsc){
+                        const baseline=rect.top-box.top+(rect.height-(fAsc+fDesc))/2+fAsc;
+                        ry=(iAsc+iDesc)/2;
+                        cy=baseline-(iAsc-iDesc)/2;
+                        rx=(iL+iR)/2 || rect.width*.42;
+                        cx=rect.left-box.left+(iR-iL)/2+ (rect.width-(iL+iR))/2;
+                        lw=Math.max(2,ry*.24);
+                    }
+                    ctx.restore();
+                }catch(e){}
+
+                const from={x:w.x, y:w.headY, r:w.headR};
+                ring={x:from.x,y:from.y,rx:from.r,ry:from.r,lw:Math.max(1.4,from.r*.30),
+                      a:.55,col:'205,191,168',glow:0};
+                const T0=performance.now(), DUR=reduce?400:1900;
+                const c0=[205,191,168], c1=[214,163,23];
+
+                (function fly(){
+                    if(!ring || !running) return;
+                    const k=Math.min(1,(performance.now()-T0)/DUR);
+                    const e=k*k*(3-2*k);
+                    ring.x=from.x+(cx-from.x)*e;
+                    ring.y=from.y+(cy-from.y)*e - Math.sin(e*Math.PI)*H*.06;
+                    ring.rx=from.r+(rx-from.r)*e;
+                    ring.ry=from.r+(ry-from.r)*e;
+                    ring.lw=Math.max(1.4,from.r*.30+(lw-from.r*.30)*e);
+                    ring.a=.55+.45*e;
+                    ring.glow=smooth(.25,.75,k);
+                    const mix=smooth(.2,.8,k);
+                    ring.col=c0.map((v,i)=>Math.round(v+(c1[i]-v)*mix)).join(',');
+                    if(k<1) ringRaf=requestAnimationFrame(fly);
+                    else {
+                        // Relais : le vrai O typographique prend la place de l'anneau.
+                        oEl.classList.add('on');
+                        const fade=setInterval(()=>{
+                            if(!ring){ clearInterval(fade); return; }
+                            ring.a-=.06; ring.glow=Math.max(0,ring.glow-.05);
+                            if(ring.a<=0){ ring=null; clearInterval(fade); }
+                        },16);
+                        timers.push(fade);
+                    }
+                })();
+
+                later(()=>brandEl.classList.add('on'), reduce?200:1150);
+                later(()=>startEl.classList.add('on'), reduce?400:2700);
+            }
+
+            /* ═══════════ Enchaînement ═══════════ */
+            function advance(){
+                if(!running || !canAdvance || busy || beat>=BEATS.length-1) return;
+                busy=true; canAdvance=false; nextEl.classList.remove('on');
+
+                clearLines(()=>{
+                    beat++; phaseAt=performance.now();
+                    const b=BEATS[beat];
+
+                    if(beat===2) emitting=true;                       // point 8 : la poussière sort des têtes
+                    if(beat===4){                                     // point 12 : accrétion à un endroit
+                        seeking=true;
+                        for(const w of walkers) w.next=Math.min(w.next,.3);
+                    }
+                    if(beat===5) for(const w of walkers) w.leaving=true;   // les silhouettes quittent le cadre et ne reviennent pas
+
+                    if(b.kind==='exit'){
+                        // La nébuleuse a pris forme. Un passant à la tête d'or entre par la
+                        // droite et s'arrête juste devant elle, au pied du bâtiment.
+                        for(let i=0;i<26;i++) dock();                   // l'accrétion devient nébuleuse
+                        const h=Math.min(H,W)*.085;
+                        walkers.push({
+                            x:W+h*.8, dir:-1, sp:-.4, sc:1.02, ph:Math.random()*6.283,
+                            next:.6, alpha:1, headY:0, headR:h*.13,
+                            amp:1, gold:true, chosen:true, leaving:false, stopping:false,
+                            target:NEB.x*W-Math.max(W*.15,Math.min(H,W)*.17)
+                        });
+                        // Point 16 : on n'ouvre la suite qu'une fois la carte sortie.
+                        (function waitCard(){
+                            if(cardAt && performance.now()-cardAt > (reduce?200:1150)){
+                                busy=false; nextEl.classList.add('on'); canAdvance=true;
+                            } else later(waitCard,150);
+                        })();
+                        return;
+                    }
+
+                    if(b.kind==='voice'){
+                        says.forEach((el,i)=>later(()=>el.classList.add('on'), reduce?100+i*120:400+i*1000));
+                        later(()=>{ busy=false; nextEl.classList.add('on'); canAdvance=true; }, reduce?400:2300);
+                        return;
+                    }
+
+                    if(b.kind==='brand'){
+                        says.forEach(el=>el.classList.remove('on'));
+                        emitting=false;
+                        const g=walkers.find(w=>w.chosen);
+                        if(g){
+                            const f=setInterval(()=>{ g.alpha-=.035; if(g.alpha<=0){g.alpha=0;clearInterval(f);} },16);
+                            timers.push(f);
+                        }
+                        later(launchRing, reduce?100:900);
+                        busy=false;
+                        return;
+                    }
+
+                    if(b.kind==='action'){
+                        later(()=>{ busy=false; nextEl.classList.add('on'); canAdvance=true; }, reduce?300:1900);
+                        return;
+                    }
+
+                    showLines(b.lines,()=>{ busy=false; nextEl.classList.add('on'); canAdvance=true; });
+                });
+            }
+
+            /* ═══════════ Entrées ═══════════ */
+            let onTap=null, onNext=null, onKey=null, onResize=null;
+
+            /* ── API ── */
+            function start(){
+                overlay = $('intro2Overlay');
+                textEl  = $('intro2Text');
+                nextEl  = $('intro2Next');
+                startEl = $('intro2Start');
+                brandEl = $('intro2Brand');
+                gapEl   = $('intro2BrandGap');
+                oEl     = $('intro2BrandO');
+                fadeEl  = $('intro2Fadein');
+                says    = [$('intro2Say1'),$('intro2Say2')];
+                cv      = $('intro2Canvas');
+                ctx     = cv.getContext('2d');
+                reduce  = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+                stop(true);                       // remise à zéro propre
+                overlay.classList.remove('hidden');
+                overlay.style.opacity=''; overlay.style.transition='';
+                textEl.innerHTML=''; says.forEach(el=>el.classList.remove('on'));
+                brandEl.classList.remove('on'); startEl.classList.remove('on');
+                oEl.classList.remove('on'); nextEl.classList.remove('on');
+                // Retour au noir sans transition, pour que le fondu d'entrée rejoue.
+                fadeEl.style.transition='none'; fadeEl.classList.remove('off');
+                void fadeEl.offsetWidth; fadeEl.style.transition='';
+
+                beat=-1; busy=false; canAdvance=false; emitting=false; seeking=false; deposit=0;
+                motes=[]; docked=[]; ring=null; cardAt=0; t=0;
+                running=true;
+                resize(); seedStars(); seedWalkers(); seedBlobs(); seedWindows(); seedAmbient();
+                startedAt=performance.now();
+
+                onTap=e=>{
+                    if(e.target.id==='intro2Start'||e.target.id==='intro2Skip') return;
+                    advance();
+                };
+                onNext=e=>{e.stopPropagation();advance();};
+                onKey=e=>{
+                    if(!running) return;
+                    if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight'){e.preventDefault();advance();}
+                };
+                onResize=()=>{resize();};
+                overlay.addEventListener('click',onTap);
+                nextEl.addEventListener('click',onNext);
+                window.addEventListener('keydown',onKey);
+                window.addEventListener('resize',onResize);
+
+                later(()=>fadeEl.classList.add('off'),120);
+                rafId=requestAnimationFrame(frame);
+                canAdvance=true; later(()=>{canAdvance=true;advance();},2000);
+            }
+
+            function stop(silent){
+                running=false;
+                if(rafId){ cancelAnimationFrame(rafId); rafId=0; }
+                if(ringRaf){ cancelAnimationFrame(ringRaf); ringRaf=0; }
+                clearTimers();
+                const ov = overlay || $('intro2Overlay');
+                if(ov){
+                    if(onTap) ov.removeEventListener('click',onTap);
+                    if(!silent) ov.classList.add('hidden');
+                }
+                if(nextEl && onNext) nextEl.removeEventListener('click',onNext);
+                if(onKey) window.removeEventListener('keydown',onKey);
+                if(onResize) window.removeEventListener('resize',onResize);
+                onTap=onNext=onKey=onResize=null;
+                motes=[]; docked=[]; walkers=[]; ring=null;
+            }
+
+            return { start, stop };
+        })();
+
         // ════════════════════════════════════════════════════════
         // CINÉMATIQUE BD D'INTRODUCTION
         // ════════════════════════════════════════════════════════
@@ -14061,8 +14818,17 @@
         // Sauvegardé : évite de rejouer la cinématique après un rechargement en
         // plein tutoriel (bascule de langue, cf. toggleLanguage).
         let _introBDSeen = false;
+        let _introVariant = 'anim';   // 'bd' = cinématique BD, 'anim' = intro animée
 
         function startIntroBD() {
+            if (_introVariant === 'anim') {
+                document.getElementById('introBDCinematic').classList.add('hidden');
+                Intro2.start();
+                return;
+            }
+            // Bascule depuis le panneau de test : l'intro animée peut tourner,
+            // on l'arrête (boucle, minuteurs, écouteurs) avant de lancer la BD.
+            Intro2.stop();
             _introBDStep = 0;
             _introBDCaseEls = {};
             const cinema = document.getElementById('introBDCinematic');
@@ -14153,7 +14919,13 @@
             });
         }
 
+        // « passer » : n'existe que dans l'intro animée, même issue que « Commencer ».
+        function skipIntroBD() {
+            finishIntroBD();
+        }
+
         function finishIntroBD() {
+            if (_introVariant === 'anim') { _intro2Finish(); return; }
             // Sortie de la cinématique — « Commencer l'aventure », seule issue
             // depuis le retrait du bouton « Passer ». C'est le geste qui autorise
             // la lecture audio : la musique d'ambiance démarre ici, et nulle part avant.
@@ -14170,6 +14942,37 @@
                 // Lancer l'onboarding habituel après la BD
                 startOnboarding();
             }, 600);
+        }
+
+        function testToggleIntroVariant() {
+            _introVariant = (_introVariant === 'anim') ? 'bd' : 'anim';
+            if (typeof saveProgress === 'function') saveProgress();
+            _refreshIntroVariantBtn();
+            showToast(_introVariant === 'anim' ? '🎞️ Intro animée' : '🎬 Cinématique BD');
+            startIntroBD();
+        }
+
+        function _refreshIntroVariantBtn() {
+            const b = document.getElementById('btnIntroVariant');
+            if (b) b.textContent = (_introVariant === 'anim') ? '🎞️ Intro : animée' : '🎞️ Intro : BD';
+        }
+
+        function _intro2Finish() {
+            // Même contrat que finishIntroBD : musique, drapeau, sauvegarde,
+            // fondu de l'overlay seul, puis enchaînement sur le tutoriel.
+            if (typeof BgMusic !== 'undefined') BgMusic.start();
+            _introBDSeen = true;
+            if (typeof saveProgress === 'function') saveProgress();
+            const ov = document.getElementById('intro2Overlay');
+            ov.style.transition = 'opacity 0.8s ease';
+            ov.style.opacity = '0';
+            setTimeout(() => {
+                Intro2.stop();
+                ov.classList.add('hidden');
+                ov.style.opacity = '';
+                ov.style.transition = '';
+                startOnboarding();
+            }, 800);
         }
 
         function startOnboarding() {
@@ -16678,6 +17481,7 @@
                     // cours de tuto rejoue la BD et perd le parcours guidé,
                     // alors que le monde (POI ramassés) reste, lui, sauvegardé.
                     _introBDSeen,
+                    _introVariant,
                     _obGuideActive: _obGuide.active,
                     _obGuideStep: _obGuide.step,
                     _obDone,
@@ -16773,6 +17577,7 @@
                 // Sauvegardes antérieures à ce champ : si la carte tutoriel a déjà
                 // été collectée, la BD a forcément été vue.
                 if (d._introBDSeen || d._obAct2Done) _introBDSeen = true;
+                if (d._introVariant) _introVariant = d._introVariant;
                 if (d._obGuideActive) { _obGuide.active = true; _obGuide.step = d._obGuideStep || null; }
                 console.log('[expLore] loadProgress _obDone raw:', d._obDone, typeof d._obDone);
                 if (d._obDone)    _obDone    = d._obDone;
@@ -24983,11 +25788,14 @@
             // n'arme pas la reprise au premier tap : le démarrage appartient au
             // bouton de fin de cinématique.
             function _introPlaying() {
-                const el = document.getElementById('introBDCinematic');
-                if (!el || el.classList.contains('hidden')) return false;
-                const cs = getComputedStyle(el);
-                return cs.display !== 'none' && cs.visibility !== 'hidden'
-                    && parseFloat(cs.opacity || '1') > 0.05;
+                // Les deux variantes d'intro : cinématique BD et intro animée.
+                return ['introBDCinematic', 'intro2Overlay'].some(id => {
+                    const el = document.getElementById(id);
+                    if (!el || el.classList.contains('hidden')) return false;
+                    const cs = getComputedStyle(el);
+                    return cs.display !== 'none' && cs.visibility !== 'hidden'
+                        && parseFloat(cs.opacity || '1') > 0.05;
+                });
             }
 
             function init() {
