@@ -9380,7 +9380,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.78.0</div>
+            <div class="hud-version" id="hudVersion">v0.79.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -17259,12 +17259,16 @@
             if (blocked) return;
             // 2) Un chapitre plein sans que la jeune fille l'ait dit (événement
             //    manqué) → « dévoiler / sceller », sur cette carte-là.
-            if (!_obGuideVu.xp_full) {
-                const pleine = OB_GUIDE_CARD_IDS.find(id => {
+            //    Une carte pleine ET dévoilée appelle le sceau, même si « dévoile tes
+            //    pages » a déjà été dit sur l'autre carte.
+            if (!_obGuideVu.xp_full || !_obGuideVu.all_revealed) {
+                const pleines = OB_GUIDE_CARD_IDS.filter(id => {
                     const cl = cardLevels[id], c = getCardById(id);
                     return cl && c && collectedCards.includes(id) && cl.experience >= getExpNeeded(c, cl.level);
                 });
-                if (pleine) _obAfterXpFull(pleine);
+                const prete = pleines.find(id => _obAllTutorialEntriesRevealed(id));
+                if (prete && !_obGuideVu.all_revealed) _obAfterXpFull(prete);
+                else if (pleines.length && !_obGuideVu.xp_full) _obAfterXpFull(pleines[0]);
             }
         }
 
@@ -17666,19 +17670,23 @@
         }
 
         // XP au max : router vers "dévoiler les pages restantes" ou directement "sceller".
-        // Dit une seule fois, pour le premier chapitre plein, quelle que soit la
-        // carte : l'anneau suit ensuite cette carte-là (_obGuide.cible).
+        // Deux consignes indépendantes, chacune dite une fois, quelle que soit la
+        // carte : « dévoile tes pages » (xp_full) et « scelle-le » (all_revealed).
+        // Le joueur peut entendre la première sur l'OT et la seconde sur les clefs.
+        // L'anneau suit la carte concernée (_obGuide.cible).
         function _obAfterXpFull(id) {
             id = id || _obGuideCarteId();
-            if (!_obUneFois('xp_full')) return;
-            _obGuide.cible = id;
             if (_obAllTutorialEntriesRevealed(id)) {
-                _obGuideVu.all_revealed = true;   // la consigne de sceller est dite ici
+                if (!_obUneFois('all_revealed')) return;
+                _obGuideVu.xp_full = true;   // plus rien à dévoiler : la première consigne n'a plus lieu d'être
+                _obGuide.cible = id;
                 _obGuide.step = 'seal';
                 _obSay('carddetail', [
                     { speaker: 'La jeune fille', line: 'Le chapitre est plein, et toutes ses pages dévoilées. Scelle-le — qu\'il prenne racine.' },
                 ], () => _obGuideRefresh());
             } else {
+                if (!_obUneFois('xp_full')) return;
+                _obGuide.cible = id;
                 _obGuide.step = 'reveal_rest';
                 // Répliques des clefs (une image, un son) seulement si c'est bien
                 // ce qui reste voilé : le chapitre I de l'Office du Tourisme
@@ -17800,6 +17808,7 @@
                             ], () => _obGuideRefresh());
                         } else {
                             _obGuide.step = 'gather';
+                            _obGuideVu.orbe_a_chercher = true;   // elle l'a envoyé dehors
                             _obSay('map', _obGatherLines(), () => _obGuideRefresh());
                         }
                     }
@@ -17808,7 +17817,9 @@
                 // Le joueur est sorti chercher l'orbe qu'elle vient de lui décrire.
                 // Hors de ce moment (orbe ramassée en passant), elle se tait.
                 case 'orb_collected':
-                    if (_obGuide.step === 'gather' && _obUneFois('orbe_ramassee')) {
+                    // Seulement si elle l'a envoyé la chercher, et tant qu'elle n'a pas servi —
+                    // quelle que soit l'étape où le guide se trouve entre-temps.
+                    if (_obGuideVu.orbe_a_chercher && !_obGuideVu.orbe_utilisee && _obUneFois('orbe_ramassee')) {
                         _obGuide.step = 'orb';
                         _obSay('map', [
                             { speaker: 'La jeune fille', line: 'Tu l\'as. Retourne à la carte et pose-la dessus : elle lui rendra toute son énergie d\'un coup.' },
@@ -19075,12 +19086,13 @@
                     d._obGuideActive = false; d._obGuideStep = null; d._obGuideOutroFlag = false;
                     // La carte tutoriel doit redevenir à collecter, sinon son
                     // marqueur ne se repose pas et le guide n'a rien à guider.
-                    const tid = (typeof OB_TUTORIAL_CARD === 'object' && OB_TUTORIAL_CARD) ? OB_TUTORIAL_CARD.id : null;
-                    if (tid) {
+                    // Les deux cartes du tutoriel : les clefs, et l'Office du Tourisme
+                    // qui paraît pendant le guide (sinon il resterait nourri et scellé).
+                    ['ob_tutorial_card', 'card_office_tourisme'].forEach(tid => {
                         if (Array.isArray(d.collectedCards)) d.collectedCards = d.collectedCards.filter(id => id !== tid);
                         if (d.cardLevels && d.cardLevels[tid]) delete d.cardLevels[tid];
                         if (d.cardJournals && d.cardJournals[tid]) delete d.cardJournals[tid];
-                    }
+                    });
                     localStorage.setItem('lyon_cards_progress', JSON.stringify(d));
                 } catch (e) { console.warn('[expLore] resetOnboarding :', e); }
             }
