@@ -9375,7 +9375,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.75.0</div>
+            <div class="hud-version" id="hudVersion">v0.76.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -16778,7 +16778,7 @@
         // `outro` : le guide est entré dans sa séquence de sortie (longue-vue →
         // progression → chute). Sans ce drapeau, _obGuideSync rappellerait
         // _obGuideFinish à chaque tick, la carte étant déjà montée de niveau.
-        let _obGuide = { active: false, step: null, outro: false };
+        let _obGuide = { active: false, step: null, outro: false, cible: null };   // cible : carte au chapitre plein
 
         // ════════════════════════════════════════════════════════════════
         // RÈGLE D'OR — une réplique ne tombe QUE dans l'interface dont elle parle
@@ -16875,29 +16875,40 @@
         let _obJournalBackSeen     = false;   // le joueur en est-il ressorti une fois ?
         let _obJournalSuppliesSaid = false;   // l'économie encre/pellicule/cassette a-t-elle été dite ?
 
-        // ── Carte suivie par le parcours guidé ──────────────────────────────
+        // ── Deux cartes, un seul tutoriel ───────────────────────────────────
         // Le joueur tient deux cartes pendant le tutoriel : les clefs de la ville,
-        // et l'Office du Tourisme s'il est allé la chercher. La jeune fille suit
-        // celle dont il ouvre le carnet en premier (ou exclusif) : le choix est
-        // figé à cette ouverture (cf. _obJournalHint). Avant, les deux comptent,
-        // et les anneaux visent la dernière des deux qu'il a ouverte.
+        // et l'Office du Tourisme s'il est allé la chercher. Aucune n'est « la »
+        // carte du tuto : chaque explication de la jeune fille tombe à la première
+        // rencontre du joueur avec la fonction (carnet, orbe, sceau…), sur
+        // l'une ou l'autre, et une seule fois (cf. _obGuideVu). Le tutoriel se
+        // termine au premier chapitre scellé, quelle que soit la carte.
+        // La carte « courante » est celle qu'il a en main (fiche ou carnet
+        // ouverts), sinon la dernière des deux qu'il a ouverte.
         const OB_GUIDE_CARD_IDS = ['ob_tutorial_card', 'card_office_tourisme'];
-        let _obGuideCardId   = null;   // figée au premier carnet ouvert (sauvegardée)
         let _obGuideDerniere = null;   // dernière carte éligible ouverte
+        let _obGuideVu = {};           // explications déjà données (sauvegardé)
+        function _obUneFois(cle) {
+            if (_obGuideVu[cle]) return false;
+            _obGuideVu[cle] = true;
+            try { saveProgress(); } catch (e) {}
+            return true;
+        }
         function _obGuideCarteId() {
-            return _obGuideCardId || _obGuideDerniere || OB_TUTORIAL_CARD.id;
+            if (selectedCard && OB_GUIDE_CARD_IDS.includes(selectedCard.id)) return selectedCard.id;
+            return _obGuideDerniere || OB_TUTORIAL_CARD.id;
         }
         function _obGuideCarte() {
             return getCardById(_obGuideCarteId()) || OB_TUTORIAL_CARD;
         }
         // Un geste sur cette carte fait-il avancer le guide ?
         function _obEstCarteGuide(id) {
-            if (_obGuideCardId) return id === _obGuideCardId;
             return OB_GUIDE_CARD_IDS.includes(id);
         }
         // Vignette de la carte du guide dans la Collection.
         function _obGuideVignetteSelector() {
-            return '.alb-card.alb-collected[onclick*="\'' + _obGuideCarteId() + '\'"]';
+            // Au moment du sceau, l'anneau suit la carte dont le chapitre est plein.
+            const id = (['seal', 'reveal_rest'].includes(_obGuide.step) && _obGuide.cible) || _obGuideCarteId();
+            return '.alb-card.alb-collected[onclick*="\'' + id + '\'"]';
         }
 
         // ── Découvertes à la curiosité ──────────────────────────────────────
@@ -17144,30 +17155,29 @@
         // ne puisse jamais rester bloqué derrière le joueur (qui peut tout faire
         // dans n'importe quel ordre). Tourne à chaque tick.
         function _obGuideSync() {
-            if (!_obGuide.active) return;
-            const card = _obGuideCarte();
-            const cl = (typeof cardLevels === 'object') ? cardLevels[card.id] : null;
-            if (!cl) return;
+            if (!_obGuide.active || typeof cardLevels !== 'object') return;
             // Ne pas agir tant qu'un overlay bloquant est affiché (dialogue VN ou
             // synthèse de scellement) : on laisse l'événement 'sealed' faire la
             // transition propre une fois la synthèse fermée.
             const vn = document.getElementById('vnOverlay');
             const synth = document.getElementById('orbSynthOverlay');
             const blocked = (vn && vn.classList.contains('show')) || (synth && synth.classList.contains('show'));
-            // 1) La carte est montée de niveau → le chapitre a été scellé : on termine
-            //    (backstop si l'événement 'sealed' n'a pas été capté à la bonne étape).
-            if (cl.level >= 1) {
+            // 1) Un chapitre I scellé, sur l'une OU l'autre carte → fin du tuto
+            //    (backstop si l'événement 'sealed' n'a pas été capté).
+            if (OB_GUIDE_CARD_IDS.some(id => cardLevels[id] && cardLevels[id].level >= 1)) {
                 if (blocked) return;
                 _obGuideFinish();
                 return;
             }
             if (blocked) return;
-            // 2) XP au max alors que le guide est encore dans une étape de nourrissage
-            //    → router vers "dévoiler / sceller".
-            const needed = getExpNeeded(card, cl.level);
-            if (cl.experience >= needed) {
-                const feeding = ['feed1', 'journal1', 'lesson', 'feed2', 'orb', 'feed3'];
-                if (feeding.indexOf(_obGuide.step) !== -1) { _obAfterXpFull(); }
+            // 2) Un chapitre plein sans que la jeune fille l'ait dit (événement
+            //    manqué) → « dévoiler / sceller », sur cette carte-là.
+            if (!_obGuideVu.xp_full) {
+                const pleine = OB_GUIDE_CARD_IDS.find(id => {
+                    const cl = cardLevels[id], c = getCardById(id);
+                    return cl && c && collectedCards.includes(id) && cl.experience >= getExpNeeded(c, cl.level);
+                });
+                if (pleine) _obAfterXpFull(pleine);
             }
         }
 
@@ -17244,9 +17254,9 @@
             if (selectedCard && selectedCard.id === cardId && typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
         }
 
-        // Toutes les entrées du niveau courant de la carte tuto sont-elles révélées ?
-        function _obAllTutorialEntriesRevealed() {
-            const id = _obGuideCarteId();
+        // Toutes les entrées du niveau courant de cette carte sont-elles révélées ?
+        function _obAllTutorialEntriesRevealed(id) {
+            id = id || _obGuideCarteId();
             const cl = cardLevels[id];
             const lvl = cl ? cl.level : 0;
             const entries = (cardJournalEntries[id] || []).filter(e => e.level === lvl);
@@ -17259,8 +17269,8 @@
         // une pellicule n'ouvre qu'une entrée visuelle, l'encre ne remplace pas
         // la cassette — d'où des « tu en as déjà » trompeurs si l'on se
         // contentait de compter _obSuppliesTotal().
-        function _obVeiledEntries() {
-            return (cardJournalEntries[_obGuideCarteId()] || []).filter(e => !e._revealed);
+        function _obVeiledEntries(id) {
+            return (cardJournalEntries[id || _obGuideCarteId()] || []).filter(e => !e._revealed);
         }
         function _obMissingSupplies() {
             const need = { visual: 0, audio: 0, text: 0 };
@@ -17290,7 +17300,7 @@
             // la dire deux fois. Tant que le guide n'a pas franchi cette étape, on
             // le laisse faire : la présentation du carnet se tient, sans la leçon.
             const _guideVaEnseigner = _obGuide.active
-                && ['go_collections', 'go_card', 'feed1', 'journal1'].indexOf(_obGuide.step) !== -1;
+                && !_obGuideVu.lesson;   // la leçon (cf. _obGuideEvent 'journal') tombe juste après
             const voilees = _guideVaEnseigner ? 0 : _obVeiledEntries().length;
             // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour que la
             // réplique et l'inventaire montrent le même signe.
@@ -17298,10 +17308,6 @@
 
             if (!_obJournalSeen) {
                 _obJournalSeen = true;
-                // Le guide suivra désormais la carte dont ce carnet est ouvert.
-                if (!_obGuideCardId && selectedCard && OB_GUIDE_CARD_IDS.includes(selectedCard.id)) {
-                    _obGuideCardId = selectedCard.id;
-                }
                 // Il vient de L'Organisation, il appartient au joueur (« garde
                 // celui-ci »), et l'oubli du joueur le relie à l'Oubli.
                 const rep = [
@@ -17448,6 +17454,8 @@
             // Un tuto relancé (reset, mode test) ne doit pas hériter du drapeau de
             // sortie de la partie précédente : _obGuideFinish refuserait d'entrer.
             _obGuide.outro = false;
+            _obGuide.cible = null;
+            _obGuideVu = {};   // un tuto relancé réexplique tout
             _obSkipBtnShow(true);
             _obGuideStartLoop();
             _obSay('map', [
@@ -17571,8 +17579,14 @@
         }
 
         // XP au max : router vers "dévoiler les pages restantes" ou directement "sceller".
-        function _obAfterXpFull() {
-            if (_obAllTutorialEntriesRevealed()) {
+        // Dit une seule fois, pour le premier chapitre plein, quelle que soit la
+        // carte : l'anneau suit ensuite cette carte-là (_obGuide.cible).
+        function _obAfterXpFull(id) {
+            id = id || _obGuideCarteId();
+            if (!_obUneFois('xp_full')) return;
+            _obGuide.cible = id;
+            if (_obAllTutorialEntriesRevealed(id)) {
+                _obGuideVu.all_revealed = true;   // la consigne de sceller est dite ici
                 _obGuide.step = 'seal';
                 _obSay('carddetail', [
                     { speaker: 'La jeune fille', line: 'Le chapitre est plein, et toutes ses pages dévoilées. Scelle-le — qu\'il prenne racine.' },
@@ -17582,7 +17596,7 @@
                 // Répliques des clefs (une image, un son) seulement si c'est bien
                 // ce qui reste voilé : le chapitre I de l'Office du Tourisme
                 // compte deux textes et une image.
-                const _voilees = _obVeiledEntries().map(e => e._type || 'text').sort().join(',');
+                const _voilees = _obVeiledEntries(id).map(e => e._type || 'text').sort().join(',');
                 _obSay('carddetail', _voilees === 'audio,visual' ? [
                     { speaker: 'La jeune fille', line: 'Le chapitre est plein — mais des pages restent voilées : une image, un son.' },
                     { speaker: 'La jeune fille', line: 'Ouvre le carnet et dévoile-les toi-même, à la pellicule et à la cassette. Ensuite seulement tu pourras sceller.' },
@@ -17601,29 +17615,30 @@
             // (Le joueur peut sceller par un chemin que le guide n'a pas anticipé.)
             if (ev === 'sealed') { _obGuideFinish(); return; }
 
-            switch (_obGuide.step) {
+            // Avant la sortie, le guide n'impose plus d'ordre : chaque
+            // explication tombe à la PREMIÈRE rencontre du joueur avec la
+            // fonction, sur l'une ou l'autre carte, et une seule fois
+            // (_obUneFois). _obGuide.step ne sert plus qu'à placer l'anneau.
+            const _etape = _obGuide.outro ? _obGuide.step : ev;
 
-                case 'go_collections':
-                    if (ev === 'collections') {
-                        _obGuide.step = 'go_card';
-                        _obSay('collections', [
-                            { speaker: 'La jeune fille', line: 'La voilà. Muette, pour l\'instant. Ouvre-la.' },
-                        ], () => _obGuideRefresh());
-                    } else if (ev === 'carddetail') {
-                        // Le joueur a ouvert la carte directement (via le toast) — on enchaîne.
-                        _obGuideEnterFeed1();
-                    }
+            switch (_etape) {
+
+                case 'collections':
+                    // Déjà entré dans une carte (via le toast) : plus rien à montrer ici.
+                    if (_obGuideVu.carddetail || !_obUneFois('collections')) break;
+                    _obGuide.step = 'go_card';
+                    _obSay('collections', [
+                        { speaker: 'La jeune fille', line: 'La voilà. Muette, pour l\'instant. Ouvre-la.' },
+                    ], () => _obGuideRefresh());
                     break;
 
-                case 'go_card':
-                    if (ev === 'carddetail') {
-                        _obGuideEnterFeed1();
-                    }
+                case 'carddetail':
+                    if (_obUneFois('carddetail')) _obGuideEnterFeed1();
                     break;
 
-                case 'feed1':
-                    if (ev === 'entry_unlocked') {
-                        _obGuide.step = 'journal1';
+                case 'entry_unlocked':
+                    if (_obUneFois('entry_unlocked')) {
+                        if (!_obGuideVu.lesson) _obGuide.step = 'journal1';
                         // La remise du carnet (« Le carnet ? » / « garde celui-ci »)
                         // ne se dit plus ici : elle a migré dans _obJournalHint, à la
                         // première ouverture réelle du carnet. Un joueur curieux peut
@@ -17635,19 +17650,22 @@
                             // carte (cardCarnetIcon) — le joueur cherche ce signe-là.
                             { speaker: 'La jeune fille', html: 'Tu l\'as réveillée. Une page s\'est inscrite dans son <span style="font-weight:600">📖 carnet</span> — il t\'appelle.' },
                         ], () => _obGuideRefresh());
-                    } else if (ev === 'xp_full') {
-                        _obAfterXpFull();
                     }
                     break;
 
-                case 'journal1':
-                    if (ev === 'journal') {
+                // La leçon des trois traces, et la page offerte : au premier carnet
+                // ouvert qui a une page voilée — celui des clefs ou celui de l'OT.
+                case 'journal': {
+                    const _id = _obGuideCarteId();
+                    const _page = _obVeiledEntries(_id)[0];
+                    if (!_page || !_obUneFois('lesson')) break;
+                    {
                         _obGuide.step = 'lesson';
                         _obGuideClearRing();
                         _obSay('journal', [
                             { speaker: 'La jeune fille', line: 'Cette première page est voilée. Cette fois, c\'est moi qui l\'écris pour toi.' },
                         ], () => {
-                            _obRevealEntryFree(_obGuideCarteId(), _obGuideCarteId() + '_0_0');
+                            _obRevealEntryFree(_id, _page.id);
                             setTimeout(() => {
                                 // Répliques bâties sur l'état réel du sac : ne jamais
                                 // dire au joueur qu'il a de quoi dévoiler s'il n'a rien,
@@ -17669,18 +17687,18 @@
                                 }
                                 _lines.push({ speaker: 'La jeune fille', line: 'Reviens à la carte et continue à la nourrir, puis dévoile toi-même les pages qui s\'ouvriront.' });
                                 _obSay('journal', _lines, () => {
-                                    _obGuide.step = 'feed2';
+                                    if (_obGuide.step === 'lesson') _obGuide.step = 'feed2';
                                     _obGuideRefresh();
                                 });
                             }, 700);
                         });
-                    } else if (ev === 'xp_full') {
-                        _obAfterXpFull();
                     }
                     break;
+                }
 
-                case 'feed2':
-                    if (ev === 'energy_empty') {
+                // L'orbe s'explique la première fois qu'une carte s'épuise, n'importe laquelle.
+                case 'energy_empty':
+                    if (_obUneFois('energie')) {
                         // L'orbe ne se donne plus : elle se ramasse. Une orbe posée
                         // dans la main n'apprend rien ; une orbe qu'on va chercher
                         // apprend où en trouver d'autres. Elle attend sur la mappe
@@ -17697,50 +17715,46 @@
                             _obGuide.step = 'gather';
                             _obSay('map', _obGatherLines(), () => _obGuideRefresh());
                         }
-                    } else if (ev === 'xp_full') {
-                        _obAfterXpFull();
                     }
                     break;
 
-                // Le joueur est dehors : il lui manque l'orbe, souvent la poussière et
-                // les fournitures. Seule l'orbe franchit l'étape — c'est elle qui
-                // rend à la carte de quoi continuer.
-                case 'gather':
-                    if (ev === 'orb_collected') {
+                // Le joueur est sorti chercher l'orbe qu'elle vient de lui décrire.
+                // Hors de ce moment (orbe ramassée en passant), elle se tait.
+                case 'orb_collected':
+                    if (_obGuide.step === 'gather' && _obUneFois('orbe_ramassee')) {
                         _obGuide.step = 'orb';
                         _obSay('map', [
                             { speaker: 'La jeune fille', line: 'Tu l\'as. Retourne à la carte et pose-la dessus : elle lui rendra toute son énergie d\'un coup.' },
                         ], () => _obGuideRefresh());
-                    } else if (ev === 'xp_full') {
-                        _obAfterXpFull();
                     }
                     break;
 
-                case 'orb':
-                    if (ev === 'orb_used') {
+                case 'orb_used':
+                    if (_obUneFois('orbe_utilisee')) {
                         _obGuide.step = 'feed3';
                         _obSay('carddetail', [
                             { speaker: 'La jeune fille', line: 'Elle revit. Continue — mène ce premier chapitre à son terme.' },
                         ], () => _obGuideRefresh());
-                    } else if (ev === 'xp_full') {
-                        _obAfterXpFull();
                     }
                     break;
 
-                case 'feed3':
-                    if (ev === 'xp_full') {
-                        _obAfterXpFull();
-                    }
+                case 'xp_full':
+                    _obAfterXpFull(_obGuideCarteId());
                     break;
 
-                case 'reveal_rest':
-                    if (ev === 'all_revealed') {
-                        _obGuide.step = 'seal';
-                        _obSay('journal', [
-                            { speaker: 'La jeune fille', line: 'Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, scelle-le.' },
-                        ], () => _obGuideRefresh());
-                    }
+                // Toutes les pages dévoilées : n'appelle le sceau que si le chapitre
+                // de CETTE carte est aussi plein (sinon il reste à la nourrir).
+                case 'all_revealed': {
+                    const _id = _obGuideCarteId(), _cl = cardLevels[_id], _c = getCardById(_id);
+                    if (!_cl || !_c || _cl.experience < getExpNeeded(_c, _cl.level)) break;
+                    if (!_obUneFois('all_revealed')) break;
+                    _obGuide.cible = _id;
+                    _obGuide.step = 'seal';
+                    _obSay('journal', [
+                        { speaker: 'La jeune fille', line: 'Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, scelle-le.' },
+                    ], () => _obGuideRefresh());
                     break;
+                }
 
                 // 'seal' : le scellement est géré en tête de fonction (ev === 'sealed').
 
@@ -17752,12 +17766,13 @@
                     // Émis par toggleMapView() au passage en vue planification —
                     // pas au retour en vue rapprochée : c'est la hauteur qu'on
                     // lui montre, et il vient de l'atteindre.
-                    if (ev === 'map_planning') { _obGuideEnterProgression(); }
+                    if (_obGuide.outro && ev === 'map_planning') { _obGuideEnterProgression(); }
                     break;
 
                 case 'progression':
-                    // Émis par openProgressionScreen().
-                    if (ev === 'progression') { _obGuideOutro(); }
+                    // Émis par openProgressionScreen(). Hors séquence de sortie,
+                    // ouvrir la progression ne termine rien.
+                    if (_obGuide.outro && ev === 'progression') { _obGuideOutro(); }
                     break;
             }
         }
@@ -18147,9 +18162,10 @@
             // Balisage disponible dans `text` : ligne vide = paragraphe,
             // « >> » en tête = encart lettre, {{sp:…}} = réponse masquée.
             // Ce n'est PAS la carte d'introduction, et elle ne tient à aucun
-            // parcours. Dans test.html, elle paraît pendant le tutoriel : si le
-            // joueur ouvre son carnet en premier, le guide la suit, et la jeune
-            // fille lui en offre la première page (cf. _obGuideCardId).
+            // parcours. Dans test.html, elle paraît pendant le tutoriel et vaut
+            // les clefs pour le guide : si son carnet est le premier ouvert avec
+            // une page voilée, la jeune fille lui en offre la première page
+            // (cf. _obGuideVu).
             card_office_tourisme: [
                 // ─ Arc 1 (niveau 0) — « Bienvenue à l'Office du Tourisme ! » ─
                 { text: "Tout le monde passe devant moi. Peu s'arrêtent pour se demander ce que j'étais avant.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
@@ -18782,8 +18798,8 @@
                     _obJournalSeen,
                     _obJournalBackSeen,
                     _obJournalSuppliesSaid,
-                    // Carte suivie par le parcours guidé (figée au premier carnet ouvert).
-                    _obGuideCardId,
+                    // Explications du tutoriel déjà données (une seule fois, sur l'une ou l'autre carte).
+                    _obGuideVu,
                     // Découvertes déjà expliquées (panorama, point d'info, parchemin…).
                     // Persistées : elles survivent au tutoriel et ne se redisent jamais.
                     _obDiscovered,
@@ -18888,7 +18904,7 @@
                 if (d._obJournalSeen)         _obJournalSeen         = true;
                 if (d._obJournalBackSeen)     _obJournalBackSeen     = true;
                 if (d._obJournalSuppliesSaid) _obJournalSuppliesSaid = true;
-                if (d._obGuideCardId && OB_GUIDE_CARD_IDS.includes(d._obGuideCardId)) _obGuideCardId = d._obGuideCardId;
+                if (d._obGuideVu && typeof d._obGuideVu === 'object') _obGuideVu = d._obGuideVu;
                 if (d._obDiscovered && typeof d._obDiscovered === 'object') _obDiscovered = d._obDiscovered;
                 if (d._obTutoSpawn && typeof d._obTutoSpawn === 'object') _obTutoSpawn = d._obTutoSpawn;
                 if (d._villeDuLivreUnlocked) _villeDuLivreUnlocked = d._villeDuLivreUnlocked;
@@ -18947,7 +18963,7 @@
                     const d = JSON.parse(raw);
                     d._obDone = false; d._obAct2Done = false; d._obAct3Done = false;
                     d._obJournalSeen = false; d._obJournalBackSeen = false; d._obJournalSuppliesSaid = false;
-                    d._obGuideCardId = null;
+                    d._obGuideVu = {};
                     d._obDiscovered = {};
                     // L'économie du tutoriel fait partie du tutoriel : la relancer
                     // avec 5000 poussières en poche et le sac plein de fournitures ne
@@ -21424,13 +21440,18 @@
             setTimeout(() => { if (el.parentNode) el.remove(); }, 1600);
         }
 
-        // Compteur, pas booléen : deux écrans empilés (Collection puis
-        // Explorium) puis fermeture de celui du dessus remettait le drapeau à
-        // 0 alors que le premier était encore ouvert — les épingles de quête et
-        // les consoles de ramassage resurgissaient par-dessus lui.
-        function _hideAllNearbyConsoles() {
-            const _n = parseInt(document.body.dataset.screenOpen, 10);
-            document.body.dataset.screenOpen = String((isNaN(_n) ? 0 : _n) + 1);
+        // Ensemble d'écrans NOMMÉS, pas compteur : deux écrans empilés (Collection
+        // puis Explorium) restent comptés tous les deux. Le compteur d'avant
+        // dérivait : un écran rouvert par-dessus lui-même (panneau après insertion
+        // d'un parchemin, coffre du panneau) comptait deux fois pour une seule
+        // fermeture, et le verrou restait bloqué — plus aucune console de
+        // ramassage ne s'ouvrait de la partie. Ici, rouvrir un écran ouvert ne
+        // change rien, et fermer un écran jamais ouvert non plus.
+        var _ecransOuverts;   // créé au premier appel (cf. _ecrans)
+        function _ecrans() { return _ecransOuverts || (_ecransOuverts = new Set()); }
+        function _hideAllNearbyConsoles(ecran) {
+            _ecrans().add(ecran || 'ecran');
+            document.body.dataset.screenOpen = String(_ecrans().size);
             ['nearbyQuest','nearbyPOI','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyLoot','nearbyBazar','nearbyInfo','nearbyPanneau','nearbyCarnetResource'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
@@ -21439,9 +21460,9 @@
             if (typeof _hideQuestPins === 'function') _hideQuestPins();
         }
 
-        function _showNearbyConsoles() {
-            const _n = parseInt(document.body.dataset.screenOpen, 10);
-            const _rest = Math.max(0, (isNaN(_n) ? 1 : _n) - 1);
+        function _showNearbyConsoles(ecran) {
+            _ecrans().delete(ecran || 'ecran');
+            const _rest = _ecrans().size;
             document.body.dataset.screenOpen = String(_rest);
             // Un écran reste ouvert dessous : ne rien redonner à voir.
             if (_rest > 0) return;
@@ -21466,8 +21487,7 @@
         }
 
         function _isAnyScreenOpen() {
-            const _n = parseInt(document.body.dataset.screenOpen, 10);
-            return !isNaN(_n) && _n > 0;
+            return _ecrans().size > 0;
         }
 
         // ── Edge-trigger pour les consoles de POI ──
@@ -22004,7 +22024,7 @@
         }
 
         function closeLootReveal() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('loot');
             const overlay = document.getElementById('lootRevealOverlay');
             overlay.style.opacity       = '0';
             overlay.style.pointerEvents = 'none';
@@ -22609,7 +22629,7 @@
         const RITUAL_HOLD_DURATION = 2800;
 
         function openCollectRitual(card) {
-            _hideAllNearbyConsoles();
+            _hideAllNearbyConsoles('rituel');
             _ritualCard = card;
             _ritualHoldProgress = 0;
             _ritualHoldActive = false;
@@ -23042,7 +23062,7 @@
         }
 
         function ritualClose() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('rituel');
             const card = _ritualCard;
             _ritualCard = null;
             if (card) setTimeout(() => _obCheckAfterCollect(card), 400);
@@ -23267,14 +23287,14 @@
         }
 
         function openBagScreen() {
-            _hideAllNearbyConsoles();
+            _hideAllNearbyConsoles('sac');
             _obOnOpenBag();
             _bagCat = 0; _bagSel = null;
             document.getElementById("bagScreen").classList.add("show");
             _bagRender();
         }
         function closeBagScreen() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('sac');
             document.getElementById("bagScreen").classList.remove("show");
         }
         function _bagRender() { _bagTabs(); _bagList(); _bagDetail(null); }
@@ -24302,14 +24322,14 @@
         let _seenCardIds = new Set();
 
         function openCollections() {
-            _hideAllNearbyConsoles();
+            _hideAllNearbyConsoles('collection');
             _obOnOpenCollections();
             document.getElementById('collectionsPanel').classList.add('show');
             albSwitchTab(_albCurrentTab || 'cards');
         }
 
         function closeCollections() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('collection');
             document.getElementById('collectionsPanel').classList.remove('show');
             selectedCollectionId = null;
             if (typeof _obGuide === 'object' && _obGuide.active) setTimeout(() => _obGuideRefresh(), 120);
@@ -28872,7 +28892,7 @@
         }
 
         function openStudioScreen() {
-            _hideAllNearbyConsoles();
+            _hideAllNearbyConsoles('studio');
             document.getElementById('studioCardName').textContent = selectedCard ? selectedCard.name : '';
             document.getElementById('studioDustCounter').textContent = memorialDust;
             applyStudioTheme();
@@ -28894,7 +28914,7 @@
         }
 
         function closeStudioScreen() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('studio');
             document.getElementById('studioScreen').classList.remove('show');
             closeStudioTooltip();
         }
@@ -31286,8 +31306,9 @@
         }
 
         function openPanneauScreen() {
-            _hideAllNearbyConsoles();
             if (!currentNearbyPanneau) return;
+            // Verrou posé APRÈS la garde : sinon un écran jamais ouvert le gardait.
+            _hideAllNearbyConsoles('panneau');
             if (typeof _obOnOpenPanneau === 'function') _obOnOpenPanneau();
             const pan   = currentNearbyPanneau;
             compterLecture('ouvertures', 'panneau:' + pan.id);
@@ -31350,7 +31371,7 @@
         }
 
         function closePanneauScreen() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('panneau');
             document.getElementById('panneauScreen').classList.remove('show');
         }
 
@@ -31563,9 +31584,10 @@
         }
 
         function openBazarScreen(bazar) {
-            _hideAllNearbyConsoles();
             currentNearbyBazar = bazar || currentNearbyBazar;
             if (!currentNearbyBazar) return;
+            // Verrou posé APRÈS la garde : sinon un écran jamais ouvert le gardait.
+            _hideAllNearbyConsoles('echoppe');
             if (!currentNearbyBazar.stock) currentNearbyBazar.stock = { pellicules: 3, encre: 3, cassettes: 3 };
             document.getElementById('bazarScreenTitle').textContent = currentNearbyBazar.name;
             _bazarRefreshStock();
@@ -31594,7 +31616,7 @@
         }
 
         function closeBazarScreen() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('echoppe');
             // Le joueur vient de fermer l'échoppe : sa console ne doit pas se
             // rouvrir dans la seconde. C'est désormais la règle générale —
             // _showNearbyConsoles() marque comme vues toutes les zones où le
@@ -31712,7 +31734,7 @@
         let vfZoomHideTimer = null;
 
         function openViewfinderFromNearby() {
-            _hideAllNearbyConsoles();
+            _hideAllNearbyConsoles('viseur');
             if (currentNearbyInfo) openViewfinder(currentNearbyInfo);
         }
 
@@ -31838,7 +31860,7 @@
         function closeViewfinder() {
             document.getElementById('viewfinderScreen').classList.remove('show');
             currentViewfinderInfo = null;
-            _showNearbyConsoles();
+            _showNearbyConsoles('viseur');
         }
 
         function openInfoFromViewfinder() {
@@ -31930,7 +31952,7 @@
         function closeInfoScreen() {
             document.getElementById('infoScreen').classList.remove('show');
             currentInfoPoint = null;
-            _showNearbyConsoles();
+            _showNearbyConsoles('info');
         }
 
         function saveToMuseum() {
@@ -33512,7 +33534,7 @@
 
         function closeArchiveFragment() {
             document.getElementById('archiveFragmentScreen').classList.remove('show');
-            if (typeof _showNearbyConsoles === 'function') _showNearbyConsoles();
+            if (typeof _showNearbyConsoles === 'function') _showNearbyConsoles('explorium');
         }
 
         function openMindmap() {
@@ -33521,14 +33543,14 @@
             // Le fragment est un repli de dev : il ne dépend pas du verrou du QG.
             if (!_showRealExplorium) {
                 clearVaultNotification();
-                _hideAllNearbyConsoles();
+                _hideAllNearbyConsoles('explorium');
                 openArchiveFragment();
                 return;
             }
             if (_hubExploriumLocked()) { _hubShowExploriumLocked(); return; }
             // Redirection vers Explorium (l'ancienne Voûte est désactivée)
             clearVaultNotification();
-            _hideAllNearbyConsoles();
+            _hideAllNearbyConsoles('explorium');
             _obOnOpenMindmap();
             refreshMindmapState();
             if (typeof openVoutV2 === 'function') {
@@ -33557,10 +33579,10 @@
             const v2 = document.getElementById('voutV2Screen');
             if (v2 && v2.classList.contains('show')) {
                 if (typeof closeVoutV2 === 'function') closeVoutV2();
-                _showNearbyConsoles();
+                _showNearbyConsoles('explorium');
                 return;
             }
-            _showNearbyConsoles();
+            _showNearbyConsoles('explorium');
             document.getElementById('mindmapScreen').classList.remove('show');
             if (mmAnimId) { cancelAnimationFrame(mmAnimId); mmAnimId = null; }
             closeFragmentPanel();
@@ -37775,7 +37797,7 @@
             const oldMindmap = document.getElementById('mindmapScreen');
             if (oldMindmap) oldMindmap.classList.remove('show');
             if (typeof closeFragmentPanel === 'function') closeFragmentPanel();
-            if (typeof _showNearbyConsoles === 'function') _showNearbyConsoles();
+            if (typeof _showNearbyConsoles === 'function') _showNearbyConsoles('explorium');
             // Première sortie après l'ouverture de la porte : le cadenas tombe.
             if (_hubPadlockPopPending) setTimeout(_hubPlayPadlockPop, 450);
         }
