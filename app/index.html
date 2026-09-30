@@ -19449,13 +19449,18 @@
             setTimeout(() => { if (el.parentNode) el.remove(); }, 1600);
         }
 
-        // Compteur, pas booléen : deux écrans empilés (Collection puis
-        // Explorium) puis fermeture de celui du dessus remettait le drapeau à
-        // 0 alors que le premier était encore ouvert — les épingles de quête et
-        // les consoles de ramassage resurgissaient par-dessus lui.
-        function _hideAllNearbyConsoles() {
-            const _n = parseInt(document.body.dataset.screenOpen, 10);
-            document.body.dataset.screenOpen = String((isNaN(_n) ? 0 : _n) + 1);
+        // Ensemble d'écrans NOMMÉS, pas compteur : deux écrans empilés (Collection
+        // puis Explorium) restent comptés tous les deux. Le compteur d'avant
+        // dérivait : un écran rouvert par-dessus lui-même (panneau après insertion
+        // d'un parchemin, coffre du panneau) comptait deux fois pour une seule
+        // fermeture, et le verrou restait bloqué — plus aucune console de
+        // ramassage ne s'ouvrait de la partie. Ici, rouvrir un écran ouvert ne
+        // change rien, et fermer un écran jamais ouvert non plus.
+        var _ecransOuverts;   // créé au premier appel (cf. _ecrans)
+        function _ecrans() { return _ecransOuverts || (_ecransOuverts = new Set()); }
+        function _hideAllNearbyConsoles(ecran) {
+            _ecrans().add(ecran || 'ecran');
+            document.body.dataset.screenOpen = String(_ecrans().size);
             ['nearbyQuest','nearbyPOI','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyLoot','nearbyBazar','nearbyInfo','nearbyPanneau','nearbyCarnetResource'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
@@ -19464,9 +19469,9 @@
             if (typeof _hideQuestPins === 'function') _hideQuestPins();
         }
 
-        function _showNearbyConsoles() {
-            const _n = parseInt(document.body.dataset.screenOpen, 10);
-            const _rest = Math.max(0, (isNaN(_n) ? 1 : _n) - 1);
+        function _showNearbyConsoles(ecran) {
+            _ecrans().delete(ecran || 'ecran');
+            const _rest = _ecrans().size;
             document.body.dataset.screenOpen = String(_rest);
             // Un écran reste ouvert dessous : ne rien redonner à voir.
             if (_rest > 0) return;
@@ -19491,8 +19496,7 @@
         }
 
         function _isAnyScreenOpen() {
-            const _n = parseInt(document.body.dataset.screenOpen, 10);
-            return !isNaN(_n) && _n > 0;
+            return _ecrans().size > 0;
         }
 
         // ── Edge-trigger pour les consoles de POI ──
@@ -19574,7 +19578,7 @@
                 const showConsole = _shouldShowPoiConsole('poi', nearbyPoi.id) && !_screenBlocked;
                 if (status === 'local') {
                     currentNearbyPOI = nearbyPoi;
-                    document.getElementById('poiName').textContent = nearbyPoi.name;
+                    document.getElementById('poiName').textContent = 'Interagir';
                     const btn = nearbyDiv.querySelector('.collect-btn');
                     if (btn) { btn.textContent = 'Collecter la carte'; btn.onclick = collectCard; }
                     const badge = document.getElementById('poiThematicBadge');
@@ -19589,7 +19593,7 @@
                     const state = thematicState[nearbyPoi.id];
                     const allCards = Object.values(COLLECTIONS).flatMap(c => c.cards);
                     const card = allCards.find(c => c.id === state.drawnCardId);
-                    document.getElementById('poiName').textContent = nearbyPoi.name;
+                    document.getElementById('poiName').textContent = 'Interagir';
                     const btn = nearbyDiv.querySelector('.collect-btn');
                     if (btn) { btn.textContent = card ? TF('Collecter "%1"', T(card.name)) : 'Collecter la carte'; btn.onclick = collectThematicCard; }
                     const badge = document.getElementById('poiThematicBadge');
@@ -20025,7 +20029,7 @@
         }
 
         function closeLootReveal() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('loot');
             const overlay = document.getElementById('lootRevealOverlay');
             overlay.style.opacity       = '0';
             overlay.style.pointerEvents = 'none';
@@ -20564,7 +20568,7 @@
         const RITUAL_HOLD_DURATION = 2800;
 
         function openCollectRitual(card) {
-            _hideAllNearbyConsoles();
+            _hideAllNearbyConsoles('rituel');
             _ritualCard = card;
             _ritualHoldProgress = 0;
             _ritualHoldActive = false;
@@ -20997,7 +21001,7 @@
         }
 
         function ritualClose() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('rituel');
             const card = _ritualCard;
             _ritualCard = null;
             if (card) setTimeout(() => _obCheckAfterCollect(card), 400);
@@ -21220,14 +21224,14 @@
         }
 
         function openBagScreen() {
-            _hideAllNearbyConsoles();
+            _hideAllNearbyConsoles('sac');
             _obOnOpenBag();
             _bagCat = 0; _bagSel = null;
             document.getElementById("bagScreen").classList.add("show");
             _bagRender();
         }
         function closeBagScreen() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('sac');
             document.getElementById("bagScreen").classList.remove("show");
         }
         function _bagRender() { _bagTabs(); _bagList(); _bagDetail(null); }
@@ -22254,14 +22258,14 @@
         let _seenCardIds = new Set();
 
         function openCollections() {
-            _hideAllNearbyConsoles();
+            _hideAllNearbyConsoles('collection');
             _obOnOpenCollections();
             document.getElementById('collectionsPanel').classList.add('show');
             albSwitchTab(_albCurrentTab || 'cards');
         }
 
         function closeCollections() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('collection');
             document.getElementById('collectionsPanel').classList.remove('show');
             selectedCollectionId = null;
             if (typeof _obGuide === 'object' && _obGuide.active) setTimeout(() => _obGuideRefresh(), 120);
@@ -26821,7 +26825,7 @@
         }
 
         function openStudioScreen() {
-            _hideAllNearbyConsoles();
+            _hideAllNearbyConsoles('studio');
             document.getElementById('studioCardName').textContent = selectedCard ? selectedCard.name : '';
             document.getElementById('studioDustCounter').textContent = memorialDust;
             applyStudioTheme();
@@ -26842,7 +26846,7 @@
         }
 
         function closeStudioScreen() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('studio');
             document.getElementById('studioScreen').classList.remove('show');
             closeStudioTooltip();
         }
@@ -28725,8 +28729,9 @@
         }
 
         function openPanneauScreen() {
-            _hideAllNearbyConsoles();
             if (!currentNearbyPanneau) return;
+            // Verrou posé APRÈS la garde : sinon un écran jamais ouvert le gardait.
+            _hideAllNearbyConsoles('panneau');
             if (typeof _obOnOpenPanneau === 'function') _obOnOpenPanneau();
             const pan   = currentNearbyPanneau;
             const state = getPanneauState(pan.id);
@@ -28788,7 +28793,7 @@
         }
 
         function closePanneauScreen() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('panneau');
             document.getElementById('panneauScreen').classList.remove('show');
         }
 
@@ -28999,9 +29004,10 @@
         }
 
         function openBazarScreen(bazar) {
-            _hideAllNearbyConsoles();
             currentNearbyBazar = bazar || currentNearbyBazar;
             if (!currentNearbyBazar) return;
+            // Verrou posé APRÈS la garde : sinon un écran jamais ouvert le gardait.
+            _hideAllNearbyConsoles('echoppe');
             if (!currentNearbyBazar.stock) currentNearbyBazar.stock = { pellicules: 3, encre: 3, cassettes: 3 };
             document.getElementById('bazarScreenTitle').textContent = currentNearbyBazar.name;
             _bazarRefreshStock();
@@ -29030,7 +29036,7 @@
         }
 
         function closeBazarScreen() {
-            _showNearbyConsoles();
+            _showNearbyConsoles('echoppe');
             // Le joueur vient de fermer l'échoppe : sa console ne doit pas se
             // rouvrir dans la seconde. C'est désormais la règle générale —
             // _showNearbyConsoles() marque comme vues toutes les zones où le
@@ -29148,7 +29154,7 @@
         let vfZoomHideTimer = null;
 
         function openViewfinderFromNearby() {
-            _hideAllNearbyConsoles();
+            _hideAllNearbyConsoles('viseur');
             if (currentNearbyInfo) openViewfinder(currentNearbyInfo);
         }
 
@@ -29273,7 +29279,7 @@
         function closeViewfinder() {
             document.getElementById('viewfinderScreen').classList.remove('show');
             currentViewfinderInfo = null;
-            _showNearbyConsoles();
+            _showNearbyConsoles('viseur');
         }
 
         function openInfoFromViewfinder() {
@@ -29363,7 +29369,7 @@
         function closeInfoScreen() {
             document.getElementById('infoScreen').classList.remove('show');
             currentInfoPoint = null;
-            _showNearbyConsoles();
+            _showNearbyConsoles('info');
         }
 
         function saveToMuseum() {
@@ -30536,6 +30542,17 @@
                 showToast('📖 Un parcours s\'ouvre : Lyon, ville du livre');
             }
 
+            // Grappe du tutoriel : absente de l'Explorium (cf. v2GrappeVisible).
+            // L'étape se valide sans pastille, sans planche, sans ouvrir l'Explorium.
+            if (grappeId === 'tutoriel') {
+                saveProgress();
+                closeGrappeQuestModal();
+                if (window._selectedQuestKey === (grappeId + ':' + etapeId)) window._selectedQuestKey = null;
+                updateQuestMarkers();
+                updateQuestCompass();
+                return;
+            }
+
             // Pastille "nouveau" : l'étape change d'état → notification Explorium
             if (typeof showVaultNotification === 'function') showVaultNotification();
 
@@ -30884,7 +30901,7 @@
         function openMindmap() {
             // Redirection vers Explorium (l'ancienne Voûte est désactivée)
             clearVaultNotification();
-            _hideAllNearbyConsoles();
+            _hideAllNearbyConsoles('explorium');
             _obOnOpenMindmap();
             refreshMindmapState();
             if (typeof openVoutV2 === 'function') {
@@ -30913,10 +30930,10 @@
             const v2 = document.getElementById('voutV2Screen');
             if (v2 && v2.classList.contains('show')) {
                 if (typeof closeVoutV2 === 'function') closeVoutV2();
-                _showNearbyConsoles();
+                _showNearbyConsoles('explorium');
                 return;
             }
-            _showNearbyConsoles();
+            _showNearbyConsoles('explorium');
             document.getElementById('mindmapScreen').classList.remove('show');
             if (mmAnimId) { cancelAnimationFrame(mmAnimId); mmAnimId = null; }
             closeFragmentPanel();
@@ -34220,6 +34237,9 @@
         // au moins une carte (ou qu'une de ses étapes est déjà obtenue). Pendant le
         // prêt de focale (test.html), tout est montré : c'est l'atlas tel qu'il est.
         function v2GrappeVisible(gid) {
+            // La grappe du tutoriel ne sert qu'au rendez-vous de Bellecour (journal
+            // de quêtes, boussole) : elle n'existe pas dans l'Explorium.
+            if (gid === 'tutoriel') return false;
             if (typeof _v2Focale !== 'undefined' && _v2Focale) return true;
             const g = GRAPPE_QUESTS[gid];
             if (!g || !g.quete || !g.quete.etapes) return false;
@@ -35047,7 +35067,7 @@
             const oldMindmap = document.getElementById('mindmapScreen');
             if (oldMindmap) oldMindmap.classList.remove('show');
             if (typeof closeFragmentPanel === 'function') closeFragmentPanel();
-            if (typeof _showNearbyConsoles === 'function') _showNearbyConsoles();
+            if (typeof _showNearbyConsoles === 'function') _showNearbyConsoles('explorium');
         }
 
         // Refresh de la V2 quand l'état change (à appeler après gain de carte, accept de quête, etc.)
