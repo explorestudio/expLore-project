@@ -28860,29 +28860,15 @@
                 span.innerHTML = '<img src="./assets/PanelInfoIcon.png?v=2" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5));" draggable="false"/>';
                 inner.appendChild(span);
 
-                // Halo au sol pulsant (indigo pour panneau)
-                const halo = document.createElement('div');
-                halo.className = 'interact-halo';
-                halo.style.cssText = 'position:absolute;bottom:-4px;left:50%;width:52px;height:52px;border:1.5px solid rgba(165,180,252,0.7);border-radius:50%;transform:translateX(-50%) scaleY(0.38);pointer-events:none;background:transparent;';
-                inner.appendChild(halo);
+                // Plus de halo au sol ni d'anneau de progression autour du panneau
+                // (demande de David) : le « TAP › » signale la portée, et
+                // l'avancement se lit dans l'écran du panneau.
 
                 // Nom du lieu
                 const nameLabel = document.createElement('div');
                 nameLabel.style.cssText = 'margin-top:3px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.9);text-shadow:0 1px 3px rgba(0,0,0,0.8);letter-spacing:0.3px;white-space:nowrap;pointer-events:none;';
                 nameLabel.textContent = pan.name || pan.title || '';
                 inner.appendChild(nameLabel);
-
-                // SVG anneau de progression (cercle, en absolute pour ne pas perturber le flex)
-                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                svg.setAttribute('class', 'panneau-ring');
-                svg.setAttribute('viewBox', '0 0 44 44');
-                svg.style.cssText = 'position:absolute;top:-6px;left:-6px;pointer-events:none;';
-                svg.innerHTML =
-                    '<circle cx="22" cy="22" r="19" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>' +
-                    '<circle class="panneau-ring-fill" cx="22" cy="22" r="19" fill="none" stroke="#D97706"' +
-                    ' stroke-width="2.5" stroke-dasharray="119.4" stroke-dashoffset="119.4"' +
-                    ' stroke-linecap="round" transform="rotate(-90 22 22)"/>';
-                inner.appendChild(svg);
 
                 el.appendChild(inner);
 
@@ -28902,14 +28888,14 @@
                     .setLngLat([pan.lng, pan.lat])
                     .addTo(map);
 
-                panneauMarkers.push({ el, inner, svg, pan });
+                panneauMarkers.push({ el, inner, svg: null, pan });
                 updatePanneauRing(pan.id);
             });
         }
 
         function updatePanneauRing(panId) {
             const entry = panneauMarkers.find(m => m.pan.id === panId);
-            if (!entry) return;
+            if (!entry || !entry.svg) return;   // anneau retiré de la mappe
             const { filled, total } = getPanneauProgress(panId);
             const fill = entry.svg.querySelector('.panneau-ring-fill');
             if (!fill) return;
