@@ -9380,7 +9380,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.77.0</div>
+            <div class="hud-version" id="hudVersion">v0.78.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -15513,7 +15513,9 @@
             function drawWalker(w){
                 const h=Math.min(H,W)*.085*w.sc;
                 const amp=(w.amp===undefined?1:w.amp);
-                const gait=Math.sin(t*2.3+w.ph)*amp, bob=Math.abs(Math.cos(t*2.3+w.ph))*h*.035*amp;
+                // cad : cadence propre (le passant à la tête d'or marche plus vite, ses pas suivent)
+                const cad=w.cad||1;
+                const gait=Math.sin(t*2.3*cad+w.ph)*amp, bob=Math.abs(Math.cos(t*2.3*cad+w.ph))*h*.035*amp;
                 const x=w.x, y=groundY-bob, R=h*.13;
                 w.headY=y-h*.90; w.headR=R;
                 if(w.alpha<=.01 && !(w.chosen && !ring)) return;
@@ -15550,9 +15552,10 @@
                         if(Math.abs(d)<2.5){
                             w.sp=0; w.x=w.target; w.target=null;
                             w.dir=Math.sign(NEB.x*W-w.x)||1;                 // il fait face à la nébuleuse
-                            if(w.chosen && !cardAt) cardAt=performance.now()+700;
+                            if(w.chosen && !cardAt) cardAt=performance.now()+250;
                         }
-                        else w.sp=Math.sign(d)*Math.min(.9,Math.abs(d)*.02+.12);
+                        // Le passant à la tête d'or arrive plus vite et freine plus court.
+                        else w.sp=Math.sign(d)*(w.chosen ? Math.min(2,Math.abs(d)*.05+.2) : Math.min(.9,Math.abs(d)*.02+.12));
                         if(w.sp) w.dir=Math.sign(w.sp);
                     }
                     else if(w.stopping) w.sp*=.94;
@@ -15646,7 +15649,7 @@
                 if(!cardAt) return;
                 const w=walkers.find(v=>v.chosen);
                 if(!w) return;
-                const k=smooth(0,900,performance.now()-cardAt);
+                const k=smooth(0,500,performance.now()-cardAt);
                 if(k<=0) return;
                 const h=Math.min(H,W)*.085*w.sc;
                 const side=w.dir||((w.x<NEB.x*W)?1:-1);        // la carte se tient du côté où il regarde
@@ -15816,12 +15819,12 @@
                         walkers.push({
                             x:W+h*.8, dir:-1, sp:-.4, sc:1.02, ph:Math.random()*6.283,
                             next:.6, alpha:1, headY:0, headR:h*.13,
-                            amp:1, gold:true, chosen:true, leaving:false, stopping:false,
+                            amp:1, cad:1.8, gold:true, chosen:true, leaving:false, stopping:false,
                             target:NEB.x*W-Math.max(W*.15,Math.min(H,W)*.17)
                         });
                         // Point 16 : on n'ouvre la suite qu'une fois la carte sortie.
                         (function waitCard(){
-                            if(cardAt && performance.now()-cardAt > (reduce?200:1150)){
+                            if(cardAt && performance.now()-cardAt > (reduce?200:600)){
                                 busy=false; nextEl.classList.add('on'); canAdvance=true;
                             } else later(waitCard,150);
                         })();
