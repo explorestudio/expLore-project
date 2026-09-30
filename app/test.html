@@ -9380,7 +9380,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.80.0</div>
+            <div class="hud-version" id="hudVersion">v0.81.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -23925,39 +23925,9 @@
                     { id: "sj_cloitre", label: "Le cloître", clue: "Contourne l'édifice — il existe un passage vers un jardin silencieux.", relicIcon: "🌿", lat: 45.7604, lng: 4.8267, radius: 50 },
                 ]
             },
-            card11: {
-                title: "Sur la colline inspirée",
-                intro: "Fourvière domine Lyon depuis des siècles. Trois témoins t'attendent.",
-                steps: [
-                    { id: "fv_esplanade", label: "L'esplanade", clue: "Trouve le point où tout Lyon s'étend sous tes pieds — une croix marque ce belvédère.", relicIcon: "✝️", lat: 45.7624, lng: 4.8220, radius: 60 },
-                    { id: "fv_mosaique", label: "La mosaïque", clue: "À l'intérieur, une voûte raconte l'histoire de Lyon en tesselles dorées.", relicIcon: "✨", lat: 45.7625, lng: 4.8228, radius: 30 },
-                    { id: "fv_tour", label: "La tour médiévale", clue: "Juste à côté de la basilique, un vestige plus ancien — une tour carrée.", relicIcon: "🗼", lat: 45.7621, lng: 4.8224, radius: 45 },
-                ]
-            },
-            card4: {
-                title: "Dans les ruelles du Vieux-Lyon",
-                intro: "Guignol est né ici, dans ces traboules et ces cours pavées. Explore.",
-                steps: [
-                    { id: "vy_traboule", label: "Une traboule", clue: "Cherche un porche ouvert — il donne sur un couloir qui traverse l'îlot de part en part.", relicIcon: "🚪", lat: 45.7638, lng: 4.8272, radius: 50 },
-                    { id: "vy_cour", label: "Une cour Renaissance", clue: "Dans une cour intérieure, des galeries superposées témoignent de la prospérité des marchands.", relicIcon: "🏛️", lat: 45.7641, lng: 4.8268, radius: 40 },
-                ]
-            },
-            card2: {
-                title: "Là où tout a commencé",
-                intro: "Le cinéma est né ici, dans cette villa bourgeoise. Deux témoins t'attendent.",
-                steps: [
-                    { id: "il_hangar", label: "Le hangar du premier film", clue: "Cherche le bâtiment annexe où les ouvriers ont assisté, sans le savoir, au premier film de l'histoire.", relicIcon: "🎬", lat: 45.7432, lng: 4.8695, radius: 50 },
-                    { id: "il_villa", label: "La villa Lumière", clue: "Devant la villa, une plaque rappelle la date exacte de la première projection publique.", relicIcon: "📽️", lat: 45.7430, lng: 4.8688, radius: 40 },
-                ]
-            },
-            card3: {
-                title: "Le ventre de Lyon",
-                intro: "Lyon est capitale de la gastronomie. Deux lieux à observer autour des Halles.",
-                steps: [
-                    { id: "hb_facade", label: "La façade des Halles", clue: "Observe la façade — le nom Bocuse y est gravé depuis quand ? Cherche la date.", relicIcon: "🍽️", lat: 45.7638, lng: 4.8545, radius: 40 },
-                    { id: "hb_rhone", label: "Le bord du Rhône", clue: "À deux pas, le Rhône longe les Halles — trouve le quai et observe la rive opposée.", relicIcon: "🌊", lat: 45.7638, lng: 4.8555, radius: 60 },
-                ]
-            },
+            // Chasses de la Basilique Notre-Dame (card11), Guignol (card4), les Frères
+            // Lumière (card2) et Paul Bocuse (card3) retirées pour le test : ces cartes se collectent
+            // directement. Seule la cathédrale Saint-Jean garde la sienne.
         };
 
         // État des quêtes actives : { cardId: { steps: { stepId: validated }, started: timestamp } }
@@ -23983,6 +23953,9 @@
 
         // ── Ouvrir l'écran de quête ──
         function openQuestScreen(card) {
+            // Masque la console « Interagir » (et les autres) : elle couvrait le texte
+            // de la chasse. Rouvrir l'écran (validation d'une étape) ne compte qu'une fois.
+            _hideAllNearbyConsoles('chasse');
             const quest = LOCAL_QUESTS[card.id];
             const state = activeQuests[card.id] || { steps: {} };
             const info = SUPERTYPES[card.supertype] || {};
@@ -24063,10 +24036,13 @@
             document.getElementById('questScreen').classList.remove('show');
             currentQuestCard = null;
             collectCardDirect(card);
+            // Libéré APRÈS l'ouverture du rituel : la console ne réapparaît pas entre les deux.
+            _showNearbyConsoles('chasse');
         }
 
         function closeQuestScreen() {
             document.getElementById('questScreen').classList.remove('show');
+            _showNearbyConsoles('chasse');
         }
 
         // ── Collecte directe (sans quête, ou après quête complète) ──
