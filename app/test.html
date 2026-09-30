@@ -9375,7 +9375,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.74.0</div>
+            <div class="hud-version" id="hudVersion">v0.75.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -14002,7 +14002,9 @@
             geometry: {
                 type: "Polygon",
                 coordinates: [[
-                    [4.8252, 45.7598], [4.8250, 45.7635], [4.8272, 45.7655], [4.8340, 45.7656],
+                    // Coin nord-est élargi pour englober Louise Labé (45.7664 / 4.8344).
+                    [4.8252, 45.7598], [4.8250, 45.7635], [4.8272, 45.7655], [4.8326, 45.7659],
+                    [4.8334, 45.7670], [4.8356, 45.7670], [4.8360, 45.7645],
                     [4.8352, 45.7630], [4.8372, 45.7600], [4.8372, 45.7572], [4.8352, 45.7555],
                     [4.8286, 45.7558], [4.8262, 45.7574], [4.8252, 45.7598]
                 ]]
@@ -14033,7 +14035,7 @@
             el.className = 'perimetre-libelle';
             el.textContent = T('Zone du test');
             _perimetreLibelle = new maplibregl.Marker({ element: el, anchor: 'bottom' })
-                .setLngLat([4.8306, 45.7656]).addTo(map);
+                .setLngLat([4.8306, 45.7658]).addTo(map);
         }
 
         const _PERIMETRE_COUCHES = ['perimeter-fill', 'perimeter-halo', 'perimeter-casing', 'perimeter-line'];
@@ -14106,17 +14108,17 @@
               localCardId: 'card6', thematicPool: [], gated: 'ville_du_livre' },
             // Office du Tourisme (pavillon est de Bellecour) : hors parcours, visible
             // dès la collecte des clefs de la ville, pendant le tutoriel (cf. _obPoiOuvert).
-            { id: 'office_tourisme',  name: 'Office du Tourisme',        lat: 45.75719, lng: 4.83305,
+            { id: 'office_tourisme',  name: 'Office du Tourisme',        lat: 45.75694, lng: 4.83271,
               localCardId: 'card_office_tourisme', thematicPool: [] },
-            { id: 'bellecordiere',   name: 'Rue Bellecordière',         lat: 45.7584, lng: 4.8357,
+            { id: 'bellecordiere',   name: 'Rue Bellecordière',         lat: 45.7664, lng: 4.8344,
               localCardId: 'card_louise_labe', thematicPool: [], gated: 'ville_du_livre' },
-            { id: 'gryphe',          name: 'Vieux-Lyon (Saint-Jean)',   lat: 45.7628, lng: 4.8266,
+            { id: 'gryphe',          name: 'Rue Mercière (Gryphe)',     lat: 45.7616, lng: 4.8330,
               localCardId: 'card_gryphe', thematicPool: [], gated: 'ville_du_livre', radius: 65 },
-            { id: 'dolet',           name: 'Rue Mercière (Dolet)',      lat: 45.764, lng: 4.8327,
+            { id: 'dolet',           name: 'Rue Mercière (Dolet)',      lat: 45.7640, lng: 4.8325,
               localCardId: 'card_dolet', thematicPool: [], gated: 'ville_du_livre', radius: 65 },
-            { id: 'presse_doloire',  name: 'Rue Mercière (la Doloire)', lat: 45.7632, lng: 4.8328,
+            { id: 'presse_doloire',  name: 'Vieux-Lyon (la Doloire)',   lat: 45.7640, lng: 4.8275,
               localCardId: 'card_presse_doloire', thematicPool: [], gated: 'ville_du_livre', radius: 65 },
-            { id: 'palais_st_jean',  name: 'Palais Saint-Jean',         lat: 45.7602, lng: 4.8272,
+            { id: 'palais_st_jean',  name: 'Palais Saint-Jean',         lat: 45.7599, lng: 4.8280,
               localCardId: 'card_palais_st_jean', thematicPool: [], gated: 'ville_du_livre', radius: 65 },
 
             { id: 'fourviere',        name: 'Basilique de Fourvière',    lat: 45.7624, lng: 4.8227,
@@ -21549,7 +21551,7 @@
                 const showConsole = _shouldShowPoiConsole('poi', nearbyPoi.id) && !_screenBlocked;
                 if (status === 'local') {
                     currentNearbyPOI = nearbyPoi;
-                    document.getElementById('poiName').textContent = nearbyPoi.name;
+                    document.getElementById('poiName').textContent = 'Interagir';   // plus le nom interne du POI
                     const btn = nearbyDiv.querySelector('.collect-btn');
                     if (btn) { btn.textContent = 'Collecter la carte'; btn.onclick = collectCard; }
                     const badge = document.getElementById('poiThematicBadge');
@@ -21564,7 +21566,7 @@
                     const state = thematicState[nearbyPoi.id];
                     const allCards = Object.values(COLLECTIONS).flatMap(c => c.cards);
                     const card = allCards.find(c => c.id === state.drawnCardId);
-                    document.getElementById('poiName').textContent = nearbyPoi.name;
+                    document.getElementById('poiName').textContent = 'Interagir';
                     const btn = nearbyDiv.querySelector('.collect-btn');
                     if (btn) { btn.textContent = card ? TF('Collecter "%1"', T(card.name)) : 'Collecter la carte'; btn.onclick = collectThematicCard; }
                     const badge = document.getElementById('poiThematicBadge');
@@ -36234,10 +36236,10 @@
             // ── Grappe "Lyon, ville du livre" (Presqu'île / Vieux-Lyon Saint-Jean) ──
             card6:                { x: 0.58, y: 0.68 },  // Place Bellecour
             card_office_tourisme: { x: 0.52, y: 0.72 },  // Pavillon de Bellecour
-            card_louise_labe:     { x: 0.62, y: 0.62 },  // Rue Bellecordière
+            card_louise_labe:     { x: 0.62, y: 0.52 },  // Louise Labé (nord de la Presqu'île)
             card_dolet:           { x: 0.34, y: 0.58 },  // Rue Mercière
-            card_presse_doloire:  { x: 0.30, y: 0.63 },  // Rue Mercière (la Doloire)
-            card_gryphe:          { x: 0.16, y: 0.48 },  // Vieux-Lyon (Saint-Jean)
+            card_presse_doloire:  { x: 0.16, y: 0.48 },  // Vieux-Lyon (la Doloire)
+            card_gryphe:          { x: 0.30, y: 0.63 },  // Rue Mercière (Gryphe)
             card13:               { x: 0.09, y: 0.50 },  // Cathédrale Saint-Jean
             card_palais_st_jean:  { x: 0.05, y: 0.58 },  // Palais Saint-Jean
         };
