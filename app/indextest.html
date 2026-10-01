@@ -18137,7 +18137,10 @@
         }
 
         function stackNearbyPanels() {
-            const ids = ['nearbyQuest','nearbyPOI','nearbyInfo','nearbyPanneau','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyBazar','nearbyLoot'];
+            // nearbyCarnetResource manquait : elle restait à 20 px et recouvrait
+            // la console placée là (carte à collecter, typiquement), qui semblait
+            // ne plus s'afficher.
+            const ids = ['nearbyQuest','nearbyPOI','nearbyInfo','nearbyPanneau','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyBazar','nearbyLoot','nearbyCarnetResource'];
             const gap = 8;
             const base = 20;
             let currentBottom = base;
@@ -18198,7 +18201,7 @@
                     if (!poi.localCardId) return;
                     if (!collectedCards.includes(poi.localCardId)) return;
                     const state = thematicState[poi.id];
-                    if (state && state.collected && (now - state.drawnAt) >= THEMATIC_COOLDOWN_MS) {
+                    if (!state || (state.collected && (now - state.drawnAt) >= THEMATIC_COOLDOWN_MS)) {
                         needsRefresh = true;
                     }
                 });
@@ -18246,7 +18249,11 @@
             // Carte locale pas encore collectée → état local
             if (!collectedCards.includes(poi.localCardId)) return 'local';
             const state = thematicState[poi.id];
-            if (!state) return 'cooldown';
+            // Carte obtenue sans passer par la collecte (scène finale de Bellecour,
+            // boutons de test) : pas encore d'état. 'cooldown' le figeait jusqu'au
+            // rechargement, zone grise sans rien dedans ; le tirage est fait par
+            // startThematicInterval.
+            if (!state) return 'exhausted';
             if (state.drawnCardId === null) return 'exhausted';
             if (!state.collected) return 'thematic_available';
             const elapsed = Date.now() - state.drawnAt;
@@ -19419,7 +19426,13 @@
                         // Ouvre la console de collecte
                         currentNearbyPOI = poi;
                         checkNearbyPOI();
-                        document.getElementById('nearbyPOI').classList.remove('hidden');
+                        // Seulement s'il y a vraiment une carte à prendre : sinon
+                        // (déjà recueillie, en attente) la console rouvrait vide,
+                        // avec le libellé et le bouton du POI précédent.
+                        if (currentNearbyPOI || currentNearbyThematic) {
+                            document.getElementById('nearbyPOI').classList.remove('hidden');
+                            stackNearbyPanels();
+                        }
                     } else {
                         _showPoiTapFeedback('too_far', false);
                     }
@@ -20614,7 +20627,8 @@
                 const st = getPoiThematicStatus(poi);
                 if (st === 'local' && !collectedCards.includes(poi.localCardId)) add(poi.lng, poi.lat, COLLECTION_RADIUS, 'poi_local');
                 else if (st === 'thematic_available') add(poi.lng, poi.lat, COLLECTION_RADIUS, 'poi_thematic');
-                else if (st === 'cooldown') add(poi.lng, poi.lat, COLLECTION_RADIUS, 'poi_cooldown');
+                // Pas de zone en 'cooldown' : il n'y a rien à y prendre (le
+                // marqueur atténué suffit à signaler le lieu).
             });
             // Rayons = constantes de collecte réelles : dessiner 50 m là où la collecte
             // se déclenche à 30 m faisait entrer le joueur dans un cercle inopérant.
@@ -20653,7 +20667,12 @@
             const MIN_RX = { poi_local:32, poi_thematic:32, poi_cooldown:32, dust:20, orb:20, echo:28, scroll:18, loot:18, carnet_resource:18 };
             // Opacite remplissage par type
             const FILL_ALPHA = { poi_local:0.10, poi_thematic:0.10, poi_cooldown:0.08, dust:0.13, orb:0.13, echo:0.10, scroll:0.10, loot:0.10, carnet_resource:0.11 };
+            // Vue ensemble : la CSS (body.planning-mode) cache les marqueurs de
+            // ressources sans toucher à leur style inline — leurs zones restaient
+            // donc dessinées, vides, pendant le vol de caméra et au pinch-zoom.
+            const _plan = document.body.classList.contains('planning-mode');
             _capZones.forEach(z => {
+                if (_plan && !z.type.startsWith('poi_')) return;
                 const c = map.project([z.lng, z.lat]);
                 const e = map.project([z.lng + z.r / (111320 * Math.cos(z.lat * Math.PI / 180)), z.lat]);
                 const rx = Math.abs(e.x - c.x);
@@ -20995,8 +21014,17 @@
             if (typeof _showQuestPins === 'function') _showQuestPins();
         }
 
+        // La fiche carte et le carnet s'ouvrent par trop de chemins (Sac, popup
+        // de carte, Explorium…) pour porter un verrou nommé sans risque de fuite :
+        // on lit leur état directement. Sans ça, ouverts hors Collection, ils
+        // passaient SOUS les consoles (z-index 300/450 contre 500).
+        const _ECRANS_LUS = ['cardDetailView', 'journalScreen'];
         function _isAnyScreenOpen() {
-            return _ecrans().size > 0;
+            if (_ecrans().size > 0) return true;
+            return _ECRANS_LUS.some(id => { const el = document.getElementById(id); return !!(el && el.classList.contains('show')); });
+        }
+        function _cacherConsoles() {
+            document.querySelectorAll('.nearby-poi').forEach(el => el.classList.add('hidden'));
         }
 
         // ── Edge-trigger pour les consoles de POI ──
@@ -21224,11 +21252,17 @@
             currentNearbyInfo = null;
             (_fieldOpen ? infoMarkers : []).forEach(({ el, inner, info }) => {
                 const alreadySaved = museumCollection.some(m => m.infoId === info.id);
-                if (alreadySaved) return;
-                const dist = getDistance(playerPos.lat, playerPos.lng, info.lat, info.lng);
-                const inZone = dist <= INFO_RADIUS;
                 const halo = inner.querySelector('.interact-halo');
                 const prompt = inner.querySelector('.tap-prompt');
+                if (alreadySaved) {
+                    // Photographié : le « TAP » et le halo vert allumés à l'entrée
+                    // restaient affichés pour toujours sur le marqueur.
+                    if (prompt) prompt.classList.remove('show');
+                    if (halo) { halo.style.borderColor = 'rgba(245,158,11,0.7)'; halo.style.boxShadow = ''; }
+                    return;
+                }
+                const dist = getDistance(playerPos.lat, playerPos.lng, info.lat, info.lng);
+                const inZone = dist <= INFO_RADIUS;
                 if (inZone) {
                     currentNearbyInfo = info;
                     if (halo) { halo.style.borderColor = 'rgba(52,211,153,0.9)'; halo.style.boxShadow = '0 0 6px 2px rgba(52,211,153,0.4)'; halo.style.background = 'transparent'; }
@@ -22944,7 +22978,7 @@
                 restoreJournalState(card.id);
                 renderJournalBio();
                 // Fermer le sac
-                document.getElementById('bagScreen').classList.remove('show');
+                closeBagScreen();   // rend aussi le verrou « sac » (sinon plus aucune console)
                 document.getElementById('journalScreen').classList.add('show');
                 // Déclencher automatiquement placeOrbe après ouverture
                 setTimeout(() => placeOrbe(), 200);
@@ -23079,7 +23113,7 @@
         function bagEchoGoToJournal(cardId) {
             const panel = document.getElementById('bagEchoAssignPanel');
             if (panel) panel.remove();
-            document.getElementById('bagScreen').classList.remove('show');
+            closeBagScreen();   // rend aussi le verrou « sac » (sinon plus aucune console)
             const card = getAllCards().find(c => c.id === cardId);
             if (card) { selectedCard = card; openJournalScreen(); }
         }
@@ -23088,7 +23122,7 @@
             // Fermer le sac et ouvrir directement le carnet de cette carte
             const panel = document.getElementById('bagEchoAssignPanel');
             if (panel) panel.remove();
-            document.getElementById('bagScreen').classList.remove('show');
+            closeBagScreen();   // rend aussi le verrou « sac » (sinon plus aucune console)
 
             const allCardsFlat = Object.values(COLLECTIONS).flatMap(c => c.cards);
             selectedCard = allCardsFlat.find(c => c.id === cardId);
@@ -23114,7 +23148,7 @@
             // 1. Tout fermer proprement
             const assignPanel = document.getElementById('bagEchoAssignPanel');
             if (assignPanel) assignPanel.remove();
-            document.getElementById('bagScreen').classList.remove('show');
+            closeBagScreen();   // rend aussi le verrou « sac » (sinon plus aucune console)
 
             // 2. S'assurer que journalScreen est fermé sans effets de bord
             document.getElementById('journalScreen').classList.remove('show');
@@ -24337,6 +24371,7 @@
         }
 
         function openCardDetail(card) {
+            _cacherConsoles();   // cf. _isAnyScreenOpen
             _obOnOpenCardDetail();
             selectedCard = card;
             cardDetailOpenedFromBag = false;
@@ -28162,6 +28197,7 @@
 
         function openJournalScreen(maxLevel) {
             if (!selectedCard) return;
+            _cacherConsoles();   // cf. _isAnyScreenOpen
             _obOnOpenJournal();
             journalOpenedFromCollections = document.getElementById('collectionsPanel')?.classList.contains('show') ?? false;
             journalOpenedFromBag = document.getElementById('bagScreen')?.classList.contains('show') ?? false;
@@ -30368,13 +30404,19 @@
             renderAchievementsList();
             refreshProgDistanceUI();
             switchProgTab('battlepass');
+            // Verrou d'écran : sans lui, les consoles de ramassage restaient
+            // posées par-dessus la progression.
+            _hideAllNearbyConsoles('progression');
             document.getElementById('progressionScreen').classList.add('show');
             // Dernière étape du guide : c'est ce geste qui déclenche la chute.
             if (typeof _obGuide === 'object' && _obGuide.active) {
                 try { _obGuideEvent('progression'); _obGuideRefresh(); } catch (e) {}
             }
         }
-        function closeProgressionScreen() { document.getElementById('progressionScreen').classList.remove('show'); }
+        function closeProgressionScreen() {
+            document.getElementById('progressionScreen').classList.remove('show');
+            _showNearbyConsoles('progression');
+        }
 
         function switchProgTab(tab) {
             document.querySelectorAll('.prog-tab').forEach(t => t.classList.remove('active'));
@@ -30938,7 +30980,7 @@
                     document.getElementById('bazarName').textContent = nearest.name;
                     // Edge-trigger : afficher la console seulement à l'entrée dans la zone
                     const show = _shouldShowPoiConsole('bazar', nearest.id) && !bazarScreenOpen && !_isAnyScreenOpen();
-                    if (show) nearbyDiv.classList.remove('hidden');
+                    if (show) { nearbyDiv.classList.remove('hidden'); stackNearbyPanels(); }
                     else if (_isAnyScreenOpen() || bazarScreenOpen) nearbyDiv.classList.add('hidden');
                 } else {
                     nearbyDiv.classList.add('hidden');
@@ -31099,11 +31141,23 @@
         let vfZoomHideTimer = null;
 
         function openViewfinderFromNearby() {
-            _hideAllNearbyConsoles('viseur');
             if (currentNearbyInfo) openViewfinder(currentNearbyInfo);
         }
 
+        // Le parcours d'un panorama (viseur → souvenir → fiche info) tient UN
+        // verrou d'écran, « viseur », pris à l'ouverture du viseur — qu'on y
+        // entre par la console ou en touchant le marqueur — et rendu seulement
+        // quand plus aucun de ses trois écrans n'est affiché. Avant, la photo
+        // fermait le viseur sans rendre le verrou : plus aucune console ne
+        // s'ouvrait de la partie après le premier panorama photographié.
+        function _panoramaLibererVerrou() {
+            const ouvert = id => { const el = document.getElementById(id); return !!(el && el.classList.contains('show')); };
+            if (ouvert('viewfinderScreen') || ouvert('infoScreen') || ouvert('memoryScreen')) return;
+            _showNearbyConsoles('viseur');
+        }
+
         function openViewfinder(info) {
+            _hideAllNearbyConsoles('viseur');
             currentViewfinderInfo = info;
             vfZoom = 1;
             if (typeof _obOnOpenViewfinder === 'function') _obOnOpenViewfinder();
@@ -31224,7 +31278,7 @@
         function closeViewfinder() {
             document.getElementById('viewfinderScreen').classList.remove('show');
             currentViewfinderInfo = null;
-            _showNearbyConsoles('viseur');
+            _panoramaLibererVerrou();
         }
 
         function openInfoFromViewfinder() {
@@ -31314,7 +31368,7 @@
         function closeInfoScreen() {
             document.getElementById('infoScreen').classList.remove('show');
             currentInfoPoint = null;
-            _showNearbyConsoles('info');
+            _panoramaLibererVerrou();
         }
 
         function saveToMuseum() {
@@ -31341,6 +31395,7 @@
 
         function closeMemoryScreen() {
             document.getElementById('memoryScreen').classList.remove('show');
+            _panoramaLibererVerrou();
         }
 
         function confirmMemory() {
@@ -31379,6 +31434,7 @@
             document.getElementById('memoryScreen').classList.remove('show');
             document.getElementById('infoScreen').classList.remove('show');
             currentInfoPoint = null;
+            _panoramaLibererVerrou();
 
             // Mettre à jour le bouton save
             const btn = document.getElementById('infoCardSaveBtn');
@@ -32980,6 +33036,8 @@
         function openQuestJournal() {
             const panel = document.getElementById('questJournalPanel');
             renderQuestJournal();
+            // Verrou d'écran : les consoles restaient affichées par-dessus le journal.
+            _hideAllNearbyConsoles('journal_quetes');
             panel.classList.add('show');
             // Effacer la pastille notif sur le bouton journal (vu)
             document.getElementById('hudQjCount').style.display = 'none';
@@ -32987,6 +33045,7 @@
 
         function closeQuestJournal() {
             document.getElementById('questJournalPanel').classList.remove('show');
+            _showNearbyConsoles('journal_quetes');
         }
 
         function handleQuestJournalBackdrop(e) {
@@ -33235,7 +33294,9 @@
                 _questPinMarkers.push({ marker, el, grappeId, etapeId: etape.id });
             });
             // Si un écran est ouvert, cacher les pins
-            if (typeof _isAnyScreenOpen === 'function' && _isAnyScreenOpen()) {
+            // Verrous nommés seulement : seule leur libération rallume les pins
+            // (cf. _showNearbyConsoles), la fiche carte et le carnet n'en ont pas.
+            if (typeof _ecrans === 'function' && _ecrans().size > 0) {
                 _questPinMarkers.forEach(m => { if (m.el) m.el.style.display = 'none'; });
             }
         }
