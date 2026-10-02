@@ -1650,6 +1650,14 @@
         }
         .ob-exit-hint.left .ob-exit-hint-label { transform: rotate(180deg); }
         @keyframes obExitPulse { 0%, 100% { opacity: 0.42; } 50% { opacity: 1; } }
+        /* Cible du guide : l'icône elle-même pulse, plus d'encadré violet autour.
+           Propriété `scale` et non `transform` : nombre de boutons portent déjà
+           un transform (centrage, survol) qu'une animation écraserait. */
+        .ob-guide-pulse { animation: obGuidePulse 1.3s ease-in-out infinite !important; }
+        @keyframes obGuidePulse {
+            0%, 100% { scale: 1;    filter: drop-shadow(0 0 0 rgba(167,139,250,0)); }
+            50%      { scale: var(--ob-pulse-scale, 1.14); filter: drop-shadow(0 0 8px rgba(167,139,250,0.95)); }
+        }
 
         @keyframes cardDetailSlideUp {
             from { opacity: 0; transform: scale(0.90) translateY(24px); }
@@ -9380,7 +9388,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.82.0</div>
+            <div class="hud-version" id="hudVersion">v0.83.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -12438,6 +12446,9 @@
                 `Do you see those little violet clusters on the map? That's <span style="color:#C084FC;font-weight:600">memorial dust</span>. Pick it up as you go: cards ask for it endlessly.`,
             "Reviens à la carte et continue à la nourrir, puis dévoile toi-même les pages qui s'ouvriront.": "Come back to the card and keep feeding it, then reveal for yourself the pages that open.",
             "La carte s'épuise. La mémoire a besoin d'infuser — il faudrait attendre des heures qu'elle se ravive d'elle-même.": "The card is running out. Memory needs to steep — it would take hours for it to revive on its own.",
+            "Ou tu sors chercher de quoi la ranimer.": "Or you go out and find something to revive it.",
+            [`Il y a une <span style="color:#67E8F9;font-weight:600">🔮 orbe mémorielle</span> près d'ici : elle rend à la carte toute son énergie d'un coup. Va la chercher.`]:
+                `There's a <span style="color:#67E8F9;font-weight:600">🔮 memory orb</span> nearby: it gives the card back all its energy at once. Go and get it.`,
             "Mais tiens — prends cette orbe mémorielle. Elle lui rend toute son énergie d'un coup. Utilise-la.": "But here — take this memory orb. It gives back all its energy at once. Use it.",
             "Tu portes déjà une orbe mémorielle. Pose-la sur la carte : elle lui rend toute son énergie d'un coup.": "You're already carrying a memory orb. Place it on the card: it gives back all its energy at once.",
             "Elle revit. Continue — mène ce premier chapitre à son terme.": "It's alive again. Keep going — carry this first chapter through to its end.",
@@ -16758,8 +16769,17 @@
             if (_obDone) return;
             if (_obScreenSeen[screenKey]) return;
             _obScreenSeen[screenKey] = true;
-            // Petit délai pour laisser l'écran s'ouvrir visuellement
-            setTimeout(() => vnShow(lines, null), 600);
+            // Petit délai pour laisser l'écran s'ouvrir visuellement. S'il a été
+            // refermé entre-temps, elle se tait : la réplique attend la prochaine
+            // ouverture plutôt que de tomber sur un autre écran.
+            setTimeout(() => {
+                const vn = document.getElementById('vnOverlay');
+                if (_obCurrentScreen() !== screenKey || (vn && vn.classList.contains('show'))) {
+                    _obScreenSeen[screenKey] = false;
+                    return;
+                }
+                vnShow(lines, null);
+            }, 600);
         }
 
         // Appelé depuis openCollections()
@@ -16828,7 +16848,7 @@
             _obDiscover('panorama', [
                 { speaker: 'La jeune fille', html: 'Un <span style="color:#5FC9E8;font-weight:600">panorama</span>. Ce sont des lieux où le regard porte — un pont, une crête, une vue qu\'on ne voit qu\'en s\'arrêtant.' },
                 { speaker: 'La jeune fille', line: 'Cadre, et prends la photo. Elle rejoindra ton studio, avec la date et ce que tu en auras noté. C\'est ta mémoire à toi, celle-là — pas celle des cartes.' },
-            ]);
+            ], 'viewfinderScreen');
         }
 
         // Appelé depuis openPanneauScreen() — premier point d'information ouvert.
@@ -16838,7 +16858,7 @@
             _obDiscover('panneau', [
                 { speaker: 'La jeune fille', html: 'Les <span style="color:#7BD88F;font-weight:600">points d\'information</span>. Des supports que d\'autres ont laissés, incomplets. Tu peux les compléter en y insérant les parchemins que tu récupères en chemin. Une fois assemblés, ils te livrent ce qu\'ils cachaient.' },
                 { speaker: 'La jeune fille', line: 'Chaque emplacement vide attend le sien. Rien ne presse — le panneau ne s\'en ira pas.' },
-            ]);
+            ], 'panneauScreen');
         }
 
         // Appelé depuis collectScroll() — premier parchemin ramassé.
@@ -16846,7 +16866,7 @@
             _obDiscover('scroll', [
                 { speaker: 'La jeune fille', html: 'Un <span style="color:#EBCC7E;font-weight:600">parchemin</span>. Il ne te dira rien tout seul : c\'est une pièce, pas un texte.' },
                 { speaker: 'La jeune fille', line: 'Garde-le. Il s\'insère dans les points d\'information de la ville, ces panneaux à moitié effacés. Tu en trouveras d\'autres en marchant, et en faisant progresser tes cartes.' },
-            ]);
+            ], 'map');
         }
 
         // Appelé depuis openZoneDetail() — premier badge de quartier consulté.
@@ -16854,7 +16874,7 @@
             _obDiscover('zone', [
                 { speaker: 'La jeune fille', html: 'Un <span style="color:#C89039;font-weight:600">quartier</span>. Chacun a ses présences, ses vues, ses histoires — et tu vois ici ce qu\'il t\'en reste à trouver.' },
                 { speaker: 'La jeune fille', line: 'Personne ne t\'oblige à en finir un avant d\'aller voir ailleurs. Mais c\'est agréable, de voir une part de ville se remplir.' },
-            ]);
+            ], 'zoneDetailPanel');
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -17011,7 +17031,9 @@
         // l'obtenir, et ne pas le revoir à la quatrième photo.
         let _obDiscovered = {};
 
-        function _obDiscover(key, lines) {
+        // ecran : id de l'interface dont parle la réplique, ou 'map'. Si le joueur
+        // l'a quittée pendant le délai, la découverte n'est pas consommée.
+        function _obDiscover(key, lines, ecran) {
             if (_obDiscovered[key]) return;
             // Pendant le tutoriel guidé on se tait : le guide a la parole et deux
             // dialogues qui se recouvrent perdent le joueur. La découverte n'est
@@ -17019,10 +17041,17 @@
             if (typeof _obGuide === 'object' && _obGuide.active) return;
             const vn = document.getElementById('vnOverlay');
             if (vn && vn.classList.contains('show')) return;
-            _obDiscovered[key] = true;
-            try { saveProgress(); } catch (e) {}
             // Petit délai pour laisser l'écran s'ouvrir visuellement.
-            setTimeout(() => { try { vnShow(lines, null); } catch (e) {} }, 600);
+            setTimeout(() => {
+                if (_obDiscovered[key]) return;
+                if (vn && vn.classList.contains('show')) return;
+                const el = ecran === 'map' ? null : document.getElementById(ecran);
+                const ici = ecran === 'map' ? _obCurrentScreen() === 'map' : !!(el && el.classList.contains('show'));
+                if (!ici) return;
+                _obDiscovered[key] = true;
+                try { saveProgress(); } catch (e) {}
+                try { vnShow(lines, null); } catch (e) {}
+            }, 600);
         }
 
         function _obGuideRing(selector) {
@@ -17210,33 +17239,24 @@
             return false;
         }
 
-        // Crée ou repositionne l'anneau #obHighlightRing autour d'un élément.
+        // Fait pulser la cible elle-même (.ob-guide-pulse) : l'encadré violet qui
+        // l'entourait a été retiré. Sur un marqueur de la mappe, c'est son visuel
+        // qui pulse, pas l'élément porteur : celui-ci tient déjà un transform
+        // de positionnement, que l'échelle déplacerait.
+        let _obPulseEl = null;
         function _obRingPlace(el) {
-            const app = document.getElementById('mainApp');
-            if (!app) return;
-            const rect = el.getBoundingClientRect();
-            const appRect = app.getBoundingClientRect();
-            const pad = 8;
-            const x = rect.left - appRect.left - pad;
-            const y = rect.top  - appRect.top  - pad;
-            const w = rect.width  + pad * 2;
-            const h = rect.height + pad * 2;
-            let ring = document.getElementById('obHighlightRing');
-            if (!ring) {
-                ring = document.createElement('div');
-                ring.id = 'obHighlightRing';
-                ring.style.cssText = [
-                    'position:absolute','border-radius:10px',
-                    'border:2px solid rgba(139,92,246,0.9)',
-                    'pointer-events:none','z-index:9002',
-                    'animation:obMarkerPulse 1.5s ease-in-out infinite'
-                ].join(';');
-                app.appendChild(ring);
-            }
-            ring.style.left   = x + 'px';
-            ring.style.top    = y + 'px';
-            ring.style.width  = w + 'px';
-            ring.style.height = h + 'px';
+            const cible = (el.closest('.maplibregl-marker') && el.firstElementChild) || el;
+            if (_obPulseEl === cible && cible.classList.contains('ob-guide-pulse')) return;
+            _obPulseClear();
+            // Les grandes cibles (vignette, image de la carte) pulsent plus discrètement.
+            const r = cible.getBoundingClientRect();
+            cible.style.setProperty('--ob-pulse-scale', Math.max(r.width, r.height) > 90 ? '1.05' : '1.14');
+            cible.classList.add('ob-guide-pulse');
+            _obPulseEl = cible;
+        }
+        function _obPulseClear() {
+            document.querySelectorAll('.ob-guide-pulse').forEach(e => e.classList.remove('ob-guide-pulse'));
+            _obPulseEl = null;
         }
 
         // Filet de sécurité : aligne le guide sur l'état réel du jeu, pour qu'il
@@ -17485,11 +17505,12 @@
 
         // Ce que la jeune fille envoie chercher dehors à l'étape « gather » :
         // seulement ce qui manque réellement, jamais un scénario supposé.
+        // Dites sur la mappe : l'orbe, la poussière et l'échoppe y sont. Le
+        // constat d'épuisement, lui, tombe avant, dans la fiche carte.
         function _obGatherLines() {
             const shop = _obTutoBazarNear();
             const lines = [
-                { speaker: 'La jeune fille', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
-                { speaker: 'La jeune fille', html: 'Ou tu sors. Il y a une <span style="color:#67E8F9;font-weight:600">🔮 orbe mémorielle</span> près d\'ici : elle lui rend toute son énergie d\'un coup. Va la chercher.' },
+                { speaker: 'La jeune fille', html: 'Il y a une <span style="color:#67E8F9;font-weight:600">🔮 orbe mémorielle</span> près d\'ici : elle rend à la carte toute son énergie d\'un coup. Va la chercher.' },
             ];
             if ((memorialDust || 0) < 40) {
                 lines.push({ speaker: 'La jeune fille', html: 'Ta réserve de <span style="color:#C084FC;font-weight:600">poussière</span> est à sec, aussi. Il y en a dehors — ramasses-en en chemin.' });
@@ -17584,10 +17605,11 @@
             if (!_obGuide.active || _obGuide.outro) return;
             _obGuide.outro = true;
             _obGuide.step = 'spyglass';
-            // Ancré à la mappe : le joueur vient de sceller depuis la fiche carte,
-            // et elle lui montre ici la longue-vue du HUD. Elle attend donc qu'il
-            // soit ressorti — l'anneau, lui, désigne la sortie entre-temps.
-            _obSay('map', [
+            // Deux temps. Le chapitre se salue là où il vient d'être scellé (la
+            // fiche carte, d'ordinaire) ; ce qui attend dehors et la longue-vue du
+            // HUD, sur la mappe seulement — l'anneau désigne la sortie entre-temps.
+            const _ici = _obCurrentScreen();
+            _obSay(_ici === 'other' ? 'map' : _ici, [
                 { speaker: 'La jeune fille', line: 'Voilà. Ce chapitre ne s\'oubliera plus. C\'est ça, être explorateur de la mémoire.' },
                 // La chute de la méprise et le pacte tiennent ici, au scellement :
                 // « Et voilà le chapitre complet ! » salue le geste que le joueur
@@ -17601,13 +17623,14 @@
                 { speaker: 'La jeune fille', line: 'Allez, c\'est officiel : tu es mon tout premier disciple. Un explorateur de la mémoire, un vrai.' },
                 { speaker: 'La jeune fille', line: 'Toi tu as la ville, moi j\'ai le carnet. Dénichons ces mémoires une par une, et tu stabilises, je note. Ça me sauverait, franchement !' },
                 { speaker: 'La jeune fille', line: 'Dès qu\'on a tout réuni, tu viens avec moi le rendre à l\'Organisation ? Ça va leur faire tout drôle !' },
+            ], () => { _obGuideRefresh(); _obSay('map', [
                 // Nommer sans expliquer : le joueur doit savoir que ces choses
                 // existent pour avoir envie de s'en approcher, pas savoir s'en
                 // servir avant de les avoir vues.
                 { speaker: 'La jeune fille', html: 'Trois choses t\'attendent en marchant : des <span style="color:#B98CE8;font-weight:600">nébuleuses</span> comme celle-ci, des <span style="color:#5FC9E8;font-weight:600">panoramas</span>, des <span style="color:#7BD88F;font-weight:600">points d\'information</span>. Tu verras bien ce qu\'ils te veulent.' },
                 // 🔭 : l'emoji que porte réellement #viewToggleBtn sur la mappe.
                 { speaker: 'La jeune fille', html: 'Une dernière chose. Cette <span style="font-weight:600">🔭 longue-vue</span>, sur la mappe — touche-la.' },
-            ], () => _obGuideRefresh());
+            ], () => _obGuideRefresh()); });
         }
 
         // Étape « spyglass » franchie : le joueur vient de basculer en vue
@@ -17810,7 +17833,14 @@
                         } else {
                             _obGuide.step = 'gather';
                             _obGuideVu.orbe_a_chercher = true;   // elle l'a envoyé dehors
-                            _obSay('map', _obGatherLines(), () => _obGuideRefresh());
+                            // Le constat dans la fiche carte, la marche à suivre sur la mappe.
+                            _obSay('carddetail', [
+                                { speaker: 'La jeune fille', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
+                                { speaker: 'La jeune fille', line: 'Ou tu sors chercher de quoi la ranimer.' },
+                            ], () => {
+                                _obGuideRefresh();
+                                _obSay('map', _obGatherLines(), () => _obGuideRefresh());
+                            });
                         }
                     }
                     break;
@@ -17961,6 +17991,7 @@
         }
 
         function _obRemoveHighlight() {
+            _obPulseClear();
             ['obHighlightOverlay','obHighlightRing','obClickZone'].forEach(id => {
                 const el = document.getElementById(id); if (el) el.remove();
             });
@@ -29514,8 +29545,12 @@
             const ecran = document.getElementById('studioScreen');
             if (!ecran || !ecran.classList.contains('show') || _hubVnOpen() || _hubOpening) return;
             _hubJfSceneVue = true;   // posé tout de suite : pas de double scène
-            try { saveProgress(); } catch (e) {}
-            setTimeout(() => vnShow(HUB_JF_LIGNES.arrivee, () => _hubHighlightDoor()), 450);
+            setTimeout(() => {
+                // Sorti de la salle pendant le délai : la scène attend son retour.
+                if (!ecran.classList.contains('show') || _studioZone !== 2 || _hubVnOpen()) { _hubJfSceneVue = false; return; }
+                try { saveProgress(); } catch (e) {}
+                vnShow(HUB_JF_LIGNES.arrivee, () => _hubHighlightDoor());
+            }, 450);
         }
 
         function hubDoorTap() {
@@ -29688,7 +29723,8 @@
                 v2SelectedGrappeId = 'ville_du_livre';
                 try { v2RefreshIfOpen(); } catch (_) {}
             }
-            vnShow([
+            // Dans l'Explorium seulement : s'il l'a déjà refermé, elle attend qu'il y revienne.
+            _obSay('mindmap', [
                 { speaker: JF, line: 'Une entrée. Une. Ne fais pas cette tête, tout le monde commence là.' },
                 // [AJOUT] : elle nomme l'Explorium maintenant que le joueur y a accès.
                 { speaker: JF, line: 'Bienvenue dans l\'Explorium. Ce que tu inscris dehors, c\'est ici que ça se lit.' },
