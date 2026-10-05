@@ -21402,8 +21402,14 @@
             const _cC = map.getCenter();
             const _cCenter = map.project(_cC);
             const _cLat = _cC.lat;
-            const _cNorth = map.project([_cC.lng, _cLat + 50 / 111320]);
-            const _cEast  = map.project([_cC.lng + 50 / (111320 * Math.cos(_cLat * Math.PI / 180)), _cLat]);
+            // Directions au sol alignées sur l'écran : « avant » = cap de la carte,
+            // « droite » = cap + 90°. Mesurer vers le nord et l'est ne valait que carte
+            // orientée au nord : carte tournée (caméra GPS), le rayon horizontal
+            // mesuré tombait vers 0 et la zone n'était plus dessinée.
+            const _brg = map.getBearing() * Math.PI / 180;
+            const _sol = (lng, lat, m, ang) => [lng + m * Math.sin(ang) / (111320 * Math.cos(lat * Math.PI / 180)), lat + m * Math.cos(ang) / 111320];
+            const _cNorth = map.project(_sol(_cC.lng, _cLat, 50, _brg));
+            const _cEast  = map.project(_sol(_cC.lng, _cLat, 50, _brg + Math.PI / 2));
             const _rxRef = Math.abs(_cEast.x - _cCenter.x);
             const _ryRef = Math.abs(_cNorth.y - _cCenter.y);
             const RATIO_Y = (_rxRef > 0.5 && isFinite(_ryRef)) ? Math.max(0.12, Math.min(1, _ryRef / _rxRef)) : 0.38;
@@ -21418,8 +21424,8 @@
             _capZones.forEach(z => {
                 if (_plan && !z.type.startsWith('poi_')) return;
                 const c = map.project([z.lng, z.lat]);
-                const e = map.project([z.lng + z.r / (111320 * Math.cos(z.lat * Math.PI / 180)), z.lat]);
-                const rx = Math.abs(e.x - c.x);
+                const e = map.project(_sol(z.lng, z.lat, z.r, _brg + Math.PI / 2));
+                const rx = Math.hypot(e.x - c.x, e.y - c.y);
                 const minRx = MIN_RX[z.type] || 24;
                 if (rx < minRx) return;
                 const ry = rx * RATIO_Y;
