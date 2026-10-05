@@ -9388,7 +9388,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.84.0</div>
+            <div class="hud-version" id="hudVersion">v0.85.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -20384,63 +20384,11 @@
         // recentre la caméra — la recentrer couperait l'animation en plein vol.
         let _viewTransition = false;
         let _viewTransitionTimer = null;
-        // ===== Animation de glissement du personnage (style Maps) =====
-        // Les points GPS arrivent par paliers (zone morte anti-dérive) ; pour éviter
-        // l'effet "téléportation", on fait GLISSER le marqueur de sa position
-        // affichée vers la nouvelle position validée, sur une durée ~= l'intervalle
-        // de relevé. La détection de distance reste par paliers (inchangée).
-        const _GPS_INTERVAL_MS = 2000;          // fréquence des relevés GPS
+        // ===================== AFFICHAGE GPS =====================
+        // Le filtrage vit dans GeoEngine (étages 1 à 4). Ici, on ne fait que poser
+        // le marqueur et la caméra sur GeoEngine.getDisplay(), à la cadence de l'écran.
         let _dispLat = null, _dispLng = null;   // position actuellement AFFICHÉE
-
-        // ===================== FILTRE DE KALMAN (style Maps) =====================
-        // Modèle à vitesse constante, 1D par axe, en MÈTRES (origine = 1er point).
-        // - L'accuracy du GPS sert de bruit de mesure : un point imprécis pèse moins.
-        // - L'état contient position ET vitesse → le filtre lisse le bruit ET fournit
-        //   une vitesse pour extrapoler l'affichage entre deux points (mouvement continu).
-        // Ça remplace l'ancienne zone morte d'affichage + la prédiction maison.
-        let _KAL_Q = 12.0;            // bruit de process : réactivité du filtre. ↑ = plus réactif/nerveux, ↓ = plus lisse/inerte. Réglable en direct via le panneau de test.
-        const _KAL_MAX_EXTRAPOLATE_MS = 2500; // plafond d'extrapolation d'affichage sans point neuf
-        const _EARTH_M_PER_DEG = 111320;
-
-        function _KalmanCV(q) { this.q = q; this.x = 0; this.v = 0; this.P = [[1,0],[0,1]]; this.ready = false; }
-        _KalmanCV.prototype.reset = function(x0) { this.x = x0; this.v = 0; this.P = [[1,0],[0,1]]; this.ready = true; };
-        _KalmanCV.prototype.predict = function(dt) {   // dt en secondes
-            if (!this.ready || dt <= 0) return;
-            this.x += this.v * dt;
-            const P = this.P, p00=P[0][0], p01=P[0][1], p10=P[1][0], p11=P[1][1];
-            // P = F P Fᵀ + Q, avec F=[[1,dt],[0,1]] et Q = bruit d'accélération discret
-            const dt2=dt*dt, dt3=dt2*dt, dt4=dt2*dt2, q=this.q;
-            this.P = [
-                [ p00 + dt*(p10+p01) + dt2*p11 + q*dt4/4, p01 + dt*p11 + q*dt3/2 ],
-                [ p10 + dt*p11 + q*dt3/2,                 p11 + q*dt2 ]
-            ];
-        };
-        _KalmanCV.prototype.update = function(z, r) {  // z mesure (m), r variance mesure (m²)
-            if (!this.ready) { this.reset(z); return; }
-            const P = this.P, S = P[0][0] + r;
-            const k0 = P[0][0]/S, k1 = P[1][0]/S, y = z - this.x;
-            this.x += k0*y; this.v += k1*y;
-            const p00=P[0][0], p01=P[0][1], p10=P[1][0], p11=P[1][1];
-            this.P = [ [(1-k0)*p00, (1-k0)*p01], [p10 - k1*p00, p11 - k1*p01] ];
-        };
-
-        let _kalE = new _KalmanCV(_KAL_Q);   // est (m)
-        let _kalN = new _KalmanCV(_KAL_Q);   // nord (m)
-        let _kalRefLat = null, _kalRefLng = null, _kalCosRef = 1;
-        let _kalLastUpdateT = 0, _kalRAF = null;
-
-        function _llToM(lat, lng) {
-            return {
-                e: (lng - _kalRefLng) * _EARTH_M_PER_DEG * _kalCosRef,
-                n: (lat - _kalRefLat) * _EARTH_M_PER_DEG
-            };
-        }
-        function _mToLL(e, n) {
-            return {
-                lat: _kalRefLat + n / _EARTH_M_PER_DEG,
-                lng: _kalRefLng + e / (_EARTH_M_PER_DEG * _kalCosRef)
-            };
-        }
+        let _geoRAF = null;
 
         function _setAvatarFacing(deltaE) {
             const el = document.getElementById('avatarSvg');
@@ -20449,38 +20397,12 @@
             else if (deltaE < -0.01) el.style.transform = 'scaleX(-1)'; // ouest → regarde à gauche
         }
 
-        // Appelée à chaque point GPS : recale le filtre (predict jusqu'à maintenant + update).
-        function _kalmanOnFix(lat, lng, accuracy) {
-            const now = performance.now();
-            if (_kalRefLat == null) {
-                _kalRefLat = lat; _kalRefLng = lng;
-                _kalCosRef = Math.cos(lat * Math.PI / 180);
-            }
-            const m = _llToM(lat, lng);
-            if (!_kalE.ready) {
-                _kalE.reset(m.e); _kalN.reset(m.n);
-            } else {
-                const dt = Math.max(0, (now - _kalLastUpdateT) / 1000);
-                _kalE.predict(dt); _kalN.predict(dt);
-                const r = Math.max(1, (accuracy || 15)) ** 2;   // variance de mesure = accuracy²
-                _kalE.update(m.e, r); _kalN.update(m.n, r);
-            }
-            _kalLastUpdateT = now;
-            if (_dispLat == null) { const ll=_mToLL(_kalE.x,_kalN.x); _dispLat=ll.lat; _dispLng=ll.lng; }
-            _kalStartLoop();
-        }
+        function _geoStartLoop() { if (!_geoRAF) _geoRAF = requestAnimationFrame(_geoTick); }
+        function _geoStopLoop() { if (_geoRAF) { cancelAnimationFrame(_geoRAF); _geoRAF = null; } }
 
-        function _kalStartLoop() { if (!_kalRAF) _kalRAF = requestAnimationFrame(_kalTick); }
-        function _kalStopLoop() { if (_kalRAF) { cancelAnimationFrame(_kalRAF); _kalRAF = null; } }
-
-        function _kalTick(now) {
-            if (!playerMarker || !map || !_kalE.ready) { _kalRAF = null; return; }
-            // Affichage = position filtrée + extrapolation par la vitesse estimée
-            // (plafonnée pour ne pas filer si le GPS tarde).
-            const dtDisp = Math.min(Math.max(0, (now - _kalLastUpdateT) / 1000), _KAL_MAX_EXTRAPOLATE_MS / 1000);
-            const e = _kalE.x + _kalE.v * dtDisp;
-            const n = _kalN.x + _kalN.v * dtDisp;
-            const ll = _mToLL(e, n);
+        function _geoTick() {
+            const ll = gpsActive ? GeoEngine.getDisplay() : null;
+            if (!playerMarker || !map || !ll) { _geoRAF = null; return; }
             const prevLng = _dispLng;
             _dispLat = ll.lat; _dispLng = ll.lng;
             _setAvatarFacing(_dispLng - prevLng);
@@ -20491,14 +20413,7 @@
                 const offset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
                 map.easeTo({ center: [_dispLng, _dispLat + offset], duration: 0, easing: x => x });
             }
-            _kalRAF = requestAnimationFrame(_kalTick);
-        }
-
-        // Réinitialise le filtre (au passage joystick → GPS, pour repartir propre).
-        function _kalmanReset() {
-            _kalStopLoop();
-            _kalE = new _KalmanCV(_KAL_Q); _kalN = new _KalmanCV(_KAL_Q);
-            _kalRefLat = null; _kalRefLng = null; _kalCosRef = 1; _kalLastUpdateT = 0;
+            _geoRAF = requestAnimationFrame(_geoTick);
         }
 
         // Déplacement DIRECT du perso (joystick/clavier : points très rapprochés,
@@ -20506,9 +20421,9 @@
         // pour que le filtre GPS reparte de la bonne position si le GPS prend le relais.
         function updatePlayerOnMap() {
             if (!map || !playerMarker) return;
-            // Déplacement direct (joystick/clavier) : on coupe le filtre GPS pour
-            // éviter tout conflit (il repartira propre si le GPS reprend la main).
-            _kalmanReset();
+            // Déplacement direct (joystick/clavier) : on coupe la boucle d'affichage
+            // GPS pour éviter tout conflit (elle repart au prochain fix).
+            _geoStopLoop();
             _dispLat = playerPos.lat;
             _dispLng = playerPos.lng;
             playerMarker.setLngLat([playerPos.lng, playerPos.lat]);
@@ -20517,7 +20432,7 @@
             // Caméra posée sur le personnage, sans animation : l'easeTo de 120 ms
             // verrouillé 100 ms faisait courir la mappe derrière le marqueur, qui
             // lui sautait à chaque tick — d'où le tremblement. Même principe que
-            // _kalTick côté GPS : on pose, on n'anime pas. Le lissage vient de la
+            // _geoTick côté GPS : on pose, on n'anime pas. Le lissage vient de la
             // fréquence d'appel (rAF, cf. startJoystickMovement).
             const currentPitch = _mapViewMode === 'far' ? MAP_VIEW.far.pitch : ISOMETRIC_TILT;
             const offset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
@@ -20530,7 +20445,7 @@
             });
         }
 
-        // Déplacement via GPS : on alimente le filtre de Kalman (lissage + prédiction).
+        // Déplacement via GPS : la boucle d'affichage suit GeoEngine.getDisplay().
         function updatePlayerOnMapSmooth() {
             if (!map || !playerMarker) return;
             // Premier placement : on pose direct (évite un glissement depuis Lyon),
@@ -20543,7 +20458,7 @@
                 const pitch0 = _mapViewMode === 'far' ? MAP_VIEW.far.pitch : ISOMETRIC_TILT;
                 map.easeTo({ center: [playerPos.lng, playerPos.lat + offset0], pitch: pitch0, bearing: ISOMETRIC_HEADING, duration: 120, easing: t => t });
             }
-            _kalmanOnFix(playerPos.lat, playerPos.lng, _lastFixAccuracy);
+            _geoStartLoop();
         }
 
 
@@ -30406,8 +30321,8 @@
         //   → étage 3 immobilité → étage 4 rendu rAF
         // Règle : l'affichage lit getDisplay(), le jeu lit getFiltered().
         // Aucune décision de capture ne se prend sur la position affichée.
-        // Lot A : étages 0 et 1, journal, panneau debug. La sortie filtrée est
-        // encore le point accepté tel quel (Kalman au lot B).
+        // Lots A-B : étages 0 à 2, journal, panneau debug. Gel à l'arrêt et
+        // rendu lissé au lot C, cap et caméra au lot D.
         const GeoEngine = (function () {
             // Réglages terrain : tout se règle ici, sans toucher à la logique.
             const CONFIG = {
@@ -30417,7 +30332,14 @@
                 ENABLE_REJECT: true,
                 ACCURACY_MAX_M: 50,             // point plus imprécis : rejeté
                 SPEED_MAX_MS: 12,               // vitesse implicite max depuis le dernier point accepté
+                SPEED_ACCURACY_MARGIN: true,    // distance diminuée des deux précisions avant le calcul :
+                                                // sans ça, le seul bruit GPS fait rejeter 16 % des bons points à 6 m de précision
                 REJECT_MAX_CONSECUTIVE: 4,      // au-delà, le point suivant passe de force (état degraded)
+                // Étage 2 — Kalman
+                ENABLE_KALMAN: true,
+                KALMAN_Q_MS2: 0.8,              // accélération typique d'un piéton (écart-type) : ↑ réactif, ↓ lisse
+                // Étage 4 — rendu
+                RENDER_EXTRAPOLATE_MAX_MS: 1500, // l'affichage prolonge la vitesse estimée, jamais plus longtemps
                 // Journal de session
                 JOURNAL_MAX: 15000,             // entrées gardées (2 h à 1 Hz, avec de la marge)
                 JOURNAL_SAVE_MS: 30000,         // recopie dans IndexedDB
@@ -30579,21 +30501,83 @@
                 if (_raw && !(p.ts > _raw.ts)) return 'horodatage';
                 if (!(p.accuracy <= CONFIG.ACCURACY_MAX_M)) return 'precision';
                 if (_raw) {
-                    const v = _distM(_raw, p) / ((p.ts - _raw.ts) / 1000);
-                    if (v > CONFIG.SPEED_MAX_MS) return 'vitesse';
+                    let d = _distM(_raw, p);
+                    if (CONFIG.SPEED_ACCURACY_MARGIN) d = Math.max(0, d - _raw.accuracy - p.accuracy);
+                    if (d / ((p.ts - _raw.ts) / 1000) > CONFIG.SPEED_MAX_MS) return 'vitesse';
                 }
                 return null;
             }
 
+            // ── Étage 2 : filtre de Kalman ──────────────────────────────────
+            // Lat/lng projetés en mètres autour d'une origine fixée au premier fix
+            // (équirectangulaire). Un filtre 1D indépendant par axe, état position
+            // + vitesse. Bruit de mesure = accuracy², bruit de process = KALMAN_Q_MS2².
+            const _M_PER_DEG = 6371000 * Math.PI / 180;
+            let _origin = null;
+            let _kTs = null;                // horodatage du dernier point filtré
+            let _kRecvT = 0;                // instant de sa réception (horloge d'affichage)
+            const _kx = { x: 0, v: 0, p00: 0, p01: 0, p11: 0 };   // axe est
+            const _ky = { x: 0, v: 0, p00: 0, p01: 0, p11: 0 };   // axe nord
+
+            function _toM(lat, lng) {
+                return { x: (lng - _origin.lng) * _M_PER_DEG * _origin.cos, y: (lat - _origin.lat) * _M_PER_DEG };
+            }
+            function _toLL(x, y) {
+                return { lat: _origin.lat + y / _M_PER_DEG, lng: _origin.lng + x / (_M_PER_DEG * _origin.cos) };
+            }
+            // Vitesse initiale inconnue : variance de 4 (± 2 m/s, un pas pressé).
+            function _kReset(k, z, r) { k.x = z; k.v = 0; k.p00 = r; k.p01 = 0; k.p11 = 4; }
+            function _kPredict(k, dt, q) {
+                k.x += k.v * dt;
+                const dt2 = dt * dt;
+                const p00 = k.p00 + 2 * dt * k.p01 + dt2 * k.p11 + q * dt2 * dt2 / 4;
+                const p01 = k.p01 + dt * k.p11 + q * dt2 * dt / 2;
+                k.p11 += q * dt2;
+                k.p00 = p00; k.p01 = p01;
+            }
+            function _kUpdate(k, z, r) {
+                const s = k.p00 + r, k0 = k.p00 / s, k1 = k.p01 / s, y = z - k.x;
+                k.x += k0 * y; k.v += k1 * y;
+                const p11 = k.p11 - k1 * k.p01;
+                k.p00 *= (1 - k0); k.p01 *= (1 - k0); k.p11 = p11;
+            }
+            // reset : point forcé après une série de rejets. Le joueur est
+            // vraisemblablement ailleurs : on repart du point plutôt que d'y ramper.
+            function _kalmanStep(p, reset) {
+                if (!_origin) _origin = { lat: p.lat, lng: p.lng, cos: Math.cos(p.lat * Math.PI / 180) };
+                const m = _toM(p.lat, p.lng), r = Math.max(1, p.accuracy) ** 2;
+                if (reset || _kTs === null) {
+                    _kReset(_kx, m.x, r); _kReset(_ky, m.y, r);
+                } else {
+                    const dt = Math.min(Math.max(0, (p.ts - _kTs) / 1000), 30);
+                    const q = CONFIG.KALMAN_Q_MS2 * CONFIG.KALMAN_Q_MS2;
+                    _kPredict(_kx, dt, q); _kPredict(_ky, dt, q);
+                    _kUpdate(_kx, m.x, r); _kUpdate(_ky, m.y, r);
+                }
+                _kTs = p.ts;
+                _kRecvT = performance.now();
+                const ll = _toLL(_kx.x, _ky.x);
+                return {
+                    lat: ll.lat, lng: ll.lng,
+                    accuracy: Math.sqrt(Math.max(_kx.p00, _ky.p00)),
+                    speed: Math.hypot(_kx.v, _ky.v),
+                    ts: p.ts
+                };
+            }
+
             function _accept(p, force) {
-                // Vitesse : celle du capteur si elle existe, sinon la vitesse implicite.
+                // Vitesse sans Kalman : celle du capteur si elle existe, sinon la vitesse implicite.
                 let speed = p.speed;
                 if (speed == null && _raw && p.ts > _raw.ts) speed = _distM(_raw, p) / ((p.ts - _raw.ts) / 1000);
                 _rejectStreak = 0;
                 _raw = p;
                 _stats.fixes++;
-                // Étage 2 (Kalman) au lot B : d'ici là, la sortie filtrée est le point accepté.
-                _filtered = { lat: p.lat, lng: p.lng, accuracy: p.accuracy, speed: speed == null ? 0 : speed, ts: p.ts };
+                if (CONFIG.ENABLE_KALMAN) {
+                    _filtered = _kalmanStep(p, force);
+                } else {
+                    _kTs = null;   // le filtre repartira propre s'il est réactivé
+                    _filtered = { lat: p.lat, lng: p.lng, accuracy: p.accuracy, speed: speed == null ? 0 : speed, ts: p.ts };
+                }
                 _setState(force ? 'degraded' : 'moving');
                 _emit('fix', getFiltered());
                 _debugRender();
@@ -30608,8 +30592,17 @@
 
             // ── Lecture ─────────────────────────────────────────────────────
             function getFiltered() { return _filtered ? Object.assign({}, _filtered) : null; }
-            function getDisplay() {   // étage 4 au lot C : d'ici là, l'affichage suit la sortie filtrée
-                return _filtered ? { lat: _filtered.lat, lng: _filtered.lng, accuracy: _filtered.accuracy } : null;
+            // Affichage : position filtrée prolongée par la vitesse estimée, pour que
+            // le marqueur avance entre deux fix (plafonné si le GPS tarde).
+            // Gel à l'arrêt et lissage τ au lot C.
+            function getDisplay() {
+                if (!_filtered) return null;
+                if (!CONFIG.ENABLE_KALMAN || _kTs === null) {
+                    return { lat: _filtered.lat, lng: _filtered.lng, accuracy: _filtered.accuracy };
+                }
+                const dt = Math.min(performance.now() - _kRecvT, CONFIG.RENDER_EXTRAPOLATE_MAX_MS) / 1000;
+                const ll = _toLL(_kx.x + _kx.v * dt, _ky.x + _ky.v * dt);
+                return { lat: ll.lat, lng: ll.lng, accuracy: _filtered.accuracy };
             }
             function getRaw() { return _raw ? Object.assign({}, _raw) : null; }
             function getHeading() { return _raw ? _raw.heading : null; }   // étage 5 au lot D
