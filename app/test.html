@@ -9392,7 +9392,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.87.0</div>
+            <div class="hud-version" id="hudVersion">v0.88.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11845,6 +11845,8 @@
             "📍 Position introuvable pour l'instant. Reste à découvert : le signal revient en général vite.": "📍 Position not found for now. Stay in the open: the signal usually comes back quickly.",
             "📍 Le GPS tarde à répondre. Patiente un instant…": "📍 The GPS is slow to respond. Hold on a moment…",
             "Recentrer sur ma position": "Recenter on my position",
+            "📡 Signal GPS perdu : ta position est figée. Reste à découvert, il revient en général vite.": "📡 GPS signal lost: your position is frozen. Stay in the open, it usually comes back quickly.",
+            "📡 Précision GPS faible : ta position peut dériver de quelques dizaines de mètres.": "📡 Low GPS accuracy: your position may drift by a few dozen metres.",
             "Volume de la musique": "Music volume",
             "Vitesse": "Speed",
             "Marche": "Walk",
@@ -30448,7 +30450,8 @@
         //   → étage 3 immobilité → étage 4 rendu rAF
         // Règle : l'affichage lit getDisplay(), le jeu lit getFiltered().
         // Aucune décision de capture ne se prend sur la position affichée.
-        // Lots A-D : étages 0 à 5, journal, panneau debug. Robustesse au lot E.
+        // Lots A-E : étages 0 à 5, robustesse terrain, journal, panneau debug.
+        // Hystérésis de capture au lot F (côté jeu).
         const GeoEngine = (function () {
             // Réglages terrain : tout se règle ici, sans toucher à la logique.
             const CONFIG = {
@@ -30461,6 +30464,10 @@
                 SPEED_ACCURACY_MARGIN: true,    // distance diminuée des deux précisions avant le calcul :
                                                 // sans ça, le seul bruit GPS fait rejeter 16 % des bons points à 6 m de précision
                 REJECT_MAX_CONSECUTIVE: 4,      // au-delà, le point suivant passe de force (état degraded)
+                // Robustesse terrain
+                FIX_TIMEOUT_MS: 15000,          // sans point accepté au-delà : état lost, marqueur figé, bandeau
+                DEGRADED_MEDIAN_ACC_M: 30,      // précision médiane au-dessus de ce seuil…
+                DEGRADED_WINDOW_MS: 30000,      // …sur cette fenêtre : état degraded affiché au joueur
                 // Étage 2 — Kalman
                 ENABLE_KALMAN: true,
                 KALMAN_Q_MS2: 0.8,              // accélération typique d'un piéton (écart-type) : ↑ réactif, ↓ lisse
@@ -30485,7 +30492,8 @@
                 ENABLE_HEADING: true,
                 HEADING_MIN_SPEED_MS: 0.8,      // au-dessus : cap GPS ; en dessous : boussole
                 HEADING_TAU_MS: 250,            // lissage angulaire (composantes sin/cos)
-                CAMERA_DEADZONE_PX: 60,         // la caméra ne bouge pas tant que le joueur reste dans ce rayon
+                CAMERA_DEADZONE_PX: 15,         // la caméra ne bouge pas tant que le joueur reste dans ce rayon
+                                                // (brief : 60 px, soit 25 m de marche au zoom 17 ; 15 px ≈ 6 m, validé le 05/10)
                 CAMERA_BEARING_TAU_MS: 300,     // rotation de la caméra vers le cap (ajout : évite les à-coups de bascule)
                 CAMERA_RECENTER_MS: 800,        // durée de l'animation du bouton « recentrer »
                 // Journal de session
@@ -30516,6 +30524,27 @@
                 _state = s;
                 _log({ k: 'state', from: prev, to: s });
                 _emit('statechange', { from: prev, to: s });
+                _debugRender();
+            }
+            // État publié : lost > degraded > still/moving. Le mouvement (_motion) est
+            // suivi à part : une précision faible ne doit pas défaire le gel à l'arrêt.
+            let _motion = 'moving';     // moving | still (étage 3)
+            let _forced = false;        // dernier point accepté de force (étage 1)
+            let _lowAcc = false;        // précision médiane trop faible sur la fenêtre
+            let _lost = false;          // pas de point frais depuis FIX_TIMEOUT_MS, ou reprise en cours
+            let _lastAcceptT = 0;
+            const _accRecues = [];      // { t, acc } des points reçus, pour la médiane
+            function _publish() {
+                _setState(_lost ? 'lost' : (_forced || _lowAcc) ? 'degraded' : (_raw ? _motion : 'acquiring'));
+            }
+            // Signal perdu : affichage figé (étage 4) ; l'arrêt est levé, le joueur a
+            // pu marcher entre-temps. Le filtre repartira du prochain point.
+            function _marquerPerdu(raison) {
+                if (_lost) return;
+                _lost = true;
+                if (_motion === 'still') { _motion = 'moving'; _stillAt = null; }
+                _log({ k: 'perdu', raison: raison });
+                _publish();
             }
 
             // Distance en mètres, approximation équirectangulaire : exacte au
@@ -30598,21 +30627,59 @@
                     return false;
                 }
                 _log({ k: 'start' });
-                _setState('acquiring');
+                _lost = false;
+                _lastAcceptT = performance.now();   // le délai lost court dès le démarrage
+                _publish();
                 // Sans autorisation à demander (Android, ordinateur), la boussole se branche d'office.
                 if (!(window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function')) _brancherBoussole();
+                _lancerWatch();
+                requestWakeLock();
+                _debugRender();
+                return true;
+            }
+            function _lancerWatch() {
                 _watchId = navigator.geolocation.watchPosition(_onRaw, _onError, {
                     enableHighAccuracy: true, maximumAge: 0, timeout: CONFIG.WATCH_TIMEOUT_MS
                 });
-                _debugRender();
-                return true;
             }
             function stop() {
                 if (_watchId !== null) { navigator.geolocation.clearWatch(_watchId); _watchId = null; }
                 if (_rafId !== null) { cancelAnimationFrame(_rafId); _rafId = null; }
+                _libererEveil();
                 _log({ k: 'stop' });
                 _journalSave();
             }
+
+            // ── Robustesse : écran allumé, reprise, perte de fix ────────────
+            // Wake Lock : l'écran ne se met pas en veille pendant la session. Le
+            // navigateur le relâche à chaque passage en arrière-plan : on le redemande
+            // au retour. API absente (vieux iOS…) : journalisé, rien de plus.
+            let _wakeLock = null;
+            function requestWakeLock() {
+                if (!('wakeLock' in navigator)) { _log({ k: 'eveil', ok: false, msg: 'API absente' }); return; }
+                if (_wakeLock || _watchId === null || document.visibilityState !== 'visible') return;
+                navigator.wakeLock.request('screen').then(w => {
+                    _wakeLock = w;
+                    _log({ k: 'eveil', ok: true });
+                    w.addEventListener('release', () => { _wakeLock = null; });
+                }).catch(e => _log({ k: 'eveil', ok: false, msg: String((e && e.message) || e) }));
+            }
+            function _libererEveil() {
+                if (_wakeLock) { _wakeLock.release().catch(() => {}); _wakeLock = null; }
+            }
+            // Retour au premier plan : sur iOS, le watch s'est arrêté avec l'écran
+            // verrouillé. On en relance un neuf ; lost tant qu'aucun point frais n'arrive.
+            function _reprendre() {
+                if (_watchId === null) return;
+                navigator.geolocation.clearWatch(_watchId);
+                _marquerPerdu('reprise');
+                _lancerWatch();
+                requestWakeLock();
+            }
+            // Perte de fix : au-delà de FIX_TIMEOUT_MS sans point accepté. Jamais silencieux.
+            setInterval(() => {
+                if (_watchId !== null && !_lost && performance.now() - _lastAcceptT > CONFIG.FIX_TIMEOUT_MS) _marquerPerdu('délai');
+            }, 1000);
 
             function _onRaw(pos) {
                 const c = pos.coords;
@@ -30626,6 +30693,16 @@
                     heading: (c.heading == null || isNaN(c.heading)) ? null : c.heading
                 };
                 _log({ k: 'raw', lat: p.lat, lng: p.lng, acc: p.accuracy, ts: p.ts, spd: p.speed, hdg: p.heading });
+
+                // Mode dégradé : précision médiane des points reçus (rejetés compris) sur
+                // la fenêtre. Affiché au joueur, jamais compensé en élargissant les rayons.
+                _accRecues.push({ t: now, acc: p.accuracy });
+                while (_accRecues.length && _accRecues[0].t < now - CONFIG.DEGRADED_WINDOW_MS) _accRecues.shift();
+                if (_accRecues.length >= 3) {
+                    const tri = _accRecues.map(a => a.acc).sort((a, b) => a - b);
+                    _lowAcc = tri[Math.floor(tri.length / 2)] > CONFIG.DEGRADED_MEDIAN_ACC_M;
+                }
+                _publish();
 
                 // ── Étage 1 : rejet ──
                 const why = CONFIG.ENABLE_REJECT ? _motifRejet(p) : null;
@@ -30723,7 +30800,7 @@
                     _kReset(_kx, m.x, r); _kReset(_ky, m.y, r);
                 } else {
                     const dt = Math.min(Math.max(0, (p.ts - _kTs) / 1000), 30);
-                    const arret = _state === 'still' && CONFIG.ENABLE_STILL;
+                    const arret = _motion === 'still' && CONFIG.ENABLE_STILL;
                     const qa = arret ? CONFIG.KALMAN_Q_STILL_MS2 : CONFIG.KALMAN_Q_MS2;
                     // À l'arrêt (étage 3), vitesse nulle : le filtre devient une moyenne
                     // pondérée des points, au lieu de chercher un mouvement dans le bruit.
@@ -30815,20 +30892,25 @@
                 _raw = p;
                 _stats.fixes++;
                 if (CONFIG.ENABLE_KALMAN) {
-                    _filtered = _kalmanStep(p, force);
+                    // Après une coupure, le joueur a pu marcher : le filtre repart du point.
+                    _filtered = _kalmanStep(p, force || _lost);
                 } else {
                     _kTs = null;   // le filtre repartira propre s'il est réactivé
                     _filtered = { lat: p.lat, lng: p.lng, accuracy: p.accuracy, speed: speed == null ? 0 : speed, ts: p.ts };
                 }
                 _histPush(p, _filtered);
-                let etat = force ? 'degraded' : 'moving';
+                _forced = force;
+                _lost = false;
+                _lastAcceptT = performance.now();
+                let mouvement = 'moving';
                 if (!force && CONFIG.ENABLE_STILL) {
-                    if (_state === 'still') etat = _sortStill(p) ? 'moving' : 'still';
-                    else if (_entreStill()) etat = 'still';
+                    if (_motion === 'still') mouvement = _sortStill(p) ? 'moving' : 'still';
+                    else if (_entreStill()) mouvement = 'still';
                 }
-                if (etat === 'still' && _state !== 'still') _gelerStill();
-                else if (etat !== 'still' && _state === 'still') _degelerStill(p);
-                _setState(etat);
+                if (mouvement === 'still' && _motion !== 'still') _gelerStill();
+                else if (mouvement !== 'still' && _motion === 'still') _degelerStill(p);
+                _motion = mouvement;
+                _publish();
                 _hdgFromFix(p);
                 if (_rafId === null) _rafId = requestAnimationFrame(_renderTick);
                 _emit('fix', getFiltered());
@@ -30838,6 +30920,13 @@
             function _onError(err) {
                 _stats.lastError = err.code;
                 _log({ k: 'error', code: err.code, msg: err.message || '' });
+                // Autorisation refusée : le watch ne reviendra pas, inutile de le garder
+                // (ni d'annoncer un « signal perdu » trompeur : le jeu passe au joystick).
+                if (err.code === 1 && _watchId !== null) {
+                    navigator.geolocation.clearWatch(_watchId);
+                    _watchId = null;
+                    _libererEveil();
+                }
                 _emit('error', err);
                 _debugRender();
             }
@@ -30850,7 +30939,7 @@
             let _boussoleBranchee = false;
 
             function _enMarche() {
-                return !!_filtered && _state !== 'still' && _filtered.speed >= CONFIG.HEADING_MIN_SPEED_MS;
+                return !!_filtered && _motion !== 'still' && _filtered.speed >= CONFIG.HEADING_MIN_SPEED_MS;
             }
             function _hdgFeed(deg, source) {
                 const now = performance.now(), r = deg * Math.PI / 180;
@@ -30918,8 +31007,9 @@
             // promettrait une précision que le joueur n'a pas.
             function _cible() {
                 if (!_filtered) return null;
+                if (_lost && _disp) return Object.assign({}, _disp);   // signal perdu : marqueur figé
                 const acc = _raw ? _raw.accuracy : _filtered.accuracy;
-                if (_state === 'still' && _stillAt) {
+                if (_motion === 'still' && _stillAt) {
                     return { lat: _stillAt.lat, lng: _stillAt.lng, accuracy: acc };
                 }
                 if (!CONFIG.ENABLE_KALMAN || _kTs === null) {
@@ -31001,12 +31091,13 @@
             setInterval(_journalSave, CONFIG.JOURNAL_SAVE_MS);
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'hidden') _journalSave();
+                else _reprendre();
             });
             window.addEventListener('pagehide', _journalSave);
 
             const api = {
                 CONFIG, start, stop, on,
-                getDisplay, getFiltered, getRaw, getHeading, getState, requestCompass,
+                getDisplay, getFiltered, getRaw, getHeading, getState, requestCompass, requestWakeLock,
                 getJournalExport, journalSize: () => _journal.length,
                 _inject,
                 debugExtra: null    // fonction facultative : une ligne de plus dans le panneau
@@ -31128,6 +31219,33 @@
         let _lastFixAccuracy = 15;
         let _gpsBranche = false;
 
+        // Bandeau d'état GPS : signal perdu (marqueur figé) ou précision faible.
+        // Jamais d'échec silencieux. Masqué si la localisation est refusée (le
+        // joueur est passé au joystick, le message d'erreur a déjà été donné).
+        const _GEO_BANDEAU = {
+            lost: '📡 Signal GPS perdu : ta position est figée. Reste à découvert, il revient en général vite.',
+            degraded: '📡 Précision GPS faible : ta position peut dériver de quelques dizaines de mètres.'
+        };
+        function _geoBandeau(etat) {
+            let el = document.getElementById('geoBandeau');
+            const msg = _GEO_BANDEAU[etat];
+            if (!msg || _gpsErrToastT[1]) { if (el) el.style.display = 'none'; return; }
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'geoBandeau';
+                el.setAttribute('role', 'status');
+                el.style.cssText = [
+                    'position:absolute', 'top:64px', 'left:50%', 'transform:translateX(-50%)', 'z-index:600',
+                    'max-width:86%', 'padding:8px 14px', 'border-radius:12px', 'background:rgba(17,24,39,0.88)',
+                    'color:#fff', 'font-size:13px', 'line-height:1.4', 'text-align:center',
+                    'box-shadow:0 2px 10px rgba(0,0,0,0.25)', 'pointer-events:none'
+                ].join(';');
+                (document.querySelector('.app-container') || document.body).appendChild(el);
+            }
+            el.textContent = T(msg);
+            el.style.display = 'block';
+        }
+
         // Le jeu reçoit la sortie filtrée de GeoEngine (règle : décisions de jeu sur
         // getFiltered()). Le polling getCurrentPosition et son repli en basse
         // précision (points vieux de 60 s) ont disparu avec le passage au watch.
@@ -31145,7 +31263,9 @@
                     + '  ·  veh ' + (_distVehicleMode ? 'oui' : 'non');
                 // Boussole : iOS n'accorde l'autorisation que sur un geste du joueur.
                 // On la demande au premier tap (« click » : touchstart ne compte pas).
-                document.addEventListener('click', () => GeoEngine.requestCompass(), { once: true, capture: true });
+                // L'écran allumé se redemande au même geste (certains navigateurs l'exigent).
+                document.addEventListener('click', () => { GeoEngine.requestCompass(); GeoEngine.requestWakeLock(); }, { once: true, capture: true });
+                GeoEngine.on('statechange', s => _geoBandeau(s.to));
             }
             GeoEngine.start();
         }
