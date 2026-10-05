@@ -9392,7 +9392,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.88.0</div>
+            <div class="hud-version" id="hudVersion">v0.89.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11847,6 +11847,8 @@
             "Recentrer sur ma position": "Recenter on my position",
             "📡 Signal GPS perdu : ta position est figée. Reste à découvert, il revient en général vite.": "📡 GPS signal lost: your position is frozen. Stay in the open, it usually comes back quickly.",
             "📡 Précision GPS faible : ta position peut dériver de quelques dizaines de mètres.": "📡 Low GPS accuracy: your position may drift by a few dozen metres.",
+            "📡 Précision GPS insuffisante pour capturer, patiente…": "📡 GPS accuracy too low to capture, hold on…",
+            "Précision GPS insuffisante, patiente…": "GPS accuracy too low, hold on…",
             "Volume de la musique": "Music volume",
             "Vitesse": "Speed",
             "Marche": "Walk",
@@ -16714,7 +16716,7 @@
             const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                 .setLngLat([dust.lng, dust.lat]).addTo(map);
             inner.addEventListener('click', () => {
-                if (getDistance(playerPos.lat, playerPos.lng, dust.lat, dust.lng) <= DUST_RADIUS) {
+                if (_zoneOk('dust:' + dust.id, dust, DUST_RADIUS)) {
                     currentNearbyDust = dust;
                     document.getElementById('nearbyDust').classList.add('hidden');
                     _animateCollect(inner, () => collectDust());
@@ -16755,7 +16757,7 @@
             const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                 .setLngLat([orb.lng, orb.lat]).addTo(map);
             inner.addEventListener('click', () => {
-                if (getDistance(playerPos.lat, playerPos.lng, orb.lat, orb.lng) <= ORB_RADIUS) {
+                if (_zoneOk('orb:' + orb.id, orb, ORB_RADIUS)) {
                     currentNearbyOrb = orb;
                     document.getElementById('nearbyOrb').classList.add('hidden');
                     _animateCollect(inner, () => collectOrb());
@@ -18212,6 +18214,45 @@
             if (poi.gated === 'ville_du_livre' && !_villeDuLivreUnlocked) return false;
             return true;
         }
+        // ── Hystérésis de capture (brief géoloc) ──
+        // Une zone devient capturable après CAPTURE_DWELL_MS de présence continue dans
+        // son rayon, et ne cesse de l'être qu'au-delà de rayon × CAPTURE_EXIT_FACTOR :
+        // posté au bord, le joueur ne voit plus la console clignoter. En GPS, la
+        // précision doit aussi suffire, sinon capture bloquée et message d'attente.
+        // Position lue : playerPos, c.-à-d. GeoEngine.getFiltered() — jamais l'affichage.
+        const _zones = {};               // clé → { dedans, depuis, vu }
+        let _zoneDernierStatut = null;   // statut du dernier _zoneOk refusé (retour visuel du tap)
+        let _zonePrecisionT = 0;         // dernier refus pour précision (bandeau d'attente pendant 2,5 s)
+        function _zoneOk(cle, pt, rayon, large) {
+            const C = GeoEngine.CONFIG, now = Date.now();
+            const d = getDistance(playerPos.lat, playerPos.lng, pt.lat, pt.lng);
+            let z = _zones[cle];
+            // Zone pas évaluée depuis 3 s : on repart de zéro (pas de présence fantôme).
+            if (!z || now - z.vu > 3000) z = _zones[cle] = { dedans: false, depuis: 0, vu: now };
+            z.vu = now;
+            const dedans = d <= (z.dedans ? rayon * C.CAPTURE_EXIT_FACTOR : rayon);
+            if (dedans !== z.dedans) {
+                z.dedans = dedans;
+                z.depuis = now;
+                GeoEngine.journal(dedans ? 'zone_in' : 'zone_out', { zone: cle, d: Math.round(d * 10) / 10 });
+                // Réévaluer à l'échéance de la présence, sans attendre le prochain fix.
+                if (dedans) setTimeout(checkNearbyPOI, C.CAPTURE_DWELL_MS + 50);
+            }
+            let statut = !dedans ? 'loin' : now - z.depuis < C.CAPTURE_DWELL_MS ? 'attente' : 'ok';
+            if (statut === 'ok' && gpsActive) {
+                const raw = GeoEngine.getRaw();
+                const max = large ? C.CAPTURE_ACCURACY_MAX_LARGE_M : C.CAPTURE_ACCURACY_MAX_M;
+                if (!raw || raw.accuracy > max) {
+                    statut = 'precision';
+                    if (now - _zonePrecisionT > 2500) GeoEngine.journal('precision_bloque', { zone: cle, acc: raw ? raw.accuracy : null });
+                    _zonePrecisionT = now;
+                    _geoBandeau(GeoEngine.getState());
+                }
+            }
+            if (statut !== 'ok') _zoneDernierStatut = statut;
+            return statut === 'ok';
+        }
+
         const DUST_RADIUS = 30;
         const ECHO_RADIUS = 30;
         const ORB_RADIUS = 30;
@@ -20178,7 +20219,7 @@
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([dust.lng, dust.lat]).addTo(map);
                 inner.addEventListener('click', () => {
-                    const inRange = getDistance(playerPos.lat, playerPos.lng, dust.lat, dust.lng) <= DUST_RADIUS;
+                    const inRange = _zoneOk('dust:' + dust.id, dust, DUST_RADIUS);
                     if (inRange) {
                         currentNearbyDust = dust;
                         document.getElementById('nearbyDust').classList.add('hidden');
@@ -20211,7 +20252,7 @@
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([pt.lng, pt.lat]).addTo(map);
                 inner.addEventListener('click', () => {
-                    const inRange = getDistance(playerPos.lat, playerPos.lng, pt.lat, pt.lng) <= CARNET_RESOURCE_RADIUS;
+                    const inRange = _zoneOk('carnet:' + pt.id, pt, CARNET_RESOURCE_RADIUS);
                     if (inRange) {
                         currentNearbyCarnetResource = pt;
                         document.getElementById('nearbyCarnetResource').classList.add('hidden');
@@ -20263,7 +20304,7 @@
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([echo.lng, echo.lat]).addTo(map);
                 inner.addEventListener('click', () => {
-                    const inRange = getDistance(playerPos.lat, playerPos.lng, echo.lat, echo.lng) <= ECHO_RADIUS;
+                    const inRange = _zoneOk('echo:' + echo.id, echo, ECHO_RADIUS);
                     if (inRange) {
                         currentNearbyEcho = echo;
                         document.getElementById('nearbyEcho').classList.add('hidden');
@@ -20301,7 +20342,7 @@
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([orb.lng, orb.lat]).addTo(map);
                 inner.addEventListener('click', () => {
-                    const inRange = getDistance(playerPos.lat, playerPos.lng, orb.lat, orb.lng) <= ORB_RADIUS;
+                    const inRange = _zoneOk('orb:' + orb.id, orb, ORB_RADIUS);
                     if (inRange) {
                         currentNearbyOrb = orb;
                         document.getElementById('nearbyOrb').classList.add('hidden');
@@ -20339,7 +20380,7 @@
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([scroll.lng, scroll.lat]).addTo(map);
                 inner.addEventListener('click', () => {
-                    const inRange = getDistance(playerPos.lat, playerPos.lng, scroll.lat, scroll.lng) <= SCROLL_RADIUS;
+                    const inRange = _zoneOk('scroll:' + scroll.id, scroll, SCROLL_RADIUS);
                     if (inRange) {
                         currentNearbyScroll = scroll;
                         document.getElementById('nearbyScroll').classList.add('hidden');
@@ -20377,7 +20418,7 @@
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([loot.lng, loot.lat]).addTo(map);
                 inner.addEventListener('click', () => {
-                    const inRange = getDistance(playerPos.lat, playerPos.lng, loot.lat, loot.lng) <= SCROLL_RADIUS;
+                    const inRange = _zoneOk('loot:' + loot.id, loot, SCROLL_RADIUS);
                     if (inRange) {
                         currentNearbyLoot = loot;
                         document.getElementById('nearbyLoot').classList.add('hidden');
@@ -21632,8 +21673,11 @@
                 orb:      { text: 'Orbe à portée !', icon: '✦', color: 'rgba(6,182,212,0.95)' },
                 scroll:   { text: 'Parchemin à portée !', icon: '✦', color: 'rgba(245,158,11,0.95)' },
                 loot:     { text: 'Mystère à portée !', icon: '✦', color: 'rgba(234,88,12,0.95)' },
+                precision: { text: 'Précision GPS insuffisante, patiente…', icon: '📡', color: 'rgba(217,119,6,0.95)' },
             };
-            const m = inRange ? (msgs[type] || msgs.too_far) : msgs.too_far;
+            // Refus pour précision (hystérésis de capture) : « rapproche-toi » serait trompeur.
+            const m = inRange ? (msgs[type] || msgs.too_far)
+                : (_zoneDernierStatut === 'precision' ? msgs.precision : msgs.too_far);
             el.style.cssText = `
                 position:fixed;top:80px;left:50%;transform:translateX(-50%);
                 background:${m.color};color:white;
@@ -21773,7 +21817,7 @@
             let nearbyPoi = null;
             {
                 const aPortee = POIS.filter(poi => _obPoiOuvert(poi) && _poiActif(poi)
-                    && getDistance(playerPos.lat, playerPos.lng, poi.lat, poi.lng) <= _poiRadius(poi))
+                    && _zoneOk('poi:' + poi.id, poi, _poiRadius(poi), !!poi.radius))
                     .map(poi => ({ poi, d: getDistance(playerPos.lat, playerPos.lng, poi.lat, poi.lng) }))
                     .sort((a, b) => a.d - b.d);
                 const utile = aPortee.find(({ poi }) => {
@@ -21829,7 +21873,7 @@
             const nearbyDust = DUST_POINTS.find(d =>
                 (_fieldOpen || d.tuto) &&
                 !collectedDustPoints.includes(d.id) &&
-                getDistance(playerPos.lat, playerPos.lng, d.lat, d.lng) <= DUST_RADIUS
+                _zoneOk('dust:' + d.id, d, DUST_RADIUS)
             );
             currentNearbyDust = nearbyDust;
             const nearbyDustDiv = document.getElementById('nearbyDust');
@@ -21845,7 +21889,7 @@
             // Echo
             const nearbyEcho = (ECHOES_DISABLED || !_fieldOpen) ? null : ECHO_POINTS.find(e =>
                 !collectedEchoes.includes(e.id) &&
-                getDistance(playerPos.lat, playerPos.lng, e.lat, e.lng) <= ECHO_RADIUS
+                _zoneOk('echo:' + e.id, e, ECHO_RADIUS)
             );
             currentNearbyEcho = nearbyEcho;
             const nearbyEchoDiv = document.getElementById('nearbyEcho');
@@ -21864,7 +21908,7 @@
             const nearbyOrb = ORB_POINTS.find(o =>
                 (_fieldOpen || o.tuto) &&
                 !collectedOrbs.includes(o.id) &&
-                getDistance(playerPos.lat, playerPos.lng, o.lat, o.lng) <= ORB_RADIUS
+                _zoneOk('orb:' + o.id, o, ORB_RADIUS)
             );
             currentNearbyOrb = nearbyOrb;
             const nearbyOrbDiv = document.getElementById('nearbyOrb');
@@ -21880,7 +21924,7 @@
             // Scroll
             const nearbyScroll = !_fieldOpen ? null : SCROLL_POINTS.find(s =>
                 !collectedScrolls.includes(s.id) &&
-                getDistance(playerPos.lat, playerPos.lng, s.lat, s.lng) <= SCROLL_RADIUS
+                _zoneOk('scroll:' + s.id, s, SCROLL_RADIUS)
             );
             currentNearbyScroll = nearbyScroll;
             const nearbyScrollDiv = document.getElementById('nearbyScroll');
@@ -21897,7 +21941,7 @@
             // Loot mystère
             const nearbyLoot = !_fieldOpen ? null : LOOT_POINTS.find(l =>
                 !collectedLoots.includes(l.id) &&
-                getDistance(playerPos.lat, playerPos.lng, l.lat, l.lng) <= SCROLL_RADIUS
+                _zoneOk('loot:' + l.id, l, SCROLL_RADIUS)
             );
             currentNearbyLoot = nearbyLoot;
             const nearbyLootDiv = document.getElementById('nearbyLoot');
@@ -21913,7 +21957,7 @@
             // Carnet resource (cassette / pellicule / encre)
             const nearbyCR = !_fieldOpen ? null : CARNET_RESOURCE_POINTS.find(pt =>
                 !collectedCarnetResources.includes(pt.id) &&
-                getDistance(playerPos.lat, playerPos.lng, pt.lat, pt.lng) <= CARNET_RESOURCE_RADIUS
+                _zoneOk('carnet:' + pt.id, pt, CARNET_RESOURCE_RADIUS)
             );
             currentNearbyCarnetResource = nearbyCR;
             const nearbyCRDiv = document.getElementById('nearbyCarnetResource');
@@ -21944,8 +21988,7 @@
                     if (halo) { halo.style.borderColor = 'rgba(245,158,11,0.7)'; halo.style.boxShadow = ''; }
                     return;
                 }
-                const dist = getDistance(playerPos.lat, playerPos.lng, info.lat, info.lng);
-                const inZone = dist <= INFO_RADIUS;
+                const inZone = _zoneOk('info:' + info.id, info, INFO_RADIUS);
                 if (inZone) {
                     currentNearbyInfo = info;
                     if (halo) { halo.style.borderColor = 'rgba(52,211,153,0.9)'; halo.style.boxShadow = '0 0 6px 2px rgba(52,211,153,0.4)'; halo.style.background = 'transparent'; }
@@ -30450,8 +30493,8 @@
         //   → étage 3 immobilité → étage 4 rendu rAF
         // Règle : l'affichage lit getDisplay(), le jeu lit getFiltered().
         // Aucune décision de capture ne se prend sur la position affichée.
-        // Lots A-E : étages 0 à 5, robustesse terrain, journal, panneau debug.
-        // Hystérésis de capture au lot F (côté jeu).
+        // Lots A-F : étages 0 à 5, robustesse terrain, journal, panneau debug.
+        // L'hystérésis de capture vit côté jeu (_zoneOk), réglée par ce CONFIG.
         const GeoEngine = (function () {
             // Réglages terrain : tout se règle ici, sans toucher à la logique.
             const CONFIG = {
@@ -30496,6 +30539,12 @@
                                                 // (brief : 60 px, soit 25 m de marche au zoom 17 ; 15 px ≈ 6 m, validé le 05/10)
                 CAMERA_BEARING_TAU_MS: 300,     // rotation de la caméra vers le cap (ajout : évite les à-coups de bascule)
                 CAMERA_RECENTER_MS: 800,        // durée de l'animation du bouton « recentrer »
+                // Hystérésis de capture (appliquée par le jeu, cf. _zoneOk). Les rayons d'entrée
+                // restent ceux de chaque type de point (décision du 05/10, pas de rayon unique de 18 m).
+                CAPTURE_EXIT_FACTOR: 1.25,      // sortie de zone au-delà de rayon × facteur
+                CAPTURE_DWELL_MS: 1500,         // présence continue avant activation
+                CAPTURE_ACCURACY_MAX_M: 25,     // précision exigée pour capturer…
+                CAPTURE_ACCURACY_MAX_LARGE_M: 35, // …sauf POI à rayon élargi (façades : Mercière, Vieux-Lyon)
                 // Journal de session
                 JOURNAL_MAX: 15000,             // entrées gardées (2 h à 1 Hz, avec de la marge)
                 JOURNAL_SAVE_MS: 30000,         // recopie dans IndexedDB
@@ -31099,6 +31148,7 @@
                 CONFIG, start, stop, on,
                 getDisplay, getFiltered, getRaw, getHeading, getState, requestCompass, requestWakeLock,
                 getJournalExport, journalSize: () => _journal.length,
+                journal: (k, data) => _log(Object.assign({ k: k }, data)),   // entrées du jeu (zones, captures)
                 _inject,
                 debugExtra: null    // fonction facultative : une ligne de plus dans le panneau
             };
@@ -31187,6 +31237,7 @@
             _cameraMoving = false;
             if (playerMarker && map) updatePlayerOnMapSmooth();
             checkNearbyPOI();
+            _geoBandeau(GeoEngine.getState());   // retire le message « précision insuffisante » s'il n'a plus lieu d'être
             _trackDistanceFromGps(position);
         }
 
@@ -31224,11 +31275,13 @@
         // joueur est passé au joystick, le message d'erreur a déjà été donné).
         const _GEO_BANDEAU = {
             lost: '📡 Signal GPS perdu : ta position est figée. Reste à découvert, il revient en général vite.',
-            degraded: '📡 Précision GPS faible : ta position peut dériver de quelques dizaines de mètres.'
+            degraded: '📡 Précision GPS faible : ta position peut dériver de quelques dizaines de mètres.',
+            precision: '📡 Précision GPS insuffisante pour capturer, patiente…'
         };
         function _geoBandeau(etat) {
             let el = document.getElementById('geoBandeau');
-            const msg = _GEO_BANDEAU[etat];
+            // Priorité : perte du signal et mode dégradé, puis capture bloquée (lot F).
+            const msg = _GEO_BANDEAU[etat] || (Date.now() - _zonePrecisionT < 2500 ? _GEO_BANDEAU.precision : null);
             if (!msg || _gpsErrToastT[1]) { if (el) el.style.display = 'none'; return; }
             if (!el) {
                 el = document.createElement('div');
@@ -31265,6 +31318,13 @@
                 // On la demande au premier tap (« click » : touchstart ne compte pas).
                 // L'écran allumé se redemande au même geste (certains navigateurs l'exigent).
                 document.addEventListener('click', () => { GeoEngine.requestCompass(); GeoEngine.requestWakeLock(); }, { once: true, capture: true });
+                // Journal : chaque capture tentée depuis une console de ramassage.
+                document.addEventListener('click', e => {
+                    const console_ = e.target.closest && e.target.closest('#nearbyPOI, #nearbyDust, #nearbyEcho, #nearbyOrb, #nearbyScroll, #nearbyLoot, #nearbyCarnetResource, #nearbyInfo');
+                    if (!console_ || !e.target.closest('button')) return;
+                    const f = GeoEngine.getFiltered(), r = GeoEngine.getRaw();
+                    GeoEngine.journal('capture', { console: console_.id, lat: f && f.lat, lng: f && f.lng, acc: r && r.accuracy });
+                }, true);
                 GeoEngine.on('statechange', s => _geoBandeau(s.to));
             }
             GeoEngine.start();
