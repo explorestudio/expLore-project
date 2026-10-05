@@ -9392,7 +9392,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.90.0</div>
+            <div class="hud-version" id="hudVersion">v0.91.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -30300,9 +30300,10 @@
         // Filtres : 5m min, 15 km/h max par tronçon, accuracy < 50m. Détection mode véhicule.
         const _DIST = {
             MIN_MOVE_M: 10,                 // plancher : ignore tout déplacement < 10m (couvre la dérive GPS à l'arrêt, y compris quand la précision rapportée est "bonne")
-            ACCURACY_MOVE_FACTOR: 0.5,      // zone morte = max(MIN_MOVE_M, accuracy × ce facteur)
+            ACCURACY_MOVE_FACTOR: 1,        // zone morte = max(MIN_MOVE_M, précision GPS brute × ce facteur)
             MAX_SEGMENT_KMH: 15,            // tronçon individuel : marche rapide / vélo cool
-            MAX_ACCURACY_M: 100,            // ignore les positions trop incertaines (urbain dense / intérieur = souvent 30-80m)
+            MAX_ACCURACY_M: 25,             // précision GPS brute au-delà : rien n'est compté (intérieur / Wi-Fi = souvent 20-50 m,
+                                            // et sans vitesse capteur le filtre y dérive lentement : distance fantôme téléphone posé)
             // Détection véhicule (moyenne mobile)
             VEHICLE_AVG_KMH_TRIGGER: 12,    // si moy 60s > 12 km/h soutenu → véhicule
             VEHICLE_RECOVER_KMH: 8,         // si moy 30s < 8 km/h → on reprend
@@ -30407,9 +30408,18 @@
                 // Reset périodes (jour/semaine) si nécessaire
                 _resetDistanceCountersIfNewPeriod();
 
-                // Filtre 1 : précision GPS
-                if (acc != null && acc > _DIST.MAX_ACCURACY_M) {
-                    // Position trop incertaine, on ne se base pas dessus mais on garde la dernière connue
+                // Filtre 1 : GPS fiable et joueur en mouvement. La précision lue est celle
+                // du GPS (brute), pas celle du filtre (2-3 m, flatteuse). Immobile, précision
+                // dégradée ou signal perdu : rien n'est compté, et l'ancre se recale pour que
+                // la dérive ne s'accumule pas puis ne soit comptée d'un coup plus tard.
+                const brut = GeoEngine.getRaw();
+                const accBrute = brut ? brut.accuracy : acc;
+                const etatGps = GeoEngine.getState();
+                if ((accBrute != null && accBrute > _DIST.MAX_ACCURACY_M)
+                    || etatGps === 'still' || etatGps === 'degraded' || etatGps === 'lost') {
+                    _distLastLat = lat;
+                    _distLastLng = lng;
+                    _distLastTs = ts;
                     return;
                 }
 
@@ -30425,8 +30435,9 @@
                 const dtMs = Math.max(1, ts - _distLastTs);
                 const kmh = (distM / 1000) / (dtMs / 3600000);
 
-                // Filtre 2 : mouvement minimum (anti-bruit GPS quand on est immobile)
-                if (distM < _DIST.MIN_MOVE_M) {
+                // Filtre 2 : mouvement minimum (anti-bruit GPS quand on est immobile),
+                // au moins égal à la précision du GPS
+                if (distM < Math.max(_DIST.MIN_MOVE_M, (accBrute || 0) * _DIST.ACCURACY_MOVE_FACTOR)) {
                     // On ne met à jour NI la position NI l'heure de l'ancre : la vitesse du
                     // tronçon se calcule sur le temps réellement mis à parcourir ces 10 m.
                     // (Avant : l'heure avançait à chaque point, et 10 m « en 1 s » donnaient
