@@ -9392,7 +9392,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.89.0</div>
+            <div class="hud-version" id="hudVersion">v0.90.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -20467,6 +20467,12 @@
         function _geoStopLoop() {
             if (_geoRAF) { cancelAnimationFrame(_geoRAF); _geoRAF = null; }
             _geoHalo(null);
+            // Animation de marche lancée par le GPS : on l'arrête (celle du joystick n'est pas touchée).
+            if (_geoMarche) {
+                _geoMarche = false;
+                const av = document.getElementById('playerAvatar');
+                if (av) av.classList.remove('avatar-walking');
+            }
         }
 
         // Halo d'incertitude (à la Google Maps) : cercle à plat sur la carte, rayon =
@@ -20507,6 +20513,8 @@
         let _geoSuiviCoupe = false;    // vue d'ensemble : le joueur a déplacé la carte au doigt
         let _geoDoigtPose = false;     // doigt sur une carte déplaçable : la caméra GPS attend
         let _geoCamT = 0;
+        let _geoCapEnCours = false;    // la caméra est en train de rattraper le cap (cf. bande morte)
+        let _geoMarche = false;        // animation de marche de l'avatar en cours
 
         // Centre de caméra qui place le joueur au bon endroit pour ce cap de carte.
         function _geoCentreCamera(ll, bearing) {
@@ -20522,7 +20530,13 @@
             let b = map.getBearing();
             const cibleCap = _mapViewMode === 'close' ? (hdg == null ? b : hdg) : 0;
             const ecartCap = ((cibleCap - b + 540) % 360) - 180;
-            if (Math.abs(ecartCap) > 0.5) b += ecartCap * (1 - Math.exp(-dt / C.CAMERA_BEARING_TAU_MS));
+            // Hystérésis : on ne se met à tourner qu'au-delà de la bande morte, et on
+            // tourne jusqu'à être calé à 2° près ; entre les deux, la caméra ne bouge pas.
+            if (!_geoCapEnCours && Math.abs(ecartCap) > C.CAMERA_BEARING_DEADBAND_DEG) _geoCapEnCours = true;
+            if (_geoCapEnCours) {
+                b += ecartCap * (1 - Math.exp(-dt / C.CAMERA_BEARING_TAU_MS));
+                if (Math.abs(ecartCap) < 2) _geoCapEnCours = false;
+            }
             const cible = _geoCentreCamera(ll, b);
             const actuel = map.getCenter();
             const pc = map.project(cible), pa = map.project(actuel);
@@ -20542,6 +20556,14 @@
             _dispLat = ll.lat; _dispLng = ll.lng;
             playerMarker.setLngLat([_dispLng, _dispLat]);
             _geoHalo(ll);
+            // Animation de marche (la même que celle du joystick) tant que le joueur avance.
+            const f = GeoEngine.getFiltered(), etat = GeoEngine.getState();
+            const marche = !!f && f.speed > 0.5 && etat !== 'still' && etat !== 'lost';
+            if (marche !== _geoMarche) {
+                _geoMarche = marche;
+                const av = document.getElementById('playerAvatar');
+                if (av) av.classList.toggle('avatar-walking', marche);
+            }
             // L'avatar (vu de profil) regarde à gauche ou à droite de l'écran selon
             // son cap par rapport à la carte ; dans l'axe, il garde son côté.
             const hdg = GeoEngine.getHeading();
@@ -30399,9 +30421,11 @@
 
                 // Filtre 2 : mouvement minimum (anti-bruit GPS quand on est immobile)
                 if (distM < _DIST.MIN_MOVE_M) {
-                    // On ne met PAS à jour _distLastLat/Lng pour éviter d'accumuler du bruit
-                    // mais on actualise le timestamp pour ne pas créer un fake delta énorme la prochaine fois
-                    _distLastTs = ts;
+                    // On ne met à jour NI la position NI l'heure de l'ancre : la vitesse du
+                    // tronçon se calcule sur le temps réellement mis à parcourir ces 10 m.
+                    // (Avant : l'heure avançait à chaque point, et 10 m « en 1 s » donnaient
+                    // 36 km/h → tronçon rejeté par le filtre 3. En marche, presque rien
+                    // n'était compté.) L'immobilité est gérée par GeoEngine (étage 3).
                     return;
                 }
 
@@ -30537,7 +30561,9 @@
                 HEADING_TAU_MS: 250,            // lissage angulaire (composantes sin/cos)
                 CAMERA_DEADZONE_PX: 15,         // la caméra ne bouge pas tant que le joueur reste dans ce rayon
                                                 // (brief : 60 px, soit 25 m de marche au zoom 17 ; 15 px ≈ 6 m, validé le 05/10)
-                CAMERA_BEARING_TAU_MS: 300,     // rotation de la caméra vers le cap (ajout : évite les à-coups de bascule)
+                CAMERA_BEARING_TAU_MS: 600,     // rotation de la caméra vers le cap (ajout : évite les à-coups de bascule)
+                CAMERA_BEARING_DEADBAND_DEG: 15, // la caméra ne tourne qu'au-delà de cet écart de cap, puis se cale et
+                                                // s'arrête : la boussole tremble de quelques degrés en permanence
                 CAMERA_RECENTER_MS: 800,        // durée de l'animation du bouton « recentrer »
                 // Hystérésis de capture (appliquée par le jeu, cf. _zoneOk). Les rayons d'entrée
                 // restent ceux de chaque type de point (décision du 05/10, pas de rayon unique de 18 m).
