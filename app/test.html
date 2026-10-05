@@ -9388,7 +9388,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.83.0</div>
+            <div class="hud-version" id="hudVersion">v0.84.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11632,6 +11632,14 @@
                         <span class="settings-volume-val" id="settingsVolumeVal">35 %</span>
                     </div>
                 </div>
+
+                <!-- Journal GPS du test terrain : le testeur l'envoie lui-même (cf. geoEnvoyerJournal) -->
+                <div class="settings-row">
+                    <div class="settings-row-label"><span>📍</span> Journal GPS</div>
+                    <div class="settings-seg">
+                        <button type="button" onclick="geoEnvoyerJournal()">Envoyer mon journal</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -11813,6 +11821,15 @@
             "Quartiers": "Districts",
             "Son": "Sound",
             "Musique d'ambiance": "Ambient music",
+            // Journal GPS du test terrain (GeoEngine, test.html seul)
+            "Journal GPS": "GPS log",
+            "Envoyer mon journal": "Send my log",
+            "📍 Journal vide : aucun point GPS enregistré pour l'instant.": "📍 Empty log: no GPS point recorded yet.",
+            "Ton prénom ou ton code testeur (il figurera dans le nom du fichier) :": "Your first name or tester code (it will appear in the file name):",
+            "📍 Journal téléchargé : joins-le à un mail.": "📍 Log downloaded: attach it to an email.",
+            "📍 Localisation refusée. Pour jouer, autorise-la dans les réglages du navigateur (Paramètres du site › Position), puis recharge la page.": "📍 Location denied. To play, allow it in your browser settings (Site settings › Location), then reload the page.",
+            "📍 Position introuvable pour l'instant. Reste à découvert : le signal revient en général vite.": "📍 Position not found for now. Stay in the open: the signal usually comes back quickly.",
+            "📍 Le GPS tarde à répondre. Patiente un instant…": "📍 The GPS is slow to respond. Hold on a moment…",
             "Volume de la musique": "Music volume",
             "Vitesse": "Speed",
             "Marche": "Walk",
@@ -30382,6 +30399,326 @@
             return (m / 1000).toFixed(2).replace('.', ',') + ' km';
         }
 
+        // ==================== GEOENGINE ====================
+        // Moteur de géolocalisation du test terrain (brief géoloc, oct. 2026).
+        // Seul endroit du fichier qui parle à navigator.geolocation.
+        //   watchPosition (~1 Hz) → étage 1 rejet → étage 2 Kalman
+        //   → étage 3 immobilité → étage 4 rendu rAF
+        // Règle : l'affichage lit getDisplay(), le jeu lit getFiltered().
+        // Aucune décision de capture ne se prend sur la position affichée.
+        // Lot A : étages 0 et 1, journal, panneau debug. La sortie filtrée est
+        // encore le point accepté tel quel (Kalman au lot B).
+        const GeoEngine = (function () {
+            // Réglages terrain : tout se règle ici, sans toucher à la logique.
+            const CONFIG = {
+                // Étage 0 — acquisition
+                WATCH_TIMEOUT_MS: 10000,        // délai max d'un fix avant une erreur TIMEOUT
+                // Étage 1 — rejet
+                ENABLE_REJECT: true,
+                ACCURACY_MAX_M: 50,             // point plus imprécis : rejeté
+                SPEED_MAX_MS: 12,               // vitesse implicite max depuis le dernier point accepté
+                REJECT_MAX_CONSECUTIVE: 4,      // au-delà, le point suivant passe de force (état degraded)
+                // Journal de session
+                JOURNAL_MAX: 15000,             // entrées gardées (2 h à 1 Hz, avec de la marge)
+                JOURNAL_SAVE_MS: 30000,         // recopie dans IndexedDB
+                JOURNAL_KEEP_MS: 12 * 3600000,  // au chargement, on oublie ce qui a plus de 12 h
+            };
+            // ?debug=1 (ou l'ancien ?gpsdebug) : panneau de diagnostic + injection de points.
+            const DEBUG = /[?&](debug=1|gpsdebug)(&|=|$)/.test(location.search);
+
+            let _watchId = null;
+            let _state = 'acquiring';
+            let _raw = null;            // dernier point accepté, brut
+            let _filtered = null;       // sortie de la chaîne : seule base des décisions de jeu
+            let _rejectStreak = 0;
+            const _stats = { rejects: 0, fixes: 0, lastRecvT: 0, intervalSum: 0, intervalN: 0, lastRawAcc: null, lastError: null };
+            const _listeners = { fix: [], statechange: [], reject: [], error: [] };
+
+            function on(ev, cb) { if (_listeners[ev]) _listeners[ev].push(cb); }
+            function _emit(ev, data) {
+                (_listeners[ev] || []).forEach(cb => {
+                    try { cb(data); } catch (e) { console.error('[geo] écouteur « ' + ev + ' » en échec', e); }
+                });
+            }
+            function _setState(s) {
+                if (s === _state) return;
+                const prev = _state;
+                _state = s;
+                _log({ k: 'state', from: prev, to: s });
+                _emit('statechange', { from: prev, to: s });
+            }
+
+            // Distance en mètres, approximation équirectangulaire : exacte au
+            // centimètre près à l'échelle d'une place, et sans dépendance au jeu.
+            function _distM(a, b) {
+                const R = 6371000, k = Math.PI / 180;
+                const x = (b.lng - a.lng) * k * Math.cos((a.lat + b.lat) / 2 * k);
+                const y = (b.lat - a.lat) * k;
+                return Math.sqrt(x * x + y * y) * R;
+            }
+
+            // ── Journal de session ──────────────────────────────────────────
+            // Tampon circulaire en mémoire, recopié dans IndexedDB toutes les 30 s
+            // pour survivre à un rechargement (bannière de mise à jour, onglet
+            // tué par le téléphone, plantage).
+            let _journal = [];
+            let _journalDirty = false;
+            let _journalLoaded = false;     // pas de recopie avant la relecture : elle écraserait l'ancien journal
+            let _dbP = null;
+
+            function _log(entry) {
+                _journal.push(Object.assign({ t: Date.now() }, entry));
+                if (_journal.length > CONFIG.JOURNAL_MAX) _journal.splice(0, _journal.length - CONFIG.JOURNAL_MAX);
+                _journalDirty = true;
+            }
+            function _db() {
+                if (!_dbP) _dbP = new Promise((res, rej) => {
+                    const rq = indexedDB.open('explore_geo_journal', 1);
+                    rq.onupgradeneeded = () => rq.result.createObjectStore('journal');
+                    rq.onsuccess = () => res(rq.result);
+                    rq.onerror = () => rej(rq.error);
+                });
+                return _dbP;
+            }
+            function _journalSave() {
+                if (!_journalLoaded || !_journalDirty || typeof indexedDB === 'undefined') return;
+                _journalDirty = false;
+                _db().then(db => {
+                    db.transaction('journal', 'readwrite').objectStore('journal').put(_journal, 'session');
+                }).catch(e => { _journalDirty = true; console.warn('[geo] journal non recopié', e); });
+            }
+            function _journalLoad() {
+                if (typeof indexedDB === 'undefined') { _journalLoaded = true; return; }
+                _db().then(db => {
+                    const rq = db.transaction('journal').objectStore('journal').get('session');
+                    rq.onsuccess = () => {
+                        const seuil = Date.now() - CONFIG.JOURNAL_KEEP_MS;
+                        const anciens = (rq.result || []).filter(e => e && e.t >= seuil);
+                        // Le watch a pu écrire avant la fin de la relecture : on garde les deux, dans l'ordre.
+                        _journal = anciens.concat(_journal).slice(-CONFIG.JOURNAL_MAX);
+                        _journalLoaded = true;
+                    };
+                    rq.onerror = () => { _journalLoaded = true; };
+                }).catch(e => { _journalLoaded = true; console.warn('[geo] journal illisible', e); });
+            }
+            function getJournalExport(testeur, version) {
+                const d = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                const stamp = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+                            + '_' + pad(d.getHours()) + pad(d.getMinutes());
+                const contenu = {
+                    meta: {
+                        testeur: testeur, version: version || '', exporte: d.toISOString(),
+                        page: location.pathname, ua: navigator.userAgent,
+                        config: CONFIG, stats: Object.assign({}, _stats)
+                    },
+                    entrees: _journal
+                };
+                return { nom: 'journal_' + testeur + '_' + stamp, json: JSON.stringify(contenu) };
+            }
+
+            // ── Étage 0 : acquisition ───────────────────────────────────────
+            // Un seul watch actif. La cadence (~1 Hz) est celle du matériel : la
+            // fluidité viendra de l'étage 4, jamais d'un polling.
+            function start() {
+                if (_watchId !== null) return true;
+                if (!('geolocation' in navigator)) {
+                    _log({ k: 'error', code: 0, msg: 'geolocation absente' });
+                    _debugRender();
+                    return false;
+                }
+                _log({ k: 'start' });
+                _setState('acquiring');
+                _watchId = navigator.geolocation.watchPosition(_onRaw, _onError, {
+                    enableHighAccuracy: true, maximumAge: 0, timeout: CONFIG.WATCH_TIMEOUT_MS
+                });
+                _debugRender();
+                return true;
+            }
+            function stop() {
+                if (_watchId !== null) { navigator.geolocation.clearWatch(_watchId); _watchId = null; }
+                _log({ k: 'stop' });
+                _journalSave();
+            }
+
+            function _onRaw(pos) {
+                const c = pos.coords;
+                const now = performance.now();
+                if (_stats.lastRecvT) { _stats.intervalSum += now - _stats.lastRecvT; _stats.intervalN++; }
+                _stats.lastRecvT = now;
+                _stats.lastRawAcc = c.accuracy;
+                const p = {
+                    lat: c.latitude, lng: c.longitude, accuracy: c.accuracy, ts: pos.timestamp,
+                    speed:   (c.speed   == null || isNaN(c.speed))   ? null : c.speed,
+                    heading: (c.heading == null || isNaN(c.heading)) ? null : c.heading
+                };
+                _log({ k: 'raw', lat: p.lat, lng: p.lng, acc: p.accuracy, ts: p.ts, spd: p.speed, hdg: p.heading });
+
+                // ── Étage 1 : rejet ──
+                const why = CONFIG.ENABLE_REJECT ? _motifRejet(p) : null;
+                if (why) {
+                    // Un horodatage rejoué ne compte pas dans la série : forcer un point
+                    // périmé ferait reculer le joueur, et un point frais finit toujours par venir.
+                    if (why !== 'horodatage') _rejectStreak++;
+                    if (why === 'horodatage' || _rejectStreak <= CONFIG.REJECT_MAX_CONSECUTIVE) {
+                        _stats.rejects++;
+                        _log({ k: 'reject', why: why });
+                        _emit('reject', { why: why, point: p, streak: _rejectStreak });
+                        _debugRender();
+                        return;
+                    }
+                    // Déblocage : sans lui, un joueur peut rester collé à une position fantôme.
+                    _log({ k: 'force', why: why });
+                    _accept(p, true);
+                    return;
+                }
+                _accept(p, false);
+            }
+
+            function _motifRejet(p) {
+                if (_raw && !(p.ts > _raw.ts)) return 'horodatage';
+                if (!(p.accuracy <= CONFIG.ACCURACY_MAX_M)) return 'precision';
+                if (_raw) {
+                    const v = _distM(_raw, p) / ((p.ts - _raw.ts) / 1000);
+                    if (v > CONFIG.SPEED_MAX_MS) return 'vitesse';
+                }
+                return null;
+            }
+
+            function _accept(p, force) {
+                // Vitesse : celle du capteur si elle existe, sinon la vitesse implicite.
+                let speed = p.speed;
+                if (speed == null && _raw && p.ts > _raw.ts) speed = _distM(_raw, p) / ((p.ts - _raw.ts) / 1000);
+                _rejectStreak = 0;
+                _raw = p;
+                _stats.fixes++;
+                // Étage 2 (Kalman) au lot B : d'ici là, la sortie filtrée est le point accepté.
+                _filtered = { lat: p.lat, lng: p.lng, accuracy: p.accuracy, speed: speed == null ? 0 : speed, ts: p.ts };
+                _setState(force ? 'degraded' : 'moving');
+                _emit('fix', getFiltered());
+                _debugRender();
+            }
+
+            function _onError(err) {
+                _stats.lastError = err.code;
+                _log({ k: 'error', code: err.code, msg: err.message || '' });
+                _emit('error', err);
+                _debugRender();
+            }
+
+            // ── Lecture ─────────────────────────────────────────────────────
+            function getFiltered() { return _filtered ? Object.assign({}, _filtered) : null; }
+            function getDisplay() {   // étage 4 au lot C : d'ici là, l'affichage suit la sortie filtrée
+                return _filtered ? { lat: _filtered.lat, lng: _filtered.lng, accuracy: _filtered.accuracy } : null;
+            }
+            function getRaw() { return _raw ? Object.assign({}, _raw) : null; }
+            function getHeading() { return _raw ? _raw.heading : null; }   // étage 5 au lot D
+            function getState() { return _state; }
+
+            // Tests au bureau (V2-V4) : injecte un point comme s'il venait du GPS.
+            // Sans effet hors du mode debug.
+            function _inject(o) {
+                if (!DEBUG) return false;
+                _onRaw({
+                    coords: { latitude: o.lat, longitude: o.lng, accuracy: o.accuracy == null ? 5 : o.accuracy, speed: null, heading: null },
+                    timestamp: o.ts == null ? Date.now() : o.ts
+                });
+                return true;
+            }
+
+            // ── Panneau debug ───────────────────────────────────────────────
+            let _panel = null;
+            function _debugRender() {
+                if (!DEBUG) return;
+                if (!_panel) {
+                    _panel = document.createElement('div');
+                    _panel.id = 'gpsDebugPanel';
+                    _panel.style.cssText = [
+                        'position:fixed', 'left:8px', 'bottom:8px', 'z-index:99999',
+                        'background:rgba(0,0,0,0.82)', 'color:#0f0', 'font:11px/1.4 monospace',
+                        'padding:8px 10px', 'border-radius:8px', 'max-width:90vw',
+                        'pointer-events:none', 'white-space:pre'
+                    ].join(';');
+                    document.body.appendChild(_panel);
+                }
+                const f = _filtered, r = _raw;
+                const m = v => v == null ? '–' : Math.round(v) + ' m';
+                const moy = _stats.intervalN ? (_stats.intervalSum / _stats.intervalN / 1000).toFixed(2) + ' s' : '–';
+                const lignes = [
+                    'état ' + _state + (_watchId === null ? '  (watch arrêté)' : ''),
+                    'acc brute ' + m(_stats.lastRawAcc) + '  ·  filtrée ' + m(f && f.accuracy),
+                    'vitesse ' + (f ? f.speed.toFixed(2) + ' m/s' : '–') + '  ·  écart brut/filtré ' + (f && r ? _distM(f, r).toFixed(1) + ' m' : '–'),
+                    'rejets ' + _stats.rejects + ' (série ' + _rejectStreak + ')  ·  fixes ' + _stats.fixes,
+                    'intervalle moyen ' + moy + '  ·  cap ' + (getHeading() == null ? 'aucun' : 'gps'),
+                    'journal ' + _journal.length + ' entrées' + (_stats.lastError ? '  ·  dernière erreur ' + _stats.lastError : '')
+                ];
+                if (typeof api.debugExtra === 'function') {
+                    try { lignes.push(api.debugExtra()); } catch (e) {}
+                }
+                _panel.textContent = lignes.join('\n');
+            }
+
+            _journalLoad();
+            setInterval(_journalSave, CONFIG.JOURNAL_SAVE_MS);
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') _journalSave();
+            });
+            window.addEventListener('pagehide', _journalSave);
+
+            const api = {
+                CONFIG, start, stop, on,
+                getDisplay, getFiltered, getRaw, getHeading, getState,
+                getJournalExport, journalSize: () => _journal.length,
+                _inject,
+                debugExtra: null    // fonction facultative : une ligne de plus dans le panneau
+            };
+            return api;
+        })();
+
+        // Bouton « Envoyer mon journal » (Paramètres). Le testeur choisit son canal
+        // dans le menu de partage du téléphone ; sans ce menu, le fichier est téléchargé.
+        async function geoEnvoyerJournal() {
+            if (!GeoEngine.journalSize()) {
+                showToast(T("📍 Journal vide : aucun point GPS enregistré pour l'instant."));
+                return;
+            }
+            let id = null;
+            try { id = localStorage.getItem('geoTesteur'); } catch (e) {}
+            if (!id) {
+                const saisie = prompt(T('Ton prénom ou ton code testeur (il figurera dans le nom du fichier) :'), '');
+                if (saisie === null) return;
+                id = saisie.trim().replace(/[^A-Za-z0-9_-]+/g, '_').slice(0, 24) || 'anonyme';
+                try { localStorage.setItem('geoTesteur', id); } catch (e) {}
+            }
+            const version = (document.getElementById('hudVersion') || {}).textContent || '';
+            const exp = GeoEngine.getJournalExport(id, version);
+            // Le JSON n'est pas partageable partout (liste de types restreinte sur
+            // Android) : on retente en texte brut, le contenu reste du JSON.
+            const candidats = [
+                new File([exp.json], exp.nom + '.json', { type: 'application/json' }),
+                new File([exp.json], exp.nom + '.txt',  { type: 'text/plain' })
+            ];
+            const partageable = navigator.canShare && candidats.find(f => navigator.canShare({ files: [f] }));
+            if (partageable) {
+                try {
+                    await navigator.share({ files: [partageable], title: partageable.name });
+                    return;
+                } catch (e) {
+                    if (e && e.name === 'AbortError') return;   // partage annulé par le testeur
+                    console.warn('[geo] partage impossible, téléchargement à la place', e);
+                }
+            }
+            const url = URL.createObjectURL(candidats[0]);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = candidats[0].name;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
+            showToast(T('📍 Journal téléchargé : joins-le à un mail.'));
+        }
+
         // ==================== GPS ====================
 
         let _gpsEstablished = false;
@@ -30393,17 +30730,14 @@
             if (jc) jc.style.display = gpsActive ? 'none' : '';
         }
 
-        // Traite un point GPS (commun à watchPosition et au polling getCurrentPosition).
+        // Traite un point GPS, tel que GeoEngine le sort (getFiltered()).
         function _onGpsFix(position) {
             const newLat = position.coords.latitude;
             const newLng = position.coords.longitude;
             const acc = position.coords.accuracy;
             // Ignore un point strictement identique au précédent (évite double comptage
             // quand plusieurs requêtes livrent la même position).
-            if (_lastFixLat === newLat && _lastFixLng === newLng) {
-                _gpsDebugUpdate(position);
-                return;
-            }
+            if (_lastFixLat === newLat && _lastFixLng === newLng) return;
 
             // NB : on ne filtre PLUS l'affichage par une zone morte ici. Le marqueur
             // suit chaque point (toutes les 2 s) pour que la prédiction reste nourrie
@@ -30425,12 +30759,24 @@
             if (playerMarker && map) updatePlayerOnMapSmooth();
             checkNearbyPOI();
             _trackDistanceFromGps(position);
-            _gpsDebugUpdate(position);
         }
 
+        // Un message par cause, au plus une fois par minute : le watch renvoie
+        // TIMEOUT en boucle tant que le ciel reste masqué.
+        const _GPS_ERR_MSG = {
+            1: '📍 Localisation refusée. Pour jouer, autorise-la dans les réglages du navigateur (Paramètres du site › Position), puis recharge la page.',
+            2: "📍 Position introuvable pour l'instant. Reste à découvert : le signal revient en général vite.",
+            3: '📍 Le GPS tarde à répondre. Patiente un instant…'
+        };
+        const _gpsErrToastT = {};
         function _onGpsError(error) {
             console.error('Erreur GPS:', error);
-            _gpsDebugError(error);
+            const msg = _GPS_ERR_MSG[error.code];
+            const now = Date.now();
+            if (msg && (!_gpsErrToastT[error.code] || now - _gpsErrToastT[error.code] > 60000)) {
+                _gpsErrToastT[error.code] = now;
+                showToast(T(msg));
+            }
             // On ne repasse en joystick QUE si la permission est explicitement refusée.
             // Un timeout (code 3) ou une position indisponible (code 2) sont transitoires
             // — fréquents en TWA/intérieur — et ne doivent pas désactiver le GPS.
@@ -30442,89 +30788,29 @@
 
         let _lastFixLat = null, _lastFixLng = null;
         let _lastFixAccuracy = 15;
-        let _gpsPollInterval = null;
+        let _gpsBranche = false;
 
-        // Acquisition d'un point en DEUX TEMPS :
-        //  1) haute précision (GPS satellite) — idéal en extérieur ;
-        //  2) si timeout/indisponible (fréquent en intérieur ou en TWA),
-        //     repli automatique sur la basse précision (réseau/Wi-Fi), rapide
-        //     et qui aboutit presque toujours.
-        // Acquisition d'un point en DEUX TEMPS :
-        //  1) haute précision (GPS satellite) — idéal en extérieur ;
-        //  2) si timeout/indisponible (fréquent en intérieur ou en TWA),
-        //     repli automatique sur la basse précision (réseau/Wi-Fi).
-        function _gpsRequestOnce() {
-            if (!('geolocation' in navigator)) return;
-            navigator.geolocation.getCurrentPosition(
-                _onGpsFix,
-                (err) => {
-                    if (err.code === 3 || err.code === 2) {
-                        navigator.geolocation.getCurrentPosition(
-                            _onGpsFix,
-                            _onGpsError,
-                            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
-                        );
-                    } else {
-                        _onGpsError(err);
-                    }
-                },
-                { enableHighAccuracy: true, timeout: 12000, maximumAge: 8000 }
-            );
-        }
-
+        // Le jeu reçoit la sortie filtrée de GeoEngine (règle : décisions de jeu sur
+        // getFiltered()). Le polling getCurrentPosition et son repli en basse
+        // précision (points vieux de 60 s) ont disparu avec le passage au watch.
         function startGPS() {
-            if (!('geolocation' in navigator)) {
-                if (_gpsDebug) _gpsDebugPanel().textContent = 'GPS indisponible : navigator.geolocation absent';
-                return;
-            }
-            if (_gpsDebug) _gpsDebugPanel().textContent = 'GPS : démarrage, en attente du 1er fix…';
             // Initialise la période courante (jour/semaine) au démarrage
             _resetDistanceCountersIfNewPeriod();
-            // Premier point tout de suite, puis polling toutes les 3 s.
-            _gpsRequestOnce();
-            if (_gpsPollInterval) clearInterval(_gpsPollInterval);
-            _gpsPollInterval = setInterval(_gpsRequestOnce, _GPS_INTERVAL_MS);
+            if (!_gpsBranche) {
+                _gpsBranche = true;
+                GeoEngine.on('fix', f => _onGpsFix({
+                    coords: { latitude: f.lat, longitude: f.lng, accuracy: f.accuracy },
+                    timestamp: f.ts
+                }));
+                GeoEngine.on('error', _onGpsError);
+                GeoEngine.debugExtra = () => 'dist_today ' + Math.round(playerStats.distance_today || 0) + ' m'
+                    + '  ·  veh ' + (_distVehicleMode ? 'oui' : 'non');
+            }
+            GeoEngine.start();
         }
 
-        // ── Diagnostic GPS ────────────────────────────────────────────────
-        // Affiche un petit panneau en bas d'écran avec le détail des fix reçus.
-        // Activer : taper _gpsDebug=true dans la console, ou ?gpsdebug dans l'URL.
-        let _gpsDebug = (typeof location !== 'undefined' && /[?&]gpsdebug/.test(location.search));
-        let _gpsFixCount = 0;
-        function _gpsDebugPanel() {
-            let p = document.getElementById('gpsDebugPanel');
-            if (!p) {
-                p = document.createElement('div');
-                p.id = 'gpsDebugPanel';
-                p.style.cssText = [
-                    'position:fixed','left:8px','bottom:8px','z-index:99999',
-                    'background:rgba(0,0,0,0.82)','color:#0f0','font:11px/1.4 monospace',
-                    'padding:8px 10px','border-radius:8px','max-width:90vw',
-                    'pointer-events:none','white-space:pre'
-                ].join(';');
-                document.body.appendChild(p);
-            }
-            return p;
-        }
-        function _gpsDebugUpdate(position) {
-            if (!_gpsDebug) return;
-            _gpsFixCount++;
-            const c = position.coords;
-            const t = new Date();
-            const hh = String(t.getHours()).padStart(2,'0') + ':' +
-                       String(t.getMinutes()).padStart(2,'0') + ':' +
-                       String(t.getSeconds()).padStart(2,'0');
-            _gpsDebugPanel().textContent =
-                'GPS fix #' + _gpsFixCount + '  @' + hh +
-                '\nlat ' + c.latitude.toFixed(6) + '  lng ' + c.longitude.toFixed(6) +
-                '\naccuracy ' + Math.round(c.accuracy) + ' m' +
-                '\ndist_today ' + Math.round(playerStats.distance_today || 0) + ' m' +
-                '\nseuil ' + _DIST.MIN_MOVE_M + ' m  ·  veh ' + (_distVehicleMode ? 'oui' : 'non');
-        }
-        function _gpsDebugError(error) {
-            if (!_gpsDebug) return;
-            _gpsDebugPanel().textContent = 'GPS ERREUR code ' + error.code + '\n' + (error.message || '');
-        }
+        // Diagnostic GPS : le panneau vit désormais dans GeoEngine (?debug=1,
+        // l'ancien ?gpsdebug reste accepté).
 
         // ==================== PROGRESSION SYSTEM ====================
 
