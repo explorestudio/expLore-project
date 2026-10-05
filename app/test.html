@@ -9388,7 +9388,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.85.0</div>
+            <div class="hud-version" id="hudVersion">v0.86.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -20398,7 +20398,39 @@
         }
 
         function _geoStartLoop() { if (!_geoRAF) _geoRAF = requestAnimationFrame(_geoTick); }
-        function _geoStopLoop() { if (_geoRAF) { cancelAnimationFrame(_geoRAF); _geoRAF = null; } }
+        function _geoStopLoop() {
+            if (_geoRAF) { cancelAnimationFrame(_geoRAF); _geoRAF = null; }
+            _geoHalo(null);
+        }
+
+        // Halo d'incertitude (à la Google Maps) : cercle à plat sur la carte, rayon =
+        // précision affichée, lissée par GeoEngine comme la position. Mis à jour
+        // seulement quand il change de façon visible.
+        let _geoHaloCle = '';
+        function _geoHalo(ll) {
+            if (!map) return;
+            if (!map.getSource('geo-halo')) {
+                if (!ll) return;
+                try {
+                    map.addSource('geo-halo', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+                    map.addLayer({ id: 'geo-halo', type: 'circle', source: 'geo-halo', paint: {
+                        'circle-color': '#4F46E5', 'circle-opacity': 0.12,
+                        'circle-stroke-color': '#4F46E5', 'circle-stroke-opacity': 0.35, 'circle-stroke-width': 1,
+                        'circle-pitch-alignment': 'map', 'circle-radius': 0
+                    } });
+                } catch (e) { return; }   // style pas encore prêt : nouvel essai à l'image suivante
+                _geoHaloCle = '';
+            }
+            // Mètres par pixel (tuiles de 512 px) à cette latitude et ce zoom
+            const px = ll ? ll.accuracy / (40075016.686 * Math.cos(ll.lat * Math.PI / 180) / (512 * Math.pow(2, map.getZoom()))) : 0;
+            const cle = ll ? ll.lat.toFixed(6) + ',' + ll.lng.toFixed(6) + ',' + px.toFixed(1) : '';
+            if (cle === _geoHaloCle) return;
+            _geoHaloCle = cle;
+            map.getSource('geo-halo').setData(ll
+                ? { type: 'Feature', geometry: { type: 'Point', coordinates: [ll.lng, ll.lat] } }
+                : { type: 'FeatureCollection', features: [] });
+            map.setPaintProperty('geo-halo', 'circle-radius', px);
+        }
 
         function _geoTick() {
             const ll = gpsActive ? GeoEngine.getDisplay() : null;
@@ -20407,6 +20439,7 @@
             _dispLat = ll.lat; _dispLng = ll.lng;
             _setAvatarFacing(_dispLng - prevLng);
             playerMarker.setLngLat([_dispLng, _dispLat]);
+            _geoHalo(ll);
             // _viewTransition : pendant la bascule de la longue-vue, le suivi GPS
             // recentrait à chaque frame et coupait l'animation. Il attend son tour.
             if (!_cameraMoving && !_viewTransition) {
@@ -30321,8 +30354,7 @@
         //   → étage 3 immobilité → étage 4 rendu rAF
         // Règle : l'affichage lit getDisplay(), le jeu lit getFiltered().
         // Aucune décision de capture ne se prend sur la position affichée.
-        // Lots A-B : étages 0 à 2, journal, panneau debug. Gel à l'arrêt et
-        // rendu lissé au lot C, cap et caméra au lot D.
+        // Lots A-C : étages 0 à 4, journal, panneau debug. Cap et caméra au lot D.
         const GeoEngine = (function () {
             // Réglages terrain : tout se règle ici, sans toucher à la logique.
             const CONFIG = {
@@ -30338,7 +30370,22 @@
                 // Étage 2 — Kalman
                 ENABLE_KALMAN: true,
                 KALMAN_Q_MS2: 0.8,              // accélération typique d'un piéton (écart-type) : ↑ réactif, ↓ lisse
+                KALMAN_SENSOR_SPEED: true,      // la vitesse Doppler de la puce GPS entre dans le filtre (ajout au brief) :
+                                                // sans elle, le filtre cherche un mouvement dans le bruit et le marqueur danse à l'arrêt
+                SENSOR_SPEED_SIGMA_MS: 0.3,     // précision supposée de cette vitesse
+                // Étage 3 — immobilité (état détecté sur fenêtre glissante, jamais point par point)
+                ENABLE_STILL: true,
+                STILL_WINDOW_MS: 5000,          // fenêtre d'analyse
+                STILL_FACTOR: 1.5,              // seuil de déplacement = STILL_FACTOR × précision moyenne…
+                STILL_MAX_M: 3,                 // …plafonné : sans ce plafond, la marche lente passait pour de l'arrêt
+                STILL_SPEED_MS: 0.3,            // vitesse max pour entrer en still (capteur si dispo, sinon Kalman)
+                STILL_EXIT_SPEED_MS: 0.5,       // vitesse capteur qui fait sortir de l'arrêt (un seul point suffit :
+                                                // au repos, le Doppler dépasse rarement 0,2 m/s)
+                STILL_EXIT_SIGMA: 3,            // sans vitesse capteur : sortie si la moyenne des 4 derniers points s'écarte de 3 σ
+                KALMAN_Q_STILL_MS2: 0,          // à l'arrêt, le filtre moyenne les points (vitesse forcée à 0)
                 // Étage 4 — rendu
+                ENABLE_RENDER: true,
+                RENDER_TAU_MS: 400,             // constante de temps du lissage d'affichage (position et halo)
                 RENDER_EXTRAPOLATE_MAX_MS: 1500, // l'affichage prolonge la vitesse estimée, jamais plus longtemps
                 // Journal de session
                 JOURNAL_MAX: 15000,             // entrées gardées (2 h à 1 Hz, avec de la marge)
@@ -30459,6 +30506,7 @@
             }
             function stop() {
                 if (_watchId !== null) { navigator.geolocation.clearWatch(_watchId); _watchId = null; }
+                if (_rafId !== null) { cancelAnimationFrame(_rafId); _rafId = null; }
                 _log({ k: 'stop' });
                 _journalSave();
             }
@@ -30541,6 +30589,28 @@
                 const p11 = k.p11 - k1 * k.p01;
                 k.p00 *= (1 - k0); k.p01 *= (1 - k0); k.p11 = p11;
             }
+            // Mesure de vitesse (H = [0, 1]) : la vitesse Doppler du capteur.
+            function _kUpdateV(k, zv, rv) {
+                const s = k.p11 + rv, k0 = k.p01 / s, k1 = k.p11 / s, y = zv - k.v;
+                k.x += k0 * y; k.v += k1 * y;
+                const p00 = k.p00 - k0 * k.p01;
+                k.p01 *= (1 - k1); k.p11 *= (1 - k1); k.p00 = p00;
+            }
+            // Vitesse franche avec cap : vecteur vitesse complet. Vitesse faible (le
+            // cap n'est alors pas fourni) : on observe une vitesse nulle, avec une
+            // incertitude qui grandit avec la vitesse lue.
+            function _kSensorSpeed(p) {
+                if (!CONFIG.KALMAN_SENSOR_SPEED || p.speed == null) return;
+                const rv = CONFIG.SENSOR_SPEED_SIGMA_MS * CONFIG.SENSOR_SPEED_SIGMA_MS;
+                if (p.heading != null && p.speed >= CONFIG.STILL_EXIT_SPEED_MS) {
+                    const h = p.heading * Math.PI / 180;
+                    _kUpdateV(_kx, p.speed * Math.sin(h), rv);
+                    _kUpdateV(_ky, p.speed * Math.cos(h), rv);
+                } else if (p.speed < CONFIG.STILL_EXIT_SPEED_MS) {
+                    _kUpdateV(_kx, 0, rv + p.speed * p.speed);
+                    _kUpdateV(_ky, 0, rv + p.speed * p.speed);
+                }
+            }
             // reset : point forcé après une série de rejets. Le joueur est
             // vraisemblablement ailleurs : on repart du point plutôt que d'y ramper.
             function _kalmanStep(p, reset) {
@@ -30550,9 +30620,14 @@
                     _kReset(_kx, m.x, r); _kReset(_ky, m.y, r);
                 } else {
                     const dt = Math.min(Math.max(0, (p.ts - _kTs) / 1000), 30);
-                    const q = CONFIG.KALMAN_Q_MS2 * CONFIG.KALMAN_Q_MS2;
-                    _kPredict(_kx, dt, q); _kPredict(_ky, dt, q);
+                    const arret = _state === 'still' && CONFIG.ENABLE_STILL;
+                    const qa = arret ? CONFIG.KALMAN_Q_STILL_MS2 : CONFIG.KALMAN_Q_MS2;
+                    // À l'arrêt (étage 3), vitesse nulle : le filtre devient une moyenne
+                    // pondérée des points, au lieu de chercher un mouvement dans le bruit.
+                    if (arret) [_kx, _ky].forEach(k => { k.v = 0; k.p01 = 0; k.p11 = 0; });
+                    _kPredict(_kx, dt, qa * qa); _kPredict(_ky, dt, qa * qa);
                     _kUpdate(_kx, m.x, r); _kUpdate(_ky, m.y, r);
+                    if (!arret) _kSensorSpeed(p);
                 }
                 _kTs = p.ts;
                 _kRecvT = performance.now();
@@ -30563,6 +30638,70 @@
                     speed: Math.hypot(_kx.v, _ky.v),
                     ts: p.ts
                 };
+            }
+
+            // ── Étage 3 : immobilité ────────────────────────────────────────
+            // Entrée : sur la fenêtre STILL_WINDOW_MS, déplacement filtré sous
+            // min(STILL_FACTOR × précision moyenne, STILL_MAX_M) ET vitesse sous
+            // STILL_SPEED_MS (vitesse du capteur si fournie, sinon celle du Kalman).
+            // Sortie : vitesse capteur franche, ou moyenne des derniers points qui
+            // s'écarte de la position d'arrêt. Jamais de seuil point par point.
+            const _hist = [];           // points acceptés récents : { ts, f, r, acc, dop }
+            let _stillAt = null;        // position affichée, gelée pendant l'arrêt
+
+            function _histPush(p, f) {
+                _hist.push({ ts: p.ts, f: { lat: f.lat, lng: f.lng }, r: { lat: p.lat, lng: p.lng }, acc: p.accuracy, dop: p.speed });
+                const limite = p.ts - CONFIG.STILL_WINDOW_MS;
+                while (_hist.length > 4 && _hist[0].ts < limite) _hist.shift();
+            }
+            function _moyenne(liste) {
+                const n = liste.length;
+                return {
+                    lat: liste.reduce((s, h) => s + h.r.lat, 0) / n,
+                    lng: liste.reduce((s, h) => s + h.r.lng, 0) / n,
+                    acc: liste.reduce((s, h) => s + h.acc, 0) / n
+                };
+            }
+            function _entreStill() {
+                const dernier = _hist[_hist.length - 1];
+                const win = _hist.filter(h => h.ts >= dernier.ts - CONFIG.STILL_WINDOW_MS);
+                if (win.length < 3 || dernier.ts - win[0].ts < CONFIG.STILL_WINDOW_MS * 0.8) return false;
+                const seuil = Math.min(CONFIG.STILL_FACTOR * _moyenne(win).acc, CONFIG.STILL_MAX_M);
+                if (win.some(h => _distM(h.f, dernier.f) >= seuil)) return false;
+                const vitesse = win.every(h => h.dop != null)
+                    ? win.reduce((s, h) => s + h.dop, 0) / win.length
+                    : _filtered.speed;
+                return vitesse < CONFIG.STILL_SPEED_MS;
+            }
+            function _sortStill(p) {
+                if (p.speed != null && p.speed > CONFIG.STILL_EXIT_SPEED_MS) return true;
+                const der = _hist.slice(-4);
+                if (der.length < 4) return false;
+                const m = _moyenne(der);
+                // Bruit de la moyenne de 4 points par axe ≈ (précision / √2) / 2
+                const seuil = Math.max(CONFIG.STILL_MAX_M, CONFIG.STILL_EXIT_SIGMA * m.acc / Math.SQRT2 / 2);
+                return _distM(m, _filtered) > seuil;
+            }
+            // Entrée en arrêt : l'affichage se fige là où est le marqueur (aucun
+            // saut), et le filtre passe en moyenne des points (vitesse nulle).
+            function _gelerStill() {
+                const d = _disp || _cible();
+                _stillAt = { lat: d.lat, lng: d.lng };
+                if (CONFIG.ENABLE_KALMAN) {
+                    [_kx, _ky].forEach(k => { k.v = 0; k.p01 = 0; k.p11 = 0; });
+                    _filtered = Object.assign({}, _filtered, { speed: 0 });
+                }
+            }
+            // Sortie : le filtre retrouve sa vitesse. Si le capteur donne vitesse et
+            // cap, on l'amorce avec : le marqueur décolle sans attendre le point suivant.
+            function _degelerStill(p) {
+                _stillAt = null;
+                const amorce = p.speed != null && p.heading != null;
+                const h = amorce ? p.heading * Math.PI / 180 : 0;
+                _kx.v = amorce ? p.speed * Math.sin(h) : 0;
+                _ky.v = amorce ? p.speed * Math.cos(h) : 0;
+                _kx.p01 = _ky.p01 = 0;
+                _kx.p11 = _ky.p11 = 4;
             }
 
             function _accept(p, force) {
@@ -30578,7 +30717,16 @@
                     _kTs = null;   // le filtre repartira propre s'il est réactivé
                     _filtered = { lat: p.lat, lng: p.lng, accuracy: p.accuracy, speed: speed == null ? 0 : speed, ts: p.ts };
                 }
-                _setState(force ? 'degraded' : 'moving');
+                _histPush(p, _filtered);
+                let etat = force ? 'degraded' : 'moving';
+                if (!force && CONFIG.ENABLE_STILL) {
+                    if (_state === 'still') etat = _sortStill(p) ? 'moving' : 'still';
+                    else if (_entreStill()) etat = 'still';
+                }
+                if (etat === 'still' && _state !== 'still') _gelerStill();
+                else if (etat !== 'still' && _state === 'still') _degelerStill(p);
+                _setState(etat);
+                if (_rafId === null) _rafId = requestAnimationFrame(_renderTick);
                 _emit('fix', getFiltered());
                 _debugRender();
             }
@@ -30592,18 +30740,48 @@
 
             // ── Lecture ─────────────────────────────────────────────────────
             function getFiltered() { return _filtered ? Object.assign({}, _filtered) : null; }
-            // Affichage : position filtrée prolongée par la vitesse estimée, pour que
-            // le marqueur avance entre deux fix (plafonné si le GPS tarde).
-            // Gel à l'arrêt et lissage τ au lot C.
-            function getDisplay() {
+            // ── Étage 4 : rendu découplé ────────────────────────────────────
+            // Cible : position gelée à l'arrêt ; sinon position filtrée prolongée
+            // par la vitesse estimée (plafonnée si le GPS tarde). Une boucle rAF
+            // rapproche l'affichage de la cible avec une constante de temps
+            // RENDER_TAU_MS, halo compris : le marqueur bouge à la cadence de
+            // l'écran alors que la donnée arrive à 1 Hz.
+            let _disp = null, _dispT = 0, _rafId = null;
+            // Le halo montre la précision annoncée par le GPS (comme Google Maps), pas
+            // celle du filtre : moyennée à l'arrêt, elle tombe vers 1 m et le halo
+            // promettrait une précision que le joueur n'a pas.
+            function _cible() {
                 if (!_filtered) return null;
+                const acc = _raw ? _raw.accuracy : _filtered.accuracy;
+                if (_state === 'still' && _stillAt) {
+                    return { lat: _stillAt.lat, lng: _stillAt.lng, accuracy: acc };
+                }
                 if (!CONFIG.ENABLE_KALMAN || _kTs === null) {
-                    return { lat: _filtered.lat, lng: _filtered.lng, accuracy: _filtered.accuracy };
+                    return { lat: _filtered.lat, lng: _filtered.lng, accuracy: acc };
                 }
                 const dt = Math.min(performance.now() - _kRecvT, CONFIG.RENDER_EXTRAPOLATE_MAX_MS) / 1000;
                 const ll = _toLL(_kx.x + _kx.v * dt, _ky.x + _ky.v * dt);
-                return { lat: ll.lat, lng: ll.lng, accuracy: _filtered.accuracy };
+                return { lat: ll.lat, lng: ll.lng, accuracy: acc };
             }
+            function _renderTick(now) {
+                const c = _cible();
+                if (c) {
+                    if (!_disp || !CONFIG.ENABLE_RENDER) {
+                        _disp = c;
+                    } else {
+                        // Retour d'arrière-plan : dt énorme, a → 1, l'affichage rejoint la cible d'un coup.
+                        const a = 1 - Math.exp(-Math.max(0, now - _dispT) / CONFIG.RENDER_TAU_MS);
+                        _disp = {
+                            lat: _disp.lat + (c.lat - _disp.lat) * a,
+                            lng: _disp.lng + (c.lng - _disp.lng) * a,
+                            accuracy: _disp.accuracy + (c.accuracy - _disp.accuracy) * a
+                        };
+                    }
+                }
+                _dispT = now;
+                _rafId = requestAnimationFrame(_renderTick);
+            }
+            function getDisplay() { return _disp ? Object.assign({}, _disp) : _cible(); }
             function getRaw() { return _raw ? Object.assign({}, _raw) : null; }
             function getHeading() { return _raw ? _raw.heading : null; }   // étage 5 au lot D
             function getState() { return _state; }
@@ -30613,7 +30791,10 @@
             function _inject(o) {
                 if (!DEBUG) return false;
                 _onRaw({
-                    coords: { latitude: o.lat, longitude: o.lng, accuracy: o.accuracy == null ? 5 : o.accuracy, speed: null, heading: null },
+                    coords: {
+                        latitude: o.lat, longitude: o.lng, accuracy: o.accuracy == null ? 5 : o.accuracy,
+                        speed: o.speed == null ? null : o.speed, heading: o.heading == null ? null : o.heading
+                    },
                     timestamp: o.ts == null ? Date.now() : o.ts
                 });
                 return true;
@@ -30732,11 +30913,10 @@
             // quand plusieurs requêtes livrent la même position).
             if (_lastFixLat === newLat && _lastFixLng === newLng) return;
 
-            // NB : on ne filtre PLUS l'affichage par une zone morte ici. Le marqueur
-            // suit chaque point (toutes les 2 s) pour que la prédiction reste nourrie
-            // et le mouvement continu. La dérive à l'arrêt est absorbée par le lissage
-            // du prédicteur, et la DISTANCE est filtrée séparément dans
-            // _trackDistanceFromGps (ancre + seuil + vitesse) → pas de distance fantôme.
+            // NB : pas de zone morte ici. La dérive à l'arrêt est absorbée par
+            // GeoEngine (étage 3 : gel de l'affichage, moyenne des points), et la
+            // DISTANCE est filtrée séparément dans _trackDistanceFromGps
+            // (ancre + seuil + vitesse) → pas de distance fantôme.
 
             _lastFixLat = newLat;
             _lastFixLng = newLng;
