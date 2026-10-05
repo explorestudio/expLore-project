@@ -1211,6 +1211,10 @@
             background: rgba(79,70,229,0.15);
             box-shadow: 0 2px 10px rgba(79,70,229,0.3);
         }
+        /* Recentrer (GeoEngine) : au-dessus du bouton de vue, visible seulement
+           quand le suivi GPS a été coupé par un glissement de la carte */
+        .map-view-toggle.geo-recentrer { bottom: 230px; display: none; }
+        .map-view-toggle.geo-recentrer.show { display: flex; }
 
         /* ══════════════════════════════════════════════════════════════
            PARAMÈTRES — bouton ⚙️ (créneau de l'ancien bouton calques,
@@ -9388,7 +9392,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.86.0</div>
+            <div class="hud-version" id="hudVersion">v0.87.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -9432,6 +9436,16 @@
 
             <!-- Bandeau temporaire en mode planification -->
             <div class="planning-banner" id="planningBanner">🗺️ VUE PLANIFICATION — pan & zoom activés</div>
+
+            <!-- Recentrer : n'apparaît qu'après un glissement de la carte au doigt (vue d'ensemble, GPS) -->
+            <button class="map-view-toggle geo-recentrer" id="geoRecentrerBtn" type="button"
+                onclick="geoRecentrer()" title="Recentrer sur ma position" aria-label="Recentrer sur ma position">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="#4F46E5"/>
+                    <line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
+                    <line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+                </svg>
+            </button>
 
             <!-- Bouton switch vue isométrique -->
             <button class="map-view-toggle" id="viewToggleBtn"
@@ -11830,6 +11844,7 @@
             "📍 Localisation refusée. Pour jouer, autorise-la dans les réglages du navigateur (Paramètres du site › Position), puis recharge la page.": "📍 Location denied. To play, allow it in your browser settings (Site settings › Location), then reload the page.",
             "📍 Position introuvable pour l'instant. Reste à découvert : le signal revient en général vite.": "📍 Position not found for now. Stay in the open: the signal usually comes back quickly.",
             "📍 Le GPS tarde à répondre. Patiente un instant…": "📍 The GPS is slow to respond. Hold on a moment…",
+            "Recentrer sur ma position": "Recenter on my position",
             "Volume de la musique": "Music volume",
             "Vitesse": "Speed",
             "Marche": "Walk",
@@ -19527,6 +19542,14 @@
             map.dragPan.disable();
             map.dragRotate.disable();
             map.keyboard.disable();
+            // Là où le pan est permis (vue d'ensemble), un glissement au doigt coupe
+            // le suivi GPS ; le bouton « recentrer » le rétablit.
+            map.on('dragstart', e => { if (e.originalEvent) _geoCouperSuivi(); });
+            // Doigt posé sur une carte déplaçable : la caméra GPS s'efface, sinon son
+            // repositionnement à chaque image annule le geste avant qu'il ne démarre.
+            const _doigt = v => () => { _geoDoigtPose = v && map.dragPan.isEnabled(); };
+            ['touchstart', 'mousedown'].forEach(t => map.getCanvasContainer().addEventListener(t, _doigt(true), { passive: true }));
+            ['touchend', 'touchcancel', 'mouseup'].forEach(t => window.addEventListener(t, _doigt(false), { passive: true }));
 
             // ---- Player marker (HTML element) ----
             const playerEl = document.createElement('div');
@@ -20432,21 +20455,83 @@
             map.setPaintProperty('geo-halo', 'circle-radius', px);
         }
 
-        function _geoTick() {
+        // ── Caméra GPS (étage 5) ──
+        // Vue proche : la carte tourne avec le cap du joueur, qui reste dans le
+        // tiers bas de l'écran (décalage vers l'avant, plus vers le nord). Vue
+        // d'ensemble : nord en haut. Zone morte : la caméra ne bouge pas tant que
+        // le joueur reste à moins de CAMERA_DEADZONE_PX de sa place ; au-delà, elle
+        // le suit en laisse ; à l'arrêt, elle se recale doucement sur lui.
+        let _geoSuiviCoupe = false;    // vue d'ensemble : le joueur a déplacé la carte au doigt
+        let _geoDoigtPose = false;     // doigt sur une carte déplaçable : la caméra GPS attend
+        let _geoCamT = 0;
+
+        // Centre de caméra qui place le joueur au bon endroit pour ce cap de carte.
+        function _geoCentreCamera(ll, bearing) {
+            const off = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0, r = bearing * Math.PI / 180;
+            return [ll.lng + off * Math.sin(r) / Math.cos(ll.lat * Math.PI / 180), ll.lat + off * Math.cos(r)];
+        }
+
+        function _geoCamera(ll, now) {
+            const C = GeoEngine.CONFIG;
+            const dt = _geoCamT ? Math.min(now - _geoCamT, 1000) : 1000;
+            _geoCamT = now;
+            const hdg = GeoEngine.getHeading();
+            let b = map.getBearing();
+            const cibleCap = _mapViewMode === 'close' ? (hdg == null ? b : hdg) : 0;
+            const ecartCap = ((cibleCap - b + 540) % 360) - 180;
+            if (Math.abs(ecartCap) > 0.5) b += ecartCap * (1 - Math.exp(-dt / C.CAMERA_BEARING_TAU_MS));
+            const cible = _geoCentreCamera(ll, b);
+            const actuel = map.getCenter();
+            const pc = map.project(cible), pa = map.project(actuel);
+            const d = Math.hypot(pc.x - pa.x, pc.y - pa.y);
+            let k = 0;
+            if (d > C.CAMERA_DEADZONE_PX) k = 1 - C.CAMERA_DEADZONE_PX / d;                 // en laisse
+            else if (GeoEngine.getState() === 'still' && d > 1) k = 1 - Math.exp(-dt / 600); // recalage à l'arrêt
+            map.jumpTo({
+                center: [actuel.lng + (cible[0] - actuel.lng) * k, actuel.lat + (cible[1] - actuel.lat) * k],
+                bearing: b
+            });
+        }
+
+        function _geoTick(now) {
             const ll = gpsActive ? GeoEngine.getDisplay() : null;
             if (!playerMarker || !map || !ll) { _geoRAF = null; return; }
-            const prevLng = _dispLng;
             _dispLat = ll.lat; _dispLng = ll.lng;
-            _setAvatarFacing(_dispLng - prevLng);
             playerMarker.setLngLat([_dispLng, _dispLat]);
             _geoHalo(ll);
+            // L'avatar (vu de profil) regarde à gauche ou à droite de l'écran selon
+            // son cap par rapport à la carte ; dans l'axe, il garde son côté.
+            const hdg = GeoEngine.getHeading();
+            if (hdg != null) {
+                const cote = Math.sin((hdg - map.getBearing()) * Math.PI / 180);
+                if (Math.abs(cote) > 0.5) _setAvatarFacing(cote);
+            }
             // _viewTransition : pendant la bascule de la longue-vue, le suivi GPS
             // recentrait à chaque frame et coupait l'animation. Il attend son tour.
-            if (!_cameraMoving && !_viewTransition) {
-                const offset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
-                map.easeTo({ center: [_dispLng, _dispLat + offset], duration: 0, easing: x => x });
-            }
+            if (!_cameraMoving && !_viewTransition && !_geoSuiviCoupe && !_geoDoigtPose) _geoCamera(ll, now);
             _geoRAF = requestAnimationFrame(_geoTick);
+        }
+
+        // Vue d'ensemble : un glissement au doigt coupe le suivi, le bouton
+        // « recentrer » le rétablit (vue proche : caméra verrouillée, pas de pan).
+        function _geoCouperSuivi() {
+            if (!gpsActive || _geoSuiviCoupe) return;
+            _geoSuiviCoupe = true;
+            const btn = document.getElementById('geoRecentrerBtn');
+            if (btn) btn.classList.add('show');
+        }
+        function geoRecentrer() {
+            const btn = document.getElementById('geoRecentrerBtn');
+            if (btn) btn.classList.remove('show');
+            _geoSuiviCoupe = false;
+            const ll = GeoEngine.getDisplay();
+            if (!map || !ll) return;
+            const duree = GeoEngine.CONFIG.CAMERA_RECENTER_MS;
+            const bearing = _mapViewMode === 'close' ? (GeoEngine.getHeading() ?? map.getBearing()) : 0;
+            _viewTransition = true;
+            if (_viewTransitionTimer) clearTimeout(_viewTransitionTimer);
+            _viewTransitionTimer = setTimeout(() => { _viewTransitionTimer = null; _viewTransition = false; }, duree + 20);
+            map.easeTo({ center: _geoCentreCamera(ll, bearing), bearing: bearing, duration: duree });
         }
 
         // Déplacement DIRECT du perso (joystick/clavier : points très rapprochés,
@@ -24161,14 +24246,23 @@
             _mapViewMode = _mapViewMode === 'close' ? 'far' : 'close';
             const v   = MAP_VIEW[_mapViewMode];
             const btn = document.getElementById('viewToggleBtn');
-            const toggleOffset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
+            // Cap de carte : nord en haut en vue d'ensemble ; en vue proche, celui du
+            // joueur si le GPS le fournit. Le décalage « tiers bas » suit ce cap.
+            const capVue = _mapViewMode === 'close' && gpsActive ? (GeoEngine.getHeading() ?? 0) : 0;
+            const centreVue = _geoCentreCamera(playerPos, capVue);
+            if (_mapViewMode === 'close' && _geoSuiviCoupe) {
+                _geoSuiviCoupe = false;
+                const btnR = document.getElementById('geoRecentrerBtn');
+                if (btnR) btnR.classList.remove('show');
+            }
             const DUREE_BASCULE = 600;
             // Le joystick et le GPS recentraient la caméra pendant le vol, ce qui
             // coupait l'animation net à chaque pas. Ils s'effacent le temps du trajet.
             _viewTransition = true;
             if (_viewTransitionTimer) { clearTimeout(_viewTransitionTimer); _viewTransitionTimer = null; }
             map.easeTo({
-                center:  [playerPos.lng, playerPos.lat + toggleOffset],
+                center:  centreVue,
+                bearing: capVue,
                 pitch:   v.pitch,
                 zoom:    v.zoom,
                 duration: DUREE_BASCULE,
@@ -30354,7 +30448,7 @@
         //   → étage 3 immobilité → étage 4 rendu rAF
         // Règle : l'affichage lit getDisplay(), le jeu lit getFiltered().
         // Aucune décision de capture ne se prend sur la position affichée.
-        // Lots A-C : étages 0 à 4, journal, panneau debug. Cap et caméra au lot D.
+        // Lots A-D : étages 0 à 5, journal, panneau debug. Robustesse au lot E.
         const GeoEngine = (function () {
             // Réglages terrain : tout se règle ici, sans toucher à la logique.
             const CONFIG = {
@@ -30387,6 +30481,13 @@
                 ENABLE_RENDER: true,
                 RENDER_TAU_MS: 400,             // constante de temps du lissage d'affichage (position et halo)
                 RENDER_EXTRAPOLATE_MAX_MS: 1500, // l'affichage prolonge la vitesse estimée, jamais plus longtemps
+                // Étage 5 — cap et caméra (la caméra est appliquée par le jeu, qui lit ces valeurs)
+                ENABLE_HEADING: true,
+                HEADING_MIN_SPEED_MS: 0.8,      // au-dessus : cap GPS ; en dessous : boussole
+                HEADING_TAU_MS: 250,            // lissage angulaire (composantes sin/cos)
+                CAMERA_DEADZONE_PX: 60,         // la caméra ne bouge pas tant que le joueur reste dans ce rayon
+                CAMERA_BEARING_TAU_MS: 300,     // rotation de la caméra vers le cap (ajout : évite les à-coups de bascule)
+                CAMERA_RECENTER_MS: 800,        // durée de l'animation du bouton « recentrer »
                 // Journal de session
                 JOURNAL_MAX: 15000,             // entrées gardées (2 h à 1 Hz, avec de la marge)
                 JOURNAL_SAVE_MS: 30000,         // recopie dans IndexedDB
@@ -30498,6 +30599,8 @@
                 }
                 _log({ k: 'start' });
                 _setState('acquiring');
+                // Sans autorisation à demander (Android, ordinateur), la boussole se branche d'office.
+                if (!(window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function')) _brancherBoussole();
                 _watchId = navigator.geolocation.watchPosition(_onRaw, _onError, {
                     enableHighAccuracy: true, maximumAge: 0, timeout: CONFIG.WATCH_TIMEOUT_MS
                 });
@@ -30726,6 +30829,7 @@
                 if (etat === 'still' && _state !== 'still') _gelerStill();
                 else if (etat !== 'still' && _state === 'still') _degelerStill(p);
                 _setState(etat);
+                _hdgFromFix(p);
                 if (_rafId === null) _rafId = requestAnimationFrame(_renderTick);
                 _emit('fix', getFiltered());
                 _debugRender();
@@ -30736,6 +30840,68 @@
                 _log({ k: 'error', code: err.code, msg: err.message || '' });
                 _emit('error', err);
                 _debugRender();
+            }
+
+            // ── Étage 5 : cap ───────────────────────────────────────────────
+            // En marche (vitesse filtrée ≥ HEADING_MIN_SPEED_MS) : cap GPS du capteur,
+            // sinon direction de la vitesse du Kalman. Plus lent ou à l'arrêt :
+            // boussole. Lissage sur les composantes sin/cos : pas de saut 359 → 0.
+            let _hdgS = 0, _hdgC = 0, _hdgOk = false, _hdgT = 0, _hdgSource = 'aucun';
+            let _boussoleBranchee = false;
+
+            function _enMarche() {
+                return !!_filtered && _state !== 'still' && _filtered.speed >= CONFIG.HEADING_MIN_SPEED_MS;
+            }
+            function _hdgFeed(deg, source) {
+                const now = performance.now(), r = deg * Math.PI / 180;
+                if (!_hdgOk) {
+                    _hdgS = Math.sin(r); _hdgC = Math.cos(r); _hdgOk = true;
+                } else {
+                    const a = 1 - Math.exp(-Math.max(0, now - _hdgT) / CONFIG.HEADING_TAU_MS);
+                    _hdgS += (Math.sin(r) - _hdgS) * a;
+                    _hdgC += (Math.cos(r) - _hdgC) * a;
+                }
+                _hdgT = now;
+                if (source !== _hdgSource) { _hdgSource = source; _log({ k: 'cap', src: source }); }
+            }
+            function _hdgFromFix(p) {
+                if (!CONFIG.ENABLE_HEADING || !_enMarche()) return;
+                if (p.heading != null) _hdgFeed(p.heading, 'gps');
+                else if (CONFIG.ENABLE_KALMAN && _kTs !== null) _hdgFeed(Math.atan2(_kx.v, _ky.v) * 180 / Math.PI, 'gps');
+            }
+            function _onOrientation(e) {
+                if (!CONFIG.ENABLE_HEADING || _enMarche()) return;
+                const angle = (screen.orientation && screen.orientation.angle) || 0;
+                let h = null;
+                if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) h = e.webkitCompassHeading;   // iOS
+                else if (e.absolute && e.alpha != null) h = 360 - e.alpha;                                                       // Android : alpha absolu, sens trigonométrique
+                if (h == null) return;
+                _hdgFeed((h + angle) % 360, 'boussole');
+            }
+            // Android : 'deviceorientationabsolute' (le 'deviceorientation' y est relatif,
+            // inutilisable comme boussole). iOS : 'deviceorientation' + webkitCompassHeading.
+            function _brancherBoussole() {
+                if (_boussoleBranchee) return;
+                _boussoleBranchee = true;
+                if ('ondeviceorientationabsolute' in window) window.addEventListener('deviceorientationabsolute', _onOrientation);
+                else window.addEventListener('deviceorientation', _onOrientation);
+            }
+            // iOS exige une autorisation demandée depuis un geste du joueur (le jeu
+            // l'appelle au premier tap). Refusée : cap GPS seul, carte fixe à l'arrêt.
+            function requestCompass() {
+                const D = window.DeviceOrientationEvent;
+                if (D && typeof D.requestPermission === 'function') {
+                    D.requestPermission().then(r => {
+                        _log({ k: 'boussole', permission: r });
+                        if (r === 'granted') _brancherBoussole();
+                    }).catch(e => _log({ k: 'boussole', permission: 'erreur', msg: String(e) }));
+                } else {
+                    _brancherBoussole();
+                }
+            }
+            function getHeading() {
+                if (!CONFIG.ENABLE_HEADING || !_hdgOk) return null;
+                return (Math.atan2(_hdgS, _hdgC) * 180 / Math.PI + 360) % 360;
             }
 
             // ── Lecture ─────────────────────────────────────────────────────
@@ -30783,7 +30949,6 @@
             }
             function getDisplay() { return _disp ? Object.assign({}, _disp) : _cible(); }
             function getRaw() { return _raw ? Object.assign({}, _raw) : null; }
-            function getHeading() { return _raw ? _raw.heading : null; }   // étage 5 au lot D
             function getState() { return _state; }
 
             // Tests au bureau (V2-V4) : injecte un point comme s'il venait du GPS.
@@ -30823,7 +30988,7 @@
                     'acc brute ' + m(_stats.lastRawAcc) + '  ·  filtrée ' + m(f && f.accuracy),
                     'vitesse ' + (f ? f.speed.toFixed(2) + ' m/s' : '–') + '  ·  écart brut/filtré ' + (f && r ? _distM(f, r).toFixed(1) + ' m' : '–'),
                     'rejets ' + _stats.rejects + ' (série ' + _rejectStreak + ')  ·  fixes ' + _stats.fixes,
-                    'intervalle moyen ' + moy + '  ·  cap ' + (getHeading() == null ? 'aucun' : 'gps'),
+                    'intervalle moyen ' + moy + '  ·  cap ' + (getHeading() == null ? 'aucun' : _hdgSource + ' ' + Math.round(getHeading()) + '°'),
                     'journal ' + _journal.length + ' entrées' + (_stats.lastError ? '  ·  dernière erreur ' + _stats.lastError : '')
                 ];
                 if (typeof api.debugExtra === 'function') {
@@ -30841,7 +31006,7 @@
 
             const api = {
                 CONFIG, start, stop, on,
-                getDisplay, getFiltered, getRaw, getHeading, getState,
+                getDisplay, getFiltered, getRaw, getHeading, getState, requestCompass,
                 getJournalExport, journalSize: () => _journal.length,
                 _inject,
                 debugExtra: null    // fonction facultative : une ligne de plus dans le panneau
@@ -30978,6 +31143,9 @@
                 GeoEngine.on('error', _onGpsError);
                 GeoEngine.debugExtra = () => 'dist_today ' + Math.round(playerStats.distance_today || 0) + ' m'
                     + '  ·  veh ' + (_distVehicleMode ? 'oui' : 'non');
+                // Boussole : iOS n'accorde l'autorisation que sur un geste du joueur.
+                // On la demande au premier tap (« click » : touchstart ne compte pas).
+                document.addEventListener('click', () => GeoEngine.requestCompass(), { once: true, capture: true });
             }
             GeoEngine.start();
         }
