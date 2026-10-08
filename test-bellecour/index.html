@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ExpLore · Test terrain Bellecour</title>
+<meta name="description" content="Tout ce qu'il faut savoir avant le test terrain d'ExpLore à Bellecour : rendez-vous, installation de l'application, déroulé.">
+<meta name="theme-color" content="#0e0c18">
+<link rel="icon" href="../app/icons/icon-192.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ExpLore · Test terrain Bellecour">
+<meta property="og:description" content="Rendez-vous, installation de l'application et déroulé du test terrain.">
+<meta property="og:url" content="https://explorestudio.github.io/expLore-project/test-bellecour/">
+<meta property="og:image" content="https://explorestudio.github.io/expLore-project/app/icons/icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400;1,600&family=DM+Mono:wght@300;400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<script>document.documentElement.className = 'js';</script>
+<style>
+/* Tokens repris de landinghub.html, pour continuité visuelle stricte */
+:root {
+  --ink: #0e0c18;
+  --gold: #c9913a;
+  --gold-light: #e8c06a;
+  --violet: 107,79,160;
+  --text: #f0ece2;
+  --text-dim: rgba(240,236,226,0.72);
+  --text-faint: rgba(240,236,226,0.50);
+  --line: rgba(201,145,58,0.28);
+  --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --sans: 'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'DM Mono', ui-monospace, 'Courier New', monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a { color: var(--gold-light); }
+strong { font-weight: 500; color: var(--text); }
+
+/* ---------- Fond : étoiles CSS + halos violets (identique au hub) ---------- */
+.sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.stars { position: absolute; inset: -10%; }
+.stars.s1 {
+  background-image:
+    radial-gradient(1.4px 1.4px at 18% 24%, rgba(240,236,226,0.55), transparent),
+    radial-gradient(1.1px 1.1px at 72% 61%, rgba(240,236,226,0.42), transparent),
+    radial-gradient(1.6px 1.6px at 41% 83%, rgba(232,192,106,0.40), transparent);
+  background-size: 217px 199px, 331px 287px, 263px 241px;
+  animation: twinkleA 7s ease-in-out infinite;
+}
+.stars.s2 {
+  background-image:
+    radial-gradient(1px 1px at 63% 17%, rgba(240,236,226,0.38), transparent),
+    radial-gradient(1.3px 1.3px at 29% 52%, rgba(240,236,226,0.30), transparent),
+    radial-gradient(0.9px 0.9px at 86% 78%, rgba(201,145,58,0.34), transparent);
+  background-size: 149px 163px, 289px 311px, 191px 173px;
+  animation: twinkleB 9s ease-in-out infinite;
+}
+@keyframes twinkleA { 0%,100% { opacity:0.85; } 50% { opacity:0.45; } }
+@keyframes twinkleB { 0%,100% { opacity:0.50; } 50% { opacity:0.90; } }
+
+.glow { position: absolute; border-radius: 50%; filter: blur(40px); }
+.glow.g1 {
+  width: 340px; height: 340px; top: -110px; right: -120px;
+  background: radial-gradient(circle, rgba(var(--violet),0.30) 0%, rgba(201,145,58,0.07) 45%, transparent 70%);
+}
+.glow.g2 {
+  width: 300px; height: 300px; bottom: -130px; left: -110px;
+  background: radial-gradient(circle, rgba(var(--violet),0.22) 0%, transparent 70%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stars.s1, .stars.s2 { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* ---------- Colonne de lecture ---------- */
+.wrap {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 22px 20px 12px;
+}
+
+/* ---------- En-tête ---------- */
+.head { text-align: center; }
+.logo {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.logo .l { color: var(--gold); }
+.head h1 {
+  margin-top: 12px;
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+.head h1 em { font-style: italic; color: var(--gold); }
+.eyebrow {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.sparkle { width: 11px; height: 11px; fill: var(--gold); flex-shrink: 0; }
+
+/* ---------- L'essentiel ---------- */
+.essentiel {
+  margin-top: 18px;
+  padding: 6px 18px;
+  border: 1px solid rgba(201,145,58,0.42);
+  border-radius: 2px;
+  background: rgba(14,12,24,0.55);
+  box-shadow: 0 0 34px rgba(201,145,58,0.10);
+}
+.essentiel h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.essentiel dl div { padding: 10px 0; border-bottom: 1px solid rgba(201,145,58,0.16); }
+.essentiel dl div:last-child { border-bottom: 0; }
+.essentiel dt {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.essentiel dd { font-size: 17px; line-height: 1.4; color: var(--text); }
+.essentiel dd small { display: block; font-size: 14px; color: var(--text-dim); }
+
+/* ---------- Boutons (repris du hub) ---------- */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 14px 22px;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-align: center;
+  border-radius: 2px;
+  transition: background 0.22s, border-color 0.22s, color 0.22s, transform 0.22s;
+}
+.btn-primary { background: var(--gold); color: var(--ink); box-shadow: 0 0 34px rgba(201,145,58,0.22); }
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); }
+.btn-secondary { background: transparent; color: var(--text); border: 1px solid rgba(201,145,58,0.42); }
+.btn-secondary:hover { border-color: var(--gold); color: var(--gold-light); }
+.cta { margin-top: 14px; }
+
+/* ---------- Sections ---------- */
+section.bloc { margin-top: 46px; }
+.bloc h2 {
+  font-family: var(--serif);
+  font-size: 27px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bloc h2 .sparkle { width: 12px; height: 12px; }
+.bloc h3 {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 22px 0 8px;
+}
+.bloc p { margin-top: 12px; color: var(--text-dim); }
+.bloc p:first-of-type { margin-top: 14px; }
+
+.liste { margin-top: 14px; list-style: none; }
+.liste li { position: relative; padding: 7px 0 7px 22px; color: var(--text-dim); }
+.liste li::before {
+  content: ''; position: absolute; left: 3px; top: 16px;
+  width: 6px; height: 6px; background: var(--gold); transform: rotate(45deg);
+}
+
+/* Encadré d'avertissement */
+.note {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-left: 2px solid var(--gold);
+  background: rgba(var(--violet),0.14);
+  color: var(--text-dim);
+  font-size: 15px;
+}
+.note strong { color: var(--gold-light); }
+
+/* Adresse de l'app, lisible et recopiable */
+.url {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 13px;
+  word-break: break-all;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+/* ---------- Installation : onglets ---------- */
+/* Sans JS : pas d'onglets, les deux blocs s'affichent l'un sous l'autre */
+.onglets { display: none; }
+.js .onglets {
+  display: flex;
+  margin-top: 20px;
+  border: 1px solid rgba(201,145,58,0.42);
+  border-radius: 2px;
+}
+.onglet {
+  flex: 1;
+  min-height: 48px;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: background 0.22s, color 0.22s;
+}
+.onglet[aria-selected="true"] { background: var(--gold); color: var(--ink); }
+.onglet:not([aria-selected="true"]):hover { color: var(--gold-light); }
+
+.os { margin-top: 22px; }
+.os h3 { margin-top: 0; }
+.js .os h3 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Étapes numérotées */
+.etapes { list-style: none; counter-reset: etape; margin-top: 6px; }
+.etapes > li {
+  counter-increment: etape;
+  position: relative;
+  padding: 14px 0 18px 46px;
+  border-bottom: 1px solid rgba(201,145,58,0.12);
+}
+.etapes > li:last-child { border-bottom: 0; }
+.etapes > li::before {
+  content: counter(etape);
+  position: absolute; left: 0; top: 12px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 14px;
+  color: var(--gold);
+  border: 1px solid rgba(201,145,58,0.55);
+  border-radius: 50%;
+}
+.etapes figcaption { color: var(--text); font-size: 16px; line-height: 1.5; }
+.etapes figcaption em { font-style: normal; color: var(--gold-light); }
+
+/* Capture d'écran : cadre neutre « Capture à venir » ; l'image, posée par-dessus
+   en fond CSS, le recouvre si le fichier existe. Fichier absent = rien de cassé. */
+.capture {
+  position: relative;
+  margin-top: 12px;
+  width: 150px;
+  aspect-ratio: 9 / 19.5;
+  border: 1px dashed rgba(240,236,226,0.22);
+  border-radius: 14px;
+  background: rgba(240,236,226,0.03);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.capture span {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-align: center;
+  padding: 0 10px;
+}
+.capture i {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+
+/* Déroulé : frise verticale */
+.deroule { list-style: none; margin-top: 16px; }
+.deroule li {
+  position: relative;
+  padding: 0 0 18px 26px;
+  color: var(--text-dim);
+}
+.deroule li::before {
+  content: ''; position: absolute; left: 4px; top: 9px;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--gold);
+}
+.deroule li::after {
+  content: ''; position: absolute; left: 7px; top: 20px; bottom: 2px;
+  width: 1px; background: var(--line);
+}
+.deroule li:last-child::after { display: none; }
+.deroule strong { display: block; }
+
+/* Contact */
+.contacts { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.btn-discord { color: var(--text); border: 1px solid rgba(88,101,242,0.6); }
+.btn-discord:hover { border-color: #5865F2; background: rgba(88,101,242,0.1); }
+.btn-ico { width: 18px; height: 18px; margin-right: 11px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; }
+.btn-discord .btn-ico { color: #5865F2; fill: currentColor; stroke: none; }
+.mail-ecrit { text-align: center; font-family: var(--mono); font-size: 13px; color: var(--text-faint); word-break: break-all; }
+
+/* ---------- Pied de page ---------- */
+.sep {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin-top: 46px;
+}
+.sep::before, .sep::after {
+  content: ''; height: 1px; width: 54px;
+  background: linear-gradient(90deg, transparent, rgba(201,145,58,0.3), transparent);
+}
+.foot {
+  position: relative;
+  z-index: 1;
+  padding: 14px 20px calc(24px + env(safe-area-inset-bottom));
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.8px;
+  color: var(--text-faint);
+}
+.foot a {
+  display: inline-block; min-height: 44px; padding-top: 13px;
+  color: inherit; text-decoration: none; transition: color 0.22s;
+}
+.foot a:hover { color: var(--gold); }
+.foot .dot { opacity: 0.45; margin: 0 8px; }
+
+/* ---------- Écrans plus larges ---------- */
+@media (min-width: 560px) {
+  .wrap { padding: 40px 28px 12px; }
+  .logo { font-size: 40px; }
+  .head h1 { font-size: 34px; }
+  .essentiel dl { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
+  .essentiel dl div:nth-last-child(2) { border-bottom: 0; }
+  .contacts { flex-direction: row; flex-wrap: wrap; }
+  .contacts .btn { flex: 1; }
+  .mail-ecrit { flex-basis: 100%; }
+}
+
+:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ⚙ INFOS VARIABLES : date, heure, lieu, durée, after, repli pluie.
+     Elles sont regroupées dans le bloc « L'essentiel » juste en dessous.
+     La date est aussi dans l'en-tête, et la date de report dans « En cas de pluie » :
+     chaque endroit à mettre à jour porte le repère  ⚙  dans un commentaire. -->
+
+<div class="sky" aria-hidden="true">
+  <span class="stars s1"></span>
+  <span class="stars s2"></span>
+  <span class="glow g1"></span>
+  <span class="glow g2"></span>
+</div>
+
+<main class="wrap">
+
+  <!-- En-tête -->
+  <header class="head">
+    <div class="logo" aria-label="ExpLore">Exp<span class="l">Lore</span></div>
+    <h1>Test terrain · <em>Bellecour</em></h1>
+    <!-- ⚙ date -->
+    <p class="eyebrow">
+      <svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>
+      Samedi 24 octobre
+    </p>
+  </header>
+
+  <!-- ⚙ L'essentiel : date, heure, lieu, durée, after -->
+  <section class="essentiel" aria-labelledby="t-essentiel">
+    <h2 id="t-essentiel">L'essentiel</h2>
+    <dl>
+      <div>
+        <dt>Quand</dt>
+        <dd>Samedi 24 octobre, 14h</dd>
+      </div>
+      <div>
+        <dt>Rendez-vous</dt>
+        <dd>Place Bellecour<small>Devant l'Office du Tourisme</small></dd>
+      </div>
+      <div>
+        <dt>Durée</dt>
+        <dd>Environ 2h</dd>
+      </div>
+      <div>
+        <dt>Après, pour ceux qui veulent</dt>
+        <dd>Les Petits Joueurs<small>Rue Saint-Georges</small></dd>
+      </div>
+    </dl>
+  </section>
+
+  <div class="cta">
+    <a class="btn btn-primary" href="#installer">Installer l'application</a>
+  </div>
+
+  <!-- Ce que c'est -->
+  <section class="bloc" aria-labelledby="t-quoi">
+    <h2 id="t-quoi"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>Ce que c'est</h2>
+    <p>ExpLore est un jeu d'exploration de Lyon, sur téléphone. Des cartes sont cachées dans la ville : tu marches, tu les trouves, tu les collectionnes, et chacune te raconte un morceau de l'histoire des lieux.</p>
+    <p>Ce samedi, c'est une <strong>avant-première</strong>, pas le jeu fini. Certaines choses marcheront bien, d'autres coinceront. C'est justement ce qu'on veut voir.</p>
+    <p>La participation est <strong>gratuite et bénévole</strong>. Tes retours décident de la suite du jeu.</p>
+  </section>
+
+  <!-- Installer l'application -->
+  <section class="bloc" id="installer" aria-labelledby="t-installer">
+    <h2 id="t-installer"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>Installer l'application</h2>
+    <p>Pas de store : l'application s'installe <strong>depuis le navigateur</strong>, en ajoutant le site à l'écran d'accueil. Ça prend deux minutes. <strong>Fais-le avant de venir</strong> si tu peux. Sinon, on le fait ensemble au départ.</p>
+    <p>Sur place, on te donne aussi ton <strong>code d'accès</strong>. Il n'est pas sur cette page, c'est normal.</p>
+
+    <div class="note">
+      <strong>Tu lis ceci depuis Discord, un mail ou Knockk ?</strong>
+      L'installation ne marche pas dans leur navigateur intégré. Ouvre d'abord cette page dans <strong>Chrome</strong> (Android) ou <strong>Safari</strong> (iPhone) : menu ⋮ ou ⋯, puis « Ouvrir dans le navigateur ».
+    </div>
+
+    <div class="onglets" role="tablist" aria-label="Choisis ton téléphone">
+      <button class="onglet" role="tab" id="tab-android" aria-controls="os-android" aria-selected="true">Android</button>
+      <button class="onglet" role="tab" id="tab-ios" aria-controls="os-ios" aria-selected="false" tabindex="-1">iPhone</button>
+    </div>
+
+    <div class="os" id="os-android" role="tabpanel" aria-labelledby="tab-android">
+      <h3>Android</h3>
+      <ol class="etapes">
+        <li><figure>
+          <figcaption>Ouvre le lien de l'application dans <em>Chrome</em>.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : la page de l'application ouverte dans Chrome"><span>Capture à venir</span><i style="background-image:url('./assets/android_1.jpg')"></i></div>
+        </figure></li>
+        <li><figure>
+          <figcaption>Touche le menu <em>⋮</em>, en haut à droite.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : le menu de Chrome ouvert"><span>Capture à venir</span><i style="background-image:url('./assets/android_2.jpg')"></i></div>
+        </figure></li>
+        <li><figure>
+          <figcaption>Choisis <em>Installer l'application</em> ou <em>Ajouter à l'écran d'accueil</em>.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : l'option Installer l'application dans le menu"><span>Capture à venir</span><i style="background-image:url('./assets/android_3.jpg')"></i></div>
+        </figure></li>
+        <li><figure>
+          <figcaption>Confirme avec <em>Installer</em>.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : la fenêtre de confirmation"><span>Capture à venir</span><i style="background-image:url('./assets/android_4.jpg')"></i></div>
+        </figure></li>
+        <li><figure>
+          <figcaption>Lance <em>ExpLore Test</em> depuis l'icône sur ton écran d'accueil, plus depuis Chrome.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : l'icône ExpLore Test sur l'écran d'accueil"><span>Capture à venir</span><i style="background-image:url('./assets/android_5.jpg')"></i></div>
+        </figure></li>
+      </ol>
+    </div>
+
+    <div class="os" id="os-ios" role="tabpanel" aria-labelledby="tab-ios">
+      <h3>iPhone</h3>
+      <ol class="etapes">
+        <li><figure>
+          <figcaption>Ouvre le lien de l'application dans <em>Safari</em>. Sur iPhone, c'est obligatoire.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : la page de l'application ouverte dans Safari"><span>Capture à venir</span><i style="background-image:url('./assets/ios_1.jpg')"></i></div>
+        </figure></li>
+        <li><figure>
+          <figcaption>Touche le bouton <em>Partager</em> : le carré avec une flèche vers le haut.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : le bouton Partager de Safari"><span>Capture à venir</span><i style="background-image:url('./assets/ios_2.jpg')"></i></div>
+        </figure></li>
+        <li><figure>
+          <figcaption>Fais défiler et choisis <em>Sur l'écran d'accueil</em>.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : l'option Sur l'écran d'accueil"><span>Capture à venir</span><i style="background-image:url('./assets/ios_3.jpg')"></i></div>
+        </figure></li>
+        <li><figure>
+          <figcaption>Touche <em>Ajouter</em>, en haut à droite.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : le bouton Ajouter"><span>Capture à venir</span><i style="background-image:url('./assets/ios_4.jpg')"></i></div>
+        </figure></li>
+        <li><figure>
+          <figcaption>Lance <em>ExpLore Test</em> depuis l'icône sur ton écran d'accueil, plus depuis Safari.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : l'icône ExpLore Test sur l'écran d'accueil"><span>Capture à venir</span><i style="background-image:url('./assets/ios_5.jpg')"></i></div>
+        </figure></li>
+      </ol>
+    </div>
+
+    <div class="cta">
+      <a class="btn btn-primary" href="../app/test.html" target="_blank" rel="noopener" aria-label="Ouvrir l'application ExpLore Test, nouvel onglet">Ouvrir l'application</a>
+      <span class="url">explorestudio.github.io/expLore-project/app/test.html</span>
+    </div>
+  </section>
+
+  <!-- Localisation -->
+  <section class="bloc" aria-labelledby="t-loc">
+    <h2 id="t-loc"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>Autoriser la localisation</h2>
+    <p>Le jeu a besoin de ta position pour savoir où tu marches. Au premier lancement, ton téléphone te la demande.</p>
+    <h3>Android</h3>
+    <p>Choisis <strong>« Lorsque vous utilisez l'appli »</strong>, et laisse la position exacte activée. Vérifie aussi que la localisation du téléphone est allumée.</p>
+    <h3>iPhone</h3>
+    <p>Choisis <strong>« Autoriser »</strong>. Si rien ne s'affiche : Réglages, Confidentialité et sécurité, Service de localisation, Sites web Safari, puis <strong>« Lorsque l'app est active »</strong>, avec Position exacte activée.</p>
+  </section>
+
+  <!-- À prévoir -->
+  <section class="bloc" aria-labelledby="t-prevoir">
+    <h2 id="t-prevoir"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>À prévoir</h2>
+    <ul class="liste">
+      <li>Ton téléphone <strong>bien chargé</strong>. Une batterie externe si tu en as une.</li>
+      <li>Les <strong>données mobiles</strong> activées.</li>
+      <li>Des <strong>chaussures confortables</strong>.</li>
+      <li>De quoi <strong>marcher une heure et demie</strong> : eau, veste selon la météo.</li>
+    </ul>
+  </section>
+
+  <!-- Le déroulé -->
+  <section class="bloc" aria-labelledby="t-deroule">
+    <h2 id="t-deroule"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>Le déroulé</h2>
+    <ol class="deroule">
+      <li><strong>Accueil</strong>On se retrouve devant l'Office du Tourisme. On te remet ta feuille de route.</li>
+      <li><strong>Installation</strong>On vérifie que l'application marche, et on te donne ton code d'accès.</li>
+      <li><strong>Le parcours</strong>Tu joues, à ton rythme, entre Bellecour et le Vieux-Lyon.</li>
+      <li><strong>Retours à chaud</strong>On se retrouve pour parler de ce qui a marché et de ce qui a coincé.</li>
+      <li><strong>L'after</strong>Aux Petits Joueurs, pour ceux qui veulent prolonger.</li>
+    </ol>
+  </section>
+
+  <!-- ⚙ En cas de pluie -->
+  <section class="bloc" aria-labelledby="t-pluie">
+    <h2 id="t-pluie"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>En cas de pluie</h2>
+    <p>Pluie légère : on maintient, prends un imperméable. Grosse pluie annoncée : le test est <strong>reporté au samedi 7 novembre, 14h</strong>, même lieu. On te le confirme la veille à 18h sur le Discord et par mail.</p>
+  </section>
+
+  <!-- Contact -->
+  <section class="bloc" aria-labelledby="t-contact">
+    <h2 id="t-contact"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>Un souci, une question</h2>
+    <p>Un problème d'installation, un empêchement, une question : écris-nous, ou passe sur le Discord.</p>
+    <div class="contacts">
+      <a class="btn btn-secondary" href="mailto:explorestudiocontact@gmail.com?subject=Test%20terrain%20Bellecour" aria-label="Nous écrire par mail">Nous écrire</a>
+      <a class="btn btn-discord" href="https://discord.gg/dtYbQKjRca" target="_blank" rel="noopener" aria-label="Rejoindre le Discord d'ExpLore, nouvel onglet">
+        <svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.3 5.3A16.6 16.6 0 0 0 15.2 4l-.5 1a15.3 15.3 0 0 0-5.4 0l-.5-1a16.6 16.6 0 0 0-4.1 1.3C2.1 9.2 1.4 13 1.8 16.7a16.7 16.7 0 0 0 5 2.5l1.1-1.7a10.8 10.8 0 0 1-1.7-.8l.4-.3a11.9 11.9 0 0 0 10.8 0l.4.3a10.8 10.8 0 0 1-1.7.8l1.1 1.7a16.7 16.7 0 0 0 5-2.5c.5-4.3-.8-8.1-2.9-11.4ZM8.7 14.5c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg>
+        Discord
+      </a>
+      <span class="mail-ecrit">explorestudiocontact@gmail.com</span>
+    </div>
+  </section>
+
+  <div class="sep" aria-hidden="true">
+    <svg class="sparkle" viewBox="0 0 24 24"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>
+  </div>
+
+</main>
+
+<footer class="foot">
+  <a href="../landinghub.html">ExpLore</a>
+  <span class="dot">·</span>
+  <a href="https://www.instagram.com/explorestudiofr/" target="_blank" rel="noopener" aria-label="ExpLore sur Instagram, nouvel onglet">@explorestudiofr</a>
+</footer>
+
+<script>
+// Onglets Android / iPhone : sans JS, les deux blocs restent visibles l'un sous l'autre
+(function () {
+  var onglets = [document.getElementById('tab-android'), document.getElementById('tab-ios')];
+
+  function choisir(onglet, focus) {
+    onglets.forEach(function (o) {
+      var actif = o === onglet;
+      o.setAttribute('aria-selected', actif);
+      o.tabIndex = actif ? 0 : -1;
+      document.getElementById(o.getAttribute('aria-controls')).hidden = !actif;
+    });
+    if (focus) onglet.focus();
+  }
+
+  onglets.forEach(function (o, i) {
+    o.addEventListener('click', function () { choisir(o); });
+    o.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') choisir(onglets[1 - i], true);
+    });
+  });
+
+  // Onglet présélectionné selon le téléphone du lecteur
+  var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  choisir(onglets[ios ? 1 : 0]);
+})();
+</script>
+
+</body>
+</html>
