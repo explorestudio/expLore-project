@@ -149,7 +149,7 @@ strong { font-weight: 500; color: var(--text); }
   color: var(--gold);
 }
 .essentiel dd { font-size: 17px; line-height: 1.4; color: var(--text); }
-.essentiel dd small { display: block; font-size: 14px; color: var(--text-dim); }
+.essentiel dd small { font-size: 14px; color: var(--text-dim); }
 
 /* ---------- Boutons (repris du hub) ---------- */
 .btn {
@@ -216,6 +216,16 @@ section.bloc { margin-top: 46px; }
   font-size: 15px;
 }
 .note strong { color: var(--gold-light); }
+
+/* Rassurance sous le bouton d'ouverture : encadré discret */
+.bloc p.rassure {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(240,236,226,0.14);
+  border-radius: 2px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
 
 /* Adresse de l'app, lisible et recopiable */
 .url {
@@ -413,21 +423,21 @@ section.bloc { margin-top: 46px; }
       </div>
       <div>
         <dt>Rendez-vous</dt>
-        <dd>Place Bellecour<small>Devant l'Office du Tourisme</small></dd>
+        <dd>Place Bellecour<br><small>Devant l'Office du Tourisme</small></dd>
       </div>
       <div>
         <dt>Durée</dt>
-        <dd>Environ 2h</dd>
+        <dd>Environ 2h, jusqu'à 16h</dd>
       </div>
       <div>
         <dt>Après, pour ceux qui veulent</dt>
-        <dd>Les Petits Joueurs<small>Rue Saint-Georges</small></dd>
+        <dd>Les Petits Joueurs<br><small>Rue Saint-Georges</small></dd>
       </div>
     </dl>
   </section>
 
   <div class="cta">
-    <a class="btn btn-primary" href="#installer">Installer l'application</a>
+    <a class="btn btn-primary" href="#installer">Comment installer</a>
   </div>
 
   <!-- Ce que c'est -->
@@ -448,6 +458,13 @@ section.bloc { margin-top: 46px; }
       <strong>Tu lis ceci depuis Discord, un mail ou Knockk ?</strong>
       L'installation ne marche pas dans leur navigateur intégré. Ouvre d'abord cette page dans <strong>Chrome</strong> (Android) ou <strong>Safari</strong> (iPhone) : menu ⋮ ou ⋯, puis « Ouvrir dans le navigateur ».
     </div>
+
+    <div class="cta">
+      <a class="btn btn-primary" href="https://explorestudio.github.io/expLore-project/app/test.html" target="_blank" rel="noopener" aria-label="Ouvrir l'application ExpLore Test, nouvel onglet">Ouvrir l'application</a>
+      <span class="url">explorestudio.github.io/expLore-project/app/test.html</span>
+    </div>
+
+    <p class="rassure">À ce stade, le jeu ne se lancera pas vraiment : c'est normal. On l'active avec ton code le jour du test. Pour l'instant, il s'agit seulement d'installer l'icône sur ton écran d'accueil.</p>
 
     <div class="onglets" role="tablist" aria-label="Choisis ton téléphone">
       <button class="onglet" role="tab" id="tab-android" aria-controls="os-android" aria-selected="true">Android</button>
@@ -474,8 +491,12 @@ section.bloc { margin-top: 46px; }
           <div class="capture" role="img" aria-label="Capture : la fenêtre de confirmation"><span>Capture à venir</span><i style="background-image:url('./assets/android_4.jpg')"></i></div>
         </figure></li>
         <li><figure>
-          <figcaption>Lance <em>ExpLore Test</em> depuis l'icône sur ton écran d'accueil, plus depuis Chrome.</figcaption>
+          <figcaption>Lance <em>ExpLore Test</em> depuis l'icône sur ton écran d'accueil, et non plus depuis Chrome.</figcaption>
           <div class="capture" role="img" aria-label="Capture : l'icône ExpLore Test sur l'écran d'accueil"><span>Capture à venir</span><i style="background-image:url('./assets/android_5.jpg')"></i></div>
+        </figure></li>
+        <li><figure>
+          <figcaption>Autorise la localisation : le jeu a besoin de ta position pour savoir où tu marches. Au premier lancement, ton téléphone te la demande. Choisis <em>« Lorsque vous utilisez l'appli »</em>, et laisse la position exacte activée. Vérifie aussi que la localisation du téléphone est allumée.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : la demande d'autorisation de localisation"><span>Capture à venir</span><i style="background-image:url('./assets/android_6.jpg')"></i></div>
         </figure></li>
       </ol>
     </div>
@@ -500,26 +521,20 @@ section.bloc { margin-top: 46px; }
           <div class="capture" role="img" aria-label="Capture : le bouton Ajouter"><span>Capture à venir</span><i style="background-image:url('./assets/ios_4.jpg')"></i></div>
         </figure></li>
         <li><figure>
-          <figcaption>Lance <em>ExpLore Test</em> depuis l'icône sur ton écran d'accueil, plus depuis Safari.</figcaption>
+          <figcaption>Lance <em>ExpLore Test</em> depuis l'icône sur ton écran d'accueil, et non plus depuis Safari.</figcaption>
           <div class="capture" role="img" aria-label="Capture : l'icône ExpLore Test sur l'écran d'accueil"><span>Capture à venir</span><i style="background-image:url('./assets/ios_5.jpg')"></i></div>
+        </figure></li>
+        <li><figure>
+          <figcaption>Autorise la localisation : le jeu a besoin de ta position pour savoir où tu marches. Au premier lancement, ton téléphone te la demande. Choisis <em>« Autoriser »</em>. Si rien ne s'affiche : Réglages, Confidentialité et sécurité, Service de localisation, Sites web Safari, puis <em>« Lorsque l'app est active »</em>, avec Position exacte activée.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : la demande d'autorisation de localisation"><span>Capture à venir</span><i style="background-image:url('./assets/ios_6.jpg')"></i></div>
         </figure></li>
       </ol>
     </div>
 
+    <!-- Rappel en fin de section, pour qui a déroulé les étapes jusqu'en bas -->
     <div class="cta">
-      <a class="btn btn-primary" href="../app/test.html" target="_blank" rel="noopener" aria-label="Ouvrir l'application ExpLore Test, nouvel onglet">Ouvrir l'application</a>
-      <span class="url">explorestudio.github.io/expLore-project/app/test.html</span>
+      <a class="btn btn-secondary" href="https://explorestudio.github.io/expLore-project/app/test.html" target="_blank" rel="noopener" aria-label="Ouvrir l'application ExpLore Test, nouvel onglet">Ouvrir l'application</a>
     </div>
-  </section>
-
-  <!-- Localisation -->
-  <section class="bloc" aria-labelledby="t-loc">
-    <h2 id="t-loc"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>Autoriser la localisation</h2>
-    <p>Le jeu a besoin de ta position pour savoir où tu marches. Au premier lancement, ton téléphone te la demande.</p>
-    <h3>Android</h3>
-    <p>Choisis <strong>« Lorsque vous utilisez l'appli »</strong>, et laisse la position exacte activée. Vérifie aussi que la localisation du téléphone est allumée.</p>
-    <h3>iPhone</h3>
-    <p>Choisis <strong>« Autoriser »</strong>. Si rien ne s'affiche : Réglages, Confidentialité et sécurité, Service de localisation, Sites web Safari, puis <strong>« Lorsque l'app est active »</strong>, avec Position exacte activée.</p>
   </section>
 
   <!-- À prévoir -->
@@ -528,6 +543,7 @@ section.bloc { margin-top: 46px; }
     <ul class="liste">
       <li>Ton téléphone <strong>bien chargé</strong>. Une batterie externe si tu en as une.</li>
       <li>Les <strong>données mobiles</strong> activées.</li>
+      <li>Un peu d'<strong>espace libre</strong> sur ton téléphone. L'installation en demande très peu, mais un téléphone plein peut la bloquer.</li>
       <li>Des <strong>chaussures confortables</strong>.</li>
       <li>De quoi <strong>marcher une heure et demie</strong> : eau, veste selon la météo.</li>
     </ul>
@@ -543,6 +559,7 @@ section.bloc { margin-top: 46px; }
       <li><strong>Retours à chaud</strong>On se retrouve pour parler de ce qui a marché et de ce qui a coincé.</li>
       <li><strong>L'after</strong>Aux Petits Joueurs, pour ceux qui veulent prolonger.</li>
     </ol>
+    <p>On prendra quelques photos pendant la sortie pour raconter l'événement. On te demandera ton accord sur place, et tu peux refuser sans aucun problème.</p>
   </section>
 
   <!-- ⚙ En cas de pluie -->
@@ -563,6 +580,8 @@ section.bloc { margin-top: 46px; }
       </a>
       <span class="mail-ecrit">explorestudiocontact@gmail.com</span>
     </div>
+    <p>Tu arrives en retard ? Préviens-nous sur le Discord ou par mail, on te dit où nous rejoindre. Bellecour est grande, on ne se retrouve pas par hasard.</p>
+    <p>Pas encore inscrit ? <a href="https://docs.google.com/forms/d/e/1FAIpQLScS5u3_C0sXMenpSuy9Pzp22pjF51Cw-qdzUU7putWiKPNcRg/viewform" target="_blank" rel="noopener" aria-label="S'inscrire au test terrain Bellecour, nouvel onglet">C'est par ici.</a></p>
   </section>
 
   <div class="sep" aria-hidden="true">
