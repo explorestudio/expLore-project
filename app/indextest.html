@@ -15804,7 +15804,7 @@
                 document.head.appendChild(s);
             }
 
-            // Visuel du point : la carte-spirale (RVBA détourée). Pas de pastille
+            // Visuel du point : la nébuleuse (RVBA détourée). Pas de pastille
             // ronde ni de bordure : elles rogneraient le cadre de la carte.
             //
             // L'élément RACINE reste nu. MapLibre le positionne en écrivant un
@@ -15823,7 +15823,7 @@
                 // Minuscule : c'est la casse suivie par git. Windows ne fait pas
                 // la différence, GitHub Pages si : une majuscule ici passe en
                 // local et donne un 404 en production.
-                'background-image:url(./assets/spiral.png)',
+                'background-image:url(./assets/nebuleuse.png)',
                 'background-size:contain',
                 'background-repeat:no-repeat',
                 'background-position:center',
@@ -19403,7 +19403,7 @@
                 const _collected = collectedCards.includes(poi.localCardId);
                 const _pid2 = 'card_' + poi.id.replace(/[^a-z0-9]/gi,'');
                 const _img = document.createElement('img');
-                _img.src = './assets/spiral.png?v=2';
+                _img.src = './assets/nebuleuse.png';
                 _img.draggable = false;
 
                 _img.style.opacity = _collected ? '0.5' : '1';
