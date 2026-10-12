@@ -6272,6 +6272,10 @@
         .viewfinder-scene svg {
             width: 100%; height: 100%; display: block; object-fit: cover;
         }
+        /* Flux caméra : remplace l'illustration quand l'accès est accordé */
+        .viewfinder-scene video {
+            width: 100%; height: 100%; display: block; object-fit: cover;
+        }
 
         /* Grain de film animé */
         .viewfinder-grain {
@@ -9392,7 +9396,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.91.0</div>
+            <div class="hud-version" id="hudVersion">v0.92.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10263,6 +10267,9 @@
                         <div class="memory-header-sub">Laisse une trace de ta visite</div>
                     </div>
                 </div>
+
+                <!-- Photo prise avec la caméra (masquée si pas de photo réelle) -->
+                <img id="memoryPhotoPreview" alt="" style="display:none;width:100%;max-height:30vh;object-fit:cover;border-radius:10px;margin-bottom:12px;">
 
                 <div class="memory-section-label">Météo</div>
                 <div class="memory-weather-row">
@@ -12071,6 +12078,7 @@
             "✦ Carte thématique disponible": "✦ Themed card available",
             "Voir le détail de la complétion": "See completion details",
             "Aucune note laissée.": "No note left.",
+            "📷 Photo non enregistrée (stockage plein ?)": "📷 Photo not saved (storage full?)",
             "🔮 +1 Orbe de mémoire !": "🔮 +1 Memory orb!",
             "✨ Niveau maximum atteint": "✨ Maximum level reached",
             "La mémoire infuse. Reviens plus tard ou ravive-la avec une orbe.": "Memory is steeping. Come back later, or revive it with an orb.",
@@ -19052,6 +19060,9 @@
                     poiCollectedAt,
                     poiCollectedKind,
                     poiCooldownMs,
+                    // Photos des panoramas : métadonnées seulement (lieu, date,
+                    // météo, humeur, note, photoId). Les images sont dans IndexedDB.
+                    museumCollection: museumCollection.map(m => Object.assign({}, m, { photoData: null })),
                 };
                 localStorage.setItem('lyon_cards_progress', JSON.stringify(_saveData));
                 console.log('[expLore] Sauvegarde écrite — poussière:', _saveData.memorialDust, 'cartes:', (_saveData.collectedCards||[]).length, '_obDone:', _saveData._obDone);
@@ -19153,6 +19164,7 @@
                 if (d.poiCollectedAt && typeof d.poiCollectedAt === 'object') poiCollectedAt = d.poiCollectedAt;
                 if (d.poiCollectedKind && typeof d.poiCollectedKind === 'object') poiCollectedKind = d.poiCollectedKind;
                 if (typeof d.poiCooldownMs === 'number' && d.poiCooldownMs > 0) poiCooldownMs = d.poiCooldownMs;
+                if (Array.isArray(d.museumCollection)) museumCollection = d.museumCollection;
                 console.log('[expLore] loadProgress _obDone après:', _obDone);
                 _progressLoaded = true;
             } catch(e) { _progressLoaded = true; }
@@ -23549,13 +23561,33 @@
 
             // Image ou illustration
             const wrap = document.getElementById('photoViewerImgWrap');
-            if (photo.photoData) {
-                wrap.innerHTML = '<img src="' + photo.photoData + '" alt="' + T(photo.title||'Photo') + '">';
-            } else {
+            const _illus = () => {
                 const illus = INFO_ILLUSTRATIONS && INFO_ILLUSTRATIONS[photo.infoId]
                     ? INFO_ILLUSTRATIONS[photo.infoId]
                     : '<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="8" fill="rgba(255,255,255,0.05)"/><text x="50" y="58" text-anchor="middle" font-size="36">' + (photo.icon || '📍') + '</text></svg>';
                 wrap.innerHTML = '<div class="photo-viewer-illustration">' + illus + '</div>';
+            };
+            _photoViewerRevoke();
+            if (photo.photoId && typeof indexedDB !== 'undefined') {
+                // Photo réelle : relue dans IndexedDB. Illustration en attendant,
+                // et si la photo a disparu (stockage vidé par le navigateur).
+                _illus();
+                const id = photo.photoId;
+                _photoViewerShown = id;
+                _photoGet(id).then(blob => {
+                    if (!blob || _photoViewerShown !== id) return;
+                    _photoViewerUrl = URL.createObjectURL(blob);
+                    const img = document.createElement('img');
+                    img.src = _photoViewerUrl;
+                    img.alt = T(photo.title || 'Photo');
+                    img.style.objectFit = 'contain';   // photo souvent en portrait : pas de rognage dans le cadre 4:3
+                    wrap.innerHTML = '';
+                    wrap.appendChild(img);
+                }).catch(e => console.warn('[photos] photo illisible', e));
+            } else if (photo.photoData) {
+                wrap.innerHTML = '<img src="' + photo.photoData + '" alt="' + T(photo.title||'Photo') + '">';
+            } else {
+                _illus();
             }
 
             // Chips météo / humeur
@@ -23569,7 +23601,12 @@
             // Note
             const noteEl = document.getElementById('photoViewerNote');
             if (photo.note) {
-                noteEl.innerHTML = '<div class="photo-viewer-note">"' + photo.note + '"</div>';
+                // textContent : la note est saisie librement et désormais sauvegardée
+                const n = document.createElement('div');
+                n.className = 'photo-viewer-note';
+                n.textContent = '"' + photo.note + '"';
+                noteEl.innerHTML = '';
+                noteEl.appendChild(n);
             } else {
                 noteEl.innerHTML = '<div class="photo-viewer-empty-note">Aucune note laissée.</div>';
             }
@@ -23577,8 +23614,16 @@
             document.getElementById('photoViewerScreen').classList.add('show');
         }
 
+        let _photoViewerUrl = null;
+        let _photoViewerShown = null;   // photo attendue : une lecture lente d'une autre photo ne l'écrase pas
+        function _photoViewerRevoke() {
+            if (_photoViewerUrl) { URL.revokeObjectURL(_photoViewerUrl); _photoViewerUrl = null; }
+            _photoViewerShown = null;
+        }
+
         function closePhotoViewer() {
             document.getElementById('photoViewerScreen').classList.remove('show');
+            _photoViewerRevoke();
         }
 
         function openBagScreen() {
@@ -32798,6 +32843,105 @@
             _showNearbyConsoles('viseur');
         }
 
+        // ── Caméra du téléphone dans le viseur ──
+        // L'illustration SVG est posée d'abord ; si la caméra arrière répond,
+        // son flux la remplace. Refus, absence de caméra (PC) ou navigateur
+        // sans getUserMedia : l'illustration reste, le parcours ne change pas.
+        let _vfStream = null;
+        let _vfCamDemande = 0;          // jeton : un viseur fermé avant la réponse ne garde pas la caméra
+
+        function _vfStartCamera() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+            const jeton = ++_vfCamDemande;
+            navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                audio: false
+            }).then(stream => {
+                const vf = document.getElementById('viewfinderScreen');
+                if (jeton !== _vfCamDemande || !vf.classList.contains('show')) {
+                    stream.getTracks().forEach(t => t.stop());
+                    return;
+                }
+                _vfStream = stream;
+                const video = document.createElement('video');
+                video.setAttribute('playsinline', '');   // iOS : sinon plein écran natif
+                video.muted = true;
+                video.autoplay = true;
+                video.srcObject = stream;
+                // Relu ici : initVFZoomGestures clone le viewport, l'ancien nœud n'est plus dans la page
+                const scene = document.getElementById('vfScene');
+                scene.innerHTML = '';
+                scene.appendChild(video);
+                video.play().catch(() => {});
+            }).catch(e => {
+                console.log('[viseur] caméra indisponible, illustration conservée :', e && e.name);
+            });
+        }
+
+        function _vfStopCamera() {
+            _vfCamDemande++;
+            if (_vfStream) { _vfStream.getTracks().forEach(t => t.stop()); _vfStream = null; }
+            const v = document.querySelector('#vfScene video');
+            if (v) v.srcObject = null;
+        }
+
+        // Application en arrière-plan : on rend la caméra, on la reprend au retour.
+        document.addEventListener('visibilitychange', () => {
+            const vf = document.getElementById('viewfinderScreen');
+            if (!vf || !vf.classList.contains('show')) return;
+            if (document.hidden) _vfStopCamera();
+            else if (!_vfStream) _vfStartCamera();
+        });
+
+        // Capture ce que montre le viseur : recadrage object-fit:cover + zoom
+        // (le zoom CSS agrandit la scène autour de son centre).
+        function _vfGrabFrame(callback) {
+            const video = document.querySelector('#vfScene video');
+            if (!_vfStream || !video || !video.videoWidth) { callback(null); return; }
+            const vp = document.getElementById('vfViewport');
+            const W = vp.clientWidth || video.videoWidth;
+            const H = vp.clientHeight || video.videoHeight;
+            const vw = video.videoWidth, vh = video.videoHeight;
+            const s  = Math.max(W / vw, H / vh) * vfZoom;
+            const sw = Math.min(vw, W / s), sh = Math.min(vh, H / s);
+            const sx = (vw - sw) / 2,       sy = (vh - sh) / 2;
+            // 1280 px sur le grand côté : ~150-300 Ko en JPEG, assez pour l'écran
+            const k  = Math.min(1, 1280 / Math.max(sw, sh));
+            const canvas = document.createElement('canvas');
+            canvas.width  = Math.round(sw * k);
+            canvas.height = Math.round(sh * k);
+            canvas.getContext('2d').drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(blob => callback(blob), 'image/jpeg', 0.82);
+        }
+
+        // ── Stockage des photos : IndexedDB (le localStorage saturerait vite) ──
+        // museumCollection (sauvegardé avec la progression) ne garde que photoId.
+        let _photoDbP = null;
+        function _photoDb() {
+            if (!_photoDbP) _photoDbP = new Promise((res, rej) => {
+                const rq = indexedDB.open('explore_photos', 1);
+                rq.onupgradeneeded = () => rq.result.createObjectStore('photos');
+                rq.onsuccess = () => res(rq.result);
+                rq.onerror = () => rej(rq.error);
+            });
+            return _photoDbP;
+        }
+        function _photoPut(id, blob) {
+            return _photoDb().then(db => new Promise((res, rej) => {
+                const tx = db.transaction('photos', 'readwrite');
+                tx.objectStore('photos').put(blob, id);
+                tx.oncomplete = () => res();
+                tx.onerror = () => rej(tx.error);
+            }));
+        }
+        function _photoGet(id) {
+            return _photoDb().then(db => new Promise((res, rej) => {
+                const rq = db.transaction('photos').objectStore('photos').get(id);
+                rq.onsuccess = () => res(rq.result || null);
+                rq.onerror = () => rej(rq.error);
+            }));
+        }
+
         function openViewfinder(info) {
             _hideAllNearbyConsoles('viseur');
             currentViewfinderInfo = info;
@@ -32822,6 +32966,7 @@
             initVFZoomGestures();
 
             document.getElementById('viewfinderScreen').classList.add('show');
+            _vfStartCamera();
         }
 
         function applyVFZoom(z, animate) {
@@ -32919,6 +33064,7 @@
         }
 
         function closeViewfinder() {
+            _vfStopCamera();
             document.getElementById('viewfinderScreen').classList.remove('show');
             currentViewfinderInfo = null;
             _panoramaLibererVerrou();
@@ -32956,17 +33102,20 @@
             // Capturer le SVG comme image PNG via canvas
             const info = currentViewfinderInfo;
             captureSVGasPhoto(info, (capture) => {
+                _vfStopCamera();
                 document.getElementById('viewfinderScreen').classList.remove('show');
                 currentInfoPoint = info;
                 currentViewfinderInfo = null;
                 window._pendingPhotoZoom = capture ? capture.zoom : 1;
-                openMemoryWithPhoto(null); // pas de PNG — zoom géré par CSS dans le musée
+                // Blob JPEG si la caméra tournait, sinon null : le sac ré-affiche l'illustration
+                openMemoryWithPhoto(capture ? capture.blob : null);
             });
         }
 
         function captureSVGasPhoto(info, callback) {
-            // On stocke juste l'infoId et le zoom — le musée ré-affiche le SVG directement avec CSS
-            callback({ infoId: info.id, zoom: vfZoom });
+            // Caméra active : on prend l'image réelle. Sinon on garde l'infoId et
+            // le zoom, et le sac ré-affiche le SVG.
+            _vfGrabFrame(blob => callback({ infoId: info.id, zoom: vfZoom, blob }));
         }
 
         function openMemoryWithPhoto(photoData) {
@@ -32980,6 +33129,7 @@
 
             // Stocker la photo temporairement
             window._pendingPhotoData = photoData;
+            _memoryPreview(photoData);
 
             const now = new Date();
             const dateStr = now.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
@@ -33026,6 +33176,7 @@
             document.getElementById('memoryDateDisplay').textContent = dateStr;
             document.getElementById('memoryNote').value = '';
             document.querySelectorAll('.memory-weather-btn, .memory-mood-btn').forEach(b => b.classList.remove('selected'));
+            _memoryPreview(window._pendingPhotoData || null);
             document.getElementById('memoryScreen').classList.add('show');
         }
 
@@ -33038,8 +33189,25 @@
             btn.classList.add('selected');
         }
 
+        // Aperçu de la photo réelle dans le formulaire souvenir (null = masqué).
+        let _memoryPreviewUrl = null;
+        function _memoryPreview(blob) {
+            const img = document.getElementById('memoryPhotoPreview');
+            if (_memoryPreviewUrl) { URL.revokeObjectURL(_memoryPreviewUrl); _memoryPreviewUrl = null; }
+            if (blob instanceof Blob) {
+                _memoryPreviewUrl = URL.createObjectURL(blob);
+                img.src = _memoryPreviewUrl;
+                img.style.display = 'block';
+            } else {
+                img.removeAttribute('src');
+                img.style.display = 'none';
+            }
+        }
+
         function closeMemoryScreen() {
             document.getElementById('memoryScreen').classList.remove('show');
+            window._pendingPhotoData = null;
+            _memoryPreview(null);
             _panoramaLibererVerrou();
         }
 
@@ -33052,15 +33220,28 @@
             const now        = new Date();
 
             // Récupérer la photo capturée (peut être null si ouvert depuis la fiche info)
-            const photoData = window._pendingPhotoData || null;
+            const photoBlob = window._pendingPhotoData || null;
             window._pendingPhotoData = null;
+            _memoryPreview(null);
+
+            // Photo réelle : rangée dans IndexedDB, l'entrée ne garde que sa clé
+            // (un JPEG en base64 dans le localStorage le saturerait en ~15 photos).
+            let photoId = null;
+            if (photoBlob instanceof Blob && typeof indexedDB !== 'undefined') {
+                photoId = 'photo_' + currentInfoPoint.id + '_' + now.getTime();
+                _photoPut(photoId, photoBlob).catch(e => {
+                    console.warn('[photos] photo non enregistrée', e);
+                    showToast(T('📷 Photo non enregistrée (stockage plein ?)'));
+                });
+            }
 
             museumCollection.push({
                 infoId:   currentInfoPoint.id,
                 title:    currentInfoPoint.title,
                 icon:     currentInfoPoint.icon,
                 text:     currentInfoPoint.text,
-                photoData, // dataURL PNG ou null
+                photoData: null, // héritage : dataURL, plus utilisé
+                photoId,         // clé IndexedDB 'explore_photos', ou null (illustration)
                 tookPhoto: window._pendingPhotoZoom != null, // true si pris avec l'appareil
                 photoZoom: window._pendingPhotoZoom || 1, // zoom au moment de la capture
                 weather:  weatherBtn ? weatherBtn.dataset.weather : null,
