@@ -9936,8 +9936,6 @@
                     <button onclick="testRetablirPerimetre()" class="test-action-btn">🗺️ Rétablir le périmètre du test</button>
                     <button onclick="closeTestPanel(); testJaugePerimetre()" class="test-action-btn">📏 Jauge du périmètre (détail)</button>
                     <button onclick="testAfficherLectures()" class="test-action-btn">📊 Statistiques de lecture</button>
-                    <button onclick="testSceneAcces()" class="test-action-btn">💬 Scène 2 : accès à l'Explorium</button>
-                    <button onclick="testSceneFinale()" class="test-action-btn">💬 Scène 3 : retour à Bellecour</button>
                     <button onclick="afficherBanniereMaj()" class="test-action-btn">🔄 Aperçu de la bannière de mise à jour</button>
                     <button onclick="testRefillCardEnergy()" class="test-action-btn">⚡ Restaurer énergie toutes cartes</button>
                     <button onclick="testFastForwardCardEnergy()" class="test-action-btn">⏩ +2h sur énergie cartes</button>
@@ -15039,8 +15037,13 @@
         // après loadProgress, dont l'ordre n'est pas garanti).
         function _perimetreAppliquer() {
             if (typeof map === 'undefined' || !map || !map.getLayer || !map.getLayer('perimeter-line')) return;
-            // Caché aussi pendant le tutoriel : il n'apparaît qu'une fois le terrain ouvert.
-            const cache = _perimetreLeve || !_obDone;
+            // Caché aussi pendant le tutoriel : il n'apparaît qu'une fois le terrain
+            // ouvert (section 12, cf. _obFieldOpen). Sa jauge, elle, attend les
+            // jumelles (section 13 : body.ui-masque-jumelles .perimetre-jauge).
+            const cache = _perimetreLeve || !_obFieldOpen();
+            // Section 12 : les zones de progression par quartier ne s'affichent
+            // pas tant que le périmètre du test est en vigueur.
+            try { applyZonesLayerVisibility(); } catch (e) {}
             const vis = cache ? 'none' : 'visible';
             _PERIMETRE_COUCHES.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis); });
             if (_perimetreLibelle) _perimetreLibelle.getElement().style.display = cache ? 'none' : '';
@@ -16202,7 +16205,14 @@
         // avec alwaysVisible), sans laquelle l'étape des fournitures serait bloquée.
         // Le joueur a de la poussière en réserve dès le départ : rien d'autre ne lui
         // manque pendant le guide.
-        function _obFieldOpen() { return !!_obDone; }
+        // Test Bellecour, section 12 : le terrain s'ouvre dès le retour sur la
+        // mappe après la section 11 (« La mappe affiche désormais tous les points
+        // d'intérêt »), avant la fin du tutoriel (section 18). Le périmètre du
+        // test en limite l'affichage (cf. _perimetreFiltrerMarqueurs).
+        function _obFieldOpen() {
+            if (_obDone) return true;
+            try { return _tutoSection >= 12; } catch (e) { return false; }   // déclaré plus bas
+        }
 
         // Seconde exception : l'Office du Tourisme. Il paraît avec les ressources du
         // tutoriel (à la collecte des clefs de la ville), seul POI de la ville
@@ -18568,6 +18578,11 @@
         // par le lot des sections 12-18. Avant, elle reste « La jeune fille ».
         let _claraPresentee = false;
         function nomClara() { return _claraPresentee ? 'Clara' : 'La jeune fille'; }
+        // Le joueur est « Toi » dans le visual novel jusqu'à la saisie de son
+        // pseudo au QG (section 15, 12 caractères au plus), puis son pseudo.
+        // Sauvegardé ; jamais envoyé au journal utilisateur.
+        let _joueurPseudo = '';
+        function nomJoueur() { return _joueurPseudo || 'Toi'; }
 
         // Icône d'objet insérée dans une réplique (rendu `html` du visual novel).
         function _vnIcone(src) {
@@ -19729,10 +19744,12 @@
         // Section n atteinte : journalisée une fois, dans l'ordre. Faux si déjà
         // atteinte (ou dépassée) : les fonctions de section restent rejouables
         // telles quelles à la reprise d'une partie.
-        function _tutoAtteindre(n) {
+        // sansJournal : l'événement est journalisé ailleurs (section 17 :
+        // jouerArriveeExplorium le fait elle-même).
+        function _tutoAtteindre(n, sansJournal) {
             if (_obDone || n <= _tutoSection) return false;
             _tutoSection = n;
-            if (typeof journalLog === 'function') { try { journalLog('tuto_step', { section: n }); } catch (e) {} }
+            if (!sansJournal && typeof journalLog === 'function') { try { journalLog('tuto_step', { section: n }); } catch (e) {} }
             try { saveProgress(); } catch (e) {}
             _tutoDemarrerTick();
             return true;
@@ -19993,23 +20010,711 @@
         }
 
         // ════════════════════════════════════════════════════════════════
-        // POINT DE RACCORD — SECTIONS 12 À 18 (lot suivant)
+        // POINT DE RACCORD — SECTIONS 12 À 18
         // ════════════════════════════════════════════════════════════════
-        // Appelée quand le joueur revient sur la mappe après la section 11
-        // (« Quand : sortie de l'interface card » du document). Rappelée à
-        // chaque reprise de partie tant que _tutoSection vaut 11 et que
-        // _tutoEtat.s11 === 'fini' : l'implémentation doit être idempotente.
-        // À faire ici (lot 12-18) : _tutoAtteindre(12), Clara PNJ mappée,
-        // présentation (_claraPresentee = true + saveProgress), etc.
-        // Outils disponibles : _tutoAtteindre(n), _tutoDire(cle, ecran, lignes, cb),
-        // guideFocus / guideFocusFin, _tutoPulser / _tutoPulsesFin, _tutoEtat
-        // (sauvegardé), _tutoTick (boucle à 250 ms tant que _tutoActif()).
-        // _obDone reste à false jusqu'à la fin du tutoriel : c'est au lot
-        // 12-18 de le poser (plus _obAct3Done, _obSkipBtnShow(false),
-        // _obRestoreAllPOI(), saveProgress()), comme le faisait _obGuideOutro.
-        function _tutoSection12() {
-            // TODO (lot sections 12 à 18)
+        // _tutoSection12() est appelée quand le joueur revient sur la mappe
+        // après la section 11 (« Quand : sortie de l'interface card »), puis à
+        // chaque reprise de partie (_tutoEtat.s11 === 'fini') : idempotente.
+        // _obDone reste à false jusqu'à la fin de la section 18 (_tutoTerminer).
+        // ════════════════════════════════════════════════════════════════
+        // TUTORIEL BELLECOUR — SECTIONS 12 À 18 (document de dialogues v0.83)
+        // ════════════════════════════════════════════════════════════════
+        // 12  retour sur la mappe : le terrain du périmètre s'ouvre (tous ses
+        //     points d'intérêt, parcours « ville du livre » compris ; zones de
+        //     quartier masquées), la jeune fille devient PNJ sur la mappe, se
+        //     présente (cas A/B selon les ressources du tuto ramassées) ; journal
+        //     de quête révélé, quête « Faire ses preuves » (3 nébuleuses, 0/3)
+        // 13  réplique de la longue-vue, jumelles révélées (+ jauge du périmètre)
+        // 14  première vue haute aux jumelles : hors du fil, dite dès qu'elle a
+        //     lieu (le joueur peut ne jamais toucher les jumelles)
+        // 15  3 nébuleuses de plus (4 cartes) : quête accomplie, QG dégrisé ; au
+        //     QG, Odile, saisie du pseudo, quartiers du joueur qui pulsent
+        // 16  première sortie du QG : menu avatar révélé, pseudo sous le bouton
+        // 17  5e carte : Explorium révélé, arrivée (jouerArriveeExplorium)
+        // 18  de retour sur la mappe : Clara, quête « Finaliser Lyon, ville du
+        //     livre au XVIè siècle » x/7, puis fin du tutoriel (_tutoTerminer)
+        // Piloté par l'état (_tutoEtat.s12 … s18, sauvegardé) depuis _tutoTick
+        // (cf. _tutoTick12) : _tutoSection12() n'est que le point d'entrée,
+        // appelé au retour de la section 11 et à chaque reprise ; idempotent.
+        // Les répliques passent par _tutoDire : une seule fois chacune.
+        // Écarts arbitrés : voir le rapport du lot (section 14 hors du fil,
+        // compteur de « Faire ses preuves » = cartes cristallisées depuis la
+        // section 12, section 17 attendue après la sortie du QG).
+
+        // Ressources du tutoriel (section 8) que Clara ramasse à la place du joueur (cas A).
+        const TUTO_RESSOURCES_S8 = { poussiere: ['dust_tuto', 'dust_tuto2'], orbe: ['orb_tuto'] };
+        const _TUTO_S12_DON = 'Tiens, je me suis permise de récupérer %1, tu es passé à côté !';
+        const _TUTO_HTML_S18_VDL = 'Tu as réussi à voir “<i>Lyon, ville du livre au XVIème siècle</i>” ou c’était autre chose ?';
+
+        // Le joueur : « Toi », puis son pseudo (section 15).
+        function _tutoToi() { return { speaker: nomJoueur(), line: '…' }; }
+
+        // Section 12, partie 1 (cas A seulement) : « Toi : … » et la récupération.
+        function _tutoLignesS12a() {
+            const c = _tutoEtat.cas12 || {};
+            const morceaux = [];
+            if ((c.poussiere || []).length) morceaux.push(T('de la poussière'));
+            if ((c.orbe || []).length) morceaux.push(T('une orbe'));
+            const liste = morceaux.length === 2 ? TF('%1 et %2', morceaux[0], morceaux[1]) : (morceaux[0] || '');
+            return [
+                _tutoToi(),
+                // Liste injectée : la ligne arrive déjà traduite, T() ne la retouche pas.
+                { speaker: _TUTO_JF, air: 'satisfait', line: TF(_TUTO_S12_DON, liste) },
+            ];
         }
+        // Section 12, partie 2 : la feuille de mission, la méprise, la présentation.
+        // À partir de « Au fait, moi c'est Clara ! », la locutrice s'affiche « Clara ».
+        function _tutoLignesS12b() {
+            const casA = !!_tutoEtat.casA12;
+            return [].concat(
+                casA ? [ { speaker: _TUTO_JF, air: 'choqué', line: 'Tiens d’ailleurs..où est ta feuille de mission ?' } ]
+                     : [ _tutoToi(), { speaker: _TUTO_JF, air: 'choqué', line: 'Où est ta feuille de mission ?' } ],
+                [
+                    _tutoToi(),
+                    { speaker: _TUTO_JF, air: 'affolé', line: "Pourquoi tu me regardes comme ça ? Cette expression, mais… C'est de l'incompréhension ! Tu n'es pas de l'Organisation, c’est ça ?" },
+                    { speaker: _TUTO_JF, air: 'se tape le front', line: 'Oh la boulette…' },
+                    { speaker: 'Clara', air: 'résolu', line: 'Bon, tu es doué et moi j’ai les connaissances… Faisons équipe pour cette fois ! Nous devons cristalliser 3 nébuleuses supplémentaires. Au fait, moi c’est Clara !' },
+                    { speaker: 'Clara', air: 'neutre', line: 'Je te laisse ma feuille de route, j’ai déjà tout en tête, n’hésite pas à la consulter quand tu le souhaites.' },
+                ]
+            );
+        }
+        const _TUTO_LIGNES_S13 = [
+            { speaker: 'Clara', air: 'exalté', line: 'Je ne sais pas toi, mais j’arrive à avoir une vision plus globale en prenant du recul, j’ai fait une carte du périmètre. Ils ne mentaient pas, il y a tant à découvrir, t’as vu ça ?' },
+        ];
+        const _TUTO_LIGNES_S14 = [
+            { speaker: 'Clara', air: 'joueur/de défi', line: 'Par où allons-nous ? Tu es prêt à faire chauffer un peu tes mollets ?' },
+        ];
+        const _TUTO_LIGNES_S15 = [
+            { speaker: 'Clara', air: 'épuisé', line: 'Et de trois ! Pfiou, j’ai mal aux pieds mais on l’a fait !' },
+            { speaker: 'Clara', air: 'réflexion', line: 'Je ne sais pas si toi aussi tu le sens, mais j\'ai l\'impression de "ressentir" la mémoire autour de nous.' },
+            { speaker: 'Clara', air: 'enjoué', line: "Assez parlé, c'est toi qui a trouvé toutes les nébuleuses de toute façon ! Il faut que je te présente à ma personne préférée. Direction le QG !" },
+        ];
+        // Au QG : Odile (HUB_NPCS.odile, sans portrait). « Blblbl » = le pseudo.
+        function _tutoLignesOdile1() {
+            return [ { speaker: HUB_NPCS.odile.nom, air: 'surpris', line: 'Ah te voilà Clara ! Mais qui est avec toi ?' } ];
+        }
+        function _tutoLignesOdile2() {
+            const odile = HUB_NPCS.odile.nom, p = _joueurPseudo;
+            return [
+                { speaker: 'Clara', air: 'souriant', line: p },
+                { speaker: odile, air: 'suspicieux', line: 'Je connais pourtant tout le monde ici, mais vous je ne vous connais.' },
+                { speaker: 'Clara', air: 'soulagé', line: "C'est vrai, il ne fait pas encore partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser ! Sans lui, ma journée ne serait pas encore finie." },
+                { speaker: odile, air: 'de réflexion', line: TF('Hmm, en effet, nous devrions pouvoir trouver une place à %1', p) },
+                { speaker: odile, air: 'chaleureux', line: TF("Accompagne %1 dans ses quartiers sur la gauche, la porte juste en face de la tienne, je m'occupe de tout.", p) },
+            ];
+        }
+        function _tutoLignesS18() {
+            return [
+                { speaker: 'Clara', air: 'inquiet', line: TF('Hey %1, reviens à toi. Hého !', nomJoueur()) },
+                { speaker: 'Clara', air: 'doigt levé', line: 'Ah, te revoilà. Tu étais dans l’Explorium c’est ça ? Je ne comprends pas comment tu as fait sans “ça”. Le Professeur Ricardo nous avait dit… Enfin, j’ai pu apprendre qu’avec l’expérience, “UNE GRANDE EXPERIENCE”, on pouvait atteindre l’Explorium sans…' },
+                { speaker: 'Clara', line: 'Moi, j’arrive à peine à me projeter dedans avec…' },
+                { speaker: 'Clara', air: 'questionné', html: _TUTO_HTML_S18_VDL },
+                { speaker: 'Clara', air: 'choqué', line: 'Peu importe ! Ce que je veux dire c’est qu’il est préférable que tu puisses te projeter depuis un endroit sûr pour ne pas finir dans les pommes n’importe où ! Imagine si je n’avais pas été là.' },
+                { speaker: 'Clara', air: 'enjoué', line: 'Il y a une salle, à droite du hall du QG, je ne sais pas si tu as remarqué. En tout cas, ne me refais plus ça, j’ai eu peur ! Allez, maintenant tu sais ce qu’on cherche en priorité, reprenons notre route.' },
+            ];
+        }
+
+        // ── Quêtes du tutoriel ─────────────────────────────────────────────
+        // Hors de GRAPPE_QUESTS (ni lieu à valider, ni étape de grappe) : comme
+        // celles de la scène finale, renderQuestJournal et
+        // updateQuestJournalBadge les ajoutent à la liste. État dans
+        // _tutoEtat.quetes (sauvegardé avec la progression, remis à zéro avec
+        // le tutoriel) : { id: { etat: 'active'|'completed', base? } }.
+        //  preuves : cartes cristallisées depuis la section 12 (base = cartes
+        //            possédées à ce moment), sur 3
+        //  vdl     : étapes obtenues de la grappe « Lyon, ville du livre » — les
+        //            panneaux allumés de sa verrière (compteur « x / 7 » de
+        //            l'Explorium, cf. _verriereMajCompteur)
+        const TUTO_QUETES = {
+            preuves: { titre: 'Faire ses preuves', texte: 'Cristalliser 3 nébuleuses', max: 3 },
+            vdl:     { titreHtml: 'Finaliser <i>Lyon, ville du livre au XVIè siècle</i>', grappe: 'ville_du_livre' },
+        };
+        const _TUTO_QUETES_ORDRE = ['vdl', 'preuves'];   // la plus récente en tête
+
+        // Cartes possédées (hors éléments du monde de l'Explorium V2, qui
+        // entrent aussi dans collectedCards).
+        function _tutoCartesPossedees() {
+            return collectedCards.filter(id => {
+                if (typeof V2_NEW_ACTORS !== 'undefined' && V2_NEW_ACTORS[id]) return false;
+                return id === OB_TUTORIAL_CARD.id || !!getCardById(id);
+            });
+        }
+        function _tutoQuetes() { return (_tutoEtat && _tutoEtat.quetes) || {}; }
+        function _tutoQueteProgres(id) {
+            const q = _tutoQuetes()[id];
+            if (id === 'preuves') {
+                const base = (q && q.base) || [];
+                const n = _tutoCartesPossedees().filter(c => !base.includes(c)).length;
+                return { n: Math.min(n, TUTO_QUETES.preuves.max), max: TUTO_QUETES.preuves.max };
+            }
+            if (id === 'vdl') {
+                const g = GRAPPE_QUESTS[TUTO_QUETES.vdl.grappe];
+                const etapes = (g && g.quete && g.quete.etapes) || [];
+                const etat = (typeof grappeQuestState === 'object' && grappeQuestState[TUTO_QUETES.vdl.grappe]) || {};
+                return { n: etapes.filter(e => etat[e.id] === 'completed').length, max: etapes.length };
+            }
+            return { n: 0, max: 0 };
+        }
+        function _tutoQuetesNb(enCours) {
+            const q = _tutoQuetes();
+            return Object.keys(q).filter(k => !enCours || q[k].etat !== 'completed').length;
+        }
+        function _tutoQueteDemarrer(id) {
+            if (!_tutoEtat.quetes) _tutoEtat.quetes = {};
+            if (_tutoEtat.quetes[id]) return false;
+            _tutoEtat.quetes[id] = { etat: 'active' };
+            if (id === 'preuves') _tutoEtat.quetes[id].base = _tutoCartesPossedees();
+            if (typeof journalLog === 'function') { try { journalLog('quest_started', { quete_tuto: id }); } catch (e) {} }
+            _tutoSauver();
+            try { updateQuestJournalBadge(); } catch (e) {}
+            return true;
+        }
+        function _tutoQueteAccomplir(id) {
+            const q = _tutoQuetes()[id];
+            if (!q || q.etat === 'completed') return false;
+            q.etat = 'completed';
+            if (typeof journalLog === 'function') { try { journalLog('quest_completed', { quete_tuto: id }); } catch (e) {} }
+            _tutoSauver();
+            try { updateQuestJournalBadge(); } catch (e) {}
+            return true;
+        }
+        // Ajoute les quêtes du tutoriel en tête du journal (appelée par renderQuestJournal).
+        function _tutoQuetesRendre(body, subtitle, nbGrappe, nbGrappeActives) {
+            const n = _tutoQuetesNb();
+            if (!n) return;
+            subtitle.textContent = TF('%1 quête(s) — %2 en cours',
+                nbGrappe + _finaleQuetesNb() + n, nbGrappeActives + _finaleQuetesNb(true) + _tutoQuetesNb(true));
+            const premier = body.firstChild;
+            _TUTO_QUETES_ORDRE.forEach(id => {
+                const q = _tutoQuetes()[id], def = TUTO_QUETES[id];
+                if (!q || !def) return;
+                const fait = q.etat === 'completed';
+                const p = _tutoQueteProgres(id);
+                const g = def.grappe && GRAPPE_QUESTS[def.grappe];
+                const el = document.createElement('div');
+                el.className = 'qj-quest qj-quest--tuto';
+                el.style.setProperty('--qj-color', g ? g.color : '#f0b8c8');
+                if (fait) el.style.opacity = '0.72';
+                el.innerHTML = '<div class="qj-quest-grappe"></div><div class="qj-quest-title"></div><div class="qj-quest-indice"></div>';
+                el.querySelector('.qj-quest-grappe').textContent = g ? T(g.title) : T(nomClara());
+                const titre = el.querySelector('.qj-quest-title');
+                if (def.titreHtml) titre.innerHTML = T(def.titreHtml) + (fait ? ' ✓' : '');
+                else titre.textContent = T(def.titre) + (fait ? ' ✓' : '');
+                const prog = (fait ? p.max : p.n) + '/' + p.max;
+                el.querySelector('.qj-quest-indice').textContent = def.texte ? T(def.texte) + ' ' + prog : prog;
+                body.insertBefore(el, premier);
+            });
+        }
+
+        // ── Section 12 ─────────────────────────────────────────────────────
+        // Point d'entrée (retour de la section 11, reprise de partie).
+        function _tutoSection12() {
+            if (_obDone) return;
+            _tutoAtteindre(12);
+            _tutoDemarrerTick();
+            // Tous les points d'intérêt du périmètre : le parcours « Lyon, ville du
+            // livre », naguère ouvert par le rendez-vous de Bellecour, en fait partie.
+            if (!_villeDuLivreUnlocked) _villeDuLivreUnlocked = true;
+            if (!_tutoEtat.clara) _tutoEtat.clara = true;   // Clara, PNJ mappée
+            _tutoSauver();
+            _tuto12Terrain(0);
+            _claraPnjMaj();
+            // Reprise : pastille du QG, pulsation de l'avatar (non sauvegardées)
+            if (_tutoEtat.s15 === 'qg') _tutoQgNotif();
+            if (_tutoEtat.s16 === 'avatar') setTimeout(() => uiPulser('#avatarBtn'), 900);
+        }
+        // Le terrain s'ouvre (cf. _obFieldOpen) : marqueurs rendus, puis ceux
+        // hors du périmètre remasqués. Attend que la mappe et ses marqueurs existent.
+        function _tuto12Terrain(essais) {
+            if (typeof map === 'undefined' || !map || typeof poiMarkers === 'undefined' || !poiMarkers.length) {
+                if (essais < 40) setTimeout(() => _tuto12Terrain(essais + 1), 500);
+                return;
+            }
+            try { _obRestoreAllPOI(); } catch (e) { console.warn('[tuto 12] terrain', e); }
+            try { updateInfoVisibility(); } catch (e) {}
+            try { _perimetreFiltrerMarqueurs(); } catch (e) {}
+            try { checkNearbyPOI(); } catch (e) {}
+        }
+
+        // Ressources de la section 8 laissées sur place (cas A) : relevé une fois.
+        function _tuto12Cas() {
+            if (_tutoEtat.cas12) return;
+            const pasPrise = (ids, pts, pris) => ids.filter(id => pts.some(p => p.id === id) && !pris.includes(id));
+            const c = {
+                poussiere: pasPrise(TUTO_RESSOURCES_S8.poussiere, DUST_POINTS, collectedDustPoints),
+                orbe:      pasPrise(TUTO_RESSOURCES_S8.orbe, ORB_POINTS, collectedOrbs),
+            };
+            _tutoEtat.cas12 = c;
+            _tutoEtat.casA12 = c.poussiere.length + c.orbe.length > 0;
+            _tutoEtat.s12 = _tutoEtat.casA12 ? 'p1' : 'p2';
+            _tutoSauver();
+        }
+
+        // Cas A : Clara rend ce qu'elle a ramassé. L'orbe file au sac, la
+        // poussière vole de sa main au compteur (animerGainPoussiere la crédite).
+        let _tuto12DonEnCours = false;
+        function _tuto12Don() {
+            if (_tuto12DonEnCours) return;
+            _tuto12DonEnCours = true;
+            const c = _tutoEtat.cas12 || {};
+            const orbes = (c.orbe || []).filter(id => !collectedOrbs.includes(id));
+            orbes.forEach(id => {
+                collectedOrbs.push(id);
+                try { markPoiCollected(id, 'orbs'); } catch (e) {}
+                bagInv.orbes = (bagInv.orbes || 0) + 1;
+            });
+            if (orbes.length) {
+                try { updateOrbVisibility(); } catch (e) {}
+                showToast(T('🔮 +1 Orbe de mémoire !'));
+            }
+            const poussiere = (c.poussiere || []).filter(id => !collectedDustPoints.includes(id));
+            const qte = poussiere.reduce((s, id) => s + ((DUST_POINTS.find(d => d.id === id) || {}).amount || TUTO_POUSSIERE_POINT), 0);
+            const fin = () => {
+                _tuto12DonEnCours = false;
+                _tutoEtat.s12 = 'p2';
+                _tutoSauver();
+            };
+            if (!qte) { fin(); return; }
+            poussiere.forEach(id => {
+                collectedDustPoints.push(id);
+                try { markPoiCollected(id, 'dust'); } catch (e) {}
+            });
+            try { updateDustVisibility(); } catch (e) {}
+            const r = _vnDernierBust;
+            const depuis = r ? { x: r.left + r.width * 0.62, y: r.top + r.height * 0.7 } : null;
+            animerGainPoussiere(depuis, qte, fin);
+        }
+
+        // Fin de la présentation : Clara nommée, journal de quête révélé avec
+        // sa pastille et sa pulsation, quête « Faire ses preuves ».
+        function _tuto12Fin() {
+            _claraPresentee = true;
+            _tutoEtat.s12 = 'fini';
+            _tutoQueteDemarrer('preuves');
+            uiReveler('journal_quetes', { pulse: true });
+            try { updateQuestJournalBadge(); } catch (e) {}
+            _claraPnjMaj();
+            _tutoSauver();
+            _tuto12FinT = Date.now();
+        }
+        let _tuto12FinT = 0;   // la section 13 laisse voir la pastille un instant
+
+        // ── Section 13 ─────────────────────────────────────────────────────
+        function _tutoSection13() {
+            _tutoAtteindre(13);
+            _tutoDire('s13', 'map', _TUTO_LIGNES_S13, () => {
+                _tutoEtat.s13 = 'fini';
+                _tutoSauver();
+                uiReveler('jumelles', { pulse: true });
+                try { jaugePerimetreMaj(); } catch (e) {}
+            });
+        }
+
+        // ── Section 14 (hors du fil) ───────────────────────────────────────
+        // Première vue haute aux jumelles, à n'importe quel moment du tutoriel
+        // après leur apparition. Journalisée à ce moment-là (tuto_step 14).
+        function _tutoSection14() {
+            const e = _tutoEtat;
+            if (!e.s14) {
+                e.s14 = 'dite';
+                if (!_tutoAtteindre(14) && typeof journalLog === 'function') {
+                    try { journalLog('tuto_step', { section: 14 }); } catch (err) {}
+                }
+                _tutoSauver();
+            }
+            _tutoDire('s14', 'map', _TUTO_LIGNES_S14, () => { e.s14 = 'fini'; _tutoSauver(); });
+        }
+
+        // ── Section 15 ─────────────────────────────────────────────────────
+        function _tutoSection15() {
+            _tutoAtteindre(15);
+            _tutoQueteAccomplir('preuves');
+            if (!_tutoEtat.s15) { _tutoEtat.s15 = 'dialogue'; _tutoSauver(); }
+            if (_tutoEtat.s15 !== 'dialogue') return;
+            _tutoDire('s15', 'map', _TUTO_LIGNES_S15, () => {
+                _tutoEtat.s15 = 'qg';
+                _tutoSauver();
+                uiReveler('qg', { pulse: true });
+                _tutoQgNotif();
+            });
+        }
+        // Pastille de notification du QG (masquée à l'ouverture, cf. _hubOnOpenQG).
+        function _tutoQgNotif() {
+            const dot = document.getElementById('hubNotifDot');
+            const qg = document.getElementById('studioScreen');
+            if (dot && !(qg && qg.classList.contains('show'))) dot.style.display = 'block';
+        }
+        function _tutoQgOuvert() {
+            const qg = document.getElementById('studioScreen');
+            return !!(qg && qg.classList.contains('show'));
+        }
+        // Au QG : Odile, la console du pseudo, la suite du dialogue, puis le
+        // joueur est libre (Clara et les autres PNJ répondent, cf. hubTalkTo).
+        let _tutoPseudoEnCours = false;
+        function _tutoQgScene() {
+            const e = _tutoEtat;
+            if (_tutoPseudoEnCours) return;
+            try { _hubRefreshDoor(); _hubInitNpcs(); } catch (err) {}   // Clara dans le hall
+            if (e.s15 === 'qg') {
+                if (_studioZone !== 1) { _studioZone = 1; _updateStudioZone(true); }
+                _tutoDire('s15_odile', 'any', _tutoLignesOdile1(), () => { e.s15 = 'pseudo'; _tutoSauver(); });
+                return;
+            }
+            if (e.s15 === 'pseudo') {
+                if (_joueurPseudo) { e.s15 = 'odile2'; _tutoSauver(); return; }
+                _tutoPseudoEnCours = true;
+                pseudoConsoleOuvrir(p => {
+                    _joueurPseudo = p;
+                    e.s15 = 'odile2';
+                    _tutoPseudoEnCours = false;
+                    _tutoSauver();
+                    _avatarPseudoMaj();
+                });
+                return;
+            }
+            if (e.s15 === 'odile2') {
+                _tutoDire('s15_odile2', 'any', _tutoLignesOdile2(), () => {
+                    e.s15 = 'libre';
+                    _hubWelcomeSeen = true;   // l'accueil d'Odile est fait
+                    _tutoSauver();
+                    if (_studioZone !== 0) uiPulser('#studioNavLeft');   // « ses quartiers sur la gauche »
+                });
+            }
+        }
+
+        // ── Console de saisie du pseudo (section 15) ───────────────────────
+        // 12 caractères au plus ; blancs de tête et de queue retirés, blancs
+        // internes réduits, caractères de contrôle et chevrons écartés.
+        const PSEUDO_MAX = 12;
+        function _pseudoNettoyer(v) {
+            const s = String(v || '').replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim();
+            return Array.from(s).slice(0, PSEUDO_MAX).join('');
+        }
+        function _pseudoStyle() {
+            if (document.getElementById('pseudoStyle')) return;
+            const st = document.createElement('style');
+            st.id = 'pseudoStyle';
+            st.textContent = '#pseudoOverlay{position:fixed;inset:0;z-index:9800;display:flex;align-items:center;justify-content:center;'
+                + 'background:rgba(6,3,18,0.62);padding:16px;}'
+                + '#pseudoOverlay .pseudo-boite{width:100%;max-width:320px;background:linear-gradient(160deg,#1e1538,#130d26);'
+                + 'border:1px solid rgba(167,139,250,0.55);border-radius:16px;padding:18px 16px 16px;box-shadow:0 10px 32px rgba(0,0,0,0.5);}'
+                + '#pseudoOverlay label{display:block;color:#e9d5ff;font-size:15px;font-weight:700;margin-bottom:10px;}'
+                + '#pseudoOverlay input{width:100%;box-sizing:border-box;font-size:18px;padding:10px 12px;border-radius:10px;'
+                + 'border:1px solid rgba(167,139,250,0.6);background:rgba(255,255,255,0.08);color:#fff;outline:none;}'
+                + '#pseudoOverlay .pseudo-aide{display:flex;justify-content:space-between;color:#a78bfa;font-size:12px;margin:6px 2px 14px;}'
+                + '#pseudoOverlay button{width:100%;padding:11px;border:0;border-radius:10px;font-size:15px;font-weight:700;'
+                + 'background:linear-gradient(135deg,#7C3AED,#4F46E5);color:#fff;cursor:pointer;}'
+                + '#pseudoOverlay button:disabled{opacity:0.4;cursor:default;}'
+                + '.hud-avatar-pseudo{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:4px;'
+                + 'max-width:110px;padding:1px 8px;border-radius:9px;background:rgba(15,12,28,0.82);color:#fff;'
+                + 'font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;}';
+            document.head.appendChild(st);
+        }
+        function pseudoConsoleOuvrir(onOk) {
+            _pseudoStyle();
+            if (document.getElementById('pseudoOverlay')) return;
+            const ov = document.createElement('div');
+            ov.id = 'pseudoOverlay';
+            ov.innerHTML = '<div class="pseudo-boite"><label for="pseudoInput"></label>'
+                + '<input id="pseudoInput" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done">'
+                + '<div class="pseudo-aide"><span class="pseudo-max"></span><span class="pseudo-compte"></span></div>'
+                + '<button type="button" id="pseudoValider"></button></div>';
+            ov.querySelector('label').textContent = T('Ton pseudo');
+            ov.querySelector('.pseudo-max').textContent = T('12 caractères maximum');
+            const input = ov.querySelector('input'), btn = ov.querySelector('button'), compte = ov.querySelector('.pseudo-compte');
+            input.maxLength = PSEUDO_MAX;
+            btn.textContent = T('Valider');
+            const maj = () => {
+                const brut = Array.from(input.value);
+                if (brut.length > PSEUDO_MAX) input.value = brut.slice(0, PSEUDO_MAX).join('');
+                compte.textContent = Array.from(input.value).length + '/' + PSEUDO_MAX;
+                btn.disabled = !_pseudoNettoyer(input.value);
+            };
+            const valider = () => {
+                const p = _pseudoNettoyer(input.value);
+                if (!p) return;
+                ov.remove();
+                onOk(p);
+            };
+            input.addEventListener('input', maj);
+            input.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); valider(); } });
+            btn.addEventListener('click', valider);
+            document.body.appendChild(ov);
+            maj();
+            setTimeout(() => { try { input.focus(); } catch (e) {} }, 60);
+        }
+        // Pseudo affiché sous le bouton avatar (caché avec lui tant qu'il ne
+        // l'est pas : il vit dans .hud-avatar-wrap).
+        function _avatarPseudoMaj() {
+            const btn = document.getElementById('avatarBtn');
+            if (!btn) return;
+            let el = document.getElementById('avatarPseudo');
+            if (!_joueurPseudo && !el) return;
+            _pseudoStyle();
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'avatarPseudo';
+                el.className = 'hud-avatar-pseudo';
+                btn.insertAdjacentElement('afterend', el);
+            }
+            if (el.textContent !== _joueurPseudo) el.textContent = _joueurPseudo;
+            el.style.display = _joueurPseudo ? '' : 'none';
+        }
+
+        // ── Section 16 ─────────────────────────────────────────────────────
+        function _tutoSection16() {
+            _tutoAtteindre(16);
+            if (!_tutoEtat.s16) {
+                _tutoEtat.s16 = 'avatar';
+                _tutoSauver();
+                uiReveler('avatar', { pulse: true });
+            }
+            _avatarPseudoMaj();
+        }
+        // Premier clic sur l'avatar après sa révélation : la ligne Progression pulse.
+        document.addEventListener('click', (ev) => {
+            if (!_tutoEtat || _tutoEtat.s16 !== 'avatar') return;
+            if (!(ev.target && ev.target.closest && ev.target.closest('#avatarBtn'))) return;
+            _tutoEtat.s16 = 'fait';
+            _tutoSauver();
+            setTimeout(() => uiPulser('.avatar-menu-item[onclick*="openProgressionScreen"]'), 80);
+        }, true);
+
+        // ── Section 17 ─────────────────────────────────────────────────────
+        // L'Explorium s'ouvre (plus de porte à ouvrir au QG) et happe le joueur.
+        let _tuto17EnCours = false;
+        function _tutoSection17() {
+            if (_tuto17EnCours) return;
+            _tutoAtteindre(17, true);   // tuto_step 17 : journalisé par jouerArriveeExplorium
+            if (_tutoEtat.s17 !== 'arrivee') { _tutoEtat.s17 = 'arrivee'; }
+            _hubExploriumKey = true;
+            _hubExploriumOpened = true;
+            _hubPadlockPopPending = false;
+            try { _hubRefreshLockUI(); _hubRefreshDoor(); } catch (e) {}
+            uiReveler('explorium');
+            _tutoSauver();
+            _tuto17EnCours = true;
+            jouerArriveeExplorium(() => {
+                _tuto17EnCours = false;
+                _tutoEtat.s17 = 'fini';
+                _tutoSauver();
+            });
+        }
+
+        // ── Section 18 ─────────────────────────────────────────────────────
+        function _tutoSection18() {
+            _tutoAtteindre(18);
+            _tutoDire('s18', 'map', _tutoLignesS18(), () => {
+                _tutoEtat.s18 = 'fini';
+                _tutoQueteDemarrer('vdl');
+                uiPulser('#hudQuestJournal');
+                try { updateQuestJournalBadge(); } catch (e) {}
+                _tutoTerminer();
+            });
+        }
+
+        // Fin du tutoriel (ce que faisait _obGuideOutro) : le terrain reste
+        // ouvert, toute l'interface est révélée (uiEstRevele), le bouton
+        // « Passer le tutoriel » disparaît.
+        function _tutoTerminer() {
+            if (_obDone) return;
+            _obDone = true;
+            _obAct2Done = true;
+            _obAct3Done = true;
+            _obSkipBtnShow(false);
+            // Filet : la carte tutoriel est possédée, quel que soit le chemin suivi.
+            if (!cardLevels[OB_TUTORIAL_CARD.id]) {
+                cardLevels[OB_TUTORIAL_CARD.id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
+            }
+            if (!collectedCards.includes(OB_TUTORIAL_CARD.id)) collectedCards.push(OB_TUTORIAL_CARD.id);
+            // Les anciennes explications d'écran ne se rejoueront pas après coup.
+            _obJournalSeen = true; _obJournalBackSeen = true; _obJournalSuppliesSaid = true;
+            if (typeof _obScreenSeen === 'object') {
+                ['collections', 'bag', 'journal', 'mindmap', 'carddetail'].forEach(k => { _obScreenSeen[k] = true; });
+            }
+            _tutoArreter();
+            _obRestoreAllPOI();
+            _uiAppliquer();
+            saveProgress();
+        }
+
+        // ── Boucle des sections 12 à 18 (appelée par _tutoTick, VN fermé) ──
+        function _tutoTick12(ecran) {
+            const s = _tutoSection, e = _tutoEtat;
+            if (ecran === 'map' && _obPendingSay) return;   // une réplique attend déjà
+            // 12
+            if (s === 12) {
+                if (ecran !== 'map') return;
+                if (!e.s12) _tuto12Cas();
+                if (e.s12 === 'p1') { _tutoDire('s12a', 'map', _tutoLignesS12a(), () => { e.s12 = 'don'; _tutoSauver(); }); return; }
+                if (e.s12 === 'don') { _tuto12Don(); return; }
+                if (e.s12 === 'p2') { _tutoDire('s12b', 'map', _tutoLignesS12b(), _tuto12Fin); return; }
+                if (e.s12 === 'fini' && Date.now() - _tuto12FinT > 2500) _tutoSection13();
+                return;
+            }
+            // 14 : première vue haute, une fois les jumelles révélées
+            if (s >= 13 && e.s13 === 'fini' && e.s14 !== 'fini' && ecran === 'map'
+                && typeof _mapViewMode !== 'undefined' && _mapViewMode === 'far') { _tutoSection14(); return; }
+            // 13, puis la quête « Faire ses preuves »
+            if (s === 13 || s === 14) {
+                if (ecran !== 'map') return;
+                if (e.s13 !== 'fini') { _tutoSection13(); return; }
+                if (_tutoQueteProgres('preuves').n >= TUTO_QUETES.preuves.max) _tutoSection15();
+                return;
+            }
+            // 15 : sur la mappe, puis au QG
+            if (s === 15) {
+                if (e.s15 === 'dialogue') { if (ecran === 'map') _tutoSection15(); return; }
+                if (_tutoQgOuvert()) { if (e.s15 !== 'libre') _tutoQgScene(); return; }
+                if (e.s15 === 'libre' && ecran === 'map') _tutoSection16();
+                return;
+            }
+            // 16 → 17 : la 5e carte, de retour sur la mappe
+            if (s === 16) {
+                if (ecran === 'map' && _tutoCartesPossedees().length >= 5) _tutoSection17();
+                return;
+            }
+            // 17 → 18 : première fermeture de l'Explorium
+            if (s === 17) {
+                if (ecran !== 'map') return;
+                if (e.s17 === 'fini') _tutoSection18();
+                else if (!_tuto17EnCours) _tutoSection17();   // reprise : l'arrivée est rejouée
+                return;
+            }
+            if (s === 18 && ecran === 'map') _tutoSection18();
+        }
+
+        // ── Clara, PNJ sur la mappe (à partir de la section 12) ─────────────
+        // Elle accompagne le joueur : son médaillon (expression neutre) le suit
+        // à quelques mètres. Toucher Clara ouvre sa feuille de route (journal de
+        // quête) une fois celle-ci donnée. Présence sauvegardée (_tutoEtat.clara).
+        let _claraMarqueur = null;
+        function _claraStyle() {
+            if (document.getElementById('claraPnjStyle')) return;
+            const st = document.createElement('style');
+            st.id = 'claraPnjStyle';
+            st.textContent = '.clara-pnj{display:flex;flex-direction:column;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent;}'
+                + '.clara-pnj-corps{width:46px;height:46px;border-radius:50%;overflow:hidden;background:#3a2530;'
+                + 'border:3px solid #f0b8c8;box-shadow:0 3px 10px rgba(0,0,0,0.35);}'
+                + '.clara-pnj-corps img{width:150%;margin-left:-25%;margin-top:-6%;display:block;pointer-events:none;}'
+                + '.clara-pnj-corps svg{width:100%;height:100%;display:block;}'
+                + '.clara-pnj-nom{margin-top:3px;padding:1px 8px;border-radius:9px;background:rgba(15,12,28,0.85);'
+                + 'color:#fff;font-size:11px;font-weight:700;white-space:nowrap;}';
+            document.head.appendChild(st);
+        }
+        function _claraPnjCreer() {
+            _claraStyle();
+            const el = document.createElement('div');
+            el.className = 'clara-pnj';
+            el.innerHTML = '<div class="clara-pnj-corps"></div><div class="clara-pnj-nom"></div>';
+            const img = document.createElement('img');
+            img.alt = '';
+            img.draggable = false;
+            // Repli : silhouette, si l'expression neutre ne se charge pas.
+            img.onerror = () => {
+                el.querySelector('.clara-pnj-corps').innerHTML = '<svg viewBox="0 0 46 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+                    + '<circle cx="23" cy="17" r="8" fill="#f0b8c8"/><path d="M7 46c0-10 7-17 16-17s16 7 16 17z" fill="#f0b8c8"/></svg>';
+            };
+            img.src = VN_CLARA_EXPR.neutre || _VN_JEUNEFILLE_IMG;
+            el.querySelector('.clara-pnj-corps').appendChild(img);
+            el.addEventListener('click', ev => {
+                ev.stopPropagation();
+                if (document.getElementById('vnOverlay').classList.contains('show')) return;
+                if (uiEstRevele('journal_quetes') && _tutoQuetesNb()) openQuestJournal();
+            });
+            _claraMarqueur = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+                .setLngLat([playerPos.lng, playerPos.lat]).addTo(map);
+            try { _claraMarqueur.getElement().style.zIndex = '3'; } catch (e) {}
+        }
+        // À sa gauche et un peu en retrait à l'écran, ramenée à 14 m au plus.
+        function _claraPnjMaj() {
+            if (!_tutoEtat || !_tutoEtat.clara || !playerPos || typeof map === 'undefined' || !map
+                || typeof maplibregl === 'undefined') return;
+            if (!_claraMarqueur) { try { _claraPnjCreer(); } catch (e) { return; } }
+            let ll = null;
+            try {
+                const c = map.project([playerPos.lng, playerPos.lat]);
+                ll = map.unproject([c.x - 56, c.y - 22]);
+            } catch (e) {}
+            if (!ll) ll = { lat: playerPos.lat + 0.00008, lng: playerPos.lng - 0.00012 };
+            const d = getDistance(playerPos.lat, playerPos.lng, ll.lat, ll.lng);
+            const k = d > 14 ? 14 / d : 1;
+            _claraMarqueur.setLngLat([playerPos.lng + (ll.lng - playerPos.lng) * k, playerPos.lat + (ll.lat - playerPos.lat) * k]);
+            const el = _claraMarqueur.getElement();
+            const nom = el.querySelector('.clara-pnj-nom');
+            const txt = T(nomClara());
+            if (nom && nom.textContent !== txt) nom.textContent = txt;
+            // Vue de planification : à cette échelle, son médaillon couvrirait le joueur.
+            const cacher = typeof _mapViewMode !== 'undefined' && _mapViewMode === 'far';
+            if ((el.style.display === 'none') !== cacher) el.style.display = cacher ? 'none' : '';
+        }
+
+        // ── Vue de planification (section 14) ──────────────────────────────
+        // Elle se referme d'elle-même quand un déplacement du joueur est capté
+        // (15 m depuis l'entrée en vue haute, position filtrée) et qu'aucun
+        // dialogue ni écran n'est ouvert. Vaut pour toute la partie.
+        const PLANIF_DEPLACEMENT_M = 15;
+        let _planifAncre = null;
+        function _planifVerifier() {
+            if (typeof _mapViewMode === 'undefined' || _mapViewMode !== 'far' || !playerPos) { _planifAncre = null; return; }
+            if (!_planifAncre) { _planifAncre = { lat: playerPos.lat, lng: playerPos.lng }; return; }
+            if (getDistance(_planifAncre.lat, _planifAncre.lng, playerPos.lat, playerPos.lng) < PLANIF_DEPLACEMENT_M) return;
+            const vn = document.getElementById('vnOverlay');
+            if ((vn && vn.classList.contains('show')) || _obPendingSay || _isAnyScreenOpen() || _viewTransition) return;
+            _planifAncre = null;
+            toggleMapView();
+        }
+
+        // Boucle lente (1 s), tutoriel fini ou non : Clara suit le joueur, pseudo
+        // sous l'avatar, avancement de la quête « Finaliser… », vue planification.
+        function _tutoCompagnonTick() {
+            if (!_progressLoaded) return;
+            try { _claraPnjMaj(); } catch (e) {}
+            try { _avatarPseudoMaj(); } catch (e) {}
+            try { _planifVerifier(); } catch (e) {}
+            const q = _tutoQuetes().vdl;
+            if (q && q.etat !== 'completed') {
+                const p = _tutoQueteProgres('vdl');
+                if (p.max && p.n >= p.max) _tutoQueteAccomplir('vdl');
+            }
+        }
+        setInterval(_tutoCompagnonTick, 1000);
+
+        // ── Périmètre du test : marqueurs hors zone masqués (section 12) ───
+        // « tous les points d'intérêt, mais SEULEMENT ceux qui sont dans le
+        // périmètre ». Les POI de carte sont filtrés dans updatePOIVisibility ;
+        // les autres marqueurs (ressources, panoramas, points d'information,
+        // échoppes) le sont ici, après chaque mise à jour de leur visibilité.
+        // Ressources du tutoriel exemptées (posées autour du joueur).
+        function _perimetreFiltrerMarqueurs() {
+            if (_perimetreLeve) return;
+            const listes = [
+                typeof dustMarkers !== 'undefined' ? dustMarkers : [], typeof echoMarkers !== 'undefined' ? echoMarkers : [],
+                typeof orbMarkers !== 'undefined' ? orbMarkers : [], typeof scrollMarkers !== 'undefined' ? scrollMarkers : [],
+                typeof lootMarkers !== 'undefined' ? lootMarkers : [], typeof infoMarkers !== 'undefined' ? infoMarkers : [],
+                typeof panneauMarkers !== 'undefined' ? panneauMarkers : [], typeof bazarMarkers !== 'undefined' ? bazarMarkers : [],
+                typeof carnetResourceMarkers !== 'undefined' ? carnetResourceMarkers : [],
+            ];
+            let masques = 0;
+            listes.forEach(l => l.forEach(m => {
+                const o = m.dust || m.echo || m.orb || m.scroll || m.loot || m.info || m.pan || m.bazar || m.pt;
+                if (!o || !m.el || o.tuto || o.id === 'bazar_tuto' || typeof o.lat !== 'number') return;
+                if (!dansPerimetreTest(o.lat, o.lng) && m.el.style.display !== 'none') { m.el.style.display = 'none'; masques++; }
+            }));
+            if (masques && typeof _capUpdate === 'function') { try { _capUpdate(); } catch (e) {} }
+        }
+        ['updateDustVisibility', 'updateEchoVisibility', 'updateOrbVisibility', 'updateScrollVisibility',
+         'updateCarnetResourceVisibility', 'updateLootVisibility', 'updateInfoVisibility'].forEach(nom => {
+            const f = window[nom];
+            if (typeof f !== 'function') return;
+            window[nom] = function () {
+                const r = f.apply(this, arguments);
+                try { _perimetreFiltrerMarqueurs(); } catch (e) {}
+                return r;
+            };
+        });
+        // Panneaux et échoppes n'ont pas de fonction de visibilité commune : relevé périodique.
+        setInterval(() => { if (_obFieldOpen()) { try { _perimetreFiltrerMarqueurs(); } catch (e) {} } }, 2000);
 
         // Boucle du tutoriel : suit l'écran ouvert et fait avancer les
         // sections qui dépendent d'un changement d'écran.
@@ -20034,6 +20739,8 @@
                 _tutoMontrerRetour(ecran);
                 if (ecran === 'map') _tutoVersSection12();
             }
+            // 12 à 18 : déroulé piloté par l'état (cf. _tutoTick12)
+            if (s >= 12) _tutoTick12(ecran);
         }
 
         // Événements du jeu (appels gardés depuis showDustDialogue,
@@ -20135,6 +20842,49 @@
             "Lorsque tu auras fini de considérer ce qu’elle a réussi à se remémorer, tu pourras la retrouver via sa miniature.": "When you’ve finished taking in what it managed to remember, you can find it again through its thumbnail.",
             "Allez s’il te plaît, prenons quelques secondes pour la regarder.": "Come on, please, let’s take a few seconds to look at it.",
             "Je suis tellement émue d’avoir partagé ça avec toi, mais on doit se reprendre ! Aujourd’hui le QG nous a donné rendez-vous à Bellecour et ce n’est pas pour rien ! Tu te souviens de la Mission ?": "I’m so moved to have shared that with you, but we have to pull ourselves together! Today HQ gave us a meeting point at Bellecour, and not for nothing! Do you remember the Mission?",
+        });
+
+        // ── Traductions des nouvelles chaînes (sections 12 à 18, Annexe B) ──
+        // « Toi » → « You » est déjà dans la table. Gabarits à trous : clé = gabarit (TF).
+        Object.assign(I18N_EN, {
+            [_TUTO_S12_DON]: "Here, I took the liberty of picking up %1, you walked right past it!",
+            "de la poussière": "some dust",
+            "une orbe": "an orb",
+            "%1 et %2": "%1 and %2",
+            "🔮 +1 Orbe de mémoire !": "🔮 +1 Memory orb!",
+            "Tiens d’ailleurs..où est ta feuille de mission ?": "By the way..where’s your mission sheet?",
+            "Où est ta feuille de mission ?": "Where’s your mission sheet?",
+            "Pourquoi tu me regardes comme ça ? Cette expression, mais… C'est de l'incompréhension ! Tu n'es pas de l'Organisation, c’est ça ?": "Why are you looking at me like that? That expression, but… It’s incomprehension! You’re not from the Organisation, are you?",
+            "Oh la boulette…": "Oops, what a blunder…",
+            "Bon, tu es doué et moi j’ai les connaissances… Faisons équipe pour cette fois ! Nous devons cristalliser 3 nébuleuses supplémentaires. Au fait, moi c’est Clara !": "Well, you’re gifted and I have the knowledge… Let’s team up this time! We need to crystallise 3 more nebulae. By the way, I’m Clara!",
+            "Je te laisse ma feuille de route, j’ai déjà tout en tête, n’hésite pas à la consulter quand tu le souhaites.": "I’ll leave you my roadmap, I already have it all in my head, feel free to check it whenever you like.",
+            "Je ne sais pas toi, mais j’arrive à avoir une vision plus globale en prenant du recul, j’ai fait une carte du périmètre. Ils ne mentaient pas, il y a tant à découvrir, t’as vu ça ?": "I don’t know about you, but I get a more global view by stepping back, I made a map of the perimeter. They weren’t lying, there’s so much to discover, have you seen that?",
+            "Par où allons-nous ? Tu es prêt à faire chauffer un peu tes mollets ?": "Which way are we going? Ready to warm up your calves a bit?",
+            "Et de trois ! Pfiou, j’ai mal aux pieds mais on l’a fait !": "And that’s three! Phew, my feet hurt but we did it!",
+            'Je ne sais pas si toi aussi tu le sens, mais j\'ai l\'impression de "ressentir" la mémoire autour de nous.': 'I don’t know if you feel it too, but I have the impression of "feeling" the memory around us.',
+            "Assez parlé, c'est toi qui a trouvé toutes les nébuleuses de toute façon ! Il faut que je te présente à ma personne préférée. Direction le QG !": "Enough talk, you’re the one who found all the nebulae anyway! I have to introduce you to my favourite person. Off to HQ!",
+            "Ah te voilà Clara ! Mais qui est avec toi ?": "Ah, there you are Clara! But who’s with you?",
+            "Je connais pourtant tout le monde ici, mais vous je ne vous connais.": "I know everyone here, and yet you, I don’t know you.",
+            "C'est vrai, il ne fait pas encore partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser ! Sans lui, ma journée ne serait pas encore finie.": "That’s true, they’re not part of the Organisation yet, but look at what they managed to crystallise! Without them, my day wouldn’t be over yet.",
+            "Hmm, en effet, nous devrions pouvoir trouver une place à %1": "Hmm, indeed, we should be able to find a place for %1",
+            "Accompagne %1 dans ses quartiers sur la gauche, la porte juste en face de la tienne, je m'occupe de tout.": "Take %1 to their quarters on the left, the door right across from yours, I’ll take care of everything.",
+            "Hey %1, reviens à toi. Hého !": "Hey %1, snap out of it. Hello-o!",
+            "Ah, te revoilà. Tu étais dans l’Explorium c’est ça ? Je ne comprends pas comment tu as fait sans “ça”. Le Professeur Ricardo nous avait dit… Enfin, j’ai pu apprendre qu’avec l’expérience, “UNE GRANDE EXPERIENCE”, on pouvait atteindre l’Explorium sans…": "Ah, there you are again. You were in the Explorium, weren’t you? I don’t understand how you did it without “that”. Professor Ricardo had told us… Well, I learned that with experience, “A GREAT EXPERIENCE”, you could reach the Explorium without…",
+            "Moi, j’arrive à peine à me projeter dedans avec…": "Me, I can barely project myself into it with…",
+            [_TUTO_HTML_S18_VDL]: 'Did you manage to see “<i>Lyon, City of Books in the 16th century</i>” or was it something else?',
+            "Peu importe ! Ce que je veux dire c’est qu’il est préférable que tu puisses te projeter depuis un endroit sûr pour ne pas finir dans les pommes n’importe où ! Imagine si je n’avais pas été là.": "Never mind! What I mean is that it’s better for you to project yourself from a safe place so you don’t pass out just anywhere! Imagine if I hadn’t been there.",
+            "Il y a une salle, à droite du hall du QG, je ne sais pas si tu as remarqué. En tout cas, ne me refais plus ça, j’ai eu peur ! Allez, maintenant tu sais ce qu’on cherche en priorité, reprenons notre route.": "There’s a room, to the right of the HQ hall, I don’t know if you noticed. Anyway, don’t ever do that to me again, I got scared! Come on, now you know what we’re looking for first, let’s get back on our way.",
+            // Quêtes du tutoriel
+            "Faire ses preuves": "Prove yourself",
+            "Cristalliser 3 nébuleuses": "Crystallise 3 nebulae",
+            [TUTO_QUETES.vdl.titreHtml]: 'Complete <i>Lyon, City of Books in the 16th century</i>',
+            // Console du pseudo (« Valider » est déjà dans la table)
+            "Ton pseudo": "Your username",
+            "12 caractères maximum": "12 characters maximum",
+            // Annexe B : Odile et Clara au QG
+            "Ce que sont les nébuleuses ? Va en parler au Professeur Ricardo, c’est le spécialiste en la matière": "What nebulae are? Go and talk to Professor Ricardo about it, he’s the expert on the matter",
+            "Ca y est, tu as fait le tour ? N’hésite pas à retourner parler à tout le monde quand tu le souhaites !": "So, have you looked around? Feel free to go back and talk to everyone whenever you like!",
+            "J’en reviens pas, tu étais si rapide quand tu cristallisais les nébuleuses ! Ca m’a pris des jours pour les premières moi": "I can’t get over it, you were so fast crystallising the nebulae! It took me days for my first ones",
         });
 
         // ── Highlight d'un élément avec trou dans l'overlay ──
@@ -21278,6 +22028,7 @@
                     // Interface révélée pas à pas, sac, échoppe du tuto (cf. uiReveler)
                     _uiEtat: _uiEtatExporter(),
                     _claraPresentee,   // Clara s'est présentée (section 12) : nomClara()
+                    _joueurPseudo,     // pseudo saisi au QG (section 15) : nomJoueur()
                     // Tutoriel Bellecour : section atteinte, sous-étapes, « autre carte » (cf. _tuto*)
                     _tutoSection,
                     _tutoEtat,
@@ -21406,11 +22157,9 @@
                 if (d._bellecourScene2bVue) _bellecourScene2bVue = true;
                 if (d._bellecourFinaleJouee) _bellecourFinaleJouee = true;
                 if (d.lectureStats && d.lectureStats.ouvertures) lectureStats = d.lectureStats;
-                // Filet test 2 : carte Place Bellecour déjà possédée sans accès à
-                // l'Explorium (collectée avant la mise à jour, ou scène interrompue).
-                if ((d.collectedCards || []).includes(BELLECOUR_CARD_ID) && !_hubExploriumKey && !_hubExploriumOpened) {
-                    _hubExploriumKey = true;
-                }
+                // (Ancien filet du test 2 — clé donnée par la carte Place Bellecour —
+                // retiré : l'Explorium s'ouvre à la 5e carte, section 17.)
+                if (typeof d._joueurPseudo === 'string' && d._joueurPseudo) _joueurPseudo = d._joueurPseudo;
                 if (d.seenCardIds)  _seenCardIds = new Set(d.seenCardIds);
                 if (d.cardJournals) cardJournals = d.cardJournals;
                 if (d.grappeQuestState) grappeQuestState = d.grappeQuestState;
@@ -21474,6 +22223,9 @@
                     // poussière remise ci-dessus sera reprise par startOnboarding,
                     // puis rendue par le don de la jeune fille (section 3).
                     d._tutoSection = 0; d._tutoEtat = {}; d._tutoAutrePoiId = null;
+                    // Sections 12 à 18 : Clara redevient « la jeune fille », le
+                    // joueur « Toi » (le pseudo se ressaisit au QG, section 15).
+                    d._claraPresentee = false; d._joueurPseudo = '';
                     // La carte tutoriel doit redevenir à collecter, sinon son
                     // marqueur ne se repose pas et le guide n'a rien à guider.
                     // Les deux cartes du tutoriel : les clefs, et l'Office du Tourisme
@@ -24087,8 +24839,8 @@
         function checkNearbyPOI() {
             // Vérifier aussi les objectifs de quêtes actives
             try { checkActiveQuestGeofencing(); } catch(e) { console.error('checkActiveQuestGeofencing', e); }
-            // Test 2 : retour à Bellecour avec les sept cartes → scène finale
-            try { _bellecourVerifierRetour(); } catch(e) { console.error('_bellecourVerifierRetour', e); }
+            // Test 2 : l'ancienne scène 3 (retour à Bellecour avec sept cartes) est
+            // retirée (décision du 13/10) : la scène finale part à t0 + 1 h.
 
             // Pendant l'onboarding, ne pas écraser la bannière du marqueur tutoriel
             if (!_obMapActive()) return;
@@ -24111,7 +24863,8 @@
             // sont à 50 m l'une de l'autre).
             let nearbyPoi = null;
             {
-                const aPortee = POIS.filter(poi => _obPoiOuvert(poi) && _poiActif(poi)
+                // Hors du périmètre du test : marqueur masqué, carte non proposée.
+                const aPortee = POIS.filter(poi => _obPoiOuvert(poi) && _poiActif(poi) && !horsZoneDuJour(poi.lat, poi.lng)
                     && _zoneOk('poi:' + poi.id, poi, _poiRadius(poi), !!poi.radius))
                     .map(poi => ({ poi, d: getDistance(playerPos.lat, playerPos.lng, poi.lat, poi.lng) }))
                     .sort((a, b) => a.d - b.d);
@@ -24325,6 +25078,11 @@
                 // POI de parcours verrouillé (ex. "ville du livre") : caché tant que
                 // le déclencheur (validation Bellecour) n'a pas eu lieu.
                 if (poi.gated === 'ville_du_livre' && !_villeDuLivreUnlocked) {
+                    el.style.display = 'none';
+                    return;
+                }
+                // Test Bellecour (section 12) : seuls les POI du périmètre s'affichent.
+                if (horsZoneDuJour(poi.lat, poi.lng)) {
                     el.style.display = 'none';
                     return;
                 }
@@ -24594,7 +25352,7 @@
 
 
         function updateInfoVisibility() {
-            if (!_obDone) return;
+            if (!_obFieldOpen()) return;   // section 12 : terrain ouvert avant la fin du tuto
             const visible = [];
             infoMarkers.forEach(({ marker, el, info }) => {
                 const captured = museumCollection.some(m => m.infoId === info.id);
@@ -24959,9 +25717,12 @@
             try { return localStorage.getItem('explore_zonesLayerVisible') !== '0'; } catch(e) { return true; }
         })();
         function applyZonesLayerVisibility() {
-            const vis = _zonesLayerVisible ? 'visible' : 'none';
+            // Test Bellecour (section 12) : zones de quartier masquées tant que le
+            // périmètre du test est affiché (la jauge du périmètre les remplace).
+            const montrer = _zonesLayerVisible && _perimetreLeve;
+            const vis = montrer ? 'visible' : 'none';
             try { if (map && map.getLayer && map.getLayer('zones-line')) map.setLayoutProperty('zones-line', 'visibility', vis); } catch(e) {}
-            Object.values(_zoneBadges).forEach(b => { if (b && b.el) b.el.style.display = _zonesLayerVisible ? '' : 'none'; });
+            Object.values(_zoneBadges).forEach(b => { if (b && b.el) b.el.style.display = montrer ? '' : 'none'; });
             const sw = document.getElementById('setZonesSwitch');
             if (sw) sw.classList.toggle('on', _zonesLayerVisible);
         }
@@ -25636,8 +26397,9 @@
             });
             // Console d'obtention de la carte supprimée (brief Bellecour, global) :
             // plus de toast « Carte révélée », plus d'accès à la carte par lui.
-            // Test 2 (Bellecour) : la carte Place Bellecour donne l'accès à l'Explorium
-            if (card && card.id === BELLECOUR_CARD_ID) setTimeout(_bellecourDonnerAcces, 900);
+            // Test Bellecour : la clé donnée par la carte Place Bellecour est
+            // retirée (décision du 13/10) ; l'Explorium s'ouvre à la 5e carte
+            // (section 17, cf. _tutoSection17).
             // Refresh Explorium : la nouvelle carte = nouvelle source de lumière à sa position
             if (typeof v2RefreshIfOpen === 'function') v2RefreshIfOpen();
             // Pastille "nouveau" si la carte est positionnée dans l'Explorium (apporte un halo)
@@ -26881,7 +27643,9 @@
 
         function collectScroll() {
             if (!currentNearbyScroll) return;
-            if (!_obDone) { _obDone = true; _obAct2Done = true; _obAct3Done = true; }
+            // Ancien forçage de fin de tutoriel : jamais pendant le tutoriel
+            // Bellecour, dont le terrain s'ouvre dès la section 12.
+            if (!_obDone && !_tutoActif()) { _obDone = true; _obAct2Done = true; _obAct3Done = true; }
             const scroll = currentNearbyScroll;
             // Console masquée d'emblée : si la suite échoue, elle ne reste pas à
             // l'écran, inerte. Un parchemin déjà ramassé ne compte pas deux fois.
@@ -31911,6 +32675,8 @@
                 _hubSay('odile', "À gauche, tes quartiers. Ici, le hall. Au fond, la salle de l'Explorium. On ne l'ouvre pas à tout le monde."),
             ],
             odile: [
+                // Annexe B du document de dialogues v0.83 (Odile, l'Archiviste)
+                _hubSay('odile', 'Ce que sont les nébuleuses ? Va en parler au Professeur Ricardo, c’est le spécialiste en la matière'),
                 _hubSay('odile', "Chaque carte que tu rapportes, je la classe. Personnage, lieu ou objet, puis un domaine. C'est comme ça qu'on s'y retrouve."),
                 _hubSay('odile', "L'histoire, c'est mon rayon. Une vieille pierre, une plaque, une date gravée : rapporte-moi ça."),
                 _hubSay('odile', "Samir te dira qu'on range trop. Samir n'a jamais retrouvé un dossier de sa vie."),
@@ -31964,8 +32730,11 @@
         function hubTalkTo(id) {
             if (_hubVnOpen() || _hubOpening) return;
             if (id === 'jeune_fille') {
-                vnShow(_hubJfSceneVue ? HUB_JF_LIGNES.relance : HUB_JF_LIGNES.arrivee);
-                if (!_hubJfSceneVue) { _hubJfSceneVue = true; try { saveProgress(); } catch (e) {} }
+                // Clara au QG (section 15, Annexe B) : ses deux répliques, à tour de rôle.
+                const lignes = HUB_JF_LIGNES.qg();
+                const i = _hubLineIdx.jeune_fille || 0;
+                _hubLineIdx.jeune_fille = (i + 1) % lignes.length;
+                vnShow([lignes[i]]);
                 return;
             }
             if (id !== 'aurele') { _hubSayNext(id); return; }
@@ -31998,7 +32767,9 @@
                 const txt   = g.querySelector('.hub-npc-plate text');
                 const cadre = g.querySelector('.hub-npc-plate rect');
                 if (!npc || !txt || !cadre) return;
-                txt.textContent = npc.role ? npc.nom + ' · ' + T(npc.role) : T(npc.nom);
+                // La jeune fille : « Clara » une fois présentée (section 12).
+                const nom = g.dataset.hubNpc === 'jeune_fille' ? nomClara() : npc.nom;
+                txt.textContent = npc.role ? nom + ' · ' + T(npc.role) : T(nom);
                 let w = 0;
                 try { w = txt.getComputedTextLength(); } catch (e) {}
                 if (w > 0) {
@@ -32015,8 +32786,15 @@
             porte.classList.toggle('door--sealed', !_hubExploriumKey && !_hubExploriumOpened);
             porte.classList.toggle('door--ready',   _hubExploriumKey && !_hubExploriumOpened);
             porte.classList.toggle('door--open',    _hubExploriumOpened);
-            // La jeune fille attend près de la porte tant qu'elle n'est pas ouverte.
+            // Clara au QG (section 15) : elle accompagne le joueur dans le hall,
+            // entre Odile et Samir (son dessin vit dans la salle de l'Explorium :
+            // on le déplace une fois dans le SVG du hall, même repère 400×370).
             const jf = document.getElementById('hubNpc-jeune_fille');
+            const hall = document.getElementById('hubHallSvg');
+            if (jf && hall && jf.parentNode !== hall) {
+                hall.appendChild(jf);
+                jf.setAttribute('transform', 'translate(192,262)');
+            }
             if (jf) jf.style.display = _hubJfPresente() ? '' : 'none';
         }
 
@@ -32025,35 +32803,33 @@
         // retrouve devant la porte de la salle. C'est ici, et plus dans
         // l'Explorium, qu'elle en parle explicitement. [AJOUT] : répliques à
         // valider par David, hormis celle devant la nébuleuse (demandée).
+        // Test Bellecour (décision du 13/10) : la clé, la porte à ouvrir et la
+        // scène d'arrivée devant la porte sont retirées. Clara est au QG à partir
+        // de la section 15 (_hubJfPresente) ; ses répliques sont celles de
+        // l'Annexe B du document de dialogues v0.83.
         const HUB_JF_LIGNES = {
-            arrivee: [
-                { speaker: 'La jeune fille', expr: 'salutation', line: 'Te voilà. Je savais que tu trouverais.' },
-                { speaker: 'La jeune fille', line: 'Derrière cette porte, l\'Explorium. C\'est là que l\'Organisation lit ce que les cartes racontent quand on les met ensemble.' },
-                { speaker: 'La jeune fille', expr: 'evidence', line: 'Dehors, tu ramasses des fragments. Là-dedans, ils se répondent.' },
-                { speaker: 'La jeune fille', line: 'Pose la main sur le sceau. Il te reconnaîtra, maintenant.' },
-            ],
-            relance: [
-                { speaker: 'La jeune fille', line: 'Le sceau. Pose la main dessus, n\'aie pas peur.' },
+            qg: () => [
+                { speaker: nomClara(), line: 'Ca y est, tu as fait le tour ? N’hésite pas à retourner parler à tout le monde quand tu le souhaites !' },
+                { speaker: nomClara(), line: 'J’en reviens pas, tu étais si rapide quand tu cristallisais les nébuleuses ! Ca m’a pris des jours pour les premières moi' },
             ],
             nebuleuse: [
                 { speaker: 'La jeune fille', line: 'Ferme les yeux. Concentre-toi, et pense à tes cartes.' },
                 { speaker: 'La jeune fille', line: 'Certaines permettent d\'en apprendre encore plus dans l\'Explorium.' },
             ],
         };
-        function _hubJfPresente() { return _hubExploriumKey && !_hubExploriumOpened; }
+        // Présente au QG dès que le joueur y arrive avec elle (section 15).
+        function _hubJfPresente() {
+            if (typeof _tutoEtat !== 'object' || !_tutoEtat) return false;
+            return !!_tutoEtat.s15 && _tutoEtat.s15 !== 'dialogue';
+        }
 
-        // Arrivée dans la salle de l'Explorium (swipe, flèche ou « Aller au QG »).
+        // Arrivée dans la salle de l'Explorium : ancienne scène devant la porte,
+        // retirée (décision du 13/10). Laissée sans effet ; appelée par
+        // _updateStudioZone.
         function _hubJfArrivee() {
-            if (_hubJfSceneVue || !_hubJfPresente() || _studioZone !== 2) return;
-            const ecran = document.getElementById('studioScreen');
-            if (!ecran || !ecran.classList.contains('show') || _hubVnOpen() || _hubOpening) return;
-            _hubJfSceneVue = true;   // posé tout de suite : pas de double scène
-            setTimeout(() => {
-                // Sorti de la salle pendant le délai : la scène attend son retour.
-                if (!ecran.classList.contains('show') || _studioZone !== 2 || _hubVnOpen()) { _hubJfSceneVue = false; return; }
-                try { saveProgress(); } catch (e) {}
-                vnShow(HUB_JF_LIGNES.arrivee, () => _hubHighlightDoor());
-            }, 450);
+            // Section 15 : « Accompagne-le dans ses quartiers sur la gauche » —
+            // la flèche des quartiers pulse jusqu'à ce que le joueur y entre.
+            if (_studioZone === 0) uiArreterPulse('#studioNavLeft');
         }
 
         function hubDoorTap() {
@@ -32086,8 +32862,8 @@
                         _hubOpening = false;
                         closeStudioScreen();
                         openMindmap();
-                        // Test 2 : la jeune fille réintervient pour les explications
-                        setTimeout(_bellecourApresOuverture, 1200);
+                        // (Ancienne scène 2 — explications de la jeune fille après
+                        // l'ouverture de la porte — retirée, décision du 13/10.)
                     });
                 }, 400);
             }, 500);
@@ -32175,6 +32951,11 @@
         //   compensation de poudre, clôture (étage 2 ouvert), périmètre levé.
         // Textes : PLAN_test_bellecour_ux_et_narration (4.3, 4.4). Les répliques
         // marquées [ADAPTÉ] ou [AJOUT] ne sont pas mot pour mot dans le document.
+        // RETIRÉES DU PARCOURS (décision du 13/10, refonte sections 12-18) : plus
+        // aucun appel à _bellecourDonnerAcces, _bellecourApresOuverture,
+        // _bellecourVerifierRetour ni jouerSceneFinaleBellecour (boutons du menu
+        // test retirés). L'Explorium s'ouvre à la 5e carte (section 17), la scène
+        // finale part à t0 + 1 h (section 24). Code laissé en place, en sommeil.
         // ══════════════════════════════════════════════════════════════
         const BELLECOUR_CARD_ID = 'card6';
         const BELLECOUR_CENTRE  = { lat: 45.7578, lng: 4.8320, rayon: 80 };
@@ -37261,7 +38042,7 @@
             const subtitle = document.getElementById('qjSubtitle');
             const list = _getActiveQuests();
 
-            if (list.length === 0 && !_finaleQuetesNb()) {
+            if (list.length === 0 && !_finaleQuetesNb() && !_tutoQuetesNb()) {
                 subtitle.textContent = 'Aucune quête en cours pour le moment';
                 body.innerHTML = '<div class="qj-empty">📜<br><br>Approfondis tes cartes dans l\'Explorium pour débloquer de nouvelles quêtes.</div>';
                 return;
@@ -37365,6 +38146,7 @@
                 body.appendChild(el);
             });
             _finaleQuetesRendre(body, subtitle, list.length, activeCount);   // scène finale du test Bellecour
+            _tutoQuetesRendre(body, subtitle, list.length, activeCount);     // quêtes du tutoriel (sections 12 à 18)
         }
 
         // Set des étapes déjà notifiées (pour ne pas redéclencher la notif voûte)
@@ -37373,7 +38155,7 @@
         // Met à jour la pastille du bouton journal et la notif voûte
         function updateQuestJournalBadge() {
             const list = _getActiveQuests();
-            const count = list.length + _finaleQuetesNb(true);
+            const count = list.length + _finaleQuetesNb(true) + _tutoQuetesNb(true);
             const btn = document.getElementById('hudQuestJournal');
             const cnt = document.getElementById('hudQjCount');
             if (!btn || !cnt) return;
