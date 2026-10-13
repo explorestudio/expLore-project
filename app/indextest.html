@@ -9884,6 +9884,7 @@
                 <div style="display:flex;flex-direction:column;gap:8px;">
                     <button onclick="testSaisirCode()" class="test-action-btn">🔑 Saisir mon code (fin de session)</button>
                     <button onclick="testReculerT0(30)" class="test-action-btn">⏱️ Reculer t0 de 30 min</button>
+                    <button onclick="testJouerSceneFinale()" class="test-action-btn">🎬 Jouer la scène finale</button>
                     <button onclick="closeTestPanel(); testExporterJournal()" class="test-action-btn">🧾 Exporter le journal utilisateur</button>
                     <button onclick="journalEnvoyer().then(ok => showToast(ok ? '🧾 Journal envoyé' : '🧾 Rien envoyé (pas de point de collecte, file vide ou réseau)'))" class="test-action-btn">🧾 Envoyer le journal maintenant</button>
                     <button onclick="addTestCards()" class="test-action-btn">🃏 Débloquer toutes les cartes</button>
@@ -12302,6 +12303,19 @@
             "Ce n'est pas le code saisi au départ.": "This is not the code you entered at the start.",
             "Ta session est déjà close.": "Your session is already closed.",
             "Session terminée. Merci !": "Session over. Thank you!",
+            // Scène finale du test Bellecour (section 24)
+            "Canelle et David": "Canelle and David",
+            "Chers testeurs, votre session touche à sa fin. Sa fin ? Non, pas vraiment, mais pour l’instant, nous vous attendons à l’adresse communiquée sur votre feuille de route !<br>En chemin ou juste après, vous pourrez nous donner vos retours !": "Dear testers, your session is coming to an end. Its end? No, not really, but for now, we are waiting for you at the address given on your route sheet!<br>On the way or right after, you can give us your feedback!",
+            "Eeeeet on vous attends avec impatience pour l’after, pour rigoler et discuter tous ensemble ! A très vite ! (Les premiers arrivés ont un p’tit badge)": "Aaaaand we can't wait to see you at the after-party, to laugh and chat all together! See you very soon! (The first to arrive get a little badge)",
+            "Remplir le Google Form": "Fill in the Google Form",
+            "Se rendre à l’after": "Go to the after-party",
+            "Aide les développeurs d’ExpLore à faire de ton expérience une pierre à l’édifice de ce jeu !": "Help the ExpLore developers turn your experience into a building block of this game!",
+            "Viens partager un bon moment avec nous, hâte de vraiment pouvoir te rencontrer.": "Come and share a good time with us, we can't wait to really meet you.",
+            "📍 Adresse communiquée sur ta feuille de route": "📍 Address given on your route sheet",
+            "Ouvrir le formulaire": "Open the form",
+            "Rouvrir le formulaire": "Reopen the form",
+            "📜 Deux nouvelles quêtes dans ton journal": "📜 Two new quests in your log",
+            "🎬 Jouer la scène finale": "🎬 Play the final scene",
             "📅 Visite le": "📅 Visited on",
 
             // ── Écran progression ──
@@ -36441,7 +36455,7 @@
             const subtitle = document.getElementById('qjSubtitle');
             const list = _getActiveQuests();
 
-            if (list.length === 0) {
+            if (list.length === 0 && !_finaleQuetesNb()) {
                 subtitle.textContent = 'Aucune quête en cours pour le moment';
                 body.innerHTML = '<div class="qj-empty">📜<br><br>Approfondis tes cartes dans l\'Explorium pour débloquer de nouvelles quêtes.</div>';
                 return;
@@ -36544,6 +36558,7 @@
 
                 body.appendChild(el);
             });
+            _finaleQuetesRendre(body, subtitle, list.length, activeCount);   // scène finale du test Bellecour
         }
 
         // Set des étapes déjà notifiées (pour ne pas redéclencher la notif voûte)
@@ -36552,7 +36567,7 @@
         // Met à jour la pastille du bouton journal et la notif voûte
         function updateQuestJournalBadge() {
             const list = _getActiveQuests();
-            const count = list.length;
+            const count = list.length + _finaleQuetesNb(true);
             const btn = document.getElementById('hudQuestJournal');
             const cnt = document.getElementById('hudQjCount');
             if (!btn || !cnt) return;
@@ -36573,6 +36588,302 @@
                     }
                 }
             });
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // TEST BELLECOUR — SCÈNE FINALE (section 24 du PDF)
+        // ══════════════════════════════════════════════════════════════
+        // 1 h après t0 (hors code équipe, filtré par _accesVerifierEcheances),
+        // Canelle et David apparaissent à quelques mètres du joueur sur la mappe,
+        // puis disent leurs deux répliques dans le visual novel. Le PDF : « Clic
+        // sur Canelle et David génère les quêtes » → les quêtes naissent au tap
+        // sur l'un des deux PNJ, pas à la fin du dialogue ; les PNJ pulsent
+        // jusque-là. Toucher les PNJ ensuite rejoue simplement le dialogue.
+        //
+        // Les deux quêtes vivent hors de GRAPPE_QUESTS (ni carte, ni lieu à
+        // valider) : renderQuestJournal et updateQuestJournalBadge les ajoutent
+        // à la liste. État dans sa propre clé (PNJ, dialogue vu, quêtes) : un
+        // rechargement remet PNJ et quêtes sans rejouer la scène (le drapeau
+        // finaleDeclenchee d'explore_acces empêche un second déclenchement).
+        const FINALE_KEY = 'explore_finale';
+        // Visuel commun des deux PNJ (David à gauche, Canelle à droite, fond noir).
+        // Sur la mappe, chaque médaillon en montre un recadrage (FINALE_PNJ_CADRAGE :
+        // taille et position du fond, pour un médaillon de 46 px) ; dans le visual
+        // novel, l'image entière en buste rond. Image absente ou illisible :
+        // silhouette générique en SVG.
+        const FINALE_PNJ_IMG = './assets/PNJs/DavidEtCanelle.png';
+        const FINALE_PNJ_CADRAGE = {
+            david:   { taille: '111px 83px', pos: '-13px -12px' },
+            canelle: { taille: '111px 83px', pos: '-46px -14px' },
+        };
+        const FINALE_LOCUTEUR = 'Canelle et David';
+        const FINALE_COULEUR  = '#2dd4bf';
+        // Répliques recopiées du PDF (le saut de ligne de la première est rendu par <br>).
+        const FINALE_REPLIQUES = [
+            { speaker: FINALE_LOCUTEUR, html: 'Chers testeurs, votre session touche à sa fin. Sa fin ? Non, pas vraiment, mais pour l’instant, nous vous attendons à l’adresse communiquée sur votre feuille de route !<br>En chemin ou juste après, vous pourrez nous donner vos retours !' },
+            { speaker: FINALE_LOCUTEUR, line: 'Eeeeet on vous attends avec impatience pour l’after, pour rigoler et discuter tous ensemble ! A très vite ! (Les premiers arrivés ont un p’tit badge)' },
+        ];
+        const FINALE_QUETES = [
+            { id: 'posttest_form', titre: 'Remplir le Google Form',
+              ambiance: 'Aide les développeurs d’ExpLore à faire de ton expérience une pierre à l’édifice de ce jeu !' },
+            { id: 'after', titre: 'Se rendre à l’after',
+              ambiance: 'Viens partager un bon moment avec nous, hâte de vraiment pouvoir te rencontrer.' },
+        ];
+        // Locuteur : buste rond tiré du visuel commun, posé seulement s'il se charge
+        // (sinon locuteur sobre, sans buste — cf. _finaleVisuel).
+        VN_SPEAKERS[FINALE_LOCUTEUR] = { color: '#5eead4', bg: 'rgba(45,212,191,0.15)', border: 'rgba(45,212,191,0.5)' };
+        let _finaleVisuelOk = null;    // null : pas encore testé ; true / false ensuite
+        function _finaleVisuel(suite) {
+            if (_finaleVisuelOk !== null) { suite(_finaleVisuelOk); return; }
+            const img = new Image();
+            img.onload  = () => { _finaleVisuelOk = true; VN_SPEAKERS[FINALE_LOCUTEUR].img = FINALE_PNJ_IMG; suite(true); };
+            img.onerror = () => { _finaleVisuelOk = false; console.warn('[finale] visuel des PNJ absent → silhouettes'); suite(false); };
+            img.src = FINALE_PNJ_IMG;
+        }
+
+        let _finale = null;            // { pnj: [{ id, nom, lat, lng }], dialogueVu, quetes: { id: 'active'|'completed' } }
+        let _finaleMarqueurs = [];
+
+        function _finaleLire() {
+            try { _finale = JSON.parse(localStorage.getItem(FINALE_KEY) || 'null'); } catch (e) { _finale = null; }
+            return _finale;
+        }
+        function _finaleEcrire() {
+            try { localStorage.setItem(FINALE_KEY, JSON.stringify(_finale)); } catch (e) {}
+        }
+        _finaleLire();
+
+        // Nombre de quêtes de la scène finale (enCours : sans celles accomplies).
+        function _finaleQuetesNb(enCours) {
+            const q = (_finale && _finale.quetes) || {};
+            return Object.keys(q).filter(k => !enCours || q[k] !== 'completed').length;
+        }
+
+        // Peut-on lancer la scène maintenant ? Non si la mappe n'est pas prête ou
+        // si quelque chose occupe l'écran : le minuteur retentera 30 s plus tard.
+        function _finaleBloquee() {
+            if (typeof map === 'undefined' || !map || !_progressLoaded) return 'mappe';
+            const montre = id => { const el = document.getElementById(id); return !!(el && el.classList.contains('show')); };
+            if (montre('vnOverlay') || montre('codeAccesOverlay') || montre('langSelectOverlay')) return 'dialogue';
+            // Cinématique d'intro (deux variantes) : masquée par la classe hidden.
+            if (['introBDCinematic', 'intro2Overlay'].some(id => {
+                const el = document.getElementById(id); return !!(el && !el.classList.contains('hidden'));
+            })) return 'intro';
+            if (document.getElementById('obHighlightOverlay')) return 'tutoriel';
+            if (typeof _isAnyScreenOpen === 'function' && _isAnyScreenOpen()) return 'ecran';
+            return null;
+        }
+
+        // Appelée par le minuteur du code d'accès : true si la scène part.
+        function declencherSceneFinaleTest() {
+            const raison = _finaleBloquee();
+            if (raison) {
+                console.log('[finale] reportée :', raison);
+                // Mappe pas encore chargée (ouverture de l'app) : on n'attend pas les 30 s du minuteur.
+                if (raison === 'mappe') setTimeout(_accesVerifierEcheances, 2000);
+                return false;
+            }
+            jouerSceneFinaleTest();
+            return true;
+        }
+
+        // La scène elle-même (aussi appelée par le menu test, sans condition de t0).
+        function jouerSceneFinaleTest() {
+            const tp = document.getElementById('testPanel');
+            if (tp) tp.style.display = 'none';   // panneau de dev : jamais bloquant
+            _finaleLire();
+            if (!_finale) _finale = { quetes: {} };
+            _finale.pnj = _finalePositions();
+            _finale.dialogueVu = false;
+            _finaleEcrire();
+            if (typeof journalLog === 'function') journalLog('final_scene_shown', {});
+            _finalePlacerPnj();
+            try { map.easeTo({ center: [playerPos.lng, playerPos.lat], duration: 800 }); } catch (e) {}
+            // Un instant pour voir les PNJ arriver avant que le dialogue ne voile la mappe.
+            setTimeout(() => _finaleDialogue(), 1300);
+        }
+
+        // Deux points de part et d'autre du joueur, un peu au-dessus de lui à
+        // l'écran (décalage en pixels, donc lisible quel que soit le zoom),
+        // ramenés à 20 m au plus pour rester « à quelques mètres ».
+        function _finalePositions() {
+            const p = { lat: playerPos.lat, lng: playerPos.lng };
+            const pos = (dx, dy) => {
+                let ll = null;
+                try {
+                    const c = map.project([p.lng, p.lat]);
+                    ll = map.unproject([c.x + dx, c.y + dy]);
+                } catch (e) {}
+                if (!ll) ll = { lat: p.lat + dy * -0.000004, lng: p.lng + dx * 0.000006 };
+                const d = getDistance(p.lat, p.lng, ll.lat, ll.lng);
+                const k = d > 20 ? 20 / d : 1;
+                return { lat: p.lat + (ll.lat - p.lat) * k, lng: p.lng + (ll.lng - p.lng) * k };
+            };
+            return [
+                Object.assign({ id: 'canelle', nom: 'Canelle' }, pos(-62, -38)),
+                Object.assign({ id: 'david',   nom: 'David'   }, pos( 62, -38)),
+            ];
+        }
+
+        function _finaleStyle() {
+            if (document.getElementById('finalePnjStyle')) return;
+            const st = document.createElement('style');
+            st.id = 'finalePnjStyle';
+            st.textContent = '.finale-pnj{display:flex;flex-direction:column;align-items:center;cursor:pointer;'
+                + '-webkit-tap-highlight-color:transparent;}'
+                + '.finale-pnj-corps{width:46px;height:46px;border-radius:50%;overflow:hidden;background:#123b38;'
+                + 'border:3px solid ' + FINALE_COULEUR + ';box-shadow:0 3px 10px rgba(0,0,0,0.35);'
+                + 'display:flex;align-items:flex-end;justify-content:center;}'
+                + '.finale-pnj-corps svg{width:100%;height:100%;display:block;}'
+                + '.finale-pnj-nom{margin-top:3px;padding:1px 8px;border-radius:9px;background:rgba(15,12,28,0.85);'
+                + 'color:#fff;font-size:11px;font-weight:700;white-space:nowrap;}';
+            document.head.appendChild(st);
+        }
+
+        // Silhouette générique (tête + buste), en attendant les visuels.
+        function _finaleSilhouette(id) {
+            const teinte = id === 'canelle' ? '#99f6e4' : '#5eead4';
+            return '<svg viewBox="0 0 46 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+                + '<circle cx="23" cy="17" r="8" fill="' + teinte + '"/>'
+                + '<path d="M7 46c0-10 7-17 16-17s16 7 16 17z" fill="' + teinte + '"/></svg>';
+        }
+
+        function _finaleRetirerPnj() {
+            _finaleMarqueurs.forEach(m => { try { m.remove(); } catch (e) {} });
+            _finaleMarqueurs = [];
+        }
+
+        function _finalePlacerPnj() {
+            _finaleRetirerPnj();
+            if (!map || !_finale || !Array.isArray(_finale.pnj)) return;
+            _finaleStyle();
+            const aGenerer = !_finaleQuetesNb();
+            _finale.pnj.forEach(n => {
+                const el = document.createElement('div');
+                el.className = 'finale-pnj';
+                el.dataset.pnj = n.id;
+                const corps = document.createElement('div');
+                corps.className = 'finale-pnj-corps';
+                corps.innerHTML = _finaleSilhouette(n.id);
+                _finaleVisuel(ok => {
+                    const c = FINALE_PNJ_CADRAGE[n.id];
+                    if (!ok || !c) return;
+                    corps.innerHTML = '';
+                    corps.style.background = '#000 url("' + FINALE_PNJ_IMG + '") no-repeat';
+                    corps.style.backgroundSize = c.taille;
+                    corps.style.backgroundPosition = c.pos;
+                });
+                const nom = document.createElement('div');
+                nom.className = 'finale-pnj-nom';
+                nom.textContent = n.nom;
+                el.appendChild(corps);
+                el.appendChild(nom);
+                el.addEventListener('click', e => { e.stopPropagation(); _finaleToucherPnj(); });
+                // Quêtes pas encore générées : on invite au tap.
+                if (aGenerer) uiPulser(corps, { garder: true });
+                const m = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+                    .setLngLat([n.lng, n.lat]).addTo(map);
+                try { m.getElement().style.zIndex = '3'; } catch (e) {}
+                _finaleMarqueurs.push(m);
+            });
+        }
+
+        function _finaleDialogue(suite) {
+            _finaleVisuel(() => vnShow(FINALE_REPLIQUES, () => {
+                if (_finale && !_finale.dialogueVu) { _finale.dialogueVu = true; _finaleEcrire(); }
+                if (suite) suite();
+            }));
+        }
+
+        function _finaleToucherPnj() {
+            if (document.getElementById('vnOverlay').classList.contains('show')) return;
+            if (_finaleQuetesNb()) { _finaleDialogue(); return; }
+            // Dialogue interrompu (app fermée) : on le joue avant de donner les quêtes.
+            if (_finale && !_finale.dialogueVu) _finaleDialogue(_finaleGenererQuetes);
+            else _finaleGenererQuetes();
+        }
+
+        function _finaleGenererQuetes() {
+            if (!_finale) _finale = { quetes: {} };
+            if (!_finale.quetes) _finale.quetes = {};
+            FINALE_QUETES.forEach(q => {
+                if (_finale.quetes[q.id]) return;
+                _finale.quetes[q.id] = 'active';
+                if (typeof journalLog === 'function') journalLog('quest_started', { quete_finale: q.id });
+            });
+            _finaleEcrire();
+            _finaleMarqueurs.forEach(m => uiArreterPulse(m.getElement().querySelector('.finale-pnj-corps')));
+            if (typeof uiEstRevele === 'function' && !uiEstRevele('journal_quetes')) uiReveler('journal_quetes', { pulse: true });
+            else uiPulser('#hudQuestJournal');
+            updateQuestJournalBadge();
+            showToast(T('📜 Deux nouvelles quêtes dans ton journal'), 3200);
+        }
+
+        // Quête Google Form : ouvre le formulaire post-test, puis la marque accomplie.
+        function _finaleOuvrirFormulaire() {
+            let w = null;
+            try { w = window.open(POSTTEST_FORM_URL, '_blank', 'noopener'); } catch (e) {}
+            if (_finale && _finale.quetes && _finale.quetes.posttest_form !== 'completed') {
+                _finale.quetes.posttest_form = 'completed';
+                _finaleEcrire();
+                if (typeof journalLog === 'function') journalLog('quest_completed', { quete_finale: 'posttest_form' });
+                updateQuestJournalBadge();
+            }
+            renderQuestJournal();
+            return w;
+        }
+
+        // Ajoute les quêtes de la scène finale en tête du journal (appelée par renderQuestJournal).
+        function _finaleQuetesRendre(body, subtitle, nbGrappe, nbGrappeActives) {
+            const n = _finaleQuetesNb();
+            if (!n) return;
+            subtitle.textContent = TF('%1 quête(s) — %2 en cours', nbGrappe + n, nbGrappeActives + _finaleQuetesNb(true));
+            const premier = body.firstChild;
+            FINALE_QUETES.forEach(q => {
+                const etat = _finale.quetes[q.id];
+                if (!etat) return;
+                const el = document.createElement('div');
+                el.className = 'qj-quest qj-quest--finale';
+                el.style.setProperty('--qj-color', FINALE_COULEUR);
+                if (etat === 'completed') el.style.opacity = '0.72';
+                el.innerHTML = `
+                    <div class="qj-quest-grappe">${T(FINALE_LOCUTEUR)}</div>
+                    <div class="qj-quest-title"></div>
+                    <div class="qj-quest-indice"></div>
+                    <div class="qj-quest-place"></div>
+                    <div class="qj-quest-action"></div>
+                `;
+                el.querySelector('.qj-quest-title').textContent = T(q.titre) + (etat === 'completed' ? ' ✓' : '');
+                el.querySelector('.qj-quest-indice').textContent = T(q.ambiance);
+                const lieu = el.querySelector('.qj-quest-place');
+                if (q.id === 'after') lieu.textContent = T('📍 Adresse communiquée sur ta feuille de route');
+                else lieu.remove();
+                const actions = el.querySelector('.qj-quest-action');
+                if (q.id === 'posttest_form') {
+                    const btn = document.createElement('button');
+                    btn.className = 'qj-quest-btn' + (etat === 'completed' ? '' : ' primary');
+                    btn.textContent = T(etat === 'completed' ? 'Rouvrir le formulaire' : 'Ouvrir le formulaire');
+                    btn.onclick = (e) => { e.stopPropagation(); _finaleOuvrirFormulaire(); };
+                    actions.appendChild(btn);
+                } else actions.remove();
+                body.insertBefore(el, premier);
+            });
+        }
+
+        // Rechargement : PNJ remis à leur place (la scène, elle, ne se rejoue pas).
+        function _finaleRestaurer() {
+            if (!_finale || !Array.isArray(_finale.pnj)) return;
+            if (typeof map === 'undefined' || !map || !_progressLoaded) { setTimeout(_finaleRestaurer, 1000); return; }
+            _finalePlacerPnj();
+            updateQuestJournalBadge();
+        }
+        setTimeout(_finaleRestaurer, 0);
+
+        // Menu test : joue la scène tout de suite, quel que soit t0 ou le code.
+        function testJouerSceneFinale() {
+            const raison = _finaleBloquee();
+            if (raison && raison !== 'ecran') { showToast('Scène finale impossible : ' + raison); return; }
+            jouerSceneFinaleTest();
         }
 
         // Tag les markers DOM avec une classe pour pouvoir les masquer en mode planning
