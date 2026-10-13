@@ -9315,9 +9315,151 @@
             #intro2Grain{animation:none}
             #intro2Overlay .i2-line,#intro2Overlay .i2-say,#intro2Brand,#intro2Start{transition-duration:.3s}
         }
+
+        /* ══════════════════════════════════════════════════════════════
+           TEST BELLECOUR — INTERFACE RÉVÉLÉE PAS À PAS (cf. uiReveler)
+           Chaque clé non révélée pose une classe sur <body> :
+           ui-masque-<clé>. Masquage par visibility (et non display) : la
+           place reste réservée et getBoundingClientRect reste juste, ce dont
+           animerGainPoussiere a besoin pour viser le compteur encore caché.
+           ══════════════════════════════════════════════════════════════ */
+        body.ui-masque-avatar .hud-avatar-wrap,
+        body.ui-masque-poussiere .hud-dust,
+        body.ui-masque-journal_quetes #hudQuestJournal,
+        body.ui-masque-journal_quetes #hudQuestCompass,
+        body.ui-masque-jumelles #viewToggleBtn,
+        body.ui-masque-parametres #settingsToggleBtn {
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        /* Barre du bas : visible mais grisée, non cliquable (sauf Collection et Sac) */
+        body.ui-masque-explorium #btnMemorial,
+        body.ui-masque-qg #btnStudio {
+            opacity: 0.32;
+            filter: grayscale(1);
+            pointer-events: none;
+        }
+        /* Pulsation propre à uiPulser : le guide du tutoriel retire toutes les
+           .ob-guide-pulse d'un coup, il ne doit pas éteindre celles-ci. */
+        .ui-pulse { animation: obGuidePulse 1.3s ease-in-out infinite !important; }
+        .ui-apparait { animation: uiApparait 0.7s cubic-bezier(0.34,1.56,0.64,1) both; }
+        @keyframes uiApparait {
+            from { opacity: 0; scale: 0.3; }
+            to   { opacity: 1; scale: 1; }
+        }
+        .hud-dust.ui-gain { animation: uiGainPop 0.45s ease-out; }
+        @keyframes uiGainPop {
+            0%, 100% { scale: 1; }
+            45%      { scale: 1.28; box-shadow: 0 0 18px rgba(192,132,252,0.85); }
+        }
+        .ui-grain-poussiere {
+            position: fixed; left: 0; top: 0; z-index: 9600;
+            width: 20px; height: 20px; pointer-events: none;
+            object-fit: contain;
+            filter: drop-shadow(0 0 6px rgba(192,132,252,0.9));
+        }
+
+        /* Section 1 : avatar plus gros et plus bas, paramètres en haut à gauche
+           au-dessus de lui. */
+        .hud-avatar-wrap { margin-top: 60px; }
+        .hud-avatar-btn { width: 66px; height: 66px; font-size: 34px; }
+        .settings-toggle {
+            top: 14px; left: 14px; bottom: auto; right: auto;
+            width: 40px; height: 40px; font-size: 19px;
+        }
+        /* Jumelles / personnage : icône du bouton de vue */
+        #viewToggleBtn .jumelles-ico { width: 26px; height: 26px; display: block; pointer-events: none; }
+
+        /* Points d'intérêt : plus de petit bouton « TAP » */
+        .tap-prompt, .interactable-tap-badge { display: none !important; }
+        /* Console d'interaction de carte : le seul mot « Interagir » */
+        #nearbyPOI .nearby-poi-header { display: none; }
+
+        /* ── Cristallisation de la nébuleuse (d'après l'artefact de référence) ── */
+        .ritual-engrave-progress { display: none !important; }
+        .ritual-cristal-haut {
+            position: absolute; top: 0; left: 0; right: 0; z-index: 3;
+            padding: max(30px, env(safe-area-inset-top)) 24px 24px;
+            text-align: center; pointer-events: none;
+            background: linear-gradient(180deg, rgba(7,5,13,0.92), rgba(7,5,13,0));
+        }
+        .ritual-cristal-kicker {
+            font-family: system-ui, sans-serif;
+            font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+            color: rgba(196,181,253,0.7);
+        }
+        #ritualEngrave .ritual-engrave-title {
+            font-family: Georgia, serif; font-weight: normal;
+            font-size: 27px; letter-spacing: 0.3px; line-height: 1.2;
+            color: #f1e9d8; margin: 8px 0 0;
+        }
+        #ritualEngrave .ritual-engrave-instruction {
+            gap: 10px;
+            padding: 28px 24px max(44px, env(safe-area-inset-bottom));
+            background: linear-gradient(to top, rgba(7,5,13,0.9) 55%, transparent);
+        }
+        .ritual-cristal-etat {
+            font-family: system-ui, sans-serif;
+            font-size: 17px; font-weight: 700; letter-spacing: 1.5px;
+            text-align: center;   /* libellés affichés tels quels, sans capitales */
+            color: rgba(196,181,253,0.85);
+            transition: color 0.4s ease;
+        }
+        .ritual-cristal-etat.en-cours     { color: rgba(221,205,255,0.98); }
+        .ritual-cristal-etat.cristallisee { color: #fde68a; }
+        #ritualEngrave .ritual-engrave-sub {
+            font-size: 19px; letter-spacing: 0.3px; font-style: italic;
+            color: rgba(232,228,221,0.72);
+            transition: opacity 0.3s ease;
+        }
+        #ritualEngrave.tenue .ritual-engrave-sub { opacity: 0.25; }
+
+        /* ── Carte obtenue : plus grande, plus haute, dans Cadre_carte.png ── */
+        #ritualReveal { padding-bottom: 9vh; cursor: pointer; }
+        #ritualReveal .ritual-obtained-label { margin-top: 0; font-size: 12px; }
+        #ritualReveal .ritual-obtained-name { font-size: 20px; margin: 6px 0 12px; }
+        .ritual-cadre {
+            position: relative; z-index: 2;
+            width: min(80vw, 360px, calc(58dvh * 0.8));
+            aspect-ratio: 1122 / 1402;   /* proportions de Cadre_carte.png */
+            transform: scale(0.4) translateY(80px); opacity: 0;
+            transition: transform 0.7s cubic-bezier(0.34,1.56,0.64,1), opacity 0.5s;
+        }
+        #ritualReveal.show .ritual-cadre { transform: none; opacity: 1; }
+        .ritual-cadre-img {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            z-index: 3; pointer-events: none;
+            filter: drop-shadow(0 0 22px rgba(167,139,250,0.35));
+        }
+        /* Ouverture du cadre mesurée sur l'image : x 224-891 / 1122, y 201-1154 / 1402.
+           La carte déborde un peu sous la moulure pour ne laisser aucun jour. */
+        .ritual-cadre .ritual-big-card {
+            position: absolute; left: 19.3%; top: 13.8%; width: 61.4%; height: 69.1%;
+            border-radius: 4px; display: flex; flex-direction: column;
+            background: #120e1f;
+            transform: none; opacity: 1; transition: none;
+        }
+        .ritual-cadre .ritual-big-card-art { height: auto; flex: 1 1 auto; min-height: 0; }
+        .ritual-cadre .ritual-big-card-body { padding: 8px 8px 12px; flex-shrink: 0; }
+        .ritual-cadre .ritual-big-card-border { display: none; }
+        /* Repli sans l'image du cadre : simple bordure dorée */
+        .ritual-cadre.sans-cadre {
+            border: 2px solid rgba(201,168,76,0.55); border-radius: 18px;
+            box-shadow: 0 0 40px rgba(167,139,250,0.3);
+        }
+        .ritual-cadre.sans-cadre .ritual-big-card { left: 4%; top: 4%; width: 92%; height: 92%; border-radius: 14px; }
+        .ritual-reveal-tap {
+            position: absolute; left: 0; right: 0;
+            bottom: max(28px, env(safe-area-inset-bottom));
+            text-align: center; z-index: 2; pointer-events: none;
+            font-family: system-ui, sans-serif; font-size: 14px; letter-spacing: 0.5px;
+            color: rgba(232,228,221,0.55);
+            opacity: 0; transition: opacity 0.6s 1.4s;
+        }
+        #ritualReveal.show .ritual-reveal-tap { opacity: 1; }
         </style>
 </head>
-<body>
+<body class="ui-masque-avatar ui-masque-poussiere ui-masque-journal_quetes ui-masque-jumelles ui-masque-explorium ui-masque-qg">
     <!-- Symbole partagé : le cadenas de l'Explorium, sur le sceau de la porte du QG
          et sur le badge des boutons Explorium. Le même signe aux deux endroits. -->
     <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -9722,7 +9864,7 @@
                     </div>
                     <div class="nearby-poi-distance">À portée de collecte !</div>
                 </div>
-                <button class="collect-btn" id="poiCollectBtn" onclick="collectCard()">Collecter la carte</button>
+                <button class="collect-btn" id="poiCollectBtn" onclick="collectCard()">Interagir</button>
             </div>
 
             <div id="nearbyInfo" class="nearby-poi hidden" style="background:#E0F2FE;border-color:#0EA5E9;">
@@ -9736,10 +9878,14 @@
             </div>
 
             <div id="nearbyBazar" class="nearby-poi hidden" style="background:#FEF3C7;border-color:#D97706;">
-                <div class="nearby-poi-header">
+                <!-- Icône à gauche du texte : l'image de l'échoppe, pas l'emoji 🛖
+                     (absent de certaines polices Android → carré vide). -->
+                <div class="nearby-poi-header" style="display:flex;align-items:center;gap:10px;">
+                    <img src="./assets/BazarIcon.png?v=2" alt="" draggable="false"
+                         style="width:32px;height:32px;object-fit:contain;flex-shrink:0;pointer-events:none;">
                     <div>
-                        <div class="nearby-poi-name" style="color:#92400E;">🛖 <span id="bazarName"></span></div>
-                        <div class="nearby-poi-distance" style="color:#D97706;">Fournitures disponibles</div>
+                        <div class="nearby-poi-name" style="color:#92400E;"><span id="bazarName"></span></div>
+                        <div class="nearby-poi-distance" style="color:#D97706;" id="bazarNearbySub">Fournitures disponibles</div>
                     </div>
                 </div>
                 <button class="collect-btn" style="background:#D97706;" onclick="collectBazar()">Consulter</button>
@@ -9890,61 +10036,42 @@
                 <div class="ritual-nebula-layer ritual-nebula-l3" id="nebulaL3"></div>
             </div>
             <canvas id="ritualCanvas"></canvas>
-            <!-- Instruction initiale -->
-            <div class="ritual-engrave-instruction" id="ritualInstruction">
-                <div class="ritual-engrave-icon" id="ritualEngraveIcon">
-                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 12px rgba(200,130,255,0.8))">
-                        <circle cx="24" cy="24" r="22" fill="url(#ng1)" opacity="0.9"/>
-                        <circle cx="24" cy="24" r="18" fill="url(#ng2)" opacity="0.7"/>
-                        <circle cx="24" cy="24" r="11" fill="url(#ng3)" opacity="0.85"/>
-                        <circle cx="12" cy="10" r="2"   fill="white"   opacity="0.7"/>
-                        <circle cx="38" cy="14" r="1.5" fill="white"   opacity="0.6"/>
-                        <circle cx="8"  cy="30" r="1.5" fill="#e0b0ff" opacity="0.8"/>
-                        <circle cx="40" cy="32" r="2"   fill="#b0d0ff" opacity="0.7"/>
-                        <circle cx="20" cy="6"  r="1"   fill="white"   opacity="0.9"/>
-                        <circle cx="33" cy="40" r="1.5" fill="#ffb0e0" opacity="0.7"/>
-                        <defs>
-                            <radialGradient id="ng1" cx="40%" cy="38%" r="60%">
-                                <stop offset="0%"   stop-color="#c084fc"/>
-                                <stop offset="50%"  stop-color="#818cf8"/>
-                                <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0"/>
-                            </radialGradient>
-                            <radialGradient id="ng2" cx="55%" cy="45%" r="55%">
-                                <stop offset="0%"   stop-color="#f0abfc"/>
-                                <stop offset="60%"  stop-color="#60a5fa"/>
-                                <stop offset="100%" stop-color="#4c1d95" stop-opacity="0"/>
-                            </radialGradient>
-                            <radialGradient id="ng3" cx="45%" cy="50%" r="55%">
-                                <stop offset="0%"   stop-color="white"/>
-                                <stop offset="40%"  stop-color="#e879f9"/>
-                                <stop offset="100%" stop-color="#6d28d9" stop-opacity="0.4"/>
-                            </radialGradient>
-                        </defs>
-                    </svg>
-                </div>
-                <div class="ritual-engrave-title">Stabilise la nébuleuse</div>
-                <div class="ritual-engrave-sub">Pose ton doigt et tiens jusqu'à la stabilisation</div>
+            <!-- Cristallisation (d'après l'artefact « Nébuleuse : capture et
+                 stabilisation ») : titre en haut, état + consigne en bas, jauge
+                 circulaire dessinée sur le canvas. Rien sous la jauge. -->
+            <div class="ritual-cristal-haut">
+                <div class="ritual-cristal-kicker">Nébuleuse détectée</div>
+                <div class="ritual-engrave-title">Cristallise la nébuleuse</div>
             </div>
-            <!-- Barre de progression (pendant le hold) -->
+            <!-- Instruction : éteinte pendant les répliques (cf. ritualAfterHunt) -->
+            <div class="ritual-engrave-instruction" id="ritualInstruction">
+                <div class="ritual-cristal-etat" id="ritualCristalEtat">Instable</div>
+                <div class="ritual-engrave-sub">Pose ton doigt et maintiens</div>
+            </div>
+            <!-- Ancienne barre linéaire : masquée (jauge circulaire du canvas) -->
             <div class="ritual-engrave-progress" id="ritualProgress">
                 <div class="ritual-progress-track">
                     <div class="ritual-progress-fill" id="ritualProgressFill"></div>
                 </div>
-                <div class="ritual-progress-label" id="ritualProgressLabel">Stabilisation en cours…</div>
             </div>
         </div>
 
         <!-- Phase 4 : Révélation -->
-        <div id="ritualReveal" class="ritual-overlay" style="display:none;">
+        <div id="ritualReveal" class="ritual-overlay" style="display:none;" onclick="_ritualRevealTap()">
             <div class="ritual-nebula">
                 <div class="ritual-nebula-layer ritual-nebula-l1 vis1"></div>
                 <div class="ritual-nebula-layer ritual-nebula-l2 vis2"></div>
                 <div class="ritual-nebula-layer ritual-nebula-l3 vis3"></div>
             </div>
             <div class="ritual-reveal-glow" id="ritualRevealGlow"></div>
-            <button class="ritual-close-btn" onclick="ritualClose()">✕</button>
+            <button class="ritual-close-btn" onclick="event.stopPropagation(); _ritualRevealTap(true)">✕</button>
             <div class="ritual-obtained-label">Carte obtenue</div>
             <div class="ritual-obtained-name" id="ritualRevealName"></div>
+            <!-- Cadre de la carte (Cadre_carte.png) : la carte loge dans son ouverture.
+                 Sans l'image, repli sur une bordure (classe sans-cadre). -->
+            <div class="ritual-cadre" id="ritualCadre">
+            <img class="ritual-cadre-img" src="./assets/Cadre_carte.png" alt="" draggable="false"
+                 onerror="this.style.display='none'; this.parentNode.classList.add('sans-cadre')">
             <div class="ritual-big-card" id="ritualBigCard">
                 <div id="ritualBigCardArt" class="ritual-big-card-art">
                     <!-- Visuel de la carte (niveau 0) ; masqué si la carte n'en a pas -->
@@ -9961,9 +10088,11 @@
                 </div>
                 <div class="ritual-big-card-border"></div>
             </div>
+            </div>
             <div class="ritual-narrative-tag" id="ritualNarrativeTag">
                 <span id="ritualNarrativeText"></span>
             </div>
+            <div class="ritual-reveal-tap">Touche l'écran pour continuer</div>
         </div>
 
         <!-- Card Popup -->
@@ -11697,6 +11826,15 @@
                         <button type="button" onclick="geoEnvoyerJournal()">Envoyer mon journal</button>
                     </div>
                 </div>
+
+                <!-- Mode test : le menu avatar est caché au début du tutoriel
+                     (cf. uiReveler) ; sans cette ligne, plus d'accès au panneau test. -->
+                <div class="settings-row">
+                    <div class="settings-row-label"><span>🧪</span> Mode test</div>
+                    <div class="settings-seg">
+                        <button type="button" onclick="closeSettings(); openTestPanel()">Ouvrir</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -11937,6 +12075,21 @@
             "Stabilise la nébuleuse": "Stabilize the nebula",
             "Pose ton doigt et tiens jusqu'à la stabilisation": "Press and hold until it stabilizes",
             "Stabilisation en cours…": "Stabilizing…",
+            // ── Test Bellecour : cristallisation, carte obtenue, interface révélée ──
+            "Nébuleuse détectée": "Nebula detected",
+            "Cristallise la nébuleuse": "Crystallize the nebula",
+            "Pose ton doigt et maintiens": "Place your finger and hold",
+            "Instable": "Unstable",
+            "En cours de cristallisation": "Crystallizing",
+            "Cristallisée": "Crystallized",
+            "Touche l'écran pour continuer": "Tap the screen to continue",
+            "Ouvrir": "Open",
+            "Échoppe vide": "Empty stall",
+            "Sac vide": "Empty bag",
+            "Ramasse des ressources en explorant la ville": "Pick up resources as you explore the city",
+            "Ton sac ne contient encore rien. Ce que tu trouves en chemin s'y range.": "Your bag is still empty. Whatever you find along the way goes in here.",
+            "Revenir à ton personnage": "Back to your character",
+            "Jumelles : vue d'ensemble": "Binoculars: overview",
             "Carte obtenue": "Card obtained",
             "Carte révélée ✦": "Card revealed ✦",
             "Appuyer pour voir": "Tap to view",
@@ -12239,7 +12392,6 @@
             "Mystère à portée !": "Mystery in range!",
 
             // Sac : objets, descriptions et actions
-            "Échoppe du passeur": "Bearer's Stall",
             "Orbe de mémoire": "Memory orb",
             "Boussole du Vieux-Lyon": "Vieux-Lyon Compass",
             "Fragment de connaissance": "Fragment of knowledge",
@@ -14395,10 +14547,11 @@
 
         // ── Bazars — points d'obtention de fournitures ──
         const BAZAR_POINTS = [
-            { id: 'bazar_terreaux',    name: 'Échoppe des Terreaux',      lat: 45.7680, lng: 4.8330, icon: '🛖', stock: { pellicules: 3, encre: 3, cassettes: 3 } },
-            { id: 'bazar_vieux_lyon',  name: 'Brocante du Vieux-Lyon',    lat: 45.7635, lng: 4.8275, icon: '🛖', stock: { pellicules: 3, encre: 3, cassettes: 3 } },
-            { id: 'bazar_croix_rousse',name: 'Marché de la Croix-Rousse', lat: 45.7730, lng: 4.8280, icon: '🛖', stock: { pellicules: 3, encre: 3, cassettes: 3 } },
-            { id: 'bazar_confluence',  name: 'Comptoir des Confluences',  lat: 45.7330, lng: 4.8188, icon: '🛖', stock: { pellicules: 3, encre: 3, cassettes: 3 } },
+            // Un seul nom pour toutes les échoppes : « Échoppe » (brief Bellecour, section 10).
+            { id: 'bazar_terreaux',    name: 'Échoppe', lat: 45.7680, lng: 4.8330, icon: '🛖', stock: { pellicules: 3, encre: 3, cassettes: 3 } },
+            { id: 'bazar_vieux_lyon',  name: 'Échoppe', lat: 45.7635, lng: 4.8275, icon: '🛖', stock: { pellicules: 3, encre: 3, cassettes: 3 } },
+            { id: 'bazar_croix_rousse',name: 'Échoppe', lat: 45.7730, lng: 4.8280, icon: '🛖', stock: { pellicules: 3, encre: 3, cassettes: 3 } },
+            { id: 'bazar_confluence',  name: 'Échoppe', lat: 45.7330, lng: 4.8188, icon: '🛖', stock: { pellicules: 3, encre: 3, cassettes: 3 } },
         ];
 
         const DUST_POINTS = [
@@ -15388,16 +15541,560 @@
         // tutoriel (à la collecte des clefs de la ville), seul POI de la ville
         // visible avant la fin du tuto — un joueur curieux peut aller le chercher.
         const OB_POI_TUTO = 'office_tourisme';
+        // Brief Bellecour (global) : l'Office du Tourisme est RETIRÉ du tutoriel.
+        // Il redevient un point d'intérêt ordinaire une fois le tutoriel fini
+        // (_obDone) : plus d'exception pendant le guide.
         function _obPoiOuvert(poi) {
-            return _obFieldOpen() || (!!_obAct2Done && !!poi && poi.id === OB_POI_TUTO);
+            return _obFieldOpen();
         }
-        // Aligne son marqueur sur l'état réel (masqué une fois sa carte recueillie).
+        // Tant que le tutoriel dure, son marqueur reste caché.
         function _obMontrerPoiTuto() {
-            if (!_obAct2Done || typeof poiMarkers === 'undefined') return;
+            if (_obFieldOpen() || typeof poiMarkers === 'undefined') return;
             const m = poiMarkers.find(({ poi }) => poi.id === OB_POI_TUTO);
-            if (!m) return;
-            m.el.removeAttribute('data-ob-hidden');
-            m.el.style.display = collectedCards.includes(m.poi.localCardId) ? 'none' : 'block';
+            if (m) m.el.style.display = 'none';
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // TEST BELLECOUR — INTERFACE RÉVÉLÉE PAS À PAS
+        // ══════════════════════════════════════════════════════════════
+        // Au départ du tutoriel, l'interface est réduite : menu avatar, compteur
+        // de poussière, journal de quête et jumelles sont cachés ; dans la barre
+        // du bas, Explorium et QG sont grisés (Collection et Sac restent actifs).
+        // Le tutoriel les révèle un à un par uiReveler(clé).
+        //
+        // Clés : 'avatar', 'poussiere', 'journal_quetes', 'jumelles',
+        //        'parametres' (visible d'emblée), 'explorium', 'qg',
+        //        'barre_bas' (= explorium + qg).
+        // Un joueur dont le tutoriel est terminé (_obDone) voit tout.
+        // État sauvegardé avec la progression (_uiEtat dans saveProgress), remis à
+        // zéro par « Relancer le tutoriel » (resetOnboarding).
+        const UI_CLES = ['avatar', 'poussiere', 'journal_quetes', 'jumelles', 'parametres', 'explorium', 'qg', 'barre_bas'];
+        const UI_REVELE_DEFAUT = { parametres: true };
+        const UI_CIBLES = {
+            avatar:         ['#avatarBtn'],
+            poussiere:      ['.hud-dust'],
+            journal_quetes: ['#hudQuestJournal'],
+            jumelles:       ['#viewToggleBtn'],
+            parametres:     ['#settingsToggleBtn'],
+            explorium:      ['#btnMemorial'],
+            qg:             ['#btnStudio'],
+            barre_bas:      ['#btnMemorial', '#btnStudio'],
+        };
+        let _uiRevele = {};              // { clé: true } — révélées pendant le tutoriel
+        let _sacVus = {};                // objets du sac déjà possédés une fois (id → true)
+        let _sacPulseFait = false;       // la pulsation du « premier objet » a eu lieu
+        let _echoppeTutoPrise = null;    // null (pas encore quittée) | 'rien' | 'partiel' | 'tout'
+        let _echoppeTutoDetail = null;   // { pris: {…}, range: {…} } à la sortie de l'échoppe du tuto
+
+        function _uiEtatExporter() {
+            return { revele: _uiRevele, sacVus: _sacVus, sacPulse: _sacPulseFait,
+                     echoppeTutoPrise: _echoppeTutoPrise, echoppeTutoDetail: _echoppeTutoDetail };
+        }
+        function _uiEtatCharger(e) {
+            if (!e || typeof e !== 'object') return;
+            if (e.revele && typeof e.revele === 'object') _uiRevele = e.revele;
+            if (e.sacVus && typeof e.sacVus === 'object') _sacVus = e.sacVus;
+            _sacPulseFait = !!e.sacPulse;
+            _echoppeTutoPrise  = e.echoppeTutoPrise || null;
+            _echoppeTutoDetail = e.echoppeTutoDetail || null;
+            setTimeout(_uiAppliquer, 0);
+        }
+
+        // Vrai si l'élément de cette clé est visible / actif pour le joueur.
+        function uiEstRevele(cle) {
+            if (_obDone) return true;
+            if (cle === 'explorium' || cle === 'qg') return !!(_uiRevele[cle] || _uiRevele.barre_bas);
+            return !!(_uiRevele[cle] || UI_REVELE_DEFAUT[cle]);
+        }
+
+        // Pose / retire les classes ui-masque-<clé> sur <body> (cf. CSS).
+        function _uiAppliquer() {
+            const b = document.body;
+            if (!b) return;
+            UI_CLES.forEach(c => {
+                if (c === 'barre_bas') return;   // portée par explorium + qg
+                b.classList.toggle('ui-masque-' + c, !uiEstRevele(c));
+            });
+        }
+
+        function _uiElements(cle) {
+            return (UI_CIBLES[cle] || []).map(s => document.querySelector(s)).filter(Boolean);
+        }
+
+        // Révèle l'élément de la clé. opts.pulse : le fait pulser ensuite
+        // (jusqu'au premier toucher, ou opts.pulseMs). opts.anime === false :
+        // pas d'animation d'apparition. Renvoie true si la clé était encore cachée.
+        function uiReveler(cle, opts) {
+            opts = opts || {};
+            if (UI_CLES.indexOf(cle) < 0) { console.warn('[ui] clé inconnue :', cle); return false; }
+            const dejaVisible = uiEstRevele(cle);
+            _uiRevele[cle] = true;
+            if (cle === 'barre_bas') { _uiRevele.explorium = true; _uiRevele.qg = true; }
+            _uiAppliquer();
+            const els = _uiElements(cle);
+            if (!dejaVisible && opts.anime !== false) {
+                els.forEach(el => {
+                    el.classList.remove('ui-apparait');
+                    void el.offsetWidth;   // relance l'animation
+                    el.classList.add('ui-apparait');
+                    setTimeout(() => el.classList.remove('ui-apparait'), 750);
+                });
+            }
+            if (opts.pulse) setTimeout(() => els.forEach(el => uiPulser(el, opts)), dejaVisible ? 0 : 760);
+            try { saveProgress(); } catch (e) {}
+            return !dejaVisible;
+        }
+
+        // Fait pulser un élément (élément ou sélecteur). S'arrête au premier
+        // toucher de l'élément, sauf opts.garder ; ou après opts.pulseMs.
+        function uiPulser(el, opts) {
+            opts = opts || {};
+            if (typeof el === 'string') el = document.querySelector(el);
+            if (!el) return null;
+            el.classList.add('ui-pulse');
+            if (!opts.garder) el.addEventListener('pointerdown', () => uiArreterPulse(el), { once: true });
+            if (opts.pulseMs > 0) setTimeout(() => uiArreterPulse(el), opts.pulseMs);
+            return el;
+        }
+        // Arrête la pulsation d'un élément ; sans argument, de tous.
+        function uiArreterPulse(el) {
+            if (typeof el === 'string') el = document.querySelector(el);
+            if (el) el.classList.remove('ui-pulse');
+            else if (!arguments.length) document.querySelectorAll('.ui-pulse').forEach(e => e.classList.remove('ui-pulse'));
+        }
+
+        // Le passage de _obDone (fin ou saut du tutoriel, chargement) révèle tout :
+        // vérification légère plutôt qu'un appel à chaque endroit qui le pose.
+        setInterval(_uiAppliquer, 1000);
+        setTimeout(() => { _uiAppliquer(); _jumellesMajIcone(); }, 0);
+
+        // ── Sac : limité à ce que le joueur a déjà trouvé ──────────────────
+        function _sacItemTrouve(item) {
+            return !!item && !item.empty && item.id !== '_empty'
+                && ((item.qty || 0) > 0 || !!_sacVus[item.id]);
+        }
+        function _sacCatVisible(cat) {
+            try { return cat.getItems().some(_sacItemTrouve); } catch (e) { return true; }
+        }
+        function _sacPremiereCat() {
+            const i = BAG_CATS.findIndex(_sacCatVisible);
+            return i < 0 ? 0 : i;
+        }
+        function _sacFiltrerItems(items) {
+            const f = (items || []).filter(_sacItemTrouve);
+            return f.length ? f : [{ id: '_empty', icon: '🎒', name: 'Sac vide', sub: 'Ramasse des ressources en explorant la ville',
+                qty: 0, empty: true, desc: "Ton sac ne contient encore rien. Ce que tu trouves en chemin s'y range." }];
+        }
+        // Appelée en tête de saveProgress : note les objets possédés et, la toute
+        // première fois qu'un objet entre dans le sac, fait pulser le bouton Sac
+        // (une seule fois, sauvegardé). Silencieuse si le tutoriel est déjà fini.
+        function _sacVerifierEntree() {
+            if (typeof BAG_CATS === 'undefined') return;
+            let total = 0;
+            try {
+                BAG_CATS.forEach(cat => cat.getItems().forEach(it => {
+                    if (!it.empty && it.id !== '_empty' && (it.qty || 0) > 0) { _sacVus[it.id] = true; total += it.qty; }
+                }));
+            } catch (e) { return; }
+            if (total > 0 && !_sacPulseFait) {
+                _sacPulseFait = true;
+                if (!_obDone) setTimeout(() => uiPulser('#btnBag'), 60);
+            }
+        }
+
+        // ── Échoppe ────────────────────────────────────────────────────────
+        const ECHOPPE_TUTO_ID = 'bazar_tuto';
+        const ECHOPPE_TUTO_STOCK = { pellicules: 3, encre: 3, cassettes: 3 };   // dotation (cf. _obSpawnTutorialBazar)
+
+        // Console de proximité : « Échoppe vide » quand il n'y a plus rien à prendre.
+        function _echoppeMajConsole(bazar) {
+            const sub = document.getElementById('bazarNearbySub');
+            if (!sub || !bazar) return;
+            const s = bazar.stock || {};
+            const reste = (s.pellicules || 0) + (s.encre || 0) + (s.cassettes || 0);
+            sub.textContent = reste > 0 ? 'Fournitures disponibles' : 'Échoppe vide';
+        }
+
+        // Vide l'échoppe du tutoriel : ce qui reste est rangé dans le sac du joueur
+        // (« Je range le reste dans ton sac »). Appelée d'office à la sortie de
+        // cette échoppe (closeBazarScreen) ; sans effet si elle est déjà vidée.
+        // Renvoie ce que le joueur avait pris : 'rien' | 'partiel' | 'tout'
+        // (null si l'échoppe du tuto n'existe pas encore).
+        function echoppeTutoVider() {
+            if (_echoppeTutoPrise) return _echoppeTutoPrise;
+            const b = BAZAR_POINTS.find(x => x.id === ECHOPPE_TUTO_ID);
+            if (!b || !b.stock) return null;
+            const pris = {}, range = {};
+            let nPris = 0, nReste = 0;
+            ['pellicules', 'encre', 'cassettes'].forEach(k => {
+                const r = Math.max(0, b.stock[k] || 0);
+                const p = Math.max(0, (ECHOPPE_TUTO_STOCK[k] || 0) - r);
+                pris[k] = p; range[k] = r; nPris += p; nReste += r;
+                bagInv[k] = (bagInv[k] || 0) + r;
+                b.stock[k] = 0;
+            });
+            _echoppeTutoPrise  = nPris === 0 ? 'rien' : (nReste === 0 ? 'tout' : 'partiel');
+            _echoppeTutoDetail = { pris, range };
+            if (range.pellicules && typeof updateCameraHUD === 'function') { try { updateCameraHUD(); } catch (e) {} }
+            try { saveProgress(); } catch (e) {}
+            return _echoppeTutoPrise;
+        }
+        // Ce que le joueur a pris dans l'échoppe du tuto : 'rien' | 'partiel' | 'tout',
+        // ou null tant qu'il n'en est pas sorti. Détail : echoppeTutoPriseDetail().
+        function echoppeTutoPrise() { return _echoppeTutoPrise; }
+        function echoppeTutoPriseDetail() { return _echoppeTutoDetail; }
+
+        function _echoppeALaSortie(bazar) {
+            if (!bazar) return;
+            if (bazar.id === ECHOPPE_TUTO_ID) echoppeTutoVider();
+            if (typeof journalLog === 'function') journalLog('shop_visited', {
+                bazar: bazar.id,
+                prise: bazar.id === ECHOPPE_TUTO_ID ? _echoppeTutoPrise : undefined,
+                pris: bazar.id === ECHOPPE_TUTO_ID && _echoppeTutoDetail ? _echoppeTutoDetail.pris : undefined,
+                stock_restant: Object.assign({}, bazar.stock || {})
+            });
+        }
+
+        // ── Jumelles (ex-longue-vue) : deux vues ──────────────────────────
+        // Vue proche → icône jumelles (passer à la vue d'ensemble) ;
+        // vue d'ensemble → icône personnage (revenir au joueur).
+        // TODO assets : icônes à produire par l'équipe. Renseigner les chemins
+        // quand les fichiers existent (ex. './assets/jumelles.png',
+        // './assets/vue_personnage.png') ; vides, le bouton garde le dessin SVG.
+        const ICONE_JUMELLES   = '';
+        const ICONE_PERSONNAGE = '';
+        const _SVG_JUMELLES = '<svg class="jumelles-ico" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+            + '<rect x="8.6" y="6" width="8.8" height="5" rx="1.6" fill="#4F46E5"/>'
+            + '<path d="M4.6 9.5 L8.4 7.4 L10.4 15.6 L3.4 16.4 Z" fill="#4F46E5"/>'
+            + '<path d="M21.4 9.5 L17.6 7.4 L15.6 15.6 L22.6 16.4 Z" fill="#4F46E5"/>'
+            + '<circle cx="7" cy="18.4" r="4.6" fill="#4F46E5"/><circle cx="19" cy="18.4" r="4.6" fill="#4F46E5"/>'
+            + '<circle cx="7" cy="18.4" r="2.6" fill="#C7D2FE"/><circle cx="19" cy="18.4" r="2.6" fill="#C7D2FE"/>'
+            + '<circle cx="6.1" cy="17.5" r="0.9" fill="#fff"/><circle cx="18.1" cy="17.5" r="0.9" fill="#fff"/>'
+            + '</svg>';
+        const _SVG_PERSONNAGE = '<svg class="jumelles-ico" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+            + '<circle cx="13" cy="7.4" r="4" fill="#4F46E5"/>'
+            + '<path d="M6.4 23 C6.4 16.6 9.2 13 13 13 C16.8 13 19.6 16.6 19.6 23 Z" fill="#4F46E5"/>'
+            + '<ellipse cx="13" cy="23.4" rx="8" ry="1.6" fill="#C7D2FE"/>'
+            + '</svg>';
+        function _jumellesMajIcone(btn) {
+            btn = btn || document.getElementById('viewToggleBtn');
+            if (!btn) return;
+            let loin = false;
+            try { loin = _mapViewMode === 'far'; } catch (e) {}
+            const src = loin ? ICONE_PERSONNAGE : ICONE_JUMELLES;
+            const svg = loin ? _SVG_PERSONNAGE : _SVG_JUMELLES;
+            if (src) {
+                btn.innerHTML = '<img class="jumelles-ico" alt="" draggable="false" src="' + src + '">';
+                btn.firstChild.onerror = () => { btn.innerHTML = svg; };
+            } else {
+                btn.innerHTML = svg;
+            }
+            btn.title = loin ? 'Revenir à ton personnage' : 'Jumelles : vue d\'ensemble';
+            btn.setAttribute('aria-label', btn.title);
+        }
+
+        // ── Poussière : animation de gain vers le compteur (section 3) ──────
+        // animerGainPoussiere(depuisEl, quantite, onDone)
+        //  - depuisEl : élément d'où part la poussière (main de la jeune fille,
+        //    portrait du VN…) ou {x, y} en pixels écran ; sinon le bas de l'écran.
+        //  - quantite : poussière CRÉDITÉE au joueur (memorialDust += quantite,
+        //    sauvegardé). 0 ou absent : animation seule, sans crédit.
+        //  - onDone : rappelé une fois le compteur mis à jour.
+        // Les grains volent vers le compteur ; le premier arrivé révèle le compteur
+        // (uiReveler('poussiere')), puis le nombre monte jusqu'au nouveau total.
+        // À lancer VN fermé : sous le voile du VN, le compteur reste assombri.
+        function animerGainPoussiere(depuisEl, quantite, onDone) {
+            const n = Math.max(0, Math.round(Number(quantite) || 0));
+            const compteur = document.getElementById('dustCounter');
+            const pastille = document.querySelector('.hud-dust');
+            const avant = memorialDust;
+            if (n > 0) memorialDust += n;
+            if (compteur) compteur.textContent = avant;
+
+            let ox = window.innerWidth / 2, oy = window.innerHeight * 0.62;
+            if (depuisEl && typeof depuisEl.getBoundingClientRect === 'function') {
+                const r = depuisEl.getBoundingClientRect();
+                if (r.width || r.height) { ox = r.left + r.width / 2; oy = r.top + r.height / 2; }
+            } else if (depuisEl && typeof depuisEl.x === 'number' && typeof depuisEl.y === 'number') {
+                ox = depuisEl.x; oy = depuisEl.y;
+            }
+            let tx = window.innerWidth - 52, ty = 34;
+            if (pastille) {
+                const r = pastille.getBoundingClientRect();
+                if (r.width) { tx = r.left + 22; ty = r.top + r.height / 2; }
+            }
+
+            let termine = false;
+            const finir = () => {
+                if (termine) return;
+                termine = true;
+                uiReveler('poussiere');
+                const fin = memorialDust, debut = avant, t0 = performance.now(), DUREE = 700;
+                const monter = (t) => {
+                    const k = Math.min(1, (t - t0) / DUREE);
+                    if (compteur) compteur.textContent = Math.round(debut + (fin - debut) * k);
+                    if (k < 1) requestAnimationFrame(monter);
+                    else {
+                        if (compteur) compteur.textContent = memorialDust;
+                        try { saveProgress(); } catch (e) {}
+                        if (typeof onDone === 'function') onDone();
+                    }
+                };
+                requestAnimationFrame(monter);
+            };
+
+            const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduit || !Element.prototype.animate || !document.body) { finir(); return; }
+
+            const NB = Math.min(18, Math.max(8, Math.round(n / 20) || 8));
+            let arrives = 0, revele = false;
+            for (let i = 0; i < NB; i++) {
+                const g = document.createElement('img');
+                g.src = './assets/Powder.png';
+                g.alt = '';
+                g.className = 'ui-grain-poussiere';
+                document.body.appendChild(g);
+                const ex = (Math.random() - 0.5) * 110, ey = (Math.random() - 0.5) * 80;
+                const mx = (ox + tx) / 2 + (Math.random() - 0.5) * 160;
+                const my = Math.min(oy, ty) + Math.abs(oy - ty) * 0.25 - Math.random() * 60;
+                const pos = (x, y, s) => 'translate(' + (x - 10) + 'px,' + (y - 10) + 'px) scale(' + s + ')';
+                const anim = g.animate([
+                    { transform: pos(ox, oy, 0.3), opacity: 0 },
+                    { transform: pos(ox + ex, oy + ey, 1.1), opacity: 1, offset: 0.2 },
+                    { transform: pos(mx, my, 0.9), opacity: 1, offset: 0.62 },
+                    { transform: pos(tx, ty, 0.45), opacity: 0.3 }
+                ], { duration: 1050 + Math.random() * 350, delay: i * 55, easing: 'ease-in-out', fill: 'forwards' });
+                anim.onfinish = () => {
+                    g.remove();
+                    arrives++;
+                    if (!revele) { revele = true; uiReveler('poussiere'); }
+                    if (pastille) { pastille.classList.remove('ui-gain'); void pastille.offsetWidth; pastille.classList.add('ui-gain'); }
+                    if (arrives === NB) finir();
+                };
+            }
+            // Filet : onglet en arrière-plan (animations suspendues) → on conclut quand même.
+            setTimeout(finir, 4000);
+        }
+
+        // ── Cristallisation de la nébuleuse ────────────────────────────────
+        // Moteur repris de l'artefact de référence (« Nébuleuse : capture et
+        // stabilisation ») : spirale logarithmique à deux bras, cohésion = seul
+        // état ; la focale (doigt posé) la fait monter, elle retombe sinon.
+        // Adapté : moins de grains (mobile), pas de nom de carte avant la
+        // cristallisation, états « Instable » / « En cours de cristallisation » /
+        // « Cristallisée », jauge circulaire sans message dessous.
+        let _ritualRevealDepuis = 0;
+        function _ritualRevealTap(forcer) {
+            if (!_ritualCard) return;
+            // Garde : le doigt qui vient de cristalliser ne doit pas fermer l'écran.
+            if (!forcer && Date.now() - _ritualRevealDepuis < 700) return;
+            ritualClose();
+        }
+
+        function _ritualCristalInit() {
+            const ecran  = document.getElementById('ritualEngrave');
+            const canvas = document.getElementById('ritualCanvas');
+            const etatEl = document.getElementById('ritualCristalEtat');
+            if (!ecran || !canvas) return;
+            const ctx  = canvas.getContext('2d');
+            const card = _ritualCard;
+            if (_ritualEngraveAnimId) { cancelAnimationFrame(_ritualEngraveAnimId); _ritualEngraveAnimId = null; }
+
+            const COUNT = 1100, ARMS = 2, TURNS = 1.15;
+            const DECAY = 0.17, GAIN = 0.52, HOLD_WIN = 0.55, COH0 = 0.12;
+            const TAU = 6.2832;
+            const rnd = (a, b) => a + Math.random() * (b - a);
+            const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+            const smooth = (e0, e1, x) => { const t = clamp01((x - e0) / (e1 - e0)); return t * t * (3 - 2 * t); };
+            const lerp = (a, b, t) => a + (b - a) * t;
+            const lerpAngle = (a, b, t) => {
+                let d = (b - a) % TAU;
+                if (d > 3.1416) d -= TAU;
+                if (d < -3.1416) d += TAU;
+                return a + d * t;
+            };
+
+            let W = 0, H = 0, cx = 0, cy = 0, R = 1, P = [], stars = [];
+            function dimensionner() {
+                W = canvas.offsetWidth || window.innerWidth;
+                H = canvas.offsetHeight || window.innerHeight;
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = Math.round(W * dpr);
+                canvas.height = Math.round(H * dpr);
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                cx = W / 2; cy = H * 0.47;
+                R = Math.min(W, H) * 0.34;
+                const rMin = R * 0.07;
+                P = new Array(COUNT);
+                for (let i = 0; i < COUNT; i++) {
+                    const t = Math.pow(Math.random(), 0.62);
+                    const r = rMin * Math.pow(R / rMin, t);
+                    const th = ((i % ARMS) / ARMS) * TAU + t * TURNS * TAU;
+                    const spread = 0.10 + 0.26 * t;
+                    P[i] = {
+                        t,
+                        r: r + r * (Math.random() + Math.random() - 1) * 0.11,
+                        th: th + (Math.random() + Math.random() - 1) * spread,
+                        gold: 0.18 + t * 0.74 + rnd(-0.05, 0.05),
+                        size: rnd(0.5, 1.9) * (1 - t * 0.3),
+                        bright: rnd(0.45, 1), wobP: rnd(0, TAU), wobA: rnd(0.4, 1.6),
+                        esc: rnd(0, 1), drift: rnd(0.6, 1.5), x: 0, y: 0, lx: 0, ly: 0
+                    };
+                }
+                stars = Array.from({ length: 90 }, () => ({
+                    x: Math.random() * W, y: Math.random() * H, s: rnd(0.3, 1.1), a: rnd(0.08, 0.5), ph: rnd(0, TAU)
+                }));
+            }
+            dimensionner();
+
+            let cohesion = COH0, pattern = 0, shear = 0, plein = 0, flash = 0;
+            let tenue = false, px = cx, py = cy, fini = false, last = 0;
+            let tenueMs = 0;
+            const t0 = Date.now();
+            let etatAffiche = '';
+            function majEtat() {
+                const txt = fini ? 'Cristallisée' : (tenue ? 'En cours de cristallisation' : 'Instable');
+                if (txt === etatAffiche || !etatEl) return;
+                etatAffiche = txt;
+                etatEl.textContent = txt;
+                etatEl.classList.toggle('en-cours', txt === 'En cours de cristallisation');
+                etatEl.classList.toggle('cristallisee', txt === 'Cristallisée');
+            }
+            majEtat();
+            ecran.classList.remove('tenue');
+
+            const pos = e => {
+                const r = canvas.getBoundingClientRect();
+                px = e.clientX - r.left; py = e.clientY - r.top;
+            };
+            // Propriétés on… (et non addEventListener) : un nouveau rituel remplace
+            // les gestionnaires du précédent au lieu de les empiler.
+            canvas.onpointerdown = e => {
+                if (fini) return;
+                tenue = true; pos(e); e.preventDefault();
+                try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+                ecran.classList.add('tenue');
+            };
+            canvas.onpointermove = e => { if (tenue) { pos(e); e.preventDefault(); } };
+            canvas.onpointerup = canvas.onpointercancel = () => { tenue = false; ecran.classList.remove('tenue'); };
+            canvas.onmousedown = canvas.onmouseup = canvas.onmouseleave = null;
+            canvas.ontouchstart = canvas.ontouchend = null;
+
+            function cristalliser() {
+                fini = true; tenue = false; flash = 1;
+                ecran.classList.remove('tenue');
+                majEtat();
+                if (typeof journalLog === 'function') journalLog('nebula_crystallized', {
+                    card: card ? card.id : null, hold_ms: Math.round(tenueMs), duree_ms: Date.now() - t0
+                });
+                setTimeout(_ritualGoReveal, 650);
+            }
+
+            function frame(now) {
+                if (ecran.style.display === 'none') { _ritualEngraveAnimId = null; return; }
+                if (!last) last = now;
+                const dt = Math.min((now - last) / 1000, 0.05);
+                last = now;
+
+                if (!fini) {
+                    if (tenue) {
+                        tenueMs += dt * 1000;
+                        const d = Math.hypot(px - cx, py - cy);
+                        const portee = 1 - smooth(R * 0.35, R * 1.5, d) * 0.72;
+                        cohesion += GAIN * portee * dt;
+                    } else {
+                        cohesion -= DECAY * dt;
+                    }
+                    cohesion = clamp01(cohesion);
+                    if (cohesion >= 0.999) { plein += dt; if (plein >= HOLD_WIN) cristalliser(); }
+                    else plein = 0;
+                }
+                majEtat();
+
+                pattern += dt * 0.11;
+                shear   += dt * (1 - cohesion) * 0.95;
+
+                ctx.clearRect(0, 0, W, H);
+                ctx.fillStyle = '#07050d';
+                ctx.fillRect(0, 0, W, H);
+                for (const s of stars) {
+                    ctx.fillStyle = 'rgba(214,205,255,' + (s.a * (0.6 + 0.4 * Math.sin(now * 0.001 + s.ph))).toFixed(3) + ')';
+                    ctx.fillRect(s.x, s.y, s.s, s.s);
+                }
+
+                ctx.globalCompositeOperation = 'lighter';
+                const hr = R * (1.6 - cohesion * 0.45);
+                const hg = ctx.createRadialGradient(cx, cy, 0, cx, cy, hr);
+                hg.addColorStop(0,    'rgba(196,181,253,' + (0.07 + cohesion * 0.16).toFixed(3) + ')');
+                hg.addColorStop(0.42, 'rgba(139,92,246,'  + (0.05 + cohesion * 0.07).toFixed(3) + ')');
+                hg.addColorStop(1,    'rgba(139,92,246,0)');
+                ctx.fillStyle = hg;
+                ctx.beginPath(); ctx.arc(cx, cy, hr, 0, TAU); ctx.fill();
+
+                const disp = 1 - cohesion;
+                for (const p of P) {
+                    const thO = p.th + pattern;
+                    const lag = shear * (0.25 + p.t * 1.5);
+                    const thD = p.th + pattern - lag + Math.sin(now * 0.0004 * p.drift + p.wobP) * 0.22 * p.wobA;
+                    const rD  = p.r * (1 + disp * (0.10 + p.esc * 0.55))
+                              + Math.sin(now * 0.0006 * p.drift + p.wobP * 1.7) * R * 0.035 * disp;
+                    const th = lerpAngle(thD, thO, cohesion);
+                    const r  = lerp(rD, p.r, cohesion);
+                    p.lx = p.x; p.ly = p.y;
+                    p.x = cx + Math.cos(th) * r;
+                    p.y = cy + Math.sin(th) * r * 0.9;
+                    const a = p.bright * (0.42 + cohesion * 0.5);
+                    if (disp > 0.45 && p.esc > 0.72 && p.t > 0.45) {
+                        ctx.strokeStyle = 'rgba(167,139,250,' + (a * 0.34).toFixed(3) + ')';
+                        ctx.lineWidth = p.size * 0.8;
+                        ctx.beginPath(); ctx.moveTo(p.lx || p.x, p.ly || p.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+                        continue;
+                    }
+                    ctx.fillStyle = cohesion >= p.gold
+                        ? 'rgba(253,230,138,' + (a * 0.95).toFixed(3) + ')'
+                        : 'rgba(167,139,250,' + (a * 0.72).toFixed(3) + ')';
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, TAU); ctx.fill();
+                }
+
+                const coeur = smooth(0.55, 1, cohesion);
+                if (coeur > 0) {
+                    const cr = R * (0.1 + coeur * 0.13);
+                    const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
+                    cg.addColorStop(0,   'rgba(255,250,232,' + (0.82 * coeur).toFixed(3) + ')');
+                    cg.addColorStop(0.3, 'rgba(253,230,138,' + (0.38 * coeur).toFixed(3) + ')');
+                    cg.addColorStop(1,   'rgba(251,191,36,0)');
+                    ctx.fillStyle = cg;
+                    ctx.beginPath(); ctx.arc(cx, cy, cr, 0, TAU); ctx.fill();
+                }
+                if (tenue && !fini) {
+                    const fr = R * 0.58;
+                    const fg = ctx.createRadialGradient(px, py, 0, px, py, fr);
+                    fg.addColorStop(0,   'rgba(226,214,255,0.17)');
+                    fg.addColorStop(0.5, 'rgba(167,139,250,0.06)');
+                    fg.addColorStop(1,   'rgba(167,139,250,0)');
+                    ctx.fillStyle = fg;
+                    ctx.beginPath(); ctx.arc(px, py, fr, 0, TAU); ctx.fill();
+                }
+                ctx.globalCompositeOperation = 'source-over';
+
+                // Jauge de cristallisation (cercle), rien dessous
+                const gr = R * 1.25;
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = 'rgba(167,139,250,0.16)';
+                ctx.beginPath(); ctx.arc(cx, cy, gr, 0, TAU); ctx.stroke();
+                ctx.strokeStyle = cohesion > 0.55 ? 'rgba(253,230,138,0.78)' : 'rgba(196,181,253,0.6)';
+                ctx.lineCap = 'round';
+                ctx.beginPath(); ctx.arc(cx, cy, gr, -1.5708, -1.5708 + TAU * cohesion); ctx.stroke();
+                ctx.lineCap = 'butt';
+
+                if (flash > 0.01) {
+                    ctx.fillStyle = 'rgba(253,230,138,' + (flash * 0.28).toFixed(3) + ')';
+                    ctx.fillRect(0, 0, W, H);
+                    flash *= 0.9;
+                }
+                _ritualEngraveAnimId = requestAnimationFrame(frame);
+            }
+            _ritualEngraveAnimId = requestAnimationFrame(frame);
         }
         let _obSpawnLat    = 0;
         let _obSpawnLng    = 0;
@@ -16445,7 +17142,7 @@
                 // Minuscule : c'est la casse suivie par git. Windows ne fait pas
                 // la différence, GitHub Pages si : une majuscule ici passe en
                 // local et donne un 404 en production.
-                'background-image:url(./assets/spiral.png)',
+                'background-image:url(./assets/nebuleuse.png)',
                 'background-size:contain',
                 'background-repeat:no-repeat',
                 'background-position:center',
@@ -16714,11 +17411,13 @@
             if (!p) return;
             const bazar = {
                 id: 'bazar_tuto',
-                name: 'Échoppe du passeur',
+                name: 'Échoppe',
                 lat: p.bazar.lat,
                 lng: p.bazar.lng,
                 icon: '🛖',
-                stock: { pellicules: 3, encre: 3, cassettes: 3 },
+                // Vidée à la sortie du joueur (cf. echoppeTutoVider) : un rechargement
+                // ne doit pas la remplir à nouveau.
+                stock: _echoppeTutoPrise ? { pellicules: 0, encre: 0, cassettes: 0 } : { pellicules: 3, encre: 3, cassettes: 3 },
             };
             BAZAR_POINTS.push(bazar);
             // alwaysVisible : les échoppes ordinaires restent masquées jusqu'à la
@@ -19017,6 +19716,8 @@
                 return;
             }
             try {
+                // Premier objet entré dans le sac : pulsation unique (cf. _sacVerifierEntree)
+                if (typeof _sacVerifierEntree === 'function') _sacVerifierEntree();
                 // Ne jamais rétrograder _obDone de true à false
                 const _existingRaw = localStorage.getItem('lyon_cards_progress');
                 if (_existingRaw) {
@@ -19099,6 +19800,8 @@
                     // Découvertes déjà expliquées (panorama, point d'info, parchemin…).
                     // Persistées : elles survivent au tutoriel et ne se redisent jamais.
                     _obDiscovered,
+                    // Interface révélée pas à pas, sac, échoppe du tuto (cf. uiReveler)
+                    _uiEtat: _uiEtatExporter(),
                     // Où l'échoppe, la poussière et l'orbe du tutoriel ont été posées :
                     // un rechargement en plein tutoriel les remet au même endroit.
                     _obTutoSpawn,
@@ -19206,6 +19909,7 @@
                 if (d._obJournalSuppliesSaid) _obJournalSuppliesSaid = true;
                 if (d._obGuideVu && typeof d._obGuideVu === 'object') _obGuideVu = d._obGuideVu;
                 if (d._obDiscovered && typeof d._obDiscovered === 'object') _obDiscovered = d._obDiscovered;
+                if (d._uiEtat && typeof d._uiEtat === 'object') _uiEtatCharger(d._uiEtat);
                 if (d._obTutoSpawn && typeof d._obTutoSpawn === 'object') _obTutoSpawn = d._obTutoSpawn;
                 if (d._villeDuLivreUnlocked) _villeDuLivreUnlocked = d._villeDuLivreUnlocked;
                 if (d._hubExploriumKey)      _hubExploriumKey      = d._hubExploriumKey;
@@ -19267,6 +19971,7 @@
                     d._obJournalSeen = false; d._obJournalBackSeen = false; d._obJournalSuppliesSaid = false;
                     d._obGuideVu = {};
                     d._obDiscovered = {};
+                    d._uiEtat = null;   // interface re-cachée, sac/échoppe du tuto remis à zéro (cf. uiReveler)
                     // L'économie du tutoriel fait partie du tutoriel : la relancer
                     // avec 5000 poussières en poche et le sac plein de fournitures ne
                     // rejouerait rien du parcours (panne sèche, échoppe, orbe).
@@ -20230,7 +20935,7 @@
                 const _collected = collectedCards.includes(poi.localCardId);
                 const _pid2 = 'card_' + poi.id.replace(/[^a-z0-9]/gi,'');
                 const _img = document.createElement('img');
-                _img.src = './assets/spiral.png?v=2';
+                _img.src = './assets/nebuleuse.png';
                 _img.draggable = false;
 
                 _img.style.opacity = _collected ? '0.5' : '1';
@@ -21946,7 +22651,7 @@
                     currentNearbyPOI = nearbyPoi;
                     document.getElementById('poiName').textContent = 'Interagir';   // plus le nom interne du POI
                     const btn = nearbyDiv.querySelector('.collect-btn');
-                    if (btn) { btn.textContent = 'Collecter la carte'; btn.onclick = collectCard; }
+                    if (btn) { btn.textContent = 'Interagir'; btn.onclick = collectCard; }   // console réduite au mot « Interagir »
                     const badge = document.getElementById('poiThematicBadge');
                     if (badge) badge.style.display = 'none';
                     const sub = nearbyDiv.querySelector('.nearby-poi-distance');
@@ -21961,7 +22666,7 @@
                     const card = allCards.find(c => c.id === state.drawnCardId);
                     document.getElementById('poiName').textContent = 'Interagir';
                     const btn = nearbyDiv.querySelector('.collect-btn');
-                    if (btn) { btn.textContent = card ? TF('Collecter "%1"', T(card.name)) : 'Collecter la carte'; btn.onclick = collectThematicCard; }
+                    if (btn) { btn.textContent = 'Interagir'; btn.onclick = collectThematicCard; }
                     const badge = document.getElementById('poiThematicBadge');
                     if (badge) badge.style.display = 'inline-block';
                     const sub = nearbyDiv.querySelector('.nearby-poi-distance');
@@ -23030,8 +23735,10 @@
             btn.style.borderColor = `rgba(${_hexToRgb(color)},0.5)`;
             btn.style.color = color;
 
-            // Afficher phase 1
-            _ritualShowPhase('ritualHunt');
+            // L'écran « J'ai trouvé ✦ » est supprimé (brief Bellecour, section 1) :
+            // la nébuleuse s'affiche directement.
+            if (typeof journalLog === 'function') journalLog('nebula_open', { card: card.id });
+            ritualAfterHunt();
         }
 
         function _ritualShowPhase(id) {
@@ -23121,9 +23828,11 @@
 
         function ritualGoEngrave() {
             _ritualShowPhase('ritualEngrave');
-            _ritualInitEngrave();
+            _ritualCristalInit();   // moteur de l'artefact (ancien : _ritualInitEngrave)
         }
 
+        // Ancien moteur de gravure (orbite + barre linéaire), remplacé par
+        // _ritualCristalInit. Conservé, inutilisé, pour un retour arrière.
         function _ritualInitEngrave() {
             const canvas = document.getElementById('ritualCanvas');
             const ctx    = canvas.getContext('2d');
@@ -23415,7 +24124,8 @@
 
             _ritualShowPhase('ritualReveal');
             setTimeout(_ritualSpawnParticles, 200);
-            setTimeout(() => ritualClose(), 2800);
+            // L'écran reste affiché jusqu'au prochain tap (cf. _ritualRevealTap).
+            _ritualRevealDepuis = Date.now();
         }
 
         function _ritualSpawnParticles() {
@@ -23449,7 +24159,8 @@
                 el.classList.remove('show','dark');
                 setTimeout(() => { el.style.display = 'none'; }, 350);
             });
-            if (card) setTimeout(() => showCardPopup(card), 400);
+            // Console d'obtention de la carte supprimée (brief Bellecour, global) :
+            // plus de toast « Carte révélée », plus d'accès à la carte par lui.
             // Test 2 (Bellecour) : la carte Place Bellecour donne l'accès à l'Explorium
             if (card && card.id === BELLECOUR_CARD_ID) setTimeout(_bellecourDonnerAcces, 900);
             // Refresh Explorium : la nouvelle carte = nouvelle source de lumière à sa position
@@ -23736,7 +24447,7 @@
         function openBagScreen() {
             _hideAllNearbyConsoles('sac');
             _obOnOpenBag();
-            _bagCat = 0; _bagSel = null;
+            _bagCat = _sacPremiereCat(); _bagSel = null;   // première catégorie déjà trouvée
             document.getElementById("bagScreen").classList.add("show");
             _bagRender();
         }
@@ -23748,6 +24459,7 @@
 
         function _bagTabs() {
             document.getElementById("bagTabsEl").innerHTML = BAG_CATS.map((cat, i) => {
+                if (!_sacCatVisible(cat)) return "";   // sac limité à ce que le joueur a trouvé
                 const qty = cat.getItems().reduce((s, it) => s + (it.empty ? 0 : it.qty), 0);
                 // Utiliser le SVG canonique pour l'onglet parchemins
                 const tabIco = cat.id === 'parchemins' ? scrollIconSVG(22) : cat.icon;
@@ -23760,7 +24472,7 @@
 
         function _bagList() {
             const cat   = BAG_CATS[_bagCat];
-            const items = cat.getItems();
+            const items = _sacFiltrerItems(cat.getItems());   // ressources déjà trouvées seulement
             document.getElementById("bagCatIco").textContent = cat.icon;
             document.getElementById("bagCatNm").textContent  = cat.label;
             document.getElementById("bagCatQt").textContent  = TF('%1 type(s)', items.filter(it => !it.empty).length);
@@ -24494,7 +25206,7 @@
                 easing: t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t
             });
             if (btn) {
-                btn.textContent = v.label;
+                _jumellesMajIcone(btn);   // jumelles (vue proche) / personnage (vue d'ensemble)
                 btn.classList.toggle('zoomed-out', _mapViewMode === 'far');
                 btn.title = v.desc;
             }
@@ -31712,7 +32424,10 @@
         function giveCamera() {
             if (hasCamera) return;
             hasCamera  = true;
-            bagInv.pellicules = Math.max(bagInv.pellicules || 0, 10);
+            // Sac vide à l'origine (brief Bellecour, section 1) : ce palier est
+            // réclamé dès le lancement, les 10 pellicules rempliraient le sac
+            // avant même le tutoriel. Elles ne sont données que hors tutoriel.
+            if (_obDone) bagInv.pellicules = Math.max(bagInv.pellicules || 0, 10);
             updateCameraHUD();
         }
         function addFilm(n) {
@@ -32772,6 +33487,7 @@
                 if (nearest) {
                     currentNearbyBazar = nearest;
                     document.getElementById('bazarName').textContent = nearest.name;
+                    _echoppeMajConsole(nearest);   // « Échoppe vide » quand il n'y a plus rien
                     // Edge-trigger : afficher la console seulement à l'entrée dans la zone
                     const show = _shouldShowPoiConsole('bazar', nearest.id) && !bazarScreenOpen && !_isAnyScreenOpen();
                     if (show) { nearbyDiv.classList.remove('hidden'); stackNearbyPanels(); }
@@ -32828,6 +33544,8 @@
             if (currentNearbyBazar) {
                 _poiEntered.bazar = currentNearbyBazar.id;
                 window._dismissPoiConsole('bazar', currentNearbyBazar.id);
+                // Échoppe du tutoriel : forcément vide à la sortie (cf. echoppeTutoVider).
+                _echoppeALaSortie(currentNearbyBazar);
             }
             const el = document.getElementById('bazarScreen');
             el.style.transform    = 'translateY(100%)';
