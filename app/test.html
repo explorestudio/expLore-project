@@ -5389,6 +5389,14 @@
             font-size: 14px; color: rgba(255,255,255,0.80);
             line-height: 1.55; font-style: italic;
         }
+        .photo-viewer-save {
+            align-self: center;
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 20px; padding: 9px 18px;
+            font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85);
+            cursor: pointer;
+        }
         .photo-viewer-empty-note {
             font-size: 13px; color: rgba(255,255,255,0.30);
             font-style: italic; text-align: center; padding: 8px 0;
@@ -9396,7 +9404,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.92.0</div>
+            <div class="hud-version" id="hudVersion">v0.93.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11257,6 +11265,8 @@
             <div class="photo-viewer-body">
                 <div class="photo-viewer-meta" id="photoViewerMeta"></div>
                 <div id="photoViewerNote"></div>
+                <!-- Visible seulement pour une vraie photo (pas pour l'illustration) -->
+                <button class="photo-viewer-save" id="photoViewerSave" onclick="photoViewerEnregistrer()" style="display:none">📥 Enregistrer dans ma galerie</button>
             </div>
         </div>
 
@@ -12079,6 +12089,8 @@
             "Voir le détail de la complétion": "See completion details",
             "Aucune note laissée.": "No note left.",
             "📷 Photo non enregistrée (stockage plein ?)": "📷 Photo not saved (storage full?)",
+            "📥 Enregistrer dans ma galerie": "📥 Save to my gallery",
+            "📥 Photo enregistrée dans tes téléchargements": "📥 Photo saved to your downloads",
             "🔮 +1 Orbe de mémoire !": "🔮 +1 Memory orb!",
             "✨ Niveau maximum atteint": "✨ Maximum level reached",
             "La mémoire infuse. Reviens plus tard ou ravive-la avec une orbe.": "Memory is steeping. Come back later, or revive it with an orb.",
@@ -23576,6 +23588,9 @@
                 _photoViewerShown = id;
                 _photoGet(id).then(blob => {
                     if (!blob || _photoViewerShown !== id) return;
+                    _photoViewerBlob = blob;
+                    _photoViewerNom  = id;
+                    document.getElementById('photoViewerSave').style.display = '';
                     _photoViewerUrl = URL.createObjectURL(blob);
                     const img = document.createElement('img');
                     img.src = _photoViewerUrl;
@@ -23616,9 +23631,42 @@
 
         let _photoViewerUrl = null;
         let _photoViewerShown = null;   // photo attendue : une lecture lente d'une autre photo ne l'écrase pas
+        let _photoViewerBlob = null;
+        let _photoViewerNom  = null;
         function _photoViewerRevoke() {
             if (_photoViewerUrl) { URL.revokeObjectURL(_photoViewerUrl); _photoViewerUrl = null; }
             _photoViewerShown = null;
+            _photoViewerBlob = null;
+            _photoViewerNom  = null;
+            const b = document.getElementById('photoViewerSave');
+            if (b) b.style.display = 'none';
+        }
+
+        // Copie la photo hors du jeu. Android : téléchargement, le fichier
+        // arrive dans « Téléchargements », que la galerie affiche. Ailleurs
+        // (iPhone) : menu de partage, qui propose « Enregistrer l'image ».
+        async function photoViewerEnregistrer() {
+            if (!_photoViewerBlob) return;
+            const fichier = new File([_photoViewerBlob], 'ExpLore_' + _photoViewerNom + '.jpg', { type: 'image/jpeg' });
+            const android = /Android/i.test(navigator.userAgent);
+            if (!android && navigator.canShare && navigator.canShare({ files: [fichier] })) {
+                try {
+                    await navigator.share({ files: [fichier] });
+                    return;
+                } catch (e) {
+                    if (e && e.name === 'AbortError') return;   // partage annulé
+                    console.warn('[photos] partage impossible, téléchargement à la place', e);
+                }
+            }
+            const url = URL.createObjectURL(fichier);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fichier.name;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
+            showToast(T('📥 Photo enregistrée dans tes téléchargements'));
         }
 
         function closePhotoViewer() {
@@ -33229,6 +33277,12 @@
             let photoId = null;
             if (photoBlob instanceof Blob && typeof indexedDB !== 'undefined') {
                 photoId = 'photo_' + currentInfoPoint.id + '_' + now.getTime();
+                // Stockage « persistant » : le navigateur ne l'efface plus de lui-même
+                // quand l'espace manque. Chrome accorde sans boîte de dialogue
+                // (app installée) ; un refus laisse le stockage ordinaire.
+                if (navigator.storage && navigator.storage.persist) {
+                    navigator.storage.persist().then(ok => console.log('[photos] stockage persistant :', ok)).catch(() => {});
+                }
                 _photoPut(photoId, photoBlob).catch(e => {
                     console.warn('[photos] photo non enregistrée', e);
                     showToast(T('📷 Photo non enregistrée (stockage plein ?)'));
