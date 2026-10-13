@@ -31218,7 +31218,7 @@
                     h += '<div class="jsb-caption">' + _jsbEsc(entry.imageBelowCaption) + '</div>';
                 }
             }
-            if (entry.quote)        h += '<div class="jsb-quote">« ' + _jsbEsc(entry.quote) + ' »</div>';
+            if (entry.quote)        h += '<div class="jsb-quote">« ' + _jsbEsc(T(entry.quote)) + ' »</div>';
             return h + '</div>';
         }
 
@@ -31344,7 +31344,7 @@
             if (entry.body)  h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
             // Main courante en pied de page, comme sur `image_citation` : une entrée
             // qui change de gabarit ne doit pas perdre sa citation au passage.
-            if (entry.quote) h += '<div class="jsb-quote">« ' + _jsbEsc(entry.quote) + ' »</div>';
+            if (entry.quote) h += '<div class="jsb-quote">« ' + _jsbEsc(T(entry.quote)) + ' »</div>';
             return h + '</div>';
         }
 
@@ -31502,7 +31502,7 @@
             if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
             // Une main courante peut coiffer la frise : c'est elle qui dit le lien
             // entre les deux colonnes, la frise dit seulement les dates.
-            if (entry.quote) h += '<div class="jsb-quote">« ' + _jsbEsc(entry.quote) + ' »</div>';
+            if (entry.quote) h += '<div class="jsb-quote">« ' + _jsbEsc(T(entry.quote)) + ' »</div>';
             h += '<div class="jsb-tl">';
             h +=   '<div class="jsb-tl-head">'
                  +   '<span>' + _jsbEsc(cols[0]) + '</span>'
