@@ -9289,6 +9289,31 @@
             box-shadow: 0 8px 26px rgba(88,28,135,0.55);
         }
         .lang-select-flag { font-size: 24px; line-height: 1; }
+        /* Code d'accès du test Bellecour : même habillage que le choix de langue.
+           Au-dessus de l'intro animée (12000) : la clôture peut s'ouvrir n'importe quand. */
+        #codeAccesOverlay { z-index: 12500; }
+        .code-acces-input {
+            padding: 14px 16px;
+            background: rgba(13,6,25,0.9);
+            border: 1px solid rgba(167,139,250,0.4);
+            border-radius: 14px;
+            color: #fef3c7;
+            font-family: ui-monospace, Menlo, Consolas, monospace;
+            font-size: 22px;
+            letter-spacing: 0.25em;
+            text-align: center;
+            text-transform: uppercase;
+            outline: none;
+        }
+        .code-acces-input:focus { border-color: rgba(251,191,36,0.7); }
+        .code-acces-input.erreur { border-color: #EF4444; }
+        .code-acces-btn { justify-content: center; }
+        .code-acces-msg {
+            min-height: 18px;
+            font-size: 13px;
+            color: #FCA5A5;
+            text-align: center;
+        }
         /* ═══════════════════════════════════════════════════════
            INTRO ANIMÉE — aucune image, tout dessiné en code
            Transposée du brief (annexe) : identifiants préfixés intro2*,
@@ -9850,6 +9875,10 @@
             <div style="padding:16px; border-bottom:1px solid rgba(255,255,255,0.08);">
                 <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Actions</div>
                 <div style="display:flex;flex-direction:column;gap:8px;">
+                    <button onclick="testSaisirCode()" class="test-action-btn">🔑 Saisir mon code (fin de session)</button>
+                    <button onclick="testReculerT0(30)" class="test-action-btn">⏱️ Reculer t0 de 30 min</button>
+                    <button onclick="closeTestPanel(); testExporterJournal()" class="test-action-btn">🧾 Exporter le journal utilisateur</button>
+                    <button onclick="journalEnvoyer().then(ok => showToast(ok ? '🧾 Journal envoyé' : '🧾 Rien envoyé (pas de point de collecte, file vide ou réseau)'))" class="test-action-btn">🧾 Envoyer le journal maintenant</button>
                     <button onclick="addTestCards()" class="test-action-btn">🃏 Débloquer toutes les cartes</button>
                     <button onclick="addTestScrolls(5)" class="test-action-btn">📜 +5 parchemins</button>
                     <button onclick="addTestOrbes(3)" class="test-action-btn">🔮 +3 orbes</button>
@@ -11966,6 +11995,21 @@
             </div>
         </div>
 
+        <!-- Code d'accès du test Bellecour (après le choix de langue, avant la partie) -->
+        <div id="codeAccesOverlay" class="lang-select-overlay">
+            <div class="lang-select-logo">Exp<em>L</em>ore</div>
+            <div class="lang-select-sub" id="codeAccesSub">Saisis le code de ta feuille de route.</div>
+            <div class="lang-select-title">Code d'accès</div>
+            <div class="lang-select-btns">
+                <input id="codeAccesInput" class="code-acces-input" type="text" maxlength="12"
+                       autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"
+                       onkeydown="if (event.key === 'Enter') codeAccesValider()">
+                <button class="lang-select-btn code-acces-btn" onclick="codeAccesValider()">Valider</button>
+                <button class="lang-select-btn code-acces-btn" id="codeAccesAnnuler" onclick="codeAccesFermer()" style="display:none">Annuler</button>
+                <div class="code-acces-msg" id="codeAccesMsg"></div>
+            </div>
+        </div>
+
         <div id="introBDCinematic" class="intro-bd-cinematic hidden">
             <button class="intro-bd-skip" onclick="skipIntroBD()">Passer ▸</button>
             <div class="intro-bd-stage" id="introBDStage">
@@ -12036,6 +12080,23 @@
 
         const LANG_KEY = 'lyon_cards_lang';   // clé localStorage dédiée (survit à saveProgress)
         let CURRENT_LANG = 'fr';
+
+        // ── Test Bellecour : codes d'accès, journal, formulaire post-test ──
+        // Alphabet sans O, 0, I, 1 ni L (confusions à l'oral et à l'écrit),
+        // sauf le code équipe, historique. Validation insensible à la casse.
+        const TEST_CODE_EQUIPE = 'CNL0DVD';
+        const TEST_CODES = [
+            TEST_CODE_EQUIPE,
+            '2NWQW3K', '2Z7QTET', '4Q4ADR2', '4UYQKAR', '4V37TXU', '5N2CC65', '6XM6TTM', '6YEFG64', '75UVQJ5', '7C75SQ8',
+            '7PU58HE', '7QRMN6R', '96EW3G4', 'AR67VKN', 'AV3UR5B', 'CHGYPQ9', 'CKMNW6N', 'CNHZ744', 'CUPC7KF', 'D7NURMP',
+            'DY8JJRC', 'E3RA9Q9', 'ESW2PE4', 'FKW9FVP', 'GXQ4HWM', 'JAUUNG3', 'JQPZ6Y7', 'JRHTWV2', 'KUXXGT6', 'M5E8HWK',
+            'MTNU958', 'MVWF2XY', 'NFDR2G7', 'NT3Y27R', 'PBDGV4Y', 'QV2SZ8W', 'TJR36FJ', 'TTFR5T9', 'U226UG9', 'UR8VYE4',
+            'VNQBN2F', 'X3M7XE8', 'X6S9H8X', 'XEBJ2WV', 'XS3QRCM', 'Y5SJUXQ', 'Z2UY9Y8', 'ZPCTG4Q', 'ZPMP27U', 'ZTHR2K4'
+        ];
+        // URL /exec du déploiement Apps Script (voir journal_endpoint.gs).
+        // Vide : le journal fonctionne en local uniquement, sans erreur.
+        const JOURNAL_ENDPOINT = '';   // TODO : coller l'URL du point de collecte
+        const POSTTEST_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdx04XLix_mq8s4NXQCkZfsBF0LHTMIVaQLG7kXTu8_9EesAg/viewform';
 
         // Table FR → EN. La clé est la chaîne française EXACTE (après trim).
         const I18N_EN = {
@@ -12224,6 +12285,15 @@
             "Ce que tu as pensé, vu, ressenti… ou juste une blague.": "What you thought, saw, felt… or just a joke.",
             "📷 Enregistrer la photo": "📷 Save the photo",
             "Annuler": "Cancel",
+            // Code d'accès du test Bellecour
+            "Saisis le code de ta feuille de route.": "Enter the code from your route sheet.",
+            "Pour terminer ta session, saisis à nouveau ton code.": "To end your session, enter your code again.",
+            "Code d'accès": "Access code",
+            "Code inconnu.": "Unknown code.",
+            "Valider": "Confirm",
+            "Ce n'est pas le code saisi au départ.": "This is not the code you entered at the start.",
+            "Ta session est déjà close.": "Your session is already closed.",
+            "Session terminée. Merci !": "Session over. Thank you!",
             "📅 Visite le": "📅 Visited on",
 
             // ── Écran progression ──
@@ -14127,7 +14197,7 @@
             const ov = document.getElementById('langSelectOverlay');
             if (ov) ov.classList.remove('show');
             applyLanguage(lang);
-            if (typeof _initAppAfterLang === 'function') _initAppAfterLang();
+            if (typeof _initAppAfterLang === 'function') _accesPuisDemarrer();
         }
 
         // Bascule en cours de partie (menu avatar). On recharge : le DOM a été
@@ -14137,6 +14207,321 @@
             const next = (CURRENT_LANG === 'en') ? 'fr' : 'en';
             try { localStorage.setItem(LANG_KEY, next); } catch(e) {}
             location.reload();
+        }
+
+        // ==================== CODE D'ACCÈS (test Bellecour) ====================
+        // Après le choix de langue, avant la partie. La première saisie valide
+        // fixe t0 (jamais réécrit) ; la seconde saisie du même code, depuis le
+        // menu test, clôt la session. Deux échéances partent de t0 :
+        // +1 h la scène finale (sauf code équipe), +2 h l'arrêt du journal.
+        // Vérifiées au lancement, toutes les 30 s et au retour au premier plan :
+        // elles tiennent même si l'app a été fermée entre-temps.
+        const ACCES_KEY             = 'explore_acces';
+        const ACCES_FINALE_MS       = 60 * 60 * 1000;
+        const ACCES_FIN_JOURNAL_MS  = 2 * 60 * 60 * 1000;
+        let _acces = null;          // { code, t0, team, sessionClosed, tEnd, finaleDeclenchee }
+        let _accesMode = 'entree';  // 'entree' (premier lancement) ou 'cloture' (menu test)
+        let _accesSuite = null;
+        let _accesVeille = null;
+
+        function _accesNormaliser(s) { return String(s || '').toUpperCase().replace(/\s+/g, ''); }
+        function codeAccesEstValide(code) { return TEST_CODES.includes(_accesNormaliser(code)); }
+        function _accesLire() {
+            try { const raw = localStorage.getItem(ACCES_KEY); _acces = raw ? JSON.parse(raw) : null; }
+            catch (e) { _acces = null; }
+            return _acces;
+        }
+        function _accesEcrire() {
+            try { localStorage.setItem(ACCES_KEY, JSON.stringify(_acces)); } catch (e) {}
+        }
+        // Événement de journal (lot 2) ; sans journal, rien.
+        function _accesJournal(type, data) {
+            if (typeof journalEvenement === 'function') journalEvenement(type, data);
+        }
+
+        // Appelé à la place de _initAppAfterLang : code déjà saisi → partie, sinon écran.
+        function _accesPuisDemarrer() {
+            _accesLire();
+            const demarrer = () => { _initAppAfterLang(); _accesDemarrerVeille(); };
+            if (_acces && _acces.code) { demarrer(); return; }
+            _accesOuvrir('entree', demarrer);
+        }
+
+        function _accesOuvrir(mode, suite) {
+            _accesMode  = mode;
+            _accesSuite = suite || null;
+            document.getElementById('codeAccesSub').textContent = mode === 'cloture'
+                ? T('Pour terminer ta session, saisis à nouveau ton code.')
+                : T('Saisis le code de ta feuille de route.');
+            document.getElementById('codeAccesAnnuler').style.display = mode === 'cloture' ? '' : 'none';
+            const input = document.getElementById('codeAccesInput');
+            input.value = '';
+            input.classList.remove('erreur');
+            document.getElementById('codeAccesMsg').textContent = '';
+            document.getElementById('codeAccesOverlay').classList.add('show');
+            setTimeout(() => { try { input.focus(); } catch (e) {} }, 150);
+        }
+
+        function codeAccesFermer() {
+            document.getElementById('codeAccesOverlay').classList.remove('show');
+        }
+
+        function _accesRefus(message) {
+            const input = document.getElementById('codeAccesInput');
+            input.classList.add('erreur');
+            document.getElementById('codeAccesMsg').textContent = T(message);
+        }
+
+        function codeAccesValider() {
+            const code = _accesNormaliser(document.getElementById('codeAccesInput').value);
+            if (!codeAccesEstValide(code)) { _accesRefus('Code inconnu.'); return; }
+            _accesLire();
+
+            if (_accesMode === 'entree') {
+                if (!_acces) _acces = {};
+                const premiere = !_acces.t0;
+                _acces.code = code;
+                if (premiere) _acces.t0 = Date.now();
+                _acces.team = (code === TEST_CODE_EQUIPE);
+                _accesEcrire();
+                if (premiere) _accesJournal('code_entered', { team: _acces.team });
+                codeAccesFermer();
+                const suite = _accesSuite; _accesSuite = null;
+                if (suite) suite();
+                return;
+            }
+
+            // Clôture : seul le code de la première saisie est accepté.
+            if (!_acces || code !== _acces.code) { _accesRefus("Ce n'est pas le code saisi au départ."); return; }
+            if (_acces.sessionClosed) { _accesRefus('Ta session est déjà close.'); return; }
+            _acces.sessionClosed = true;
+            _acces.tEnd = Date.now();
+            _accesEcrire();
+            _accesJournal('code_closed', { duree_min: Math.round((_acces.tEnd - _acces.t0) / 60000) });
+            if (typeof journalArreter === 'function') journalArreter('session_close');
+            codeAccesFermer();
+            showToast(T('Session terminée. Merci !'));
+        }
+
+        function _accesDemarrerVeille() {
+            _accesVerifierEcheances();
+            if (_accesVeille) return;
+            _accesVeille = setInterval(_accesVerifierEcheances, 30000);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) _accesVerifierEcheances();
+            });
+        }
+
+        function _accesVerifierEcheances() {
+            if (!_acces || !_acces.t0) return;
+            const ecoule = Date.now() - _acces.t0;
+            if (ecoule >= ACCES_FIN_JOURNAL_MS && typeof journalArreter === 'function') journalArreter('2h');
+            // Scène finale (lot 3I) : elle répond false tant qu'elle ne peut pas
+            // se jouer (dialogue ouvert, carte pas prête) ; on retente au tour suivant.
+            if (!_acces.team && !_acces.sessionClosed && !_acces.finaleDeclenchee
+                && ecoule >= ACCES_FINALE_MS && typeof declencherSceneFinaleTest === 'function') {
+                if (declencherSceneFinaleTest()) {
+                    _acces.finaleDeclenchee = true;
+                    _accesEcrire();
+                }
+            }
+        }
+
+        // ── Menu test ──
+        function testSaisirCode() {
+            closeTestPanel();
+            _accesOuvrir('cloture');
+        }
+        // Simule le temps qui passe depuis la première saisie.
+        function testReculerT0(minutes) {
+            _accesLire();
+            if (!_acces || !_acces.t0) { showToast('Aucun code saisi'); return; }
+            _acces.t0 -= minutes * 60000;
+            _accesEcrire();
+            _accesVerifierEcheances();
+            const ecoule = Math.round((Date.now() - _acces.t0) / 60000);
+            showToast('⏱️ t0 il y a ' + ecoule + ' min' + (_acces.team ? ' (code équipe)' : ''));
+        }
+
+        // ==================== JOURNAL UTILISATEUR (test Bellecour) ====================
+        // Événements { t (ISO), type, data } rattachés au CODE du joueur, jamais à
+        // son pseudo, et sans aucune position GPS (le journal GPS, lui, reste local).
+        // File en localStorage : un événement y reste jusqu'à envoi confirmé.
+        // Envoi toutes les 5 min (fetch) + envoi de secours (sendBeacon) au passage
+        // en arrière-plan : en poche, les minuteurs sont suspendus, c'est lui qui
+        // garantit la remontée. Arrêt définitif à la clôture de session ou 2 h
+        // après t0 : un dernier envoi, puis plus rien, même après réouverture.
+        //
+        // Requête « simple » (text/plain, no-cors) : la réponse d'Apps Script est
+        // illisible côté app ; un fetch qui ne lève pas d'erreur vaut succès, et le
+        // dernier lot parti reste dans journalSent par sécurité.
+        const JOURNAL_QUEUE_KEY = 'journalQueue';
+        const JOURNAL_SENT_KEY  = 'journalSent';
+        const JOURNAL_STOP_KEY  = 'journalStopped';
+        const JOURNAL_MAX       = 2000;            // événements en file (les plus anciens sautent)
+        const JOURNAL_TXT_MAX   = 500;             // caractères par champ texte
+        const JOURNAL_ENVOI_MS  = 5 * 60 * 1000;
+
+        let _jrnQueue   = [];
+        let _jrnStopped = false;
+        let _jrnEnvoi   = false;    // un fetch est en vol
+        try { _jrnQueue = JSON.parse(localStorage.getItem(JOURNAL_QUEUE_KEY) || '[]'); } catch (e) { _jrnQueue = []; }
+        try { _jrnStopped = localStorage.getItem(JOURNAL_STOP_KEY) === '1'; } catch (e) {}
+        if (!Array.isArray(_jrnQueue)) _jrnQueue = [];
+
+        function _jrnPersister() {
+            try { localStorage.setItem(JOURNAL_QUEUE_KEY, JSON.stringify(_jrnQueue)); } catch (e) {}
+        }
+        // Tronque chaque chaîne à 500 caractères, à toute profondeur.
+        function _jrnTronquer(v, prof) {
+            if (typeof v === 'string') return v.length > JOURNAL_TXT_MAX ? v.slice(0, JOURNAL_TXT_MAX) : v;
+            if (!v || typeof v !== 'object' || (prof || 0) > 4) return v;
+            if (Array.isArray(v)) return v.slice(0, 50).map(x => _jrnTronquer(x, (prof || 0) + 1));
+            const o = {};
+            for (const k in v) o[k] = _jrnTronquer(v[k], (prof || 0) + 1);
+            return o;
+        }
+
+        // Nom employé par les ajouts de la branche « expressions de Clara ».
+        function journalLog(type, data) { journalEvenement(type, data); }
+
+        function journalEvenement(type, data) {
+            if (_jrnStopped) return;
+            _jrnQueue.push({ t: new Date().toISOString(), type: String(type), data: _jrnTronquer(data || {}) });
+            if (_jrnQueue.length > JOURNAL_MAX) _jrnQueue.splice(0, _jrnQueue.length - JOURNAL_MAX);
+            _jrnPersister();
+        }
+
+        // Corps envoyé : le code est lu au moment de l'envoi, donc les événements
+        // d'avant la saisie (app_open) partent avec lui.
+        function _jrnCorps(events) {
+            const a = _acces || _accesLire() || {};
+            return JSON.stringify({
+                code: a.code || '',
+                team: !!a.team,
+                t0: a.t0 ? new Date(a.t0).toISOString() : '',
+                app_version: ((document.getElementById('hudVersion') || {}).textContent || '').trim(),
+                user_agent: navigator.userAgent,
+                events
+            });
+        }
+        function _jrnPret() {
+            const a = _acces || _accesLire();
+            return !!(JOURNAL_ENDPOINT && a && a.code && _jrnQueue.length);
+        }
+        // Retire de la file le lot parti (des événements ont pu s'ajouter derrière).
+        function _jrnLotParti(lot) {
+            _jrnQueue.splice(0, lot.length);
+            _jrnPersister();
+            try { localStorage.setItem(JOURNAL_SENT_KEY, JSON.stringify(lot)); } catch (e) {}
+        }
+
+        function journalEnvoyer(finalEnvoi) {
+            if (!_jrnPret() || (_jrnEnvoi && !finalEnvoi)) return Promise.resolve(false);
+            const lot = _jrnQueue.slice();
+            _jrnEnvoi = true;
+            return fetch(JOURNAL_ENDPOINT, {
+                method: 'POST',
+                mode: 'no-cors',
+                keepalive: lot.length < 300,   // keepalive plafonne le corps à 64 Ko
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: _jrnCorps(lot)
+            }).then(() => { _jrnLotParti(lot); return true; })
+              .catch(e => { console.warn('[journal] envoi en échec, nouvel essai au prochain tour', e); return false; })
+              .finally(() => { _jrnEnvoi = false; });
+        }
+
+        // Envoi de secours : la page passe en arrière-plan ou se ferme.
+        function _jrnBalise() {
+            if (_jrnStopped || !_jrnPret() || !navigator.sendBeacon) return;
+            const lot = _jrnQueue.slice();
+            let ok = false;
+            try { ok = navigator.sendBeacon(JOURNAL_ENDPOINT, _jrnCorps(lot)); } catch (e) {}
+            if (ok) _jrnLotParti(lot);
+        }
+
+        function journalArreter(raison) {
+            if (_jrnStopped) return;
+            journalEvenement('journal_stop', { raison });
+            journalEnvoyer(true);          // dernier envoi ; la file reste exportable s'il échoue
+            _jrnStopped = true;
+            try { localStorage.setItem(JOURNAL_STOP_KEY, '1'); } catch (e) {}
+            console.log('[journal] arrêt définitif :', raison);
+        }
+
+        setInterval(() => { if (!_jrnStopped) journalEnvoyer(); }, JOURNAL_ENVOI_MS);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) { journalEvenement('app_hide'); _jrnBalise(); }
+            else journalEvenement('app_show');
+        });
+        window.addEventListener('pagehide', _jrnBalise);
+
+        // Erreurs JavaScript : message et pile tronqués.
+        window.addEventListener('error', e => {
+            journalEvenement('error', {
+                message: e.message || String(e.error || ''),
+                source: (e.filename || '').split('/').pop() + ':' + (e.lineno || 0),
+                stack: (e.error && e.error.stack) || ''
+            });
+        });
+        window.addEventListener('unhandledrejection', e => {
+            const r = e.reason;
+            journalEvenement('error', { message: 'promesse rejetée : ' + ((r && r.message) || String(r)), stack: (r && r.stack) || '' });
+        });
+
+        // GPS : erreurs et précision (en mètres, au plus une fois par minute), jamais la position.
+        let _jrnGpsDernier = 0;
+        function _jrnBrancherGPS() {
+            if (typeof GeoEngine === 'undefined' || !GeoEngine.on) return;
+            GeoEngine.on('error', err => journalEvenement('gps_error', { code: err && err.code, message: err && err.message }));
+            GeoEngine.on('fix', () => {
+                const now = Date.now();
+                if (now - _jrnGpsDernier < 60000) return;
+                const raw = GeoEngine.getRaw();
+                if (!raw || typeof raw.acc !== 'number') return;
+                _jrnGpsDernier = now;
+                journalEvenement('gps_accuracy', { precision_m: Math.round(raw.acc) });
+            });
+        }
+        // Après le chargement complet : GeoEngine est déclaré plus bas dans le script.
+        window.addEventListener('load', () => {
+            journalEvenement('app_open', { version: ((document.getElementById('hudVersion') || {}).textContent || '').trim(), lang: CURRENT_LANG });
+            _jrnBrancherGPS();
+        });
+
+        // ── Menu test : journal brut, sélectionnable, copiable (filet si rien n'est parti) ──
+        function testExporterJournal() {
+            let envoyes = [];
+            try { envoyes = JSON.parse(localStorage.getItem(JOURNAL_SENT_KEY) || '[]'); } catch (e) {}
+            const contenu = JSON.parse(_jrnCorps(_jrnQueue));
+            contenu.arrete = _jrnStopped;
+            contenu.point_de_collecte = JOURNAL_ENDPOINT || '(aucun : journal local)';
+            contenu.dernier_lot_envoye = envoyes;
+            const json = JSON.stringify(contenu, null, 2);
+
+            let ov = document.getElementById('journalExportOverlay');
+            if (!ov) {
+                ov = document.createElement('div');
+                ov.id = 'journalExportOverlay';
+                ov.style.cssText = 'position:fixed;inset:0;z-index:13000;background:rgba(10,8,20,0.96);display:flex;flex-direction:column;gap:10px;padding:16px;';
+                ov.innerHTML = '<div style="display:flex;gap:8px;align-items:center;">'
+                    + '<div style="flex:1;color:#EDE9FE;font-weight:700;font-size:14px;">Journal utilisateur</div>'
+                    + '<button id="journalExportCopier" class="test-action-btn" style="width:auto;">📋 Copier</button>'
+                    + '<button id="journalExportFermer" class="test-action-btn" style="width:auto;">✕</button></div>'
+                    + '<textarea id="journalExportTexte" readonly style="flex:1;width:100%;background:#0d0619;color:#d1d5db;border:1px solid rgba(167,139,250,0.3);border-radius:10px;padding:10px;font:11px/1.4 ui-monospace,Menlo,Consolas,monospace;"></textarea>';
+                document.body.appendChild(ov);
+                document.getElementById('journalExportFermer').onclick = () => { ov.style.display = 'none'; };
+                document.getElementById('journalExportCopier').onclick = () => {
+                    const ta = document.getElementById('journalExportTexte');
+                    ta.select();
+                    const fini = () => showToast('📋 Journal copié');
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(ta.value).then(fini).catch(() => { try { document.execCommand('copy'); fini(); } catch (e) {} });
+                    } else { try { document.execCommand('copy'); fini(); } catch (e) {} }
+                };
+            }
+            document.getElementById('journalExportTexte').value = json;
+            ov.style.display = 'flex';
         }
 
         // ==================== DATA ====================
@@ -20322,7 +20707,7 @@
                 if (_ov) { _ov.classList.add('show'); return; }
             }
             applyLanguage(_savedLang || 'fr');
-            _initAppAfterLang();
+            _accesPuisDemarrer();   // code d'accès du test, puis _initAppAfterLang
         }
 
         // Corps historique de initApp, appelé une fois la langue connue.
@@ -25123,6 +25508,7 @@
             currentQuestCard = card;
             if (!activeQuests[card.id]) {
                 activeQuests[card.id] = { steps: {}, started: Date.now() };
+                journalEvenement('quest_started', { quete_locale: card.id });
             }
             saveProgress();
             openQuestScreen(card);
@@ -25210,6 +25596,7 @@
         function activateQuestCard() {
             const card = currentQuestCard;
             if (!card) return;
+            journalEvenement('quest_completed', { quete_locale: card.id });
             document.getElementById('questScreen').classList.remove('show');
             currentQuestCard = null;
             collectCardDirect(card);
@@ -26174,6 +26561,7 @@
         }
 
         function openCardDetail(card) {
+            if (card) journalEvenement('card_opened', { carte: card.id });
             _cacherConsoles();   // cf. _isAnyScreenOpen
             _obOnOpenCardDetail();
             selectedCard = card;
@@ -26898,6 +27286,7 @@
             if (!cardJournalEntries[cardId]) cardJournalEntries[cardId] = [];
             const alreadyAdded = cardJournalEntries[cardId].some(e => e.id === entry.id);
             if (alreadyAdded) return;
+            journalEvenement('journal_entry_unlocked', { carte: cardId, chapitre: level + 1, index: cardJournalEntries[cardId].filter(e => e.level === level).length + 1, entree: entry.id });
             // _type forcé depuis showDustDialogue en priorité, sinon inférence de secours
             const entryType = entry._type || (
                 entry.photo === 'placeholder_visual' ? 'visual' :
@@ -27219,6 +27608,7 @@
             }
 
             memorialDust -= increment;
+            journalEvenement('dust_given', { carte: selectedCard.id, quantite: increment, niveau: cl.level });
             // Consommer 1 cran d'énergie
             consumeCardEnergy(selectedCard.id);
             document.getElementById('dustCounter').textContent = memorialDust;
@@ -27271,6 +27661,7 @@
                 return;
             }
             bagInv.orbes -= 1;
+            journalEvenement('orb_used', { carte: selectedCard.id });
             restoreCardEnergy(selectedCard.id);
             saveProgress();
 
@@ -35358,6 +35749,7 @@
         function _acceptQuestEtape(grappeId, etapeId) {
             if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
             grappeQuestState[grappeId][etapeId] = 'active';
+            journalEvenement('quest_started', { grappe: grappeId, etape: etapeId });
             saveProgress();
             renderGrappeQuestModal(grappeId);
             updateQuestMarkers();
@@ -35368,6 +35760,7 @@
             const grappe = GRAPPE_QUESTS[grappeId];
             if (!grappe) return;
             const etape = grappe.quete.etapes.find(e => e.id === etapeId);
+            journalEvenement('quest_completed', { grappe: grappeId, etape: etapeId });
             if (!etape) return;
             if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
             grappeQuestState[grappeId][etapeId] = 'completed';
