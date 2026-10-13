@@ -17761,8 +17761,19 @@
             if (typeof _obGuide === 'object') { _obGuide.active = false; }
             if (typeof _obGuideStopLoop === 'function') _obGuideStopLoop();
             try { _obRemoveHighlight(); } catch(e) {}
-            // RDV Bellecour (réactivé pour le test 2)
-            if (typeof _obActivateBellecourQuest === 'function') _obActivateBellecourQuest();
+            // Test Bellecour : le rendez-vous de Bellecour n'existe plus. Passer le
+            // tutoriel mène au même état que sa fin (sections 12, 17 et 18) :
+            // parcours « Lyon, ville du livre » ouvert, Explorium ouvert (sinon il
+            // resterait verrouillé, la 5e carte n'ouvrant la salle que pendant le
+            // tutoriel), quête « Finaliser… » donnée. « Faire ses preuves », si
+            // elle était en cours, se clôt d'elle-même (_tutoCompagnonTick).
+            _villeDuLivreUnlocked = true;
+            _hubExploriumKey = true;
+            _hubExploriumOpened = true;
+            _hubPadlockPopPending = false;
+            try { _hubRefreshLockUI(); _hubRefreshDoor(); } catch (e) {}
+            _tutoQueteDemarrer('vdl');
+            _uiAppliquer();
             // Marquer tous les écrans comme déjà vus pour éviter tout hint contextuel a posteriori
             if (typeof _obScreenSeen === 'object') {
                 ['collections','bag','journal','mindmap','carddetail'].forEach(k => { _obScreenSeen[k] = true; });
@@ -20677,6 +20688,11 @@
                 const p = _tutoQueteProgres('vdl');
                 if (p.max && p.n >= p.max) _tutoQueteAccomplir('vdl');
             }
+            // Tutoriel passé en pleine quête « Faire ses preuves » : la section 15
+            // ne viendra plus la clore, elle se clôt à la 3e nébuleuse.
+            const qp = _tutoQuetes().preuves;
+            if (_obDone && qp && qp.etat !== 'completed'
+                && _tutoQueteProgres('preuves').n >= TUTO_QUETES.preuves.max) _tutoQueteAccomplir('preuves');
         }
         setInterval(_tutoCompagnonTick, 1000);
 
