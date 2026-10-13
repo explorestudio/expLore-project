@@ -8804,6 +8804,13 @@
             padding: 3px 9px; pointer-events: none;
             box-shadow: 0 1px 6px rgba(0,0,0,0.18);
         }
+        /* Jauge de progression du périmètre, glissée dans le libellé (modèle : badges de quartier).
+           Masquée tant que les jumelles ne sont pas révélées (classe posée par uiReveler). */
+        .perimetre-jauge { display: flex; align-items: center; gap: 6px; justify-content: center; margin-top: 3px; }
+        .perimetre-jauge-barre { width: 64px; height: 5px; background: rgba(106,80,40,0.18); border-radius: 3px; overflow: hidden; }
+        .perimetre-jauge-rempli { height: 100%; width: 0%; background: #C89039; border-radius: 3px; transition: width .45s ease; }
+        .perimetre-jauge-pct { font-size: 12px; font-weight: 800; letter-spacing: 0; color: #8a5a1e; min-width: 30px; text-align: right; }
+        body.ui-masque-jumelles .perimetre-jauge { display: none; }
         /* Journal de quêtes : objectif hors du périmètre du jour (visible, pas masqué) */
         .qj-hors-zone {
             display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 8px;
@@ -9902,6 +9909,7 @@
                     <button onclick="testToggleCompleteZones()" class="test-action-btn">🗺️ Compléter les zones (aperçu)</button>
                     <button onclick="leverPerimetreTest()" class="test-action-btn">🗺️ Lever le périmètre du test</button>
                     <button onclick="testRetablirPerimetre()" class="test-action-btn">🗺️ Rétablir le périmètre du test</button>
+                    <button onclick="closeTestPanel(); testJaugePerimetre()" class="test-action-btn">📏 Jauge du périmètre (détail)</button>
                     <button onclick="testAfficherLectures()" class="test-action-btn">📊 Statistiques de lecture</button>
                     <button onclick="testSceneAcces()" class="test-action-btn">💬 Scène 2 : accès à l'Explorium</button>
                     <button onclick="testSceneFinale()" class="test-action-btn">💬 Scène 3 : retour à Bellecour</button>
@@ -14829,6 +14837,157 @@
             el.textContent = T('Zone du test');
             _perimetreLibelle = new maplibregl.Marker({ element: el, anchor: 'bottom' })
                 .setLngLat([4.8306, 45.7658]).addTo(map);
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // JAUGE DE PROGRESSION DU PÉRIMÈTRE (test Bellecour, section 13)
+        // ══════════════════════════════════════════════════════════════
+        // Même logique que les jauges de quartier : 100 % = tout ce que contient
+        // le périmètre. Le testeur ne l'atteindra pas en une heure, et ce n'est
+        // pas le but : la jauge doit bouger de façon visible sans se remplir.
+        //
+        // Inventaire du périmètre (TEST_PERIMETER, listes fixes ; les ressources
+        // du tutoriel, posées autour du joueur, sont exclues) :
+        //   cartes     12 : 1 légendaire (card6), 8 rares, 3 communes
+        //   visites     6 : 4 panoramas, 1 point d'information, 1 échoppe
+        //   ressources 44 : 22 poussières, 3 orbes, 5 parchemins,
+        //                   7 ressources de carnet, 5 mystères, 2 échos
+        //   entrées   102 : paliers par chapitre (légendaire 4, rare 3, commune 2,
+        //                   cf. showDustDialogue) × 3 chapitres
+        //                   = 12 + 8×9 + 3×6
+        //
+        // Poids : les jauges de quartier n'en ont pas (1 par objet). Proposition
+        // du brief (carte 5, visite 2, ressource 1, entrée 1) : total 218,
+        // session type 44 → 20 %, sous la cible de 25-40 %. Les 102 entrées
+        // pèsent trop au dénominateur pour ce qu'une heure en débloque.
+        // Poids retenus : carte 10, visite 3, ressource 1, entrée 0,25
+        //   total = 120 + 18 + 44 + 25,5 = 207,5
+        //
+        // Session type (1 h, 1,5 à 2 km avec arrêts) :
+        //   4 cartes (40) + 4 visites (12) + 10 ressources (10) + 6 entrées (1,5)
+        //   = 63,5 → 31 %
+        //   basse : 3 / 3 / 8 / 4 → 48 → 23 % · haute : 5 / 5 / 12 / 10 → 79,5 → 38 %
+        //
+        // Recalibrer après le test : l'événement perimeter_progress du journal
+        // donne le détail (cartes, visites, ressources, entrées) à chaque palier.
+        //
+        // Une ressource ou une visite comptée le reste : les listes de collecte
+        // se vident à la réapparition (3 min), d'où le registre _jaugeVus, relevé
+        // toutes les 5 s et à chaque jaugePerimetreMaj().
+        const JAUGE_POIDS = { carte: 10, visite: 3, ressource: 1, entree: 0.25 };
+        const JAUGE_VUS_KEY = 'explore_jauge_vus';
+        let _jaugeInventaire = null;
+        let _jaugeVus = { ressources: {}, visites: {} };
+        let _jaugeDernierPct = null;
+        try {
+            const raw = localStorage.getItem(JAUGE_VUS_KEY);
+            if (raw) _jaugeVus = Object.assign({ ressources: {}, visites: {} }, JSON.parse(raw));
+        } catch (e) {}
+
+        function _jaugeConstruireInventaire() {
+            const dans = o => o && typeof o.lat === 'number' && !o.tuto && !/tuto/.test(o.id || '')
+                && dansPerimetreTest(o.lat, o.lng);
+            const ids = arr => (arr || []).filter(dans).map(o => o.id);
+            const cartes = POIS.filter(p => !p.disabled && dans(p)).map(p => p.localCardId).filter(Boolean);
+            const entrees = {};
+            cartes.forEach(id => {
+                const r = (getCardById(id) || {}).rarity;
+                entrees[id] = (r === 'legendary' ? 4 : r === 'rare' ? 3 : 2) * MAX_LEVEL;
+            });
+            return {
+                cartes,
+                entrees,
+                visites: [...ids(INFO_POINTS), ...ids(PANNEAU_POINTS), ...ids(BAZAR_POINTS)],
+                ressources: [...ids(DUST_POINTS), ...ids(ORB_POINTS), ...ids(SCROLL_POINTS),
+                             ...ids(CARNET_RESOURCE_POINTS), ...ids(LOOT_POINTS), ...ids(ECHO_POINTS)]
+            };
+        }
+        function _jaugeInv() {
+            if (!_jaugeInventaire) _jaugeInventaire = _jaugeConstruireInventaire();
+            return _jaugeInventaire;
+        }
+
+        // Note ce qui est ramassé ou visité en ce moment, avant que la réapparition ne l'efface.
+        function _jaugeRelever() {
+            const inv = _jaugeInv();
+            let neuf = false;
+            const ramasses = new Set([
+                ...Object.keys(typeof poiCollectedAt === 'object' ? poiCollectedAt : {}),
+                ...Object.values(POI_KIND_ARRAYS).flatMap(get => { try { return get() || []; } catch (e) { return []; } })
+            ]);
+            inv.ressources.forEach(id => {
+                if (!_jaugeVus.ressources[id] && ramasses.has(id)) { _jaugeVus.ressources[id] = Date.now(); neuf = true; }
+            });
+            const echoppeOuverte = (() => {
+                const el = document.getElementById('bazarScreen');
+                return el && /translateY\(0/.test(el.style.transform) && currentNearbyBazar ? currentNearbyBazar.id : null;
+            })();
+            const infoVus = new Set((visitedPoints || []).filter(v => v.type === 'info' || v.type === 'panorama').map(v => v.ref));
+            inv.visites.forEach(id => {
+                if (_jaugeVus.visites[id]) return;
+                if (infoVus.has(id) || isPanoramaTaken(id) || isPanneauCompleted(id) || echoppeOuverte === id) {
+                    _jaugeVus.visites[id] = Date.now(); neuf = true;
+                }
+            });
+            if (neuf) { try { localStorage.setItem(JAUGE_VUS_KEY, JSON.stringify(_jaugeVus)); } catch (e) {} }
+        }
+
+        // Détail du calcul : { pct, faits, total, cartes, visites, ressources, entrees }.
+        function jaugePerimetreDetail() {
+            const inv = _jaugeInv();
+            const P = JAUGE_POIDS;
+            const cartes     = inv.cartes.filter(id => collectedCards.includes(id)).length;
+            const visites    = inv.visites.filter(id => _jaugeVus.visites[id]).length;
+            const ressources = inv.ressources.filter(id => _jaugeVus.ressources[id]).length;
+            const entrees    = inv.cartes.reduce((s, id) =>
+                s + Math.min((cardJournalEntries[id] || []).length, inv.entrees[id]), 0);
+            const entreesMax = inv.cartes.reduce((s, id) => s + inv.entrees[id], 0);
+            const total = inv.cartes.length * P.carte + inv.visites.length * P.visite
+                        + inv.ressources.length * P.ressource + entreesMax * P.entree;
+            const faits = cartes * P.carte + visites * P.visite + ressources * P.ressource + entrees * P.entree;
+            return { pct: total ? Math.round(100 * faits / total) : 0, faits, total, cartes, visites, ressources, entrees };
+        }
+        function jaugePerimetrePct() { return jaugePerimetreDetail().pct; }
+
+        // Relève, recalcule et met l'affichage à jour. À appeler après un gain.
+        function jaugePerimetreMaj() {
+            if (typeof POIS === 'undefined' || typeof collectedCards === 'undefined') return null;
+            _jaugeRelever();
+            const d = jaugePerimetreDetail();
+            if (_perimetreLibelle) {
+                const el = _perimetreLibelle.getElement();
+                let jauge = el.querySelector('.perimetre-jauge');
+                if (!jauge) {
+                    jauge = document.createElement('div');
+                    jauge.className = 'perimetre-jauge';
+                    jauge.innerHTML = '<div class="perimetre-jauge-barre"><div class="perimetre-jauge-rempli"></div></div>'
+                        + '<div class="perimetre-jauge-pct">0%</div>';
+                    el.appendChild(jauge);
+                }
+                jauge.querySelector('.perimetre-jauge-rempli').style.width = d.pct + '%';
+                jauge.querySelector('.perimetre-jauge-pct').textContent = d.pct + '%';
+            }
+            if (_jaugeDernierPct !== null && d.pct !== _jaugeDernierPct && typeof journalLog === 'function') {
+                journalLog('perimeter_progress', { pct: d.pct, cartes: d.cartes, visites: d.visites, ressources: d.ressources, entrees: d.entrees });
+            }
+            _jaugeDernierPct = d.pct;
+            return d.pct;
+        }
+        setInterval(jaugePerimetreMaj, 5000);
+
+        // Menu test : détail du calcul.
+        function testJaugePerimetre() {
+            const d = jaugePerimetreMaj() === null ? null : jaugePerimetreDetail();
+            if (!d) return;
+            const inv = _jaugeInv();
+            console.table({
+                cartes:     { faits: d.cartes,     total: inv.cartes.length,     poids: JAUGE_POIDS.carte },
+                visites:    { faits: d.visites,    total: inv.visites.length,    poids: JAUGE_POIDS.visite },
+                ressources: { faits: d.ressources, total: inv.ressources.length, poids: JAUGE_POIDS.ressource },
+                entrees:    { faits: d.entrees,    total: inv.cartes.reduce((s, id) => s + inv.entrees[id], 0), poids: JAUGE_POIDS.entree }
+            });
+            showToast('📏 Périmètre ' + d.pct + ' % · ' + d.cartes + ' cartes · ' + d.visites + ' visites · '
+                + d.ressources + ' ressources · ' + d.entrees + ' entrées');
         }
 
         const _PERIMETRE_COUCHES = ['perimeter-fill', 'perimeter-halo', 'perimeter-casing', 'perimeter-line'];
