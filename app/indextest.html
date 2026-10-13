@@ -18093,7 +18093,7 @@
             document.getElementById('vnActionBtn').classList.remove('show');
             // Précharge les expressions de la séquence : pas de blanc au changement d'image.
             lines.forEach(l => { const sp = VN_SPEAKERS[l.speaker];
-                if (sp && sp.exprs && sp.exprs[l.expr]) new Image().src = sp.exprs[l.expr]; });
+                const src = sp && sp.exprs && sp.exprs[_vnExprCle(l)]; if (src) new Image().src = src; });
             _vnRender();
         }
 
@@ -18107,6 +18107,22 @@
          ['prete', 'prête.png'], ['salutation', 'salutation.png'],
         ].forEach(([cle, fichier]) => { VN_CLARA_EXPR[cle] = _VN_CLARA_DIR + encodeURIComponent(fichier); });
         const _VN_JEUNEFILLE_IMG = VN_CLARA_EXPR.neutre;
+        // Indications « [air …] » du document de dialogues → image. Une réplique
+        // porte l'indication telle quelle (`air: 'enjoué'`) ; c'est ici, et
+        // seulement ici, qu'on choisit l'image qui la rend. Choix faits sur ce
+        // que montre chaque image, pas sur son nom de fichier.
+        const VN_CLARA_AIRS = {
+            'neutre': 'neutre', 'petit doigt en l’air': 'neutre', 'doigt levé': 'neutre',
+            'fasciné': 'admirative', 'ému': 'admirative', 'suppliant': 'admirative',
+            'enthousiaste': 'prete', 'exalté': 'prete', 'déterminé': 'prete',
+            'résolu': 'prete', 'joueur/de défi': 'prete',
+            'enjoué': 'salutation', 'souriant': 'salutation',
+            'inquisiteur': 'enjouee', 'questionné': 'enjouee', 'réflexion': 'enjouee',
+            'satisfait': 'evidence', 'soulagé': 'evidence', 'épuisé': 'evidence',
+            'choqué': 'interloquee', 'affolé': 'interloquee', 'inquiet': 'interloquee',
+            'surpris': 'interloquee', 'confus': 'interloquee', 'se tape le front': 'interloquee',
+            'renfrogné': 'excitee',
+        };
 
         // PNJ du QG (hub). Noms provisoires : c'est ici, et seulement ici, qu'on
         // les change — plaques, locuteurs et répliques en dérivent. Déclaré avant
@@ -18136,6 +18152,10 @@
                                 color: '#f0b8c8', bg: 'rgba(240,184,200,0.15)', border: 'rgba(240,184,200,0.5)' },
         };
         Object.values(HUB_NPCS).forEach(n => { VN_SPEAKERS[n.nom] = n.vn; });
+        // La jeune fille s'affiche « Clara » une fois présentée (section 12) : même fiche.
+        VN_SPEAKERS['Clara'] = VN_SPEAKERS['La jeune fille'];
+        // Image d'une réplique : `expr` (clé d'image) prime, sinon `air` via VN_CLARA_AIRS.
+        function _vnExprCle(entry) { return entry.expr || VN_CLARA_AIRS[entry.air]; }
 
         function _vnRender() {
             if (_vnIdx >= _vnQueue.length) {
@@ -18153,7 +18173,7 @@
             const speakerBox=document.getElementById('vnSpeakerBox');
             const dialogBox=document.querySelector('.vn-dialogue-box');
             // Locuteur à expressions : l'image suit entry.expr (neutre par défaut).
-            const bustSrc = (sp && sp.exprs) ? (sp.exprs[entry.expr] || sp.img) : (sp && sp.img);
+            const bustSrc = (sp && sp.exprs) ? (sp.exprs[_vnExprCle(entry)] || sp.img) : (sp && sp.img);
             if(bustSrc){bustImg2.src=bustSrc;bustImg2.style.display='block';}
             else{bustImg2.style.display='none';}
             // Locuteur « full » (la jeune fille) : grand portrait à gauche, au-dessus de la boîte. Autres : buste rond.
