@@ -8300,13 +8300,17 @@
             display: block;
             margin-left: -6px;
             margin-bottom: -22px;
-            width: clamp(130px, 42%, 210px) !important;
+            /* Images de Clara en pied (1086×1448) : on ne garde que le haut du
+               corps (tête → hanches), recadré par aspect-ratio + object-fit:cover.
+               Le reste passerait de toute façon derrière la boîte. */
+            width: clamp(150px, 46%, 230px) !important;
             height: auto !important;
+            aspect-ratio: 1086 / 900;
             max-height: 46vh;
-            object-position: bottom center;
+            object-position: top center;
             border: none !important;
             border-radius: 0 !important;
-            object-fit: contain;
+            object-fit: cover;
             filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6));
             z-index: 0;
             pointer-events: none;
@@ -16884,7 +16888,7 @@
             if (!_obJournalSeen) { _obJournalHint(); return; }
             if (_obGuide.active) { _obGuideEvent('journal'); _obGuideRefresh(); return; }
             _obContextualHint('journal', [
-                { speaker: 'La jeune fille', line: 'Les fragments que tu réveilles laissent des traces. Certaines te surprendront.' },
+                { speaker: 'La jeune fille', expr: 'enjouee', line: 'Les fragments que tu réveilles laissent des traces. Certaines te surprendront.' },
             ]);
         }
 
@@ -16902,7 +16906,7 @@
             if (selectedCard && OB_GUIDE_CARD_IDS.includes(selectedCard.id)) _obGuideDerniere = selectedCard.id;
             if (_obGuide.active) { _obGuideEvent('carddetail'); _obGuideRefresh(); return; }
             _obContextualHint('carddetail', [
-                { speaker: 'La jeune fille', line: 'La poussière mémorielle réveille ce qui s\'était tu. Essaie.' },
+                { speaker: 'La jeune fille', expr: 'excitee', line: 'La poussière mémorielle réveille ce qui s\'était tu. Essaie.' },
             ]);
         }
 
@@ -16951,7 +16955,7 @@
         function _obOnOpenZoneDetail() {
             _obDiscover('zone', [
                 { speaker: 'La jeune fille', html: 'Un <span style="color:#C89039;font-weight:600">quartier</span>. Chacun a ses présences, ses vues, ses histoires — et tu vois ici ce qu\'il t\'en reste à trouver.' },
-                { speaker: 'La jeune fille', line: 'Personne ne t\'oblige à en finir un avant d\'aller voir ailleurs. Mais c\'est agréable, de voir une part de ville se remplir.' },
+                { speaker: 'La jeune fille', expr: 'evidence', line: 'Personne ne t\'oblige à en finir un avant d\'aller voir ailleurs. Mais c\'est agréable, de voir une part de ville se remplir.' },
             ], 'zoneDetailPanel');
         }
 
@@ -17503,8 +17507,8 @@
                 const rep = [
                     { speaker: 'La jeune fille', html: 'Ah, tu l\'as trouvé. C\'est le <span style="font-weight:600">📖 carnet</span> de la carte — j\'y ai noté tout ce qu\'elle m\'a déjà raconté.' },
                     { speaker: 'Toi', line: 'Le carnet ?' },
-                    { speaker: 'La jeune fille', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poussière mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' },
-                    { speaker: 'La jeune fille', line: 'Elle est un peu bavarde, en tout cas elle a encore des choses à dire.' },
+                    { speaker: 'La jeune fille', expr: 'enjouee', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poussière mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' },
+                    { speaker: 'La jeune fille', expr: 'enjouee', line: 'Elle est un peu bavarde, en tout cas elle a encore des choses à dire.' },
                     { speaker: 'La jeune fille', line: 'Prends le temps de lire ce qu\'elle a déjà retrouvé. Le reste viendra après.' },
                 ];
                 // L'économie des fournitures n'a de sens que devant une page voilée :
@@ -17588,13 +17592,13 @@
         function _obGatherLines() {
             const shop = _obTutoBazarNear();
             const lines = [
-                { speaker: 'La jeune fille', html: 'Il y a une <span style="color:#67E8F9;font-weight:600">🔮 orbe mémorielle</span> près d\'ici : elle rend à la carte toute son énergie d\'un coup. Va la chercher.' },
+                { speaker: 'La jeune fille', expr: 'prete', html: 'Il y a une <span style="color:#67E8F9;font-weight:600">🔮 orbe mémorielle</span> près d\'ici : elle rend à la carte toute son énergie d\'un coup. Va la chercher.' },
             ];
             if ((memorialDust || 0) < 40) {
                 lines.push({ speaker: 'La jeune fille', html: 'Ta réserve de <span style="color:#C084FC;font-weight:600">poussière</span> est à sec, aussi. Il y en a dehors — ramasses-en en chemin.' });
             }
             lines.push(shop
-                ? { speaker: 'La jeune fille', line: 'Et l\'échoppe n\'est pas loin, va voir ce que tu peux y trouver !' }
+                ? { speaker: 'La jeune fille', expr: 'enjouee', line: 'Et l\'échoppe n\'est pas loin, va voir ce que tu peux y trouver !' }
                 : { speaker: 'La jeune fille', line: 'Et passe par une échoppe : c\'est là qu\'on trouve l\'encre, la pellicule et les cassettes. Tes pages voilées en réclameront.' });
             return lines;
         }
@@ -17688,19 +17692,19 @@
             // HUD, sur la mappe seulement — l'anneau désigne la sortie entre-temps.
             const _ici = _obCurrentScreen();
             _obSay(_ici === 'other' ? 'map' : _ici, [
-                { speaker: 'La jeune fille', line: 'Voilà. Ce chapitre ne s\'oubliera plus. C\'est ça, être explorateur de la mémoire.' },
+                { speaker: 'La jeune fille', expr: 'evidence', line: 'Voilà. Ce chapitre ne s\'oubliera plus. C\'est ça, être explorateur de la mémoire.' },
                 // La chute de la méprise et le pacte tiennent ici, au scellement :
                 // « Et voilà le chapitre complet ! » salue le geste que le joueur
                 // vient de poser. Ces répliques étaient jusqu'ici dans
                 // _obGuideOutro, deux étapes de HUD plus loin — elles y félicitaient
                 // le joueur pour un chapitre scellé depuis longtemps.
-                { speaker: 'La jeune fille', line: 'Et voilà le chapitre complet ! Tu t\'en sors drôlement bien, pour quelqu\'un qui oublie tout.' },
-                { speaker: 'La jeune fille', line: 'Quand je te vois faire, ça semble si facile, je ne sais pas où tu en es du quartier que tu dois couvrir mais moi j\'ai à peine commencé… Tant de cartes et leur mémoire à réunir et si peu de temps, pfiou' },
-                { speaker: 'La jeune fille', line: 'Pourquoi tu me regardes comme ça ? Cette expression, mais… C\'est de l\'incompréhension ! Tu n\'es pas de l\'Organisation, toi, hein ?' },
-                { speaker: 'La jeune fille', line: 'Oh la boulette… Oh. Oh, mais c\'est encore mieux ! Un don pareil, et sans même le savoir !' },
-                { speaker: 'La jeune fille', line: 'Allez, c\'est officiel : tu es mon tout premier disciple. Un explorateur de la mémoire, un vrai.' },
-                { speaker: 'La jeune fille', line: 'Toi tu as la ville, moi j\'ai le carnet. Dénichons ces mémoires une par une, et tu stabilises, je note. Ça me sauverait, franchement !' },
-                { speaker: 'La jeune fille', line: 'Dès qu\'on a tout réuni, tu viens avec moi le rendre à l\'Organisation ? Ça va leur faire tout drôle !' },
+                { speaker: 'La jeune fille', expr: 'enjouee', line: 'Et voilà le chapitre complet ! Tu t\'en sors drôlement bien, pour quelqu\'un qui oublie tout.' },
+                { speaker: 'La jeune fille', expr: 'admirative', line: 'Quand je te vois faire, ça semble si facile, je ne sais pas où tu en es du quartier que tu dois couvrir mais moi j\'ai à peine commencé… Tant de cartes et leur mémoire à réunir et si peu de temps, pfiou' },
+                { speaker: 'La jeune fille', expr: 'interloquee', line: 'Pourquoi tu me regardes comme ça ? Cette expression, mais… C\'est de l\'incompréhension ! Tu n\'es pas de l\'Organisation, toi, hein ?' },
+                { speaker: 'La jeune fille', expr: 'excitee', line: 'Oh la boulette… Oh. Oh, mais c\'est encore mieux ! Un don pareil, et sans même le savoir !' },
+                { speaker: 'La jeune fille', expr: 'evidence', line: 'Allez, c\'est officiel : tu es mon tout premier disciple. Un explorateur de la mémoire, un vrai.' },
+                { speaker: 'La jeune fille', expr: 'prete', line: 'Toi tu as la ville, moi j\'ai le carnet. Dénichons ces mémoires une par une, et tu stabilises, je note. Ça me sauverait, franchement !' },
+                { speaker: 'La jeune fille', expr: 'enjouee', line: 'Dès qu\'on a tout réuni, tu viens avec moi le rendre à l\'Organisation ? Ça va leur faire tout drôle !' },
             ], () => { _obGuideRefresh(); _obSay('map', [
                 // Nommer sans expliquer : le joueur doit savoir que ces choses
                 // existent pour avoir envie de s'en approcher, pas savoir s'en
@@ -17717,8 +17721,8 @@
         function _obGuideEnterProgression() {
             _obGuide.step = 'progression';
             _obSay('map', [
-                { speaker: 'La jeune fille', html: 'Voilà. On prend de la hauteur, et la ville se laisse lire. Les <span style="color:#C89039;font-weight:600">quartiers</span> montrent ici leur avancement — ce qu\'il te reste à y trouver.' },
-                { speaker: 'La jeune fille', line: 'C\'est comme ça qu\'on décide où aller. Moi, je commence toujours ma journée par là.' },
+                { speaker: 'La jeune fille', expr: 'evidence', html: 'Voilà. On prend de la hauteur, et la ville se laisse lire. Les <span style="color:#C89039;font-weight:600">quartiers</span> montrent ici leur avancement — ce qu\'il te reste à y trouver.' },
+                { speaker: 'La jeune fille', expr: 'enjouee', line: 'C\'est comme ça qu\'on décide où aller. Moi, je commence toujours ma journée par là.' },
                 // ⭐ : la ligne « Progression » du menu de l'avatar.
                 { speaker: 'La jeune fille', html: 'Et sous ton portrait, il y a ta <span style="font-weight:600">⭐ progression</span> : ce que la marche te rapporte, et ce qu\'elle débloquera. Jette-y un œil.' },
             ], () => _obGuideRefresh());
@@ -17743,12 +17747,12 @@
                 { speaker: 'La jeune fille', line: 'Et là où tu passes, la carte en garde trace — chaque geste que tu poses laisse un petit signe, discret, à sa place exacte. À toi de reconnaître, plus tard, le dessin de ton exploration.' },
                 // Test 2 — scène 1, la remise des clefs (PLAN_test_bellecour, 4.2) :
                 // nommer le manque, refuser d'ouvrir l'Explorium, sans le nommer.
-                { speaker: 'La jeune fille', line: 'Voilà. Tu sais regarder, tu sais ramasser, tu sais ranger.' },
+                { speaker: 'La jeune fille', expr: 'evidence', line: 'Voilà. Tu sais regarder, tu sais ramasser, tu sais ranger.' },
                 { speaker: 'La jeune fille', line: 'Ce que tu vas trouver ici, ce ne sont pas des objets isolés. Ces choses-là se répondent entre elles. Il y a un endroit où on lit ces réponses.' },
-                { speaker: 'La jeune fille', line: 'Mais pas tout de suite. Un atlas où rien n\'est écrit, ça s\'appelle une page blanche, et je n\'ai pas le temps de t\'apprendre à lire une page blanche.' },
-                { speaker: 'La jeune fille', line: 'Commence par en remplir une ligne.' },
+                { speaker: 'La jeune fille', expr: 'enjouee', line: 'Mais pas tout de suite. Un atlas où rien n\'est écrit, ça s\'appelle une page blanche, et je n\'ai pas le temps de t\'apprendre à lire une page blanche.' },
+                { speaker: 'La jeune fille', expr: 'prete', line: 'Commence par en remplir une ligne.' },
                 { speaker: 'La jeune fille', line: 'Avant que je parte : on t\'a donné rendez-vous. Des voix s\'y cherchent. Quand tu en croiseras une, quelque chose s\'ouvrira.' },
-                { speaker: 'La jeune fille', line: 'Tu retrouveras ce rendez-vous dans ton journal, et un repère t\'attend sur la carte. À toi, désormais.' },
+                { speaker: 'La jeune fille', expr: 'salutation', line: 'Tu retrouveras ce rendez-vous dans ton journal, et un repère t\'attend sur la carte. À toi, désormais.' },
             ], () => {
                 _obDone = true;
                 _obAct3Done = true;
@@ -17784,7 +17788,7 @@
                 _obGuide.cible = id;
                 _obGuide.step = 'seal';
                 _obSay('carddetail', [
-                    { speaker: 'La jeune fille', line: 'Le chapitre est plein, et toutes ses pages dévoilées. Scelle-le — qu\'il prenne racine.' },
+                    { speaker: 'La jeune fille', expr: 'prete', line: 'Le chapitre est plein, et toutes ses pages dévoilées. Scelle-le — qu\'il prenne racine.' },
                 ], () => _obGuideRefresh());
             } else {
                 if (!_obUneFois('xp_full')) return;
@@ -17845,7 +17849,7 @@
                         _obSay('carddetail', [
                             // 📖 : l'icône que porte le bouton du carnet sur la fiche
                             // carte (cardCarnetIcon) — le joueur cherche ce signe-là.
-                            { speaker: 'La jeune fille', html: 'Tu l\'as réveillée. Une page s\'est inscrite dans son <span style="font-weight:600">📖 carnet</span> — il t\'appelle.' },
+                            { speaker: 'La jeune fille', expr: 'excitee', html: 'Tu l\'as réveillée. Une page s\'est inscrite dans son <span style="font-weight:600">📖 carnet</span> — il t\'appelle.' },
                         ], () => _obGuideRefresh());
                     }
                     break;
@@ -17860,7 +17864,7 @@
                         _obGuide.step = 'lesson';
                         _obGuideClearRing();
                         _obSay('journal', [
-                            { speaker: 'La jeune fille', line: 'Cette première page est voilée. Cette fois, c\'est moi qui l\'écris pour toi.' },
+                            { speaker: 'La jeune fille', expr: 'admirative', line: 'Cette première page est voilée. Cette fois, c\'est moi qui l\'écris pour toi.' },
                         ], () => {
                             _obRevealEntryFree(_id, _page.id);
                             setTimeout(() => {
@@ -17905,7 +17909,7 @@
                             _obGuide.step = 'orb';
                             if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
                             _obSay('carddetail', [
-                                { speaker: 'La jeune fille', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
+                                { speaker: 'La jeune fille', expr: 'interloquee', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
                                 { speaker: 'La jeune fille', line: 'Tu portes déjà une orbe mémorielle. Pose-la sur la carte : elle lui rend toute son énergie d\'un coup.' },
                             ], () => _obGuideRefresh());
                         } else {
@@ -17913,7 +17917,7 @@
                             _obGuideVu.orbe_a_chercher = true;   // elle l'a envoyé dehors
                             // Le constat dans la fiche carte, la marche à suivre sur la mappe.
                             _obSay('carddetail', [
-                                { speaker: 'La jeune fille', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
+                                { speaker: 'La jeune fille', expr: 'interloquee', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
                                 { speaker: 'La jeune fille', line: 'Ou tu sors chercher de quoi la ranimer.' },
                             ], () => {
                                 _obGuideRefresh();
@@ -17940,7 +17944,7 @@
                     if (_obUneFois('orbe_utilisee')) {
                         _obGuide.step = 'feed3';
                         _obSay('carddetail', [
-                            { speaker: 'La jeune fille', line: 'Elle revit. Continue — mène ce premier chapitre à son terme.' },
+                            { speaker: 'La jeune fille', expr: 'excitee', line: 'Elle revit. Continue — mène ce premier chapitre à son terme.' },
                         ], () => _obGuideRefresh());
                     }
                     break;
@@ -17958,7 +17962,7 @@
                     _obGuide.cible = _id;
                     _obGuide.step = 'seal';
                     _obSay('journal', [
-                        { speaker: 'La jeune fille', line: 'Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, scelle-le.' },
+                        { speaker: 'La jeune fille', expr: 'prete', line: 'Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, scelle-le.' },
                     ], () => _obGuideRefresh());
                     break;
                 }
@@ -18087,11 +18091,22 @@
             _vnOnDone = onDone || null;
             document.getElementById('vnOverlay').classList.add('show');
             document.getElementById('vnActionBtn').classList.remove('show');
+            // Précharge les expressions de la séquence : pas de blanc au changement d'image.
+            lines.forEach(l => { const sp = VN_SPEAKERS[l.speaker];
+                if (sp && sp.exprs && sp.exprs[l.expr]) new Image().src = sp.exprs[l.expr]; });
             _vnRender();
         }
 
-        // Portrait de la jeune fille (référencé par chemin — 6,5 Mo, pas d'inline base64).
-        const _VN_JEUNEFILLE_IMG = './assets/Character%20Bust%20Icon%20_%20Take%202.png';
+        // Expressions de la jeune fille (Clara), une image en pied par expression
+        // (référencées par chemin, pas d'inline base64). Clé = champ `expr` d'une
+        // réplique ; réplique sans `expr` (ou clé inconnue) → neutre.
+        const _VN_CLARA_DIR = './assets/visual%20novel/Clara/';
+        const VN_CLARA_EXPR = {};
+        [['neutre', 'image.png'], ['admirative', 'admirative.png'], ['enjouee', 'enjouée.png'],
+         ['evidence', 'évidence.png'], ['excitee', 'excitée.png'], ['interloquee', 'interloquée.png'],
+         ['prete', 'prête.png'], ['salutation', 'salutation.png'],
+        ].forEach(([cle, fichier]) => { VN_CLARA_EXPR[cle] = _VN_CLARA_DIR + encodeURIComponent(fichier); });
+        const _VN_JEUNEFILLE_IMG = VN_CLARA_EXPR.neutre;
 
         // PNJ du QG (hub). Noms provisoires : c'est ici, et seulement ici, qu'on
         // les change — plaques, locuteurs et répliques en dérivent. Déclaré avant
@@ -18110,14 +18125,14 @@
             // Présente au QG entre la remise de la clé et l'ouverture de la porte.
             // Même fiche de dialogue que dans VN_SPEAKERS (qui est réécrit depuis ici).
             jeune_fille: { nom: 'La jeune fille', role: '', couleur: '#f0b8c8',
-                      vn: { img: _VN_JEUNEFILLE_IMG, full: true,
+                      vn: { img: _VN_JEUNEFILLE_IMG, exprs: VN_CLARA_EXPR, full: true,
                             color: '#f0b8c8', bg: 'rgba(240,184,200,0.15)', border: 'rgba(240,184,200,0.5)' } },
         };
 
         // Locuteurs du visual novel. Absent de la table : style neutre, sans buste.
         // Sans img : buste masqué. full : grand portrait à gauche (vn-bust--full).
         const VN_SPEAKERS = {
-            'La jeune fille': { img: _VN_JEUNEFILLE_IMG, full: true,
+            'La jeune fille': { img: _VN_JEUNEFILLE_IMG, exprs: VN_CLARA_EXPR, full: true,
                                 color: '#f0b8c8', bg: 'rgba(240,184,200,0.15)', border: 'rgba(240,184,200,0.5)' },
         };
         Object.values(HUB_NPCS).forEach(n => { VN_SPEAKERS[n.nom] = n.vn; });
@@ -18137,7 +18152,9 @@
             const speakerEl=document.getElementById('vnSpeaker');
             const speakerBox=document.getElementById('vnSpeakerBox');
             const dialogBox=document.querySelector('.vn-dialogue-box');
-            if(sp&&sp.img){bustImg2.src=sp.img;bustImg2.style.display='block';}
+            // Locuteur à expressions : l'image suit entry.expr (neutre par défaut).
+            const bustSrc = (sp && sp.exprs) ? (sp.exprs[entry.expr] || sp.img) : (sp && sp.img);
+            if(bustSrc){bustImg2.src=bustSrc;bustImg2.style.display='block';}
             else{bustImg2.style.display='none';}
             // Locuteur « full » (la jeune fille) : grand portrait à gauche, au-dessus de la boîte. Autres : buste rond.
             bustImg2.classList.toggle('vn-bust--full', !!(sp&&sp.full));
@@ -23035,11 +23052,11 @@
             const _instr = document.getElementById('ritualInstruction');
             if (_instr) _instr.style.opacity = '0';
             vnShow([
-                { speaker: 'La jeune fille', html: 'Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> flottent à l\'intérieur. Ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span>.' },
+                { speaker: 'La jeune fille', expr: 'excitee', html: 'Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> flottent à l\'intérieur. Ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span>.' },
                 { speaker: 'Toi', line: 'Ma quoi ?' },
                 { speaker: 'La jeune fille', html: 'Une <span style="color:#F5B841;font-weight:600">carte</span>. Le nom qu\'on donne à une mémoire qu\'on a réussi à fixer : un <span style="color:#5FC9E8;font-weight:600">personnage</span>, un <span style="color:#5FC9E8;font-weight:600">lieu</span> ou un <span style="color:#5FC9E8;font-weight:600">objet</span> que la ville avait presque oublié.' },
                 { speaker: 'La jeune fille', html: 'Celle-ci, tiens : les <span style="color:#F5B841;font-weight:600">clefs de la ville</span>.' },
-                { speaker: 'La jeune fille', line: 'Cristallise-la, et découvre ce qu\'elle garde. Elle est à toi.' },
+                { speaker: 'La jeune fille', expr: 'evidence', line: 'Cristallise-la, et découvre ce qu\'elle garde. Elle est à toi.' },
                 { speaker: 'La jeune fille', line: 'Pose ton doigt sur la nébuleuse et tiens, jusqu\'à ce qu\'elle se stabilise.' },
             ], () => {
                 ov.classList.remove('vn-over-scene');
@@ -29771,9 +29788,9 @@
         // valider par David, hormis celle devant la nébuleuse (demandée).
         const HUB_JF_LIGNES = {
             arrivee: [
-                { speaker: 'La jeune fille', line: 'Te voilà. Je savais que tu trouverais.' },
+                { speaker: 'La jeune fille', expr: 'salutation', line: 'Te voilà. Je savais que tu trouverais.' },
                 { speaker: 'La jeune fille', line: 'Derrière cette porte, l\'Explorium. C\'est là que l\'Organisation lit ce que les cartes racontent quand on les met ensemble.' },
-                { speaker: 'La jeune fille', line: 'Dehors, tu ramasses des fragments. Là-dedans, ils se répondent.' },
+                { speaker: 'La jeune fille', expr: 'evidence', line: 'Dehors, tu ramasses des fragments. Là-dedans, ils se répondent.' },
                 { speaker: 'La jeune fille', line: 'Pose la main sur le sceau. Il te reconnaîtra, maintenant.' },
             ],
             relance: [
@@ -29947,13 +29964,13 @@
             _bellecourSceneEnCours = true;
             _bellecourQuandLibre(() => {
                 vnShow([
-                    { speaker: JF, line: 'Déjà ? Bon.' },
+                    { speaker: JF, expr: 'interloquee', line: 'Déjà ? Bon.' },
                     // [ADAPTÉ] : l'Explorium ne s'ouvre plus sous ses yeux, le joueur
                     // l'ouvre lui-même au QG ; elle le désigne sans le nommer.
-                    { speaker: JF, line: 'Tu viens d\'inscrire quelque chose. Et ça, ça ouvre une porte.' },
-                    { speaker: JF, line: 'Au QG, la porte du fond. Elle ne te résistera plus. Va voir.' },
+                    { speaker: JF, expr: 'excitee', line: 'Tu viens d\'inscrire quelque chose. Et ça, ça ouvre une porte.' },
+                    { speaker: JF, expr: 'prete', line: 'Au QG, la porte du fond. Elle ne te résistera plus. Va voir.' },
                     // [AJOUT] : le joueur la retrouve au QG (cf. _hubJfArrivee).
-                    { speaker: JF, line: 'Je t\'y attends.' },
+                    { speaker: JF, expr: 'salutation', line: 'Je t\'y attends.' },
                 ], () => {
                     _bellecourSceneEnCours = false;
                     _hubGiveExploriumKey();
@@ -29972,16 +29989,16 @@
             }
             // Dans l'Explorium seulement : s'il l'a déjà refermé, elle attend qu'il y revienne.
             _obSay('mindmap', [
-                { speaker: JF, line: 'Une entrée. Une. Ne fais pas cette tête, tout le monde commence là.' },
+                { speaker: JF, expr: 'enjouee', line: 'Une entrée. Une. Ne fais pas cette tête, tout le monde commence là.' },
                 // [AJOUT] : elle nomme l'Explorium maintenant que le joueur y a accès.
-                { speaker: JF, line: 'Bienvenue dans l\'Explorium. Ce que tu inscris dehors, c\'est ici que ça se lit.' },
+                { speaker: JF, expr: 'evidence', line: 'Bienvenue dans l\'Explorium. Ce que tu inscris dehors, c\'est ici que ça se lit.' },
                 { speaker: JF, line: 'Cette place n\'est pas seule. Il y en a six autres autour d\'ici qui se souviennent de la même histoire : des presses, de l\'encre, des gens qui imprimaient des livres qu\'on n\'avait pas le droit de lire.' },
                 // [AJOUT] : ce qu'est un récit (la « grappe », sans le mot technique),
                 // qu'il en existe d'autres, et qu'ils apparaissent avec les cartes.
                 { speaker: JF, line: 'Ensemble, elles racontent une histoire. On la reconstitue grâce à la mémoire collectée : une mémoire mise en commun.' },
                 { speaker: JF, line: 'Sa planche est là. Pour l\'instant, elle est presque blanche.' },
                 { speaker: JF, line: 'Des histoires comme celle-là, il y en a d\'autres. Elles apparaîtront quand tu en tiendras un morceau.' },
-                { speaker: JF, line: 'Sept voix en tout. Trouve-les, et on reparlera.' },
+                { speaker: JF, expr: 'prete', line: 'Sept voix en tout. Trouve-les, et on reparlera.' },
             ]);
         }
 
@@ -30065,8 +30082,8 @@
             _bellecourQuandLibre(() => {
                 // 1. Le prêt de focale
                 vnShow([
-                    { speaker: JF, line: 'Sept. Tu as marché, dis donc.' },
-                    { speaker: JF, line: 'Tu veux voir ce qu\'il y a vraiment ? Deux secondes, pas plus.' },
+                    { speaker: JF, expr: 'admirative', line: 'Sept. Tu as marché, dis donc.' },
+                    { speaker: JF, expr: 'enjouee', line: 'Tu veux voir ce qu\'il y a vraiment ? Deux secondes, pas plus.' },
                 ], () => {
                     // Elle ouvre avec sa propre focale : la porte du QG n'est pas exigée.
                     if (!_hubExploriumOpened) {
@@ -30077,11 +30094,11 @@
                     if (typeof _showRealExplorium !== 'undefined') _showRealExplorium = true;
                     openMindmap();
                     setTimeout(() => v2PretDeFocale(
-                        () => vnShow([{ speaker: JF, line: 'Voilà. Toute la ville se souvient, tout le temps, de tout.' }]),
+                        () => vnShow([{ speaker: JF, expr: 'evidence', line: 'Voilà. Toute la ville se souvient, tout le temps, de tout.' }]),
                         () => {
                             const vn = document.getElementById('vnOverlay');
                             const suite = () => vnShow([
-                                { speaker: JF, line: 'Et voilà ce que toi, tu vois. Sept points. C\'est déjà sept de plus qu\'hier.' },
+                                { speaker: JF, expr: 'enjouee', line: 'Et voilà ce que toi, tu vois. Sept points. C\'est déjà sept de plus qu\'hier.' },
                             ], _bellecourCompensation);
                             // Laisser finir la réplique de la pleine lumière
                             (function attendre() {
@@ -30109,7 +30126,7 @@
                 try { saveProgress(); } catch (_) {}
                 vnShow([
                     { speaker: JF, line: 'Il te manque un peu de quoi finir. Tiens.' },
-                    { speaker: JF, line: 'Non, ne me remercie pas, ça se reprend.' },
+                    { speaker: JF, expr: 'enjouee', line: 'Non, ne me remercie pas, ça se reprend.' },
                 ], suite);
                 showToast(TF('✨ La jeune fille te donne %1 de poussière', manque));
             } else {
@@ -30118,7 +30135,7 @@
                 _bellecourAppliquerNiveaux(besoins);
                 _bellecourMajPoudre();
                 try { saveProgress(); } catch (_) {}
-                vnShow([{ speaker: JF, line: 'Tu as tout ce qu\'il faut. Fais-le toi-même.' }], suite);
+                vnShow([{ speaker: JF, expr: 'prete', line: 'Tu as tout ce qu\'il faut. Fais-le toi-même.' }], suite);
             }
         }
 
@@ -30133,7 +30150,7 @@
                     const g = 'ville_du_livre';
                     const reste = (GRAPPE_QUESTS[g].bd.cases || []).filter(c => !_verriereCaseObtenue(g, c.id)).length;
                     vnShow([
-                        { speaker: JF, line: 'Ce que tu viens de reconstituer, personne ne l\'avait remis ensemble depuis longtemps.' },
+                        { speaker: JF, expr: 'admirative', line: 'Ce que tu viens de reconstituer, personne ne l\'avait remis ensemble depuis longtemps.' },
                         reste === 5
                             ? { speaker: JF, line: 'Il reste cinq cases. Elles ne sont pas toutes par ici.' }
                             : { speaker: JF, line: TF('Il reste %1 cases. Elles ne sont pas toutes par ici.', reste) },
@@ -30143,7 +30160,7 @@
                         try { closeVoutV2(); } catch (_) {}
                         setTimeout(() => {
                             leverPerimetreTest();
-                            setTimeout(() => vnShow([{ speaker: JF, line: 'À bientôt, explorateur.' }], () => {
+                            setTimeout(() => vnShow([{ speaker: JF, expr: 'salutation', line: 'À bientôt, explorateur.' }], () => {
                                 _bellecourFinaleJouee = true;
                                 _bellecourSceneEnCours = false;
                                 try { saveProgress(); } catch (_) {}
