@@ -9652,6 +9652,8 @@
                 <div style="display:flex;flex-direction:column;gap:8px;">
                     <button onclick="testSaisirCode()" class="test-action-btn">🔑 Saisir mon code (fin de session)</button>
                     <button onclick="testReculerT0(30)" class="test-action-btn">⏱️ Reculer t0 de 30 min</button>
+                    <button onclick="closeTestPanel(); testExporterJournal()" class="test-action-btn">🧾 Exporter le journal utilisateur</button>
+                    <button onclick="journalEnvoyer().then(ok => showToast(ok ? '🧾 Journal envoyé' : '🧾 Rien envoyé (pas de point de collecte, file vide ou réseau)'))" class="test-action-btn">🧾 Envoyer le journal maintenant</button>
                     <button onclick="addTestCards()" class="test-action-btn">🃏 Débloquer toutes les cartes</button>
                     <button onclick="addTestScrolls(5)" class="test-action-btn">📜 +5 parchemins</button>
                     <button onclick="addTestOrbes(3)" class="test-action-btn">🔮 +3 orbes</button>
@@ -14104,6 +14106,184 @@
             _accesVerifierEcheances();
             const ecoule = Math.round((Date.now() - _acces.t0) / 60000);
             showToast('⏱️ t0 il y a ' + ecoule + ' min' + (_acces.team ? ' (code équipe)' : ''));
+        }
+
+        // ==================== JOURNAL UTILISATEUR (test Bellecour) ====================
+        // Événements { t (ISO), type, data } rattachés au CODE du joueur, jamais à
+        // son pseudo, et sans aucune position GPS (le journal GPS, lui, reste local).
+        // File en localStorage : un événement y reste jusqu'à envoi confirmé.
+        // Envoi toutes les 5 min (fetch) + envoi de secours (sendBeacon) au passage
+        // en arrière-plan : en poche, les minuteurs sont suspendus, c'est lui qui
+        // garantit la remontée. Arrêt définitif à la clôture de session ou 2 h
+        // après t0 : un dernier envoi, puis plus rien, même après réouverture.
+        //
+        // Requête « simple » (text/plain, no-cors) : la réponse d'Apps Script est
+        // illisible côté app ; un fetch qui ne lève pas d'erreur vaut succès, et le
+        // dernier lot parti reste dans journalSent par sécurité.
+        const JOURNAL_QUEUE_KEY = 'journalQueue';
+        const JOURNAL_SENT_KEY  = 'journalSent';
+        const JOURNAL_STOP_KEY  = 'journalStopped';
+        const JOURNAL_MAX       = 2000;            // événements en file (les plus anciens sautent)
+        const JOURNAL_TXT_MAX   = 500;             // caractères par champ texte
+        const JOURNAL_ENVOI_MS  = 5 * 60 * 1000;
+
+        let _jrnQueue   = [];
+        let _jrnStopped = false;
+        let _jrnEnvoi   = false;    // un fetch est en vol
+        try { _jrnQueue = JSON.parse(localStorage.getItem(JOURNAL_QUEUE_KEY) || '[]'); } catch (e) { _jrnQueue = []; }
+        try { _jrnStopped = localStorage.getItem(JOURNAL_STOP_KEY) === '1'; } catch (e) {}
+        if (!Array.isArray(_jrnQueue)) _jrnQueue = [];
+
+        function _jrnPersister() {
+            try { localStorage.setItem(JOURNAL_QUEUE_KEY, JSON.stringify(_jrnQueue)); } catch (e) {}
+        }
+        // Tronque chaque chaîne à 500 caractères, à toute profondeur.
+        function _jrnTronquer(v, prof) {
+            if (typeof v === 'string') return v.length > JOURNAL_TXT_MAX ? v.slice(0, JOURNAL_TXT_MAX) : v;
+            if (!v || typeof v !== 'object' || (prof || 0) > 4) return v;
+            if (Array.isArray(v)) return v.slice(0, 50).map(x => _jrnTronquer(x, (prof || 0) + 1));
+            const o = {};
+            for (const k in v) o[k] = _jrnTronquer(v[k], (prof || 0) + 1);
+            return o;
+        }
+
+        function journalEvenement(type, data) {
+            if (_jrnStopped) return;
+            _jrnQueue.push({ t: new Date().toISOString(), type: String(type), data: _jrnTronquer(data || {}) });
+            if (_jrnQueue.length > JOURNAL_MAX) _jrnQueue.splice(0, _jrnQueue.length - JOURNAL_MAX);
+            _jrnPersister();
+        }
+
+        // Corps envoyé : le code est lu au moment de l'envoi, donc les événements
+        // d'avant la saisie (app_open) partent avec lui.
+        function _jrnCorps(events) {
+            const a = _acces || _accesLire() || {};
+            return JSON.stringify({
+                code: a.code || '',
+                team: !!a.team,
+                t0: a.t0 ? new Date(a.t0).toISOString() : '',
+                app_version: ((document.getElementById('hudVersion') || {}).textContent || '').trim(),
+                user_agent: navigator.userAgent,
+                events
+            });
+        }
+        function _jrnPret() {
+            const a = _acces || _accesLire();
+            return !!(JOURNAL_ENDPOINT && a && a.code && _jrnQueue.length);
+        }
+        // Retire de la file le lot parti (des événements ont pu s'ajouter derrière).
+        function _jrnLotParti(lot) {
+            _jrnQueue.splice(0, lot.length);
+            _jrnPersister();
+            try { localStorage.setItem(JOURNAL_SENT_KEY, JSON.stringify(lot)); } catch (e) {}
+        }
+
+        function journalEnvoyer(finalEnvoi) {
+            if (!_jrnPret() || (_jrnEnvoi && !finalEnvoi)) return Promise.resolve(false);
+            const lot = _jrnQueue.slice();
+            _jrnEnvoi = true;
+            return fetch(JOURNAL_ENDPOINT, {
+                method: 'POST',
+                mode: 'no-cors',
+                keepalive: lot.length < 300,   // keepalive plafonne le corps à 64 Ko
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: _jrnCorps(lot)
+            }).then(() => { _jrnLotParti(lot); return true; })
+              .catch(e => { console.warn('[journal] envoi en échec, nouvel essai au prochain tour', e); return false; })
+              .finally(() => { _jrnEnvoi = false; });
+        }
+
+        // Envoi de secours : la page passe en arrière-plan ou se ferme.
+        function _jrnBalise() {
+            if (_jrnStopped || !_jrnPret() || !navigator.sendBeacon) return;
+            const lot = _jrnQueue.slice();
+            let ok = false;
+            try { ok = navigator.sendBeacon(JOURNAL_ENDPOINT, _jrnCorps(lot)); } catch (e) {}
+            if (ok) _jrnLotParti(lot);
+        }
+
+        function journalArreter(raison) {
+            if (_jrnStopped) return;
+            journalEvenement('journal_stop', { raison });
+            journalEnvoyer(true);          // dernier envoi ; la file reste exportable s'il échoue
+            _jrnStopped = true;
+            try { localStorage.setItem(JOURNAL_STOP_KEY, '1'); } catch (e) {}
+            console.log('[journal] arrêt définitif :', raison);
+        }
+
+        setInterval(() => { if (!_jrnStopped) journalEnvoyer(); }, JOURNAL_ENVOI_MS);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) { journalEvenement('app_hide'); _jrnBalise(); }
+            else journalEvenement('app_show');
+        });
+        window.addEventListener('pagehide', _jrnBalise);
+
+        // Erreurs JavaScript : message et pile tronqués.
+        window.addEventListener('error', e => {
+            journalEvenement('error', {
+                message: e.message || String(e.error || ''),
+                source: (e.filename || '').split('/').pop() + ':' + (e.lineno || 0),
+                stack: (e.error && e.error.stack) || ''
+            });
+        });
+        window.addEventListener('unhandledrejection', e => {
+            const r = e.reason;
+            journalEvenement('error', { message: 'promesse rejetée : ' + ((r && r.message) || String(r)), stack: (r && r.stack) || '' });
+        });
+
+        // GPS : erreurs et précision (en mètres, au plus une fois par minute), jamais la position.
+        let _jrnGpsDernier = 0;
+        function _jrnBrancherGPS() {
+            if (typeof GeoEngine === 'undefined' || !GeoEngine.on) return;
+            GeoEngine.on('error', err => journalEvenement('gps_error', { code: err && err.code, message: err && err.message }));
+            GeoEngine.on('fix', () => {
+                const now = Date.now();
+                if (now - _jrnGpsDernier < 60000) return;
+                const raw = GeoEngine.getRaw();
+                if (!raw || typeof raw.acc !== 'number') return;
+                _jrnGpsDernier = now;
+                journalEvenement('gps_accuracy', { precision_m: Math.round(raw.acc) });
+            });
+        }
+        // Après le chargement complet : GeoEngine est déclaré plus bas dans le script.
+        window.addEventListener('load', () => {
+            journalEvenement('app_open', { version: ((document.getElementById('hudVersion') || {}).textContent || '').trim(), lang: CURRENT_LANG });
+            _jrnBrancherGPS();
+        });
+
+        // ── Menu test : journal brut, sélectionnable, copiable (filet si rien n'est parti) ──
+        function testExporterJournal() {
+            let envoyes = [];
+            try { envoyes = JSON.parse(localStorage.getItem(JOURNAL_SENT_KEY) || '[]'); } catch (e) {}
+            const contenu = JSON.parse(_jrnCorps(_jrnQueue));
+            contenu.arrete = _jrnStopped;
+            contenu.point_de_collecte = JOURNAL_ENDPOINT || '(aucun : journal local)';
+            contenu.dernier_lot_envoye = envoyes;
+            const json = JSON.stringify(contenu, null, 2);
+
+            let ov = document.getElementById('journalExportOverlay');
+            if (!ov) {
+                ov = document.createElement('div');
+                ov.id = 'journalExportOverlay';
+                ov.style.cssText = 'position:fixed;inset:0;z-index:13000;background:rgba(10,8,20,0.96);display:flex;flex-direction:column;gap:10px;padding:16px;';
+                ov.innerHTML = '<div style="display:flex;gap:8px;align-items:center;">'
+                    + '<div style="flex:1;color:#EDE9FE;font-weight:700;font-size:14px;">Journal utilisateur</div>'
+                    + '<button id="journalExportCopier" class="test-action-btn" style="width:auto;">📋 Copier</button>'
+                    + '<button id="journalExportFermer" class="test-action-btn" style="width:auto;">✕</button></div>'
+                    + '<textarea id="journalExportTexte" readonly style="flex:1;width:100%;background:#0d0619;color:#d1d5db;border:1px solid rgba(167,139,250,0.3);border-radius:10px;padding:10px;font:11px/1.4 ui-monospace,Menlo,Consolas,monospace;"></textarea>';
+                document.body.appendChild(ov);
+                document.getElementById('journalExportFermer').onclick = () => { ov.style.display = 'none'; };
+                document.getElementById('journalExportCopier').onclick = () => {
+                    const ta = document.getElementById('journalExportTexte');
+                    ta.select();
+                    const fini = () => showToast('📋 Journal copié');
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(ta.value).then(fini).catch(() => { try { document.execCommand('copy'); fini(); } catch (e) {} });
+                    } else { try { document.execCommand('copy'); fini(); } catch (e) {} }
+                };
+            }
+            document.getElementById('journalExportTexte').value = json;
+            ov.style.display = 'flex';
         }
 
         // ==================== DATA ====================
@@ -23170,12 +23350,15 @@
         let _ritualHoldActive = false;
         let _ritualHoldProgress = 0;
         const RITUAL_HOLD_DURATION = 2800;
+        let _ritualHoldMs = 0;   // maintien cumulé du doigt (journal)
 
         function openCollectRitual(card) {
             _hideAllNearbyConsoles('rituel');
             _ritualCard = card;
             _ritualHoldProgress = 0;
             _ritualHoldActive = false;
+            _ritualHoldMs = 0;
+            journalEvenement('nebula_open', { carte: card.id });
 
             const info    = SUPERTYPES[card.supertype] || {};
             const color   = info.color || '#ffffff';
@@ -23351,6 +23534,7 @@
 
                 if (_ritualHoldActive) {
                     _ritualHoldProgress = Math.min(1, _ritualHoldProgress + dt / RITUAL_HOLD_DURATION);
+                    _ritualHoldMs += dt;
                     const instr = document.getElementById('ritualInstruction');
                     const prog  = document.getElementById('ritualProgress');
                     if (instr && !instr.classList.contains('hidden-instr')) {
@@ -23529,6 +23713,7 @@
             const card  = _ritualCard;
             const info  = SUPERTYPES[card.supertype] || {};
             const color = info.color || '#ffffff';
+            journalEvenement('nebula_crystallized', { carte: card.id, maintien_ms: Math.round(_ritualHoldMs) });
 
             // Mettre à jour le contenu de la phase 4
             document.getElementById('ritualReveal').style.setProperty('--ritual-color', color);
@@ -24452,6 +24637,7 @@
             currentQuestCard = card;
             if (!activeQuests[card.id]) {
                 activeQuests[card.id] = { steps: {}, started: Date.now() };
+                journalEvenement('quest_started', { quete_locale: card.id });
             }
             saveProgress();
             openQuestScreen(card);
@@ -24539,6 +24725,7 @@
         function activateQuestCard() {
             const card = currentQuestCard;
             if (!card) return;
+            journalEvenement('quest_completed', { quete_locale: card.id });
             document.getElementById('questScreen').classList.remove('show');
             currentQuestCard = null;
             collectCardDirect(card);
@@ -25503,6 +25690,7 @@
         }
 
         function openCardDetail(card) {
+            if (card) journalEvenement('card_opened', { carte: card.id });
             _cacherConsoles();   // cf. _isAnyScreenOpen
             _obOnOpenCardDetail();
             selectedCard = card;
@@ -26226,6 +26414,7 @@
             if (!cardJournalEntries[cardId]) cardJournalEntries[cardId] = [];
             const alreadyAdded = cardJournalEntries[cardId].some(e => e.id === entry.id);
             if (alreadyAdded) return;
+            journalEvenement('journal_entry_unlocked', { carte: cardId, chapitre: level + 1, index: cardJournalEntries[cardId].filter(e => e.level === level).length + 1, entree: entry.id });
             // _type forcé depuis showDustDialogue en priorité, sinon inférence de secours
             const entryType = entry._type || (
                 entry.photo === 'placeholder_visual' ? 'visual' :
@@ -26547,6 +26736,7 @@
             }
 
             memorialDust -= increment;
+            journalEvenement('dust_given', { carte: selectedCard.id, quantite: increment, niveau: cl.level });
             // Consommer 1 cran d'énergie
             consumeCardEnergy(selectedCard.id);
             document.getElementById('dustCounter').textContent = memorialDust;
@@ -26597,6 +26787,7 @@
                 return;
             }
             bagInv.orbes -= 1;
+            journalEvenement('orb_used', { carte: selectedCard.id });
             restoreCardEnergy(selectedCard.id);
             saveProgress();
 
@@ -32956,6 +33147,7 @@
             _hideAllNearbyConsoles('echoppe');
             if (!currentNearbyBazar.stock) currentNearbyBazar.stock = { pellicules: 3, encre: 3, cassettes: 3 };
             document.getElementById('bazarScreenTitle').textContent = currentNearbyBazar.name;
+            _jrnEchoppe = { echoppe: currentNearbyBazar.id, pris: {} };
             _bazarRefreshStock();
             const el = document.getElementById('bazarScreen');
             el.style.transform    = 'translateY(0)';
@@ -32981,7 +33173,9 @@
             });
         }
 
+        let _jrnEchoppe = null;   // visite en cours (journal)
         function closeBazarScreen() {
+            if (_jrnEchoppe) { journalEvenement('shop_visited', _jrnEchoppe); _jrnEchoppe = null; }
             _showNearbyConsoles('echoppe');
             // Le joueur vient de fermer l'échoppe : sa console ne doit pas se
             // rouvrir dans la seconde. C'est désormais la règle générale —
@@ -33004,6 +33198,7 @@
             if ((currentNearbyBazar.stock[item] || 0) <= 0) { showToast('Stock épuisé'); return; }
             currentNearbyBazar.stock[item]--;
             bagInv[item] = (bagInv[item] || 0) + 1;
+            if (_jrnEchoppe) _jrnEchoppe.pris[item] = (_jrnEchoppe.pris[item] || 0) + 1;
             if (item === 'pellicules') updateCameraHUD();
             saveProgress();
             _bazarRefreshStock();
@@ -34668,6 +34863,7 @@
         function _acceptQuestEtape(grappeId, etapeId) {
             if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
             grappeQuestState[grappeId][etapeId] = 'active';
+            journalEvenement('quest_started', { grappe: grappeId, etape: etapeId });
             saveProgress();
             renderGrappeQuestModal(grappeId);
             updateQuestMarkers();
@@ -34678,6 +34874,7 @@
             const grappe = GRAPPE_QUESTS[grappeId];
             if (!grappe) return;
             const etape = grappe.quete.etapes.find(e => e.id === etapeId);
+            journalEvenement('quest_completed', { grappe: grappeId, etape: etapeId });
             if (!etape) return;
             if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
             grappeQuestState[grappeId][etapeId] = 'completed';
