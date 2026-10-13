@@ -8713,6 +8713,85 @@
             letter-spacing: 0.04em;
         }
 
+        /* ── Arrivée dans l'Explorium (test Bellecour, section 17) ──
+           Couche d'effets au-dessus de l'Explorium ; tant que la séquence
+           tourne, nœuds, fils et médias restent éteints jusqu'à leur tour. */
+        .expl-arr-couche {
+            position: absolute; inset: 0; z-index: 60;
+            background: rgb(8,6,15);
+            pointer-events: none;
+        }
+        .expl-arr-couche canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+        .voute-v2-screen.expl-arr-actif .v2-back { pointer-events: none; }
+        .voute-v2-screen .v2-header,
+        .voute-v2-screen .v2-grappes-strip { transition: opacity 0.6s ease; }
+        .voute-v2-screen.expl-arr-ui-cache .v2-header,
+        .voute-v2-screen.expl-arr-ui-cache .v2-grappes-strip { opacity: 0; }
+        .voute-v2-screen.expl-arr-actif #v2NodesLayer > g:not(.expl-arr-on),
+        .voute-v2-screen.expl-arr-actif #v2MediasLayer > g:not(.expl-arr-on),
+        .voute-v2-screen.expl-arr-actif #v2ThreadsLayer > path:not(.expl-arr-on) { opacity: 0; }
+        .voute-v2-screen.expl-arr-actif #v2ThreadsLayer > path.expl-arr-on { transition: opacity 0.3s ease; }
+        .expl-arr-in { transform-box: fill-box; transform-origin: center; }
+        /* Carte qui s'allume : surgit dans un éclat doré, puis se pose */
+        #v2NodesLayer > g.expl-arr-on > .expl-arr-in {
+            animation: explArrCarte 0.9s cubic-bezier(.2,1.3,.4,1) both;
+        }
+        @keyframes explArrCarte {
+            0%   { opacity: 0; transform: scale(0.25); filter: brightness(2.4) drop-shadow(0 0 0 rgba(253,230,138,0)); }
+            55%  { opacity: 1; transform: scale(1.15); filter: brightness(1.6) drop-shadow(0 0 12px rgba(253,230,138,0.9)); }
+            100% { opacity: 1; transform: scale(1);    filter: none; }
+        }
+        /* Média qui émerge : monte du noir, halo violet */
+        #v2MediasLayer > g.expl-arr-on > .expl-arr-in {
+            animation: explArrMedia 0.8s cubic-bezier(.25,1.2,.45,1) both;
+        }
+        @keyframes explArrMedia {
+            0%   { opacity: 0; transform: scale(0.4) translateY(8px); filter: drop-shadow(0 0 0 rgba(167,139,250,0)); }
+            60%  { opacity: 1; transform: scale(1.08); filter: drop-shadow(0 0 10px rgba(167,139,250,0.85)); }
+            100% { opacity: 1; transform: scale(1);    filter: none; }
+        }
+        /* Silhouettes et éléments du monde : simple fondu */
+        #v2NodesLayer > g.expl-arr-on.expl-arr-doux > .expl-arr-in { animation: explArrFondu 1.2s ease both; }
+        @keyframes explArrFondu { from { opacity: 0; } to { opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) {
+            #v2NodesLayer > g.expl-arr-on > .expl-arr-in,
+            #v2MediasLayer > g.expl-arr-on > .expl-arr-in { animation: explArrFondu 0.4s ease both; }
+        }
+
+        /* Voix mémorielle : l'image est peinte sur fond noir — fondue dans la scène */
+        #vnBust[src*="voix_memorielle"] { mix-blend-mode: screen; }
+
+        /* Icône d'objet dans une réplique du visual novel (sections 19 à 21) */
+        .vn-line .vn-ico {
+            display: inline-block; height: 1.35em; width: auto;
+            vertical-align: -0.32em; margin-right: 0.25em;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
+        }
+
+        /* Section 23 : la pastille du nouveau visuel se remplit, de bas en haut */
+        .ot-tl-node.ot-tl-remplit::before,
+        .card-flavor-zone .ot-tl-node.ot-tl-remplit::before {
+            background: linear-gradient(135deg, #A855F7 0%, #7C3AED 100%) bottom / 100% 0% no-repeat,
+                        rgba(124,58,237,0.15);
+            opacity: 1;
+            animation: otTlRemplit 1.1s ease-in-out both;
+        }
+        @keyframes otTlRemplit {
+            0%   { background-size: 100% 0%, 100% 100%;   transform: translate(-50%, -50%) scale(1.3);
+                   box-shadow: 0 0 0 0 rgba(196,181,253,0); }
+            70%  { background-size: 100% 100%, 100% 100%; transform: translate(-50%, -50%) scale(1.5);
+                   box-shadow: 0 0 12px 5px rgba(196,181,253,0.85); }
+            100% { background-size: 100% 100%, 100% 100%; transform: translate(-50%, -50%) scale(1);
+                   box-shadow: 0 1px 3px rgba(15,23,42,0.22); }
+        }
+        /* … puis le nouveau visuel s'installe dans un bref éclat */
+        .card-art-placeholder.chap-intro-eclat { animation: chapIntroEclat 1.2s ease-out; }
+        @keyframes chapIntroEclat {
+            0%   { filter: brightness(1); }
+            30%  { filter: brightness(1.6) drop-shadow(0 0 14px rgba(196,181,253,0.9)); }
+            100% { filter: brightness(1); }
+        }
+
         /* ═══════════════════════════════════════════════════════════
            FRESQUE — diapositive de tableaux narratifs
            ═══════════════════════════════════════════════════════════ */
@@ -12179,7 +12258,7 @@
             "Visuel %1 — pas encore révélé": "Artwork %1 — not revealed yet",
             "Type de carte : %1": "Card type: %1",
             "elle reviendra à elle dans %1": "it will come round in %1",
-            "%1 — scellé": "%1 — sealed",
+            "%1 — clôturé": "%1 — closed",
             "Il vous faut %1 poussières mémorielle pour débloquer cet objet. Vous en avez %2.": "You need %1 memorial dust to unlock this item. You have %2.",
             "%1 ajouté !": "%1 added!",
             "Nouvel objet ajouté à votre studio. %1": "New item added to your studio. %1",
@@ -12256,7 +12335,7 @@
             "Une pellicule photographique non développée. Utilise-la dans le carnet d'une carte pour révéler une entrée visuelle, ou dans l'appareil photo pour capturer un panorama.": "An undeveloped roll of film. Use it in a card's notebook to reveal a visual entry, or in the camera to capture a panorama.",
             "Un flacon d'encre mémorielle. Verse-la sur une entrée textuelle dans le carnet d'une carte pour en révéler le contenu.": "A vial of memorial ink. Pour it over a text entry in a card's notebook to reveal its content.",
             "Une cassette vierge. Insère-la dans une entrée audio dans le carnet d'une carte pour en libérer le son.": "A blank tape. Insert it into an audio entry in a card's notebook to release its sound.",
-            "Concentré de poussière mémorielle. Glisse-le dans le carnet d'une carte pour valider le passage de niveau et sceller le chapitre narratif.": "Concentrated memorial dust. Slip it into a card's notebook to confirm the level up and seal the narrative chapter.",
+            "Concentré de poussière mémorielle. Glisse-le dans le carnet d'une carte pour valider le passage de niveau et clôturer le chapitre narratif.": "Concentrated memorial dust. Slip it into a card's notebook to confirm the level up and close the narrative chapter.",
             "Les photos se prennent depuis les points d'information sur la carte. Chacune est accompagnée d'une note et d'une date de visite.": "Photos are taken from the information points on the map. Each comes with a note and a visit date.",
 
             // Chemin de l'Explorateur — jalons
@@ -12534,12 +12613,12 @@
             "Mais tiens — prends cette orbe mémorielle. Elle lui rend toute son énergie d'un coup. Utilise-la.": "But here — take this memory orb. It gives back all its energy at once. Use it.",
             "Tu portes déjà une orbe mémorielle. Pose-la sur la carte : elle lui rend toute son énergie d'un coup.": "You're already carrying a memory orb. Place it on the card: it gives back all its energy at once.",
             "Elle revit. Continue — mène ce premier chapitre à son terme.": "It's alive again. Keep going — carry this first chapter through to its end.",
-            "Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, scelle-le.": "All the pages are unveiled. Come back to the card: the chapter is complete, seal it.",
-            "Le chapitre est plein, et toutes ses pages dévoilées. Scelle-le — qu'il prenne racine.": "The chapter is full, and all its pages unveiled. Seal it — let it take root.",
+            "Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, clôture-le.": "All the pages are unveiled. Come back to the card: the chapter is complete, close it.",
+            "Le chapitre est plein, et toutes ses pages dévoilées. Clôture-le — qu'il prenne racine.": "The chapter is full, and all its pages unveiled. Close it — let it take root.",
             "Le chapitre est plein — mais des pages restent voilées : une image, un son.": "The chapter is full — but some pages stay veiled: an image, a sound.",
-            "Ouvre le carnet et dévoile-les toi-même, à la pellicule et à la cassette. Ensuite seulement tu pourras sceller.": "Open the notebook and reveal them yourself, with film and tape. Only then can you seal it.",
+            "Ouvre le carnet et dévoile-les toi-même, à la pellicule et à la cassette. Ensuite seulement tu pourras clôturer.": "Open the notebook and reveal them yourself, with film and tape. Only then can you close it.",
             "Le chapitre est plein — mais des pages restent voilées.": "The chapter is full — but some pages stay veiled.",
-            "Ouvre le carnet et dévoile-les toi-même, avec ce qu'il faut pour chacune. Ensuite seulement tu pourras sceller.": "Open the notebook and reveal them yourself, with what each one needs. Only then can you seal it.",
+            "Ouvre le carnet et dévoile-les toi-même, avec ce qu'il faut pour chacune. Ensuite seulement tu pourras clôturer.": "Open the notebook and reveal them yourself, with what each one needs. Only then can you close it.",
             "Voilà. Ce chapitre ne s'oubliera plus. C'est ça, être explorateur de la mémoire.": "There. This chapter will not be forgotten again. That is what being a memory explorer means.",
             "Avant que je parte, écoute. Trois choses t'attendent en marchant.": "Before I go, listen. Three things are waiting for you as you walk.",
             "Et là où tu passes, la carte en garde trace — chaque geste que tu poses laisse un petit signe, discret, à sa place exacte. À toi de reconnaître, plus tard, le dessin de ton exploration.": "And wherever you pass, the map keeps a trace of it — every gesture you make leaves a small, discreet sign at its exact place. Later, it's for you to recognize the shape your exploration has drawn.",
@@ -12561,7 +12640,7 @@
             "Chapitre I — scellé": "Chapter I — sealed",
             "Chapitre II — scellé": "Chapter II — sealed",
             "Chapitre III — scellé": "Chapter III — sealed",
-            "Chapitre scellé.": "Chapter sealed.",
+            "Chapitre clôturé.": "Chapter closed.",
             "La mémoire a pris racine.": "Memory has taken root.",
             "Fragment visuel · non développé": "Visual fragment · undeveloped",
             "Tous les savoirs révélés": "All knowledge revealed",
@@ -13518,7 +13597,7 @@
             "Trouvé près de": "Found near",
             "⋆ Les cartes marquées alimentent l'Explorium": "⋆ Marked cards feed the Explorium",
             "Les cartes n'ont pas de voix — seulement des silences qui attendent.": "Cards have no voice — only silences that wait.",
-            "✨ Sceller le chapitre": "✨ Seal the chapter",
+            "✨ Clôturer le chapitre": "✨ Close the chapter",
             "Décalage actuel : aucun": "Current offset: none",
             "Tu as tout vu. Je ne sais pas quoi penser de ça.": "You've seen everything. I don't know what to make of that.",
             "C'est tout. Tu connais tout ce que j'ai accepté de montrer.": "That's all. You know everything I agreed to show.",
@@ -13676,7 +13755,7 @@
             // ── Explorium : évolution et échos ──
             "Aucune carte n'est prête à évoluer.": "No card is ready to evolve.",
             "Donne de la poussière à tes cartes pour remplir leur jauge.": "Give dust to your cards to fill their gauge.",
-            "Sceller →": "Seal →",
+            "Clôturer →": "Close →",
             "Utiliser un orbe de mémoire": "Use a memory orb",
             "Explore Lyon pour en trouver une.": "Explore Lyon to find one.",
             "Ouvrir →": "Open →",
@@ -16925,30 +17004,57 @@
         // persisté (il ne la reverra pas à la quatrième photo).
         // ════════════════════════════════════════════════════════════════
 
-        // Appelé depuis openViewfinder() — premier panorama cadré.
+        // Test Bellecour, sections 19 à 21 : répliques du document de dialogues
+        // (mot pour mot), icône de l'objet insérée devant son nom. Les gabarits
+        // HTML sont des constantes : la même chaîne sert de clé à la traduction
+        // (cf. _OB_DECOUVERTES_EN, plus bas avec l'arrivée dans l'Explorium).
+        const _OB_HTML_PANORAMA = 'Vise un peu ce ' + _vnIcone('./assets/PanoramaIcon.png?v=2')
+            + '<span style="color:#5FC9E8;font-weight:600">panorama</span>. J’aime prendre le temps parfois, de juste regarder autour de moi. Garder un bout de ce que je vis l’espace d’un instant. Essaie, toi aussi.';
+        const _OB_HTML_PANNEAU = 'L’Organisation en a brièvement parlé lors de la dernière réunion des Sensibles Novices. Les '
+            + _vnIcone('./assets/PanelInfoIcon.png?v=2')
+            + '<span style="color:#7BD88F;font-weight:600">points d\'information</span> sont des supports d’ancrage très liés au lieu où ils se trouvent. Ce serait trop long de t’expliquer maintenant mais sache que tu peux agir avec grâce à des parchemins que tu récupères en chemin. Une fois assemblés, ils te livrent ce qu\'ils cachaient.';
+        const _OB_HTML_PARCHEMIN = 'Oh un ' + _vnIcone('./assets/parchemin.png')
+            + '<span style="color:#EBCC7E;font-weight:600">parchemin</span>. J’en ai déjà accumulé quelques-uns. Pris isolément, ça ne sert pas à grand-chose. Vois ça comme une pièce de puzzle. Fais-lui une place dans ton sac, ça peut être important.';
+
+        // Appelé depuis openViewfinder() — premier panorama cadré (section 19).
         function _obOnOpenViewfinder() {
-            _obDiscover('panorama', [
-                { speaker: 'La jeune fille', html: 'Un <span style="color:#5FC9E8;font-weight:600">panorama</span>. Ce sont des lieux où le regard porte — un pont, une crête, une vue qu\'on ne voit qu\'en s\'arrêtant.' },
-                { speaker: 'La jeune fille', line: 'Cadre, et prends la photo. Elle rejoindra ton studio, avec la date et ce que tu en auras noté. C\'est ta mémoire à toi, celle-là — pas celle des cartes.' },
+            _obDiscover('panorama', () => [
+                { speaker: nomClara(), air: 'enjoué', html: _OB_HTML_PANORAMA },
             ], 'viewfinderScreen');
         }
 
-        // Appelé depuis openPanneauScreen() — premier point d'information ouvert.
-        // La réplique reprend mot pour mot celle qui vivait dans l'adieu : sa
-        // traduction anglaise existe déjà, elle n'avait plus de source française.
+        // Appelé depuis openPanneauScreen() — premier point d'information ouvert (section 20).
         function _obOnOpenPanneau() {
-            _obDiscover('panneau', [
-                { speaker: 'La jeune fille', html: 'Les <span style="color:#7BD88F;font-weight:600">points d\'information</span>. Des supports que d\'autres ont laissés, incomplets. Tu peux les compléter en y insérant les parchemins que tu récupères en chemin. Une fois assemblés, ils te livrent ce qu\'ils cachaient.' },
-                { speaker: 'La jeune fille', line: 'Chaque emplacement vide attend le sien. Rien ne presse — le panneau ne s\'en ira pas.' },
+            _obDiscover('panneau', () => [
+                { speaker: nomClara(), air: 'neutre', html: _OB_HTML_PANNEAU },
             ], 'panneauScreen');
         }
 
-        // Appelé depuis collectScroll() — premier parchemin ramassé.
+        // Appelé depuis collectScroll() — premier parchemin ramassé (section 21).
         function _obOnCollectScroll() {
-            _obDiscover('scroll', [
-                { speaker: 'La jeune fille', html: 'Un <span style="color:#EBCC7E;font-weight:600">parchemin</span>. Il ne te dira rien tout seul : c\'est une pièce, pas un texte.' },
-                { speaker: 'La jeune fille', line: 'Garde-le. Il s\'insère dans les points d\'information de la ville, ces panneaux à moitié effacés. Tu en trouveras d\'autres en marchant, et en faisant progresser tes cartes.' },
+            _obDiscover('scroll', () => [
+                { speaker: nomClara(), air: 'neutre', html: _OB_HTML_PARCHEMIN },
             ], 'map');
+        }
+
+        // Section 22 — jauge d'énergie d'une carte vide, la première fois.
+        // Le document ne donne la marche à suivre que si le joueur porte une
+        // orbe ; sans orbe, on garde la réplique existante (« Ou tu sors
+        // chercher… »). L'orbe n'a pas d'icône dessinée en jeu : 🔮, comme au sac.
+        function _obLignesEnergie(avecOrbe) {
+            const qui = nomClara();
+            return [
+                { speaker: qui, line: 'La carte s\'épuise. La mémoire a besoin de temps, attends quelques heures qu’elle se ravive d’elle mêmes' },
+                avecOrbe
+                    ? { speaker: qui, line: 'Tu portes déjà une 🔮 orbe mémorielle, pose-la sur la carte : elle lui rend toute son énergie d\'un coup.' }
+                    : { speaker: qui, line: 'Ou tu sors chercher de quoi la ranimer.' },
+            ];
+        }
+        // Hors tutoriel guidé (le guide a son propre déclencheur, energy_empty).
+        // Dite dans la fiche carte, où se trouve la jauge : le document indique
+        // « MAPPE », mais la jauge ne se vide que fiche ouverte.
+        function _obOnEnergieVide() {
+            _obDiscover('energie', () => _obLignesEnergie((bagInv.orbes || 0) > 0), 'cardDetailView');
         }
 
         // Appelé depuis openZoneDetail() — premier badge de quartier consulté.
@@ -17112,6 +17218,18 @@
         // trouve son premier panorama trois semaines plus tard doit encore
         // l'obtenir, et ne pas le revoir à la quatrième photo.
         let _obDiscovered = {};
+        // Découverte → section du document de dialogues (journal utilisateur)
+        const _OB_DECOUVERTE_SECTION = { panorama: 19, panneau: 20, scroll: 21, energie: 22 };
+
+        // Clara se présente à la section 12 : ce drapeau (sauvegardé) est posé
+        // par le lot des sections 12-18. Avant, elle reste « La jeune fille ».
+        let _claraPresentee = false;
+        function nomClara() { return _claraPresentee ? 'Clara' : 'La jeune fille'; }
+
+        // Icône d'objet insérée dans une réplique (rendu `html` du visual novel).
+        function _vnIcone(src) {
+            return '<img class="vn-ico" src="' + src + '" alt="" draggable="false">';
+        }
 
         // ecran : id de l'interface dont parle la réplique, ou 'map'. Si le joueur
         // l'a quittée pendant le délai, la découverte n'est pas consommée.
@@ -17121,6 +17239,9 @@
             // dialogues qui se recouvrent perdent le joueur. La découverte n'est
             // pas consommée — elle retombera à la prochaine visite, hors tutoriel.
             if (typeof _obGuide === 'object' && _obGuide.active) return;
+            // Test Bellecour (sections 19-22) : muettes tant que le tutoriel guidé
+            // n'est pas terminé. Non consommée : elle attend la rencontre suivante.
+            if (!_obDone) return;
             const vn = document.getElementById('vnOverlay');
             if (vn && vn.classList.contains('show')) return;
             // Petit délai pour laisser l'écran s'ouvrir visuellement.
@@ -17132,6 +17253,11 @@
                 if (!ici) return;
                 _obDiscovered[key] = true;
                 try { saveProgress(); } catch (e) {}
+                // Répliques construites au moment de parler (nomClara() peut avoir changé)
+                if (typeof lines === 'function') lines = lines();
+                if (typeof journalLog === 'function' && _OB_DECOUVERTE_SECTION[key]) {
+                    try { journalLog('tuto_step', { section: _OB_DECOUVERTE_SECTION[key] }); } catch (e) {}
+                }
                 try { vnShow(lines, null); } catch (e) {}
             }, 600);
         }
@@ -17788,7 +17914,7 @@
                 _obGuide.cible = id;
                 _obGuide.step = 'seal';
                 _obSay('carddetail', [
-                    { speaker: 'La jeune fille', expr: 'prete', line: 'Le chapitre est plein, et toutes ses pages dévoilées. Scelle-le — qu\'il prenne racine.' },
+                    { speaker: 'La jeune fille', expr: 'prete', line: 'Le chapitre est plein, et toutes ses pages dévoilées. Clôture-le — qu\'il prenne racine.' },
                 ], () => _obGuideRefresh());
             } else {
                 if (!_obUneFois('xp_full')) return;
@@ -17800,10 +17926,10 @@
                 const _voilees = _obVeiledEntries(id).map(e => e._type || 'text').sort().join(',');
                 _obSay('carddetail', _voilees === 'audio,visual' ? [
                     { speaker: 'La jeune fille', line: 'Le chapitre est plein — mais des pages restent voilées : une image, un son.' },
-                    { speaker: 'La jeune fille', line: 'Ouvre le carnet et dévoile-les toi-même, à la pellicule et à la cassette. Ensuite seulement tu pourras sceller.' },
+                    { speaker: 'La jeune fille', line: 'Ouvre le carnet et dévoile-les toi-même, à la pellicule et à la cassette. Ensuite seulement tu pourras clôturer.' },
                 ] : [
                     { speaker: 'La jeune fille', line: 'Le chapitre est plein — mais des pages restent voilées.' },
-                    { speaker: 'La jeune fille', line: 'Ouvre le carnet et dévoile-les toi-même, avec ce qu\'il faut pour chacune. Ensuite seulement tu pourras sceller.' },
+                    { speaker: 'La jeune fille', line: 'Ouvre le carnet et dévoile-les toi-même, avec ce qu\'il faut pour chacune. Ensuite seulement tu pourras clôturer.' },
                 ], () => _obGuideRefresh());
             }
         }
@@ -17900,6 +18026,8 @@
                 // L'orbe s'explique la première fois qu'une carte s'épuise, n'importe laquelle.
                 case 'energy_empty':
                     if (_obUneFois('energie')) {
+                        // Section 22 : dite ici, elle ne se redira pas en découverte.
+                        _obDiscovered.energie = true;
                         // L'orbe ne se donne plus : elle se ramasse. Une orbe posée
                         // dans la main n'apprend rien ; une orbe qu'on va chercher
                         // apprend où en trouver d'autres. Elle attend sur la mappe
@@ -17908,18 +18036,12 @@
                         if ((bagInv.orbes || 0) > 0) {
                             _obGuide.step = 'orb';
                             if (typeof updateCardLevelDisplay === 'function') updateCardLevelDisplay();
-                            _obSay('carddetail', [
-                                { speaker: 'La jeune fille', expr: 'interloquee', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
-                                { speaker: 'La jeune fille', line: 'Tu portes déjà une orbe mémorielle. Pose-la sur la carte : elle lui rend toute son énergie d\'un coup.' },
-                            ], () => _obGuideRefresh());
+                            _obSay('carddetail', _obLignesEnergie(true), () => _obGuideRefresh());
                         } else {
                             _obGuide.step = 'gather';
                             _obGuideVu.orbe_a_chercher = true;   // elle l'a envoyé dehors
                             // Le constat dans la fiche carte, la marche à suivre sur la mappe.
-                            _obSay('carddetail', [
-                                { speaker: 'La jeune fille', expr: 'interloquee', line: 'La carte s\'épuise. La mémoire a besoin d\'infuser — il faudrait attendre des heures qu\'elle se ravive d\'elle-même.' },
-                                { speaker: 'La jeune fille', line: 'Ou tu sors chercher de quoi la ranimer.' },
-                            ], () => {
+                            _obSay('carddetail', _obLignesEnergie(false), () => {
                                 _obGuideRefresh();
                                 _obSay('map', _obGatherLines(), () => _obGuideRefresh());
                             });
@@ -17962,7 +18084,7 @@
                     _obGuide.cible = _id;
                     _obGuide.step = 'seal';
                     _obSay('journal', [
-                        { speaker: 'La jeune fille', expr: 'prete', line: 'Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, scelle-le.' },
+                        { speaker: 'La jeune fille', expr: 'prete', line: 'Toutes les pages sont dévoilées. Reviens à la carte : le chapitre est complet, clôture-le.' },
                     ], () => _obGuideRefresh());
                     break;
                 }
@@ -19099,6 +19221,7 @@
                     // Découvertes déjà expliquées (panorama, point d'info, parchemin…).
                     // Persistées : elles survivent au tutoriel et ne se redisent jamais.
                     _obDiscovered,
+                    _claraPresentee,   // Clara s'est présentée (section 12) : nomClara()
                     // Où l'échoppe, la poussière et l'orbe du tutoriel ont été posées :
                     // un rechargement en plein tutoriel les remet au même endroit.
                     _obTutoSpawn,
@@ -19206,6 +19329,7 @@
                 if (d._obJournalSuppliesSaid) _obJournalSuppliesSaid = true;
                 if (d._obGuideVu && typeof d._obGuideVu === 'object') _obGuideVu = d._obGuideVu;
                 if (d._obDiscovered && typeof d._obDiscovered === 'object') _obDiscovered = d._obDiscovered;
+                if (d._claraPresentee) _claraPresentee = true;
                 if (d._obTutoSpawn && typeof d._obTutoSpawn === 'object') _obTutoSpawn = d._obTutoSpawn;
                 if (d._villeDuLivreUnlocked) _villeDuLivreUnlocked = d._villeDuLivreUnlocked;
                 if (d._hubExploriumKey)      _hubExploriumKey      = d._hubExploriumKey;
@@ -23587,7 +23711,7 @@
                 action: { icon: "💜", label: "Utiliser pour un level up" },
                 getItems() {
                     return [{ id: "orbe", icon: "🔮", name: "Orbe de mémoire", sub: "Consommable · Level up", qty: bagInv.orbes,
-                        desc: "Concentré de poussière mémorielle. Glisse-le dans le carnet d'une carte pour valider le passage de niveau et sceller le chapitre narratif." }];
+                        desc: "Concentré de poussière mémorielle. Glisse-le dans le carnet d'une carte pour valider le passage de niveau et clôturer le chapitre narratif." }];
                 }
             },
             {
@@ -23887,9 +24011,9 @@
                         </div>
                         <div style="flex:1;min-width:0;">
                             <div style="font-size:13px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
-                            <div style="font-size:11px;color:#9ca3af;">${c.type || ''} · Scelle ${nextLevel}</div>
+                            <div style="font-size:11px;color:#9ca3af;">${c.type || ''} · Clôture ${nextLevel}</div>
                         </div>
-                        <div style="font-size:11px;color:#8B5CF6;font-weight:700;">Sceller →</div>
+                        <div style="font-size:11px;color:#8B5CF6;font-weight:700;">Clôturer →</div>
                     </div>`;
                 }).join('');
             }
@@ -25680,7 +25804,8 @@
                 } else {
                     btn.disabled = false;
                     btn.onclick = () => { placeOrbe(); };
-                    btn.textContent = '✨ Sceller le chapitre';
+                    btn.textContent = '✨ Clôturer le chapitre';
+                    _chapPleinParler(selectedCard, cl.level);   // section 23
                 }
             } else {
                 const cfg = RARITY_CONFIG[selectedCard.rarity] || RARITY_CONFIG.common;
@@ -26029,7 +26154,7 @@
                 textEl.style.opacity = '1';
             }, 150);
 
-            const delay = type === 'heart' ? 4500 : 7000;
+            const delay = type === 'heart' ? 4500 : type === 'chapitre' ? 5000 : 7000;   // chapitre : section 23
             _flavorRestoreTimer = setTimeout(() => {
                 // Retour au flavor text d'ambiance
                 textEl.style.opacity = '0';
@@ -26415,6 +26540,8 @@
                 } else if (_en.value <= 0) {
                     setTimeout(() => _obGuideEvent('energy_empty'), 550);
                 }
+            } else if (getCardEnergyState(selectedCard.id).value <= 0) {
+                _obOnEnergieVide();   // section 22, hors tutoriel guidé
             }
         }
 
@@ -26513,6 +26640,8 @@
             // ── Sceller le chapitre : ne consomme plus d'orbe.
             // L'orbe est désormais réservée au bypass de la maturation des cartes.
             if (!selectedCard) return;
+            // Section 23 : le chapitre se clôture depuis la fiche carte, plus depuis le carnet.
+            if (document.getElementById('journalScreen')?.classList.contains('show')) return;
             const cl = cardLevels[selectedCard.id];
             if (cl.level >= MAX_LEVEL) return;
             const needed = getExpNeeded(selectedCard, cl.level);
@@ -26561,7 +26690,7 @@
             ];
             const LEVEL_NAMES = ['Chapitre I', 'Chapitre II', 'Chapitre III'];
             document.getElementById('orbSynthCardName').textContent = selectedCard.name;
-            document.getElementById('orbSynthLevel').textContent = TF('%1 — scellé', T(LEVEL_NAMES[levelBefore]));
+            document.getElementById('orbSynthLevel').textContent = TF('%1 — clôturé', T(LEVEL_NAMES[levelBefore]));
             document.getElementById('orbSynthText').textContent = SYNTH_TEXTS[Math.min(levelBefore, 2)];
             document.getElementById('orbSynthOverlay').classList.add('show');
         }
@@ -26572,10 +26701,14 @@
 
             // L'overlay de synthèse levé, le détail carte redevient visible :
             // c'est le moment d'allumer la pastille fraîchement débloquée.
+            // Section 23 : le nouveau visuel est introduit sur place, et sa pastille
+            // se remplit (cf. _chapIntroVisuel) ; le carnet ne s'ouvre pas par-dessus.
+            let _introVisuel = false;
             if (_otTlPendingReveal >= 0 && selectedCard
                 && document.getElementById('cardDetailView')?.classList.contains('show')) {
                 const _tlCard = selectedCard;
-                setTimeout(() => _otTlBuild(_tlCard), 420);
+                _introVisuel = true;
+                setTimeout(() => _chapIntroVisuel(_tlCard), 420);
             }
 
             // ── Accroche parcours guidé : chapitre scellé → adieu de la jeune fille ──
@@ -26583,6 +26716,7 @@
                 setTimeout(() => _obGuideEvent('sealed'), 350);
                 return;
             }
+            if (_introVisuel) return;
 
             const sealedLvl = selectedCard ? (cardLevels[selectedCard.id].level - 1) : undefined;
             const journalEl = document.getElementById('journalScreen');
@@ -26949,7 +27083,7 @@
                 if (isClosed) {
                     html2 += '<div class="chapter-seal" style="transform:rotate(-0.6deg);">';
                     html2 += '<div class="chapter-seal-wax">✦</div>';
-                    html2 += '<div class="chapter-seal-text">Chapitre scellé.<br><span style="opacity:0.6;font-size:10px;">La mémoire a pris racine.</span></div>';
+                    html2 += '<div class="chapter-seal-text">Chapitre clôturé.<br><span style="opacity:0.6;font-size:10px;">La mémoire a pris racine.</span></div>';
                     html2 += '</div>';
                 }
 
@@ -26967,9 +27101,10 @@
                         slotTitle = unrevealed2 + ' ' + T(unrevealed2 > 1 ? 'entrées à dévoiler' : 'entrée à dévoiler');
                         slotSub = 'Révèle toutes les entrées du chapitre pour progresser';
                     } else if (xpFull) {
-                        slotCls = 'ready'; orbIco = '✨';
-                        slotTitle = 'Sceller ce chapitre';
-                        slotSub = 'Tap pour progresser';
+                        // Section 23 : plus de passage de niveau depuis le carnet.
+                        slotCls = 'no-orb'; orbIco = '✨';
+                        slotTitle = 'Chapitre prêt à être clôturé';
+                        slotSub = 'Clôture-le depuis la fiche de la carte';
                     } else {
                         slotCls = 'no-orb'; orbIco = '○';
                         slotTitle = 'XP insuffisante';
@@ -29061,6 +29196,8 @@
                 const revealed = entries.filter(e => e._revealed).length;
                 _triggerLayer3(cardId, delta, revealed, total);
             }
+            // Section 23 : retour sur la fiche, chapitre plein et tout dévoilé ?
+            if (selectedCard) setTimeout(() => { try { updateCardLevelDisplay(); } catch (e) {} }, 400);
         }
 
         // ==================== STUDIO ====================
@@ -38363,6 +38500,7 @@
                     path.setAttribute('fill', 'none');
                     path.setAttribute('stroke', grappeColor);
                     path.setAttribute('stroke-width', '1.6');
+                    path.setAttribute('data-card', req.cardId);   // arrivée dans l'Explorium
                     if (!illuminated && !owned) {
                         // Fil dans l'obscurité : pointillé fin à très faible opacité
                         path.setAttribute('stroke-dasharray', '2 4');
@@ -38378,6 +38516,16 @@
                     layer.appendChild(path);
                 });
             });
+        }
+
+        // Cartes de l'Explorium : rectangle portrait centré sur le nœud
+        // (test Bellecour, section 17 — remplace les cercles).
+        function _v2RectCarte(w, h, rx) {
+            const r = document.createElementNS(V2_SVG_NS, 'rect');
+            r.setAttribute('x', -w / 2); r.setAttribute('y', -h / 2);
+            r.setAttribute('width', w); r.setAttribute('height', h);
+            r.setAttribute('rx', rx);
+            return r;
         }
 
         function v2RenderNodes() {
@@ -38397,6 +38545,7 @@
                 const g = document.createElementNS(V2_SVG_NS, 'g');
                 g.setAttribute('transform', `translate(${x.toFixed(0)}, ${y.toFixed(0)})`);
                 g.setAttribute('pointer-events', 'auto');
+                g.setAttribute('data-card', cardId);   // arrivée dans l'Explorium
                 g.style.cursor = 'pointer';
 
                 // Si non éclairé ET non obtenu : silhouette ? simple (style Whispers)
@@ -38415,13 +38564,11 @@
                     g.setAttribute('class', `v2-node ${owned ? 'obtained' : 'not-obtained'} ${isShadow ? 'shadow' : ''}`);
 
                     if (isShadow) {
-                        // Mode silhouette : cercle pointillé + "?" doré tenu
-                        const bg = document.createElementNS(V2_SVG_NS, 'circle');
-                        bg.setAttribute('r', '18');
+                        // Mode silhouette : carte pointillée + "?" doré tenu
+                        const bg = _v2RectCarte(28, 38, 4);
                         bg.setAttribute('fill', 'rgba(8,7,10,0.5)');
                         g.appendChild(bg);
-                        const ring = document.createElementNS(V2_SVG_NS, 'circle');
-                        ring.setAttribute('r', '18');
+                        const ring = _v2RectCarte(28, 38, 4);
                         ring.setAttribute('fill', 'none');
                         ring.setAttribute('stroke', 'rgba(217,164,65,0.45)');
                         ring.setAttribute('stroke-width', '1.5');
@@ -38444,11 +38591,11 @@
                         star.textContent = '✦';
                         g.appendChild(star);
                     } else {
-                        const halo = document.createElementNS(V2_SVG_NS, 'circle');
-                        halo.setAttribute('r', '30'); halo.setAttribute('fill', 'rgba(8,7,10,0.6)');
+                        const halo = _v2RectCarte(46, 58, 8);
+                        halo.setAttribute('fill', 'rgba(8,7,10,0.6)');
                         g.appendChild(halo);
-                        const bg = document.createElementNS(V2_SVG_NS, 'circle');
-                        bg.setAttribute('r', '21'); bg.setAttribute('class', 'v2-node-bg');
+                        const bg = _v2RectCarte(34, 46, 4);
+                        bg.setAttribute('class', 'v2-node-bg');
                         g.appendChild(bg);
                         if (owned) {
                             const t = document.createElementNS(V2_SVG_NS, 'text');
@@ -38461,8 +38608,8 @@
                             q.textContent = '?';
                             g.appendChild(q);
                         }
-                        const ring = document.createElementNS(V2_SVG_NS, 'circle');
-                        ring.setAttribute('r', '21'); ring.setAttribute('class', 'v2-node-ring');
+                        const ring = _v2RectCarte(34, 46, 4);
+                        ring.setAttribute('class', 'v2-node-ring');
                         g.appendChild(ring);
                         // Label (seulement si éclairé ou obtenu)
                         const labelW = Math.max(name.length * 4.8 + 10, 42);
@@ -38578,6 +38725,16 @@
             });
         }
 
+        // Médias de l'Explorium : hexagone (pointes à gauche et à droite) inscrit
+        // dans la vignette (test Bellecour, section 17 — remplace les rectangles).
+        function _v2HexMedia(x, y, w, h) {
+            const p = document.createElementNS(V2_SVG_NS, 'polygon');
+            const c = w * 0.22, my = y + h / 2;
+            p.setAttribute('points', [[x + c, y], [x + w - c, y], [x + w, my],
+                [x + w - c, y + h], [x + c, y + h], [x, my]].map(q => q.join(',')).join(' '));
+            return p;
+        }
+
         function v2RenderMedias(allEtapes) {
             const layer = document.getElementById('v2MediasLayer');
             layer.innerHTML = '';
@@ -38591,6 +38748,7 @@
                 const estNouveau = v2MediaEstNouveau(merged);
                 const g = document.createElementNS(V2_SVG_NS, 'g');
                 g.setAttribute('class', `v2-media ${status}` + (isUnconsulted ? ' unconsulted' : ''));
+                g.setAttribute('data-media', merged.etape.id);   // arrivée dans l'Explorium
                 g.setAttribute('transform', `translate(${(x-w/2).toFixed(0)}, ${(y-h/2).toFixed(0)})`);
                 g.setAttribute('pointer-events', 'auto');
                 g.style.cursor = 'pointer';
@@ -38641,20 +38799,14 @@
                 g.appendChild(grad);
 
                 // Vignette de fond (gradient thématique) — toujours présente
-                const thumb = document.createElementNS(V2_SVG_NS, 'rect');
-                thumb.setAttribute('x', thumbX); thumb.setAttribute('y', thumbY);
-                thumb.setAttribute('width', thumbW); thumb.setAttribute('height', thumbH);
-                thumb.setAttribute('rx', 4);
+                const thumb = _v2HexMedia(thumbX, thumbY, thumbW, thumbH);
                 thumb.setAttribute('fill', `url(#${gradId})`);
                 g.appendChild(thumb);
 
                 // Frame (bordure) par-dessus la vignette — couleur de la grappe
                 const grappeColor = V2_GRAPPE_COLORS[merged.grappeId] || merged.color || '#d9a441';
-                const frame = document.createElementNS(V2_SVG_NS, 'rect');
+                const frame = _v2HexMedia(thumbX, thumbY, thumbW, thumbH);
                 frame.setAttribute('class', 'v2-media-frame');
-                frame.setAttribute('x', thumbX); frame.setAttribute('y', thumbY);
-                frame.setAttribute('width', thumbW); frame.setAttribute('height', thumbH);
-                frame.setAttribute('rx', 4);
                 frame.setAttribute('fill', 'none');
                 frame.setAttribute('stroke', grappeColor);
                 frame.setAttribute('stroke-width', status === 'completed' ? '2.4' : '1.6');
@@ -38669,10 +38821,7 @@
 
                 // Voile sombre + cadenas si locked
                 if (status === 'locked') {
-                    const veil = document.createElementNS(V2_SVG_NS, 'rect');
-                    veil.setAttribute('x', thumbX); veil.setAttribute('y', thumbY);
-                    veil.setAttribute('width', thumbW); veil.setAttribute('height', thumbH);
-                    veil.setAttribute('rx', 4);
+                    const veil = _v2HexMedia(thumbX, thumbY, thumbW, thumbH);
                     veil.setAttribute('fill', 'rgba(8,7,10,0.55)');
                     g.appendChild(veil);
                 }
@@ -39221,6 +39370,543 @@
                 }, 400);
             }
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // ARRIVÉE DANS L'EXPLORIUM — test Bellecour, section 17
+        // À sa 5e carte, le joueur est « happé » dans l'Explorium. D'après
+        // l'artefact « collecte → Explorium » (UI et VFX ; le rôle des orbes
+        // n'y est pas repris) : la poussière mémorielle tourbillonne, se
+        // referme sur un point et éclate, et l'Explorium tel qu'il est en jeu
+        // apparaît dans le noir. La voix mémorielle parle ; pendant ses
+        // répliques, cartes possédées et lumens s'allument un à un, les liens
+        // se tissent, les médias émergent. À la dernière réplique, la poussière
+        // se referme et rend le joueur à la mappe : onDone est appelé à la
+        // fermeture de l'Explorium (la section 18 appartient à l'appelant).
+        // Fourni pour le lot des sections 12-18 : jouerArriveeExplorium(onDone).
+        // ═══════════════════════════════════════════════════════════
+
+        // Locutrice du visual novel de l'arrivée.
+        // TODO : nom affiché à confirmer — le document de dialogues ne le donne pas.
+        VN_SPEAKERS['Voix mémorielle'] = {
+            img: './assets/voix_memorielle.png', full: true,
+            color: '#c4b5fd', bg: 'rgba(124,58,237,0.18)', border: 'rgba(167,139,250,0.55)',
+        };
+
+        // Répliques de la section 17, mot pour mot. « XXXX » = Clara, nommée
+        // « la jeune fille » si elle ne s'est pas encore présentée.
+        function _arrLignesVoix() {
+            const v = 'Voix mémorielle';
+            const clara = nomClara() === 'Clara' ? 'Clara' : T('la jeune fille');
+            return {
+                premiere: [
+                    { speaker: v, line: 'Les cartes commencent à prendre leur place. Félicitations.' },
+                ],
+                // {Les cartes apparaissent, une à une…} : entre la 1re et la 2e réplique.
+                suite: [
+                    { speaker: v, line: 'Tu te demandes sans doute où tu es ? L\'Explorium.' },
+                    { speaker: v, line: 'Mmh. Tu ne sembles pas comme les autres, je ressens que tu ne comprends pas ce dont je te parle.' },
+                    { speaker: v, line: 'Sache que les nébuleuses que tu as cristallisées existent pour elles-même, mais qu’elles sont irrémédiablement attirées par d’autres pour faire sens de ce qu’elles sont. Ceci explique que tu aies été happé ici.' },
+                    { speaker: v, line: 'L’Organisation a permis de circonscrire cette mémoire collective de façon plus “palpable” pour les gens comme… Toi.' },
+                    { speaker: v, line: 'Plus tu réuniras les nébuleuses, plus tu leur rendras leur mémoire, plus tu comprendras tout ce qui se joue ici.' },
+                    // Nom injecté : la ligne arrive déjà traduite, T() ne la retouche pas.
+                    { speaker: v, line: TF('Je sens ta concentration se perdre, je te laisse rejoindre %1 dans le monde réel.', clara) },
+                ],
+            };
+        }
+
+        // Jalons de la séquence d'ouverture (ms) : spirale, effondrement, éclosion.
+        const _ARR = { SPIRALE: 1500, EFFONDRE: 2000, ECLOT: 3200, SORTIE: 1300, FIN: 1900 };
+        const _arrClamp = v => v < 0 ? 0 : v > 1 ? 1 : v;
+        const _arrIn2   = p => p * p;
+        const _arrIn3   = p => p * p * p;
+        const _arrOut3  = p => 1 - Math.pow(1 - p, 3);
+        const _arrBack  = p => { const c = 1.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+
+        let _arr = null;   // état de la séquence en cours (null hors séquence)
+
+        function jouerArriveeExplorium(onDone) {
+            const fini = () => {
+                if (typeof onDone !== 'function') return;
+                try { onDone(); } catch (e) { console.warn('[Explorium] arrivée : onDone a échoué', e); }
+            };
+            if (_arr) { console.warn('[Explorium] arrivée déjà en cours'); return; }
+            const ecran = document.getElementById('voutV2Screen');
+            if (!ecran || typeof openVoutV2 !== 'function') { fini(); return; }
+            if (typeof journalLog === 'function') { try { journalLog('tuto_step', { section: 17 }); } catch (e) {} }
+
+            // Couche d'effets : fond de nuit + canevas de poussière, au-dessus de l'Explorium
+            const couche = document.createElement('div');
+            couche.className = 'expl-arr-couche';
+            const cv = document.createElement('canvas');
+            couche.appendChild(cv);
+            ecran.appendChild(couche);
+            ecran.classList.add('expl-arr-actif', 'expl-arr-ui-cache');
+
+            _arr = {
+                ecran, couche, cv, ctx: cv.getContext('2d'), W: 0, H: 0,
+                t0: performance.now(), dernier: 0, raf: 0, timers: [],
+                grains: [], eclats: [], items: [], cibles: false,
+                pret: false, vnLance: false, revelation: false, voileSale: true,
+                sortie: 0, ferme: false, fini,
+                reduit: !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches),
+            };
+            if (_arr.reduit) _arr.t0 -= _ARR.EFFONDRE;   // mouvement réduit : pas de tourbillon
+
+            // L'Explorium tel qu'il est en jeu, derrière la nuit. La séquence
+            // cinématique des lumens en attente est suspendue (ils s'allument
+            // ici avec les cartes), et le toast « nouveau média » se tait.
+            const suspendu = window._v2SuppressLumenSequence;
+            window._v2SuppressLumenSequence = true;
+            _v2NouveauxAnnonces = Infinity;   // recalé par v2AnnoncerNouveauxMedias à l'ouverture
+            if (typeof _hideAllNearbyConsoles === 'function') _hideAllNearbyConsoles('explorium');
+            try { openVoutV2(); } catch (e) { console.warn('[Explorium] arrivée : ouverture', e); }
+
+            // Écran affiché (même tâche, rien n'a encore été peint) : on mesure
+            const r = ecran.getBoundingClientRect();
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            _arr.W = r.width; _arr.H = r.height;
+            cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+            _arr.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            _arrSemer();
+            const debut = performance.now();
+            (function attendre() {
+                if (!_arr) return;
+                const rendu = (document.getElementById('v2NodesLayer')?.childElementCount || 0) > 0;
+                if (!rendu && performance.now() - debut < 4000) { requestAnimationFrame(attendre); return; }
+                window._v2SuppressLumenSequence = suspendu;
+                _arrPreparer();
+            })();
+            _arr.raf = requestAnimationFrame(_arrBoucle);
+        }
+
+        // Poussière du monde : semée sur tout l'écran, elle convergera en spirale.
+        function _arrSemer() {
+            const a = _arr;
+            const n = a.reduit ? 0 : (a.W * a.H > 500000 ? 900 : 650);
+            const vx = a.W / 2, vy = a.H * 0.42;
+            a.grains = [];
+            for (let i = 0; i < n; i++) {
+                const x = Math.random() * a.W, y = Math.random() * a.H;
+                a.grains.push({
+                    r0: Math.hypot(x - vx, y - vy), ang: Math.atan2(y - vy, x - vx),
+                    taille: 0.6 + Math.random() * 1.5, or: Math.random() < 0.18,   // 18 % de lumens dorés
+                    eclat: 0.45 + Math.random() * 0.55, wob: Math.random() * 6.283,
+                    spin: 0.85 + Math.random() * 0.5, delai: Math.random() * 0.45,
+                    sx: x, sy: y, tx: x, ty: y,
+                });
+            }
+            a.cibles = false;
+        }
+
+        // Une fois l'Explorium rendu : lumens en attente posés, caméra cadrée,
+        // liste de ce qui s'allumera un à un, nœuds et médias enveloppés.
+        function _arrPreparer() {
+            const a = _arr;
+            if (typeof v2PendingLumens !== 'undefined' && v2PendingLumens.length) {
+                v2PlacedLumens.push(...v2PendingLumens.splice(0));
+            }
+            try { v2RenderAll(); } catch (e) { console.warn('[Explorium] arrivée : rendu', e); }
+            const cartes = Object.entries(V2_POSITIONS).filter(([id]) => !V2_NEW_ACTORS[id] && v2IsOwned(id));
+            // Caméra : barycentre de ce que possède le joueur, au-dessus du milieu
+            // (le bas de l'écran est pris par le visual novel).
+            const pts = cartes.map(([, p]) => p).concat(v2PlacedLumens);
+            const stage = document.getElementById('v2Stage');
+            if (pts.length && stage) {
+                const r = stage.getBoundingClientRect();
+                const cx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
+                const cy = pts.reduce((s, p) => s + p.y, 0) / pts.length;
+                v2State.panX = r.width / 2 - cx * V2_MAP_W * v2State.zoom;
+                v2State.panY = r.height * 0.38 - cy * V2_MAP_H * v2State.zoom;
+                v2ClampPan(); v2ApplyTransform();
+            }
+            a.items = cartes.map(([id, p]) => ({ type: 'carte', id, x: p.x, y: p.y, rayon: V2_LIGHT_RADIUS, k0: 0 }))
+                .concat(v2PlacedLumens.map(l => ({ type: 'lumen', x: l.x, y: l.y, rayon: V2_LUMEN_RADIUS, k0: 0 })));
+            // L'attribut transform du <g> porte la position : l'échelle s'anime
+            // sur un groupe intérieur, sans la lui reprendre.
+            a.ecran.querySelectorAll('#v2NodesLayer > g, #v2MediasLayer > g').forEach(g => {
+                const dedans = document.createElementNS(V2_SVG_NS, 'g');
+                dedans.setAttribute('class', 'expl-arr-in');
+                while (g.firstChild) dedans.appendChild(g.firstChild);
+                g.appendChild(dedans);
+            });
+            a.voileSale = true;
+            a.pret = true;
+        }
+
+        // Position écran (repère de l'écran Explorium) d'un point de la carte 0..1
+        function _arrEcranDe(pt) {
+            const st = document.getElementById('v2Stage')?.getBoundingClientRect();
+            const er = _arr.ecran.getBoundingClientRect();
+            if (!st) return { x: er.width / 2, y: er.height / 2 };
+            return { x: st.left - er.left + v2State.panX + pt.x * V2_MAP_W * v2State.zoom,
+                     y: st.top - er.top + v2State.panY + pt.y * V2_MAP_H * v2State.zoom };
+        }
+
+        // Éclosion : une part des grains vient se poser autour des cartes et des
+        // lumens à venir (ils les annoncent), le reste retombe en poussière.
+        function _arrCibler() {
+            const a = _arr;
+            a.cibles = true;
+            const pts = a.pret ? a.items.map(_arrEcranDe) : [];
+            a.grains.forEach(p => {
+                if (pts.length && Math.random() < 0.55) {
+                    const c = pts[(Math.random() * pts.length) | 0];
+                    const ang = Math.random() * 6.283, rr = 6 + Math.random() * 28;
+                    p.tx = c.x + Math.cos(ang) * rr; p.ty = c.y + Math.sin(ang) * rr;
+                } else {
+                    p.tx = Math.random() * a.W; p.ty = a.H * 0.1 + Math.random() * a.H * 0.9;
+                }
+            });
+        }
+
+        // Gerbe de poussière autour d'un élément qui s'allume
+        function _arrEclat(x, y, dore, n) {
+            const a = _arr;
+            if (!a || a.reduit) return;
+            const now = performance.now();
+            a.eclats.push({ anneau: true, x, y, t0: now, dore });
+            for (let i = 0, nb = n || 34; i < nb; i++) {
+                const ang = Math.random() * 6.283, v = 0.03 + Math.random() * 0.11;
+                a.eclats.push({ x, y, vx: Math.cos(ang) * v, vy: Math.sin(ang) * v, t0: now,
+                                duree: 700 + Math.random() * 600, dore: dore || Math.random() < 0.3,
+                                taille: 0.7 + Math.random() * 1.4 });
+            }
+        }
+
+        // Voile de l'Explorium pendant la séquence : noir absolu, percé à mesure
+        // que cartes et lumens s'allument (même dégradé que v2DrawVeil).
+        function _arrDessinerVoile(now) {
+            const a = _arr;
+            const canvas = document.getElementById('v2VeilCanvas');
+            if (!canvas || !V2_MAP_W) return;
+            const enCours = a.items.some(it => it.k0 && now - it.k0 < 1100);
+            if (!enCours && !a.voileSale) return;
+            a.voileSale = enCours;
+            const ctx = canvas.getContext('2d');
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.clearRect(0, 0, V2_MAP_W, V2_MAP_H);
+            ctx.fillStyle = 'rgba(2, 1, 4, 1)';
+            ctx.fillRect(0, 0, V2_MAP_W, V2_MAP_H);
+            ctx.globalCompositeOperation = 'destination-out';
+            a.items.forEach(it => {
+                if (!it.k0) return;
+                const k = _arrOut3(_arrClamp((now - it.k0) / 1100));
+                const cx = it.x * V2_MAP_W, cy = it.y * V2_MAP_H;
+                const r = it.rayon * V2_MAP_W * 1.3 * k;
+                if (r < 1) return;
+                const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+                grad.addColorStop(0,    'rgba(0,0,0,1)');
+                grad.addColorStop(0.55, 'rgba(0,0,0,0.95)');
+                grad.addColorStop(0.85, 'rgba(0,0,0,0.35)');
+                grad.addColorStop(1,    'rgba(0,0,0,0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        function _arrBoucle(now) {
+            const a = _arr;
+            if (!a) return;
+            const dt = Math.min(now - (a.dernier || now), 48);
+            a.dernier = now;
+            const t = now - a.t0;
+            const s = a.sortie ? now - a.sortie : 0;
+            const { ctx, W, H } = a;
+            ctx.clearRect(0, 0, W, H);
+
+            // Fond : la nuit du tourbillon s'efface à l'éclosion, revient à la sortie
+            let nuit;
+            if (a.sortie) nuit = s < _ARR.SORTIE ? _arrClamp(s / 900) : 1 - _arrClamp((s - _ARR.SORTIE) / (_ARR.FIN - _ARR.SORTIE));
+            else nuit = 1 - _arrClamp((t - _ARR.EFFONDRE) / 800);
+            a.couche.style.backgroundColor = 'rgba(8,6,15,' + nuit.toFixed(3) + ')';
+            if (!a.sortie && t > _ARR.EFFONDRE + 500) a.ecran.classList.remove('expl-arr-ui-cache');
+            if (a.pret && !a.sortie) _arrDessinerVoile(now);
+
+            // Temps de spirale : la sortie rejoue le tourbillon, resserré
+            const ts = a.sortie ? s * (_ARR.EFFONDRE / _ARR.SORTIE) : t;
+            const vx = W / 2, vy = H * 0.42;
+            ctx.globalCompositeOperation = 'lighter';
+            if (!a.sortie && ts >= _ARR.EFFONDRE && !a.cibles) _arrCibler();
+            for (const p of a.grains) {
+                let x, y, al;
+                if (ts < _ARR.EFFONDRE) {
+                    // Tourbillon : vitesse angulaire croissante vers le centre
+                    const retrait = ts < _ARR.SPIRALE
+                        ? 1 - 0.58 * _arrIn2(ts / _ARR.SPIRALE)
+                        : 0.42 * (1 - _arrIn3(_arrClamp((ts - _ARR.SPIRALE) / (_ARR.EFFONDRE - _ARR.SPIRALE))));
+                    const rad = p.r0 * retrait;
+                    const interieur = 1 - _arrClamp(rad / (Math.max(W, H) * 0.55));
+                    p.ang += (0.0011 + 0.0042 * interieur * interieur) * p.spin * dt * (a.sortie ? _ARR.EFFONDRE / _ARR.SORTIE : 1);
+                    x = vx + Math.cos(p.ang) * rad;
+                    y = vy + Math.sin(p.ang) * rad * 0.92;
+                    al = _arrClamp(ts / 450 - p.delai);
+                    p.sx = x; p.sy = y;
+                } else if (a.sortie) {
+                    continue;   // la sortie s'achève sur l'effondrement
+                } else {
+                    // Éclosion : chaque grain rejoint sa place, puis s'éteint doucement
+                    const q = _arrClamp(((t - _ARR.EFFONDRE) / (_ARR.ECLOT - _ARR.EFFONDRE) - p.delai) / (1 - p.delai));
+                    const e = _arrBack(q);
+                    const repos = _arrClamp((t - _ARR.ECLOT) / 1600);
+                    x = p.sx + (p.tx - p.sx) * e + Math.sin(p.wob + t * 0.0012) * 1.4 * repos;
+                    y = p.sy + (p.ty - p.sy) * e + Math.cos(p.wob + t * 0.0011) * 1.4 * repos;
+                    al = 1 - repos;
+                    if (al <= 0) continue;
+                }
+                const b = p.eclat * al;
+                ctx.fillStyle = p.or ? 'rgba(253,230,138,' + (b * 0.95).toFixed(3) + ')'
+                                     : 'rgba(167,139,250,' + (b * 0.8).toFixed(3) + ')';
+                ctx.beginPath(); ctx.arc(x, y, p.taille, 0, 6.2832); ctx.fill();
+            }
+            if (!a.sortie && t > _ARR.ECLOT + 1700) a.grains = [];
+
+            // Halo du vortex
+            if (a.grains.length && ts > 420 && ts < _ARR.EFFONDRE + 420) {
+                const hp = ts < _ARR.EFFONDRE ? _arrClamp((ts - 420) / (_ARR.EFFONDRE - 420)) : 1 - _arrClamp((ts - _ARR.EFFONDRE) / 420);
+                const rr = 120 * (1 - hp * 0.6) + 24;
+                const g = ctx.createRadialGradient(vx, vy, 0, vx, vy, rr);
+                g.addColorStop(0,    'rgba(196,181,253,' + (0.30 * hp).toFixed(3) + ')');
+                g.addColorStop(0.45, 'rgba(139,92,246,' + (0.13 * hp).toFixed(3) + ')');
+                g.addColorStop(1,    'rgba(139,92,246,0)');
+                ctx.fillStyle = g;
+                ctx.beginPath(); ctx.arc(vx, vy, rr, 0, 6.2832); ctx.fill();
+            }
+            // Éclat de l'effondrement
+            const fl = (1 - _arrClamp(Math.abs(ts - _ARR.EFFONDRE) / 230)) * (a.sortie ? 0.6 : 1);
+            if (fl > 0 && !a.reduit) {
+                const g = ctx.createRadialGradient(vx, vy, 0, vx, vy, Math.max(W, H) * 0.72);
+                g.addColorStop(0,    'rgba(255,248,224,' + (0.85 * fl).toFixed(3) + ')');
+                g.addColorStop(0.14, 'rgba(253,230,138,' + (0.40 * fl).toFixed(3) + ')');
+                g.addColorStop(0.46, 'rgba(167,139,250,' + (0.12 * fl).toFixed(3) + ')');
+                g.addColorStop(1,    'rgba(167,139,250,0)');
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, W, H);
+            }
+            // Gerbes : grains qui s'écartent, anneau qui s'ouvre
+            a.eclats = a.eclats.filter(e => {
+                const age = now - e.t0;
+                if (e.anneau) {
+                    const k = _arrClamp(age / 900);
+                    if (k >= 1) return false;
+                    ctx.strokeStyle = (e.dore ? 'rgba(253,230,138,' : 'rgba(196,181,253,') + (0.6 * (1 - k)).toFixed(3) + ')';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath(); ctx.arc(e.x, e.y, 6 + 46 * _arrOut3(k), 0, 6.2832); ctx.stroke();
+                    return true;
+                }
+                if (age >= e.duree) return false;
+                e.x += e.vx * dt; e.y += e.vy * dt; e.vx *= 0.97; e.vy *= 0.97;
+                const al = 1 - age / e.duree;
+                ctx.fillStyle = (e.dore ? 'rgba(253,230,138,' : 'rgba(167,139,250,') + (0.9 * al).toFixed(3) + ')';
+                ctx.beginPath(); ctx.arc(e.x, e.y, e.taille, 0, 6.2832); ctx.fill();
+                return true;
+            });
+            ctx.globalCompositeOperation = 'source-over';
+
+            // La voix prend la parole une fois l'Explorium posé
+            if (!a.vnLance && !a.sortie && a.pret && t >= _ARR.ECLOT) { a.vnLance = true; _arrLancerVoix(); }
+            // Sortie : l'Explorium se ferme dans la nuit, puis la nuit se lève sur la mappe
+            if (a.sortie && !a.ferme && s >= _ARR.SORTIE) {
+                a.ferme = true;
+                try { closeVoutV2(); } catch (e) {}
+                a.ecran.classList.remove('expl-arr-actif', 'expl-arr-ui-cache', 'expl-arr-tout');
+            }
+            if (a.sortie && s >= _ARR.FIN) { _arrTerminer(); return; }
+            a.raf = requestAnimationFrame(_arrBoucle);
+        }
+
+        function _arrLancerVoix() {
+            const ov = document.getElementById('vnOverlay');
+            const lignes = _arrLignesVoix();
+            // Fond allégé : l'Explorium reste visible derrière les répliques
+            if (ov) ov.classList.add('vn-over-scene');
+            vnShow(lignes.premiere, () => {
+                _arrReveler();
+                if (ov) ov.classList.add('vn-over-scene');
+                vnShow(lignes.suite, _arrSortir);
+            });
+        }
+
+        // Cartes et lumens un à un, puis les liens, puis les médias, puis le reste
+        function _arrReveler() {
+            const a = _arr;
+            if (!a || a.revelation) return;
+            a.revelation = true;
+            const PAS = 650;
+            a.items.forEach((it, i) => a.timers.push(setTimeout(() => _arrAllumer(it), i * PAS)));
+            const t = a.items.length * PAS;
+            a.timers.push(setTimeout(_arrTisser, t + 150));
+            a.timers.push(setTimeout(_arrEmerger, t + 1300));
+            a.timers.push(setTimeout(_arrSilhouettes, t + 2300));
+        }
+
+        function _arrAllumer(it) {
+            const a = _arr;
+            if (!a || it.k0) return;
+            it.k0 = performance.now();
+            a.voileSale = true;
+            const p = _arrEcranDe(it);
+            _arrEclat(p.x, p.y, it.type === 'lumen');
+            if (it.type === 'carte') {
+                const g = a.ecran.querySelector('#v2NodesLayer > g[data-card="' + it.id + '"]');
+                if (g) g.classList.add('expl-arr-on');
+            }
+        }
+
+        // Les fils se dessinent de leur média vers la carte, dans l'ordre d'allumage
+        function _arrTisser() {
+            const a = _arr;
+            if (!a) return;
+            const ordre = a.items.filter(i => i.type === 'carte').map(i => i.id);
+            const rang = p => { const i = ordre.indexOf(p.getAttribute('data-card')); return i < 0 ? 999 : i; };
+            [...a.ecran.querySelectorAll('#v2ThreadsLayer > path')]
+                .sort((p, q) => rang(p) - rang(q))
+                .forEach((p, i) => a.timers.push(setTimeout(() => _arrTisserFil(p), i * 90)));
+        }
+        function _arrTisserFil(p) {
+            let long = 0;
+            try { long = p.getTotalLength(); } catch (e) {}
+            p.classList.add('expl-arr-on');
+            if (!long || typeof p.animate !== 'function') return;
+            // Tracé continu le temps du tissage, puis retour au pointillé d'origine
+            p.style.strokeDasharray = long + ' ' + long;
+            const anim = p.animate([{ strokeDashoffset: long }, { strokeDashoffset: 0 }],
+                                   { duration: 900, easing: 'ease-in-out' });
+            anim.onfinish = () => { p.style.strokeDasharray = ''; };
+        }
+
+        function _arrEmerger() {
+            const a = _arr;
+            if (!a) return;
+            const er = a.ecran.getBoundingClientRect();
+            [...a.ecran.querySelectorAll('#v2MediasLayer > g')].forEach((g, i) => a.timers.push(setTimeout(() => {
+                g.classList.add('expl-arr-on');
+                const r = g.getBoundingClientRect();
+                _arrEclat(r.left - er.left + r.width / 2, r.top - er.top + r.height / 2, false, 14);
+            }, i * 160)));
+        }
+
+        // Cartes non possédées (silhouettes) et éléments du monde : fondu discret
+        function _arrSilhouettes() {
+            const a = _arr;
+            if (!a) return;
+            a.ecran.querySelectorAll('#v2NodesLayer > g:not(.expl-arr-on)')
+                .forEach(g => g.classList.add('expl-arr-on', 'expl-arr-doux'));
+            a.ecran.classList.add('expl-arr-tout');
+        }
+
+        // Fin des répliques : tout ce qui restait s'allume, puis la poussière
+        // se referme sur l'Explorium et rend le joueur à la mappe.
+        function _arrSortir() {
+            const a = _arr;
+            if (!a) return;
+            document.getElementById('vnOverlay')?.classList.remove('vn-over-scene');
+            a.timers.forEach(clearTimeout);
+            a.timers = [];
+            const now = performance.now();
+            a.items.forEach(it => { if (!it.k0) it.k0 = now - 2000; });
+            a.voileSale = true;
+            _arrDessinerVoile(now);
+            a.ecran.querySelectorAll('#v2NodesLayer > g, #v2MediasLayer > g, #v2ThreadsLayer > path')
+                .forEach(el => el.classList.add('expl-arr-on'));
+            a.eclats = [];
+            _arrSemer();
+            a.sortie = now;
+        }
+
+        function _arrTerminer() {
+            const a = _arr;
+            if (!a) return;
+            cancelAnimationFrame(a.raf);
+            a.timers.forEach(clearTimeout);
+            a.couche.remove();
+            a.ecran.classList.remove('expl-arr-actif', 'expl-arr-ui-cache', 'expl-arr-tout');
+            _arr = null;
+            a.fini();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // CHAPITRE PLEIN ET DÉVOILÉ — test Bellecour, section 23
+        // La carte parle dans sa propre boîte de texte (pas le visual novel),
+        // 5 s, quand son chapitre est plein et toutes ses entrées dévoilées.
+        // Une fois par carte et par chapitre, le temps de la session.
+        // Puis, à la clôture, le visuel du chapitre suivant est introduit.
+        // ═══════════════════════════════════════════════════════════
+        const _CHAP_PLEIN_LIGNES = [
+            'J’ai besoin que tu m’aides, je sens que quelque chose se passe.',   // chapitre I   (« NIVEAU 1 »)
+            'Je me sens changer, comme moins morcelée.',                           // chapitre II  (« NIVEAU 2 »)
+            'Merci, il n’y a rien de pire que de s’oublier soi-même. Grâce à toi, j’ai récupéré mes souvenirs.',   // dernier (« NIVEAU MAX »)
+        ];
+        const _chapPleinDits = new Set();
+
+        function _chapPleinParler(card, level) {
+            if (!card) return;
+            const cle = card.id + '_' + level;
+            if (_chapPleinDits.has(cle)) return;
+            setTimeout(() => {
+                if (!selectedCard || selectedCard.id !== card.id || _chapPleinDits.has(cle)) return;
+                // Seulement si la fiche est au premier plan : sinon, au prochain affichage
+                if (!document.getElementById('cardDetailView')?.classList.contains('show')) return;
+                if (document.getElementById('journalScreen')?.classList.contains('show')) return;
+                if (document.getElementById('orbSynthOverlay')?.classList.contains('show')) return;
+                _chapPleinDits.add(cle);
+                const idx = level >= MAX_LEVEL - 1 ? 2 : Math.min(level, 1);
+                if (typeof showBubble === 'function') showBubble(T(_CHAP_PLEIN_LIGNES[idx]), 'chapitre');
+            }, 450);
+        }
+
+        // Après la clôture : la pastille du nouveau visuel se remplit, puis le
+        // visuel s'installe sur place (morphing de la rangée des visuels).
+        function _chapIntroVisuel(card) {
+            const idx = _otTlPendingReveal;
+            _otTlBuild(card);   // pose la rangée ; consomme le déblocage en attente
+            if (idx < 0 || selectedCard !== card) return;
+            const node = document.querySelector('.ot-tl .ot-tl-node[data-idx="' + idx + '"]');
+            if (node) {
+                node.classList.remove('unlocking');
+                node.classList.add('ot-tl-remplit');
+                node.addEventListener('animationend', () => node.classList.remove('ot-tl-remplit'), { once: true });
+            }
+            setTimeout(() => {
+                if (selectedCard !== card) return;
+                const holder = document.getElementById('cardArtContainer');
+                if (holder) {
+                    holder.classList.remove('chap-intro-eclat');
+                    void holder.offsetWidth;
+                    holder.classList.add('chap-intro-eclat');
+                    setTimeout(() => holder.classList.remove('chap-intro-eclat'), 1300);
+                }
+                _otTlSelect(idx);
+            }, 1150);
+        }
+
+        // ── Traductions des nouvelles chaînes (sections 17, 19 à 23) ──
+        // Gabarits HTML : la clé est la chaîne exacte (cf. _vnRender → T(entry.html)).
+        Object.assign(I18N_EN, {
+            "Voix mémorielle": "Memory Voice",
+            "la jeune fille": "the girl",
+            "Les cartes commencent à prendre leur place. Félicitations.": "The cards are starting to take their place. Congratulations.",
+            "Tu te demandes sans doute où tu es ? L'Explorium.": "You're probably wondering where you are? The Explorium.",
+            "Mmh. Tu ne sembles pas comme les autres, je ressens que tu ne comprends pas ce dont je te parle.": "Mmh. You don't seem like the others, I can sense you don't understand what I'm talking about.",
+            "Sache que les nébuleuses que tu as cristallisées existent pour elles-même, mais qu’elles sont irrémédiablement attirées par d’autres pour faire sens de ce qu’elles sont. Ceci explique que tu aies été happé ici.": "Know that the nebulae you have crystallised exist for themselves, but that they are irresistibly drawn to others to make sense of what they are. That is why you were pulled in here.",
+            "L’Organisation a permis de circonscrire cette mémoire collective de façon plus “palpable” pour les gens comme… Toi.": "The Organisation made it possible to contain this collective memory in a more “tangible” way for people like… You.",
+            "Plus tu réuniras les nébuleuses, plus tu leur rendras leur mémoire, plus tu comprendras tout ce qui se joue ici.": "The more nebulae you bring together, the more of their memory you give back, the more you'll understand everything at play here.",
+            "Je sens ta concentration se perdre, je te laisse rejoindre %1 dans le monde réel.": "I feel your focus slipping, I'll let you rejoin %1 in the real world.",
+            [_OB_HTML_PANORAMA]: 'Take a look at this ' + _vnIcone('./assets/PanoramaIcon.png?v=2')
+                + '<span style="color:#5FC9E8;font-weight:600">panorama</span>. Sometimes I like to take my time, just to look around me. To keep a piece of what I’m living, for the space of an instant. You try it too.',
+            [_OB_HTML_PANNEAU]: 'The Organisation briefly mentioned them at the last meeting of the Novice Sensitives. The '
+                + _vnIcone('./assets/PanelInfoIcon.png?v=2')
+                + '<span style="color:#7BD88F;font-weight:600">info points</span> are anchoring supports, closely tied to the place where they stand. It would take too long to explain now, but know that you can act on them with the scrolls you pick up along the way. Once assembled, they give up what they were hiding.',
+            [_OB_HTML_PARCHEMIN]: 'Oh, a ' + _vnIcone('./assets/parchemin.png')
+                + '<span style="color:#EBCC7E;font-weight:600">scroll</span>. I’ve already gathered a few. On its own, it’s not much use. Think of it as a puzzle piece. Make room for it in your bag, it might be important.',
+            "La carte s'épuise. La mémoire a besoin de temps, attends quelques heures qu’elle se ravive d’elle mêmes": "The card is wearing out. Memory needs time, wait a few hours for it to revive on its own",
+            "Tu portes déjà une 🔮 orbe mémorielle, pose-la sur la carte : elle lui rend toute son énergie d'un coup.": "You're already carrying a 🔮 memory orb, place it on the card: it gives back all its energy at once.",
+            "J’ai besoin que tu m’aides, je sens que quelque chose se passe.": "I need you to help me, I can feel something is happening.",
+            "Je me sens changer, comme moins morcelée.": "I feel myself changing, as if less fragmented.",
+            "Merci, il n’y a rien de pire que de s’oublier soi-même. Grâce à toi, j’ai récupéré mes souvenirs.": "Thank you, there is nothing worse than forgetting yourself. Thanks to you, I have my memories back.",
+            "Chapitre prêt à être clôturé": "Chapter ready to be closed",
+            "Clôture-le depuis la fiche de la carte": "Close it from the card sheet",
+        });
 
         // ═══════════════════════════════════════════════════════════
         // FRESQUE — diapositive de tableaux narratifs
