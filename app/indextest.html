@@ -24936,6 +24936,7 @@
             // leur bannière, le joueur voit le marqueur mais ne peut rien en faire.
             const nearbyDust = DUST_POINTS.find(d =>
                 (_fieldOpen || d.tuto) &&
+                (d.tuto || !horsZoneDuJour(d.lat, d.lng)) &&   // hors périmètre : marqueur masqué, rien à proposer
                 !collectedDustPoints.includes(d.id) &&
                 _zoneOk('dust:' + d.id, d, DUST_RADIUS)
             );
@@ -24952,7 +24953,7 @@
 
             // Echo
             const nearbyEcho = (ECHOES_DISABLED || !_fieldOpen) ? null : ECHO_POINTS.find(e =>
-                !collectedEchoes.includes(e.id) &&
+                !collectedEchoes.includes(e.id) && !horsZoneDuJour(e.lat, e.lng) &&
                 _zoneOk('echo:' + e.id, e, ECHO_RADIUS)
             );
             currentNearbyEcho = nearbyEcho;
@@ -24971,6 +24972,7 @@
             // Orb
             const nearbyOrb = ORB_POINTS.find(o =>
                 (_fieldOpen || o.tuto) &&
+                (o.tuto || !horsZoneDuJour(o.lat, o.lng)) &&
                 !collectedOrbs.includes(o.id) &&
                 _zoneOk('orb:' + o.id, o, ORB_RADIUS)
             );
@@ -24987,7 +24989,7 @@
 
             // Scroll
             const nearbyScroll = !_fieldOpen ? null : SCROLL_POINTS.find(s =>
-                !collectedScrolls.includes(s.id) &&
+                !collectedScrolls.includes(s.id) && !horsZoneDuJour(s.lat, s.lng) &&
                 _zoneOk('scroll:' + s.id, s, SCROLL_RADIUS)
             );
             currentNearbyScroll = nearbyScroll;
@@ -25004,7 +25006,7 @@
 
             // Loot mystère
             const nearbyLoot = !_fieldOpen ? null : LOOT_POINTS.find(l =>
-                !collectedLoots.includes(l.id) &&
+                !collectedLoots.includes(l.id) && !horsZoneDuJour(l.lat, l.lng) &&
                 _zoneOk('loot:' + l.id, l, SCROLL_RADIUS)
             );
             currentNearbyLoot = nearbyLoot;
@@ -25020,7 +25022,7 @@
 
             // Carnet resource (cassette / pellicule / encre)
             const nearbyCR = !_fieldOpen ? null : CARNET_RESOURCE_POINTS.find(pt =>
-                !collectedCarnetResources.includes(pt.id) &&
+                !collectedCarnetResources.includes(pt.id) && !horsZoneDuJour(pt.lat, pt.lng) &&
                 _zoneOk('carnet:' + pt.id, pt, CARNET_RESOURCE_RADIUS)
             );
             currentNearbyCarnetResource = nearbyCR;
@@ -25052,7 +25054,7 @@
                     if (halo) { halo.style.borderColor = 'rgba(245,158,11,0.7)'; halo.style.boxShadow = ''; }
                     return;
                 }
-                const inZone = _zoneOk('info:' + info.id, info, INFO_RADIUS);
+                const inZone = !horsZoneDuJour(info.lat, info.lng) && _zoneOk('info:' + info.id, info, INFO_RADIUS);
                 if (inZone) {
                     currentNearbyInfo = info;
                     if (halo) { halo.style.borderColor = 'rgba(52,211,153,0.9)'; halo.style.boxShadow = '0 0 6px 2px rgba(52,211,153,0.4)'; halo.style.background = 'transparent'; }
@@ -35492,7 +35494,7 @@
             const nearbyDiv = document.getElementById('nearbyPanneau');
             panneauMarkers.forEach(({ inner, pan }) => {
                 const dist = getDistance(playerPos.lat, playerPos.lng, pan.lat, pan.lng);
-                const inZone = dist <= PANNEAU_RADIUS;
+                const inZone = dist <= PANNEAU_RADIUS && !horsZoneDuJour(pan.lat, pan.lng);
                 const halo = inner.querySelector('.interact-halo');
                 const prompt = inner.querySelector('.tap-prompt');
                 if (inZone) {
@@ -35758,6 +35760,8 @@
                     // le tutoriel dure — les autres sont posées mais invisibles, et
                     // proposer d'entrer dans une échoppe qu'on ne voit pas n'a pas de sens.
                     if (!_obFieldOpen() && bazar.id !== 'bazar_tuto') return;
+                    // Hors du périmètre du test : marqueur masqué, échoppe non proposée.
+                    if (bazar.id !== 'bazar_tuto' && horsZoneDuJour(bazar.lat, bazar.lng)) return;
                     const dist = getDistance(playerPos.lat, playerPos.lng, bazar.lat, bazar.lng);
                     if (dist <= BAZAR_RADIUS && dist < nearestDist) {
                         nearest = bazar;
