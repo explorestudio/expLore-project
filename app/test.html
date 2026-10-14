@@ -10365,9 +10365,9 @@
                 <div class="ritual-nebula-layer ritual-nebula-l3 vis3"></div>
             </div>
             <div class="ritual-reveal-glow" id="ritualRevealGlow"></div>
-            <button class="ritual-close-btn" onclick="event.stopPropagation(); _ritualRevealTap(true)">✕</button>
+            <!-- Ni croix ni nom au-dessus de la carte : un toucher n'importe où
+                 ferme l'écran, et le nom est déjà écrit sur la carte. -->
             <div class="ritual-obtained-label">Carte obtenue</div>
-            <div class="ritual-obtained-name" id="ritualRevealName"></div>
             <!-- Cadre de la carte (Cadre_carte.png) : la carte loge dans son ouverture.
                  Sans l'image, repli sur une bordure (classe sans-cadre). -->
             <div class="ritual-cadre" id="ritualCadre">
@@ -10377,7 +10377,7 @@
                 <div id="ritualBigCardArt" class="ritual-big-card-art">
                     <!-- Visuel de la carte (niveau 0) ; masqué si la carte n'en a pas -->
                     <img id="ritualBigCardImg" src="" alt=""
-                         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;z-index:0;">
+                         style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none;z-index:0;">
                     <div class="ritual-big-card-art-shine"></div>
                     <div class="ritual-big-card-art-particles" id="ritualCardParticles"></div>
                     <div class="ritual-big-card-art-icon" id="ritualBigIcon"></div>
@@ -12937,6 +12937,7 @@
             // ── Première approche ──
             "Il y a quelque chose là-bas. Pas un lieu, pas un monument — quelque chose de plus discret. Approche-toi.": "There's something over there. Not a place, not a monument — something quieter. Come closer.",
             "✦ Un fragment t'attend ici": "✦ A fragment is waiting for you here",
+            "Quelque chose t'attend ici": "Something is waiting for you here",
             "Interagir": "Interact",
             "Nébuleuse": "Nebula",
 
@@ -18204,11 +18205,11 @@
         // Afficher la bannière nearby du marqueur tutoriel
         function _obShowTutorialNearby() {
             const nearbyDiv = document.getElementById('nearbyPOI');
-            document.getElementById('poiName').textContent = 'Les clefs de la ville';
+            document.getElementById('poiName').textContent = T('Nébuleuse');   // pas le nom de la carte, comme les autres consoles
             const badge = document.getElementById('poiThematicBadge');
             if (badge) badge.style.display = 'none';
             const sub = nearbyDiv.querySelector('.nearby-poi-distance');
-            if (sub) sub.textContent = '✦ Un fragment t\'attend ici';
+            if (sub) sub.textContent = 'Quelque chose t\'attend ici';
             const btn = nearbyDiv.querySelector('.collect-btn');
             if (btn) {
                 btn.textContent = 'Interagir';
@@ -18737,6 +18738,7 @@
         const _OB_HTML_ORBE = 'Tu portes déjà une ' + vnMot('orbe', 'orbe mémorielle', true) + ', pose-la sur la carte : elle lui rend toute son énergie d\'un coup.';
         function _obLignesEnergie(avecOrbe) {
             const qui = nomClara();
+            if (avecOrbe) _obDiscovered.orbe = true;   // l'orbe est présentée : _obVerifierOrbe se tait
             return [
                 { speaker: qui, line: 'La carte s\'épuise. La mémoire a besoin de temps, attends quelques heures qu’elle se ravive d’elle mêmes' },
                 avecOrbe
@@ -18749,6 +18751,31 @@
         // « MAPPE », mais la jauge ne se vide que fiche ouverte.
         function _obOnEnergieVide() {
             _obDiscover('energie', () => _obLignesEnergie((bagInv.orbes || 0) > 0), 'cardDetailView');
+        }
+
+        // Présentation de l'orbe au PREMIER moment où elle peut servir : fiche
+        // d'une carte à énergie nulle ouverte ET une orbe dans le sac. La réplique
+        // d'énergie vide la dit déjà si le joueur porte une orbe à cet instant ;
+        // ici on rattrape tous les autres cas (orbe ramassée après coup, carte
+        // hors guide pendant le tutoriel, chapitre plein au même geste…).
+        // Premier passage à 1,5 s : la réplique d'énergie vide a priorité.
+        let _obOrbeAttente = null;
+        function _obVerifierOrbe() {
+            if (_obDiscovered.orbe || _obOrbeAttente) return;
+            const tic = () => {
+                _obOrbeAttente = null;
+                if (_obDiscovered.orbe || !selectedCard) return;
+                const fiche = document.getElementById('cardDetailView');
+                if (!fiche || !fiche.classList.contains('show')) return;
+                if ((bagInv.orbes || 0) <= 0 || getCardEnergyState(selectedCard.id).value > 0) return;
+                const vn = document.getElementById('vnOverlay');
+                if (vn && vn.classList.contains('show')) { _obOrbeAttente = setTimeout(tic, 400); return; }
+                _obDiscovered.orbe = true;
+                try { saveProgress(); } catch (e) {}
+                vnShow([{ speaker: nomClara(), html: _OB_HTML_ORBE }], null);
+                _orbeVerrouiller();   // pas d'orbe posée avant la fin de la réplique
+            };
+            _obOrbeAttente = setTimeout(tic, 1500);
         }
 
         // Appelé depuis openZoneDetail() — premier badge de quartier consulté.
@@ -20827,6 +20854,7 @@
             _tuto12FinT = Date.now();
         }
         let _tuto12FinT = 0;   // la section 13 laisse voir la pastille un instant
+        let _tutoFeuilleFermeeT = 0;   // fermeture de la feuille de route (cf. closeQuestJournal)
 
         // ── Section 13 ─────────────────────────────────────────────────────
         function _tutoSection13() {
@@ -21078,7 +21106,10 @@
                 if (e.s12 === 'p1') { _tutoDire('s12a', 'map', _tutoLignesS12a(), () => { e.s12 = 'don'; _tutoSauver(); }); return; }
                 if (e.s12 === 'don') { _tuto12Don(); return; }
                 if (e.s12 === 'p2') { _tutoDire('s12b', 'map', _tutoLignesS12b(), _tuto12Fin); return; }
-                if (e.s12 === 'fini' && Date.now() - _tuto12FinT > 2500) _tutoSection13();
+                // La section 13 attend un geste du joueur : avoir ouvert puis refermé
+                // la feuille de route (journal de quête) qui pulse. Elle partait
+                // seule 2,5 s après la 12, enchaînant deux dialogues sans action.
+                if (e.s12 === 'fini' && e.feuilleVue && Date.now() - _tutoFeuilleFermeeT > 700) _tutoSection13();
                 return;
             }
             // 14 : première vue haute, une fois les jumelles révélées
@@ -25383,6 +25414,17 @@
             if (id) _poiDismissed[type].add(id);
         };
 
+        // Une ressource ne se ramasse que si son marqueur est réellement affiché :
+        // terrain encore fermé, hors périmètre, vue d'ensemble (body.planning-mode,
+        // qui masque les ressources par CSS sans toucher au style inline)… La
+        // console ne propose jamais de collecter ce que la mappe ne montre pas.
+        // Appelé en dernier dans les filtres : seulement pour les points à portée.
+        function _marqueurAffiche(liste, cle, id) {
+            const m = (liste || []).find(x => x && x[cle] && x[cle].id === id);
+            if (!m || !m.el || !m.el.isConnected) return false;
+            return getComputedStyle(m.el).display !== 'none';
+        }
+
         function checkNearbyPOI() {
             // Vérifier aussi les objectifs de quêtes actives
             try { checkActiveQuestGeofencing(); } catch(e) { console.error('checkActiveQuestGeofencing', e); }
@@ -25469,7 +25511,8 @@
                 (_fieldOpen || d.tuto) &&
                 (d.tuto || !horsZoneDuJour(d.lat, d.lng)) &&   // hors périmètre : marqueur masqué, rien à proposer
                 !collectedDustPoints.includes(d.id) &&
-                _zoneOk('dust:' + d.id, d, DUST_RADIUS)
+                _zoneOk('dust:' + d.id, d, DUST_RADIUS) &&
+                _marqueurAffiche(dustMarkers, 'dust', d.id)
             );
             currentNearbyDust = nearbyDust;
             const nearbyDustDiv = document.getElementById('nearbyDust');
@@ -25485,7 +25528,8 @@
             // Echo
             const nearbyEcho = (ECHOES_DISABLED || !_fieldOpen) ? null : ECHO_POINTS.find(e =>
                 !collectedEchoes.includes(e.id) && !horsZoneDuJour(e.lat, e.lng) &&
-                _zoneOk('echo:' + e.id, e, ECHO_RADIUS)
+                _zoneOk('echo:' + e.id, e, ECHO_RADIUS) &&
+                _marqueurAffiche(echoMarkers, 'echo', e.id)
             );
             currentNearbyEcho = nearbyEcho;
             const nearbyEchoDiv = document.getElementById('nearbyEcho');
@@ -25505,7 +25549,8 @@
                 (_fieldOpen || o.tuto) &&
                 (o.tuto || !horsZoneDuJour(o.lat, o.lng)) &&
                 !collectedOrbs.includes(o.id) &&
-                _zoneOk('orb:' + o.id, o, ORB_RADIUS)
+                _zoneOk('orb:' + o.id, o, ORB_RADIUS) &&
+                _marqueurAffiche(orbMarkers, 'orb', o.id)
             );
             currentNearbyOrb = nearbyOrb;
             const nearbyOrbDiv = document.getElementById('nearbyOrb');
@@ -25521,7 +25566,8 @@
             // Scroll
             const nearbyScroll = !_fieldOpen ? null : SCROLL_POINTS.find(s =>
                 !collectedScrolls.includes(s.id) && !horsZoneDuJour(s.lat, s.lng) &&
-                _zoneOk('scroll:' + s.id, s, SCROLL_RADIUS)
+                _zoneOk('scroll:' + s.id, s, SCROLL_RADIUS) &&
+                _marqueurAffiche(scrollMarkers, 'scroll', s.id)
             );
             currentNearbyScroll = nearbyScroll;
             const nearbyScrollDiv = document.getElementById('nearbyScroll');
@@ -25538,7 +25584,8 @@
             // Loot mystère
             const nearbyLoot = !_fieldOpen ? null : LOOT_POINTS.find(l =>
                 !collectedLoots.includes(l.id) && !horsZoneDuJour(l.lat, l.lng) &&
-                _zoneOk('loot:' + l.id, l, SCROLL_RADIUS)
+                _zoneOk('loot:' + l.id, l, SCROLL_RADIUS) &&
+                _marqueurAffiche(lootMarkers, 'loot', l.id)
             );
             currentNearbyLoot = nearbyLoot;
             const nearbyLootDiv = document.getElementById('nearbyLoot');
@@ -25554,7 +25601,8 @@
             // Carnet resource (cassette / pellicule / encre)
             const nearbyCR = !_fieldOpen ? null : CARNET_RESOURCE_POINTS.find(pt =>
                 !collectedCarnetResources.includes(pt.id) && !horsZoneDuJour(pt.lat, pt.lng) &&
-                _zoneOk('carnet:' + pt.id, pt, CARNET_RESOURCE_RADIUS)
+                _zoneOk('carnet:' + pt.id, pt, CARNET_RESOURCE_RADIUS) &&
+                _marqueurAffiche(carnetResourceMarkers, 'pt', pt.id)
             );
             currentNearbyCarnetResource = nearbyCR;
             const nearbyCRDiv = document.getElementById('nearbyCarnetResource');
@@ -25585,7 +25633,8 @@
                     if (halo) { halo.style.borderColor = 'rgba(245,158,11,0.7)'; halo.style.boxShadow = ''; }
                     return;
                 }
-                const inZone = !horsZoneDuJour(info.lat, info.lng) && _zoneOk('info:' + info.id, info, INFO_RADIUS);
+                const inZone = !horsZoneDuJour(info.lat, info.lng) && _zoneOk('info:' + info.id, info, INFO_RADIUS)
+                    && _marqueurAffiche(infoMarkers, 'info', info.id);
                 if (inZone) {
                     currentNearbyInfo = info;
                     if (halo) { halo.style.borderColor = 'rgba(52,211,153,0.9)'; halo.style.boxShadow = '0 0 6px 2px rgba(52,211,153,0.4)'; halo.style.background = 'transparent'; }
@@ -26867,7 +26916,6 @@
             });
             document.getElementById('ritualRevealGlow').style.background =
                 `radial-gradient(ellipse at 50% 45%, ${color}2e 0%, transparent 65%)`;
-            document.getElementById('ritualRevealName').textContent     = card.name;
             document.getElementById('ritualBigCardArt').style.background =
                 `linear-gradient(160deg, ${color}44 0%, ${color}14 55%, rgba(8,6,15,0.9) 100%)`;
             document.getElementById('ritualBigIcon').textContent         = card.clueIcon || info.symbol || '✦';
@@ -27997,11 +28045,17 @@
             // de la ville pendant les 600 ms où la caméra était encore au large.
             // Bénéfice au passage : bien moins de marqueurs à repositionner
             // pendant le vol, donc une bascule plus fluide dans les deux sens.
-            if (isPlanning) document.body.classList.add('planning-mode');
+            if (isPlanning) {
+                document.body.classList.add('planning-mode');
+                try { checkNearbyPOI(); } catch (e) {}   // ressources masquées : leurs consoles se ferment
+            }
             _viewTransitionTimer = setTimeout(() => {
                 _viewTransitionTimer = null;
                 _viewTransition = false;
-                if (!isPlanning) document.body.classList.remove('planning-mode');
+                if (!isPlanning) {
+                    document.body.classList.remove('planning-mode');
+                    try { checkNearbyPOI(); } catch (e) {}   // ressources de nouveau visibles
+                }
             }, DUREE_BASCULE + 20);
             // Activer le pan & zoom en mode planning, les désactiver autrement
             if (isPlanning) {
@@ -28841,6 +28895,7 @@
             _cacherConsoles();   // cf. _isAnyScreenOpen
             _obOnOpenCardDetail();
             selectedCard = card;
+            _obVerifierOrbe();   // carte vide + orbe au sac : Clara présente l'orbe
             cardDetailOpenedFromBag = false;
             if (!_cardDetailSource) _cardDetailSource = null; // conserve si setté avant l'appel
             if (!cardLevels[card.id]) {
@@ -29889,9 +29944,10 @@
 
             // Première carte vidée : orbe verrouillée jusqu'à la fin de la réplique
             // qui l'explique (les joueurs enchaînent les clics, cf. _orbeVerrouiller).
-            if (getCardEnergyState(selectedCard.id).value <= 0 && !_obDiscovered.energie && (bagInv.orbes || 0) > 0) {
+            if (getCardEnergyState(selectedCard.id).value <= 0 && !_obDiscovered.orbe && (bagInv.orbes || 0) > 0) {
                 _orbeVerrouiller();
             }
+            _obVerifierOrbe();
 
             // ── Accroches parcours guidé (carte tuto) ──
             if (typeof _obGuide === 'object' && _obGuide.active && _obEstCarteGuide(selectedCard.id)) {
@@ -36065,7 +36121,8 @@
             const nearbyDiv = document.getElementById('nearbyPanneau');
             panneauMarkers.forEach(({ inner, pan }) => {
                 const dist = getDistance(playerPos.lat, playerPos.lng, pan.lat, pan.lng);
-                const inZone = dist <= PANNEAU_RADIUS && !horsZoneDuJour(pan.lat, pan.lng);
+                const inZone = dist <= PANNEAU_RADIUS && !horsZoneDuJour(pan.lat, pan.lng)
+                    && _marqueurAffiche(panneauMarkers, 'pan', pan.id);   // cf. checkNearbyPOI
                 const halo = inner.querySelector('.interact-halo');
                 const prompt = inner.querySelector('.tap-prompt');
                 if (inZone) {
@@ -38615,6 +38672,8 @@
             // Verrou d'écran : les consoles restaient affichées par-dessus le journal.
             _hideAllNearbyConsoles('journal_quetes');
             panel.classList.add('show');
+            // Section 12 finie : la feuille de route consultée débloque la section 13.
+            try { if (_tutoEtat.s12 === 'fini' && !_tutoEtat.feuilleVue) { _tutoEtat.feuilleVue = true; _tutoSauver(); } } catch (e) {}
             // Effacer la pastille notif sur le bouton journal (vu)
             document.getElementById('hudQjCount').style.display = 'none';
         }
@@ -38622,6 +38681,7 @@
         function closeQuestJournal() {
             document.getElementById('questJournalPanel').classList.remove('show');
             _showNearbyConsoles('journal_quetes');
+            _tutoFeuilleFermeeT = Date.now();
         }
 
         function handleQuestJournalBackdrop(e) {

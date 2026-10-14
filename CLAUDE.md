@@ -51,10 +51,15 @@ Explorer · Collectionner · Découvrir.
   consulté : ces fichiers reflètent des décisions
   abandonnées.
 
-### Fichier d'appoint : `/app/test.html`
-- Brouillon perso pour tester des bouts de code
-- Peu utile, peut être modifié librement, ne pas s'inquiéter
-  de la cohérence avec le reste
+### Environnement du test Bellecour : `/app/test.html`
+- Dernière version du jeu, utilisée pour le test terrain de
+  Bellecour (codes d'accès, journal envoyé au Google Sheet,
+  tutoriel Bellecour)
+- Point d'entrée des testeurs (page `test-bellecour/`)
+- Service Worker partagé avec `/app/index.html` :
+  incrémenter la version cache à chaque push
+- `/app/indextest.html` = ancienne version de test.html
+  (v0.93), gardée pour mémoire
 
 ## Règle d'or
 **Avant d'éditer un .html, confirmer lequel.** Si je dis
