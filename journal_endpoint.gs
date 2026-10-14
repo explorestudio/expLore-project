@@ -3,7 +3,7 @@
 // ⚠ APRÈS TOUTE MODIFICATION DE CE CODE : Déployer → Gérer les déploiements →
 //   icône crayon sur le déploiement existant → Version : Nouvelle version → Déployer.
 //   Sans cette étape, l'URL /exec continue de servir l'ancien code.
-//   L'URL ne change pas : rien à modifier dans app/indextest.html (JOURNAL_ENDPOINT).
+//   L'URL ne change pas : rien à modifier dans app/test.html (JOURNAL_ENDPOINT).
 //
 // Reçoit un POST JSON :
 //   { session_id, code, team, t0, plateforme, navigateur, app_version, user_agent,
