@@ -9628,6 +9628,10 @@
         /* Lueur des éléments qui pulsent, au-dessus du voile (sinon coupée par
            le bord du trou) et sous le visual novel. Même rythme qu'obGuidePulse. */
         #guideHalos { position: fixed; inset: 0; z-index: 9060; pointer-events: none; }
+        /* Un bouton-icône qui pulse prend l'aspect qu'il a au survol (léger fond
+           clair) : sa forme entière se lit, pas seulement son icône. */
+        .ui-pulse:is(.journal-screen-back, .alb-back) { background: rgba(255,255,255,0.08); color: white; }
+        .ui-pulse.action-bar-btn { background: rgba(255,255,255,0.07); }
         .guide-halo { position: absolute; pointer-events: none; animation: guideHalo 1.3s ease-in-out infinite; }
         @keyframes guideHalo {
             0%, 100% { box-shadow: 0 0 0 0 rgba(167,139,250,0); }
@@ -19799,9 +19803,12 @@
         // de décor autour de l'icône. C'est toujours le bouton entier qui pulse.
         function _gfForme(el) {
             const cs = getComputedStyle(el);
+            // Un bouton à coins arrondis garde sa forme entière (celle qu'il prend
+            // au survol : retour mappe, retour Collection, barre du bas).
             const fond = (cs.backgroundImage && cs.backgroundImage !== 'none')
                 || !/^(transparent|rgba\([^)]*,\s*0\))$/.test(cs.backgroundColor.trim())
-                || parseFloat(cs.borderTopWidth) > 0;
+                || parseFloat(cs.borderTopWidth) > 0
+                || parseFloat(cs.borderTopLeftRadius) > 0;
             return fond ? el : (el.querySelector('svg, img') || el);
         }
         // Contour à l'écran : { cx, cy, w, h, ang, rad } — centre, taille et
