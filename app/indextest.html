@@ -1659,7 +1659,9 @@
         @media (max-width: 360px) {
             .ob-exit-hint { width: calc(50% - 135px); }
         }
-        .ob-exit-hint.show { animation: obExitPulse 1.9s ease-in-out infinite; }
+        /* La bande reste fixe : seule la flèche pulse (une icône, pas une zone). */
+        .ob-exit-hint.show { opacity: 1; }
+        .ob-exit-hint.show .ob-exit-hint-arrow { animation: obGuidePulse 1.3s ease-in-out infinite; --ob-pulse-scale: 1.3; }
         .ob-exit-hint.left  { left: 0;  background: linear-gradient(to right, rgba(139,92,246,0.32), rgba(139,92,246,0)); }
         .ob-exit-hint.right { right: 0; background: linear-gradient(to left,  rgba(139,92,246,0.32), rgba(139,92,246,0)); }
         .ob-exit-hint-arrow {
@@ -1675,7 +1677,6 @@
             text-shadow: 0 2px 8px rgba(0,0,0,0.65);
         }
         .ob-exit-hint.left .ob-exit-hint-label { transform: rotate(180deg); }
-        @keyframes obExitPulse { 0%, 100% { opacity: 0.42; } 50% { opacity: 1; } }
         /* Cible du guide : l'icône elle-même pulse, plus d'encadré violet autour.
            Propriété `scale` et non `transform` : nombre de boutons portent déjà
            un transform (centrage, survol) qu'une animation écraserait. */
@@ -2272,8 +2273,17 @@
         .card-exp-fill {
             height: 100%;
             background: linear-gradient(90deg, #A855F7 0%, #7C3AED 100%);
-            transition: width 0.3s ease;
+            transition: width 0.55s cubic-bezier(.22,.8,.25,1);
         }
+        /* Don de poussière : grains qui volent du bouton à la jauge (showDustParticles).
+           Au-dessus de la fiche et du voile du mode guidé (9050), sous le VN (9100). */
+        #vfxPoussiereCouche { position: fixed; inset: 0; z-index: 9080; pointer-events: none; }
+        .vfx-grain-poussiere {
+            position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px;
+            border-radius: 50%; background: #c4b2ff; box-shadow: 0 0 9px #a78bfa;
+            opacity: 0;
+        }
+        @media (prefers-reduced-motion: reduce) { .card-exp-fill { transition: none; } }
 
         /* Jauge d'énergie de la carte (3 paliers + smiley) */
         .card-energy-row {
@@ -16339,11 +16349,29 @@
 
         // Fait pulser un élément (élément ou sélecteur). S'arrête au premier
         // toucher de l'élément, sauf opts.garder ; ou après opts.pulseMs.
+        // Ce qui pulse, c'est l'icône du jeu, jamais une zone : un bouton de la
+        // barre du bas, de retour à la mappe ou du carnet pulse par son icône ;
+        // une ligne de menu, par son pictogramme. Les autres cibles (vignette,
+        // miniature, entrée du carnet, bouton rond…) pulsent elles-mêmes.
+        function _uiPulseVisuel(el) {
+            if (!el || !el.matches) return el;
+            let v = null;
+            if (el.matches('.action-bar-btn, .alb-back, .journal-screen-back')) v = el.querySelector(':scope > svg');
+            else if (el.matches('.card-carnet-btn')) v = el.querySelector('.card-carnet-icon');
+            else if (el.matches('.avatar-menu-item')) v = el.querySelector(':scope > span');
+            return v || el;
+        }
         function uiPulser(el, opts) {
             opts = opts || {};
             if (typeof el === 'string') el = document.querySelector(el);
             if (!el) return null;
-            el.classList.add('ui-pulse');
+            const v = _uiPulseVisuel(el);
+            // Les grandes cibles (bouton de dose, entrée du carnet) pulsent plus discrètement.
+            if (!v.style.getPropertyValue('--ob-pulse-scale')) {
+                const r = v.getBoundingClientRect();
+                if (Math.max(r.width, r.height) > 90) v.style.setProperty('--ob-pulse-scale', '1.05');
+            }
+            v.classList.add('ui-pulse');
             if (!opts.garder) el.addEventListener('pointerdown', () => uiArreterPulse(el), { once: true });
             if (opts.pulseMs > 0) setTimeout(() => uiArreterPulse(el), opts.pulseMs);
             return el;
@@ -16351,7 +16379,7 @@
         // Arrête la pulsation d'un élément ; sans argument, de tous.
         function uiArreterPulse(el) {
             if (typeof el === 'string') el = document.querySelector(el);
-            if (el) el.classList.remove('ui-pulse');
+            if (el) { el.classList.remove('ui-pulse'); _uiPulseVisuel(el).classList.remove('ui-pulse'); }
             else if (!arguments.length) document.querySelectorAll('.ui-pulse').forEach(e => e.classList.remove('ui-pulse'));
         }
 
@@ -16380,6 +16408,8 @@
         // Appelée en tête de saveProgress : note les objets possédés et, la toute
         // première fois qu'un objet entre dans le sac, fait pulser le bouton Sac
         // (une seule fois, sauvegardé). Silencieuse si le tutoriel est déjà fini.
+        // Les lumens ne sont plus dans le sac : seul un vrai objet (orbe,
+        // fourniture, écho…) déclenche la pulsation.
         function _sacVerifierEntree() {
             if (typeof BAG_CATS === 'undefined') return;
             let total = 0;
@@ -19536,6 +19566,19 @@
             if (r.bottom < 0 || r.top > window.innerHeight || r.right < 0 || r.left > window.innerWidth) return null;
             const cs = getComputedStyle(el);
             if (cs.visibility === 'hidden' || cs.display === 'none') return null;
+            // Une cible qui pulse elle-même (propriété `scale` animée) : le trou
+            // est calculé sur sa taille de repos agrandie de l'amplitude maximale
+            // de la pulsation, et reste fixe. Sinon, recalé toutes les 150 ms, le
+            // rectangle clair pulsait avec elle autour de l'élément.
+            const sc = parseFloat(cs.scale);
+            if (el.classList.contains('ui-pulse') || el.classList.contains('ob-guide-pulse') || (sc > 0 && sc !== 1)) {
+                const amp = el.classList.contains('ui-pulse') || el.classList.contains('ob-guide-pulse')
+                    ? (parseFloat(cs.getPropertyValue('--ob-pulse-scale')) || 1.14) : 1;
+                const k = amp / ((sc > 0) ? sc : 1);
+                const cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
+                const w2 = r.width * k / 2, h2 = r.height * k / 2;
+                return { left: cx - w2, top: cy - h2, right: cx + w2, bottom: cy + h2, width: w2 * 2, height: h2 * 2 };
+            }
             return r;
         }
         // Les trous qui se touchent sont fusionnés : en evenodd, deux trous qui
@@ -19586,13 +19629,17 @@
             if (!_gf) return;
             const voile = _gfCalque('guideVoile'), bloq = _gfCalque('guideBloqueur');
             const cibles = _gfElements(_gfListe(_gf.cibles));
-            if (_gf.pulse !== false) {
-                _gfElements(_gfListe(_gf.pulse || _gf.cibles)).forEach(el => {
-                    if (_gf.pulses.has(el) && el.classList.contains('ui-pulse')) return;
-                    _gf.pulses.add(el);
-                    uiPulser(el, { garder: true });
-                });
-            }
+            const aPulser = _gf.pulse === false ? [] : _gfElements(_gfListe(_gf.pulse || _gf.cibles));
+            // Cibles changées (guidage écran par écran, section 10) : l'ancienne
+            // cible cesse de pulser.
+            _gf.pulses.forEach(el => {
+                if (aPulser.indexOf(el) < 0) { uiArreterPulse(el); _gf.pulses.delete(el); }
+            });
+            aPulser.forEach(el => {
+                if (_gf.pulses.has(el) && _uiPulseVisuel(el).classList.contains('ui-pulse')) return;
+                _gf.pulses.add(el);
+                uiPulser(el, { garder: true });
+            });
             const rc = cibles.map(_gfRect).filter(Boolean);
             if (!rc.length) { voile.style.display = 'none'; bloq.style.display = 'none'; return; }
             const rv = _gfElements(_gfListe(_gf.visibles)).map(_gfRect).filter(Boolean);
@@ -19909,8 +19956,12 @@
             _tutoAtteindre(7);
             if (!_tutoEtat.s7) { _tutoEtat.s7 = 'entree'; _tutoSauver(); }
             if (_tutoEtat.s7 === 'entree') {
-                guideFocus(['#journalScreen .scrap-available']);
-                _tutoDire('s7a', 'journal', _TUTO_LIGNES_S7A);
+                // L'entrée ne pulse qu'une fois la réplique finie.
+                const entree = ['#journalScreen .scrap-available'];
+                guideFocus(entree, { pulse: false });
+                _tutoDire('s7a', 'journal', _TUTO_LIGNES_S7A, () => {
+                    if (_tutoSection === 7 && _tutoEtat.s7 === 'entree') guideFocus(entree);
+                });
             } else {
                 guideFocus(['#journalScreen .journal-screen-back']);
                 _tutoDire('s7b', 'journal', _TUTO_LIGNES_S7B);
@@ -26573,17 +26624,8 @@
                     }));
                 }
             },
-            {
-                id: "lumens", icon: "🕯️", label: "Lumens",
-                action: { icon: "🗺️", label: "Voir sur la carte" },
-                getItems() {
-                    const total = autoLumens.length + pendingAutoLumens;
-                    return [{ id: "lumen", icon: "🕯️", name: "Lumens",
-                        sub: "Éclairent automatiquement l'Explorium",
-                        qty: total,
-                        desc: "Les Lumens s'accumulent à chaque palier de progression franchi. Ils s'inscrivent automatiquement sur l'Explorium à ta prochaine visite, révélant de nouvelles zones dans l'obscurité." }];
-                }
-            },
+            // Lumens retirés du sac (14/10) : ils ne vivent plus que dans
+            // l'Explorium (autoLumens, pendingAutoLumens, pendingGrappeLumens).
         ];
 
         let _bagCat  = 0;
@@ -29164,76 +29206,42 @@
         }
 
 
+        // Don de poussière : 14 grains partent du haut du bouton « Donner de la
+        // poussière » et se dissipent sur le point de remplissage de la jauge de
+        // niveau (d'après l'artefact de référence, fonction burst).
+        // xpRatio : 0→1, progression dans le palier courant APRÈS le don.
+        // Couche fixe au-dessus de la fiche carte et du voile du mode guidé
+        // (9050), sous le visual novel (9100).
         function showDustParticles(xpRatio) {
-            // xpRatio : 0→1, progression dans le palier courant
-            // Plus on est proche du prochain palier, plus l'animation est intense
-            const cardEl = document.querySelector('.card-frame') || document.querySelector('.card-detail-inner');
-            if (!cardEl) return;
-
-            // Trouver le prochain palier
-            const cfg = RARITY_CONFIG[selectedCard?.rarity] || RARITY_CONFIG.common;
-            const cl = cardLevels[selectedCard?.id];
-            if (!cl) return;
-            const level = cl.level;
-            const milestones = cfg.milestones[level] || [0.5];
-            const needed = getExpNeeded(selectedCard, level);
-
-            // Trouver dans quel inter-palier on est
-            const thresholds = [0, ...milestones, 1];
-            let segStart = 0, segEnd = 1;
-            for (let i = 0; i < thresholds.length - 1; i++) {
-                if (xpRatio >= thresholds[i] && xpRatio < thresholds[i+1]) {
-                    segStart = thresholds[i];
-                    segEnd = thresholds[i+1];
-                    break;
-                }
+            if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const btn = document.getElementById('addExpBtn');
+            const fill = document.getElementById('cardExpBar');
+            const track = fill && fill.parentElement;
+            if (!btn || !track || typeof Element.prototype.animate !== 'function') return;
+            let couche = document.getElementById('vfxPoussiereCouche');
+            if (!couche) {
+                couche = document.createElement('div');
+                couche.id = 'vfxPoussiereCouche';
+                couche.setAttribute('aria-hidden', 'true');
+                document.body.appendChild(couche);
             }
-            const segProgress = segEnd > segStart
-                ? (xpRatio - segStart) / (segEnd - segStart)
-                : 0;
-
-            // Intensité : 1-2 particules au début, 5-6 près du palier
-            const count = Math.round(1 + segProgress * 4);
-            const intensity = 0.4 + segProgress * 0.6; // opacité/taille
-
-            const rect = cardEl.getBoundingClientRect();
-            for (let i = 0; i < count; i++) {
-                const p = document.createElement('div');
-                const angle = -60 + Math.random() * 120; // vers le haut ±60°
-                const dist = 40 + Math.random() * 60 * intensity;
-                const size = 4 + Math.random() * 6 * intensity;
-                const startX = rect.left + rect.width * (0.3 + Math.random() * 0.4);
-                const startY = rect.top + rect.height * (0.4 + Math.random() * 0.3);
-                const rad = angle * Math.PI / 180;
-                const dx = Math.sin(rad) * dist;
-                const dy = -Math.cos(rad) * dist;
-
-                p.style.cssText = `
-                    position:fixed;
-                    left:${startX}px; top:${startY}px;
-                    width:${size}px; height:${size}px;
-                    border-radius:50%;
-                    background:radial-gradient(circle, #fde68a, #f59e0b);
-                    opacity:${0.6 + intensity * 0.4};
-                    pointer-events:none;
-                    z-index:9999;
-                    transition: transform ${0.5 + Math.random() * 0.3}s ease-out, opacity ${0.4 + Math.random() * 0.3}s ease-out;
-                `;
-                document.body.appendChild(p);
-
-                // Halo sur la carte si très proche du palier
-                if (segProgress > 0.75) {
-                    cardEl.style.boxShadow = `0 0 ${12 + segProgress * 20}px rgba(245,158,11,${0.2 + segProgress * 0.3})`;
-                    setTimeout(() => { cardEl.style.boxShadow = ''; }, 800);
-                }
-
-                requestAnimationFrame(() => {
-                    setTimeout(() => {
-                        p.style.transform = `translate(${dx}px, ${dy}px)`;
-                        p.style.opacity = '0';
-                    }, i * 40);
-                });
-                setTimeout(() => p.remove(), 1200 + i * 40);
+            const b = btn.getBoundingClientRect(), t = track.getBoundingClientRect();
+            const sy = b.top + 10;
+            const tx = t.left + t.width * Math.max(0, Math.min(1, xpRatio || 0)), ty = t.top + 4;
+            for (let i = 0; i < 14; i++) {
+                const g = document.createElement('span');
+                g.className = 'vfx-grain-poussiere';
+                const x0 = b.left + b.width / 2 + (Math.random() - 0.5) * b.width * 0.6;
+                g.style.left = x0 + 'px';
+                g.style.top = sy + 'px';
+                couche.appendChild(g);
+                const a = g.animate([
+                    { transform: 'translate(0,0) scale(1)', opacity: 0 },
+                    { opacity: 1, offset: 0.15 },
+                    { transform: 'translate(' + (tx - x0 + (Math.random() - 0.5) * 16) + 'px,' + (ty - sy) + 'px) scale(0.5)', opacity: 0.1 }
+                ], { duration: 620 + Math.random() * 420, delay: i * 28, easing: 'cubic-bezier(.4,.1,.3,1)', fill: 'forwards' });
+                a.onfinish = () => g.remove();
+                a.oncancel = () => g.remove();
             }
         }
 
