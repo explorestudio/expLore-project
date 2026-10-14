@@ -9625,6 +9625,14 @@
         .guide-calque { position: fixed; inset: 0; z-index: 9050; display: none; }
         #guideVoile { pointer-events: none; background: rgba(4,2,14,0.72); }
         #guideBloqueur { pointer-events: auto; background: transparent; }
+        /* Lueur des éléments qui pulsent, au-dessus du voile (sinon coupée par
+           le bord du trou) et sous le visual novel. Même rythme qu'obGuidePulse. */
+        #guideHalos { position: fixed; inset: 0; z-index: 9060; pointer-events: none; }
+        .guide-halo { position: absolute; pointer-events: none; animation: guideHalo 1.3s ease-in-out infinite; }
+        @keyframes guideHalo {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(167,139,250,0); }
+            50%      { box-shadow: 0 0 10px 3px rgba(167,139,250,0.9); }
+        }
         .ui-apparait { animation: uiApparait 0.7s cubic-bezier(0.34,1.56,0.64,1) both; }
         @keyframes uiApparait {
             from { opacity: 0; scale: 0.3; }
@@ -19785,7 +19793,21 @@
         // Marge minimale : plus large, elle découvre le décor autour de l'élément
         // (le papier du carnet) et redessine une « zone » claire.
         const _GF_MARGE_PULSE = 2;
-        function _gfQuad(el, m) {
+        // Forme visible d'un élément qui pulse : lui-même s'il a un fond ou une
+        // bordure ; sinon (bouton-icône sur fond transparent, ex. bouton de la
+        // mappe du carnet) son icône — sans quoi le trou découvrirait un carré
+        // de décor autour de l'icône. C'est toujours le bouton entier qui pulse.
+        function _gfForme(el) {
+            const cs = getComputedStyle(el);
+            const fond = (cs.backgroundImage && cs.backgroundImage !== 'none')
+                || !/^(transparent|rgba\([^)]*,\s*0\))$/.test(cs.backgroundColor.trim())
+                || parseFloat(cs.borderTopWidth) > 0;
+            return fond ? el : (el.querySelector('svg, img') || el);
+        }
+        // Contour à l'écran : { cx, cy, w, h, ang, rad } — centre, taille et
+        // angle réels (échelle et rotation de l'élément ET de ses ancêtres :
+        // l'icône grossit avec le bouton qui pulse), rayon des coins arrondis.
+        function _gfQuad(el) {
             if (!el || !el.getBoundingClientRect) return null;
             const r = el.getBoundingClientRect();
             if (r.width < 2 || r.height < 2) return null;
@@ -19793,25 +19815,83 @@
             const cs = getComputedStyle(el);
             if (cs.visibility === 'hidden' || cs.display === 'none') return null;
             const cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
-            let w = el.offsetWidth || el.clientWidth || 0, h = el.offsetHeight || el.clientHeight || 0;
-            let ang = 0;
-            if (cs.transform && cs.transform !== 'none') {
-                try {
-                    const t = new DOMMatrixReadOnly(cs.transform);
-                    ang = Math.atan2(t.b, t.a); w *= Math.hypot(t.a, t.b); h *= Math.hypot(t.c, t.d);
-                } catch (e) {}
+            const w0 = el.offsetWidth || el.clientWidth || 0, h0 = el.offsetHeight || el.clientHeight || 0;
+            let ang = 0, kx = 1, ky = 1;
+            for (let n = el; n && n !== document.body && n.nodeType === 1; n = n.parentElement) {
+                const c = n === el ? cs : getComputedStyle(n);
+                if (c.transform && c.transform !== 'none') {
+                    try {
+                        const t = new DOMMatrixReadOnly(c.transform);
+                        ang += Math.atan2(t.b, t.a); kx *= Math.hypot(t.a, t.b); ky *= Math.hypot(t.c, t.d);
+                    } catch (e) {}
+                }
+                const rot = parseFloat(c.rotate); if (rot) ang += rot * Math.PI / 180;
+                const sc = parseFloat(c.scale); if (sc > 0) { kx *= sc; ky *= sc; }
             }
-            const rot = parseFloat(cs.rotate); if (rot) ang += rot * Math.PI / 180;
-            const sc = parseFloat(cs.scale); if (sc > 0) { w *= sc; h *= sc; }
-            const c = Math.cos(ang), s = Math.sin(ang);
+            let w = w0 * kx, h = h0 * ky;
+            const co = Math.cos(ang), si = Math.sin(ang);
             // Contrôle : l'englobant du contour calculé doit retomber sur celui du navigateur.
-            const bw = Math.abs(w * c) + Math.abs(h * s), bh = Math.abs(w * s) + Math.abs(h * c);
+            const bw = Math.abs(w * co) + Math.abs(h * si), bh = Math.abs(w * si) + Math.abs(h * co);
             if (!w || !h || Math.abs(bw - r.width) > r.width * 0.15 || Math.abs(bh - r.height) > r.height * 0.15) {
                 w = r.width; h = r.height; ang = 0;
             }
-            const hw = w / 2 + m, hh = h / 2 + m;
-            return [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]]
-                .map(([x, y]) => [cx + x * Math.cos(ang) - y * Math.sin(ang), cy + x * Math.sin(ang) + y * Math.cos(ang)]);
+            // Coins : rayon CSS de l'élément (px ou %), à l'échelle ; icône sans rayon : léger arrondi.
+            const br = cs.borderTopLeftRadius || '0';
+            let rad = br.indexOf('%') >= 0 ? parseFloat(br) / 100 * Math.min(w, h) : (parseFloat(br) || 0) * Math.min(kx, ky);
+            if (!rad && /^(svg|img)$/i.test(el.tagName)) rad = Math.min(w, h) * 0.22;
+            rad = Math.min(rad, w / 2, h / 2);
+            return { cx, cy, w, h, ang, rad };
+        }
+        // Polygone d'un contour (coins arrondis approchés), agrandi de m px.
+        function _gfPolygone(q, m) {
+            const hw = q.w / 2 + m, hh = q.h / 2 + m, rr = Math.min(q.rad + m, hw, hh);
+            const pts = [];
+            [[hw - rr, -hh + rr, -90], [hw - rr, hh - rr, 0], [-hw + rr, hh - rr, 90], [-hw + rr, -hh + rr, 180]]
+                .forEach(([x0, y0, a0]) => {
+                    for (let i = 0; i <= 6; i++) {
+                        const a = (a0 + i * 15) * Math.PI / 180;
+                        pts.push([x0 + rr * Math.cos(a), y0 + rr * Math.sin(a)]);
+                    }
+                });
+            const co = Math.cos(q.ang), si = Math.sin(q.ang);
+            return pts.map(([x, y]) => [q.cx + x * co - y * si, q.cy + x * si + y * co]);
+        }
+        // Lueur de la pulsation, dessinée AU-DESSUS du voile : sans elle, le
+        // trou couperait net le halo violet de l'élément. Une lueur par élément
+        // isolé, calée chaque image sur son contour, en phase avec sa pulsation.
+        const _gfHalos = new Map();   // élément qui pulse → div de lueur
+        function _gfHalosMaj(items) {
+            let calque = document.getElementById('guideHalos');
+            if (!calque) {
+                calque = document.createElement('div');
+                calque.id = 'guideHalos';
+                calque.setAttribute('aria-hidden', 'true');
+                document.body.appendChild(calque);
+            }
+            const vus = new Set();
+            items.forEach(({ el, q }) => {
+                vus.add(el);
+                let h = _gfHalos.get(el);
+                if (!h) {
+                    h = document.createElement('div');
+                    h.className = 'guide-halo';
+                    calque.appendChild(h);
+                    _gfHalos.set(el, h);
+                    // En phase avec la pulsation de l'élément (même durée).
+                    try {
+                        const ae = el.getAnimations().find(a => a.animationName === 'obGuidePulse');
+                        const ah = h.getAnimations()[0];
+                        if (ae && ah) ah.currentTime = ae.currentTime;
+                    } catch (e) {}
+                }
+                h.style.left = (q.cx - q.w / 2) + 'px';
+                h.style.top = (q.cy - q.h / 2) + 'px';
+                h.style.width = q.w + 'px';
+                h.style.height = q.h + 'px';
+                h.style.borderRadius = q.rad + 'px';
+                h.style.transform = 'rotate(' + q.ang + 'rad)';
+            });
+            _gfHalos.forEach((h, el) => { if (!vus.has(el)) { h.remove(); _gfHalos.delete(el); } });
         }
         // Tout l'écran, moins un rectangle par trou et un polygone par contour
         // d'élément qui pulse (règle evenodd).
@@ -19864,6 +19944,7 @@
             if (document.body.classList.contains('vn-ouvert')) {
                 voile.style.clipPath = 'none';
                 bloq.style.clipPath  = 'none';
+                _gfHalosMaj([]);
                 return;
             }
             // Trous du voile : le contour exact de chaque élément qui pulse ; un
@@ -19880,8 +19961,11 @@
             // l'intersection. Seuls les éléments isolés ont un trou à leur contour.
             const dans = (v) => { const b = v.getBoundingClientRect();
                 return rects.some(r => b.left < r.right && r.left < b.right && b.top < r.bottom && r.top < b.bottom); };
-            const polys = visuels.filter(v => !dans(v)).map(v => _gfQuad(v, _GF_MARGE_PULSE)).filter(Boolean);
+            const isoles = visuels.filter(v => !dans(v))
+                .map(el => ({ el, q: _gfQuad(_gfForme(el)) })).filter(o => o.q);
+            const polys = isoles.map(o => _gfPolygone(o.q, _GF_MARGE_PULSE));
             voile.style.clipPath = _gfDecoupe(_gfFusion(rects), polys);
+            _gfHalosMaj(isoles);
             bloq.style.clipPath  = _gfDecoupe(_gfFusion(rc));
         }
         function guideFocus(cibles, opts) {
@@ -19904,6 +19988,7 @@
         function guideFocusFin() {
             if (!_gf) return;
             cancelAnimationFrame(_gf.timer);
+            _gfHalosMaj([]);
             _gf.pulses.forEach(el => uiArreterPulse(el));
             _gf = null;
             ['guideVoile', 'guideBloqueur'].forEach(id => {
@@ -20275,6 +20360,9 @@
                 _tutoEtat.s10 = 'lu';
                 if (!_tutoEtat.s11) _tutoEtat.s11 = 'attente';
                 _tutoSauver();
+                // « …tu pourras la retrouver via sa miniature » : le bouton de
+                // retour à la carte (la miniature) pulse dès la bulle fermée.
+                _tutoPulser('#journalScreenCardImage');
             });
         }
 
@@ -20284,6 +20372,7 @@
             _tutoAtteindre(11);
             _tutoEtat.s11 = 'miniature';
             _tutoSauver();
+            _tutoPulsesFin();
             guideFocus(['#journalScreenCardImage']);
             _tutoDire('s11a', 'journal', _TUTO_LIGNES_S11A);
         }
@@ -20293,6 +20382,7 @@
         function _tutoSection11B() {
             _tutoAtteindre(11);
             guideFocusFin();
+            _tutoPulsesFin();
             _tutoEtat.s11 = 'mission';
             _tutoSauver();
             _tutoDire('s11b', 'carddetail', _TUTO_LIGNES_S11B, () => {
