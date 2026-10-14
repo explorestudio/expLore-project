@@ -8779,12 +8779,18 @@
         /* Voix mémorielle : l'image est peinte sur fond noir — fondue dans la scène */
         #vnBust[src*="voix_memorielle"] { mix-blend-mode: screen; }
 
-        /* Icône d'objet dans une réplique du visual novel (sections 19 à 21) */
+        /* Icône d'objet dans une réplique du visual novel (cf. VN_MOTS_CLES).
+           Porte aussi .vn-ch : l'écriture progressive la révèle à sa place. */
         .vn-line .vn-ico {
-            display: inline-block; height: 1.35em; width: auto;
-            vertical-align: -0.32em; margin-right: 0.25em;
+            /* 1.4em : à 1.1em (≈15 px) la poussière et l'échoppe ne se lisaient plus */
+            display: inline-block; height: 1.4em; width: auto;
+            vertical-align: -0.36em; margin-right: 0.2em;
             filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
         }
+        /* Mot-clé d'une réplique : couleur de l'objet (style en ligne), gras ;
+           l'icône et le premier mot sont insécables. */
+        .vn-line .vn-mot { font-weight: 600; }
+        .vn-line .vn-mot-ico { white-space: nowrap; }
 
         /* Section 23 : la pastille du nouveau visuel se remplit, de bas en haut */
         .ot-tl-node.ot-tl-remplit::before,
@@ -12653,8 +12659,6 @@
             "🔒 Explorium rescellé": "🔒 Explorium resealed",
             // Accueil d'Odile
             "Ah, te voilà. La nouvelle recrue.": "Ah, there you are. The new recruit.",
-            "Ne me demande pas où se trouve le QG. Le scientifique t'expliquera, si tu as une heure devant toi.": "Don't ask me where HQ is. The Scientist will explain, if you have an hour to spare.",
-            "À gauche, tes quartiers. Ici, le hall. Au fond, la salle de l'Explorium. On ne l'ouvre pas à tout le monde.": "To the left, your quarters. Here, the hall. At the back, the Explorium room. We don't open it to just anyone.",
             // Odile
             "Chaque carte que tu rapportes, je la classe. Personnage, lieu ou objet, puis un domaine. C'est comme ça qu'on s'y retrouve.": "Every card you bring back, I file. Character, place or object, then a field. That's how we keep track.",
             "L'histoire, c'est mon rayon. Une vieille pierre, une plaque, une date gravée : rapporte-moi ça.": "History is my department. An old stone, a plaque, a carved date: bring me those.",
@@ -12664,7 +12668,6 @@
             "Les parcs, les jardins, les quais. La ville a une mémoire verte, et on la collecte trop peu.": "Parks, gardens, embankments. The city has a green memory, and we collect too little of it.",
             "Odile veut tout mettre en tiroirs. Moi je dis qu'un arbre ne tient pas dans un tiroir.": "Odile wants everything in drawers. I say a tree doesn't fit in a drawer.",
             // Aurèle
-            "Derrière cette porte, l'Explorium. Toutes les mémoires extraites, remises à leur place d'origine.": "Behind this door, the Explorium. Every memory ever extracted, put back where it came from.",
             "On n'entre pas sans la clé. Le règlement, je ne l'ai pas écrit.": "Nobody goes in without the key. I didn't write the rules.",
             "Comment il marche ? Il tourne. C'est tout ce qu'on a besoin de savoir, ici.": "How does it work? It runs. That's all we need to know around here.",
             "Tu as la clé. Pose la main sur le sceau, il te reconnaîtra.": "You have the key. Lay your hand on the seal; it will know you.",
@@ -12674,8 +12677,6 @@
             "Scellée. Il te faut la clé de l'Organisation.": "Sealed. You need the Organisation's key.",
             // Le scientifique (plaque et locuteur : pas de nom propre)
             "Le scientifique": "The Scientist",
-            "Tu te demandes où tu es ? À l'intérieur d'une nébuleuse. Le QG tout entier n'existe que là-dedans.": "Wondering where you are? Inside a nebula. The whole of HQ exists only in there.",
-            "Longtemps, on a seulement su observer les nébuleuses. Puis la science de l'exploration de la mémoire a progressé, et on a appris à y entrer. Aujourd'hui, on y travaille.": "For a long time, we could only observe the nebulae. Then the science of memory exploration moved on, and we learned to go inside. Now we work in them.",
             "Celle-ci, on l'a stabilisée nous-mêmes. Tant qu'elle tient, l'Organisation a un toit.": "We stabilized this one ourselves. As long as it holds, the Organisation has a roof over its head.",
             // ══════════ VERRIÈRE — planche BD (test.html) ══════════
             "Verrière · %1": "Glasswork · %1",
@@ -18372,13 +18373,55 @@
         // (mot pour mot), icône de l'objet insérée devant son nom. Les gabarits
         // HTML sont des constantes : la même chaîne sert de clé à la traduction
         // (cf. _OB_DECOUVERTES_EN, plus bas avec l'arrivée dans l'Explorium).
-        const _OB_HTML_PANORAMA = 'Vise un peu ce ' + _vnIcone('./assets/PanoramaIcon.png?v=2')
-            + '<span style="color:#5FC9E8;font-weight:600">panorama</span>. J’aime prendre le temps parfois, de juste regarder autour de moi. Garder un bout de ce que je vis l’espace d’un instant. Essaie, toi aussi.';
+
+        // ── Mots-clés des répliques (règle de David, 14/10) ────────────────
+        // Tout élément du jeu que le joueur manipule ensuite est mis en forme
+        // quand une réplique le nomme : sa COULEUR à chaque mention ; son ICÔNE
+        // à la première mention (ordre du tutoriel), et partout où le document
+        // de dialogues écrit déjà l'emoji (📖 🖋️ 🎞️ 📼 🔮). Exception demandée :
+        // la poussière a aussi son icône à « poussière mémorielle » (section 4).
+        // Le texte des répliques n'est jamais touché : seulement la mise en forme.
+        //  icone : asset du jeu, <img> en ligne (révélée par l'écriture progressive) ;
+        //  emoji : le signe que le jeu emploie déjà pour l'objet (sac, carnet).
+        // QG, Explorium et sac n'ont d'icône que dessinée en SVG dans la barre du
+        // bas : couleur seule, reprise de ce dessin. Pas de mise en forme pour
+        // « carte » (le jeu entier : partout, souvent au sens de la mappe) ni pour
+        // « feuille de route » (emoji encore à choisir, cf. TODO de la section 11).
+        const VN_MOTS_CLES = {
+            poussiere: { icone: './assets/Powder.png',             couleur: '#C084FC' },
+            echoppe:   { icone: './assets/BazarIcon.png?v=2',      couleur: '#FB923C' },
+            nebuleuse: { icone: './assets/nebuleuse.png',          couleur: '#B98CE8' },
+            panorama:  { icone: './assets/PanoramaIcon.png?v=2',   couleur: '#5FC9E8' },
+            info:      { icone: './assets/PanelInfoIcon.png?v=2',  couleur: '#7BD88F' },
+            parchemin: { icone: './assets/parchemin.png',          couleur: '#EBCC7E' },
+            carnet:    { emoji: '📖', couleur: '#F2DDB5' },   // papier du carnet
+            encre:     { emoji: '🖋️', couleur: '#E0A458' },
+            pellicule: { emoji: '🎞️', couleur: '#FCD34D' },
+            cassette:  { emoji: '📼', couleur: '#C4B5FD' },
+            orbe:      { emoji: '🔮', couleur: '#67E8F9' },
+            sac:       { couleur: '#F87171' },
+            qg:        { couleur: '#A78BFA' },
+            explorium: { couleur: '#38BDF8' },
+        };
+        // Html d'un mot-clé : [icône] + mot, dans la couleur de l'objet.
+        // icone : vrai à la première mention (ou si le document porte l'emoji).
+        function vnMot(cle, mot, icone) {
+            const k = VN_MOTS_CLES[cle];
+            if (!k) return mot;
+            const ico = !icone ? '' : k.icone ? _vnIcone(k.icone) : (k.emoji ? k.emoji + ' ' : '');
+            // L'icône reste collée au premier mot ; les mots suivants peuvent passer à la ligne.
+            const i = mot.indexOf(' ');
+            const tete = ico ? '<span class="vn-mot-ico">' + ico + (i < 0 ? mot : mot.slice(0, i)) + '</span>' + (i < 0 ? '' : mot.slice(i)) : mot;
+            return '<span class="vn-mot" style="color:' + k.couleur + '">' + tete + '</span>';
+        }
+
+        const _OB_HTML_PANORAMA = 'Vise un peu ce ' + vnMot('panorama', 'panorama', true)
+            + '. J’aime prendre le temps parfois, de juste regarder autour de moi. Garder un bout de ce que je vis l’espace d’un instant. Essaie, toi aussi.';
         const _OB_HTML_PANNEAU = 'L’Organisation en a brièvement parlé lors de la dernière réunion des Sensibles Novices. Les '
-            + _vnIcone('./assets/PanelInfoIcon.png?v=2')
-            + '<span style="color:#7BD88F;font-weight:600">points d\'information</span> sont des supports d’ancrage très liés au lieu où ils se trouvent. Ce serait trop long de t’expliquer maintenant mais sache que tu peux agir avec grâce à des parchemins que tu récupères en chemin. Une fois assemblés, ils te livrent ce qu\'ils cachaient.';
-        const _OB_HTML_PARCHEMIN = 'Oh un ' + _vnIcone('./assets/parchemin.png')
-            + '<span style="color:#EBCC7E;font-weight:600">parchemin</span>. J’en ai déjà accumulé quelques-uns. Pris isolément, ça ne sert pas à grand-chose. Vois ça comme une pièce de puzzle. Fais-lui une place dans ton sac, ça peut être important.';
+            + vnMot('info', 'points d\'information', true)
+            + ' sont des supports d’ancrage très liés au lieu où ils se trouvent. Ce serait trop long de t’expliquer maintenant mais sache que tu peux agir avec grâce à des ' + vnMot('parchemin', 'parchemins') + ' que tu récupères en chemin. Une fois assemblés, ils te livrent ce qu\'ils cachaient.';
+        const _OB_HTML_PARCHEMIN = 'Oh un ' + vnMot('parchemin', 'parchemin', true)
+            + '. J’en ai déjà accumulé quelques-uns. Pris isolément, ça ne sert pas à grand-chose. Vois ça comme une pièce de puzzle. Fais-lui une place dans ton ' + vnMot('sac', 'sac') + ', ça peut être important.';
 
         // Appelé depuis openViewfinder() — premier panorama cadré (section 19).
         function _obOnOpenViewfinder() {
@@ -18405,12 +18448,13 @@
         // Le document ne donne la marche à suivre que si le joueur porte une
         // orbe ; sans orbe, on garde la réplique existante (« Ou tu sors
         // chercher… »). L'orbe n'a pas d'icône dessinée en jeu : 🔮, comme au sac.
+        const _OB_HTML_ORBE = 'Tu portes déjà une ' + vnMot('orbe', 'orbe mémorielle', true) + ', pose-la sur la carte : elle lui rend toute son énergie d\'un coup.';
         function _obLignesEnergie(avecOrbe) {
             const qui = nomClara();
             return [
                 { speaker: qui, line: 'La carte s\'épuise. La mémoire a besoin de temps, attends quelques heures qu’elle se ravive d’elle mêmes' },
                 avecOrbe
-                    ? { speaker: qui, line: 'Tu portes déjà une 🔮 orbe mémorielle, pose-la sur la carte : elle lui rend toute son énergie d\'un coup.' }
+                    ? { speaker: qui, html: _OB_HTML_ORBE }
                     : { speaker: qui, line: 'Ou tu sors chercher de quoi la ranimer.' },
             ];
         }
@@ -18596,8 +18640,10 @@
         function nomJoueur() { return _joueurPseudo || 'Toi'; }
 
         // Icône d'objet insérée dans une réplique (rendu `html` du visual novel).
+        // Classe vn-ch : _vnStartTyping la compte comme un caractère, elle
+        // apparaît donc au moment où l'écriture progressive arrive au mot.
         function _vnIcone(src) {
-            return '<img class="vn-ico" src="' + src + '" alt="" draggable="false">';
+            return '<img class="vn-ico vn-ch" src="' + src + '" alt="" draggable="false">';
         }
 
         // ecran : id de l'interface dont parle la réplique, ou 'map'. Si le joueur
@@ -19685,7 +19731,8 @@
         const _TUTO_JF = 'La jeune fille';
 
         // ── Répliques (mot pour mot, document de dialogues v0.83) ──────────
-        const _TUTO_HTML_S1 = 'Je n’avais jamais vu une nébuleuse pareille ! Je me demande ce que l’on trouvera à l’intérieur ! Un '
+        // Mots-clés (VN_MOTS_CLES) : icône à la première mention, couleur ensuite.
+        const _TUTO_HTML_S1 = 'Je n’avais jamais vu une ' + vnMot('nebuleuse', 'nébuleuse', true) + ' pareille ! Je me demande ce que l’on trouvera à l’intérieur ! Un '
             + _tutoG('personnage') + ', un ' + _tutoG('lieu') + ' ou un ' + _tutoG('objet') + ' ?';
         const _TUTO_LIGNES_S1 = [
             { speaker: _TUTO_JF, air: 'fasciné',   html: _TUTO_HTML_S1 },
@@ -19696,28 +19743,32 @@
             { speaker: _TUTO_JF, air: 'ému',     line: 'Je suis trop émue… Je n’arriverai pas à me concentrer, je te laisse la cristalliser.' },
         ];
         const _TUTO_HTML_S3 = 'Tu l\'as eue ! Ne range pas cette carte tout de suite s’il te plaît. Je te donne ma '
-            + '<span style="color:#C084FC;font-weight:600">poussière</span> si tu veux, j’ai si hâte de savoir ce qu’elle a à nous dire.';
+            + vnMot('poussiere', 'poussière', true) + ' si tu veux, j’ai si hâte de savoir ce qu’elle a à nous dire.';
         // expr 'poussiere' : la jeune fille tient de la poussière (asset à venir,
         // cf. CLARA_POUSSIERE_DISPO) ; bouton « Consulter » (section 4 : « Clic
         // dans la boîte de dialogue sur consulter plutôt que continuer »).
         const _TUTO_LIGNES_S3 = [
             { speaker: _TUTO_JF, air: 'enthousiaste', expr: 'poussiere', bouton: 'Consulter', html: _TUTO_HTML_S3 },
         ];
+        // Première « poussière mémorielle » : icône et violet (demande de David).
+        const _TUTO_HTML_S4 = 'Ce sont les Clés de la Ville ! Elles semblent vidées de toute substance. Comme disait le Professeur Ricardo, “elle s’éveille si on s’y attarde un peu. Pour qu’une carte retrouve ses souvenirs il faut lui donner de la '
+            + vnMot('poussiere', 'poussière mémorielle', true) + '”.';
         const _TUTO_LIGNES_S4 = [
-            { speaker: _TUTO_JF, air: 'petit doigt en l’air', line: 'Ce sont les Clés de la Ville ! Elles semblent vidées de toute substance. Comme disait le Professeur Ricardo, “elle s’éveille si on s’y attarde un peu. Pour qu’une carte retrouve ses souvenirs il faut lui donner de la poussière mémorielle”.' },
+            { speaker: _TUTO_JF, air: 'petit doigt en l’air', html: _TUTO_HTML_S4 },
         ];
-        const _TUTO_HTML_S6 = 'Ca marche ! Regardons ce qui a émergé dans le 📖 ' + _tutoG('carnet') + '.';
+        const _TUTO_HTML_S6 = 'Ca marche ! Regardons ce qui a émergé dans le ' + vnMot('carnet', 'carnet', true) + '.';
         const _TUTO_LIGNES_S6 = [ { speaker: _TUTO_JF, air: 'enjoué', html: _TUTO_HTML_S6 } ];
-        const _TUTO_HTML_S7A = 'C’est fascinant ! Le 📖 ' + _tutoG('carnet') + ' réagit vraiment au réveil de la carte ! Je t’avais dit qu’il suffisait d’un peu de poussière, son histoire commence à se dévoiler, je suis si contente. Regarde, il nous faut de l’🖋️ ' + _tutoG('encre');
-        const _TUTO_HTML_S7B = 'Tu n’en as pas ? Ils avaient pourtant insisté sur ça au QG : 🖋️ ' + _tutoG('encre') + ', 🎞️ ' + _tutoG('pellicule') + ' et 📼 ' + _tutoG('cassette')
-            + '. Tu aurais bien besoin d\'un peu de poussière mémorielle toi aussi ! Bon, suis-moi, on va faire le plein. Trouvons une échoppe, il parait qu’il y en a un peu partout en ville.';
+        const _TUTO_HTML_S7A = 'C’est fascinant ! Le ' + vnMot('carnet', 'carnet', true) + ' réagit vraiment au réveil de la carte ! Je t’avais dit qu’il suffisait d’un peu de ' + vnMot('poussiere', 'poussière') + ', son histoire commence à se dévoiler, je suis si contente. Regarde, il nous faut de l’' + vnMot('encre', 'encre', true);
+        // Première « échoppe » : icône et orange (demande de David).
+        const _TUTO_HTML_S7B = 'Tu n’en as pas ? Ils avaient pourtant insisté sur ça au ' + vnMot('qg', 'QG') + ' : ' + vnMot('encre', 'encre', true) + ', ' + vnMot('pellicule', 'pellicule', true) + ' et ' + vnMot('cassette', 'cassette', true)
+            + '. Tu aurais bien besoin d\'un peu de ' + vnMot('poussiere', 'poussière mémorielle') + ' toi aussi ! Bon, suis-moi, on va faire le plein. Trouvons une ' + vnMot('echoppe', 'échoppe', true) + ', il parait qu’il y en a un peu partout en ville.';
         const _TUTO_LIGNES_S7A = [ { speaker: _TUTO_JF, air: 'enjoué',       html: _TUTO_HTML_S7A } ];
         const _TUTO_LIGNES_S7B = [ { speaker: _TUTO_JF, air: 'enthousiaste', html: _TUTO_HTML_S7B } ];
         // Section 10 — « Monsieur » : le marchand de l'échoppe.
         const _TUTO_HTML_S10 = {
-            A: 'Il faut tout prendre quand on nous le propose, ce ne sera pas toujours le cas d’après l’Organisation. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton sac et donnons-lui l’🖋️ ' + _tutoG('encre') + '.',
-            B: 'Ce sont des ressources rares, mieux vaut faire un stock, comme l’a dit l’Organisation. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton sac et donnons-lui l’🖋️ ' + _tutoG('encre') + '.',
-            C: 'T’as bien fait, l’Organisation nous a prévenu d’en faire un stock. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton sac et donnons-lui l’🖋️ ' + _tutoG('encre') + '.',
+            A: 'Il faut tout prendre quand on nous le propose, ce ne sera pas toujours le cas d’après l’Organisation. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton ' + vnMot('sac', 'sac') + ' et donnons-lui l’' + vnMot('encre', 'encre', true) + '.',
+            B: 'Ce sont des ressources rares, mieux vaut faire un stock, comme l’a dit l’Organisation. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton ' + vnMot('sac', 'sac') + ' et donnons-lui l’' + vnMot('encre', 'encre', true) + '.',
+            C: 'T’as bien fait, l’Organisation nous a prévenu d’en faire un stock. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton ' + vnMot('sac', 'sac') + ' et donnons-lui l’' + vnMot('encre', 'encre', true) + '.',
         };
         const _TUTO_LIGNES_S10 = {
             // CAS A : le joueur n'a rien pris
@@ -19744,8 +19795,9 @@
         ];
         // TODO (document) : « [emoji de la feuille de route à définir] » après
         // « la Mission ? » — à insérer quand l'emoji sera choisi.
+        const _TUTO_HTML_S11B = 'Je suis tellement émue d’avoir partagé ça avec toi, mais on doit se reprendre ! Aujourd’hui le ' + vnMot('qg', 'QG') + ' nous a donné rendez-vous à Bellecour et ce n’est pas pour rien ! Tu te souviens de la Mission ?';
         const _TUTO_LIGNES_S11B = [
-            { speaker: _TUTO_JF, air: 'inquisiteur', line: 'Je suis tellement émue d’avoir partagé ça avec toi, mais on doit se reprendre ! Aujourd’hui le QG nous a donné rendez-vous à Bellecour et ce n’est pas pour rien ! Tu te souviens de la Mission ?' },
+            { speaker: _TUTO_JF, air: 'inquisiteur', html: _TUTO_HTML_S11B },
         ];
 
         // ── Moteur ─────────────────────────────────────────────────────────
@@ -20056,6 +20108,11 @@
         const TUTO_RESSOURCES_S8 = { poussiere: ['dust_tuto', 'dust_tuto2'], orbe: ['orb_tuto'] };
         const _TUTO_S12_DON = 'Tiens, je me suis permise de récupérer %1, tu es passé à côté !';
         const _TUTO_HTML_S18_VDL = 'Tu as réussi à voir “<i>Lyon, ville du livre au XVIème siècle</i>” ou c’était autre chose ?';
+        // Répliques à mots-clés (VN_MOTS_CLES : couleur, l'icône est déjà passée en 1).
+        const _TUTO_HTML_S12_EQUIPE = 'Bon, tu es doué et moi j’ai les connaissances… Faisons équipe pour cette fois ! Nous devons cristalliser 3 ' + vnMot('nebuleuse', 'nébuleuses') + ' supplémentaires. Au fait, moi c’est Clara !';
+        const _TUTO_HTML_S15_QG = "Assez parlé, c'est toi qui a trouvé toutes les " + vnMot('nebuleuse', 'nébuleuses') + " de toute façon ! Il faut que je te présente à ma personne préférée. Direction le " + vnMot('qg', 'QG') + " !";
+        const _TUTO_HTML_S18_RETOUR = 'Ah, te revoilà. Tu étais dans l’' + vnMot('explorium', 'Explorium') + ' c’est ça ? Je ne comprends pas comment tu as fait sans “ça”. Le Professeur Ricardo nous avait dit… Enfin, j’ai pu apprendre qu’avec l’expérience, “UNE GRANDE EXPERIENCE”, on pouvait atteindre l’' + vnMot('explorium', 'Explorium') + ' sans…';
+        const _TUTO_HTML_S18_SALLE = 'Il y a une salle, à droite du hall du ' + vnMot('qg', 'QG') + ', je ne sais pas si tu as remarqué. En tout cas, ne me refais plus ça, j’ai eu peur ! Allez, maintenant tu sais ce qu’on cherche en priorité, reprenons notre route.';
 
         // Le joueur : « Toi », puis son pseudo (section 15).
         function _tutoToi() { return { speaker: nomJoueur(), line: '…' }; }
@@ -20064,13 +20121,15 @@
         function _tutoLignesS12a() {
             const c = _tutoEtat.cas12 || {};
             const morceaux = [];
-            if ((c.poussiere || []).length) morceaux.push(T('de la poussière'));
-            if ((c.orbe || []).length) morceaux.push(T('une orbe'));
+            // Mots-clés (VN_MOTS_CLES) sur le dernier mot, déjà traduit
+            // (poussière/dust, orbe/orb) ; l'orbe est nommée ici pour la première fois.
+            if ((c.poussiere || []).length) morceaux.push(T('de la poussière').replace(/\S+$/, m => vnMot('poussiere', m)));
+            if ((c.orbe || []).length) morceaux.push(T('une orbe').replace(/\S+$/, m => vnMot('orbe', m, true)));
             const liste = morceaux.length === 2 ? TF('%1 et %2', morceaux[0], morceaux[1]) : (morceaux[0] || '');
             return [
                 _tutoToi(),
                 // Liste injectée : la ligne arrive déjà traduite, T() ne la retouche pas.
-                { speaker: _TUTO_JF, air: 'satisfait', line: TF(_TUTO_S12_DON, liste) },
+                { speaker: _TUTO_JF, air: 'satisfait', html: TF(_TUTO_S12_DON, liste) },
             ];
         }
         // Section 12, partie 2 : la feuille de mission, la méprise, la présentation.
@@ -20084,7 +20143,7 @@
                     _tutoToi(),
                     { speaker: _TUTO_JF, air: 'affolé', line: "Pourquoi tu me regardes comme ça ? Cette expression, mais… C'est de l'incompréhension ! Tu n'es pas de l'Organisation, c’est ça ?" },
                     { speaker: _TUTO_JF, air: 'se tape le front', line: 'Oh la boulette…' },
-                    { speaker: 'Clara', air: 'résolu', line: 'Bon, tu es doué et moi j’ai les connaissances… Faisons équipe pour cette fois ! Nous devons cristalliser 3 nébuleuses supplémentaires. Au fait, moi c’est Clara !' },
+                    { speaker: 'Clara', air: 'résolu', html: _TUTO_HTML_S12_EQUIPE },
                     { speaker: 'Clara', air: 'neutre', line: 'Je te laisse ma feuille de route, j’ai déjà tout en tête, n’hésite pas à la consulter quand tu le souhaites.' },
                 ]
             );
@@ -20098,7 +20157,7 @@
         const _TUTO_LIGNES_S15 = [
             { speaker: 'Clara', air: 'épuisé', line: 'Et de trois ! Pfiou, j’ai mal aux pieds mais on l’a fait !' },
             { speaker: 'Clara', air: 'réflexion', line: 'Je ne sais pas si toi aussi tu le sens, mais j\'ai l\'impression de "ressentir" la mémoire autour de nous.' },
-            { speaker: 'Clara', air: 'enjoué', line: "Assez parlé, c'est toi qui a trouvé toutes les nébuleuses de toute façon ! Il faut que je te présente à ma personne préférée. Direction le QG !" },
+            { speaker: 'Clara', air: 'enjoué', html: _TUTO_HTML_S15_QG },
         ];
         // Au QG : Odile (HUB_NPCS.odile, sans portrait). « Blblbl » = le pseudo.
         function _tutoLignesOdile1() {
@@ -20117,11 +20176,11 @@
         function _tutoLignesS18() {
             return [
                 { speaker: 'Clara', air: 'inquiet', line: TF('Hey %1, reviens à toi. Hého !', nomJoueur()) },
-                { speaker: 'Clara', air: 'doigt levé', line: 'Ah, te revoilà. Tu étais dans l’Explorium c’est ça ? Je ne comprends pas comment tu as fait sans “ça”. Le Professeur Ricardo nous avait dit… Enfin, j’ai pu apprendre qu’avec l’expérience, “UNE GRANDE EXPERIENCE”, on pouvait atteindre l’Explorium sans…' },
+                { speaker: 'Clara', air: 'doigt levé', html: _TUTO_HTML_S18_RETOUR },
                 { speaker: 'Clara', line: 'Moi, j’arrive à peine à me projeter dedans avec…' },
                 { speaker: 'Clara', air: 'questionné', html: _TUTO_HTML_S18_VDL },
                 { speaker: 'Clara', air: 'choqué', line: 'Peu importe ! Ce que je veux dire c’est qu’il est préférable que tu puisses te projeter depuis un endroit sûr pour ne pas finir dans les pommes n’importe où ! Imagine si je n’avais pas été là.' },
-                { speaker: 'Clara', air: 'enjoué', line: 'Il y a une salle, à droite du hall du QG, je ne sais pas si tu as remarqué. En tout cas, ne me refais plus ça, j’ai eu peur ! Allez, maintenant tu sais ce qu’on cherche en priorité, reprenons notre route.' },
+                { speaker: 'Clara', air: 'enjoué', html: _TUTO_HTML_S18_SALLE },
             ];
         }
 
@@ -20834,30 +20893,31 @@
         Object.assign(I18N_EN, {
             "Donner de la poussière": "Give dust",
             "Poussière insuffisante (%1/%2)": "Not enough dust (%1/%2)",
-            [_TUTO_HTML_S1]: 'I’d never seen a nebula like this! I wonder what we’ll find inside! A '
+            [_TUTO_HTML_S1]: 'I’d never seen a ' + vnMot('nebuleuse', 'nebula', true) + ' like this! I wonder what we’ll find inside! A '
                 + _tutoG('character') + ', a ' + _tutoG('place') + ' or an ' + _tutoG('object') + '?',
             "Allons nous en occuper ! Approchons-nous…": "Let’s take care of it! Let’s get closer…",
             "Tu ne trouves pas ça fascinant, toi, que plusieurs potentiels de mémoire puissent coexister à l’intérieur ?": "Don’t you find it fascinating, that several potentials of memory can coexist inside?",
             "Je suis trop émue… Je n’arriverai pas à me concentrer, je te laisse la cristalliser.": "I’m too moved… I won’t be able to concentrate, I’ll let you crystallise it.",
             [_TUTO_HTML_S3]: 'You got it! Please don’t put this card away just yet. I’ll give you my '
-                + '<span style="color:#C084FC;font-weight:600">dust</span> if you like, I can’t wait to find out what it has to tell us.',
-            "Ce sont les Clés de la Ville ! Elles semblent vidées de toute substance. Comme disait le Professeur Ricardo, “elle s’éveille si on s’y attarde un peu. Pour qu’une carte retrouve ses souvenirs il faut lui donner de la poussière mémorielle”.": "These are the Keys of the City! They seem drained of all substance. As Professor Ricardo used to say, “it wakes up if you linger on it a little. For a card to recover its memories, you have to give it memorial dust”.",
-            [_TUTO_HTML_S6]: 'It works! Let’s see what has emerged in the 📖 ' + _tutoG('notebook') + '.',
-            [_TUTO_HTML_S7A]: 'It’s fascinating! The 📖 ' + _tutoG('notebook') + ' really reacts to the card waking up! I told you a little dust would be enough, its story is starting to unfold, I’m so happy. Look, we need some 🖋️ ' + _tutoG('ink'),
-            [_TUTO_HTML_S7B]: 'You don’t have any? They really insisted on it at HQ: 🖋️ ' + _tutoG('ink') + ', 🎞️ ' + _tutoG('film') + ' and 📼 ' + _tutoG('tape')
-                + '. You could do with a little memorial dust yourself, too! Right, follow me, let’s stock up. Let’s find a stall, apparently there are some all over town.',
+                + vnMot('poussiere', 'dust', true) + ' if you like, I can’t wait to find out what it has to tell us.',
+            [_TUTO_HTML_S4]: 'These are the Keys of the City! They seem drained of all substance. As Professor Ricardo used to say, “it wakes up if you linger on it a little. For a card to recover its memories, you have to give it '
+                + vnMot('poussiere', 'memorial dust', true) + '”.',
+            [_TUTO_HTML_S6]: 'It works! Let’s see what has emerged in the ' + vnMot('carnet', 'notebook', true) + '.',
+            [_TUTO_HTML_S7A]: 'It’s fascinating! The ' + vnMot('carnet', 'notebook', true) + ' really reacts to the card waking up! I told you a little ' + vnMot('poussiere', 'dust') + ' would be enough, its story is starting to unfold, I’m so happy. Look, we need some ' + vnMot('encre', 'ink', true),
+            [_TUTO_HTML_S7B]: 'You don’t have any? They really insisted on it at ' + vnMot('qg', 'HQ') + ': ' + vnMot('encre', 'ink', true) + ', ' + vnMot('pellicule', 'film', true) + ' and ' + vnMot('cassette', 'tape', true)
+                + '. You could do with a little ' + vnMot('poussiere', 'memorial dust') + ' yourself, too! Right, follow me, let’s stock up. Let’s find a ' + vnMot('echoppe', 'stall', true) + ', apparently there are some all over town.',
             "Je dois vraiment tout faire ! Merci Monsieur, cet énergumène ne semble pas être réveillé aujourd’hui.": "Do I really have to do everything! Thank you, Sir, this character doesn’t seem to be awake today.",
-            [_TUTO_HTML_S10.A]: 'You have to take everything when it’s offered, it won’t always be the case according to the Organisation. Come on, I can’t wait to learn more about the card! I’ll put the rest in your bag and let’s give it the 🖋️ ' + _tutoG('ink') + '.',
+            [_TUTO_HTML_S10.A]: 'You have to take everything when it’s offered, it won’t always be the case according to the Organisation. Come on, I can’t wait to learn more about the card! I’ll put the rest in your ' + vnMot('sac', 'bag') + ' and let’s give it the ' + vnMot('encre', 'ink', true) + '.',
             "Il fallait tout prendre, je m’en suis chargée ! Merci Monsieur.": "You had to take everything, I took care of it! Thank you, Sir.",
-            [_TUTO_HTML_S10.B]: 'These are rare resources, better to stock up, as the Organisation said. Come on, I can’t wait to learn more about the card! I’ll put the rest in your bag and let’s give it the 🖋️ ' + _tutoG('ink') + '.',
+            [_TUTO_HTML_S10.B]: 'These are rare resources, better to stock up, as the Organisation said. Come on, I can’t wait to learn more about the card! I’ll put the rest in your ' + vnMot('sac', 'bag') + ' and let’s give it the ' + vnMot('encre', 'ink', true) + '.',
             "Merci Monsieur.": "Thank you, Sir.",
-            [_TUTO_HTML_S10.C]: 'You did well, the Organisation warned us to stock up. Come on, I can’t wait to learn more about the card! I’ll put the rest in your bag and let’s give it the 🖋️ ' + _tutoG('ink') + '.',
+            [_TUTO_HTML_S10.C]: 'You did well, the Organisation warned us to stock up. Come on, I can’t wait to learn more about the card! I’ll put the rest in your ' + vnMot('sac', 'bag') + ' and let’s give it the ' + vnMot('encre', 'ink', true) + '.',
             "Wouah ! Elle a une histoire si intéressante. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story. I’ll give you time to read in peace.",
             "Wouah ! Elle a une histoire si intéressante, continue. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story, keep going. I’ll give you time to read in peace.",
             "Wouah ! Elle a une histoire si intéressante, nous pouvons découvrir encore 2 entrées. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story, we can still discover 2 entries. I’ll give you time to read in peace.",
             "Lorsque tu auras fini de considérer ce qu’elle a réussi à se remémorer, tu pourras la retrouver via sa miniature.": "When you’ve finished taking in what it managed to remember, you can find it again through its thumbnail.",
             "Allez s’il te plaît, prenons quelques secondes pour la regarder.": "Come on, please, let’s take a few seconds to look at it.",
-            "Je suis tellement émue d’avoir partagé ça avec toi, mais on doit se reprendre ! Aujourd’hui le QG nous a donné rendez-vous à Bellecour et ce n’est pas pour rien ! Tu te souviens de la Mission ?": "I’m so moved to have shared that with you, but we have to pull ourselves together! Today HQ gave us a meeting point at Bellecour, and not for nothing! Do you remember the Mission?",
+            [_TUTO_HTML_S11B]: "I’m so moved to have shared that with you, but we have to pull ourselves together! Today " + vnMot('qg', 'HQ') + " gave us a meeting point at Bellecour, and not for nothing! Do you remember the Mission?",
         });
 
         // ── Traductions des nouvelles chaînes (sections 12 à 18, Annexe B) ──
@@ -20872,24 +20932,24 @@
             "Où est ta feuille de mission ?": "Where’s your mission sheet?",
             "Pourquoi tu me regardes comme ça ? Cette expression, mais… C'est de l'incompréhension ! Tu n'es pas de l'Organisation, c’est ça ?": "Why are you looking at me like that? That expression, but… It’s incomprehension! You’re not from the Organisation, are you?",
             "Oh la boulette…": "Oops, what a blunder…",
-            "Bon, tu es doué et moi j’ai les connaissances… Faisons équipe pour cette fois ! Nous devons cristalliser 3 nébuleuses supplémentaires. Au fait, moi c’est Clara !": "Well, you’re gifted and I have the knowledge… Let’s team up this time! We need to crystallise 3 more nebulae. By the way, I’m Clara!",
+            [_TUTO_HTML_S12_EQUIPE]: 'Well, you’re gifted and I have the knowledge… Let’s team up this time! We need to crystallise 3 more ' + vnMot('nebuleuse', 'nebulae') + '. By the way, I’m Clara!',
             "Je te laisse ma feuille de route, j’ai déjà tout en tête, n’hésite pas à la consulter quand tu le souhaites.": "I’ll leave you my roadmap, I already have it all in my head, feel free to check it whenever you like.",
             "Je ne sais pas toi, mais j’arrive à avoir une vision plus globale en prenant du recul, j’ai fait une carte du périmètre. Ils ne mentaient pas, il y a tant à découvrir, t’as vu ça ?": "I don’t know about you, but I get a more global view by stepping back, I made a map of the perimeter. They weren’t lying, there’s so much to discover, have you seen that?",
             "Par où allons-nous ? Tu es prêt à faire chauffer un peu tes mollets ?": "Which way are we going? Ready to warm up your calves a bit?",
             "Et de trois ! Pfiou, j’ai mal aux pieds mais on l’a fait !": "And that’s three! Phew, my feet hurt but we did it!",
             'Je ne sais pas si toi aussi tu le sens, mais j\'ai l\'impression de "ressentir" la mémoire autour de nous.': 'I don’t know if you feel it too, but I have the impression of "feeling" the memory around us.',
-            "Assez parlé, c'est toi qui a trouvé toutes les nébuleuses de toute façon ! Il faut que je te présente à ma personne préférée. Direction le QG !": "Enough talk, you’re the one who found all the nebulae anyway! I have to introduce you to my favourite person. Off to HQ!",
+            [_TUTO_HTML_S15_QG]: 'Enough talk, you’re the one who found all the ' + vnMot('nebuleuse', 'nebulae') + ' anyway! I have to introduce you to my favourite person. Off to ' + vnMot('qg', 'HQ') + '!',
             "Ah te voilà Clara ! Mais qui est avec toi ?": "Ah, there you are Clara! But who’s with you?",
             "Je connais pourtant tout le monde ici, mais vous je ne vous connais.": "I know everyone here, and yet you, I don’t know you.",
             "C'est vrai, il ne fait pas encore partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser ! Sans lui, ma journée ne serait pas encore finie.": "That’s true, they’re not part of the Organisation yet, but look at what they managed to crystallise! Without them, my day wouldn’t be over yet.",
             "Hmm, en effet, nous devrions pouvoir trouver une place à %1": "Hmm, indeed, we should be able to find a place for %1",
             "Accompagne %1 dans ses quartiers sur la gauche, la porte juste en face de la tienne, je m'occupe de tout.": "Take %1 to their quarters on the left, the door right across from yours, I’ll take care of everything.",
             "Hey %1, reviens à toi. Hého !": "Hey %1, snap out of it. Hello-o!",
-            "Ah, te revoilà. Tu étais dans l’Explorium c’est ça ? Je ne comprends pas comment tu as fait sans “ça”. Le Professeur Ricardo nous avait dit… Enfin, j’ai pu apprendre qu’avec l’expérience, “UNE GRANDE EXPERIENCE”, on pouvait atteindre l’Explorium sans…": "Ah, there you are again. You were in the Explorium, weren’t you? I don’t understand how you did it without “that”. Professor Ricardo had told us… Well, I learned that with experience, “A GREAT EXPERIENCE”, you could reach the Explorium without…",
+            [_TUTO_HTML_S18_RETOUR]: 'Ah, there you are again. You were in the ' + vnMot('explorium', 'Explorium') + ', weren’t you? I don’t understand how you did it without “that”. Professor Ricardo had told us… Well, I learned that with experience, “A GREAT EXPERIENCE”, you could reach the ' + vnMot('explorium', 'Explorium') + ' without…',
             "Moi, j’arrive à peine à me projeter dedans avec…": "Me, I can barely project myself into it with…",
             [_TUTO_HTML_S18_VDL]: 'Did you manage to see “<i>Lyon, City of Books in the 16th century</i>” or was it something else?',
             "Peu importe ! Ce que je veux dire c’est qu’il est préférable que tu puisses te projeter depuis un endroit sûr pour ne pas finir dans les pommes n’importe où ! Imagine si je n’avais pas été là.": "Never mind! What I mean is that it’s better for you to project yourself from a safe place so you don’t pass out just anywhere! Imagine if I hadn’t been there.",
-            "Il y a une salle, à droite du hall du QG, je ne sais pas si tu as remarqué. En tout cas, ne me refais plus ça, j’ai eu peur ! Allez, maintenant tu sais ce qu’on cherche en priorité, reprenons notre route.": "There’s a room, to the right of the HQ hall, I don’t know if you noticed. Anyway, don’t ever do that to me again, I got scared! Come on, now you know what we’re looking for first, let’s get back on our way.",
+            [_TUTO_HTML_S18_SALLE]: 'There’s a room, to the right of the ' + vnMot('qg', 'HQ') + ' hall, I don’t know if you noticed. Anyway, don’t ever do that to me again, I got scared! Come on, now you know what we’re looking for first, let’s get back on our way.',
             // Quêtes du tutoriel
             "Faire ses preuves": "Prove yourself",
             "Cristalliser 3 nébuleuses": "Crystallise 3 nebulae",
@@ -20898,9 +20958,7 @@
             "Ton pseudo": "Your username",
             "12 caractères maximum": "12 characters maximum",
             // Annexe B : Odile et Clara au QG
-            "Ce que sont les nébuleuses ? Va en parler au Professeur Ricardo, c’est le spécialiste en la matière": "What nebulae are? Go and talk to Professor Ricardo about it, he’s the expert on the matter",
             "Ca y est, tu as fait le tour ? N’hésite pas à retourner parler à tout le monde quand tu le souhaites !": "So, have you looked around? Feel free to go back and talk to everyone whenever you like!",
-            "J’en reviens pas, tu étais si rapide quand tu cristallisais les nébuleuses ! Ca m’a pris des jours pour les premières moi": "I can’t get over it, you were so fast crystallising the nebulae! It took me days for my first ones",
         });
 
         // ── Highlight d'un élément avec trou dans l'overlay ──
@@ -32685,16 +32743,27 @@
         // L'état (clé, porte, accueil) est déclaré près de _villeDuLivreUnlocked
         // et sauvegardé ; HUB_NPCS est déclaré avant VN_SPEAKERS.
         // ══════════════════════════════════════════════════════════════
-        const _hubSay = (id, line) => ({ speaker: HUB_NPCS[id].nom, line });
+        // Réplique contenant du html (mots-clés de VN_MOTS_CLES) : rendu `html`.
+        const _hubSay = (id, line) => /</.test(line) ? { speaker: HUB_NPCS[id].nom, html: line } : { speaker: HUB_NPCS[id].nom, line };
+        // Répliques à mots-clés (couleur) : la chaîne sert aussi de clé de traduction.
+        const _HUB_HTML = {
+            qg:        "Ne me demande pas où se trouve le " + vnMot('qg', 'QG') + ". Le scientifique t'expliquera, si tu as une heure devant toi.",
+            explorium: "À gauche, tes quartiers. Ici, le hall. Au fond, la salle de l'" + vnMot('explorium', 'Explorium') + ". On ne l'ouvre pas à tout le monde.",
+            nebuleuses: 'Ce que sont les ' + vnMot('nebuleuse', 'nébuleuses') + ' ? Va en parler au Professeur Ricardo, c’est le spécialiste en la matière',
+            porte:     "Derrière cette porte, l'" + vnMot('explorium', 'Explorium') + ". Toutes les mémoires extraites, remises à leur place d'origine.",
+            dedans:    "Tu te demandes où tu es ? À l'intérieur d'une " + vnMot('nebuleuse', 'nébuleuse') + ". Le " + vnMot('qg', 'QG') + " tout entier n'existe que là-dedans.",
+            science:   "Longtemps, on a seulement su observer les " + vnMot('nebuleuse', 'nébuleuses') + ". Puis la science de l'exploration de la mémoire a progressé, et on a appris à y entrer. Aujourd'hui, on y travaille.",
+            clara:     'J’en reviens pas, tu étais si rapide quand tu cristallisais les ' + vnMot('nebuleuse', 'nébuleuses') + ' ! Ca m’a pris des jours pour les premières moi',
+        };
         const HUB_LINES = {
             accueil: [
                 _hubSay('odile', 'Ah, te voilà. La nouvelle recrue.'),
-                _hubSay('odile', "Ne me demande pas où se trouve le QG. Le scientifique t'expliquera, si tu as une heure devant toi."),
-                _hubSay('odile', "À gauche, tes quartiers. Ici, le hall. Au fond, la salle de l'Explorium. On ne l'ouvre pas à tout le monde."),
+                _hubSay('odile', _HUB_HTML.qg),
+                _hubSay('odile', _HUB_HTML.explorium),
             ],
             odile: [
                 // Annexe B du document de dialogues v0.83 (Odile, l'Archiviste)
-                _hubSay('odile', 'Ce que sont les nébuleuses ? Va en parler au Professeur Ricardo, c’est le spécialiste en la matière'),
+                _hubSay('odile', _HUB_HTML.nebuleuses),
                 _hubSay('odile', "Chaque carte que tu rapportes, je la classe. Personnage, lieu ou objet, puis un domaine. C'est comme ça qu'on s'y retrouve."),
                 _hubSay('odile', "L'histoire, c'est mon rayon. Une vieille pierre, une plaque, une date gravée : rapporte-moi ça."),
                 _hubSay('odile', "Samir te dira qu'on range trop. Samir n'a jamais retrouvé un dossier de sa vie."),
@@ -32705,7 +32774,7 @@
                 _hubSay('samir', "Odile veut tout mettre en tiroirs. Moi je dis qu'un arbre ne tient pas dans un tiroir."),
             ],
             aureleSansCle: [
-                _hubSay('aurele', "Derrière cette porte, l'Explorium. Toutes les mémoires extraites, remises à leur place d'origine."),
+                _hubSay('aurele', _HUB_HTML.porte),
                 _hubSay('aurele', "On n'entre pas sans la clé. Le règlement, je ne l'ai pas écrit."),
                 _hubSay('aurele', "Comment il marche ? Il tourne. C'est tout ce qu'on a besoin de savoir, ici."),
             ],
@@ -32723,8 +32792,8 @@
                 _hubSay('aurele', "Scellée. Il te faut la clé de l'Organisation."),
             ],
             scientifique: [
-                _hubSay('scientifique', "Tu te demandes où tu es ? À l'intérieur d'une nébuleuse. Le QG tout entier n'existe que là-dedans."),
-                _hubSay('scientifique', "Longtemps, on a seulement su observer les nébuleuses. Puis la science de l'exploration de la mémoire a progressé, et on a appris à y entrer. Aujourd'hui, on y travaille."),
+                _hubSay('scientifique', _HUB_HTML.dedans),
+                _hubSay('scientifique', _HUB_HTML.science),
                 _hubSay('scientifique', "Celle-ci, on l'a stabilisée nous-mêmes. Tant qu'elle tient, l'Organisation a un toit."),
             ],
         };
@@ -32828,7 +32897,7 @@
         const HUB_JF_LIGNES = {
             qg: () => [
                 { speaker: nomClara(), line: 'Ca y est, tu as fait le tour ? N’hésite pas à retourner parler à tout le monde quand tu le souhaites !' },
-                { speaker: nomClara(), line: 'J’en reviens pas, tu étais si rapide quand tu cristallisais les nébuleuses ! Ca m’a pris des jours pour les premières moi' },
+                { speaker: nomClara(), html: _HUB_HTML.clara },
             ],
             nebuleuse: [
                 { speaker: 'La jeune fille', line: 'Ferme les yeux. Concentre-toi, et pense à tes cartes.' },
@@ -42583,6 +42652,12 @@
 
         // Répliques de la section 17, mot pour mot. « XXXX » = Clara, nommée
         // « la jeune fille » si elle ne s'est pas encore présentée.
+        // Répliques à mots-clés (VN_MOTS_CLES, couleur) : clés de traduction.
+        const _ARR_HTML = {
+            ou:      'Tu te demandes sans doute où tu es ? L\'' + vnMot('explorium', 'Explorium') + '.',
+            sache:   'Sache que les ' + vnMot('nebuleuse', 'nébuleuses') + ' que tu as cristallisées existent pour elles-même, mais qu’elles sont irrémédiablement attirées par d’autres pour faire sens de ce qu’elles sont. Ceci explique que tu aies été happé ici.',
+            reunir:  'Plus tu réuniras les ' + vnMot('nebuleuse', 'nébuleuses') + ', plus tu leur rendras leur mémoire, plus tu comprendras tout ce qui se joue ici.',
+        };
         function _arrLignesVoix() {
             const v = 'Voix mémorielle';
             const clara = nomClara() === 'Clara' ? 'Clara' : T('la jeune fille');
@@ -42592,11 +42667,11 @@
                 ],
                 // {Les cartes apparaissent, une à une…} : entre la 1re et la 2e réplique.
                 suite: [
-                    { speaker: v, line: 'Tu te demandes sans doute où tu es ? L\'Explorium.' },
+                    { speaker: v, html: _ARR_HTML.ou },
                     { speaker: v, line: 'Mmh. Tu ne sembles pas comme les autres, je ressens que tu ne comprends pas ce dont je te parle.' },
-                    { speaker: v, line: 'Sache que les nébuleuses que tu as cristallisées existent pour elles-même, mais qu’elles sont irrémédiablement attirées par d’autres pour faire sens de ce qu’elles sont. Ceci explique que tu aies été happé ici.' },
+                    { speaker: v, html: _ARR_HTML.sache },
                     { speaker: v, line: 'L’Organisation a permis de circonscrire cette mémoire collective de façon plus “palpable” pour les gens comme… Toi.' },
-                    { speaker: v, line: 'Plus tu réuniras les nébuleuses, plus tu leur rendras leur mémoire, plus tu comprendras tout ce qui se joue ici.' },
+                    { speaker: v, html: _ARR_HTML.reunir },
                     // Nom injecté : la ligne arrive déjà traduite, T() ne la retouche pas.
                     { speaker: v, line: TF('Je sens ta concentration se perdre, je te laisse rejoindre %1 dans le monde réel.', clara) },
                 ],
@@ -43075,21 +43150,29 @@
             "Voix mémorielle": "Memory Voice",
             "la jeune fille": "the girl",
             "Les cartes commencent à prendre leur place. Félicitations.": "The cards are starting to take their place. Congratulations.",
-            "Tu te demandes sans doute où tu es ? L'Explorium.": "You're probably wondering where you are? The Explorium.",
+            [_ARR_HTML.ou]: 'You\'re probably wondering where you are? The ' + vnMot('explorium', 'Explorium') + '.',
             "Mmh. Tu ne sembles pas comme les autres, je ressens que tu ne comprends pas ce dont je te parle.": "Mmh. You don't seem like the others, I can sense you don't understand what I'm talking about.",
-            "Sache que les nébuleuses que tu as cristallisées existent pour elles-même, mais qu’elles sont irrémédiablement attirées par d’autres pour faire sens de ce qu’elles sont. Ceci explique que tu aies été happé ici.": "Know that the nebulae you have crystallised exist for themselves, but that they are irresistibly drawn to others to make sense of what they are. That is why you were pulled in here.",
+            [_ARR_HTML.sache]: 'Know that the ' + vnMot('nebuleuse', 'nebulae') + ' you have crystallised exist for themselves, but that they are irresistibly drawn to others to make sense of what they are. That is why you were pulled in here.',
             "L’Organisation a permis de circonscrire cette mémoire collective de façon plus “palpable” pour les gens comme… Toi.": "The Organisation made it possible to contain this collective memory in a more “tangible” way for people like… You.",
-            "Plus tu réuniras les nébuleuses, plus tu leur rendras leur mémoire, plus tu comprendras tout ce qui se joue ici.": "The more nebulae you bring together, the more of their memory you give back, the more you'll understand everything at play here.",
+            [_ARR_HTML.reunir]: 'The more ' + vnMot('nebuleuse', 'nebulae') + ' you bring together, the more of their memory you give back, the more you\'ll understand everything at play here.',
             "Je sens ta concentration se perdre, je te laisse rejoindre %1 dans le monde réel.": "I feel your focus slipping, I'll let you rejoin %1 in the real world.",
-            [_OB_HTML_PANORAMA]: 'Take a look at this ' + _vnIcone('./assets/PanoramaIcon.png?v=2')
-                + '<span style="color:#5FC9E8;font-weight:600">panorama</span>. Sometimes I like to take my time, just to look around me. To keep a piece of what I’m living, for the space of an instant. You try it too.',
+            [_OB_HTML_PANORAMA]: 'Take a look at this ' + vnMot('panorama', 'panorama', true)
+                + '. Sometimes I like to take my time, just to look around me. To keep a piece of what I’m living, for the space of an instant. You try it too.',
             [_OB_HTML_PANNEAU]: 'The Organisation briefly mentioned them at the last meeting of the Novice Sensitives. The '
-                + _vnIcone('./assets/PanelInfoIcon.png?v=2')
-                + '<span style="color:#7BD88F;font-weight:600">info points</span> are anchoring supports, closely tied to the place where they stand. It would take too long to explain now, but know that you can act on them with the scrolls you pick up along the way. Once assembled, they give up what they were hiding.',
-            [_OB_HTML_PARCHEMIN]: 'Oh, a ' + _vnIcone('./assets/parchemin.png')
-                + '<span style="color:#EBCC7E;font-weight:600">scroll</span>. I’ve already gathered a few. On its own, it’s not much use. Think of it as a puzzle piece. Make room for it in your bag, it might be important.',
+                + vnMot('info', 'info points', true)
+                + ' are anchoring supports, closely tied to the place where they stand. It would take too long to explain now, but know that you can act on them with the ' + vnMot('parchemin', 'scrolls') + ' you pick up along the way. Once assembled, they give up what they were hiding.',
+            [_OB_HTML_PARCHEMIN]: 'Oh, a ' + vnMot('parchemin', 'scroll', true)
+                + '. I’ve already gathered a few. On its own, it’s not much use. Think of it as a puzzle piece. Make room for it in your ' + vnMot('sac', 'bag') + ', it might be important.',
             "La carte s'épuise. La mémoire a besoin de temps, attends quelques heures qu’elle se ravive d’elle mêmes": "The card is wearing out. Memory needs time, wait a few hours for it to revive on its own",
-            "Tu portes déjà une 🔮 orbe mémorielle, pose-la sur la carte : elle lui rend toute son énergie d'un coup.": "You're already carrying a 🔮 memory orb, place it on the card: it gives back all its energy at once.",
+            [_OB_HTML_ORBE]: 'You\'re already carrying a ' + vnMot('orbe', 'memory orb', true) + ', place it on the card: it gives back all its energy at once.',
+            // QG (hub et Clara, Annexe B) : répliques à mots-clés (cf. _HUB_HTML)
+            [_HUB_HTML.qg]: "Don't ask me where " + vnMot('qg', 'HQ') + " is. The Scientist will explain, if you have an hour to spare.",
+            [_HUB_HTML.explorium]: "To the left, your quarters. Here, the hall. At the back, the " + vnMot('explorium', 'Explorium') + " room. We don't open it to just anyone.",
+            [_HUB_HTML.nebuleuses]: 'What ' + vnMot('nebuleuse', 'nebulae') + ' are? Go and talk to Professor Ricardo about it, he’s the expert on the matter',
+            [_HUB_HTML.porte]: "Behind this door, the " + vnMot('explorium', 'Explorium') + ". Every memory ever extracted, put back where it came from.",
+            [_HUB_HTML.dedans]: "Wondering where you are? Inside a " + vnMot('nebuleuse', 'nebula') + ". The whole of " + vnMot('qg', 'HQ') + " exists only in there.",
+            [_HUB_HTML.science]: "For a long time, we could only observe the " + vnMot('nebuleuse', 'nebulae') + ". Then the science of memory exploration moved on, and we learned to go inside. Now we work in them.",
+            [_HUB_HTML.clara]: 'I can’t get over it, you were so fast crystallising the ' + vnMot('nebuleuse', 'nebulae') + '! It took me days for my first ones',
             "J’ai besoin que tu m’aides, je sens que quelque chose se passe.": "I need you to help me, I can feel something is happening.",
             "Je me sens changer, comme moins morcelée.": "I feel myself changing, as if less fragmented.",
             "Merci, il n’y a rien de pire que de s’oublier soi-même. Grâce à toi, j’ai récupéré mes souvenirs.": "Thank you, there is nothing worse than forgetting yourself. Thanks to you, I have my memories back.",
