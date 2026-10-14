@@ -1885,8 +1885,15 @@
             inset: 0;
             z-index: 0;
             opacity: 1;
-            transition: opacity 0.14s linear;
+            transition: opacity 0.14s linear, filter 0.9s ease;
         }
+
+        /* Trois niveaux automatiques des cartes sans visuels par niveau
+           (cf. _otNiveauxAuto) : voilé → à moitié → net, avec une lueur dorée. */
+        #cardArtEmoji { transition: filter 0.9s ease; }
+        .ot-auto-0 #cardArtImg, .ot-auto-0 #cardArtEmoji { filter: grayscale(1) blur(2px) brightness(0.75) opacity(0.55); }
+        .ot-auto-1 #cardArtImg, .ot-auto-1 #cardArtEmoji { filter: grayscale(0.45) blur(0.6px) brightness(0.9) opacity(0.85); }
+        .ot-auto-2 #cardArtEmoji { filter: drop-shadow(0 0 10px rgba(245,184,65,0.85)) drop-shadow(0 0 22px rgba(245,184,65,0.45)); }
 
         /* ════════════════════════════════════════════════════════════
            Timeline des visuels multi-niveaux
@@ -14159,8 +14166,23 @@
         // Nombre de visuels débloqués : un visuel l'est si son index ≤ niveau courant.
         // 0 si la carte n'a pas de visuels multiples (→ pas de rangée du tout).
         function _otVisualCount(card) {
-            if (!card || !Array.isArray(card.artByLevel)) return 0;
-            return Math.min(_otArtDeclared(card), _otCardLevel(card) + 1);
+            if (!card) return 0;
+            return Math.min(_otTlTotal(card), _otCardLevel(card) + 1);
+        }
+
+        // ── Trois niveaux pour toutes les cartes (demande de David, 14/10) ──
+        // Une carte sans visuels par niveau (moins de 2 déclarés) reçoit trois états automatiques de son
+        // visuel unique (illustration ou, à défaut, emoji) : voilé, à moitié, net. Ils
+        // se débloquent comme les visuels des clefs de la ville (même rangée de
+        // pastilles). Déclarer `artByLevel` sur la carte les remplace par ses images.
+        const OT_NIVEAUX_AUTO = 3;
+        function _otNiveauxAuto(card) { return !!card && _otArtDeclared(card) < 2; }
+        // Pose l'état idx sur l'illustration de la fiche (classe .ot-auto-N, cf. CSS).
+        function _otAppliquerEtatAuto(card, idx) {
+            const holder = document.getElementById('cardArtContainer');
+            if (!holder) return;
+            for (let i = 0; i < OT_NIVEAUX_AUTO; i++) holder.classList.remove('ot-auto-' + i);
+            if (_otNiveauxAuto(card)) holder.classList.add('ot-auto-' + Math.max(0, Math.min(OT_NIVEAUX_AUTO - 1, idx)));
         }
         let _obDone        = false;
         let _villeDuLivreUnlocked = false;  // true quand le rendez-vous Bellecour est validé → POI du parcours visibles
@@ -22725,7 +22747,8 @@
         // Nombre total d'états de la carte (débloqués ou non). Les visuels à venir
         // (`null`) n'en font pas partie : la rangée ne promet que ce qui existe.
         function _otTlTotal(card) {
-            return _otArtDeclared(card);
+            if (!card) return 0;
+            return _otNiveauxAuto(card) ? OT_NIVEAUX_AUTO : _otArtDeclared(card);
         }
 
         function _otTlBuild(card, opts) {
@@ -22739,6 +22762,7 @@
                 artArea.querySelectorAll('.ot-tl').forEach(el => el.remove());
                 holder.querySelectorAll('.ot-morph').forEach(el => el.remove());
                 _otTlPendingReveal = -1;
+                _otAppliquerEtatAuto(card, 0);
                 return;
             }
 
@@ -22814,6 +22838,8 @@
                 if (opts.morph) _otTlMorph(holder, artImg, src);
                 else { artImg.src = src; artImg.style.opacity = '1'; artImg.style.display = 'block'; }
             }
+            // États automatiques : le changement de classe fait la transition (filtre).
+            _otAppliquerEtatAuto(card, _otTlIndex);
         }
 
         // Tap sur une pastille
@@ -22865,9 +22891,9 @@
         // prochain build. La carte affichée ne change pas — c'est au joueur d'aller
         // voir ce qui vient d'apparaître.
         function _otTlOnLevelUp(card, levelBefore) {
-            if (!card || !Array.isArray(card.artByLevel)) return;
+            if (!card) return;
             const newIdx = levelBefore + 1;
-            if (newIdx < card.artByLevel.length) _otTlPendingReveal = newIdx;
+            if (newIdx < _otTlTotal(card)) _otTlPendingReveal = newIdx;
         }
 
         function openCardDetail(card) {
@@ -22893,6 +22919,7 @@
                 if (artSrc) { artImg.src = artSrc; artImg.style.opacity = '1'; artImg.style.display = 'block'; artEmoji.style.display = 'none'; }
                 else { artImg.style.display = 'none'; artEmoji.style.display = 'block'; }
             }
+            _otAppliquerEtatAuto(card, _otIdx);   // états automatiques, sans flash
             const typeIcon = {
                 'Personnage': '👤',
                 'Objet': '⚙️',

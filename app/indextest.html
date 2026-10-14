@@ -724,7 +724,7 @@
             box-shadow: 0 6px 18px rgba(var(--acc), 0.35), inset 0 -2px 0 rgba(0,0,0,0.18);
         }
         .console-interactable .collect-btn::after { content: '›'; margin-left: 8px; font-size: 1.2em; line-height: 0; }
-        .console--nebuleuse { --acc: 167,139,250; padding: 10px; }   /* bouton seul (header masqué) */
+        .console--nebuleuse { --acc: 167,139,250; }
         .console--panorama  { --acc: 96,165,250; }
         .console--echoppe   { --acc: 251,146,60; }
         .console--panneau   { --acc: 52,211,153; }
@@ -2043,8 +2043,15 @@
             inset: 0;
             z-index: 0;
             opacity: 1;
-            transition: opacity 0.14s linear;
+            transition: opacity 0.14s linear, filter 0.9s ease;
         }
+
+        /* Trois niveaux automatiques des cartes sans visuels par niveau
+           (cf. _otNiveauxAuto) : voilé → à moitié → net, avec une lueur dorée. */
+        #cardArtEmoji { transition: filter 0.9s ease; }
+        .ot-auto-0 #cardArtImg, .ot-auto-0 #cardArtEmoji { filter: grayscale(1) blur(2px) brightness(0.75) opacity(0.55); }
+        .ot-auto-1 #cardArtImg, .ot-auto-1 #cardArtEmoji { filter: grayscale(0.45) blur(0.6px) brightness(0.9) opacity(0.85); }
+        .ot-auto-2 #cardArtEmoji { filter: drop-shadow(0 0 10px rgba(245,184,65,0.85)) drop-shadow(0 0 22px rgba(245,184,65,0.45)); }
 
         /* ════════════════════════════════════════════════════════════
            Timeline des visuels multi-niveaux
@@ -7928,25 +7935,18 @@
 
     
         /* ══ Marqueur Panneau d'information (i) ══ */
+        /* Plus de disque orange sous l'icône PanelInfoIcon (demande de David, 14/10) :
+           l'icône seule, sans fond, bord ni lueur, à portée ou non. */
         .panneau-marker {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: linear-gradient(135deg, #92400E, #B45309);
-            border: 3px solid white;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 3px 10px rgba(146,64,14,0.6);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
+            transition: transform 0.15s;
             position: relative;
         }
         .panneau-marker .panneau-i {
             font-size: 15px; font-weight: 900;
             font-family: Georgia, serif; font-style: italic;
             color: white; line-height: 1; pointer-events: none;
-        }
-        .panneau-marker.in-range {
-            background: linear-gradient(135deg, #B45309, #D97706);
-            box-shadow: 0 3px 18px rgba(217,119,6,0.9);
-            animation: panneauPulse 1.4s ease-in-out infinite;
         }
         @keyframes panneauPulse {
             0%,100% { box-shadow: 0 3px 18px rgba(217,119,6,0.9); }
@@ -8956,7 +8956,7 @@
             letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap;
             color: #6A4A1A; background: rgba(250,240,215,0.92);
             border: 1px solid rgba(138,100,40,0.55); border-radius: 10px;
-            padding: 3px 9px; pointer-events: none;
+            padding: 3px 9px; pointer-events: auto; cursor: pointer;   /* ouvre le détail (openPerimetreDetail) */
             box-shadow: 0 1px 6px rgba(0,0,0,0.18);
         }
         /* Jauge de progression du périmètre, glissée dans le libellé (modèle : badges de quartier).
@@ -9667,8 +9667,6 @@
 
         /* Points d'intérêt : plus de petit bouton « TAP » */
         .tap-prompt, .interactable-tap-badge { display: none !important; }
-        /* Console d'interaction de carte : le seul mot « Interagir » */
-        #nearbyPOI .nearby-poi-header { display: none; }
 
         /* ── Cristallisation de la nébuleuse (d'après l'artefact de référence) ── */
         .ritual-engrave-progress { display: none !important; }
@@ -10153,15 +10151,19 @@
 
         <!-- Controls -->
 
-            <div id="nearbyPOI" class="nearby-poi console-poi console-interactable console--nebuleuse hidden">
+            <!-- Mêmes codes que les consoles de collecte (poussière, orbe…) : icône et
+                 nom à gauche, « À portée de collecte ! » dessous, bouton à droite. -->
+            <div id="nearbyPOI" class="nearby-poi console-poi console-collectable console--nebuleuse hidden">
                 <div class="nearby-poi-header">
-                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                        <div class="nearby-poi-name" id="poiName"></div>
-                        <span id="poiThematicBadge" style="display:none;font-size:10px;font-weight:700;
-                            background:linear-gradient(135deg,#F59E0B,#D97706);color:white;
-                            padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">⋆ Thématique</span>
+                    <div>
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <div class="nearby-poi-name"><img src="./assets/nebuleuse.png" alt="" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> <span id="poiName"></span></div>
+                            <span id="poiThematicBadge" style="display:none;font-size:10px;font-weight:700;
+                                background:linear-gradient(135deg,#F59E0B,#D97706);color:white;
+                                padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">⋆ Thématique</span>
+                        </div>
+                        <div class="nearby-poi-distance">À portée de collecte !</div>
                     </div>
-                    <div class="nearby-poi-distance">À portée de collecte !</div>
                 </div>
                 <button class="collect-btn" id="poiCollectBtn" onclick="collectCard()">Interagir</button>
             </div>
@@ -12292,7 +12294,7 @@
         ];
         // URL /exec du déploiement Apps Script (voir journal_endpoint.gs).
         // Vide : le journal fonctionne en local uniquement, sans erreur.
-        const JOURNAL_ENDPOINT = '';   // TODO : coller l'URL du point de collecte
+        const JOURNAL_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwi67LgKN3Wr6KFlWcBxYEFPlCwHtdKH2ZwjqrRnfjWEUtRvYBL7Wt7T-J0DgJ4aEeW/exec';
         const POSTTEST_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdx04XLix_mq8s4NXQCkZfsBF0LHTMIVaQLG7kXTu8_9EesAg/viewform';
 
         // Table FR → EN. La clé est la chaîne française EXACTE (après trim).
@@ -12853,6 +12855,13 @@
             "Rien n'a encore été dessiné ici. Le cadre en garde la place.": "Nothing has been drawn here yet. The frame keeps its place.",
             // ══════════ PÉRIMÈTRE DU TEST (test.html) ══════════
             "Zone du test": "Test area",
+            // Détail de la zone du test (openPerimetreDetail)
+            "Cartes collectées": "Cards collected",
+            "Lieux visités": "Places visited",
+            "Ressources ramassées": "Resources gathered",
+            "Pages de carnet": "Notebook pages",
+            "Marche aujourd'hui": "Walked today",
+            "Panoramas, points d’information et échoppe comptent comme lieux visités. La marche ne compte pas dans le pourcentage.": "Panoramas, information points and the stall count as places visited. Walking does not count towards the percentage.",
             "hors zone du jour": "outside today's area",
             "Une nouvelle version est disponible.": "A new version is available.",
             "Recharger": "Reload",
@@ -12929,6 +12938,7 @@
             "Il y a quelque chose là-bas. Pas un lieu, pas un monument — quelque chose de plus discret. Approche-toi.": "There's something over there. Not a place, not a monument — something quieter. Come closer.",
             "✦ Un fragment t'attend ici": "✦ A fragment is waiting for you here",
             "Interagir": "Interact",
+            "Nébuleuse": "Nebula",
 
             // ── Découverte de la nébuleuse (répliques à mots-clés colorés) ──
             [`Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> flottent à l'intérieur. Approche-toi — ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span>.`]:
@@ -15032,6 +15042,8 @@
             const el = document.createElement('div');
             el.className = 'perimetre-libelle';
             el.textContent = T('Zone du test');
+            // Toucher le libellé ouvre le détail de la progression (cf. openPerimetreDetail).
+            el.addEventListener('click', ev => { ev.stopPropagation(); openPerimetreDetail(); });
             _perimetreLibelle = new maplibregl.Marker({ element: el, anchor: 'bottom' })
                 .setLngLat([4.8306, 45.7658]).addTo(map);
         }
@@ -15185,6 +15197,45 @@
             });
             showToast('📏 Périmètre ' + d.pct + ' % · ' + d.cartes + ' cartes · ' + d.visites + ' visites · '
                 + d.ressources + ' ressources · ' + d.entrees + ' entrées');
+        }
+
+        // Détail de la progression du périmètre, au toucher du libellé « Zone du test ».
+        // Même panneau que les badges de quartier (zoneDetailPanel). La marche du jour
+        // est donnée à titre indicatif : elle ne pèse pas dans le pourcentage.
+        function openPerimetreDetail() {
+            if (document.body.classList.contains('ui-masque-jumelles')) return;   // jauge pas encore révélée
+            const vn = document.getElementById('vnOverlay');
+            if (vn && vn.classList.contains('show')) return;
+            if (jaugePerimetreMaj() === null) return;
+            const d = jaugePerimetreDetail();
+            const inv = _jaugeInv();
+            const entreesMax = inv.cartes.reduce((s, id) => s + inv.entrees[id], 0);
+            _injectZoneDetailCSS();
+            let panel = document.getElementById('zoneDetailPanel');
+            if (!panel) {
+                panel = document.createElement('div');
+                panel.id = 'zoneDetailPanel';
+                panel.addEventListener('click', e => { if (e.target === panel) closeZoneDetail(); });
+                document.body.appendChild(panel);
+            }
+            const m = Math.round((playerStats && playerStats.distance_today) || 0);
+            const marche = m >= 1000 ? (m / 1000).toFixed(1).replace('.', ',') + ' km' : m + ' m';
+            const row = (label, val) => '<div class="zd-row"><span>' + T(label) + '</span><span>' + val + '</span></div>';
+            panel.innerHTML =
+                '<div class="zd-card">'
+              + '<button class="zd-close" onclick="closeZoneDetail()">✕</button>'
+              + '<div class="zd-title">' + T('Zone du test') + '</div>'
+              + '<div class="zd-pct">' + d.pct + '%</div>'
+              + '<div class="zd-bar"><div class="zd-bar-fill" style="width:' + d.pct + '%"></div></div>'
+              + row('Cartes collectées', d.cartes + '/' + inv.cartes.length)
+              + row('Lieux visités', d.visites + '/' + inv.visites.length)
+              + row('Ressources ramassées', d.ressources + '/' + inv.ressources.length)
+              + row('Pages de carnet', d.entrees + '/' + entreesMax)
+              + row("Marche aujourd'hui", marche)
+              + '<div style="margin-top:10px;font-size:11px;opacity:0.7;text-align:center;">' + T('Panoramas, points d’information et échoppe comptent comme lieux visités. La marche ne compte pas dans le pourcentage.') + '</div>'
+              + '</div>';
+            panel.classList.add('show');
+            if (typeof journalLog === 'function') journalLog('perimeter_detail', { pct: d.pct });
         }
 
         const _PERIMETRE_COUCHES = ['perimeter-fill', 'perimeter-halo', 'perimeter-casing', 'perimeter-line'];
@@ -16328,8 +16379,24 @@
         // Nombre de visuels débloqués : un visuel l'est si son index ≤ niveau courant.
         // 0 si la carte n'a pas de visuels multiples (→ pas de rangée du tout).
         function _otVisualCount(card) {
-            if (!card || !Array.isArray(card.artByLevel)) return 0;
-            return Math.min(card.artByLevel.length, _otCardLevel(card) + 1);
+            if (!card) return 0;
+            const total = Array.isArray(card.artByLevel) ? card.artByLevel.length : OT_NIVEAUX_AUTO;
+            return Math.min(total, _otCardLevel(card) + 1);
+        }
+
+        // ── Trois niveaux pour toutes les cartes (demande de David, 14/10) ──
+        // Une carte sans `artByLevel` reçoit trois états automatiques de son visuel
+        // unique (illustration ou, à défaut, emoji) : voilé, à moitié, net. Ils se
+        // débloquent comme les visuels des clefs de la ville (même rangée de
+        // pastilles). Déclarer `artByLevel` sur la carte les remplace par ses images.
+        const OT_NIVEAUX_AUTO = 3;
+        function _otNiveauxAuto(card) { return !!card && !Array.isArray(card.artByLevel); }
+        // Pose l'état idx sur l'illustration de la fiche (classe .ot-auto-N, cf. CSS).
+        function _otAppliquerEtatAuto(card, idx) {
+            const holder = document.getElementById('cardArtContainer');
+            if (!holder) return;
+            for (let i = 0; i < OT_NIVEAUX_AUTO; i++) holder.classList.remove('ot-auto-' + i);
+            if (_otNiveauxAuto(card)) holder.classList.add('ot-auto-' + Math.max(0, Math.min(OT_NIVEAUX_AUTO - 1, idx)));
         }
         let _obDone        = false;
         let _villeDuLivreUnlocked = false;  // true quand le rendez-vous Bellecour est validé → POI du parcours visibles
@@ -16543,22 +16610,27 @@
             return f.length ? f : [{ id: '_empty', icon: '🎒', name: 'Sac vide', sub: 'Ramasse des ressources en explorant la ville',
                 qty: 0, empty: true, desc: "Ton sac ne contient encore rien. Ce que tu trouves en chemin s'y range." }];
         }
-        // Appelée en tête de saveProgress : note les objets possédés et, la toute
-        // première fois qu'un objet entre dans le sac, fait pulser le bouton Sac
-        // (une seule fois, sauvegardé). Silencieuse si le tutoriel est déjà fini.
+        // Appelée en tête de saveProgress : note les objets possédés et, chaque
+        // fois qu'un type d'objet entre dans le sac pour la première fois, fait
+        // pulser le bouton Sac (registre _sacVus, sauvegardé). Tutoriel fini ou non.
         // Les lumens ne sont plus dans le sac : seul un vrai objet (orbe,
         // fourniture, écho…) déclenche la pulsation.
         function _sacVerifierEntree() {
             if (typeof BAG_CATS === 'undefined') return;
-            let total = 0;
+            let nouveau = false;
             try {
                 BAG_CATS.forEach(cat => cat.getItems().forEach(it => {
-                    if (!it.empty && it.id !== '_empty' && (it.qty || 0) > 0) { _sacVus[it.id] = true; total += it.qty; }
+                    if (it.empty || it.id === '_empty' || !((it.qty || 0) > 0)) return;
+                    // Plaques et boussoles : un identifiant par exemplaire, le type est la catégorie.
+                    const type = (cat.id === 'plaques' || cat.id === 'boussoles') ? 'cat_' + cat.id : it.id;
+                    if (!_sacVus[type]) nouveau = true;
+                    _sacVus[type] = true;
+                    _sacVus[it.id] = true;
                 }));
             } catch (e) { return; }
-            if (total > 0 && !_sacPulseFait) {
+            if (nouveau) {
                 _sacPulseFait = true;
-                if (!_obDone) setTimeout(() => uiPulser('#btnBag'), 60);
+                setTimeout(() => uiPulser('#btnBag'), 60);
             }
         }
 
@@ -21038,6 +21110,10 @@
         }
         // À sa gauche et un peu en retrait à l'écran, ramenée à 14 m au plus.
         function _claraPnjMaj() {
+            // Clara n'intervient pas sur la mappe : plus de médaillon (demande de
+            // David, 14/10). Code gardé en sommeil ; retirer ce retour pour la remettre.
+            if (_claraMarqueur) { try { _claraMarqueur.remove(); } catch (e) {} _claraMarqueur = null; }
+            return;
             if (!_tutoEtat || !_tutoEtat.clara || !playerPos || typeof map === 'undefined' || !map
                 || typeof maplibregl === 'undefined') return;
             if (!_claraMarqueur) { try { _claraPnjCreer(); } catch (e) { return; } }
@@ -22365,7 +22441,7 @@
                 return;
             }
             try {
-                // Premier objet entré dans le sac : pulsation unique (cf. _sacVerifierEntree)
+                // Nouveau type d’objet dans le sac : pulsation (cf. _sacVerifierEntree)
                 if (typeof _sacVerifierEntree === 'function') _sacVerifierEntree();
                 // Ne jamais rétrograder _obDone de true à false
                 const _existingRaw = localStorage.getItem('lyon_cards_progress');
@@ -25305,7 +25381,7 @@
                 const showConsole = _shouldShowPoiConsole('poi', nearbyPoi.id) && !_screenBlocked;
                 if (status === 'local') {
                     currentNearbyPOI = nearbyPoi;
-                    document.getElementById('poiName').textContent = 'Interagir';   // plus le nom interne du POI
+                    document.getElementById('poiName').textContent = T('Nébuleuse');   // plus le nom interne du POI
                     const btn = nearbyDiv.querySelector('.collect-btn');
                     if (btn) { btn.textContent = 'Interagir'; btn.onclick = collectCard; }   // console réduite au mot « Interagir »
                     const badge = document.getElementById('poiThematicBadge');
@@ -25320,7 +25396,7 @@
                     const state = thematicState[nearbyPoi.id];
                     const allCards = Object.values(COLLECTIONS).flatMap(c => c.cards);
                     const card = allCards.find(c => c.id === state.drawnCardId);
-                    document.getElementById('poiName').textContent = 'Interagir';
+                    document.getElementById('poiName').textContent = T('Nébuleuse');
                     const btn = nearbyDiv.querySelector('.collect-btn');
                     if (btn) { btn.textContent = 'Interagir'; btn.onclick = collectThematicCard; }
                     const badge = document.getElementById('poiThematicBadge');
@@ -28564,7 +28640,8 @@
 
         // Nombre total d'états de la carte (débloqués ou non)
         function _otTlTotal(card) {
-            return (card && Array.isArray(card.artByLevel)) ? card.artByLevel.length : 0;
+            if (!card) return 0;
+            return Array.isArray(card.artByLevel) ? card.artByLevel.length : OT_NIVEAUX_AUTO;
         }
 
         function _otTlBuild(card, opts) {
@@ -28578,6 +28655,7 @@
                 artArea.querySelectorAll('.ot-tl').forEach(el => el.remove());
                 holder.querySelectorAll('.ot-morph').forEach(el => el.remove());
                 _otTlPendingReveal = -1;
+                _otAppliquerEtatAuto(card, 0);
                 return;
             }
 
@@ -28653,6 +28731,8 @@
                 if (opts.morph) _otTlMorph(holder, artImg, src);
                 else { artImg.src = src; artImg.style.opacity = '1'; artImg.style.display = 'block'; }
             }
+            // États automatiques : le changement de classe fait la transition (filtre).
+            _otAppliquerEtatAuto(card, _otTlIndex);
         }
 
         // Tap sur une pastille
@@ -28704,9 +28784,9 @@
         // prochain build. La carte affichée ne change pas — c'est au joueur d'aller
         // voir ce qui vient d'apparaître.
         function _otTlOnLevelUp(card, levelBefore) {
-            if (!card || !Array.isArray(card.artByLevel)) return;
+            if (!card) return;
             const newIdx = levelBefore + 1;
-            if (newIdx < card.artByLevel.length) _otTlPendingReveal = newIdx;
+            if (newIdx < _otTlTotal(card)) _otTlPendingReveal = newIdx;
         }
 
         function openCardDetail(card) {
@@ -28733,6 +28813,7 @@
                 if (artSrc) { artImg.src = artSrc; artImg.style.opacity = '1'; artImg.style.display = 'block'; artEmoji.style.display = 'none'; }
                 else { artImg.style.display = 'none'; artEmoji.style.display = 'block'; }
             }
+            _otAppliquerEtatAuto(card, _otIdx);   // états automatiques, sans flash
             const typeIcon = {
                 'Personnage': '👤',
                 'Objet': '⚙️',
@@ -29759,6 +29840,12 @@
             updateCardLevelDisplay();
             saveProgress();
 
+            // Première carte vidée : orbe verrouillée jusqu'à la fin de la réplique
+            // qui l'explique (les joueurs enchaînent les clics, cf. _orbeVerrouiller).
+            if (getCardEnergyState(selectedCard.id).value <= 0 && !_obDiscovered.energie && (bagInv.orbes || 0) > 0) {
+                _orbeVerrouiller();
+            }
+
             // ── Accroches parcours guidé (carte tuto) ──
             if (typeof _obGuide === 'object' && _obGuide.active && _obEstCarteGuide(selectedCard.id)) {
                 const _needed = getExpNeeded(selectedCard, cl.level);
@@ -29773,9 +29860,29 @@
             }
         }
 
+        // Verrou de l'orbe à la première carte vidée : posé dès que la jauge tombe
+        // à zéro, levé 0,5 s après la fermeture du dialogue de la jeune fille. Si
+        // aucun dialogue ne s'ouvre dans les 3 s (découverte muette), il se lève seul.
+        let _orbeVerrou = false;
+        function _orbeVerrouiller() {
+            if (_orbeVerrou) return;
+            _orbeVerrou = true;
+            const t0 = Date.now();
+            let vu = false;
+            const id = setInterval(() => {
+                const vn = document.getElementById('vnOverlay');
+                if (vn && vn.classList.contains('show')) { vu = true; return; }
+                if (vu || Date.now() - t0 > 3000) {
+                    clearInterval(id);
+                    setTimeout(() => { _orbeVerrou = false; }, 500);
+                }
+            }, 150);
+        }
+
         // Utiliser une orbe pour restaurer l'énergie de la carte sélectionnée
         function useOrbOnCard() {
             if (!selectedCard) return;
+            if (_orbeVerrou) return;   // dialogue de la carte vidée pas encore refermé
             if (!bagInv.orbes || bagInv.orbes <= 0) {
                 showToast('Aucune orbe disponible');
                 return;
@@ -35478,7 +35585,48 @@
                 if (state.progress >= a.goal) { state.unlocked = true; awardXP(a.xpReward); showAchievementToast(a); }
             });
         }
+        // ── Succès différés ──
+        // Un succès débloqué par une action (collecte, passage de niveau, Explorium…)
+        // attend que tout ce que cette action déclenche soit fini : dialogue, rituel,
+        // overlays, animations. Sa console ne paraît qu'après 1 s de calme continu,
+        // une à la fois. Les animations infinies (pulsations, lueurs) ne comptent pas.
+        const _SUCCES_CALME_MS = 1000;
+        const _SUCCES_OVERLAYS = '#vnOverlay, #levelupOverlay, #orbSynthOverlay, #lootRevealOverlay, .ritual-overlay';
+        let _succesFile = [];
+        let _succesBoucle = null;
+        const _SUCCES_ANIM_MAX_MS = 12000;   // au-delà, une animation seule ne retient plus
+        let _succesAttenteDepuis = 0;
+        function _succesOccupe() {
+            const ouvert = Array.from(document.querySelectorAll(_SUCCES_OVERLAYS)).some(el => {
+                const cs = getComputedStyle(el);
+                return cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity) > 0.05;
+            });
+            if (ouvert || document.getElementById('achieveToast')) return true;
+            if (typeof _viewTransition !== 'undefined' && _viewTransition) return true;
+            if (typeof document.getAnimations !== 'function') return false;
+            if (Date.now() - _succesAttenteDepuis > _SUCCES_ANIM_MAX_MS) return false;
+            return document.getAnimations().some(an => {
+                if (an.playState !== 'running' || !an.effect) return false;
+                const t = an.effect.getTiming ? an.effect.getTiming() : {};
+                return t.iterations !== Infinity;
+            });
+        }
         function showAchievementToast(a) {
+            _succesFile.push(a);
+            if (_succesBoucle) return;
+            _succesAttenteDepuis = Date.now();
+            let calmeDepuis = 0;
+            _succesBoucle = setInterval(() => {
+                if (document.hidden || _succesOccupe()) { calmeDepuis = 0; return; }
+                if (!calmeDepuis) { calmeDepuis = Date.now(); return; }
+                if (Date.now() - calmeDepuis < _SUCCES_CALME_MS) return;
+                _afficherToastSucces(_succesFile.shift());
+                calmeDepuis = 0;
+                _succesAttenteDepuis = Date.now();
+                if (!_succesFile.length) { clearInterval(_succesBoucle); _succesBoucle = null; }
+            }, 200);
+        }
+        function _afficherToastSucces(a) {
             const ex = document.getElementById('achieveToast');
             if (ex) ex.remove();
             const t = document.createElement('div');
