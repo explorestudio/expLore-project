@@ -16488,22 +16488,15 @@
         // miniature, entrée du carnet, bouton rond…) pulsent elles-mêmes.
         function _uiPulseVisuel(el) {
             if (!el || !el.matches) return el;
-            let v = null;
-            if (el.matches('.action-bar-btn, .alb-back, .journal-screen-back')) v = el.querySelector(':scope > svg');
-            else if (el.matches('.card-carnet-btn')) v = el.querySelector('.card-carnet-icon');
-            else if (el.matches('.avatar-menu-item')) v = el.querySelector(':scope > span');
-            return v || el;
+            // Décision de David : c'est le BOUTON lui-même qui pulse (comme en vue
+            // planification), pas une icône isolée à l'intérieur du bouton.
+            return el;
         }
         function uiPulser(el, opts) {
             opts = opts || {};
             if (typeof el === 'string') el = document.querySelector(el);
             if (!el) return null;
             const v = _uiPulseVisuel(el);
-            // Les grandes cibles (bouton de dose, entrée du carnet) pulsent plus discrètement.
-            if (!v.style.getPropertyValue('--ob-pulse-scale')) {
-                const r = v.getBoundingClientRect();
-                if (Math.max(r.width, r.height) > 90) v.style.setProperty('--ob-pulse-scale', '1.05');
-            }
             v.classList.add('ui-pulse');
             if (!opts.garder) el.addEventListener('pointerdown', () => uiArreterPulse(el), { once: true });
             if (opts.pulseMs > 0) setTimeout(() => uiArreterPulse(el), opts.pulseMs);
@@ -19877,11 +19870,18 @@
             // rectangle pour les cibles qui ne contiennent aucun élément pulsant
             // et pour les interfaces simplement laissées visibles.
             const visuels = [..._gf.pulses].map(_uiPulseVisuel);
-            const polys = visuels.map(v => _gfQuad(v, _GF_MARGE_PULSE)).filter(Boolean);
             const rcSansPulse = cibles.filter(el => !visuels.some(v => el === v || el.contains(v)))
                 .map(_gfRect).filter(Boolean);
             const rv = _gfElements(_gfListe(_gf.visibles)).map(_gfRect).filter(Boolean);
-            voile.style.clipPath = _gfDecoupe(_gfFusion(rcSansPulse.concat(rv)), polys);
+            const rects = rcSansPulse.concat(rv);
+            // Un élément qui pulse DANS une interface laissée visible (bouton de
+            // dose dans le panneau de la fiche) n'a pas de trou propre : la zone
+            // visible le découvre déjà, et en evenodd un second trou y reboucherait
+            // l'intersection. Seuls les éléments isolés ont un trou à leur contour.
+            const dans = (v) => { const b = v.getBoundingClientRect();
+                return rects.some(r => b.left < r.right && r.left < b.right && b.top < r.bottom && r.top < b.bottom); };
+            const polys = visuels.filter(v => !dans(v)).map(v => _gfQuad(v, _GF_MARGE_PULSE)).filter(Boolean);
+            voile.style.clipPath = _gfDecoupe(_gfFusion(rects), polys);
             bloq.style.clipPath  = _gfDecoupe(_gfFusion(rc));
         }
         function guideFocus(cibles, opts) {
