@@ -12294,7 +12294,7 @@
         ];
         // URL /exec du déploiement Apps Script (voir journal_endpoint.gs).
         // Vide : le journal fonctionne en local uniquement, sans erreur.
-        const JOURNAL_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwi67LgKN3Wr6KFlWcBxYEFPlCwHtdKH2ZwjqrRnfjWEUtRvYBL7Wt7T-J0DgJ4aEeW/exec';
+        const JOURNAL_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzZ5-lVgLq4Q_lToes1Zq7KlSSsCKDuGjeX8dZbWYMC-8RerPooTmDGN1fAXauBDpC6/exec';
         const POSTTEST_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdx04XLix_mq8s4NXQCkZfsBF0LHTMIVaQLG7kXTu8_9EesAg/viewform';
 
         // Table FR → EN. La clé est la chaîne française EXACTE (après trim).
@@ -14495,6 +14495,9 @@
             if (_accesMode === 'entree') {
                 if (!_acces) _acces = {};
                 const premiere = !_acces.t0;
+                // Nouvelle session (première saisie, ou saisie après une session close) :
+                // nouvel identifiant. Une simple réouverture de l'app le conserve.
+                if (premiere || _acces.sessionClosed || !journalSessionId()) _jrnNouvelleSession();
                 _acces.code = code;
                 if (premiere) _acces.t0 = Date.now();
                 _acces.team = (code === TEST_CODE_EQUIPE);
@@ -14607,14 +14610,54 @@
             _jrnPersister();
         }
 
+        // ── Identifiant de session (brief « journal lisible », lot A) ──
+        // 8 caractères aléatoires, en localStorage sous `sessionId`. Créé à chaque
+        // saisie de code qui ouvre une session (cf. codeAccesValider), conservé tant
+        // que l'app est seulement fermée puis rouverte. Effacé avec le reste par un reset.
+        const JOURNAL_SESSION_KEY = 'sessionId';
+        function journalSessionId() {
+            try { return localStorage.getItem(JOURNAL_SESSION_KEY) || ''; } catch (e) { return ''; }
+        }
+        function _jrnNouvelleSession() {
+            const abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+            let id = '';
+            try {
+                const r = new Uint32Array(8);
+                crypto.getRandomValues(r);
+                r.forEach(n => { id += abc[n % abc.length]; });
+            } catch (e) {
+                for (let i = 0; i < 8; i++) id += abc[Math.floor(Math.random() * abc.length)];
+            }
+            try { localStorage.setItem(JOURNAL_SESSION_KEY, id); } catch (e) {}
+            return id;
+        }
+        // Plateforme et navigateur, en clair et sans le user agent complet.
+        function _jrnPlateforme() {
+            const ua = navigator.userAgent || '';
+            if (/Android/i.test(ua)) return 'Android';
+            if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'iPhone';
+            return 'Ordinateur';
+        }
+        function _jrnNavigateur() {
+            const ua = navigator.userAgent || '';
+            if (/Firefox|FxiOS/.test(ua)) return 'Firefox';
+            if (/Edg\/|EdgiOS|EdgA|OPR\/|Opera|SamsungBrowser/.test(ua)) return 'Autre';
+            if (/Chrome|CriOS/.test(ua)) return 'Chrome';
+            if (/Safari/.test(ua)) return 'Safari';
+            return 'Autre';
+        }
+
         // Corps envoyé : le code est lu au moment de l'envoi, donc les événements
         // d'avant la saisie (app_open) partent avec lui.
         function _jrnCorps(events) {
             const a = _acces || _accesLire() || {};
             return JSON.stringify({
+                session_id: journalSessionId(),
                 code: a.code || '',
                 team: !!a.team,
                 t0: a.t0 ? new Date(a.t0).toISOString() : '',
+                plateforme: _jrnPlateforme(),
+                navigateur: _jrnNavigateur(),
                 app_version: ((document.getElementById('hudVersion') || {}).textContent || '').trim(),
                 user_agent: navigator.userAgent,
                 events
@@ -15125,7 +15168,11 @@
                 ...Object.values(POI_KIND_ARRAYS).flatMap(get => { try { return get() || []; } catch (e) { return []; } })
             ]);
             inv.ressources.forEach(id => {
-                if (!_jaugeVus.ressources[id] && ramasses.has(id)) { _jaugeVus.ressources[id] = Date.now(); neuf = true; }
+                if (!_jaugeVus.ressources[id] && ramasses.has(id)) {
+                    _jaugeVus.ressources[id] = Date.now(); neuf = true;
+                    // Compteur « ressources ramassées » de l'onglet sessions du Sheet
+                    if (typeof journalLog === 'function') journalLog('resource_collected', { ressource: id });
+                }
             });
             const echoppeOuverte = (() => {
                 const el = document.getElementById('bazarScreen');
