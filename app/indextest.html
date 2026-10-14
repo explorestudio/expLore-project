@@ -8907,8 +8907,8 @@
             #v2MediasLayer > g.expl-arr-on > .expl-arr-in { animation: explArrFondu 0.4s ease both; }
         }
 
-        /* Voix mémorielle : l'image est peinte sur fond noir — fondue dans la scène */
-        #vnBust[src*="voix_memorielle"] { mix-blend-mode: screen; }
+        /* Voix mémorielle : l'image est détourée (fond transparent) — pas de
+           mix-blend-mode, qui délaverait ses violets sombres. */
 
         /* Icône d'objet dans une réplique du visual novel (cf. VN_MOTS_CLES).
            Porte aussi .vn-ch : l'écriture progressive la révèle à sa place. */
@@ -9608,6 +9608,17 @@
         /* Pulsation propre à uiPulser : le guide du tutoriel retire toutes les
            .ob-guide-pulse d'un coup, il ne doit pas éteindre celles-ci. */
         .ui-pulse { animation: obGuidePulse 1.3s ease-in-out infinite !important; }
+        /* Règle de David : une pulsation ne coïncide jamais à l'écran avec une
+           bulle de dialogue. Tant que le visual novel est ouvert (body.vn-ouvert,
+           posé par l'observateur de #vnOverlay), toutes les pulsations de guidage
+           sont figées ; elles reprennent dès la fermeture de la bulle. */
+        body.vn-ouvert .ob-guide-pulse,
+        body.vn-ouvert .ui-pulse,
+        body.vn-ouvert .ob-exit-hint-arrow,
+        body.vn-ouvert .card-carnet-btn.has-new,
+        body.vn-ouvert .card-carnet-btn.has-new .card-carnet-icon,
+        body.vn-ouvert #obTutorialMarker > div,
+        body.vn-ouvert #obHighlightRing { animation: none !important; }
         /* Mode guidé (guideFocus) : voile sombre découpé autour des interfaces
            laissées claires, bloqueur transparent découpé autour des seules
            cibles cliquables. Sous le visual novel (9100), au-dessus des écrans. */
@@ -21230,6 +21241,16 @@
         let _vnIdx    = 0;
         let _vnOnDone = null;
         let _vnDernierBust = null;   // rect du portrait à la fermeture du dernier dialogue
+
+        // body.vn-ouvert suit l'état de #vnOverlay, quel que soit le chemin qui
+        // l'ouvre ou le ferme : il fige les pulsations de guidage (cf. CSS).
+        (function () {
+            const vn = document.getElementById('vnOverlay');
+            if (!vn) return;
+            const maj = () => document.body.classList.toggle('vn-ouvert', vn.classList.contains('show'));
+            new MutationObserver(maj).observe(vn, { attributes: true, attributeFilter: ['class'] });
+            maj();
+        })();
 
         function vnShow(lines, onDone) {
             _vnQueue  = lines;
