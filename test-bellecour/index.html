@@ -294,7 +294,7 @@ section.bloc { margin-top: 46px; }
    en fond CSS, le recouvre si le fichier existe. Fichier absent = rien de cassé. */
 .capture {
   position: relative;
-  margin-top: 12px;
+  margin: 12px auto 0;   /* centrée sous le texte de l'étape */
   width: 150px;
   aspect-ratio: 9 / 19.5;
   border: 1px dashed rgba(240,236,226,0.22);
@@ -343,6 +343,9 @@ section.bloc { margin-top: 46px; }
 .btn-discord:hover { border-color: #5865F2; background: rgba(88,101,242,0.1); }
 .btn-ico { width: 18px; height: 18px; margin-right: 11px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; }
 .btn-discord .btn-ico { color: #5865F2; fill: currentColor; stroke: none; }
+.btn-instagram { color: var(--text); border: 1px solid rgba(225,48,108,0.55); }
+.btn-instagram:hover { border-color: #E1306C; background: rgba(225,48,108,0.1); }
+.btn-instagram .btn-ico { color: #E1306C; }
 .mail-ecrit { text-align: center; font-family: var(--mono); font-size: 13px; color: var(--text-faint); word-break: break-all; }
 
 /* ---------- Pied de page ---------- */
@@ -433,6 +436,10 @@ section.bloc { margin-top: 46px; }
         <dt>Après, pour ceux qui veulent</dt>
         <dd>Les Petits Joueurs<br><small>Rue Saint-Georges</small></dd>
       </div>
+      <div>
+        <dt>Participation</dt>
+        <dd>Gratuite</dd>
+      </div>
     </dl>
   </section>
 
@@ -440,24 +447,11 @@ section.bloc { margin-top: 46px; }
     <a class="btn btn-primary" href="#installer">Comment installer</a>
   </div>
 
-  <!-- Ce que c'est -->
-  <section class="bloc" aria-labelledby="t-quoi">
-    <h2 id="t-quoi"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>Ce que c'est</h2>
-    <p>ExpLore est un jeu d'exploration de Lyon, sur téléphone. Des cartes sont cachées dans la ville : tu marches, tu les trouves, tu les collectionnes, et chacune te raconte un morceau de l'histoire des lieux.</p>
-    <p>Ce samedi, c'est une <strong>avant-première</strong>, pas le jeu fini. Certaines choses marcheront bien, d'autres coinceront. C'est justement ce qu'on veut voir.</p>
-    <p>La participation est <strong>gratuite et bénévole</strong>. Tes retours décident de la suite du jeu.</p>
-  </section>
-
   <!-- Installer l'application -->
   <section class="bloc" id="installer" aria-labelledby="t-installer">
-    <h2 id="t-installer"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>Installer l'application</h2>
+    <h2 id="t-installer">Installer l'application</h2>
     <p>Pas de store : l'application s'installe <strong>depuis le navigateur</strong>, en ajoutant le site à l'écran d'accueil. Ça prend deux minutes. <strong>Fais-le avant de venir</strong> si tu peux. Sinon, on le fait ensemble au départ.</p>
     <p>Sur place, on te donne aussi ton <strong>code d'accès</strong>. Il n'est pas sur cette page, c'est normal.</p>
-
-    <div class="note">
-      <strong>Tu lis ceci depuis Discord, un mail ou Knockk ?</strong>
-      L'installation ne marche pas dans leur navigateur intégré. Ouvre d'abord cette page dans <strong>Chrome</strong> (Android) ou <strong>Safari</strong> (iPhone) : menu ⋮ ou ⋯, puis « Ouvrir dans le navigateur ».
-    </div>
 
     <div class="cta">
       <a class="btn btn-primary" href="https://explorestudio.github.io/expLore-project/app/test.html" target="_blank" rel="noopener" aria-label="Ouvrir l'application ExpLore Test, nouvel onglet">Ouvrir l'application</a>
@@ -483,8 +477,8 @@ section.bloc { margin-top: 46px; }
           <div class="capture" role="img" aria-label="Capture : le menu de Chrome ouvert"><span>Capture à venir</span><i style="background-image:url('./assets/android_2.jpg')"></i></div>
         </figure></li>
         <li><figure>
-          <figcaption>Choisis <em>Installer l'application</em> ou <em>Ajouter à l'écran d'accueil</em>.</figcaption>
-          <div class="capture" role="img" aria-label="Capture : l'option Installer l'application dans le menu"><span>Capture à venir</span><i style="background-image:url('./assets/android_3.jpg')"></i></div>
+          <figcaption>Fais défiler le menu et choisis <em>Installer et créer un raccourci</em>, puis <em>Installer</em>. Selon ton téléphone, l'option peut s'appeler <em>Installer l'application</em> ou <em>Ajouter à l'écran d'accueil</em>.</figcaption>
+          <div class="capture" role="img" aria-label="Capture : le choix Installer, après Installer et créer un raccourci"><span>Capture à venir</span><i style="background-image:url('./assets/android_3.jpg')"></i></div>
         </figure></li>
         <li><figure>
           <figcaption>Confirme avec <em>Installer</em>.</figcaption>
@@ -495,7 +489,7 @@ section.bloc { margin-top: 46px; }
           <div class="capture" role="img" aria-label="Capture : l'icône ExpLore Test sur l'écran d'accueil"><span>Capture à venir</span><i style="background-image:url('./assets/android_5.jpg')"></i></div>
         </figure></li>
         <li><figure>
-          <figcaption>Autorise la localisation : le jeu a besoin de ta position pour savoir où tu marches. Au premier lancement, ton téléphone te la demande. Choisis <em>« Lorsque vous utilisez l'appli »</em>, et laisse la position exacte activée. Vérifie aussi que la localisation du téléphone est allumée.</figcaption>
+          <figcaption>Autorise la localisation : le jeu a besoin de ta position pour savoir où tu marches. Au premier lancement, ton téléphone te la demande. Choisis <em>Exacte</em>, puis <em>Autoriser pendant la visite du site</em> (ou <em>Lorsque vous utilisez l'appli</em>, selon ton téléphone). Évite <em>Autoriser cette fois-ci</em> : la question reviendrait à chaque lancement. Vérifie aussi que la localisation du téléphone est allumée.</figcaption>
           <div class="capture" role="img" aria-label="Capture : la demande d'autorisation de localisation"><span>Capture à venir</span><i style="background-image:url('./assets/android_6.jpg')"></i></div>
         </figure></li>
       </ol>
@@ -539,7 +533,7 @@ section.bloc { margin-top: 46px; }
 
   <!-- À prévoir -->
   <section class="bloc" aria-labelledby="t-prevoir">
-    <h2 id="t-prevoir"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>À prévoir</h2>
+    <h2 id="t-prevoir">À prévoir</h2>
     <ul class="liste">
       <li>Ton téléphone <strong>bien chargé</strong>. Une batterie externe si tu en as une.</li>
       <li>Les <strong>données mobiles</strong> activées.</li>
@@ -551,7 +545,7 @@ section.bloc { margin-top: 46px; }
 
   <!-- Le déroulé -->
   <section class="bloc" aria-labelledby="t-deroule">
-    <h2 id="t-deroule"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>Le déroulé</h2>
+    <h2 id="t-deroule">Le déroulé</h2>
     <ol class="deroule">
       <li><strong>Accueil</strong>On se retrouve devant l'Office du Tourisme. On te remet ta feuille de route.</li>
       <li><strong>Installation</strong>On vérifie que l'application marche, et on te donne ton code d'accès.</li>
@@ -564,15 +558,19 @@ section.bloc { margin-top: 46px; }
 
   <!-- ⚙ En cas de pluie -->
   <section class="bloc" aria-labelledby="t-pluie">
-    <h2 id="t-pluie"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>En cas de pluie</h2>
+    <h2 id="t-pluie">En cas de pluie</h2>
     <p>Pluie légère : on maintient, prends un imperméable. Grosse pluie annoncée : le test est <strong>reporté au samedi 7 novembre, 14h</strong>, même lieu. On te le confirme la veille à 18h sur le Discord et par mail.</p>
   </section>
 
   <!-- Contact -->
   <section class="bloc" aria-labelledby="t-contact">
-    <h2 id="t-contact"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 5.4 4.7 9.2 10.1 10.1C16.7 12 12.9 15.8 12 21.2 11.1 15.8 7.3 12 1.9 11.1 7.3 10.2 11.1 6.4 12 1Z"/></svg>Un souci, une question</h2>
+    <h2 id="t-contact">Un souci, une question</h2>
     <p>Un problème d'installation, un empêchement, une question : écris-nous, ou passe sur le Discord.</p>
     <div class="contacts">
+      <a class="btn btn-instagram" href="https://www.instagram.com/explorestudiofr/" target="_blank" rel="noopener" aria-label="ExpLore sur Instagram, nouvel onglet">
+        <svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.4" cy="6.6" r="1.2" fill="currentColor"/></svg>
+        Instagram
+      </a>
       <a class="btn btn-secondary" href="mailto:explorestudiocontact@gmail.com?subject=Test%20terrain%20Bellecour" aria-label="Nous écrire par mail">Nous écrire</a>
       <a class="btn btn-discord" href="https://discord.gg/dtYbQKjRca" target="_blank" rel="noopener" aria-label="Rejoindre le Discord d'ExpLore, nouvel onglet">
         <svg class="btn-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.3 5.3A16.6 16.6 0 0 0 15.2 4l-.5 1a15.3 15.3 0 0 0-5.4 0l-.5-1a16.6 16.6 0 0 0-4.1 1.3C2.1 9.2 1.4 13 1.8 16.7a16.7 16.7 0 0 0 5 2.5l1.1-1.7a10.8 10.8 0 0 1-1.7-.8l.4-.3a11.9 11.9 0 0 0 10.8 0l.4.3a10.8 10.8 0 0 1-1.7.8l1.1 1.7a16.7 16.7 0 0 0 5-2.5c.5-4.3-.8-8.1-2.9-11.4ZM8.7 14.5c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg>
@@ -590,11 +588,6 @@ section.bloc { margin-top: 46px; }
 
 </main>
 
-<footer class="foot">
-  <a href="../landinghub.html">ExpLore</a>
-  <span class="dot">·</span>
-  <a href="https://www.instagram.com/explorestudiofr/" target="_blank" rel="noopener" aria-label="ExpLore sur Instagram, nouvel onglet">@explorestudiofr</a>
-</footer>
 
 <script>
 // Onglets Android / iPhone : sans JS, les deux blocs restent visibles l'un sous l'autre
