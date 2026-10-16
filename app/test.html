@@ -28061,10 +28061,11 @@
             }
             updatePOIVisibility();
             checkNearbyPOI();
-            // Toast (§3.3) : première capture de carte jamais faite (hors carte tutoriel).
+            // Encadré beige « Elle est là… » (première capture hors carte tutoriel) :
+            // retiré à la demande de David (16/10), il recouvrait l'écran de
+            // cristallisation. showOnboardingToast reste en place, sans appel.
             if (!playerStats._firstCaptureDone && card.id !== 'ob_tutorial_card') {
                 playerStats._firstCaptureDone = true;
-                showOnboardingToast('first_capture');
             }
             // v3 : capture d'une carte-lieu → point-souvenir + maj du % de la zone.
             markVisitedPoint('card', card.id);
