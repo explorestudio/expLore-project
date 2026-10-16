@@ -667,6 +667,10 @@
         .console-collectable {
             display: flex; align-items: center; gap: 12px;
             padding: 12px 12px 12px 18px;
+            /* Lot 3.2 (playtest) : une hauteur unique pour toutes les consoles de
+               collecte, calée sur la poussière (libellés FR sur deux lignes à 390 px,
+               conservés tels quels, cf. brief 3.6). Formes inchangées. */
+            min-height: 84px; box-sizing: border-box;
             background:
                 radial-gradient(130% 160% at 0% 50%, rgba(var(--acc), 0.22), rgba(var(--acc), 0) 62%),
                 linear-gradient(160deg, #1f1832, #120e1c) !important;
@@ -964,10 +968,15 @@
             cursor: pointer;
             transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
         }
-        .alb-type-btn:hover {
-            transform: translateY(-1px);
-            background: rgba(255,255,255,0.14);
+        /* Lot 3.3 : survol réservé aux écrans à pointeur (au doigt, il restait
+           collé au bouton touché et le faisait paraître encore sélectionné). */
+        @media (hover: hover) {
+            .alb-type-btn:hover {
+                transform: translateY(-1px);
+                background: rgba(255,255,255,0.14);
+            }
         }
+        .alb-type-btn--toutes { width: auto; padding: 0 14px; font-size: 13px; font-weight: 700; }
         .alb-type-btn.active {
             background: rgba(255,255,255,0.22);
             border-color: rgba(255,255,255,0.32);
@@ -10468,6 +10477,7 @@
                 <button class="alb-tab"         id="albTab-ville"       onclick="albSwitchTab('ville')">Ville</button>
             </div>
             <div class="alb-type-strip" id="albTypeStrip">
+                <button class="alb-type-btn alb-type-btn--toutes" data-type="" onclick="_albSetCardTypeFilter(null)">Toutes</button>
                 <button class="alb-type-btn" data-type="Personnage" onclick="_albSetCardTypeFilter('Personnage')" title="Personnage">👤</button>
                 <button class="alb-type-btn" data-type="Objet" onclick="_albSetCardTypeFilter('Objet')" title="Objet">⚙️</button>
                 <button class="alb-type-btn" data-type="Lieu" onclick="_albSetCardTypeFilter('Lieu')" title="Lieu">🏛️</button>
@@ -12425,6 +12435,7 @@
             "Ouvrir": "Open",
             "Échoppe vide": "Empty stall",
             "Sac vide": "Empty bag",
+            "Toutes": "All",
             "Ramasse des ressources en explorant la ville": "Pick up resources as you explore the city",
             "Ton sac ne contient encore rien. Ce que tu trouves en chemin s'y range.": "Your bag is still empty. Whatever you find along the way goes in here.",
             "Revenir à ton personnage": "Back to your character",
@@ -16649,11 +16660,17 @@
                 && ((item.qty || 0) > 0 || !!_sacVus[item.id]);
         }
         function _sacCatVisible(cat) {
+            // Lot 3.4 (playtest) : les échos ne sont pas collectables dans le test,
+            // le sac n'en parle pas.
+            if (cat.id === 'echos' && ECHOES_DISABLED) return false;
             try { return cat.getItems().some(_sacItemTrouve); } catch (e) { return true; }
         }
         function _sacPremiereCat() {
             const i = BAG_CATS.findIndex(_sacCatVisible);
-            return i < 0 ? 0 : i;
+            if (i >= 0) return i;
+            // Sac vide : jamais retomber sur les échos (en-tête neutre, cf. _bagList).
+            const j = BAG_CATS.findIndex(c => c.id !== 'echos');
+            return j < 0 ? 0 : j;
         }
         function _sacFiltrerItems(items) {
             const f = (items || []).filter(_sacItemTrouve);
@@ -20418,6 +20435,13 @@
             });
         }
 
+        // Lot 3.1 (playtest) : dans les tunnels des sections 4 à 6, seules les
+        // zones de lecture de la fiche restent claires ; onglets (Carte, Skins,
+        // Général), carnet et « Donner de la poussière », s'ils ne sont pas
+        // l'action attendue, passent sous le voile.
+        const _TUTO_FICHE_LECTURE = ['#cardInfoPanel .card-level-row', '#cardInfoPanel .card-exp-bar',
+            '#cardEnergyRow', '#cardInfoPanel .card-level-reserves'];
+
         // 4 — Première ouverture de la carte. La mappe ne montre plus rien
         // (plus d'« autre carte » depuis le lot 2.1 ; poussière, orbe et
         // échoppe n'arrivent qu'en section 8).
@@ -20426,6 +20450,8 @@
             _tutoAtteindre(4);
             _tutoMajMappe();
             _tutoOuvrirCarteTuto();
+            // Lot 3.1 : tunnel dès la section 4 (assombri pendant la réplique).
+            guideFocus(['#addExpBtn'], { visibles: _TUTO_FICHE_LECTURE, pulse: false });
             _tutoDire('s4', 'carddetail', _TUTO_LIGNES_S4, _tutoSection5);
         }
 
@@ -20437,7 +20463,7 @@
             if (_obDone || _tutoSection > 5) return;
             _tutoAtteindre(5);
             _tutoOuvrirCarteTuto();
-            guideFocus(['#addExpBtn'], { visibles: ['#cardInfoPanel'] });
+            guideFocus(['#addExpBtn'], { visibles: _TUTO_FICHE_LECTURE });
         }
 
         // 6 — Première page inscrite : seul le bouton du carnet reste cliquable.
@@ -20445,7 +20471,7 @@
             if (_obDone || _tutoSection > 6) return;
             _tutoAtteindre(6);
             _tutoOuvrirCarteTuto();
-            guideFocus(['#journalTabBtn'], { visibles: ['#cardInfoPanel'] });
+            guideFocus(['#journalTabBtn'], { visibles: _TUTO_FICHE_LECTURE });
             _tutoDire('s6', 'carddetail', _TUTO_LIGNES_S6);
         }
 
@@ -25929,7 +25955,8 @@
             { weight: 18, give: () => { addFilm(1); return { iconHtml: '🎞️', label: '+1 pellicule' }; } },
             { weight: 18, give: () => { bagInv.encre = (bagInv.encre||0)+1; saveProgress(); return { iconHtml: '🖋️', label: '+1 encre' }; } },
             { weight: 18, give: () => { bagInv.cassettes = (bagInv.cassettes||0)+1; saveProgress(); return { iconHtml: '📼', label: '+1 cassette' }; } },
-            { weight: 8,  give: () => { const types = Object.keys(SUPERTYPES); const t = types[Math.floor(Math.random()*types.length)]; bagInv.echos[t] = (bagInv.echos[t]||0)+1; saveProgress(); return { iconHtml: SUPERTYPES[t].symbol, label: TF('Écho %1', T(SUPERTYPES[t].name)) }; } },
+            // Lot 3.4 : pas d'écho dans le test (poids nul tant que ECHOES_DISABLED).
+            { weight: ECHOES_DISABLED ? 0 : 8,  give: () => { const types = Object.keys(SUPERTYPES); const t = types[Math.floor(Math.random()*types.length)]; bagInv.echos[t] = (bagInv.echos[t]||0)+1; saveProgress(); return { iconHtml: SUPERTYPES[t].symbol, label: TF('Écho %1', T(SUPERTYPES[t].name)) }; } },
             { weight: 5,  give: () => { bagInv.orbes++; saveProgress(); return { iconHtml: '🔮', label: '+1 orbe de mémoire' }; } },
             { weight: 3,  give: () => { bagInv.parchemins.push({ id:'loot_scroll_'+Date.now(), name:'Parchemin', desc:'Trouvé dans un objet mystère.' }); saveProgress(); return { iconHtml: '📜', label: '+1 parchemin' }; } },
         ];
@@ -27326,8 +27353,9 @@
         function _bagList() {
             const cat   = BAG_CATS[_bagCat];
             const items = _sacFiltrerItems(cat.getItems());   // ressources déjà trouvées seulement
-            document.getElementById("bagCatIco").textContent = cat.icon;
-            document.getElementById("bagCatNm").textContent  = cat.label;
+            const neutre = !_sacCatVisible(cat);   // sac vide : en-tête « 🎒 Sac »
+            document.getElementById("bagCatIco").textContent = neutre ? '🎒' : cat.icon;
+            document.getElementById("bagCatNm").textContent  = neutre ? T('Sac') : cat.label;
             document.getElementById("bagCatQt").textContent  = TF('%1 type(s)', items.filter(it => !it.empty).length);
             document.getElementById("bagListEl").innerHTML =
                 "<div class='bag-grp-lbl'>" + (items[0]?.empty ? "Vide" : "En réserve") + "</div>" +
@@ -28350,20 +28378,25 @@
         }
 
         let _albCurrentTab = 'cards';
-        let _albCardTypeFilter = null;
+        // Lot 3.3 (playtest) : filtres cumulables (une carte s'affiche si elle
+        // correspond à l'un d'eux), second tap = désactivation, « Toutes » vide
+        // la sélection et est allumé quand aucun filtre n'est actif.
+        const _albCardTypeFilter = new Set();
 
         function _albUpdateTypeButtons() {
             const buttons = document.querySelectorAll('.alb-type-btn');
             buttons.forEach(btn => {
                 const type = btn.dataset.type;
-                btn.classList.toggle('active', type === _albCardTypeFilter);
+                btn.classList.toggle('active', type ? _albCardTypeFilter.has(type) : _albCardTypeFilter.size === 0);
             });
             const strip = document.getElementById('albTypeStrip');
             if (strip) strip.style.display = _albCurrentTab === 'cards' ? 'flex' : 'none';
         }
 
         function _albSetCardTypeFilter(type) {
-            _albCardTypeFilter = (_albCardTypeFilter === type) ? null : type;
+            if (!type) _albCardTypeFilter.clear();
+            else if (_albCardTypeFilter.has(type)) _albCardTypeFilter.delete(type);
+            else _albCardTypeFilter.add(type);
             _albUpdateTypeButtons();
             _albRenderCards();
         }
@@ -28386,11 +28419,11 @@
             const all = getAllCards();
             // Onglet Cartes = toutes les cartes
             let thematic  = all;
-            if (_albCardTypeFilter) {
-                const typeLower = _albCardTypeFilter.toLowerCase();
+            if (_albCardTypeFilter.size) {
+                const types = [..._albCardTypeFilter].map(t => t.toLowerCase());
                 thematic = thematic.filter(c => {
                     const cardType = (c.type || '').toLowerCase();
-                    return cardType.includes(typeLower);
+                    return types.some(t => cardType.includes(t));
                 });
             }
             const collected = thematic.filter(c => collectedCards.includes(c.id));
