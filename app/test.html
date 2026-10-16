@@ -22727,6 +22727,8 @@
                     _bellecourFinaleJouee,
                     seenCardIds: [..._seenCardIds],
                     v2ConsultedMedias,   // sans elle, tout redevenait « nouveau » au rechargement
+                    v2CartesVues,        // lot 3.7 : cartes vues dans l'Explorium
+                    _vaultEvenement,     // lot 3.7 : pastille d'événement non vue
                     cardJournals,
                     grappeQuestState,
                     grappeBDUnlocked,
@@ -22758,6 +22760,9 @@
                 console.log('[expLore] Sauvegarde chargée — _obDone:', d._obDone, 'cartes:', (d.collectedCards||[]).length, 'poussière:', d.memorialDust);
                 if (d.collectedCards)        collectedCards      = d.collectedCards;
                 if (d.v2ConsultedMedias && typeof d.v2ConsultedMedias === 'object') v2ConsultedMedias = d.v2ConsultedMedias;
+                if (d.v2CartesVues && typeof d.v2CartesVues === 'object') v2CartesVues = d.v2CartesVues;
+                _vaultEvenement = !!d._vaultEvenement;
+                setTimeout(rafraichirPastilleExplorium, 0);
                 if (d.collectedEchoes)       collectedEchoes     = d.collectedEchoes;
                 if (d.collectedDustPoints)   collectedDustPoints = d.collectedDustPoints;
                 if (d.memorialDust != null)  memorialDust        = d.memorialDust;
@@ -39537,15 +39542,28 @@
             document.getElementById('hqcArrow').style.transform = 'rotate(' + displayAngle + 'deg)';
         }
 
+        // Lot 3.7 (playtest) : la pastille de l'Explorium (barre, collection, carnet)
+        // = un événement pas encore vu (étape, lumen, panneau… : éteint à l'entrée)
+        // OU une nouveauté réelle encore présente (média jamais ouvert, carte jamais
+        // consultée dans l'Explorium : éteinte seulement quand tout a été vu).
+        // Tout est sauvegardé : la pastille survit à un redémarrage.
+        let _vaultEvenement = false;
         function showVaultNotification() {
             // Explorium scellé : la pastille est retenue, rendue après la chute du cadenas.
             if (_hubExploriumLocked()) { _hubVaultNotifPending = true; return; }
-            // Affiche tous les dots "nouveau" liés à l'Explorium (action-bar, collections, journal)
-            document.querySelectorAll('.vault-notif-dot').forEach(d => { d.style.display = 'block'; });
+            _vaultEvenement = true;
+            rafraichirPastilleExplorium();
         }
 
         function clearVaultNotification() {
-            document.querySelectorAll('.vault-notif-dot').forEach(d => { d.style.display = 'none'; });
+            _vaultEvenement = false;
+            rafraichirPastilleExplorium();
+        }
+
+        function rafraichirPastilleExplorium() {
+            let on = false;
+            try { on = _exploriumAccessible() && (_vaultEvenement || v2ExploriumANouveau()); } catch (e) {}
+            document.querySelectorAll('.vault-notif-dot').forEach(d => { d.style.display = on ? 'block' : 'none'; });
         }
 
         function openGrappeQuestModal(grappeId) {
@@ -41952,6 +41970,22 @@
         function v2MediaEstNouveau(merged) {
             return v2ConsultedMedias[merged.etape.id] === undefined;
         }
+        // Lot 3.7 : carte obtenue jamais consultée depuis l'Explorium (v2CartesVues).
+        function v2CarteEstNouvelle(cardId) {
+            return !V2_NEW_ACTORS[cardId] && !v2CartesVues[cardId] && v2IsOwned(cardId);
+        }
+        // Nouveautés d'une grappe : médias visibles jamais ouverts + cartes affichées
+        // jamais consultées. Le parent reste signalé tant qu'un enfant n'est pas vu.
+        function v2GrappeNouveautes(gid) {
+            const medias = v2GetAllEtapes().filter(m => m.grappeId === gid
+                && v2MediaIsVisible(m) && v2MediaEstNouveau(m)).length;
+            const cartes = [...v2GetGrappeCardIds(gid)].filter(id => V2_POSITIONS[id] && V2_CARD_META[id]
+                && v2NodeIsVisible(id) && v2CarteEstNouvelle(id)).length;
+            return medias + cartes;
+        }
+        function v2ExploriumANouveau() {
+            return v2GrappesVisibles().some(gid => v2GrappeNouveautes(gid) > 0);
+        }
 
         function v2GetGrappeCardIds(grappeId) {
             const ids = new Set();
@@ -42189,6 +42223,8 @@
         let v2PendingLumens = [];  // [{x, y}] lumens en attente d'animation cinématique
         // Médias consultés : { etapeId: statusAtConsult } — le pulse réapparaît si le statut change
         let v2ConsultedMedias = {};
+        // Cartes obtenues déjà consultées depuis l'Explorium : { cardId: true } (lot 3.7, sauvegardé)
+        let v2CartesVues = {};
 
         // Vérifie si un média mérite l'animation "pulse non consulté".
         // Un média est "non consulté" si :
@@ -42203,6 +42239,7 @@
         function v2MarkMediaConsulted(merged, currentStatus) {
             v2ConsultedMedias[merged.etape.id] = currentStatus;
             if (typeof saveProgress === 'function') saveProgress();
+            rafraichirPastilleExplorium();
         }
 
         // Synchronise les lumens V2 avec le compteur V1.
@@ -42683,6 +42720,16 @@
                     v2OnNodeClick(cardId, owned, illuminated, name, level);
                 });
 
+                // Lot 3.7 : carte obtenue jamais consultée ici → point doré, éteint au premier tap
+                if (!isShadow && v2CarteEstNouvelle(cardId)) {
+                    const pt = document.createElementNS(V2_SVG_NS, 'circle');
+                    pt.setAttribute('cx', 17); pt.setAttribute('cy', -23); pt.setAttribute('r', 5);
+                    pt.setAttribute('fill', '#f0c674');
+                    pt.setAttribute('stroke', '#1a1206'); pt.setAttribute('stroke-width', '1.2');
+                    pt.setAttribute('class', 'v2-media-nouveau v2-carte-nouvelle');
+                    g.appendChild(pt);
+                }
+
                 layer.appendChild(g);
             });
         }
@@ -42881,8 +42928,7 @@
                 if (!grappe.quete?.etapes) return;
                 if (!v2GrappeVisible(gid)) return;   // récit pas encore apparu
                 const etapes = grappe.quete.etapes;
-                const nouveaux = v2GetAllEtapes().filter(m => m.grappeId === gid
-                    && v2MediaIsVisible(m) && v2MediaEstNouveau(m)).length;
+                const nouveaux = v2GrappeNouveautes(gid);   // médias + cartes (lot 3.7)
                 const total = etapes.length;
                 let completed = 0;
                 etapes.forEach(et => {
@@ -42991,6 +43037,13 @@
             // retombait sur la source précédente — fermer une carte ouverte
             // depuis l'Explorium rouvrait le sac.
             _cardDetailSource = 'voutV2';
+            // Lot 3.7 : la carte est vue ; marqueur, compteur de grappe et pastille suivent.
+            if (!v2CartesVues[cardId]) {
+                v2CartesVues[cardId] = true;
+                try { saveProgress(); } catch (e) {}
+                rafraichirPastilleExplorium();
+                try { v2RenderNodes(); v2RenderGrappesStrip(); } catch (e) {}
+            }
             openCardDetail(card);
         }
 
@@ -44245,6 +44298,12 @@
 
             // Focalisation éventuelle : on ouvre au plan large PUIS on zoome.
             if (typeof focusIdx === 'number' && focusIdx >= 0) {
+                // Lot 3.7 : le média sur lequel la verrière s'ouvre est consulté.
+                try {
+                    const et = ((grappe.quete || {}).etapes || [])[focusIdx];
+                    const m = et && v2GetAllEtapes().find(x => x.etape.id === et.id);
+                    if (m) v2MarkMediaConsulted(m, v2GetEtapeStatusV2(m.grappeId, m));
+                } catch (e) {}
                 const i = _verriereIndexDeEtape(grappeId, focusIdx);
                 if (i >= 0) setTimeout(() => verriereTapPanneau(i), 620);
             }
