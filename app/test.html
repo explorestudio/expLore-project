@@ -20062,7 +20062,9 @@
             if (_obDone || _tutoSection > 6) return;
             _tutoAtteindre(6);
             _tutoOuvrirCarteTuto();
-            guideFocus(['#journalTabBtn'], { visibles: _TUTO_FICHE_COLONNE });
+            // Deux actions possibles (David, 16/10) : le carnet (suggéré, il pulse)
+            // et le don de poussière, qui reste actif.
+            guideFocus(['#journalTabBtn', '#addExpBtn'], { visibles: _TUTO_FICHE_COLONNE, pulse: ['#journalTabBtn'] });
             // Le carnet apparaît (et pulse, cf. guideFocus) quand la jeune fille l'a mentionné.
             _tutoDire('s6', 'carddetail', _TUTO_LIGNES_S6, () => uiReveler('carnet'));
         }
