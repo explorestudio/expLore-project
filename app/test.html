@@ -7456,6 +7456,33 @@
             background: rgba(255,255,255,0.1); margin-left: 2px;
         }
         .gq-prereq.met .gq-prereq-level { background: rgba(52,211,153,0.3); color: rgb(180,255,210); }
+        /* Nouveautés de la fiche de grappe (16/10) */
+        .gq-etape--nouveau { box-shadow: inset 3px 0 0 #f0c674; }
+        .gq-etape-nouveau {
+            display: inline-block; margin-left: 8px; padding: 1px 6px; border-radius: 8px;
+            background: #f0c674; color: #1a1206; font-size: 9px; font-weight: 800; letter-spacing: 0.6px;
+            vertical-align: middle; animation: v2NouveauPulse 1.6s ease-in-out infinite;
+        }
+        .gq-prereq--revele { animation: gqPrereqRevele 1.3s ease-out; }
+        @keyframes gqPrereqRevele {
+            0%   { background: rgba(240,198,116,0.35); box-shadow: 0 0 0 0 rgba(240,198,116,0.9); }
+            100% { box-shadow: 0 0 0 10px rgba(240,198,116,0); }
+        }
+        .gq-prereq--revele .gq-prereq-name { animation: gqNomRevele 0.9s ease-out; }
+        @keyframes gqNomRevele { from { opacity: 0; letter-spacing: 0.25em; } to { opacity: 1; } }
+        .gq-cadenas {
+            display: inline-block; overflow: hidden; vertical-align: middle; margin-right: 3px;
+            animation: gqCadenasBrise 1s ease-in 0.35s forwards;
+        }
+        @keyframes gqCadenasBrise {
+            0%   { transform: none; opacity: 1; }
+            20%  { transform: rotate(-14deg); }
+            35%  { transform: rotate(12deg); }
+            50%  { transform: rotate(-8deg) scale(1.15); opacity: 1; }
+            100% { transform: translateY(6px) scale(0.3) rotate(35deg); opacity: 0; width: 0; margin: 0; }
+        }
+        .gq-coche { display: inline-block; margin-left: 3px; opacity: 0; animation: gqCoche 0.4s ease-out 1.25s forwards; }
+        @keyframes gqCoche { from { opacity: 0; transform: scale(0.3); } to { opacity: 1; transform: scale(1); } }
 
         .gq-objectif {
             font-size: 13px; color: rgba(255,230,180,0.95);
@@ -9771,16 +9798,17 @@
             <div style="padding:16px; border-bottom:1px solid rgba(255,255,255,0.08);">
                 <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Délai cartes thématiques</div>
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-                    <input type="range" id="thematicDelaySlider" min="10" max="300" step="10" value="90"
+                    <input type="range" id="thematicDelaySlider" min="10" max="300" step="10" value="300"
                         oninput="updateThematicDelay(this.value)"
                         style="flex:1;accent-color:#6366f1;">
-                    <span id="thematicDelayLabel" style="font-size:18px;font-weight:800;min-width:50px;text-align:right;">90s</span>
+                    <span id="thematicDelayLabel" style="font-size:18px;font-weight:800;min-width:50px;text-align:right;">48 h</span>
                 </div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
                     <button onclick="setThematicDelay(10)"  class="test-time-btn">10s</button>
                     <button onclick="setThematicDelay(30)"  class="test-time-btn">30s</button>
                     <button onclick="setThematicDelay(90)"  class="test-time-btn">90s</button>
                     <button onclick="setThematicDelay(180)" class="test-time-btn">3min</button>
+                    <button onclick="setThematicDelay(172800); document.getElementById('thematicDelayLabel').textContent = '48 h';" class="test-time-btn">48 h</button>
                 </div>
             </div>
 
@@ -14698,31 +14726,26 @@
         // du tutoriel, posées autour du joueur, sont exclues) :
         //   cartes     12 : 1 légendaire (card6), 8 rares, 3 communes
         //   visites     6 : 4 panoramas, 1 point d'information, 1 échoppe
-        //   ressources 44 : 22 poussières, 3 orbes, 5 parchemins,
-        //                   7 ressources de carnet, 5 mystères, 2 échos
-        //   entrées   102 : paliers par chapitre (légendaire 4, rare 3, commune 2,
-        //                   cf. showDustDialogue) × 3 chapitres
-        //                   = 12 + 8×9 + 3×6
+        //   ressources 42 : 22 poussières, 3 orbes, 5 parchemins,
+        //                   7 ressources de carnet, 5 mystères
+        //                   (échos exclus : non collectables, ECHOES_DISABLED)
         //
-        // Poids : les jauges de quartier n'en ont pas (1 par objet). Proposition
-        // du brief (carte 5, visite 2, ressource 1, entrée 1) : total 218,
-        // session type 44 → 20 %, sous la cible de 25-40 %. Les 102 entrées
-        // pèsent trop au dénominateur pour ce qu'une heure en débloque.
-        // Poids retenus : carte 10, visite 3, ressource 1, entrée 0,25
-        //   total = 120 + 18 + 44 + 25,5 = 207,5
+        // Refonte du 16/10 (demande de David) : les pages de carnet ne comptent
+        // plus. La jauge mesure l'exploration du terrain : cartes, lieux,
+        // ressources. Poids : carte 10, visite 3, ressource 1
+        //   total = 120 + 18 + 42 = 180
         //
         // Session type (1 h, 1,5 à 2 km avec arrêts) :
-        //   4 cartes (40) + 4 visites (12) + 10 ressources (10) + 6 entrées (1,5)
-        //   = 63,5 → 31 %
-        //   basse : 3 / 3 / 8 / 4 → 48 → 23 % · haute : 5 / 5 / 12 / 10 → 79,5 → 38 %
+        //   4 cartes (40) + 4 visites (12) + 10 ressources (10) = 62 → 34 %
+        //   basse : 3 / 3 / 8 → 47 → 26 % · haute : 5 / 5 / 12 → 79 → 44 %
         //
         // Recalibrer après le test : l'événement perimeter_progress du journal
-        // donne le détail (cartes, visites, ressources, entrées) à chaque palier.
+        // donne le détail (cartes, visites, ressources) à chaque palier.
         //
         // Une ressource ou une visite comptée le reste : les listes de collecte
         // se vident à la réapparition (3 min), d'où le registre _jaugeVus, relevé
         // toutes les 5 s et à chaque jaugePerimetreMaj().
-        const JAUGE_POIDS = { carte: 10, visite: 3, ressource: 1, entree: 0.25 };
+        const JAUGE_POIDS = { carte: 10, visite: 3, ressource: 1 };
         const JAUGE_VUS_KEY = 'explore_jauge_vus';
         let _jaugeInventaire = null;
         let _jaugeVus = { ressources: {}, visites: {} };
@@ -14737,17 +14760,12 @@
                 && dansPerimetreTest(o.lat, o.lng);
             const ids = arr => (arr || []).filter(dans).map(o => o.id);
             const cartes = POIS.filter(p => !p.disabled && dans(p)).map(p => p.localCardId).filter(Boolean);
-            const entrees = {};
-            cartes.forEach(id => {
-                const r = (getCardById(id) || {}).rarity;
-                entrees[id] = (r === 'legendary' ? 4 : r === 'rare' ? 3 : 2) * MAX_LEVEL;
-            });
             return {
                 cartes,
-                entrees,
                 visites: [...ids(INFO_POINTS), ...ids(PANNEAU_POINTS), ...ids(BAZAR_POINTS)],
                 ressources: [...ids(DUST_POINTS), ...ids(ORB_POINTS), ...ids(SCROLL_POINTS),
-                             ...ids(CARNET_RESOURCE_POINTS), ...ids(LOOT_POINTS), ...ids(ECHO_POINTS)]
+                             ...ids(CARNET_RESOURCE_POINTS), ...ids(LOOT_POINTS),
+                             ...(ECHOES_DISABLED ? [] : ids(ECHO_POINTS))]
             };
         }
         function _jaugeInv() {
@@ -14784,20 +14802,16 @@
             if (neuf) { try { localStorage.setItem(JAUGE_VUS_KEY, JSON.stringify(_jaugeVus)); } catch (e) {} }
         }
 
-        // Détail du calcul : { pct, faits, total, cartes, visites, ressources, entrees }.
+        // Détail du calcul : { pct, faits, total, cartes, visites, ressources }.
         function jaugePerimetreDetail() {
             const inv = _jaugeInv();
             const P = JAUGE_POIDS;
             const cartes     = inv.cartes.filter(id => collectedCards.includes(id)).length;
             const visites    = inv.visites.filter(id => _jaugeVus.visites[id]).length;
             const ressources = inv.ressources.filter(id => _jaugeVus.ressources[id]).length;
-            const entrees    = inv.cartes.reduce((s, id) =>
-                s + Math.min((cardJournalEntries[id] || []).length, inv.entrees[id]), 0);
-            const entreesMax = inv.cartes.reduce((s, id) => s + inv.entrees[id], 0);
-            const total = inv.cartes.length * P.carte + inv.visites.length * P.visite
-                        + inv.ressources.length * P.ressource + entreesMax * P.entree;
-            const faits = cartes * P.carte + visites * P.visite + ressources * P.ressource + entrees * P.entree;
-            return { pct: total ? Math.round(100 * faits / total) : 0, faits, total, cartes, visites, ressources, entrees };
+            const total = inv.cartes.length * P.carte + inv.visites.length * P.visite + inv.ressources.length * P.ressource;
+            const faits = cartes * P.carte + visites * P.visite + ressources * P.ressource;
+            return { pct: total ? Math.round(100 * faits / total) : 0, faits, total, cartes, visites, ressources };
         }
 
         // Relève, recalcule et met l'affichage à jour. À appeler après un gain.
@@ -14819,7 +14833,7 @@
                 jauge.querySelector('.perimetre-jauge-pct').textContent = d.pct + '%';
             }
             if (_jaugeDernierPct !== null && d.pct !== _jaugeDernierPct && typeof journalLog === 'function') {
-                journalLog('perimeter_progress', { pct: d.pct, cartes: d.cartes, visites: d.visites, ressources: d.ressources, entrees: d.entrees });
+                journalLog('perimeter_progress', { pct: d.pct, cartes: d.cartes, visites: d.visites, ressources: d.ressources });
             }
             _jaugeDernierPct = d.pct;
             return d.pct;
@@ -14834,11 +14848,10 @@
             console.table({
                 cartes:     { faits: d.cartes,     total: inv.cartes.length,     poids: JAUGE_POIDS.carte },
                 visites:    { faits: d.visites,    total: inv.visites.length,    poids: JAUGE_POIDS.visite },
-                ressources: { faits: d.ressources, total: inv.ressources.length, poids: JAUGE_POIDS.ressource },
-                entrees:    { faits: d.entrees,    total: inv.cartes.reduce((s, id) => s + inv.entrees[id], 0), poids: JAUGE_POIDS.entree }
+                ressources: { faits: d.ressources, total: inv.ressources.length, poids: JAUGE_POIDS.ressource }
             });
             showToast('📏 Périmètre ' + d.pct + ' % · ' + d.cartes + ' cartes · ' + d.visites + ' visites · '
-                + d.ressources + ' ressources · ' + d.entrees + ' entrées');
+                + d.ressources + ' ressources');
         }
 
         // Détail de la progression du périmètre, au toucher du libellé « Zone du test ».
@@ -14851,7 +14864,6 @@
             if (jaugePerimetreMaj() === null) return;
             const d = jaugePerimetreDetail();
             const inv = _jaugeInv();
-            const entreesMax = inv.cartes.reduce((s, id) => s + inv.entrees[id], 0);
             _injectZoneDetailCSS();
             let panel = document.getElementById('zoneDetailPanel');
             if (!panel) {
@@ -14872,7 +14884,6 @@
               + row('Cartes collectées', d.cartes + '/' + inv.cartes.length)
               + row('Lieux visités', d.visites + '/' + inv.visites.length)
               + row('Ressources ramassées', d.ressources + '/' + inv.ressources.length)
-              + row('Pages de carnet', d.entrees + '/' + entreesMax)
               + row("Marche aujourd'hui", marche)
               + '<div style="margin-top:10px;font-size:11px;opacity:0.7;text-align:center;">' + T('Panoramas, points d’information et échoppe comptent comme lieux visités. La marche ne compte pas dans le pourcentage.') + '</div>'
               + '</div>';
@@ -20256,7 +20267,7 @@
             const odile = HUB_NPCS.odile.nom, p = _joueurPseudo;
             return [
                 { speaker: 'Clara', air: 'souriant', line: p },
-                { speaker: odile, air: 'suspicieux', line: 'Je connais pourtant tout le monde ici, mais vous je ne vous connais.' },
+                { speaker: odile, air: 'suspicieux', line: 'Je connais pourtant tout le monde ici, mais vous je ne vous connais pas.' },
                 { speaker: 'Clara', air: 'soulagé', line: "C'est vrai, il ne fait pas encore partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser ! Sans lui, ma journée ne serait pas encore finie." },
                 { speaker: odile, air: 'de réflexion', line: TF('Hmm, en effet, nous devrions pouvoir trouver une place à %1', p) },
                 { speaker: odile, air: 'chaleureux', line: TF("Accompagne %1 dans ses quartiers sur la gauche, la porte juste en face de la tienne, je m'occupe de tout.", p) },
@@ -21037,7 +21048,7 @@
             'Je ne sais pas si toi aussi tu le sens, mais j\'ai l\'impression de "ressentir" la mémoire autour de nous.': 'I don’t know if you feel it too, but I have the impression of "feeling" the memory around us.',
             [_TUTO_HTML_S15_QG]: 'Enough talk, you’re the one who found all the ' + vnMot('nebuleuse', 'nebulae') + ' anyway! I have to introduce you to my favourite person. Off to ' + vnMot('qg', 'HQ') + '!',
             "Ah te voilà Clara ! Mais qui est avec toi ?": "Ah, there you are Clara! But who’s with you?",
-            "Je connais pourtant tout le monde ici, mais vous je ne vous connais.": "I know everyone here, and yet you, I don’t know you.",
+            "Je connais pourtant tout le monde ici, mais vous je ne vous connais pas.": "I know everyone here, and yet you, I don’t know you.",
             "C'est vrai, il ne fait pas encore partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser ! Sans lui, ma journée ne serait pas encore finie.": "That’s true, they’re not part of the Organisation yet, but look at what they managed to crystallise! Without them, my day wouldn’t be over yet.",
             "Hmm, en effet, nous devrions pouvoir trouver une place à %1": "Hmm, indeed, we should be able to find a place for %1",
             "Accompagne %1 dans ses quartiers sur la gauche, la porte juste en face de la tienne, je m'occupe de tout.": "Take %1 to their quarters on the left, the door right across from yours, I’ll take care of everything.",
@@ -22234,6 +22245,7 @@
                     v2ConsultedMedias,   // sans elle, tout redevenait « nouveau » au rechargement
                     v2CartesVues,        // lot 3.7 : cartes vues dans l'Explorium
                     v2CartesRevelees,    // cartes déjà apparues (animation à l'ouverture)
+                    v2PrereqVus,         // stades de prérequis déjà montrés dans les fiches de grappe
                     _vaultEvenement,     // lot 3.7 : pastille d'événement non vue
                     cardJournals,
                     grappeQuestState,
@@ -22269,6 +22281,7 @@
                 if (d.v2ConsultedMedias && typeof d.v2ConsultedMedias === 'object') v2ConsultedMedias = d.v2ConsultedMedias;
                 if (d.v2CartesVues && typeof d.v2CartesVues === 'object') v2CartesVues = d.v2CartesVues;
                 v2CartesRevelees = Array.isArray(d.v2CartesRevelees) ? d.v2CartesRevelees : null;
+                v2PrereqVus = (d.v2PrereqVus && typeof d.v2PrereqVus === 'object') ? d.v2PrereqVus : null;
                 _vaultEvenement = !!d._vaultEvenement;
                 setTimeout(rafraichirPastilleExplorium, 0);
                 if (d.collectedEchoes)       collectedEchoes     = d.collectedEchoes;
@@ -22485,7 +22498,10 @@
         let collectedLoots = [];
 
         // ── Système thématique ──
-        let THEMATIC_COOLDOWN_MS = 90 * 1000; // 90s en prototype (sera variable en prod)
+        // Réapparition des nébuleuses (tirage thématique d'un POI dont la carte locale
+        // est collectée) : 48 h, pour qu'aucune ne revienne pendant une session de
+        // test (David, 16/10). Le menu test peut toujours raccourcir le délai.
+        let THEMATIC_COOLDOWN_MS = 48 * 3600 * 1000;
         let thematicState = {}; // { poiId: { drawnCardId, drawnAt, collected } }
         let currentNearbyThematic = null;
         let collectedScrolls = [];
@@ -37738,9 +37754,18 @@
             body.scrollTop = 0;
             modal.classList.add('show');
             renderGrappeQuestModal(grappeId);
-            // Garantir scroll=0 après render
+            // Garantir scroll=0 après render ; s'il y a du nouveau, le premier
+            // chapitre signalé est amené à l'écran (16/10).
             body.scrollTop = 0;
-            requestAnimationFrame(() => { body.scrollTop = 0; });
+            requestAnimationFrame(() => {
+                body.scrollTop = 0;
+                const nouveau = body.querySelector('.gq-etape--nouveau');
+                if (nouveau) {
+                    // Défilement de la fiche seule (scrollIntoView ferait défiler les parents)
+                    const nb = nouveau.getBoundingClientRect(), bb = body.getBoundingClientRect();
+                    if (nb.bottom > bb.bottom) body.scrollTop += Math.min(nb.top - bb.top - 12, nb.bottom - bb.bottom + 12);
+                }
+            });
         }
 
         function closeGrappeQuestModal() {
@@ -37763,11 +37788,17 @@
 
             const body = document.getElementById('grappeQuestBody');
             body.innerHTML = '';
+            // Nouveautés montrées par cette fiche (16/10) : prérequis montés de stade,
+            // médias jamais ouverts. Elles comptent comme vues une fois affichées.
+            let _mediasNouveaux = new Set();
+            try { if (v2PrereqVus) _mediasNouveaux = v2EtapesMediasNouveaux(grappeId); } catch (e) {}
 
             grappe.quete.etapes.forEach((etape, idx) => {
                 const status = _getEtapeStatus(grappeId, etape);
                 const etapeEl = document.createElement('div');
                 etapeEl.className = 'gq-etape ' + status;
+                const _nouveau = !!v2PrereqVus && (_mediasNouveaux.has(etape.id) || v2EtapeAPrereqNouveau(grappeId, etape));
+                if (_nouveau) etapeEl.classList.add('gq-etape--nouveau');
 
                 // Header : titre + statut
                 const head = document.createElement('div');
@@ -37775,6 +37806,12 @@
                 const title = document.createElement('div');
                 title.className = 'gq-etape-title';
                 title.textContent = (idx + 1) + '. ' + etape.titre;
+                if (_nouveau) {
+                    const badge = document.createElement('span');
+                    badge.className = 'gq-etape-nouveau';
+                    badge.textContent = T('NOUVEAU');
+                    title.appendChild(badge);
+                }
                 const statusEl = document.createElement('div');
                 statusEl.className = 'gq-etape-status gq-status-' + status;
                 statusEl.textContent = ({
@@ -37823,6 +37860,23 @@
                     lvl.className = 'gq-prereq-level';
                     lvl.textContent = 'LV' + req.minLevel + (cardState.has ? ' (' + cardState.level + ')' : '');
                     reqEl.appendChild(lvl);
+                    // Deux niveaux de nouveauté (16/10) : 1. carte obtenue → le « ??? »
+                    // se révèle ; 2. niveau requis atteint → le cadenas du badge se brise.
+                    if (v2PrereqVus) {
+                        const stade = v2PrereqStade(req), vu = v2PrereqVu(grappeId, etape.id, req);
+                        if (stade >= 1 && vu < 1) reqEl.classList.add('gq-prereq--revele');
+                        if (stade === 2 && vu < 2) {
+                            reqEl.classList.add('gq-prereq--brise');
+                            const cad = document.createElement('span');
+                            cad.className = 'gq-cadenas';
+                            cad.textContent = '🔒';
+                            lvl.insertBefore(cad, lvl.firstChild);
+                            const coche = document.createElement('span');
+                            coche.className = 'gq-coche';
+                            coche.textContent = '✓';
+                            lvl.appendChild(coche);
+                        }
+                    }
 
                     if (cardState.has) {
                         reqEl.addEventListener('click', () => {
@@ -37977,10 +38031,32 @@
                     lieu.textContent = '📍 ' + T(etape.objectifGeo.nom);
                     head.insertAdjacentElement('afterend', lieu);
                 }
-                if (!el.classList.contains('active')) el.classList.add('gq-etape--replie');
+                // Un chapitre qui a du nouveau reste déplié (16/10)
+                if (!el.classList.contains('active') && !el.classList.contains('gq-etape--nouveau')) el.classList.add('gq-etape--replie');
                 head.style.cursor = 'pointer';
                 head.addEventListener('click', () => el.classList.toggle('gq-etape--replie'));
             });
+
+            // Ce que la fiche vient de montrer compte comme vu : stades de prérequis
+            // et médias des chapitres signalés. Compteur de grappe et pastille suivent.
+            // Seulement si la fiche est à l'écran (elle est aussi rendue en coulisse,
+            // p. ex. à l'acceptation d'une quête depuis la verrière).
+            const _visible = document.getElementById('grappeQuestModal')?.classList.contains('show');
+            if (v2PrereqVus && _visible) {
+                let change = false;
+                grappe.quete.etapes.forEach(etape => {
+                    if (v2EtapeAPrereqNouveau(grappeId, etape)) { v2MarquerPrereqVus(grappeId, etape); change = true; }
+                    if (_mediasNouveaux.has(etape.id)) {
+                        const m = v2GetAllEtapes().find(x => x.etape.id === etape.id);
+                        if (m) { v2ConsultedMedias[etape.id] = v2GetEtapeStatusV2(m.grappeId, m); change = true; }
+                    }
+                });
+                if (change) {
+                    try { saveProgress(); } catch (e) {}
+                    try { rafraichirPastilleExplorium(); } catch (e) {}
+                    try { v2RefreshIfOpen(); } catch (e) {}
+                }
+            }
         }
 
         function renderGrappeBar() {
@@ -39873,14 +39949,19 @@
         function v2CarteEstNouvelle(cardId) {
             return !V2_NEW_ACTORS[cardId] && !v2CartesVues[cardId] && v2IsOwned(cardId);
         }
-        // Nouveautés d'une grappe : médias visibles jamais ouverts + cartes affichées
-        // jamais consultées. Le parent reste signalé tant qu'un enfant n'est pas vu.
+        // Nouveautés d'une grappe = nombre de chapitres (étapes) qui ont du nouveau à
+        // montrer dans sa fiche : un prérequis monté de stade (carte obtenue, niveau
+        // atteint) ou un média visible jamais ouvert. Les points dorés des cartes ne
+        // comptent plus : le compteur ne promet que ce que la fiche montre (16/10).
+        function v2EtapesMediasNouveaux(gid) {
+            return new Set(v2GetAllEtapes().filter(m => m.grappeId === gid
+                && v2MediaIsVisible(m) && v2MediaEstNouveau(m)).map(m => m.etape.id));
+        }
         function v2GrappeNouveautes(gid) {
-            const medias = v2GetAllEtapes().filter(m => m.grappeId === gid
-                && v2MediaIsVisible(m) && v2MediaEstNouveau(m)).length;
-            const cartes = [...v2GetGrappeCardIds(gid)].filter(id => V2_POSITIONS[id] && V2_CARD_META[id]
-                && v2NodeIsVisible(id) && v2CarteEstNouvelle(id)).length;
-            return medias + cartes;
+            const g = GRAPPE_QUESTS[gid];
+            if (!g || !g.quete) return 0;
+            const medias = v2EtapesMediasNouveaux(gid);
+            return g.quete.etapes.filter(e => medias.has(e.id) || v2EtapeAPrereqNouveau(gid, e)).length;
         }
         function v2ExploriumANouveau() {
             return v2GrappesVisibles().some(gid => v2GrappeNouveautes(gid) > 0);
@@ -40122,6 +40203,32 @@
         }
         function v2CartesEnAttente() {
             return Object.keys(V2_POSITIONS).filter(v2CarteEnAttente);
+        }
+        // Prérequis vus dans la fiche de grappe (demande de David, 16/10) :
+        // { 'grappe:étape:carte': stade vu }, stade 0 = carte absente, 1 = carte
+        // obtenue, 2 = niveau requis atteint. Chaque montée de stade est une nouveauté
+        // jusqu'à ce que la fiche l'ait montrée. Sauvegardé ; null = jamais initialisé
+        // (première ouverture de l'Explorium : tout l'état présent compte comme vu).
+        let v2PrereqVus = null;
+        function v2PrereqStade(req) {
+            const s = _getCardLevelDisplay(req.cardId);
+            return !s.has ? 0 : (s.level >= (req.minLevel || 0) ? 2 : 1);
+        }
+        function _v2PrereqCle(gid, etapeId, cardId) { return gid + ':' + etapeId + ':' + cardId; }
+        function v2PrereqVu(gid, etapeId, req) {
+            if (!v2PrereqVus) return v2PrereqStade(req);
+            return v2PrereqVus[_v2PrereqCle(gid, etapeId, req.cardId)] || 0;
+        }
+        function v2EtapeAPrereqNouveau(gid, etape) {
+            return (etape.prerequis || []).some(req => v2PrereqStade(req) > v2PrereqVu(gid, etape.id, req));
+        }
+        function v2MarquerPrereqVus(gid, etape) {
+            if (!v2PrereqVus) return;
+            (etape.prerequis || []).forEach(req => { v2PrereqVus[_v2PrereqCle(gid, etape.id, req.cardId)] = v2PrereqStade(req); });
+        }
+        function v2InitPrereqVus() {
+            v2PrereqVus = {};
+            Object.entries(GRAPPE_QUESTS).forEach(([gid, g]) => ((g.quete || {}).etapes || []).forEach(e => v2MarquerPrereqVus(gid, e)));
         }
         function v2RevelerToutesLesCartes() {
             v2CartesRevelees = Object.keys(V2_POSITIONS).filter(id => !V2_NEW_ACTORS[id] && v2IsOwned(id));
@@ -40807,6 +40914,9 @@
                     </div>
                 `;
                 pill.addEventListener('click', () => {
+                    // Grappe signalée (compteur) : un seul tap ouvre sa fiche, où le
+                    // nouveau est montré (16/10).
+                    if (nouveaux && v2SelectedGrappeId !== gid) { v2SelectedGrappeId = gid; v2RenderAll(); }
                     if (v2SelectedGrappeId === gid) {
                         // Grappe déjà sélectionnée : un 2e tap ouvre le détail de la quête
                         if (typeof openGrappeQuestModal === 'function') {
@@ -41215,6 +41325,7 @@
                 v2SyncLumensFromV1();
                 // Première ouverture (ou ancienne sauvegarde) : rien à faire apparaître
                 if (!Array.isArray(v2CartesRevelees)) v2RevelerToutesLesCartes();
+                if (!v2PrereqVus) { v2InitPrereqVus(); try { saveProgress(); } catch (e) {} }
                 if (!v2SelectedGrappeId || !GRAPPE_QUESTS[v2SelectedGrappeId]) {
                     v2SelectedGrappeId = v2GrappesVisibles()[0] || null;
                 }
