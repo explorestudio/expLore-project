@@ -19670,12 +19670,15 @@
         }
         // Tout l'écran, moins un rectangle par trou et un polygone par contour
         // d'élément qui pulse (règle evenodd).
-        function _gfDecoupe(rects, polys) {
+        // masques : éléments ré-assombris À L'INTÉRIEUR d'une zone claire (en
+        // evenodd, un second contour dans un trou rebouche le voile).
+        function _gfDecoupe(rects, polys, masques) {
             const W = window.innerWidth, H = window.innerHeight, f = n => n.toFixed(1);
             let d = 'M0 0H' + W + 'V' + H + 'H0Z';
-            rects.forEach(r => {
-                const x1 = Math.max(0, r.left - _GF_MARGE), y1 = Math.max(0, r.top - _GF_MARGE);
-                const x2 = Math.min(W, r.right + _GF_MARGE), y2 = Math.min(H, r.bottom + _GF_MARGE);
+            const tous = rects.map(r => ({ r, m: _GF_MARGE })).concat((masques || []).map(r => ({ r, m: 2 })));
+            tous.forEach(({ r, m }) => {
+                const x1 = Math.max(0, r.left - m), y1 = Math.max(0, r.top - m);
+                const x2 = Math.min(W, r.right + m), y2 = Math.min(H, r.bottom + m);
                 // Coins arrondis (12 px, comme les panneaux et boutons) : un trou à
                 // angles droits tranchait sur l'interface (retour de David, 16/10).
                 const k = Math.max(0, Math.min(12, (x2 - x1) / 2, (y2 - y1) / 2));
@@ -19746,7 +19749,8 @@
             const isoles = visuels.filter(v => !dans(v))
                 .map(el => ({ el, q: _gfQuad(_gfForme(el)) })).filter(o => o.q);
             const polys = isoles.map(o => _gfPolygone(o.q, _GF_MARGE_PULSE));
-            voile.style.clipPath = _gfDecoupe(_gfFusion(rects), polys);
+            const masques = _gfElements(_gfListe(_gf.masques)).map(_gfRect).filter(Boolean);
+            voile.style.clipPath = _gfDecoupe(_gfFusion(rects), polys, masques);
             _gfHalosMaj(isoles);
             bloq.style.clipPath  = _gfDecoupe(_gfFusion(rc));
         }
@@ -19756,6 +19760,7 @@
             _gf = {
                 cibles: cibles,
                 visibles: opts.visibles || null,
+                masques: opts.masques || null,
                 pulse: opts.pulse === undefined ? null : opts.pulse,
                 opacite: (typeof opts.opacite === 'number') ? opts.opacite : 0.72,
                 pulses: new Set(),
@@ -20016,6 +20021,11 @@
         // inverserait l'assombrissement (parcours 1-13 du 16/10).
         const _TUTO_FICHE_LECTURE = ['#cardInfoPanel .card-level-row', '#cardInfoPanel .card-exp-bar',
             '#cardEnergyRow'];
+        // Retour de David (16/10) : sur l'écran carte, toute la colonne blanche reste
+        // claire, sauf les onglets (Carte, Skins, Général). Le carnet reste dans
+        // l'ombre (masque) jusqu'à ce que la jeune fille le mentionne (section 6) ;
+        // le bouton de poussière y passe alors à son tour.
+        const _TUTO_FICHE_COLONNE = ['#cardInfoPanel .card-vtab-content'];
 
         // 4 — Première ouverture de la carte. La mappe ne montre plus rien
         // (plus d'« autre carte » depuis le lot 2.1 ; poussière, orbe et
@@ -20026,7 +20036,7 @@
             _tutoMajMappe();
             _tutoOuvrirCarteTuto();
             // Lot 3.1 : tunnel dès la section 4 (assombri pendant la réplique).
-            guideFocus(['#addExpBtn'], { visibles: _TUTO_FICHE_LECTURE, pulse: false });
+            guideFocus(['#addExpBtn'], { visibles: _TUTO_FICHE_COLONNE, masques: ['#journalTabBtn'], pulse: false });
             _tutoDire('s4', 'carddetail', _TUTO_LIGNES_S4, _tutoSection5);
         }
 
@@ -20038,7 +20048,7 @@
             if (_obDone || _tutoSection > 5) return;
             _tutoAtteindre(5);
             _tutoOuvrirCarteTuto();
-            guideFocus(['#addExpBtn'], { visibles: _TUTO_FICHE_LECTURE });
+            guideFocus(['#addExpBtn'], { visibles: _TUTO_FICHE_COLONNE, masques: ['#journalTabBtn'] });
         }
 
         // 6 — Première page inscrite : seul le bouton du carnet reste cliquable.
@@ -20046,7 +20056,7 @@
             if (_obDone || _tutoSection > 6) return;
             _tutoAtteindre(6);
             _tutoOuvrirCarteTuto();
-            guideFocus(['#journalTabBtn'], { visibles: _TUTO_FICHE_LECTURE });
+            guideFocus(['#journalTabBtn'], { visibles: _TUTO_FICHE_COLONNE, masques: ['#addExpBtn'] });
             _tutoDire('s6', 'carddetail', _TUTO_LIGNES_S6);
         }
 
