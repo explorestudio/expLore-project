@@ -8408,6 +8408,12 @@
 
         /* Nouveau média : étiquette dorée qui respire ; compteur sur l'onglet du récit */
         .v2-media-nouveau { animation: v2NouveauPulse 1.6s ease-in-out infinite; pointer-events: none; }
+        /* Apparition d'une carte nouvellement obtenue (séquence d'ouverture de l'Explorium) */
+        .v2-carte-eclot { transform-box: fill-box; transform-origin: center; animation: v2CarteEclot 0.75s cubic-bezier(0.34,1.56,0.64,1) both; }
+        @keyframes v2CarteEclot { from { transform: scale(0.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .v2-carte-eclat { fill: none; stroke: #f0c674; stroke-width: 2; pointer-events: none;
+            transform-box: fill-box; transform-origin: center; animation: v2CarteEclat 1.1s ease-out forwards; }
+        @keyframes v2CarteEclat { from { transform: scale(0.3); opacity: 0.95; } to { transform: scale(3.2); opacity: 0; } }
         @keyframes v2NouveauPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
         .v2-grappe-pill { position: relative; }
         .v2-grappe-pill-new {
@@ -22227,6 +22233,7 @@
                     seenCardIds: [..._seenCardIds],
                     v2ConsultedMedias,   // sans elle, tout redevenait « nouveau » au rechargement
                     v2CartesVues,        // lot 3.7 : cartes vues dans l'Explorium
+                    v2CartesRevelees,    // cartes déjà apparues (animation à l'ouverture)
                     _vaultEvenement,     // lot 3.7 : pastille d'événement non vue
                     cardJournals,
                     grappeQuestState,
@@ -22261,6 +22268,7 @@
                 if (d.collectedCards)        collectedCards      = d.collectedCards;
                 if (d.v2ConsultedMedias && typeof d.v2ConsultedMedias === 'object') v2ConsultedMedias = d.v2ConsultedMedias;
                 if (d.v2CartesVues && typeof d.v2CartesVues === 'object') v2CartesVues = d.v2CartesVues;
+                v2CartesRevelees = Array.isArray(d.v2CartesRevelees) ? d.v2CartesRevelees : null;
                 _vaultEvenement = !!d._vaultEvenement;
                 setTimeout(rafraichirPastilleExplorium, 0);
                 if (d.collectedEchoes)       collectedEchoes     = d.collectedEchoes;
@@ -40104,6 +40112,20 @@
         let v2ConsultedMedias = {};
         // Cartes obtenues déjà consultées depuis l'Explorium : { cardId: true } (lot 3.7, sauvegardé)
         let v2CartesVues = {};
+        // Cartes déjà révélées (apparues) dans l'Explorium : [cardId] (sauvegardé). null =
+        // jamais initialisé : à la première ouverture, tout ce qui est possédé compte comme
+        // révélé (l'arrivée de la section 17 fait sa propre révélation).
+        let v2CartesRevelees = null;
+        function v2CarteEnAttente(cardId) {
+            return Array.isArray(v2CartesRevelees) && !V2_NEW_ACTORS[cardId] && !!V2_POSITIONS[cardId]
+                && v2IsOwned(cardId) && !v2CartesRevelees.includes(cardId);
+        }
+        function v2CartesEnAttente() {
+            return Object.keys(V2_POSITIONS).filter(v2CarteEnAttente);
+        }
+        function v2RevelerToutesLesCartes() {
+            v2CartesRevelees = Object.keys(V2_POSITIONS).filter(id => !V2_NEW_ACTORS[id] && v2IsOwned(id));
+        }
 
         // Vérifie si un média mérite l'animation "pulse non consulté".
         // Un média est "non consulté" si :
@@ -40177,7 +40199,8 @@
             //    c'est le système des lumens qui éclaire le reste de la carte.
             Object.entries(V2_POSITIONS).forEach(([id, pos]) => {
                 if (V2_NEW_ACTORS[id]) return;
-                if (v2IsOwned(id)) sources.push({ x: pos.x, y: pos.y, radius: V2_LIGHT_RADIUS });
+                // Carte pas encore révélée dans l'Explorium : sa lumière vient avec son apparition
+                if (v2IsOwned(id) && !v2CarteEnAttente(id)) sources.push({ x: pos.x, y: pos.y, radius: V2_LIGHT_RADIUS });
             });
             // 2. Lumens V2 déjà placés (animation passée, source permanente)
             v2PlacedLumens.forEach(l => {
@@ -40364,7 +40387,8 @@
                 if (!v2NodeIsVisible(cardId)) return;
                 const meta = V2_CARD_META[cardId];
                 if (!meta) return;
-                const owned = v2IsOwned(cardId);
+                // Carte obtenue mais pas encore révélée ici : silhouette jusqu'à son apparition
+                const owned = v2IsOwned(cardId) && !v2CarteEnAttente(cardId);
                 const illuminated = v2NodeIsIlluminated(cardId);
                 const name = v2GetCardName(cardId);
                 const level = v2GetCardLevel(cardId);
@@ -40549,7 +40573,7 @@
                 });
 
                 // Lot 3.7 : carte obtenue jamais consultée ici → point doré, éteint au premier tap
-                if (!isShadow && v2CarteEstNouvelle(cardId)) {
+                if (owned && v2CarteEstNouvelle(cardId)) {
                     const pt = document.createElementNS(V2_SVG_NS, 'circle');
                     pt.setAttribute('cx', 17); pt.setAttribute('cy', -23); pt.setAttribute('r', 5);
                     pt.setAttribute('fill', '#f0c674');
@@ -41040,6 +41064,52 @@
             v2LumenSequencePlaying = false;
         }
 
+        // ── Séquence d'ouverture : nouvelles cartes, puis lumens (demande de David, 16/10) ──
+        // Comme pour les lumens : la caméra va sur chaque carte obtenue depuis la
+        // dernière visite ; elle apparaît (éclosion + éclat) et allume sa zone.
+        let v2CartesSequencePlaying = false;
+        async function v2PlayPendingCardsSequence() {
+            if (v2CartesSequencePlaying || v2LumenSequencePlaying) return;
+            const attente = v2CartesEnAttente();
+            if (!attente.length) { if (v2PendingLumens.length) v2PlayPendingLumensSequence(); return; }
+            v2CartesSequencePlaying = true;
+            const stage = document.getElementById('v2Stage');
+            const r = stage?.getBoundingClientRect();
+            const fitZoom = r ? r.width / V2_MAP_W : 0.5;
+            const cinematicZoom = Math.max(fitZoom * 2.0, 0.9);
+            await new Promise(res => setTimeout(res, 400));
+            for (const id of attente) {
+                const pos = V2_POSITIONS[id];
+                if (!pos) continue;
+                await v2AnimateCameraTo(pos.x, pos.y, cinematicZoom, 900);
+                await new Promise(res => setTimeout(res, 250));
+                if (!v2CartesRevelees.includes(id)) v2CartesRevelees.push(id);
+                try { saveProgress(); } catch (e) {}
+                v2RenderAll();
+                // Éclosion : l'échelle s'anime sur un groupe intérieur (le <g> porte la position)
+                const g = document.querySelector('#v2NodesLayer > g[data-card="' + id + '"]');
+                if (g) {
+                    const dedans = document.createElementNS(V2_SVG_NS, 'g');
+                    dedans.setAttribute('class', 'v2-carte-eclot');
+                    while (g.firstChild) dedans.appendChild(g.firstChild);
+                    g.appendChild(dedans);
+                    const anneau = document.createElementNS(V2_SVG_NS, 'circle');
+                    anneau.setAttribute('r', 22);
+                    anneau.setAttribute('class', 'v2-carte-eclat');
+                    g.appendChild(anneau);
+                }
+                await new Promise(res => setTimeout(res, 900));
+            }
+            v2CartesSequencePlaying = false;
+            if (v2PendingLumens.length) { v2PlayPendingLumensSequence(); return; }   // ramène la caméra
+            const r2 = document.getElementById('v2Stage')?.getBoundingClientRect();
+            const finalZoom = r2 ? Math.max((r2.width / V2_MAP_W) * 1.6, 0.7) : 0.8;
+            await v2AnimateCameraTo(0.42, 0.48, finalZoom, 900);
+        }
+        function v2SequenceEnAttente() {
+            return v2CartesEnAttente().length > 0 || v2PendingLumens.length > 0;
+        }
+
         let v2PanZoomAttached = false;
         function v2AttachPanZoom() {
             if (v2PanZoomAttached) return;
@@ -41143,6 +41213,8 @@
                 svg.setAttribute('height', V2_MAP_H);
                 svg.setAttribute('viewBox', `0 0 ${V2_MAP_W} ${V2_MAP_H}`);
                 v2SyncLumensFromV1();
+                // Première ouverture (ou ancienne sauvegarde) : rien à faire apparaître
+                if (!Array.isArray(v2CartesRevelees)) v2RevelerToutesLesCartes();
                 if (!v2SelectedGrappeId || !GRAPPE_QUESTS[v2SelectedGrappeId]) {
                     v2SelectedGrappeId = v2GrappesVisibles()[0] || null;
                 }
@@ -41152,8 +41224,8 @@
                 v2AttachPanZoom();
                 // Si des lumens sont en attente d'animation, lancer la séquence cinématique
                 // SAUF si une post-validation va ouvrir la fresque (séquence reportée à la fermeture)
-                if (v2PendingLumens.length > 0 && !window._v2SuppressLumenSequence) {
-                    v2PlayPendingLumensSequence();
+                if (v2SequenceEnAttente() && !window._v2SuppressLumenSequence) {
+                    v2PlayPendingCardsSequence();   // nouvelles cartes, puis lumens
                 }
             };
             if (img.complete && img.naturalWidth) finishSetup();
@@ -41198,7 +41270,7 @@
             if (window._v2SuppressLumenSequence) return;
             // Sync au cas où de nouveaux lumens ont été gagnés, puis lancer la séquence si pending
             if (typeof v2SyncLumensFromV1 === 'function') v2SyncLumensFromV1();
-            if (v2PendingLumens.length > 0 && !v2LumenSequencePlaying) {
+            if (v2SequenceEnAttente() && !v2LumenSequencePlaying && !v2CartesSequencePlaying) {
                 setTimeout(() => {
                     // Re-vérifier juste avant de lancer (l'état a pu changer pendant le délai)
                     const sc = document.getElementById('voutV2Screen');
@@ -41207,8 +41279,8 @@
                         && !(document.getElementById('verriereScreen')?.classList.contains('show'))
                         && !(document.getElementById('grappeQuestModal')?.classList.contains('show'))
                         && !(document.getElementById('cardDetailView')?.classList.contains('show'))
-                        && v2PendingLumens.length > 0 && !v2LumenSequencePlaying) {
-                        v2PlayPendingLumensSequence();
+                        && v2SequenceEnAttente() && !v2LumenSequencePlaying && !v2CartesSequencePlaying) {
+                        v2PlayPendingCardsSequence();
                     }
                 }, 400);
             }
@@ -41354,6 +41426,8 @@
             if (typeof v2PendingLumens !== 'undefined' && v2PendingLumens.length) {
                 v2PlacedLumens.push(...v2PendingLumens.splice(0));
             }
+            v2RevelerToutesLesCartes();   // l'arrivée révèle elle-même toutes les cartes
+            try { saveProgress(); } catch (e) {}
             try { v2RenderAll(); } catch (e) { console.warn('[Explorium] arrivée : rendu', e); }
             const cartes = Object.entries(V2_POSITIONS).filter(([id]) => !V2_NEW_ACTORS[id] && v2IsOwned(id));
             // Caméra : barycentre de ce que possède le joueur, au-dessus du milieu
