@@ -9411,10 +9411,12 @@
             font-size: 34px;
             font-weight: 900;
             letter-spacing: 0.03em;
-            color: #fef3c7;
-            text-shadow: 0 0 22px rgba(167,139,250,0.45);
+            /* Harmonisé avec le logo de l'intro animée (#intro2Brand) :
+               « Exp » couleur papier, « Lore » entier en or (16/10). */
+            color: #e8dfd0;
+            text-shadow: 0 0 22px rgba(214,163,23,0.35);
         }
-        .lang-select-logo em { font-style: normal; color: #A78BFA; }
+        .lang-select-logo em { font-style: normal; color: #d6a317; }
         .lang-select-sub {
             font-family: Georgia, serif;
             font-size: 13px;
@@ -9447,7 +9449,7 @@
             background: linear-gradient(135deg, rgba(30,16,53,0.95), rgba(18,8,40,0.95));
             border: 1px solid rgba(167,139,250,0.4);
             border-radius: 16px;
-            color: #EDE9FE;
+            color: #f4ecdc;   /* papier des consoles, au lieu du blanc lavande */
             font-family: Georgia, serif;
             font-size: 16px;
             font-weight: 700;
@@ -12235,7 +12237,7 @@
              ════════════════════════════════════════════════════════ -->
         <!-- ══ CHOIX DE LA LANGUE (premier lancement) ══ -->
         <div id="langSelectOverlay" class="lang-select-overlay">
-            <div class="lang-select-logo">Exp<em>L</em>ore</div>
+            <div class="lang-select-logo">Exp<em>Lore</em></div>
             <div class="lang-select-sub">Explorateurs de la Mémoire · Lyon</div>
             <div class="lang-select-title">Langue · Language</div>
             <div class="lang-select-btns">
@@ -12250,7 +12252,7 @@
 
         <!-- Code d'accès du test Bellecour (après le choix de langue, avant la partie) -->
         <div id="codeAccesOverlay" class="lang-select-overlay">
-            <div class="lang-select-logo">Exp<em>L</em>ore</div>
+            <div class="lang-select-logo">Exp<em>Lore</em></div>
             <div class="lang-select-sub" id="codeAccesSub">Saisis le code de ta feuille de route.</div>
             <div class="lang-select-title">Code d'accès</div>
             <div class="lang-select-btns">
@@ -17908,6 +17910,8 @@
         let _introVariant = 'anim';   // 'bd' = cinématique BD, 'anim' = intro animée
 
         function startIntroBD() {
+            // La musique démarre avec l'animation d'onboarding (demande de David, 16/10).
+            if (typeof BgMusic !== 'undefined') BgMusic.start();
             if (_introVariant === 'anim') {
                 document.getElementById('introBDCinematic').classList.add('hidden');
                 Intro2.start();
@@ -30961,6 +30965,7 @@
             let volume  = VOL_DEFAULT;   // volume réglé dans les paramètres
             let enabled = true;
             let pendingStart = false;   // ON, en attente d'un geste du joueur
+            let _demarre = false;       // start() appelé : le déverrouillage silencieux ne coupe plus
             let ducked = false;
             let fadeTimer = null;
 
@@ -31032,6 +31037,8 @@
             // Démarrage explicite — appelé en fin de cinématique d'intro
             function start() {
                 if (!audioEl || !enabled) return;
+                _demarre = true;
+                audioEl.muted = false;
                 audioEl.volume = _target();
                 audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
             }
@@ -31050,6 +31057,16 @@
             function _firstTap() {
                 if (!pendingStart || !enabled) return;
                 if (_introPlaying()) { _armFirstTap(); return; }
+                // Nouvelle partie (intro pas encore vue) : la musique attend le
+                // début de l'animation d'onboarding (startIntroBD). Ce premier
+                // geste sert seulement à déverrouiller l'audio, en silence (iOS
+                // refuse une lecture lancée hors geste).
+                if (typeof _introBDSeen !== 'undefined' && !_introBDSeen) {
+                    audioEl.muted = true;
+                    audioEl.play().then(function () { if (!_demarre) audioEl.pause(); audioEl.muted = false; })
+                        .catch(function () { audioEl.muted = false; });
+                    return;
+                }
                 audioEl.volume = _target();
                 audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
             }
