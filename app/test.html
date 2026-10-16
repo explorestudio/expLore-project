@@ -20491,8 +20491,11 @@
         // zones de lecture de la fiche restent claires ; onglets (Carte, Skins,
         // Général), carnet et « Donner de la poussière », s'ils ne sont pas
         // l'action attendue, passent sous le voile.
+        // Pas les réserves (poussière, orbes) : sur la ligne des boutons, _gfFusion
+        // les fondrait avec la jauge en un bloc qui recouvre les deux boutons et
+        // inverserait l'assombrissement (parcours 1-13 du 16/10).
         const _TUTO_FICHE_LECTURE = ['#cardInfoPanel .card-level-row', '#cardInfoPanel .card-exp-bar',
-            '#cardEnergyRow', '#cardInfoPanel .card-level-reserves'];
+            '#cardEnergyRow'];
 
         // 4 — Première ouverture de la carte. La mappe ne montre plus rien
         // (plus d'« autre carte » depuis le lot 2.1 ; poussière, orbe et
