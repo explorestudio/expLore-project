@@ -9717,39 +9717,76 @@
         #ritualEngrave.tenue .ritual-engrave-sub { opacity: 0.25; }
 
         /* ── Carte obtenue : plus grande, plus haute, dans Cadre_carte.png ── */
-        #ritualReveal { padding-bottom: 9vh; cursor: pointer; }
+        /* Lot 4 (playtest) : fenêtre du cadre au ratio des visuels (--card-ratio,
+           posé par CARD_VISUAL_RATIO), informations sous le cadre. Cadre_carte.png
+           (1122 × 1402, fenêtre x 225-889 / y 202-1152, soit ~7:10) est étiré par
+           border-image : coins et bords haut/bas intacts, bords gauche/droit
+           allongés. Provisoire, en attendant un cadre 9:16 de l'artiste.
+           --win : largeur de la fenêtre, bornée par la largeur ET par la hauteur
+           d'écran (300 px réservés au libellé, aux infos et à « Touche l'écran »).
+           --s : échelle du PNG (1 px source = --s). */
+        #ritualReveal { padding-bottom: 64px; justify-content: center; cursor: pointer; }
         #ritualReveal .ritual-obtained-label { margin-top: 0; font-size: 12px; }
         #ritualReveal .ritual-obtained-name { font-size: 20px; margin: 6px 0 12px; }
         .ritual-cadre {
-            position: relative; z-index: 2;
-            width: min(80vw, 360px, calc(58dvh * 0.8));
-            aspect-ratio: 1122 / 1402;   /* proportions de Cadre_carte.png */
+            --win: min(64vw, 300px, calc((100dvh - 300px) / (1 / var(--card-ratio, 0.5625) + 0.376)));
+            --s: calc(var(--win) / 665);
+            position: relative; z-index: 2; flex-shrink: 0;
+            width:  calc(var(--win) + 457 * var(--s));
+            height: calc(var(--win) / var(--card-ratio, 0.5625) + 451 * var(--s));
+            /* marges transparentes du PNG (77 px en haut, 124 en bas) rognées */
+            margin: calc(-77 * var(--s) + 4px) 0 calc(-124 * var(--s));
             transform: scale(0.4) translateY(80px); opacity: 0;
             transition: transform 0.7s cubic-bezier(0.34,1.56,0.64,1), opacity 0.5s;
         }
         #ritualReveal.show .ritual-cadre { transform: none; opacity: 1; }
-        .ritual-cadre-img {
-            position: absolute; inset: 0; width: 100%; height: 100%;
-            z-index: 3; pointer-events: none;
+        .ritual-cadre-img { display: none; }   /* détection d'absence seulement (onerror) */
+        .ritual-cadre-bord {
+            position: absolute; inset: 0; z-index: 3; pointer-events: none;
+            box-sizing: border-box; border-style: solid; border-color: transparent;
+            border-width: calc(202 * var(--s)) calc(232 * var(--s)) calc(249 * var(--s)) calc(225 * var(--s));
+            border-image-source: url('./assets/Cadre_carte.png');
+            border-image-slice: 202 232 249 225 fill;
+            border-image-width: 1;
+            border-image-repeat: stretch;
             filter: drop-shadow(0 0 22px rgba(167,139,250,0.35));
         }
-        /* Ouverture du cadre mesurée sur l'image : x 224-891 / 1122, y 201-1154 / 1402.
-           La carte déborde un peu sous la moulure pour ne laisser aucun jour. */
+        /* La carte déborde un peu (4 px source) sous la moulure : aucun jour. */
         .ritual-cadre .ritual-big-card {
-            position: absolute; left: 19.3%; top: 13.8%; width: 61.4%; height: 69.1%;
+            position: absolute; width: auto; height: auto;
+            left:   calc(221 * var(--s)); top:    calc(198 * var(--s));
+            right:  calc(228 * var(--s)); bottom: calc(245 * var(--s));
             border-radius: 4px; display: flex; flex-direction: column;
             background: #120e1f;
             transform: none; opacity: 1; transition: none;
         }
         .ritual-cadre .ritual-big-card-art { height: auto; flex: 1 1 auto; min-height: 0; }
-        .ritual-cadre .ritual-big-card-body { padding: 8px 8px 12px; flex-shrink: 0; }
+        .ritual-cadre .ritual-big-card-art-shine,
         .ritual-cadre .ritual-big-card-border { display: none; }
+        /* Zone d'informations sous le cadre */
+        .ritual-infos {
+            position: relative; z-index: 2; max-width: 88vw; margin-top: 8px;
+            display: flex; flex-direction: column; align-items: center;
+            opacity: 0; transition: opacity 0.6s 0.8s;
+        }
+        #ritualReveal.show .ritual-infos { opacity: 1; }
+        .ritual-infos .ritual-big-card-body { padding: 0; }
+        .ritual-infos .ritual-big-card-name { font-size: 18px; margin-bottom: 3px; }
+        .ritual-infos .ritual-big-card-supertype { margin-bottom: 2px; }
+        .ritual-infos .ritual-big-card-type { color: rgba(255,255,255,0.55); }
+        .ritual-big-card-collections {
+            font-size: 11px; letter-spacing: 0.5px; text-align: center;
+            color: rgba(201,168,76,0.75); margin-top: 3px;
+        }
+        .ritual-big-card-collections:empty { display: none; }
+        .ritual-infos .ritual-narrative-tag { margin-top: 8px; }
         /* Repli sans l'image du cadre : simple bordure dorée */
         .ritual-cadre.sans-cadre {
             border: 2px solid rgba(201,168,76,0.55); border-radius: 18px;
             box-shadow: 0 0 40px rgba(167,139,250,0.3);
         }
-        .ritual-cadre.sans-cadre .ritual-big-card { left: 4%; top: 4%; width: 92%; height: 92%; border-radius: 14px; }
+        .ritual-cadre.sans-cadre .ritual-cadre-bord { display: none; }
+        .ritual-cadre.sans-cadre .ritual-big-card { left: 4%; top: 4%; right: 4%; bottom: 4%; border-radius: 14px; }
         .ritual-reveal-tap {
             position: absolute; left: 0; right: 0;
             bottom: max(28px, env(safe-area-inset-bottom));
@@ -10382,25 +10419,34 @@
             <div class="ritual-cadre" id="ritualCadre">
             <img class="ritual-cadre-img" src="./assets/Cadre_carte.png" alt="" draggable="false"
                  onerror="this.style.display='none'; this.parentNode.classList.add('sans-cadre')">
+            <!-- Lot 4 : le cadre est dessiné par border-image (fenêtre au ratio
+                 CARD_VISUAL_RATIO) ; l'<img> ci-dessus ne sert plus qu'à détecter
+                 l'absence du PNG. -->
+            <div class="ritual-cadre-bord" aria-hidden="true"></div>
             <div class="ritual-big-card" id="ritualBigCard">
                 <div id="ritualBigCardArt" class="ritual-big-card-art">
-                    <!-- Visuel de la carte (niveau 0) ; masqué si la carte n'en a pas -->
+                    <!-- Visuel de la carte (niveau 0) ; masqué si la carte n'en a pas.
+                         Remplit la fenêtre, recadré au centre s'il n'est pas au ratio. -->
                     <img id="ritualBigCardImg" src="" alt=""
-                         style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none;z-index:0;">
+                         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:none;z-index:0;">
                     <div class="ritual-big-card-art-shine"></div>
                     <div class="ritual-big-card-art-particles" id="ritualCardParticles"></div>
                     <div class="ritual-big-card-art-icon" id="ritualBigIcon"></div>
                 </div>
-                <div class="ritual-big-card-body">
-                    <div class="ritual-big-card-supertype" id="ritualRevealSupertype"></div>
-                    <div class="ritual-big-card-name" id="ritualRevealCardName"></div>
-                    <div class="ritual-big-card-type" id="ritualRevealCardType"></div>
-                </div>
                 <div class="ritual-big-card-border"></div>
             </div>
             </div>
-            <div class="ritual-narrative-tag" id="ritualNarrativeTag">
-                <span id="ritualNarrativeText"></span>
+            <!-- Lot 4 : informations SOUS le cadre, jamais sur le visuel. -->
+            <div class="ritual-infos">
+                <div class="ritual-big-card-body">
+                    <div class="ritual-big-card-name" id="ritualRevealCardName"></div>
+                    <div class="ritual-big-card-supertype" id="ritualRevealSupertype"></div>
+                    <div class="ritual-big-card-type" id="ritualRevealCardType"></div>
+                    <div class="ritual-big-card-collections" id="ritualRevealCollections"></div>
+                </div>
+                <div class="ritual-narrative-tag" id="ritualNarrativeTag">
+                    <span id="ritualNarrativeText"></span>
+                </div>
             </div>
             <div class="ritual-reveal-tap">Touche l'écran pour continuer</div>
         </div>
@@ -16421,6 +16467,12 @@
         // à mesure qu'elle progresse. Aucune ne le fait pour l'instant —
         // toutes retombent sur `card.art`, sans changement de comportement.
         // ════════════════════════════════════════════════════════════════
+        // Lot 4 (playtest) : ratio des visuels de cartes, portrait, 9 de large pour
+        // 16 de haut (production : 1080 × 1920). Seul réglage à modifier : le CSS
+        // le lit dans --card-ratio (écran « Carte obtenue », .ritual-cadre).
+        const CARD_VISUAL_RATIO = 9 / 16;
+        try { document.documentElement.style.setProperty('--card-ratio', String(CARD_VISUAL_RATIO)); } catch (e) {}
+
         function getCardArtForLevel(card, level) {
             if (!card) return null;
             const byLevel = card.artByLevel;
@@ -26994,7 +27046,11 @@
             }
             document.getElementById('ritualRevealSupertype').textContent = `${info.symbol || ''} ${info.name || ''}`;
             document.getElementById('ritualRevealCardName').textContent  = card.name;
-            document.getElementById('ritualRevealCardType').textContent  = `${T(card.type)} · ${T(card.rarity || '')}`;
+            // Lot 4 : rareté par son nom (« Rare »), collections affichées.
+            const _rar = (RARITY_CONFIG[card.rarity] || {}).name || card.rarity || '';
+            document.getElementById('ritualRevealCardType').textContent  = [T(card.type || ''), T(_rar)].filter(Boolean).join(' · ');
+            const _cols = (card.collections || []).map(id => COLLECTION_DEFS[id] ? T(COLLECTION_DEFS[id].name) : null).filter(Boolean);
+            document.getElementById('ritualRevealCollections').textContent = _cols.join(' · ');
             document.getElementById('ritualBigCard').style.boxShadow     =
                 `0 0 0 1px ${color}50, 0 0 40px ${color}30, 0 20px 60px rgba(0,0,0,0.7)`;
 
