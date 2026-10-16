@@ -14372,6 +14372,8 @@
             "Accepter": "Accept",
             "Valider ✓": "Complete ✓",
             "▸ Suivre": "▸ Track",
+            "Ne plus suivre": "Stop tracking",
+            "🗺️ Quête acceptée — « %1 » mise de côté": "🗺️ Quest accepted — “%1” set aside",
             "Voir grappe": "View cluster",
             "✓ Disponible": "✓ Available",
             "★ Quête suivie": "★ Quest tracked",
@@ -22734,6 +22736,7 @@
                     _vaultEvenement,     // lot 3.7 : pastille d'événement non vue
                     cardJournals,
                     grappeQuestState,
+                    selectedQuestKey: window._selectedQuestKey || null,   // quête suivie (pin + boussole)
                     grappeBDUnlocked,
                     // Verrière : panneaux dont l'allumage a déjà été vu, et mise en
                     // lumière du complet déjà jouée. Sans eux, l'animation se rejoue
@@ -22847,6 +22850,7 @@
                 if (d.seenCardIds)  _seenCardIds = new Set(d.seenCardIds);
                 if (d.cardJournals) cardJournals = d.cardJournals;
                 if (d.grappeQuestState) grappeQuestState = d.grappeQuestState;
+                window._selectedQuestKey = d.selectedQuestKey || null;
                 if (d.grappeBDUnlocked) grappeBDUnlocked = d.grappeBDUnlocked;
                 if (d.verriereVues)     verriereVues     = d.verriereVues;
                 if (d.verriereEclatVu)  verriereEclatVu  = d.verriereEclatVu;
@@ -23837,6 +23841,11 @@
                         }
                     }, 100);
                 }
+                // Quête suivie restaurée : son pin, sa zone et la boussole dès le
+                // démarrage (avant : rien tant que le journal n'était pas ouvert).
+                setTimeout(() => {
+                    try { updateQuestMarkers(); updateQuestCompass(); } catch (e) {}
+                }, 500);
             }); // end map.on('load')
 
             map.on('zoom', updateAvatarScale);
@@ -38302,15 +38311,41 @@
             return { has: true, level: (cl?.level || 0) };
         }
 
-        function _acceptQuestEtape(grappeId, etapeId) {
+        // Règle des quêtes (David, 16/10) : une seule quête « se rendre à une
+        // adresse » (objectifGeo) active à la fois ; l'accepter met la précédente
+        // de côté (elle redevient disponible) et la fait suivre (pin + boussole).
+        // opts.surPlace : acceptation-validation immédiate par la console de
+        // proximité, sans toucher à la quête en cours.
+        function _acceptQuestEtape(grappeId, etapeId, opts) {
+            opts = opts || {};
+            const miseDeCote = [];
+            const cible = ((GRAPPE_QUESTS[grappeId] || {}).quete || {}).etapes || [];
+            const aUnPin = !!(cible.find(e => e.id === etapeId) || {}).objectifGeo;
+            if (!opts.surPlace && aUnPin) {
+                Object.entries(GRAPPE_QUESTS).forEach(([gid, g]) => {
+                    ((g.quete || {}).etapes || []).forEach(e => {
+                        if (gid === grappeId && e.id === etapeId) return;
+                        if (!e.objectifGeo || !grappeQuestState[gid] || grappeQuestState[gid][e.id] !== 'active') return;
+                        delete grappeQuestState[gid][e.id];
+                        miseDeCote.push(e.titre);
+                    });
+                });
+            }
             if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
             grappeQuestState[grappeId][etapeId] = 'active';
+            if (!opts.surPlace && aUnPin) window._selectedQuestKey = grappeId + ':' + etapeId;
             journalEvenement('quest_started', { grappe: grappeId, etape: etapeId });
             saveProgress();
             renderGrappeQuestModal(grappeId);
             updateQuestMarkers();
-            showToast('🗺️ Quête acceptée — direction le terrain');
+            try { updateQuestCompass(); } catch (e) {}
+            if (opts.surPlace) return;
+            showToast(miseDeCote.length
+                ? TF('🗺️ Quête acceptée — « %1 » mise de côté', T(miseDeCote[0]))
+                : '🗺️ Quête acceptée — direction le terrain');
         }
+        // Quête suivie = son pin sur la mappe et la boussole (une au plus).
+        function _queteSuivie(gid, etapeId) { return window._selectedQuestKey === gid + ':' + etapeId; }
 
         function _completeQuestEtape(grappeId, etapeId) {
             const grappe = GRAPPE_QUESTS[grappeId];
@@ -38854,15 +38889,14 @@
             subtitle.textContent = TF('%1 quête(s) — %2 en cours', list.length, activeCount);
 
             body.innerHTML = '';
-            // Si pas de quête sélectionnée, sélectionner automatiquement la première active
+            // Quête suivie disparue (terminée, mise de côté) : plus rien de suivi.
+            // Plus de sélection automatique : « ne plus suivre » est respecté.
             const activeList = list.filter(q => q.status === 'active');
-            if (activeList.length > 0) {
-                const currentSelected = window._selectedQuestKey;
-                const stillExists = activeList.some(q => (q.grappeId + ':' + q.etape.id) === currentSelected);
-                if (!stillExists) {
-                    window._selectedQuestKey = activeList[0].grappeId + ':' + activeList[0].etape.id;
-                    updateQuestMarkers();
-                }
+            const currentSelected = window._selectedQuestKey;
+            if (currentSelected && !activeList.some(q => (q.grappeId + ':' + q.etape.id) === currentSelected)) {
+                window._selectedQuestKey = null;
+                updateQuestMarkers();
+                try { updateQuestCompass(); } catch (e) {}
             }
             list.forEach(({ grappeId, grappe, etape, status }) => {
                 const questKey = grappeId + ':' + etape.id;
@@ -38927,11 +38961,27 @@
                     followBtn.onclick = (e) => {
                         e.stopPropagation();
                         window._selectedQuestKey = questKey;
+                        saveProgress();
                         updateQuestMarkers();
                         updateQuestCompass();
                         renderQuestJournal();
                     };
                     actions.appendChild(followBtn);
+                }
+                // « Ne plus suivre » : la quête reste active, pin et boussole s'éteignent.
+                if (status === 'active' && isSelected) {
+                    const unfollowBtn = document.createElement('button');
+                    unfollowBtn.className = 'qj-quest-btn';
+                    unfollowBtn.textContent = 'Ne plus suivre';
+                    unfollowBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        window._selectedQuestKey = null;
+                        saveProgress();
+                        updateQuestMarkers();
+                        updateQuestCompass();
+                        renderQuestJournal();
+                    };
+                    actions.appendChild(unfollowBtn);
                 }
                 const detailBtn = document.createElement('button');
                 detailBtn.className = 'qj-quest-btn';
@@ -39298,7 +39348,8 @@
             Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
                 grappe.quete.etapes.forEach(etape => {
                     const status = _getEtapeStatus(gid, etape);
-                    if (status === 'active' && etape.objectifGeo) {
+                    // Zone au sol : quête suivie seulement (comme son pin)
+                    if (status === 'active' && etape.objectifGeo && _queteSuivie(gid, etape.id)) {
                         const r = etape.objectifGeo.rayon || 50;
                         const color = grappe.color || '#F59E0B';
                         features.push({
@@ -39336,12 +39387,13 @@
             // Style plus discret en mode zoom (close), plus visible en mode planning (far)
             const isPlanning = (_mapViewMode === 'far');
 
-            // Récupérer toutes les quêtes actives (status === 'active')
+            // Seule la quête SUIVIE a son pin (règle du 16/10) : une quête active
+            // non suivie n'apparaît pas sur la mappe.
             const list = [];
             Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
                 grappe.quete.etapes.forEach(etape => {
                     const status = _getEtapeStatus(gid, etape);
-                    if (status === 'active' && etape.objectifGeo) {
+                    if (status === 'active' && etape.objectifGeo && _queteSuivie(gid, etape.id)) {
                         list.push({ grappeId: gid, grappe, etape });
                     }
                 });
@@ -39472,7 +39524,7 @@
             _hideNearbyQuestConsole();
             // Étape pas encore acceptée : on l'accepte sur place avant de la valider.
             if (status === 'available' && typeof _acceptQuestEtape === 'function') {
-                _acceptQuestEtape(gid, etapeId);
+                _acceptQuestEtape(gid, etapeId, { surPlace: true });   // la quête en cours reste suivie
             }
             // Flux habituel : complétion → Explorium + fresque
             _completeQuestEtape(gid, etapeId);
@@ -39499,23 +39551,8 @@
                 }
             }
 
-            // Fallback : la plus proche si rien de sélectionné ou si la sélection n'est plus valide
-            if (!target) {
-                let nearestDist = Infinity;
-                Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
-                    grappe.quete.etapes.forEach(etape => {
-                        const status = _getEtapeStatus(gid, etape);
-                        if (status !== 'active') return;
-                        if (!etape.objectifGeo) return;
-                        const dist = getDistance(playerPos.lat, playerPos.lng, etape.objectifGeo.lat, etape.objectifGeo.lng);
-                        if (dist < nearestDist) {
-                            nearestDist = dist;
-                            target = { grappe, etape, dist };
-                        }
-                    });
-                });
-            }
-
+            // Plus de repli sur la quête active la plus proche : la boussole ne
+            // guide que vers la quête suivie (« ne plus suivre » l'éteint).
             const nearest = target;
             if (!nearest) { compass.style.display = 'none'; return; }
             compass.style.display = 'flex';
