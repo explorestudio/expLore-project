@@ -18427,7 +18427,23 @@
             try { saveProgress(); } catch (e) {}
         }
 
+        // Lot 2.2 : l'échoppe du tutoriel disparaît une fois le dialogue de
+        // sortie (section 10) joué, et n'est plus reposée au rechargement.
+        function _echoppeTutoRetirer() {
+            if (!_tutoEtat.echoppeRetiree) { _tutoEtat.echoppeRetiree = true; _tutoSauver(); }
+            const i = bazarMarkers.findIndex(m => m.bazar && m.bazar.id === 'bazar_tuto');
+            if (i >= 0) { try { bazarMarkers[i].marker.remove(); } catch (e) {} bazarMarkers.splice(i, 1); }
+            const j = BAZAR_POINTS.findIndex(b => b.id === 'bazar_tuto');
+            if (j >= 0) BAZAR_POINTS.splice(j, 1);
+            if (currentNearbyBazar && currentNearbyBazar.id === 'bazar_tuto') {
+                currentNearbyBazar = null;
+                const c = document.getElementById('nearbyBazar');
+                if (c) c.classList.add('hidden');
+            }
+        }
+
         function _obSpawnTutorialBazar() {
+            if (_tutoEtat.echoppeRetiree) return;   // lot 2.2 : déjà retirée
             if (BAZAR_POINTS.some(b => b.id === 'bazar_tuto')) return;   // déjà posée
             const p = _obTutoSpawnPoints();
             if (!p) return;
@@ -20358,9 +20374,11 @@
             _tutoSauver();
         }
         // POI de l'autre carte, visible à partir de la section 4 (sinon null).
+        // Lot 2.1 (playtest, décision de David du 16/10) : plus d'« autre carte »
+        // pendant le tutoriel. Aucune nébuleuse hors étape avant la section 12 ;
+        // les autres arrivent avec le terrain (_tuto12Terrain).
         function _tutoAutrePoi() {
-            if (!_tutoAutrePoiId || _tutoSection < 4 || typeof POIS === 'undefined') return null;
-            return POIS.find(p => p.id === _tutoAutrePoiId) || null;
+            return null;
         }
         function _tutoMajMappe() {
             try { updatePOIVisibility(); } catch (e) {}
@@ -20400,13 +20418,12 @@
             });
         }
 
-        // 4 — Première ouverture de la carte. À partir d'ici la mappe ne
-        // montre plus que l'autre carte non collectée (ni poussière, ni orbe,
-        // ni échoppe : elles n'arrivent qu'en section 8).
+        // 4 — Première ouverture de la carte. La mappe ne montre plus rien
+        // (plus d'« autre carte » depuis le lot 2.1 ; poussière, orbe et
+        // échoppe n'arrivent qu'en section 8).
         function _tutoSection4() {
             if (_obDone) return;
             _tutoAtteindre(4);
-            _tutoChoisirAutreCarte();
             _tutoMajMappe();
             _tutoOuvrirCarteTuto();
             _tutoDire('s4', 'carddetail', _TUTO_LIGNES_S4, _tutoSection5);
@@ -20487,6 +20504,7 @@
             _tutoSauver();
             if (_tutoEtat.s10 !== 'dialogue' && _tutoEtat.s10 !== 'guide') return;
             _tutoDire('s10', 'map', _TUTO_LIGNES_S10[_tutoEtat.cas10], () => {
+                _echoppeTutoRetirer();   // lot 2.2 : son office est rempli
                 if (_tutoEtat.s10 === 'dialogue') { _tutoEtat.s10 = 'guide'; _tutoSauver(); }
                 if (_tutoEtat.s10 === 'guide') guideFocus(_tuto10Cibles);
             });
