@@ -294,7 +294,10 @@ section.bloc { margin-top: 46px; }
    en fond CSS, le recouvre si le fichier existe. Fichier absent = rien de cassé. */
 .capture {
   position: relative;
-  margin: 12px auto 0;   /* centrée sous le texte de l'étape */
+  margin: 12px auto 0;
+  /* Centrée sur la largeur de l'étape, pastille comprise : le texte commence
+     46 px après le bord gauche (numéro d'étape), on compense la moitié. */
+  left: -23px;
   width: 150px;
   aspect-ratio: 9 / 19.5;
   border: 1px dashed rgba(240,236,226,0.22);
@@ -302,6 +305,22 @@ section.bloc { margin-top: 46px; }
   background: rgba(240,236,226,0.03);
   overflow: hidden;
   display: flex; align-items: center; justify-content: center;
+}
+.capture.zoomable { cursor: zoom-in; }
+.capture.zoomable:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+/* Capture agrandie (toucher la capture) */
+.zoom-capture {
+  position: fixed; inset: 0; z-index: 100;
+  display: none; align-items: center; justify-content: center;
+  padding: 16px;
+  background: rgba(8,6,15,0.92);
+  cursor: zoom-out;
+}
+.zoom-capture.ouvert { display: flex; }
+.zoom-capture img {
+  max-width: 100%; max-height: 100%;
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
 .capture span {
   font-family: var(--mono);
@@ -614,6 +633,41 @@ section.bloc { margin-top: 46px; }
   // Onglet présélectionné selon le téléphone du lecteur
   var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   choisir(onglets[ios ? 1 : 0]);
+})();
+
+// Captures : un toucher les agrandit en plein écran, un second toucher (ou Échap) referme.
+// Seulement si l'image existe (sinon le cadre « Capture à venir » reste inerte).
+(function () {
+  var voile = document.createElement('div');
+  voile.className = 'zoom-capture';
+  voile.setAttribute('role', 'dialog');
+  voile.setAttribute('aria-label', 'Capture agrandie, touche pour fermer');
+  var img = document.createElement('img');
+  img.alt = '';
+  voile.appendChild(img);
+  document.body.appendChild(voile);
+  function fermer() { voile.classList.remove('ouvert'); }
+  voile.addEventListener('click', fermer);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fermer(); });
+
+  document.querySelectorAll('.capture').forEach(function (cap) {
+    var i = cap.querySelector('i');
+    var m = i && /url\(['"]?([^'")]+)['"]?\)/.exec(i.style.backgroundImage);
+    if (!m) return;
+    var test = new Image();
+    test.onload = function () {
+      cap.classList.add('zoomable');
+      cap.tabIndex = 0;
+      function ouvrir() {
+        img.src = m[1];
+        img.alt = cap.getAttribute('aria-label') || '';
+        voile.classList.add('ouvert');
+      }
+      cap.addEventListener('click', ouvrir);
+      cap.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrir(); } });
+    };
+    test.src = m[1];
+  });
 })();
 </script>
 
