@@ -1,3 +1,7 @@
 CARTES PRETESTEURS (1).pptx
 app/test_backup_avant_port.html
 app/index_backup_avant_port.html
+
+# Claude Code : copies de travail des agents et réglages locaux
+.claude/worktrees/
+.claude/settings.local.json
