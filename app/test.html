@@ -17195,6 +17195,8 @@
             }
 
             /* ═══════════ Enchaînement ═══════════ */
+            // Passe au temps suivant sans attendre de tap.
+            function enchainer(){ busy=false; canAdvance=true; advance(); }
             function advance(){
                 if(!running || !canAdvance || busy || beat>=BEATS.length-1) return;
                 busy=true; canAdvance=false; nextEl.classList.remove('on');
@@ -17221,18 +17223,19 @@
                             amp:1, cad:1.8, gold:true, chosen:true, leaving:false, stopping:false,
                             target:NEB.x*W-Math.max(W*.15,Math.min(H,W)*.17)
                         });
-                        // Point 16 : on n'ouvre la suite qu'une fois la carte sortie.
+                        // Point 16 : la suite attend que la carte soit sortie, puis
+                        // s'enchaîne seule (« Hé toi… », puis le titre) : 16/10.
                         (function waitCard(){
-                            if(cardAt && performance.now()-cardAt > (reduce?200:600)){
-                                busy=false; nextEl.classList.add('on'); canAdvance=true;
-                            } else later(waitCard,150);
+                            if(cardAt && performance.now()-cardAt > (reduce?200:600)) enchainer();
+                            else later(waitCard,150);
                         })();
                         return;
                     }
 
                     if(b.kind==='voice'){
                         says.forEach((el,i)=>later(()=>el.classList.add('on'), reduce?100+i*120:400+i*1000));
-                        later(()=>{ busy=false; nextEl.classList.add('on'); canAdvance=true; }, reduce?400:2300);
+                        // Le temps de lire « Hé toi, tu la vois aussi ? », puis le titre se forme.
+                        later(enchainer, reduce?600:3700);
                         return;
                     }
 
@@ -17250,7 +17253,9 @@
                     }
 
                     if(b.kind==='action'){
-                        later(()=>{ busy=false; nextEl.classList.add('on'); canAdvance=true; }, reduce?300:1900);
+                        // Une animation amène d'elle-même le texte qui la suit (16/10) :
+                        // un tap = un texte, ou une animation puis son texte.
+                        later(enchainer, reduce?300:1900);
                         return;
                     }
 
