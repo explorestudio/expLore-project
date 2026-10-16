@@ -19676,7 +19676,14 @@
             rects.forEach(r => {
                 const x1 = Math.max(0, r.left - _GF_MARGE), y1 = Math.max(0, r.top - _GF_MARGE);
                 const x2 = Math.min(W, r.right + _GF_MARGE), y2 = Math.min(H, r.bottom + _GF_MARGE);
-                d += 'M' + f(x1) + ' ' + f(y1) + 'H' + f(x2) + 'V' + f(y2) + 'H' + f(x1) + 'Z';
+                // Coins arrondis (12 px, comme les panneaux et boutons) : un trou à
+                // angles droits tranchait sur l'interface (retour de David, 16/10).
+                const k = Math.max(0, Math.min(12, (x2 - x1) / 2, (y2 - y1) / 2));
+                d += 'M' + f(x1 + k) + ' ' + f(y1) + 'H' + f(x2 - k)
+                   + 'A' + k + ' ' + k + ' 0 0 1 ' + f(x2) + ' ' + f(y1 + k) + 'V' + f(y2 - k)
+                   + 'A' + k + ' ' + k + ' 0 0 1 ' + f(x2 - k) + ' ' + f(y2) + 'H' + f(x1 + k)
+                   + 'A' + k + ' ' + k + ' 0 0 1 ' + f(x1) + ' ' + f(y2 - k) + 'V' + f(y1 + k)
+                   + 'A' + k + ' ' + k + ' 0 0 1 ' + f(x1 + k) + ' ' + f(y1) + 'Z';
             });
             (polys || []).forEach(p => {
                 d += 'M' + p.map(q => f(q[0]) + ' ' + f(q[1])).join('L') + 'Z';
