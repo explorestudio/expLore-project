@@ -10456,7 +10456,7 @@
                     </svg>
                 </button>
                 <span class="alb-title">Collection</span>
-                <button class="alb-memorial-btn" onclick="closeCollections(); openMindmap();" title="Explorium" style="position:relative;">
+                <button class="alb-memorial-btn" onclick="if (_exploriumAccessible()) { closeCollections(); openMindmap(); }" title="Explorium" style="position:relative;">
                     <span class="vault-notif-dot vault-notif-dot-collections" style="display:none;"></span>
                     <svg class="hub-lock-badge" aria-hidden="true"><use href="#hubPadlock"/></svg>
                     <svg width="20" height="20" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="22" y1="22" x2="6" y2="22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="22" y1="22" x2="38" y2="22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="22" y1="22" x2="14" y2="8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="22" y1="22" x2="14" y2="36" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="6" cy="22" r="4" fill="currentColor" opacity="0.75"/><circle cx="38" cy="22" r="4" fill="currentColor" opacity="0.75"/><circle cx="14" cy="8" r="4" fill="currentColor" opacity="0.75"/><circle cx="14" cy="36" r="4" fill="currentColor" opacity="0.75"/><circle cx="22" cy="22" r="6" fill="currentColor"/></svg>
@@ -11621,7 +11621,7 @@
                     <div class="journal-screen-card-subtitle" id="journalScreenCardType">Personnage</div>
                     <div class="journal-screen-card-image" id="journalScreenCardImage" onclick="journalBackBtn()" title="Retour à la carte">🎴</div>
                 </div>
-                <button class="journal-screen-memorial-btn" onclick="journalBackBtn(); setTimeout(openMindmap, 300);" title="Explorium" style="position:relative;">
+                <button class="journal-screen-memorial-btn" onclick="if (_exploriumAccessible()) { journalBackBtn(); setTimeout(openMindmap, 300); }" title="Explorium" style="position:relative;">
                     <span class="vault-notif-dot vault-notif-dot-journal" style="display:none;"></span>
                     <svg class="hub-lock-badge" aria-hidden="true"><use href="#hubPadlock"/></svg>
                     <svg width="20" height="20" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="22" y1="22" x2="6" y2="22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="22" y1="22" x2="38" y2="22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="22" y1="22" x2="14" y2="8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="22" y1="22" x2="14" y2="36" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="6" cy="22" r="4" fill="currentColor" opacity="0.75"/><circle cx="38" cy="22" r="4" fill="currentColor" opacity="0.75"/><circle cx="14" cy="8" r="4" fill="currentColor" opacity="0.75"/><circle cx="14" cy="36" r="4" fill="currentColor" opacity="0.75"/><circle cx="22" cy="22" r="6" fill="currentColor"/></svg>
@@ -16456,6 +16456,8 @@
         let _hubJfSceneVue        = false;  // la jeune fille a parlé de l'Explorium au QG
         let _hubVaultNotifPending = false;  // pastille Explorium retenue pendant le verrouillage
         function _hubExploriumLocked() { return !_hubExploriumOpened; }
+        // Explorium ouvert ET révélé par le tutoriel (section 17, ou tutoriel fini).
+        function _exploriumAccessible() { return !_hubExploriumLocked() && uiEstRevele('explorium'); }
         let _obAct2Done    = false;
         let _obAct3Done    = false;
         // La mappe doit se réveiller dès la collecte de la carte tutoriel, pas à la fin du
@@ -22918,6 +22920,14 @@
             const now = Date.now();
             let changed = false;
             Object.keys(poiCollectedAt).forEach(poiId => {
+                // Ressources du tutoriel (dust_tuto, orb_tuto…) : jamais de respawn,
+                // sinon la section 12 les croit « pas prises » (lot 1.2) et elles
+                // redeviennent collectables (lot 2.3). L'entrée est seulement purgée.
+                if (/^(dust|orb)_tuto\d*$/.test(poiId)) {
+                    delete poiCollectedAt[poiId];
+                    delete poiCollectedKind[poiId];
+                    return;
+                }
                 if (now - poiCollectedAt[poiId] < poiCooldownMs) return;
                 const kind = poiCollectedKind[poiId];
                 const getter = POI_KIND_ARRAYS[kind];
@@ -29017,7 +29027,22 @@
 
         function handleCardDetailBackdropClick(e) {
             // Fermer si clic sur le backdrop (pas sur le contenu intérieur)
-            if (e.target === document.getElementById('cardDetailView')) closeCardDetail();
+            if (e.target !== document.getElementById('cardDetailView')) return;
+            // Lot 1.5 : bandes « Mappe » allumées → le tap mène à la mappe, quel
+            // que soit l'écran d'origine (collection, sac, carnet…).
+            if (document.querySelector('#cardDetailView .ob-exit-hint.show')) { retourMappe(); return; }
+            closeCardDetail();
+        }
+
+        // Ferme tous les écrans empilés et rend la mappe.
+        function retourMappe() {
+            const carnet = document.getElementById('journalScreen');
+            if (carnet && carnet.classList.contains('show')) closeJournalScreen();
+            closeCardDetail();
+            const sac = document.getElementById('bagScreen');
+            if (sac && sac.classList.contains('show')) closeBagScreen();
+            closeCollections();
+            closeMindmap();
         }
 
         function closeCardDetail() {
@@ -29162,6 +29187,7 @@
 
         function updateCardLevelDisplay() {
             if (!selectedCard) return;
+            updateCardDetailOrbesDisplay();   // lot 1.4 : même lecture que le bouton d'orbe
             const cl = cardLevels[selectedCard.id] || { level: 0, experience: 0 };
             document.getElementById('cardLevelDisplay').textContent = `Niveau ${cl.level}`;
             document.getElementById('cardRarityGemFlavor').innerHTML = getRarityGemHTML(selectedCard.rarity);
@@ -32907,6 +32933,7 @@
         }
 
         function openStudioScreen() {
+            if (!uiEstRevele('qg')) return;   // lot 1.1 : pas de QG avant la section 15
             _hideAllNearbyConsoles('studio');
             document.getElementById('studioCardName').textContent = selectedCard ? selectedCard.name : '';
             document.getElementById('studioDustCounter').textContent = memorialDust;
@@ -33212,7 +33239,7 @@
                 return _stEntete('🕯️', 'Explorium', "La flamme grandit à mesure que ton Explorium se complète.")
                     + `<div class="studio-gauge"><div style="width:${pct}%"></div></div>`
                     + `<div class="studio-panel-desc"><b style="color:#ffd050">${pct} %</b> complété</div>`
-                    + _stTiles([{ emoji: '🕸️', nom: "Ouvrir l'Explorium", primaire: true, action: 'closeStudioPanel(); closeStudioScreen(); openMindmap()' }]);
+                    + _stTiles([{ emoji: '🕸️', nom: "Ouvrir l'Explorium", primaire: true, action: 'if (_exploriumAccessible()) { closeStudioPanel(); closeStudioScreen(); openMindmap(); }' }]);
             },
 
             window: () => _stEntete('🪟', 'Fenêtre magique', "Elle s'ouvre sur des panoramas de Lyon à travers les âges. La lumière change selon l'heure.")
@@ -33292,7 +33319,6 @@
             ],
             aureleSansCle: [
                 _hubSay('aurele', _HUB_HTML.porte),
-                _hubSay('aurele', "On n'entre pas sans la clé. Le règlement, je ne l'ai pas écrit."),
                 _hubSay('aurele', "Comment il marche ? Il tourne. C'est tout ce qu'on a besoin de savoir, ici."),
             ],
             aureleCle: [
@@ -33439,7 +33465,9 @@
         function hubDoorTap() {
             if (_hubVnOpen() || _hubOpening) return;
             if (_hubExploriumOpened) { closeStudioScreen(); openMindmap(); return; }
-            if (!_hubExploriumKey) { vnShow(HUB_LINES.porteScellee); return; }
+            // Lot 1.1 : sans clé (parcours joueur avant la section 17), porte inerte ;
+            // la réplique « Scellée… la clé de l'Organisation » n'est plus jouée.
+            if (!_hubExploriumKey) return;
             _hubOpenDoor();
         }
 
@@ -33515,6 +33543,7 @@
         // la salle de l'Explorium, fait pulser la porte.
         function hubGoToQG() {
             _hubCloseLocked();
+            if (!uiEstRevele('qg')) return;
             const ouvert = id => { const el = document.getElementById(id); return !!(el && el.classList.contains('show')); };
             if (ouvert('collectionsPanel'))  closeCollections();
             if (ouvert('journalScreen'))     closeJournalScreen();
@@ -35633,6 +35662,9 @@
                     claimedPaliers.add(node.palier);
                     node.rewardFn();
                     saveProgress();
+                    // Lot 1.4 : un palier peut donner des orbes fiche carte ouverte ;
+                    // compteur et bouton « Utiliser une orbe » suivent le solde réel.
+                    try { if (selectedCard) updateCardLevelDisplay(); } catch (e) {}
                 }
             });
         }
@@ -38571,7 +38603,10 @@
                 openArchiveFragment();
                 return;
             }
-            if (_hubExploriumLocked()) { _hubShowExploriumLocked(); return; }
+            // Correctifs playtest (lot 1.1) : avant la section 17, le tap ne fait
+            // rien (le cadenas suffit). L'ancienne fiche « Explorium scellé » et
+            // son « Aller au QG » ne s'ouvrent plus.
+            if (!_exploriumAccessible()) return;
             // Redirection vers Explorium (l'ancienne Voûte est désactivée)
             clearVaultNotification();
             _hideAllNearbyConsoles('explorium');
@@ -38787,10 +38822,10 @@
                 detailBtn.textContent = 'Voir grappe';
                 detailBtn.onclick = (e) => {
                     e.stopPropagation();
+                    if (!_exploriumAccessible()) return;   // avant la section 17 : rien
                     closeQuestJournal();
                     openMindmap();
-                    // Explorium scellé : la feuille suffit, pas de modale grappe par-dessus.
-                    if (!_hubExploriumLocked()) setTimeout(() => openGrappeQuestModal(grappeId), 200);
+                    setTimeout(() => openGrappeQuestModal(grappeId), 200);
                 };
                 actions.appendChild(detailBtn);
 
