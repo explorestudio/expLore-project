@@ -9340,7 +9340,8 @@
         body.ui-masque-journal_quetes #hudQuestJournal,
         body.ui-masque-journal_quetes #hudQuestCompass,
         body.ui-masque-jumelles #viewToggleBtn,
-        body.ui-masque-parametres #settingsToggleBtn {
+        body.ui-masque-parametres #settingsToggleBtn,
+        body.ui-masque-carnet #journalTabBtn {
             visibility: hidden !important;
             pointer-events: none !important;
         }
@@ -16143,7 +16144,9 @@
         // Un joueur dont le tutoriel est terminé (_obDone) voit tout.
         // État sauvegardé avec la progression (_uiEtat dans saveProgress), remis à
         // zéro par « Relancer le tutoriel » (resetOnboarding).
-        const UI_CLES = ['avatar', 'poussiere', 'journal_quetes', 'jumelles', 'parametres', 'explorium', 'qg', 'barre_bas'];
+        // 'carnet' (16/10) : bouton du carnet de la fiche carte, révélé quand la
+        // jeune fille le mentionne (section 6).
+        const UI_CLES = ['avatar', 'poussiere', 'journal_quetes', 'jumelles', 'parametres', 'explorium', 'qg', 'barre_bas', 'carnet'];
         const UI_REVELE_DEFAUT = { parametres: true };
         const UI_CIBLES = {
             avatar:         ['#avatarBtn'],
@@ -16154,6 +16157,7 @@
             explorium:      ['#btnMemorial'],
             qg:             ['#btnStudio'],
             barre_bas:      ['#btnMemorial', '#btnStudio'],
+            carnet:         ['#journalTabBtn'],
         };
         let _uiRevele = {};              // { clé: true } — révélées pendant le tutoriel
         let _sacVus = {};                // objets du sac déjà possédés une fois (id → true)
@@ -16179,6 +16183,8 @@
         function uiEstRevele(cle) {
             if (_obDone) return true;
             if (cle === 'explorium' || cle === 'qg') return !!(_uiRevele[cle] || _uiRevele.barre_bas);
+            // Carnet : une partie sauvegardée au-delà de la section 6 l'a déjà vu
+            if (cle === 'carnet') return !!_uiRevele.carnet || (typeof _tutoSection === 'number' && _tutoSection > 6);
             return !!(_uiRevele[cle] || UI_REVELE_DEFAUT[cle]);
         }
 
@@ -20036,7 +20042,7 @@
             _tutoMajMappe();
             _tutoOuvrirCarteTuto();
             // Lot 3.1 : tunnel dès la section 4 (assombri pendant la réplique).
-            guideFocus(['#addExpBtn'], { visibles: _TUTO_FICHE_COLONNE, masques: ['#journalTabBtn'], pulse: false });
+            guideFocus(['#addExpBtn'], { visibles: _TUTO_FICHE_COLONNE, pulse: false });
             _tutoDire('s4', 'carddetail', _TUTO_LIGNES_S4, _tutoSection5);
         }
 
@@ -20048,7 +20054,7 @@
             if (_obDone || _tutoSection > 5) return;
             _tutoAtteindre(5);
             _tutoOuvrirCarteTuto();
-            guideFocus(['#addExpBtn'], { visibles: _TUTO_FICHE_COLONNE, masques: ['#journalTabBtn'] });
+            guideFocus(['#addExpBtn'], { visibles: _TUTO_FICHE_COLONNE });
         }
 
         // 6 — Première page inscrite : seul le bouton du carnet reste cliquable.
@@ -20056,8 +20062,9 @@
             if (_obDone || _tutoSection > 6) return;
             _tutoAtteindre(6);
             _tutoOuvrirCarteTuto();
-            guideFocus(['#journalTabBtn'], { visibles: _TUTO_FICHE_COLONNE, masques: ['#addExpBtn'] });
-            _tutoDire('s6', 'carddetail', _TUTO_LIGNES_S6);
+            guideFocus(['#journalTabBtn'], { visibles: _TUTO_FICHE_COLONNE });
+            // Le carnet apparaît (et pulse, cf. guideFocus) quand la jeune fille l'a mentionné.
+            _tutoDire('s6', 'carddetail', _TUTO_LIGNES_S6, () => uiReveler('carnet'));
         }
 
         // 7 — Présentation du carnet, à sa toute première ouverture : l'entrée à
