@@ -14443,6 +14443,7 @@
                 description: 'Trésors de la Presqu\'île lyonnaise',
                 cards: [
                     { id: 'card6', cardKind: 'local', collections: ["pierres_memoire", "ville_du_livre"], name: 'Place Bellecour', type: 'Lieu', poiId: 'vdl_bellecour', rarity: 'legendary', supertype: 'histoire',
+                      art: './assets/Cards/Place_Bellecour/Place_Bellecour1.jpg',
                       clue: 'Lève les yeux vers le centre — cherche l\'équestre de bronze qui domine la place.', clueIcon: '🏇',
                       incipit: 'J\'ai été le cœur de mille révolutions et de mille fêtes. Les villes oublient, moi jamais.' },
                     { id: 'card_office_tourisme', cardKind: 'local', collections: [], name: 'Office du Tourisme', type: 'Lieu', poiId: 'office_tourisme', rarity: 'rare', supertype: 'societe',
@@ -14493,6 +14494,7 @@
                       clue: 'Assieds-toi sur une des gradins de pierre — compte les rangées depuis le bas.', clueIcon: '🏛️',
                       incipit: 'J\'avais vingt mille places. Les comédiens sont partis, mais la colline garde encore la forme de mes applaudissements.' },
                     { id: 'card13', cardKind: 'local', collections: ["pierres_memoire", "ville_du_livre"], name: 'Cathédrale Saint-Jean', type: 'Lieu', poiId: 'saint_jean', rarity: 'rare', supertype: 'histoire',
+                      art: './assets/Cards/Cathedrale_Stjean/Cathedrale_Stjean1.jpg',
                       clue: 'Lève les yeux vers le portail — cherche les médaillons sculptés qui racontent des scènes de la Genèse.', clueIcon: '🕍',
                       incipit: 'On m\'a mis trois siècles à bâtir. Je suis l\'œuvre de mains qui ne se sont jamais rencontrées.' },
                     { id: 'card14', cardKind: 'local', collections: ["pierres_memoire"], name: 'Traboule Renaissance', type: 'Lieu', poiId: 'vieux_lyon', rarity: 'common', supertype: 'societe', supertype2: 'histoire',
@@ -14550,18 +14552,23 @@
                 description: 'L\'imprimerie lyonnaise du XVIe siècle : maîtres, martyrs et voix nouvelles',
                 cards: [
                     { id: 'card_louise_labe', cardKind: 'local', collections: ["ville_du_livre"], name: 'Louise Labé', type: 'Personnage', poiId: 'bellecordiere', rarity: 'rare', supertype: 'arts',
+                      art: './assets/Cards/Louise_Labe/Louise_Labe1.jpg',
                       clue: 'Cherche la rue qui porte son nom, juste au nord de la grande place.', clueIcon: '🪶',
                       incipit: 'On a dit qu\'une femme ne pouvait écrire ainsi — que je n\'existais pas. Mes vers, eux, n\'ont jamais douté.' },
                     { id: 'card_gryphe', cardKind: 'local', collections: ["ville_du_livre"], name: 'Sébastien Gryphe', type: 'Personnage', poiId: 'gryphe', rarity: 'rare', supertype: 'societe', supertype2: 'histoire',
+                      art: './assets/Cards/Sebastien_Gryphe/Sebastien_Gryphe1.jpg',
                       clue: 'Dans le Vieux-Lyon, cherche l\'ombre des vieux ateliers près de Saint-Jean.', clueIcon: '🦅',
                       incipit: 'J\'ai donné à la France ses lettres penchées et à Lyon ses plus beaux livres. Le reste n\'est que poussière d\'encre.' },
                     { id: 'card_dolet', cardKind: 'local', collections: ["ville_du_livre"], name: 'Étienne Dolet', type: 'Personnage', poiId: 'dolet', rarity: 'rare', supertype: 'societe', supertype2: 'histoire',
+                      art: './assets/Cards/Etienne_Dolet/Etienne_dolet1.jpg',
                       clue: 'Descends rue Mercière, là où une hache servait jadis d\'enseigne.', clueIcon: '🪓',
                       incipit: 'Trois mots de trop dans une traduction, et l\'on m\'a déclaré hérétique. Vivre libre, c\'était vivre.' },
                     { id: 'card_presse_doloire', cardKind: 'local', collections: ["ville_du_livre"], name: 'La presse de la Doloire', type: 'Objet', poiId: 'presse_doloire', rarity: 'common', supertype: 'science', supertype2: 'societe',
+                      art: './assets/Cards/Presse_Gutemberg/Presse_Gutemberg1.jpg',
                       clue: 'Cherche l\'atelier rue Mercière où l\'on tirait les feuilles une à une.', clueIcon: '🗜️',
                       incipit: 'Avant moi, copier un livre prenait des mois. Avec moi, cent feuilles par jour. Je n\'ai pas changé le monde — je l\'ai multiplié.' },
                     { id: 'card_palais_st_jean', cardKind: 'local', collections: ["ville_du_livre"], name: 'Bibliothèque Saint-Jean', type: 'Lieu', poiId: 'palais_st_jean', rarity: 'rare', supertype: 'histoire', supertype2: 'societe',
+                      art: './assets/Cards/Bibliotheque_Stjean/Bibliotheque_Stjean1.jpg',
                       clue: 'Juste à côté de la cathédrale, cherche l\'ancien palais archiépiscopal — il a longtemps gardé les livres de la ville.', clueIcon: '📚',
                       incipit: 'Ce qui a survécu au feu, à la censure et à l\'oubli a fini, un temps, sous mon toit. Les livres sont partis ailleurs depuis. Moi, je suis resté.' },
                 ]
@@ -15997,14 +16004,14 @@
             clue: 'Un présent d\'apparat, offert puis presque oublié. Il en manque deux.',
             clueIcon: '✦',
             collections: [],
-            art: './assets/clef%20de%20la%20ville.png',
+            art: './assets/Cards/Clef_de_la_ville/Clef_de_la_ville1.jpg',
 
             // Visuels par niveau (index = niveau). Le chapitre I porte
             // l'illustration réelle ; les deux suivants sont des visuels
             // PROVISOIRES, posés pour éprouver la rangée de pastilles et le
             // morphing — à remplacer par les illustrations définitives.
             artByLevel: [
-                './assets/clef%20de%20la%20ville.png',   // niveau 0 — une clef
+                './assets/Cards/Clef_de_la_ville/Clef_de_la_ville1.jpg',   // niveau 0 — une clef
                 './assets/clef_chapitre2.svg',           // niveau 1 — la deuxième se devine
                 './assets/clef_chapitre3.svg',           // niveau 2 — les trois sur le plat
             ],
