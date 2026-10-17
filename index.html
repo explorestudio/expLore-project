@@ -482,6 +482,25 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
 .h-sub-detail { font-size: 15px; line-height: 1.75; color: var(--text-dim); max-width: 420px; margin-bottom: 44px; }
 .h-social-proof { margin-top: 22px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--text-faint); text-transform: uppercase; }
 .h-social-proof span { color: rgba(201,145,58,0.5); margin: 0 6px; }
+/* Hero mobile : titre et téléphone côte à côte, pour tout voir sur le premier écran */
+@media(max-width:800px) {
+  section#hero { justify-content: flex-start; padding-top: 84px !important; }
+  .h-une { min-height: 44px; gap: 10px; margin-bottom: 22px; padding: 6px 14px 6px 6px; font-size: 14px; }
+  .h-une-tag { padding: 7px 10px; font-size: 10px; }
+  .hero-inner { grid-template-columns: 1fr auto; column-gap: 16px; row-gap: 0; align-items: center; }
+  .hero-text { display: contents; }
+  .h-ey { grid-column: 1 / -1; grid-row: 1; margin-bottom: 18px; }
+  .h-title { grid-column: 1; grid-row: 2; margin-bottom: 14px; }
+  #hero .h-title { font-size: clamp(40px,12vw,54px) !important; }
+  .h-sub { grid-column: 1; grid-row: 3; align-self: start; margin-bottom: 0 !important; }
+  .hero-phone-wrap { grid-column: 2; grid-row: 2 / 4; order: 0; padding: 0; }
+  .hero-inner .phone-frame { width: clamp(118px,34vw,150px); height: auto; aspect-ratio: 124 / 254; border-radius: 20px; }
+  .phone-screen { inset: 3px; border-radius: 17px; }
+  .h-sub-detail { grid-column: 1 / -1; grid-row: 4; margin-top: 26px; }
+  .h-actions { grid-column: 1 / -1; grid-row: 5; }
+  .h-social-proof { grid-column: 1 / -1; grid-row: 6; }
+  .h-dots { grid-column: 1 / -1; grid-row: 7; }
+}
 .btn-proto-primary { background: var(--gold); color: var(--ink); font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; text-decoration: none; padding: 17px 36px; border-radius: 2px; display: inline-block; transition: background 0.2s, transform 0.2s; }
 .btn-proto-primary:hover { background: var(--gold-light); transform: translateY(-1px); }
 .btn-proto-primary::after { content: ''; display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: var(--ink); margin-left: 10px; vertical-align: middle; animation: protoDot 2s ease-in-out infinite; }
