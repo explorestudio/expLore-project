@@ -441,6 +441,11 @@ section { padding: 110px 10vw; }
 .es-main { flex:2; padding:40px 34px; border-color:rgba(201,145,58,0.45); background:rgba(201,145,58,0.05); }
 .es-main:hover { border-color:var(--gold); background:rgba(201,145,58,0.08); }
 .es-main .es-title { font-size:clamp(28px,3vw,40px); font-weight:300; color:var(--gold-light); }
+.es-details { margin-top:6px; font-size:14px; line-height:1.7; color:var(--text); }
+.es-warn { margin-top:10px; padding:12px 16px; border:1px solid rgba(232,192,106,0.4); border-left:3px solid var(--gold-light); border-radius:2px; background:rgba(232,192,106,0.08); font-size:14px; line-height:1.6; color:var(--text); }
+.es-warn strong { font-weight:600; color:var(--gold-light); }
+.es-btn { align-self:flex-start; display:inline-flex; align-items:center; min-height:44px; margin-top:14px; padding:0 30px; background:var(--gold); color:var(--ink); font-family:'Outfit',sans-serif; font-size:12px; font-weight:500; letter-spacing:2px; text-transform:uppercase; border-radius:2px; transition:background 0.2s; }
+.es-main:hover .es-btn { background:var(--gold-light); }
 /* Fin des règles de la carte test terrain */
 @media(max-width:800px){ .es-grid{flex-direction:column;} .es-card{padding:24px 20px;} }
 @media(prefers-reduced-motion:reduce){ .es-card, .es-more a{transition:none;} }
@@ -622,9 +627,15 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
     <!-- DEBUT carte test terrain : supprimer jusqu'à « FIN carte test terrain » quand il n'y a plus de session -->
     <a class="es-card es-main" href="https://docs.google.com/forms/d/e/1FAIpQLScS5u3_C0sXMenpSuy9Pzp22pjF51Cw-qdzUU7putWiKPNcRg/viewform" target="_blank" rel="noopener noreferrer">
       <!-- LIGNE D'ÉTAT À MODIFIER : changer les 3 textes de la ligne suivante (français, anglais, puis texte affiché) -->
-      <span class="es-state" data-fr="Inscriptions ouvertes jusqu'au 24 octobre" data-en="Sign-ups open until 24 October">Inscriptions ouvertes jusqu'au 24 octobre</span>
-      <h3 class="es-title" data-fr="Inscris-toi au test Bellecour" data-en="Sign up for the Bellecour test">Inscris-toi au test Bellecour</h3>
-      <span class="es-ctx" data-fr="Tu es à Lyon ? Viens explorer la vraie carte, dehors." data-en="In Lyon? Come and explore the real map, outdoors.">Tu es à Lyon ? Viens explorer la vraie carte, dehors.</span>
+      <span class="es-state" data-fr="Prochaine session · samedi 24 octobre" data-en="Next session · Saturday 24 October">Prochaine session · samedi 24 octobre</span>
+      <h3 class="es-title" data-fr="Rejoins le groupe de testeurs" data-en="Join the tester group">Rejoins le groupe de testeurs</h3>
+      <span class="es-ctx" data-fr="Tu es à Lyon ? Viens découvrir en devenant testeur." data-en="In Lyon? Come and discover it by becoming a tester.">Tu es à Lyon ? Viens découvrir en devenant testeur.</span>
+      <!-- DÉTAILS DE LA SESSION À MODIFIER : changer les 3 textes de la ligne suivante (français, anglais, puis texte affiché) -->
+      <span class="es-details" data-fr="Samedi 24 octobre, 14h · Parvis de la cathédrale Saint-Jean · Environ 2h · À partir de 18 ans" data-en="Saturday 24 October, 2 pm · Parvis de la cathédrale Saint-Jean · About 2 hours · Ages 18 and up">Samedi 24 octobre, 14h · Parvis de la cathédrale Saint-Jean · Environ 2h · À partir de 18 ans</span>
+      <!-- DEBUT avertissement temporaire : supprimer jusqu'à « FIN avertissement » quand la session est confirmée -->
+      <span class="es-warn"><strong data-fr="Session sous réserve." data-en="Session to be confirmed.">Session sous réserve.</strong> <span data-fr="Au vu de la situation en centre-ville, nous confirmons son maintien ou son report mercredi 21 octobre. Ton inscription reste valable dans les deux cas." data-en="Given the situation in the city centre, we will confirm or postpone it on Wednesday 21 October. Your sign-up remains valid either way.">Au vu de la situation en centre-ville, nous confirmons son maintien ou son report mercredi 21 octobre. Ton inscription reste valable dans les deux cas.</span></span>
+      <!-- FIN avertissement -->
+      <span class="es-btn" data-fr="S'inscrire" data-en="Sign up">S'inscrire</span>
     </a>
     <!-- FIN carte test terrain -->
 
