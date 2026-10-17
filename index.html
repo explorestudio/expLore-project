@@ -60,22 +60,6 @@ a, button, input { cursor: none; }
 }
 .screen-phone-mini:hover::after { opacity: 1; }
 
-/* ── Steps déverrouillés au scroll ── */
-.step { opacity: 0; transform: translateY(20px) scale(0.97); transition: opacity 0.6s ease, transform 0.6s ease, border-color 0.3s, background 0.3s; }
-.step.unlocked { opacity: 1; transform: translateY(0) scale(1); }
-.step-lock {
-  position: absolute; top: 14px; left: 14px;
-  width: 18px; height: 18px; opacity: 0.3;
-  font-size: 14px; transition: opacity 0.4s;
-}
-.step.unlocked .step-lock { opacity: 0; }
-.step-unlock-flash {
-  position: absolute; inset: 0; border-radius: 2px;
-  background: radial-gradient(ellipse at center, rgba(201,145,58,0.15) 0%, transparent 70%);
-  opacity: 0; pointer-events: none; transition: opacity 0.6s;
-}
-.step.just-unlocked .step-unlock-flash { opacity: 1; }
-
 
 /* Bouton entrée lore */
 .lore-entry-btn {
@@ -395,16 +379,6 @@ section { padding: 110px 10vw; }
 .fp.hc::after { content:''; position:absolute; top:10px; right:7px; width:26px; height:34px; background:linear-gradient(145deg,#1a1428,#0e0c18); border:1px solid rgba(201,145,58,0.5); border-radius:3px; }
 @media(max-width:800px){.lore-grid{grid-template-columns:1fr;gap:40px;} .book-side{order:-1;} .bwrap{width:290px;height:206px;}}
 
-/* How */
-#how { border-top:1px solid rgba(201,145,58,0.1); background:linear-gradient(180deg,transparent,rgba(201,145,58,0.03) 50%,transparent); }
-.steps { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; margin-top:52px; }
-.step { padding:34px 26px; border:1px solid rgba(201,145,58,0.1); position:relative; transition:border-color 0.3s,background 0.3s; }
-.step:hover { border-color:rgba(201,145,58,0.3); background:rgba(201,145,58,0.03); }
-.sico { width:44px; height:44px; border-radius:50%; border:1px solid rgba(201,145,58,0.3); display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:18px; background:rgba(201,145,58,0.06); }
-.sn { position:absolute; top:14px; right:16px; font-family:'DM Mono',monospace; font-size:11px; color:var(--text-faint); }
-.step h3 { font-family:'Cormorant Garamond',serif; font-size:23px; font-weight:400; margin-bottom:7px; }
-.step p { font-size:15px; line-height:1.7; color:var(--text-dim); }
-@media(max-width:800px){.steps{grid-template-columns:1fr;}}
 
 /* Waitlist */
 #waitlist { border-top:1px solid rgba(201,145,58,0.1); text-align:center; display:flex; flex-direction:column; align-items:center; }
@@ -545,7 +519,6 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
     <li><a href="#actualites" data-fr="Actualités" data-en="News">Actualités</a></li>
     <li><a href="#concept" data-fr="Le concept" data-en="The concept">Le concept</a></li>
     <li><a href="lore.html" data-fr="L'univers" data-en="The world">L'univers</a></li>
-    <li><a href="#how" data-fr="Comment ça marche" data-en="How it works">Comment ça marche</a></li>
     <li><a href="#partners" data-fr="Partenaires" data-en="Partners">Partenaires</a></li>
     <li><a href="#about" data-fr="À propos" data-en="About">À propos</a></li>
     <li><a href="#discord" data-fr="Communauté" data-en="Community">Communauté</a></li>
@@ -567,7 +540,6 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
   <a href="#actualites" onclick="closeMobileNav()">Actualités</a>
   <a href="#concept" onclick="closeMobileNav()">Le concept</a>
   <a href="lore.html" onclick="closeMobileNav()">L'univers</a>
-  <a href="#how" onclick="closeMobileNav()">Comment ça marche</a>
   <a href="#waitlist" onclick="closeMobileNav()">Liste d'attente</a>
   <a href="#about" onclick="closeMobileNav()">À propos</a>
   <a href="#discord" onclick="closeMobileNav()">Communauté</a>
@@ -784,17 +756,6 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
       </div>
     </div>
 
-  </div>
-</section>
-
-<!-- HOW -->
-<section id="how">
-  <p class="ey rv" data-fr="Gameplay" data-en="How it works">Gameplay</p>
-  <h2 class="st rv d1" data-fr="Simple à commencer, infini à explorer" data-en="Simple to start, infinite to explore">Simple à commencer, infini à explorer</h2>
-  <div class="steps">
-    <div class="step rv"><div class="step-unlock-flash"></div><span class="sn">01</span><div class="sico">🗺️</div><h3 data-fr="Ouvre la carte" data-en="Open the map">Ouvre la carte</h3><p data-fr="Lance l'app, vois les points d'intérêt autour de toi. Certains brillent, certains attendent." data-en="Launch the app, see points of interest around you. Some glow, some wait.">Lance l'app, vois les points d'intérêt autour de toi. Certains brillent, certains attendent.</p></div>
-    <div class="step rv d1"><span class="sn">02</span><div class="sico">📍</div><h3 data-fr="Approche-toi" data-en="Get closer">Approche-toi</h3><p data-fr="Les cartes ne se collectent qu'en vrai, sur place. La ville est le plateau de jeu." data-en="Cards can only be collected in person, on location. The city is the game board.">Les cartes ne se collectent qu'en vrai, sur place. La ville est le plateau de jeu.</p></div>
-    <div class="step rv d2"><span class="sn">03</span><div class="sico">✨</div><h3 data-fr="Découvre" data-en="Discover">Découvre</h3><p data-fr="Chaque collecte révèle un fragment : histoire, anecdote, connexion. Le journal se remplit." data-en="Each collect reveals a fragment: history, anecdote, connection. Your journal fills up.">Chaque collecte révèle un fragment : histoire, anecdote, connexion. Le journal se remplit.</p></div>
   </div>
 </section>
 
@@ -1083,29 +1044,6 @@ setInterval(function() {
   });
 })();
 
-// ── 4. Steps déverrouillés au scroll ──
-(function() {
-  var steps = document.querySelectorAll('.step');
-  if (!steps.length || !window.IntersectionObserver) {
-    steps.forEach(function(s) { s.classList.add('unlocked'); });
-    return;
-  }
-  var delays = [0, 180, 360];
-  var stepObs = new IntersectionObserver(function(entries) {
-    entries.forEach(function(e) {
-      if (!e.isIntersecting) return;
-      var idx = Array.from(steps).indexOf(e.target);
-      var delay = delays[idx] || 0;
-      setTimeout(function() {
-        e.target.classList.add('unlocked', 'just-unlocked');
-        setTimeout(function() { e.target.classList.remove('just-unlocked'); }, 700);
-      }, delay);
-      stepObs.unobserve(e.target);
-    });
-  }, { threshold: 0.25 });
-  steps.forEach(function(s) { stepObs.observe(s); });
-})();
-
 // Scroll ancres — compatibilité tous navigateurs
 document.querySelectorAll('a[href^="#"]').forEach(function(a) {
   a.addEventListener('click', function(e) {
@@ -1209,7 +1147,7 @@ document.addEventListener('mousemove', function(e) {
 
 // Lien nav actif au scroll
 (function() {
-  var sections = ['actualites','concept','how','partners','about','discord'];
+  var sections = ['actualites','concept','partners','about','discord'];
   var links = {};
   sections.forEach(function(id) {
     var a = document.querySelector('.nav-links a[href="#' + id + '"]');
