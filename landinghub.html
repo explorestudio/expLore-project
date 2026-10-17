@@ -221,6 +221,21 @@ body {
   color: var(--text-faint);
 }
 
+/* Avertissement temporaire sous la session (même style que sur index.html) */
+.warn {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border: 1px solid rgba(232,192,106,0.4);
+  border-left: 3px solid var(--gold-light);
+  border-radius: 2px;
+  background: rgba(232,192,106,0.08);
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.warn strong { font-weight: 600; color: var(--gold-light); }
+
 /* Action tertiaire : lien texte, volontairement plus discret */
 .act-third {
   display: inline-block;
@@ -338,10 +353,13 @@ body {
          Nouvelle session : changer le lien du formulaire, le texte et la date data-fin.
          Fin de session : remettre la démo en bouton jaune en tête (le bloc « hors session » est en bas). -->
     <div id="test-session" data-fin="2026-10-24">
-      <a class="act" href="https://docs.google.com/forms/d/e/1FAIpQLScS5u3_C0sXMenpSuy9Pzp22pjF51Cw-qdzUU7putWiKPNcRg/viewform" target="_blank" rel="noopener" aria-label="S'inscrire à la session de test à Bellecour, nouvel onglet">
-        <span class="btn btn-primary">Inscris-toi au test Bellecour</span>
+      <a class="act" href="https://docs.google.com/forms/d/e/1FAIpQLScS5u3_C0sXMenpSuy9Pzp22pjF51Cw-qdzUU7putWiKPNcRg/viewform" target="_blank" rel="noopener" aria-label="S'inscrire à la session de test terrain, nouvel onglet">
+        <span class="btn btn-primary">Inscris-toi au test terrain</span>
       </a>
       <p class="hint"><span class="live">Session en cours</span> Tu es à Lyon ? Viens explorer la vraie carte, dehors.</p>
+      <!-- DEBUT avertissement temporaire : supprimer jusqu'à « FIN avertissement » quand la session est confirmée -->
+      <p class="warn"><strong>Session sous réserve.</strong> Au vu de la situation en centre-ville, nous confirmons son maintien ou son report mercredi 21 octobre. Ton inscription reste valable dans les deux cas.</p>
+      <!-- FIN avertissement -->
     </div>
 
     <div>
