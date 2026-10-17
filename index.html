@@ -434,6 +434,33 @@ section { padding: 110px 10vw; }
 .insta-btn { --insta:radial-gradient(circle farthest-corner at 0% 120%,#fdf497 0%,#fdc45c 12%,#f77737 28%,#f14a4a 42%,#e1306c 56%,#c13584 72%,#833ab4 90%); background:var(--insta); transition:filter 0.2s,transform 0.2s; }
 .insta-btn:hover { background:var(--insta); filter:brightness(0.9); }
 
+/* À la une (pastille du hero) */
+.h-une { position:relative; z-index:1; align-self:flex-start; display:inline-flex; align-items:center; gap:16px; min-height:56px; margin-bottom:30px; padding:10px 24px 10px 10px; border:1px solid rgba(201,145,58,0.45); border-radius:30px; background:rgba(201,145,58,0.08); color:var(--text); text-decoration:none; font-size:17px; line-height:1.4; transition:border-color 0.3s,background 0.3s; }
+.h-une:hover { border-color:var(--gold); background:rgba(201,145,58,0.1); }
+.h-une:focus-visible { outline:2px solid var(--gold-light); outline-offset:3px; }
+.h-une-tag { flex-shrink:0; padding:9px 14px; border-radius:20px; background:var(--gold); color:var(--ink); font-family:'DM Mono',monospace; font-size:12px; letter-spacing:2px; text-transform:uppercase; }
+@media(prefers-reduced-motion:reduce){ .h-une{transition:none;} }
+
+/* Actualités */
+#actualites { border-top:1px solid rgba(201,145,58,0.1); }
+.es-grid { display:flex; gap:2px; margin-top:52px; }
+.es-card { flex:1; display:flex; flex-direction:column; justify-content:center; gap:8px; min-height:44px; padding:30px 26px; border:1px solid rgba(201,145,58,0.1); color:var(--text); text-decoration:none; transition:border-color 0.3s,background 0.3s; }
+.es-card:hover { border-color:rgba(201,145,58,0.3); background:rgba(201,145,58,0.03); }
+.es-card:focus-visible, .es-more a:focus-visible { outline:2px solid var(--gold-light); outline-offset:3px; }
+.es-title { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:400; }
+.es-ctx { font-size:15px; line-height:1.7; color:var(--text-dim); }
+.es-state { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); }
+.es-more { margin-top:22px; font-size:15px; line-height:1.7; color:var(--text-dim); }
+.es-more a { display:inline-block; padding:15px 0; color:var(--gold); text-decoration:underline; text-decoration-color:rgba(201,145,58,0.3); text-underline-offset:5px; line-height:1; transition:color 0.2s,text-decoration-color 0.2s; }
+.es-more a:hover { color:var(--gold-light); text-decoration-color:var(--gold-light); }
+/* Carte test terrain : règles à supprimer avec le bloc « carte test terrain » de la section */
+.es-main { flex:2; padding:40px 34px; border-color:rgba(201,145,58,0.45); background:rgba(201,145,58,0.05); }
+.es-main:hover { border-color:var(--gold); background:rgba(201,145,58,0.08); }
+.es-main .es-title { font-size:clamp(28px,3vw,40px); font-weight:300; color:var(--gold-light); }
+/* Fin des règles de la carte test terrain */
+@media(max-width:800px){ .es-grid{flex-direction:column;} .es-card{padding:24px 20px;} }
+@media(prefers-reduced-motion:reduce){ .es-card, .es-more a{transition:none;} }
+
 /* Join */
 #join { border-top:1px solid rgba(201,145,58,0.1); }
 .join-cards { display:grid; grid-template-columns:1fr 1fr; gap:2px; margin-top:52px; }
@@ -504,6 +531,7 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
 <nav id="nav">
   <a href="#" class="logo">ExpLore</a>
   <ul class="nav-links">
+    <li><a href="#actualites" data-fr="Actualités" data-en="News">Actualités</a></li>
     <li><a href="#concept" data-fr="Le concept" data-en="The concept">Le concept</a></li>
     <li><a href="lore.html" data-fr="L'univers" data-en="The world">L'univers</a></li>
     <li><a href="#how" data-fr="Comment ça marche" data-en="How it works">Comment ça marche</a></li>
@@ -517,6 +545,7 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
   </button>
 </nav>
 <div class="mobile-nav" id="mobileNav">
+  <a href="#actualites" onclick="closeMobileNav()">Actualités</a>
   <a href="#concept" onclick="closeMobileNav()">Le concept</a>
   <a href="lore.html" onclick="closeMobileNav()">L'univers</a>
   <a href="#how" onclick="closeMobileNav()">Comment ça marche</a>
@@ -528,6 +557,12 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
 <section id="hero">
   <div class="h-grid"></div>
   <div class="h-orb"></div>
+  <!-- DEBUT pastille à la une : pour changer l'actu, modifier les 3 textes de la ligne .h-une-txt (français, anglais, puis texte affiché) -->
+  <a class="h-une" href="#actualites">
+    <span class="h-une-tag" data-fr="À la une" data-en="Featured">À la une</span>
+    <span class="h-une-txt" data-fr="Test Bellecour : inscriptions jusqu'au 24 octobre" data-en="Bellecour test: sign-ups until 24 October">Test Bellecour : inscriptions jusqu'au 24 octobre</span>
+  </a>
+  <!-- FIN pastille à la une -->
   <div class="hero-inner">
     <div class="hero-text">
       <p class="h-ey" data-fr="Lyon · Bientôt disponible" data-en="Lyon · Coming soon">Lyon · Bientôt disponible</p>
@@ -568,6 +603,33 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
   </div>
   <div class="sh" data-fr="Explorer" data-en="Explore">Explorer</div>
 </section>
+
+<!-- DEBUT section actualités -->
+<section id="actualites">
+  <p class="ey" data-fr="À la une" data-en="Featured">À la une</p>
+  <h2 class="st"><em data-fr="Actualités" data-en="News">Actualités</em></h2>
+  <p class="sb" data-fr="Ce qui se passe en ce moment autour d'ExpLore." data-en="What's happening right now around ExpLore.">Ce qui se passe en ce moment autour d'ExpLore.</p>
+  <div class="es-grid">
+
+    <!-- DEBUT carte test terrain : supprimer jusqu'à « FIN carte test terrain » quand il n'y a plus de session -->
+    <a class="es-card es-main" href="https://docs.google.com/forms/d/e/1FAIpQLScS5u3_C0sXMenpSuy9Pzp22pjF51Cw-qdzUU7putWiKPNcRg/viewform" target="_blank" rel="noopener noreferrer">
+      <!-- LIGNE D'ÉTAT À MODIFIER : changer les 3 textes de la ligne suivante (français, anglais, puis texte affiché) -->
+      <span class="es-state" data-fr="Inscriptions ouvertes jusqu'au 24 octobre" data-en="Sign-ups open until 24 October">Inscriptions ouvertes jusqu'au 24 octobre</span>
+      <h3 class="es-title" data-fr="Inscris-toi au test Bellecour" data-en="Sign up for the Bellecour test">Inscris-toi au test Bellecour</h3>
+      <span class="es-ctx" data-fr="Tu es à Lyon ? Viens explorer la vraie carte, dehors." data-en="In Lyon? Come and explore the real map, outdoors.">Tu es à Lyon ? Viens explorer la vraie carte, dehors.</span>
+    </a>
+    <!-- FIN carte test terrain -->
+
+    <a class="es-card" href="app/demo.html">
+      <span class="es-state" data-fr="Jouable maintenant" data-en="Playable now">Jouable maintenant</span>
+      <h3 class="es-title" data-fr="Essaie la démo" data-en="Try the demo">Essaie la démo</h3>
+      <span class="es-ctx" data-fr="Sans inscription, en quelques minutes." data-en="No sign-up, just a few minutes.">Sans inscription, en quelques minutes.</span>
+    </a>
+
+  </div>
+  <p class="es-more"><span data-fr="Pour suivre le projet et les prochaines sessions," data-en="To follow the project and the next sessions,">Pour suivre le projet et les prochaines sessions,</span> <a href="#discord" data-fr="rejoins la communauté" data-en="join the community">rejoins la communauté</a></p>
+</section>
+<!-- FIN section actualités -->
 
 <!-- SCREENS -->
 <section id="screens">
@@ -866,6 +928,7 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
       <div class="fsub" data-fr="Lyon, France — 2025" data-en="Lyon, France — 2025">Lyon, France — 2025</div>
     </div>
     <ul class="flinks">
+      <li><a href="#actualites" data-fr="Actualités" data-en="News">Actualités</a></li>
       <li><a href="#concept" data-fr="Le concept" data-en="The concept">Le concept</a></li>
       <li><a href="#waitlist" data-fr="Liste d'attente" data-en="Waitlist">Liste d'attente</a></li>
       <li><a href="#partners" data-fr="Partenaires" data-en="Partners">Partenaires</a></li>
@@ -1127,7 +1190,7 @@ document.addEventListener('mousemove', function(e) {
 
 // Lien nav actif au scroll
 (function() {
-  var sections = ['concept','how','partners','about','discord'];
+  var sections = ['actualites','concept','how','partners','about','discord'];
   var links = {};
   sections.forEach(function(id) {
     var a = document.querySelector('.nav-links a[href="#' + id + '"]');
