@@ -270,9 +270,6 @@ section { padding: 110px 10vw; }
 .h-title em { font-style:italic; color:var(--gold); display:block; }
 .h-sub { font-size:18px; line-height:1.8; color:var(--text-dim); max-width:460px; margin-bottom:52px; }
 .h-actions { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
-.sh { position:absolute; bottom:36px; left:10vw; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text-faint); display:flex; align-items:center; gap:10px; animation:hf 3s ease-in-out infinite; }
-.sh::after { content:''; width:1px; height:30px; background:linear-gradient(to bottom,var(--gold-light),transparent); }
-@keyframes hf{0%,100%{opacity:0.3}50%{opacity:0.8}}
 @media(max-width:800px){.h-orb{width:260px;height:260px;opacity:0.4;right:-40px;} section{padding:80px 6vw;}}
 
 /* Concept */
@@ -525,6 +522,11 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
   section { padding: 72px 6vw !important; }
   #hero { padding: 100px 6vw 60px !important; }
 }
+/* Écrans tactiles : pas de curseur personnalisé */
+@media(hover:none),(pointer:coarse) {
+  body, a, button, input, .burger { cursor: auto; }
+  #cur, #cur-ring { display: none; }
+}
 /* Transition fondu */
 #transition-overlay { position:fixed; inset:0; z-index:9000; background:#000; opacity:0; pointer-events:none; transition:opacity 0.5s ease; }
 #transition-overlay.active { opacity:1; pointer-events:all; }
@@ -543,8 +545,8 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
     <li><a href="#concept" data-fr="Le concept" data-en="The concept">Le concept</a></li>
     <li><a href="lore.html" data-fr="L'univers" data-en="The world">L'univers</a></li>
     <li><a href="#partners" data-fr="Partenaires" data-en="Partners">Partenaires</a></li>
-    <li><a href="#about" data-fr="À propos" data-en="About">À propos</a></li>
     <li><a href="#discord" data-fr="Communauté" data-en="Community">Communauté</a></li>
+    <li><a href="#about" data-fr="À propos" data-en="About">À propos</a></li>
   </ul>
   <div class="nav-end">
   <a href="https://discord.gg/dtYbQKjRca" target="_blank" rel="noopener noreferrer" class="nav-soc" aria-label="Discord ExpLore">
@@ -564,8 +566,8 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
   <a href="#concept" onclick="closeMobileNav()">Le concept</a>
   <a href="lore.html" onclick="closeMobileNav()">L'univers</a>
   <a href="#waitlist" onclick="closeMobileNav()">Liste d'attente</a>
-  <a href="#about" onclick="closeMobileNav()">À propos</a>
   <a href="#discord" onclick="closeMobileNav()">Communauté</a>
+  <a href="#about" onclick="closeMobileNav()">À propos</a>
 </div>
 <!-- HERO -->
 <section id="hero">
@@ -614,7 +616,6 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
       </div>
     </div>
   </div>
-  <div class="sh" data-fr="Explorer" data-en="Explore">Explorer</div>
 </section>
 
 <!-- DEBUT section actualités -->
@@ -845,22 +846,6 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
 <div class="pcard rv d2"><span class="pico">🎓</span><div><h4>Écoles</h4><p>Un support pédagogique ludique, activable via le Pass Culture.</p></div></div>
 <div class="pcard rv d3"><span class="pico">🏙️</span><div><h4>Collectivités</h4><p>Faites vivre l'espace public et la mémoire des quartiers.</p></div></div>
 </div></section>
-<!-- ABOUT -->
-<section id="about">
-  <div class="ai">
-    <p class="ey rv" data-fr="À propos" data-en="About">À propos</p>
-    <h2 class="st rv d1"><span data-fr="Pourquoi" data-en="Why">Pourquoi</span><br><em data-fr="ExpLore ?" data-en="ExpLore?">ExpLore ?</em></h2>
-    <div class="div rv d1"></div>
-    <blockquote class="aq rv d2" data-fr="On connaît notre ville en surface. ExpLore existe pour qu'on la connaisse en profondeur." data-en="We know our city on the surface. ExpLore exists so we can know it deeply.">On connaît notre ville en surface. ExpLore existe pour qu'on la connaisse en profondeur.</blockquote>
-    <p class="at rv d3" data-fr="Le projet est né d'un constat simple : nous vivons dans des villes riches d'histoires, de figures, de savoirs — et nous passons devant chaque jour sans les voir. L'écran nous a appris à consommer l'espace sans l'habiter." data-en="The project was born from a simple observation: we live in cities rich with stories, figures, knowledge — and we walk past them every day without seeing them. Screens have taught us to consume space without inhabiting it.">
-      Le projet est né d'un constat simple : nous vivons dans des villes riches d'histoires, de figures, de savoirs — et nous passons devant chaque jour sans les voir. L'écran nous a appris à consommer l'espace sans l'habiter.
-    </p>
-    <p class="at rv d4" data-fr="ExpLore utilise la mécanique du jeu — la collecte, la progression, la curiosité — pour inviter à regarder différemment. Pas une app de plus. Un prétexte à se perdre." data-en="ExpLore uses game mechanics — collection, progression, curiosity — as an invitation to look differently. Not one more app. A reason to get lost.">
-      ExpLore utilise la mécanique du jeu — la collecte, la progression, la curiosité — pour inviter à regarder différemment. Pas une app de plus. Un prétexte à se perdre.
-    </p>
-  </div>
-</section>
-
 <!-- DISCORD -->
 <section id="discord">
   <p class="ey rv" data-fr="Communauté" data-en="Community">Communauté</p>
@@ -925,6 +910,22 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
       </div>
     </div>
 
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="ai">
+    <p class="ey rv" data-fr="À propos" data-en="About">À propos</p>
+    <h2 class="st rv d1"><span data-fr="Pourquoi" data-en="Why">Pourquoi</span><br><em data-fr="ExpLore ?" data-en="ExpLore?">ExpLore ?</em></h2>
+    <div class="div rv d1"></div>
+    <blockquote class="aq rv d2" data-fr="On connaît notre ville en surface. ExpLore existe pour qu'on la connaisse en profondeur." data-en="We know our city on the surface. ExpLore exists so we can know it deeply.">On connaît notre ville en surface. ExpLore existe pour qu'on la connaisse en profondeur.</blockquote>
+    <p class="at rv d3" data-fr="Le projet est né d'un constat simple : nous vivons dans des villes riches d'histoires, de figures, de savoirs — et nous passons devant chaque jour sans les voir. L'écran nous a appris à consommer l'espace sans l'habiter." data-en="The project was born from a simple observation: we live in cities rich with stories, figures, knowledge — and we walk past them every day without seeing them. Screens have taught us to consume space without inhabiting it.">
+      Le projet est né d'un constat simple : nous vivons dans des villes riches d'histoires, de figures, de savoirs — et nous passons devant chaque jour sans les voir. L'écran nous a appris à consommer l'espace sans l'habiter.
+    </p>
+    <p class="at rv d4" data-fr="ExpLore utilise la mécanique du jeu — la collecte, la progression, la curiosité — pour inviter à regarder différemment. Pas une app de plus. Un prétexte à se perdre." data-en="ExpLore uses game mechanics — collection, progression, curiosity — as an invitation to look differently. Not one more app. A reason to get lost.">
+      ExpLore utilise la mécanique du jeu — la collecte, la progression, la curiosité — pour inviter à regarder différemment. Pas une app de plus. Un prétexte à se perdre.
+    </p>
   </div>
 </section>
 
@@ -1175,7 +1176,7 @@ document.addEventListener('mousemove', function(e) {
 
 // Lien nav actif au scroll
 (function() {
-  var sections = ['actualites','concept','partners','about','discord'];
+  var sections = ['actualites','concept','partners','discord','about'];
   var links = {};
   sections.forEach(function(id) {
     var a = document.querySelector('.nav-links a[href="#' + id + '"]');
