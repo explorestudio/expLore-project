@@ -7,7 +7,7 @@
    À INCRÉMENTER à chaque mise à jour des assets
    (sinon les utilisateurs garderont les anciennes images en cache) */
 
-const CACHE_VERSION = 'v77';
+const CACHE_VERSION = 'v78';
 const CACHE_NAME = `explore-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -26,20 +26,8 @@ const PRECACHE_URLS = [
   './assets/Icon Cassette.png',
   './assets/Icon Pellicule.png',
   './assets/Icon Encre.png',
-  // Échos par supertype
-  './assets/EchoHistoireIcon.png',
-  './assets/EchoNatureIcon.png',
-  './assets/EchoScienceIcon.png',
-  './assets/EchoArtIcon.png',
-  './assets/EchoSocieteIcon.png',
-  // Personnages et illustrations
-  './assets/Marcus.png',
-  './assets/Gardienne.png',
-  './assets/clef%20de%20la%20ville.png',
-  './assets/familypic.png',
-  './assets/Tasse-cafe.png',
-  './assets/cantine.png',
-  './assets/voiture.png'
+  // Illustrations
+  './assets/Cards/Clef_de_la_ville/Clef_de_la_ville1.jpg'
 ];
 
 // ── Message handler ─────────────────────────────────────────────
