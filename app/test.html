@@ -14563,7 +14563,7 @@
                       art: './assets/Cards/Etienne_Dolet/Etienne_dolet1.jpg',
                       clue: 'Descends rue Mercière, là où une hache servait jadis d\'enseigne.', clueIcon: '🪓',
                       incipit: 'Trois mots de trop dans une traduction, et l\'on m\'a déclaré hérétique. Vivre libre, c\'était vivre.' },
-                    { id: 'card_presse_doloire', cardKind: 'local', collections: ["ville_du_livre"], name: 'Presse de Gutenberg', type: 'Objet', poiId: 'presse_doloire', rarity: 'common', supertype: 'science', supertype2: 'societe',
+                    { id: 'card_presse_gutenberg', cardKind: 'local', collections: ["ville_du_livre"], name: 'Presse de Gutenberg', type: 'Objet', poiId: 'presse_doloire', rarity: 'common', supertype: 'science', supertype2: 'societe',
                       art: './assets/Cards/Presse_Gutenberg/Presse_Gutenberg1.jpg',
                       clue: 'Cherche l\'atelier rue Mercière où l\'on tirait les feuilles une à une.', clueIcon: '🗜️',
                       incipit: 'Avant moi, copier un livre prenait des mois. Avec moi, cent feuilles par jour. Je n\'ai pas changé le monde — je l\'ai multiplié.' },
@@ -14983,7 +14983,7 @@
             { id: 'dolet',           name: 'Rue Mercière (Dolet)',      lat: 45.7640, lng: 4.8325,
               localCardId: 'card_dolet', thematicPool: [], gated: 'ville_du_livre', radius: 65 },
             { id: 'presse_doloire',  name: 'Vieux-Lyon (la Doloire)',   lat: 45.7640, lng: 4.8275,
-              localCardId: 'card_presse_doloire', thematicPool: [], gated: 'ville_du_livre', radius: 65 },
+              localCardId: 'card_presse_gutenberg', thematicPool: [], gated: 'ville_du_livre', radius: 65 },
             { id: 'palais_st_jean',  name: 'Palais Saint-Jean',         lat: 45.7599, lng: 4.8280,
               localCardId: 'card_palais_st_jean', thematicPool: [], gated: 'ville_du_livre', radius: 65 },
 
@@ -21940,7 +21940,7 @@
             ],
 
             // ── LA PRESSE DE LA DOLOIRE (Commune, Science/Société) ──
-            card_presse_doloire: [
+            card_presse_gutenberg: [
                 { text: "Bois et fer, vis et cadre. Rien de plus. Mais assez pour multiplier une page en quelques centaines d'exemplaires par jour.", heart: true, level: 0,
                   entry: { date: "Rue Mercière, XVIe siècle", text: "Presse à bras typique du quartier Mercière, où l'on en comptait par centaines au XVIe siècle. Un objet en apparence simple, moteur d'une industrie entière.", photo: null, audio: null }
                 },
@@ -36173,7 +36173,7 @@
         // Pas une carte : pas de slot dans COLLECTIONS. Ils s'éclairent dans
         // l'Explorium par accumulation — dès que ≥2 cartes de la grappe sont
         // stabilisées à C1 ou plus (doc "grappe_lyon_ville_du_livre", section 4).
-        const VDL_CARD_IDS = ['card6', 'card_louise_labe', 'card_gryphe', 'card13', 'card_dolet', 'card_presse_doloire', 'card_palais_st_jean'];
+        const VDL_CARD_IDS = ['card6', 'card_louise_labe', 'card_gryphe', 'card13', 'card_dolet', 'card_presse_gutenberg', 'card_palais_st_jean'];
         function griffarinsUnlocked() {
             const stabilized = VDL_CARD_IDS.filter(id => {
                 const cl = cardLevels[id];
@@ -36444,7 +36444,7 @@
                             titre: 'Une ville qui imprime',
                             indice: 'Depuis Bellecour, l\'histoire du livre se joue juste à côté. Trouve l\'atelier où l\'on tirait les feuilles une à une.',
                             // Étage 1 (test Bellecour) : des cartes, aucun niveau exigé.
-                            prerequis: [{ cardId: 'card6', minLevel: 0 }, { cardId: 'card_presse_doloire', minLevel: 0 }, { cardId: 'card_dolet', minLevel: 0 }],
+                            prerequis: [{ cardId: 'card6', minLevel: 0 }, { cardId: 'card_presse_gutenberg', minLevel: 0 }, { cardId: 'card_dolet', minLevel: 0 }],
                             objectifGeo: { lat: 45.7632, lng: 4.8328, rayon: 80, nom: 'Rue Mercière (la Doloire)' },
                             rewardCases: ['vdl_case1'],
                         },
@@ -36469,7 +36469,7 @@
                             id: 'vdl_2_tric',
                             titre: 'Le Grand Tric',
                             indice: 'Une presse ne travaille jamais seule. Retourne du côté des ateliers de la Doloire, là où les compagnons s\'organisaient.',
-                            prerequis: [{ cardId: 'card_presse_doloire', minLevel: 2 }, { cardId: 'card_gryphe', minLevel: 2 }],
+                            prerequis: [{ cardId: 'card_presse_gutenberg', minLevel: 2 }, { cardId: 'card_gryphe', minLevel: 2 }],
                             objectifGeo: { lat: 45.7632, lng: 4.8328, rayon: 80, nom: 'Rue Mercière (la Doloire)' },
                             rewardCases: ['vdl_case4'],
                         },
@@ -36477,7 +36477,7 @@
                             id: 'vdl_2_dolet',
                             titre: 'Trois mots de trop',
                             indice: 'Un imprimeur est allé plus loin que les autres. Cherche l\'enseigne d\'une hache, rue Mercière.',
-                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_doloire', minLevel: 2 }],
+                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_gutenberg', minLevel: 2 }],
                             objectifGeo: { lat: 45.7640, lng: 4.8327, rayon: 80, nom: 'Rue Mercière (Dolet)' },
                             rewardCases: ['vdl_case5'],
                         },
@@ -36485,7 +36485,7 @@
                             id: 'vdl_3_incendie',
                             titre: 'L\'autre incendie',
                             indice: 'Une bibliothèque a brûlé, et ce n\'est pas celle qu\'on croit. Retourne à la cathédrale Saint-Jean.',
-                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_doloire', minLevel: 2 }, { cardId: 'card13', minLevel: 2 }],
+                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_gutenberg', minLevel: 2 }, { cardId: 'card13', minLevel: 2 }],
                             objectifGeo: { lat: 45.7606, lng: 4.8268, rayon: 80, nom: 'Cathédrale Saint-Jean' },
                             rewardCases: ['vdl_case6'],
                         },
@@ -36493,7 +36493,7 @@
                             id: 'vdl_3_survivant',
                             titre: 'Ce qui a survécu',
                             indice: 'Juste à côté de la cathédrale, un ancien palais a gardé ce que le feu a épargné.',
-                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_doloire', minLevel: 2 }, { cardId: 'card13', minLevel: 2 }, { cardId: 'card_palais_st_jean', minLevel: 2 }],
+                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_gutenberg', minLevel: 2 }, { cardId: 'card13', minLevel: 2 }, { cardId: 'card_palais_st_jean', minLevel: 2 }],
                             objectifGeo: { lat: 45.7602, lng: 4.8272, rayon: 80, nom: 'Palais Saint-Jean' },
                             rewardCases: ['vdl_case7'],
                         },
@@ -39763,7 +39763,7 @@
             card_office_tourisme: { x: 0.52, y: 0.72 },  // Pavillon de Bellecour
             card_louise_labe:     { x: 0.62, y: 0.52 },  // Louise Labé (nord de la Presqu'île)
             card_dolet:           { x: 0.34, y: 0.58 },  // Rue Mercière
-            card_presse_doloire:  { x: 0.16, y: 0.48 },  // Vieux-Lyon (la Doloire)
+            card_presse_gutenberg:  { x: 0.16, y: 0.48 },  // Vieux-Lyon (la Doloire)
             card_gryphe:          { x: 0.30, y: 0.63 },  // Rue Mercière (Gryphe)
             card13:               { x: 0.09, y: 0.50 },  // Cathédrale Saint-Jean
             card_palais_st_jean:  { x: 0.05, y: 0.58 },  // Palais Saint-Jean
@@ -39920,7 +39920,7 @@
             card_gryphe:         { emoji:'🦅', kind:'actor' },
             card13:              { emoji:'🕍', kind:'actor' },
             card_dolet:          { emoji:'🪓', kind:'actor' },
-            card_presse_doloire: { emoji:'🗜', kind:'actor' },
+            card_presse_gutenberg: { emoji:'🗜', kind:'actor' },
             card_palais_st_jean: { emoji:'📚', kind:'actor' },
         };
         Object.entries(V2_NEW_ACTORS).forEach(([id, a]) => {
