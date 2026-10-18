@@ -9649,7 +9649,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.95.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v0.96.0 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -12455,8 +12455,8 @@
             "Voilà. Il est à toi, maintenant. Enfin, à nous tous.": "There. It's yours now. Well, all of ours.",
             "Il tourne bien, aujourd'hui.": "It's running well today.",
             "Il y a des jours où on l'entend presque. Comme un murmure. Ne fais pas attention.": "Some days you can almost hear it. Like a murmur. Pay it no mind.",
-            // Le scientifique (plaque et locuteur : pas de nom propre)
-            "Le scientifique": "The Scientist",
+            // Professeur Ricardo (plaque et locuteur ; ancien « Le scientifique »)
+            "Professeur Ricardo": "Professor Ricardo",
             "Celle-ci, on l'a stabilisée nous-mêmes. Tant qu'elle tient, l'Organisation a un toit.": "We stabilized this one ourselves. As long as it holds, the Organisation has a roof over its head.",
             // ══════════ VERRIÈRE — planche BD (test.html) ══════════
             "Verrière · %1": "Glasswork · %1",
@@ -21309,9 +21309,9 @@
                       vn: { color: '#34d399', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.5)' } },
             aurele: { nom: 'Aurèle', role: 'opérateur',   couleur: '#3B82F6',   // Science
                       vn: { color: '#60a5fa', bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.5)' } },
-            // Sans nom propre ni supertype : la plaque porte « Le scientifique »,
-            // l'accent reprend le bleu de l'Explorium.
-            scientifique: { nom: 'Le scientifique', role: '', couleur: '#38BDF8',
+            // Sans supertype : la plaque porte « Professeur Ricardo » (renommé le
+            // 18/10, ancien « Le scientifique ») ; l'accent reprend le bleu de l'Explorium.
+            scientifique: { nom: 'Professeur Ricardo', role: '', couleur: '#38BDF8',
                       vn: { color: '#7dd3fc', bg: 'rgba(56,189,248,0.15)', border: 'rgba(56,189,248,0.5)' } },
             // Présente au QG entre la remise de la clé et l'ouverture de la porte.
             // Même fiche de dialogue que dans VN_SPEAKERS (qui est réécrit depuis ici).
@@ -32187,7 +32187,7 @@
         const _hubSay = (id, line) => /</.test(line) ? { speaker: HUB_NPCS[id].nom, html: line } : { speaker: HUB_NPCS[id].nom, line };
         // Répliques à mots-clés (couleur) : la chaîne sert aussi de clé de traduction.
         const _HUB_HTML = {
-            qg:        "Ne me demande pas où se trouve le " + vnMot('qg', 'QG') + ". Le scientifique t'expliquera, si tu as une heure devant toi.",
+            qg:        "Ne me demande pas où se trouve le " + vnMot('qg', 'QG') + ". Le Professeur Ricardo t'expliquera, si tu as une heure devant toi.",
             explorium: "À gauche, tes quartiers. Ici, le hall. Au fond, la salle de l'" + vnMot('explorium', 'Explorium') + ". On ne l'ouvre pas à tout le monde.",
             nebuleuses: 'Ce que sont les ' + vnMot('nebuleuse', 'nébuleuses') + ' ? Va en parler au Professeur Ricardo, c’est le spécialiste en la matière',
             porte:     "Derrière cette porte, l'" + vnMot('explorium', 'Explorium') + ". Toutes les mémoires extraites, remises à leur place d'origine.",
@@ -42009,7 +42009,7 @@
             "La carte s'épuise. La mémoire a besoin de temps, attends quelques heures qu’elle se ravive d’elle mêmes": "The card is wearing out. Memory needs time, wait a few hours for it to revive on its own",
             [_OB_HTML_ORBE]: 'You\'re already carrying a ' + vnMot('orbe', 'memory orb', true) + ', place it on the card: it gives back all its energy at once.',
             // QG (hub et Clara, Annexe B) : répliques à mots-clés (cf. _HUB_HTML)
-            [_HUB_HTML.qg]: "Don't ask me where " + vnMot('qg', 'HQ') + " is. The Scientist will explain, if you have an hour to spare.",
+            [_HUB_HTML.qg]: "Don't ask me where " + vnMot('qg', 'HQ') + " is. Professor Ricardo will explain, if you have an hour to spare.",
             [_HUB_HTML.explorium]: "To the left, your quarters. Here, the hall. At the back, the " + vnMot('explorium', 'Explorium') + " room. We don't open it to just anyone.",
             [_HUB_HTML.nebuleuses]: 'What ' + vnMot('nebuleuse', 'nebulae') + ' are? Go and talk to Professor Ricardo about it, he’s the expert on the matter',
             [_HUB_HTML.porte]: "Behind this door, the " + vnMot('explorium', 'Explorium') + ". Every memory ever extracted, put back where it came from.",
