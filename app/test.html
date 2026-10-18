@@ -9649,7 +9649,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.96.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v0.97.0 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -36544,18 +36544,25 @@
         let grappeBDUnlocked = {};
 
         // ── Helpers quête ──
+        // Lot 4.2 (playtest 2, David 18/10) : un média d'un étage ne peut être ni
+        // accepté ni obtenu tant que l'étage précédent n'est pas entièrement obtenu,
+        // quel que soit le chemin (fiche, journal, console sur place, Explorium).
+        function _etapeEtageOuvert(grappeId, etape) {
+            if (!etape || typeof verriereEtageOuvert !== 'function') return true;
+            const cas = (etape.rewardCases || [])[0];
+            const n = cas ? _verriereEtageDeCase(grappeId, cas) : -1;
+            return n <= 0 || verriereEtageOuvert(grappeId, n);
+        }
+
         function _getEtapeStatus(grappeId, etape) {
             if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
             const stored = grappeQuestState[grappeId][etape.id];
             if (stored === 'completed') return 'completed';
-            if (stored === 'active') return 'active';
             // Verrou d'étage (planche déclarée en étages) : ne dépend QUE de
-            // l'étage précédent, jamais des cartes de l'étape.
-            if (typeof verriereEtageOuvert === 'function') {
-                const cas = (etape.rewardCases || [])[0];
-                const n = cas ? _verriereEtageDeCase(grappeId, cas) : -1;
-                if (n > 0 && !verriereEtageOuvert(grappeId, n)) return 'locked';
-            }
+            // l'étage précédent, jamais des cartes de l'étape. Lot 4.2 (playtest 2) :
+            // testé avant 'active', une étape d'un étage fermé ne se valide pas.
+            if (!_etapeEtageOuvert(grappeId, etape)) return 'locked';
+            if (stored === 'active') return 'active';
             // Vérifier prérequis
             const allMet = etape.prerequis.every(req => {
                 if (!collectedCards.includes(req.cardId)) return false;
@@ -36580,6 +36587,7 @@
             opts = opts || {};
             const miseDeCote = [];
             const cible = ((GRAPPE_QUESTS[grappeId] || {}).quete || {}).etapes || [];
+            if (!_etapeEtageOuvert(grappeId, cible.find(e => e.id === etapeId))) return;   // lot 4.2
             const aUnPin = !!(cible.find(e => e.id === etapeId) || {}).objectifGeo;
             if (!opts.surPlace && aUnPin) {
                 Object.entries(GRAPPE_QUESTS).forEach(([gid, g]) => {
@@ -36611,6 +36619,8 @@
             const grappe = GRAPPE_QUESTS[grappeId];
             if (!grappe) return;
             const etape = grappe.quete.etapes.find(e => e.id === etapeId);
+            if (etape && grappeQuestState[grappeId]?.[etapeId] !== 'completed'
+                && !_etapeEtageOuvert(grappeId, etape)) return;   // lot 4.2 : étage fermé
             journalEvenement('quest_completed', { grappe: grappeId, etape: etapeId });
             if (!etape) return;
             if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
@@ -40109,8 +40119,11 @@
             if (typeof grappeQuestState !== 'undefined' && grappeQuestState[grappeId]) {
                 const stored = grappeQuestState[grappeId][etapeWithMergedPrereqs.etape.id];
                 if (stored === 'completed') return 'completed';
-                if (stored === 'active') return 'active';
             }
+            // Lot 4.2 (playtest 2) : même verrou d'étage que la verrière et _getEtapeStatus.
+            if (!_etapeEtageOuvert(grappeId, etapeWithMergedPrereqs.etape)) return 'locked';
+            if (typeof grappeQuestState !== 'undefined' && grappeQuestState[grappeId]
+                && grappeQuestState[grappeId][etapeWithMergedPrereqs.etape.id] === 'active') return 'active';
             const allMet = etapeWithMergedPrereqs.mergedPrereqs.every(req => {
                 if (!v2IsOwned(req.cardId)) return false;
                 const lvl = v2GetCardLevel(req.cardId);
@@ -40752,15 +40765,9 @@
                     v2OnNodeClick(cardId, owned, illuminated, name, level);
                 });
 
-                // Lot 3.7 : carte obtenue jamais consultée ici → point doré, éteint au premier tap
-                if (owned && v2CarteEstNouvelle(cardId)) {
-                    const pt = document.createElementNS(V2_SVG_NS, 'circle');
-                    pt.setAttribute('cx', 17); pt.setAttribute('cy', -23); pt.setAttribute('r', 5);
-                    pt.setAttribute('fill', '#f0c674');
-                    pt.setAttribute('stroke', '#1a1206'); pt.setAttribute('stroke-width', '1.2');
-                    pt.setAttribute('class', 'v2-media-nouveau v2-carte-nouvelle');
-                    g.appendChild(pt);
-                }
+                // Lot 4.3 (playtest 2) : plus de pastille de nouveauté sur les cartes
+                // de l'Explorium (point doré du lot 3.7 retiré) ; elle reste dans la
+                // collection. v2CartesVues continue d'être tenu à jour.
 
                 layer.appendChild(g);
             });
@@ -40898,6 +40905,16 @@
                         console.log('[V2] tap ignoré (move=' + Math.hypot(dx, dy).toFixed(1) + ', dt=' + dt + ')');
                         return;
                     }
+                    mediaTapValide = true;
+                });
+                // Lot 4.1 (playtest 2) : ouverture au `click` qui suit le tap, et non au
+                // pointerup. Ouverte au pointerup, la fiche de grappe recevait ce click
+                // sur son fond et se refermait aussitôt (le « flash »).
+                let mediaTapValide = false;
+                g.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!mediaTapValide) return;
+                    mediaTapValide = false;
                     v2OpenMediaSheet(merged, status);
                 });
 
