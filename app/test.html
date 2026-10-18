@@ -7735,6 +7735,14 @@
             color: var(--quest-color, #a78bfa); padding: 8px 16px; border-radius: 20px;
             font-size: 12px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px;
         }
+        .quest-question { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .quest-question-texte { font-size: 13px; color: white; line-height: 1.4; margin-bottom: 2px; }
+        .quest-choix-btn {
+            text-align: left;
+            background: rgba(167,139,250,0.08); border: 1px solid rgba(167,139,250,0.3);
+            color: white; padding: 8px 14px; border-radius: 12px;
+            font-size: 12px; cursor: pointer;
+        }
         #questActivateBtn {
             display: none; margin: 0 20px 20px; padding: 16px; border-radius: 14px; border: none;
             background: var(--quest-color, #a78bfa); color: white; font-size: 15px;
@@ -9649,7 +9657,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.98.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v0.99.0 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -13106,8 +13114,21 @@
             "Lève les yeux vers le portail principal — une rose de pierre filtre la lumière.": "Look up at the main portal — a rose of stone filters the light.",
             "L'horloge astronomique": "The astronomical clock",
             "À l'intérieur, cherche la plus ancienne machine à compter le temps de Lyon.": "Inside, look for the oldest time-keeping machine in Lyon.",
-            "Le cloître": "The cloister",
-            "Contourne l'édifice — il existe un passage vers un jardin silencieux.": "Walk around the building — there is a passage through to a silent garden.",
+            "Le jardin archéologique": "The archaeological garden",
+            "Contourne l'édifice par le nord — des ruines affleurent dans un jardin.": "Walk around the building to the north — ruins surface in a garden.",
+            "Au-dessus de quel portail la rose de pierre est-elle posée ?": "Above which portal does the rose of stone sit?",
+            "Le portail de gauche": "The left portal",
+            "Le portail central": "The central portal",
+            "Le portail de droite": "The right portal",
+            "Quel animal s'anime au sommet de l'horloge ?": "Which animal comes to life at the top of the clock?",
+            "Un coq": "A rooster",
+            "Un aigle": "An eagle",
+            "Un lion": "A lion",
+            "Combien d'églises disparues dorment dans les ruines du jardin ?": "How many vanished churches sleep in the garden's ruins?",
+            "Une": "One",
+            "Deux": "Two",
+            "Trois": "Three",
+            "Regarde encore…": "Look again…",
             "Sur la colline inspirée": "On the inspired hill",
             "Fourvière domine Lyon depuis des siècles. Trois témoins t'attendent.": "Fourvière has overlooked Lyon for centuries. Three witnesses are waiting for you.",
             "L'esplanade": "The esplanade",
@@ -27004,16 +27025,22 @@
         // ══════════════════════════════════════════
 
         // Quêtes associées aux cartes locales
-        // Chaque quête a 2-3 sous-points à valider physiquement (<150m du POI)
+        // Chaque quête a 2-3 sous-points, validés par une question d'observation
+        // (David, 18/10) : plus de GPS, la réponse se trouve en regardant autour de soi.
         // Le joueur n'en voit JAMAIS les marqueurs sur la carte — seulement les indices textuels
         const LOCAL_QUESTS = {
             card13: {
                 title: "Les secrets de Saint-Jean",
                 intro: "La cathédrale recèle des siècles d'histoire. Prends le temps d'observer avant de stabiliser cette carte.",
                 steps: [
-                    { id: "sj_rosace", label: "La rosace", clue: "Lève les yeux vers le portail principal — une rose de pierre filtre la lumière.", relicIcon: "🌹", lat: 45.7609, lng: 4.8270, radius: 40 },
-                    { id: "sj_horloge", label: "L'horloge astronomique", clue: "À l'intérieur, cherche la plus ancienne machine à compter le temps de Lyon.", relicIcon: "⚙️", lat: 45.7607, lng: 4.8269, radius: 35 },
-                    { id: "sj_cloitre", label: "Le cloître", clue: "Contourne l'édifice — il existe un passage vers un jardin silencieux.", relicIcon: "🌿", lat: 45.7604, lng: 4.8267, radius: 50 },
+                    { id: "sj_rosace", label: "La rosace", clue: "Lève les yeux vers le portail principal — une rose de pierre filtre la lumière.", relicIcon: "🌹",
+                      question: "Au-dessus de quel portail la rose de pierre est-elle posée ?", choix: ["Le portail de gauche", "Le portail central", "Le portail de droite"], bonne: 1 },
+                    { id: "sj_horloge", label: "L'horloge astronomique", clue: "À l'intérieur, cherche la plus ancienne machine à compter le temps de Lyon.", relicIcon: "⚙️",
+                      question: "Quel animal s'anime au sommet de l'horloge ?", choix: ["Un coq", "Un aigle", "Un lion"], bonne: 0 },
+                    // Id « sj_cloitre » gardé pour les sauvegardes : le cloître a disparu,
+                    // la relique devient le jardin archéologique (côté nord).
+                    { id: "sj_cloitre", label: "Le jardin archéologique", clue: "Contourne l'édifice par le nord — des ruines affleurent dans un jardin.", relicIcon: "🌿",
+                      question: "Combien d'églises disparues dorment dans les ruines du jardin ?", choix: ["Une", "Deux", "Trois"], bonne: 1 },
                 ]
             },
             // Chasses de la Basilique Notre-Dame (card11), Guignol (card4), les Frères
@@ -27091,16 +27118,27 @@
             screen.classList.add('show');
         }
 
-        // ── Valider un sous-point par géoloc ──
+        // ── « J'y suis » : affiche la question d'observation du sous-point ──
         function tryValidateStep(cardId, stepId) {
             const quest = LOCAL_QUESTS[cardId];
             const step = quest.steps.find(s => s.id === stepId);
             if (!step) return;
-
-            const dist = getDistance(playerPos.lat, playerPos.lng, step.lat, step.lng);
             const btn = document.querySelector(`#qstep_${stepId} .quest-validate-btn`);
+            if (!btn) return;
+            const bloc = document.createElement('div');
+            bloc.className = 'quest-question';
+            bloc.innerHTML = `<div class="quest-question-texte">${step.question}</div>`
+                + step.choix.map((c, i) => `<button class="quest-choix-btn" onclick="repondreRelique('${cardId}','${stepId}',${i},this)">${c}</button>`).join('');
+            btn.replaceWith(bloc);
+        }
 
-            if (dist <= step.radius) {
+        // ── Valider un sous-point par la bonne réponse ──
+        function repondreRelique(cardId, stepId, i, btn) {
+            const quest = LOCAL_QUESTS[cardId];
+            const step = quest.steps.find(s => s.id === stepId);
+            if (!step) return;
+
+            if (i === step.bonne) {
                 // Valider
                 if (!activeQuests[cardId]) activeQuests[cardId] = { steps: {}, started: Date.now() };
                 activeQuests[cardId].steps[stepId] = true;
@@ -27111,11 +27149,13 @@
                 // Petit feedback haptique si dispo
                 if (navigator.vibrate) navigator.vibrate([40, 20, 40]);
             } else {
-                // Trop loin — feedback
+                // Mauvaise réponse : aucune pénalité, le joueur regarde encore
                 if (btn) {
-                    btn.textContent = TF('Pas encore… (%1m)', Math.round(dist));
+                    const libelle = btn.textContent;
+                    btn.textContent = T('Regarde encore…');
+                    btn.disabled = true;
                     btn.style.opacity = '0.6';
-                    setTimeout(() => { btn.textContent = "J'y suis →"; btn.style.opacity = '1'; }, 2000);
+                    setTimeout(() => { btn.textContent = libelle; btn.disabled = false; btn.style.opacity = '1'; }, 2000);
                 }
                 if (navigator.vibrate) navigator.vibrate(100);
             }
