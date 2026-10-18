@@ -9649,7 +9649,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.94.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v0.95.0 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -18612,7 +18612,10 @@
             if (typeof _obGuide === 'object' && _obGuide.active) return;
             // Test Bellecour (sections 19-22) : muettes tant que le tutoriel guidé
             // n'est pas terminé. Non consommée : elle attend la rencontre suivante.
-            if (!_obDone) return;
+            // Lot 2.1 (playtest 2) : parchemin et point d'information parlent dès
+            // la fin du tunnel (section 12), sans attendre l'Explorium.
+            const _horsTuto = (key === 'scroll' || key === 'panneau') && !_tutoTunnelActif();
+            if (!_obDone && !_horsTuto) return;
             const vn = document.getElementById('vnOverlay');
             if (vn && vn.classList.contains('show')) return;
             // Petit délai pour laisser l'écran s'ouvrir visuellement.
