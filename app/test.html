@@ -9430,6 +9430,9 @@
            au-dessus de lui. */
         .hud-avatar-wrap { margin-top: 60px; }
         .hud-avatar-btn { width: 66px; height: 66px; font-size: 34px; }
+        /* Lot 3 : la boussole de quête (top 70px) recouvrait la moitié de l'avatar
+           descendu (≈ 74-140px) ; elle passe juste sous lui. */
+        .hud-quest-compass { top: 150px; }
         .settings-toggle {
             top: 14px; left: 14px; bottom: auto; right: auto;
             width: 40px; height: 40px; font-size: 19px;
@@ -9674,7 +9677,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.2.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v1.3.0 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -21015,6 +21018,8 @@
         // hors mode guidé. Le carnet est réécrit à chaque dévoilement : on repose
         // la pulsation sur les entrées restantes à chaque passage de la boucle.
         function _tutoPulserEntrees(ecran) {
+            // Lot 3 (A4) : pendant le tunnel seulement (sections 1 à 11)
+            if (!_tutoTunnelActif()) return;
             if (ecran !== 'journal' || _gf) return;
             if (_tutoEtat.s10 !== 'lecture' && _tutoEtat.s10 !== 'lu') return;
             document.querySelectorAll('#journalScreen .scrap-available').forEach(el => {
@@ -36820,7 +36825,10 @@
             // S'assurer que l'Explorium est ouvert pour voir la fresque s'y poser
             // Flag : suppression de la séquence cinématique des lumens pour ne pas qu'elle se déclenche
             // pendant que la fresque s'ouvre. Elle sera jouée à la fermeture de la fresque.
-            window._v2SuppressLumenSequence = true;
+            // Lot 3 (A6) : seulement si la planche peut s'ouvrir. Explorium scellé,
+            // aucune planche ne viendrait lever la suspension : les séquences de
+            // cartes et de lumens restaient bloquées à chaque ouverture suivante.
+            if (!_hubExploriumLocked()) window._v2SuppressLumenSequence = true;
             const v2Screen = document.getElementById('voutV2Screen');
             if (!v2Screen || !v2Screen.classList.contains('show')) {
                 // Explorium scellé (hub du QG) : on ne l'ouvre pas de force.
@@ -39881,7 +39889,9 @@
 
             // ── Grappe "Lyon, ville du livre" (Presqu'île / Vieux-Lyon Saint-Jean) ──
             card6:                { x: 0.58, y: 0.68 },  // Place Bellecour
-            card_office_tourisme: { x: 0.52, y: 0.72 },  // Pavillon de Bellecour
+            // Office du Tourisme retiré (lot 3, A7) : prérequis d'aucun média, il n'est
+            // dessiné dans aucun calque ; sa position allumait un cercle vide et
+            // envoyait la caméra sur une carte qui n'éclosait jamais.
             card_louise_labe:     { x: 0.62, y: 0.52 },  // Louise Labé (nord de la Presqu'île)
             card_dolet:           { x: 0.34, y: 0.58 },  // Rue Mercière
             card_presse_gutenberg:  { x: 0.16, y: 0.48 },  // Vieux-Lyon (la Doloire)
@@ -40157,8 +40167,10 @@
 
         function v2GetCardLevel(cardId) {
             if (V2_NEW_ACTORS[cardId]) return V2_NEW_ACTORS[cardId].level;
-            if (typeof cardLevels !== 'undefined' && cardLevels[cardId]) return cardLevels[cardId].level || 1;
-            return 1;
+            // Lot 3 (A5) : une carte collectée démarre au niveau 0 ; « || 1 » le
+            // comptait 1 et rendait disponible un média qui exige le niveau 1.
+            if (typeof cardLevels !== 'undefined' && cardLevels[cardId]) return cardLevels[cardId].level || 0;
+            return 0;
         }
 
         // Récupère toutes les étapes consolidées avec leurs prérequis enrichis
@@ -42547,14 +42559,9 @@
             verriereState.panneauOuvert = null;
             // Reprise de la logique de closeFresqueModal : sans elle, la cinématique
             // des lumens reste bloquée après une validation.
-            if (window._v2SuppressLumenSequence) {
-                window._v2SuppressLumenSequence = false;
-                const v2 = document.getElementById('voutV2Screen');
-                if (v2 && v2.classList.contains('show') && v2PendingLumens.length > 0) {
-                    setTimeout(() => v2PlayPendingLumensSequence(), 350);
-                }
-                return;
-            }
+            // Lot 3 (A6) : fin de la suspension, puis la reprise normale — nouvelles
+            // cartes D'ABORD, puis lumens (seuls les lumens étaient relancés ici).
+            window._v2SuppressLumenSequence = false;
             if (typeof v2OnReturnToExplorium === 'function') v2OnReturnToExplorium();
         }
 
@@ -42987,14 +42994,9 @@
         function closeFresqueModal() {
             document.getElementById('fresqueModal').classList.remove('show');
             // Cas post-validation : la séquence avait été suppressée le temps de regarder la fresque.
-            if (window._v2SuppressLumenSequence) {
-                window._v2SuppressLumenSequence = false;
-                const v2 = document.getElementById('voutV2Screen');
-                if (v2 && v2.classList.contains('show') && v2PendingLumens.length > 0) {
-                    setTimeout(() => v2PlayPendingLumensSequence(), 350);
-                }
-                return;
-            }
+            // Lot 3 (A6) : fin de la suspension, puis la reprise normale — nouvelles
+            // cartes D'ABORD, puis lumens (seuls les lumens étaient relancés ici).
+            window._v2SuppressLumenSequence = false;
             // Cas normal : fresque fermée hors post-validation. Si des lumens sont en attente
             // (gagnés pendant la consultation), on les lance au retour à l'Explorium.
             if (typeof v2OnReturnToExplorium === 'function') v2OnReturnToExplorium();
