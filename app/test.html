@@ -9649,7 +9649,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.97.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v0.98.0 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -40405,6 +40405,7 @@
         function v2IsPointIlluminated(x, y) {
             // Prêt de focale : tout ce qui est dans son cercle est éclairé
             if (_v2Focale && Math.hypot(x * V2_MAP_W - _v2Focale.cx, y * V2_MAP_H - _v2Focale.cy) < _v2Focale.r) return true;
+            if (v2DansReserve(x, y)) return false;   // lot 4.4 : réserve d'ombre d'un acteur
             const sources = v2GetLightSources();
             if (!sources.length) return false;
             for (const s of sources) {
@@ -40489,6 +40490,47 @@
                 ctx.fill();
             }
             ctx.globalCompositeOperation = 'source-over';
+            // 3. Réserves d'ombre (lot 4.4) : repeintes par-dessus les halos.
+            v2ReservesOmbre().forEach(z => {
+                const cx = z.x * V2_MAP_W, cy = z.y * V2_MAP_H, r = z.r * V2_MAP_W;
+                const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+                grad.addColorStop(0,    'rgba(2,1,4,1)');
+                grad.addColorStop(0.75, 'rgba(2,1,4,1)');
+                grad.addColorStop(1,    'rgba(2,1,4,0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // ── Réserves d'ombre des acteurs non-cartes (lot 4.4, playtest 2) ──
+        // La lumière est commune à tous les calques, mais le calque d'une grappe
+        // ne montre que ses propres acteurs : sans réserve, un autre calque
+        // révélait le lieu d'un acteur (Astrolabe, Atelier canut, Traboule) sans
+        // l'acteur. Autour de chaque acteur non affiché dans le calque courant, la
+        // zone reste dans l'ombre (voile, médias, éclairage). Dans le calque de sa
+        // grappe, l'acteur se révèle comme avant (cartes ou lumens).
+        // Une réserve ne couvre jamais une carte affichée dans le calque : son rayon
+        // s'arrête avant la plus proche (marge d'une demi-vignette), et elle disparaît
+        // si l'acteur est posé sur une carte (Traboule / Palais Saint-Jean).
+        const V2_RESERVE_RADIUS = 0.07;
+        const V2_RESERVE_MARGE  = 0.035;
+        function v2ReservesOmbre() {
+            const grappeCardIds = v2SelectedGrappeId ? v2GetGrappeCardIds(v2SelectedGrappeId) : null;
+            if (!grappeCardIds) return [];   // sans calque : tous les acteurs sont affichés
+            const cartes = [...grappeCardIds].filter(id => !V2_NEW_ACTORS[id] && V2_POSITIONS[id]).map(id => V2_POSITIONS[id]);
+            return Object.keys(V2_NEW_ACTORS)
+                .filter(id => V2_POSITIONS[id] && !grappeCardIds.has(id))
+                .map(id => {
+                    const a = V2_POSITIONS[id];
+                    const dMin = cartes.reduce((m, c) => Math.min(m, Math.hypot(c.x - a.x, c.y - a.y)), Infinity);
+                    return { x: a.x, y: a.y, r: Math.min(V2_RESERVE_RADIUS, dMin - V2_RESERVE_MARGE) };
+                })
+                .filter(z => z.r >= 0.02);
+        }
+        function v2DansReserve(x, y, reserves) {
+            return (reserves || v2ReservesOmbre()).some(z => Math.hypot(x - z.x, y - z.y) < z.r);
         }
 
         // ── Prêt de focale (ancienne scène finale du test 2) ──
