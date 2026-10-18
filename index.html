@@ -329,6 +329,30 @@ section { padding: 110px 10vw; }
 .carde-divider { height: 1px; background: rgba(201,145,58,0.3); margin-bottom: 6px; }
 .carde-quote { font-family: 'Cormorant Garamond', serif; font-size: 12px; font-style: italic; color: rgba(240,236,226,0.75); line-height: 1.5; }
 @media(max-width:800px) { .cards-grid { gap: 16px; } .carde { width: 160px; } .carde.center { width: 175px; } .carde-img { height: 150px; } }
+/* DEBUT dossier de cartes : paquet fermé qui s'ouvre en éventail au clic.
+   Pour revenir à la grille simple, supprimer ce bloc, la classe cg-dossier,
+   le bouton .cg-toggle et le bloc JS du même nom. */
+.cards-grid.cg-dossier { display: block; position: relative; height: 420px; max-width: 900px; margin: 0 auto; cursor: pointer; }
+.cg-dossier .carde { position: absolute; left: 50%; bottom: 0; --x: 0px; --y: 0px; --r: 0deg; transform: translateX(-50%) translate(var(--x), var(--y)) rotate(var(--r)); transition: transform 0.5s cubic-bezier(.2,.8,.2,1), box-shadow 0.3s; }
+.cg-dossier .carde:hover { transform: translateX(-50%) translate(var(--x), var(--y)) rotate(var(--r)) !important; }
+.cg-dossier .carde.left { --x: -14px; --y: -4px; --r: -6deg; z-index: 1; }
+.cg-dossier .carde.right { --x: 14px; --y: -2px; --r: 5deg; z-index: 2; }
+.cg-dossier .carde.center { --y: -10px; z-index: 3; }
+.cg-dossier:not(.is-open):hover .carde.left { --x: -30px; --r: -9deg; }
+.cg-dossier:not(.is-open):hover .carde.right { --x: 30px; --r: 8deg; }
+.cg-dossier.is-open .carde.left { --x: -268px; --y: 0px; --r: -3deg; }
+.cg-dossier.is-open .carde.right { --x: 268px; --y: 0px; --r: 3deg; }
+.cg-dossier.is-open .carde.center { --y: -16px; }
+.cg-dossier.is-open .carde.is-front { z-index: 5; --y: -22px; box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(201,145,58,0.4); }
+.cg-toggle { display: block; margin: 22px auto 0; background: none; border: none; border-bottom: 1px solid rgba(201,145,58,0.3); padding: 12px 2px 2px; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); cursor: pointer; }
+.cg-toggle:hover { color: var(--gold-light); border-color: var(--gold-light); }
+.cg-toggle:focus-visible { outline: 1px solid var(--gold); outline-offset: 4px; }
+@media(max-width:800px) {
+  .cg-dossier.is-open .carde.left { --x: -88px; --r: -6deg; }
+  .cg-dossier.is-open .carde.right { --x: 88px; --r: 6deg; }
+}
+@media(prefers-reduced-motion:reduce){ .cg-dossier .carde { transition: none; } }
+/* FIN dossier de cartes */
 .lore-whisper { margin-top:26px; font-family:'Cormorant Garamond',serif; font-size:15px; font-style:italic; letter-spacing:2px; color:rgba(201,145,58,0.4); }
 .book-side { display:flex; justify-content:center; align-items:center; min-height:360px; }
 .bwrap { position:relative; width:480px; height:340px; }
@@ -738,10 +762,10 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
 <!-- CARTES -->
 <section id="cards">
   <p class="ey rv">La collection</p>
-  <h2 class="st rv d1"><span data-fr="Chaque fragment" data-en="Every fragment">Chaque carte</span><br><em data-fr="a sa voix." data-en="has its voice.">a sa voix.</em></h2>
+  <h2 class="st rv d1"><span data-fr="Chaque carte" data-en="Every card">Chaque carte</span><br><em data-fr="a sa voix." data-en="has its voice.">a sa voix.</em></h2>
   <div class="div rv d1" style="margin:0 auto 16px;"></div>
   <p class="sb rv d2" data-fr="Lieux, figures, objets — chaque carte est un éclat de mémoire à collectionner, à reconstituer, à sauver de l'effacement." data-en="Places, figures, objects — every card is a shard of memory to collect, reconstruct, and save from erasure.">Lieux, figures, objets — chaque carte est un éclat de mémoire à collectionner, à reconstituer, à sauver de l'effacement.</p>
-  <div class="cards-grid rv d3">
+  <div class="cards-grid cg-dossier rv d3" id="cgDossier">
 
     <!-- Carte Objet — Lumignon -->
     <div class="carde left">
@@ -786,6 +810,7 @@ footer { padding:52px 10vw 34px; border-top:1px solid rgba(201,145,58,0.1); }
     </div>
 
   </div>
+  <button type="button" class="cg-toggle" id="cgToggle" aria-expanded="false" aria-controls="cgDossier" data-fr="Ouvrir la collection" data-en="Open the collection">Ouvrir la collection</button>
 </section>
 
 <!-- WAITLIST -->
@@ -1210,6 +1235,42 @@ if (window.IntersectionObserver) {
 } else {
   rvEls.forEach(function(el) { el.classList.add('on'); });
 }
+
+// DEBUT dossier de cartes : ouvrir, mettre une carte devant, refermer
+(function() {
+  var box = document.getElementById('cgDossier');
+  var btn = document.getElementById('cgToggle');
+  if (!box || !btn) return;
+  var cards = box.querySelectorAll('.carde');
+  function setOpen(open) {
+    box.classList.toggle('is-open', open);
+    btn.setAttribute('aria-expanded', open);
+    btn.setAttribute('data-fr', open ? 'Refermer' : 'Ouvrir la collection');
+    btn.setAttribute('data-en', open ? 'Close' : 'Open the collection');
+    btn.textContent = btn.getAttribute('data-' + lang);
+    if (!open) cards.forEach(function(c) { c.classList.remove('is-front'); });
+  }
+  // Hauteur du paquet = carte la plus haute + marge pour la carte soulevée
+  function fitHeight() {
+    var h = 0;
+    cards.forEach(function(c) { h = Math.max(h, c.offsetHeight); });
+    if (h) box.style.height = (h + 30) + 'px';
+  }
+  box.addEventListener('click', function(e) {
+    var card = e.target.closest('.carde');
+    if (!box.classList.contains('is-open')) { setOpen(true); return; }
+    if (!card) { setOpen(false); return; }
+    cards.forEach(function(c) { c.classList.toggle('is-front', c === card); });
+  });
+  btn.addEventListener('click', function() { setOpen(!box.classList.contains('is-open')); });
+  document.addEventListener('click', function(e) {
+    if (box.classList.contains('is-open') && !box.contains(e.target) && e.target !== btn) setOpen(false);
+  });
+  fitHeight();
+  window.addEventListener('load', fitHeight);
+  window.addEventListener('resize', fitHeight);
+})();
+// FIN dossier de cartes
 
 // Langue
 var lang = 'fr';
