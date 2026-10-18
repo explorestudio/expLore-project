@@ -9649,7 +9649,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v0.93.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v0.94.0 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -18402,10 +18402,12 @@
         // Premier passage à 1,5 s : la réplique d'énergie vide a priorité.
         let _obOrbeAttente = null;
         function _obVerifierOrbe() {
-            if (_obDiscovered.orbe || _obOrbeAttente) return;
+            // Lot 1.1 (playtest 2) : muette pendant le tunnel guidé, non consommée ;
+            // elle retombe à la prochaine fiche vide ouverte avec une orbe.
+            if (_obDiscovered.orbe || _obOrbeAttente || _tutoTunnelActif()) return;
             const tic = () => {
                 _obOrbeAttente = null;
-                if (_obDiscovered.orbe || !selectedCard) return;
+                if (_obDiscovered.orbe || !selectedCard || _tutoTunnelActif()) return;
                 const fiche = document.getElementById('cardDetailView');
                 if (!fiche || !fiche.classList.contains('show')) return;
                 if ((bagInv.orbes || 0) <= 0 || getCardEnergyState(selectedCard.id).value > 0) return;
@@ -19526,7 +19528,11 @@
         }
         function _gfElements(sels) {
             const out = [];
-            sels.forEach(s => { try { document.querySelectorAll(s).forEach(el => out.push(el)); } catch (e) {} });
+            // Sélecteur CSS, ou élément déjà résolu (cf. _tutoPremiereEntree).
+            sels.forEach(s => {
+                if (s && s.nodeType === 1) { out.push(s); return; }
+                try { document.querySelectorAll(s).forEach(el => out.push(el)); } catch (e) {}
+            });
             return out;
         }
         // Rectangle à l'écran d'un élément réellement affiché, sinon null.
@@ -19924,6 +19930,10 @@
         // ── Moteur ─────────────────────────────────────────────────────────
         // Le tutoriel des sections du document est-il en cours ?
         function _tutoActif() { return !_obDone && _tutoSection >= 1; }
+        // Tunnel guidé = sections 1 à 11 (décision de David, 18/10) : aucun
+        // dialogue extérieur au tutoriel tant qu'il dure. Il s'achève au retour
+        // sur la mappe après la section 11 (_tutoVersSection12).
+        function _tutoTunnelActif() { return _tutoActif() && !(_tutoEtat && _tutoEtat.s11 === 'fini'); }
 
         // Section n atteinte : journalisée une fois, dans l'ordre. Faux si déjà
         // atteinte (ou dépassée) : les fonctions de section restent rejouables
@@ -20090,7 +20100,7 @@
             if (!_tutoEtat.s7) { _tutoEtat.s7 = 'entree'; _tutoSauver(); }
             if (_tutoEtat.s7 === 'entree') {
                 // L'entrée ne pulse qu'une fois la réplique finie.
-                const entree = ['#journalScreen .scrap-available'];
+                const entree = _tutoPremiereEntree;
                 guideFocus(entree, { pulse: false });
                 _tutoDire('s7a', 'journal', _TUTO_LIGNES_S7A, () => {
                     if (_tutoSection === 7 && _tutoEtat.s7 === 'entree') guideFocus(entree);
@@ -20147,9 +20157,16 @@
                 case 'map':         return ['#btnCollections'];
                 case 'collections': return ['.alb-card.alb-collected[onclick*="\'' + OB_TUTORIAL_CARD.id + '\'"]'];
                 case 'carddetail':  return ['#journalTabBtn'];
-                case 'journal':     return ['#journalScreen .scrap-available'];
+                case 'journal':     return _tutoPremiereEntree();
             }
             return [];
+        }
+        // Lot 1.2 (David, 18/10) : au début du tutoriel (sections 7 et 10), seule
+        // la première entrée à dévoiler est éclairée et pulse, même si d'autres
+        // sont débloquées : celles-ci restent dans l'ombre avec le reste. Après le
+        // premier dévoilement, toutes les restantes pulsent (_tutoPulserEntrees).
+        function _tutoPremiereEntree() {
+            return [document.querySelector('#journalScreen .scrap-available')];
         }
         // Première entrée dévoilée : la lecture, selon le nombre d'entrées
         // débloquées sur la carte (1 → A, 2 → B, 3 → C).
@@ -20949,6 +20966,7 @@
             if (vn && vn.classList.contains('show')) return;
             const ecran = _obCurrentScreen();
             const s = _tutoSection, e = _tutoEtat;
+            _tutoPulserEntrees(ecran);
             // 7 : toute première ouverture du carnet
             if (s === 6 && ecran === 'journal') { _tutoSection7(); return; }
             // 8 : sorti du carnet par la mappe, de retour dehors
@@ -20962,6 +20980,20 @@
             }
             // 12 à 18 : déroulé piloté par l'état (cf. _tutoTick12)
             if (s >= 12) _tutoTick12(ecran);
+        }
+
+        // Lot 1.2 (playtest 2) : une fois la lecture lancée (section 10), chaque
+        // entrée débloquée et non dévoilée de la carte pulse, carnet ouvert et
+        // hors mode guidé. Le carnet est réécrit à chaque dévoilement : on repose
+        // la pulsation sur les entrées restantes à chaque passage de la boucle.
+        function _tutoPulserEntrees(ecran) {
+            if (ecran !== 'journal' || _gf) return;
+            if (_tutoEtat.s10 !== 'lecture' && _tutoEtat.s10 !== 'lu') return;
+            document.querySelectorAll('#journalScreen .scrap-available').forEach(el => {
+                if (el.classList.contains('ui-pulse')) return;
+                _tutoPulses.add(el);
+                uiPulser(el, { garder: true });
+            });
         }
 
         // Événements du jeu (appels gardés depuis showDustDialogue,
