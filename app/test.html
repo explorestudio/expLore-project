@@ -1449,6 +1449,15 @@
             cursor: pointer;
             transition: background 0.15s, color 0.15s;
         }
+        .mode-test-code { margin-top: 8px; }
+        .mode-test-code-input {
+            flex: 2; min-width: 0; padding: 7px 10px;
+            font-family: inherit; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
+            color: #EDE9FE; background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(167,139,250,0.35); border-radius: 9px;
+        }
+        .mode-test-code-input.erreur { border-color: #f87171; }
+        .mode-test-code-msg { font-size: 11px; color: #fca5a5; margin-top: 4px; min-height: 0; }
         .settings-seg button.active {
             color: #EDE9FE;
             background: rgba(124,58,237,0.32);
@@ -9657,7 +9666,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.0.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v1.1.0 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10347,11 +10356,9 @@
                                 <!-- ── Pane GÉNÉRAL : infos statiques ── -->
                                 <div class="card-vtab-pane" id="cardPaneGeneral">
                                     <div id="generalTab" class="tab-content active" style="display:block;padding:0;">
-                                        <div class="info-row"><span class="info-label">Naissance</span><span class="info-value">7 novembre 1867</span></div>
-                                        <div class="info-row"><span class="info-label">Décès</span><span class="info-value">4 juillet 1934</span></div>
-                                        <div class="info-row"><span class="info-label">Nationalité</span><span class="info-value">Polonaise, Française</span></div>
-                                        <div class="info-row"><span class="info-label">Conjoint</span><span class="info-value">Pierre Curie</span></div>
-                                        <p style="margin-top:12px; padding:0 4px; color:#4b5563; font-size:13px; line-height:1.6;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                                        <!-- Contenu par carte pas encore rédigé (David, 19/10) : l'ancien gabarit
+                                             (fiche Marie Curie + Lorem ipsum) s'affichait sur toutes les cartes. -->
+                                        <p style="margin-top:12px; padding:0 4px; color:#4b5563; font-size:13px; line-height:1.6;">Informations à venir.</p>
                                     </div>
                                 </div>
 
@@ -11795,12 +11802,20 @@
                 </div>
 
                 <!-- Mode test : le menu avatar est caché au début du tutoriel
-                     (cf. uiReveler) ; sans cette ligne, plus d'accès au panneau test. -->
+                     (cf. uiReveler) ; sans cette ligne, plus d'accès au panneau test.
+                     Hors code équipe, le code équipe est demandé (David, 19/10). -->
                 <div class="settings-row">
                     <div class="settings-row-label"><span>🧪</span> Mode test</div>
                     <div class="settings-seg">
-                        <button type="button" onclick="closeSettings(); openTestPanel()">Ouvrir</button>
+                        <button type="button" onclick="ouvrirModeTest()">Ouvrir</button>
                     </div>
+                    <div class="settings-seg mode-test-code" id="modeTestCode" style="display:none">
+                        <input type="text" id="modeTestCodeInput" class="mode-test-code-input" placeholder="Code équipe"
+                               autocomplete="off" autocapitalize="characters" spellcheck="false"
+                               onkeydown="if (event.key === 'Enter') validerCodeModeTest()">
+                        <button type="button" onclick="validerCodeModeTest()">Valider</button>
+                    </div>
+                    <div class="mode-test-code-msg" id="modeTestCodeMsg"></div>
                 </div>
             </div>
         </div>
@@ -12103,6 +12118,9 @@
             "Défaut": "Default",
             "Actif": "Active",
             "Appliquer": "Apply",
+            "Informations à venir.": "Information coming soon.",
+            "Code équipe": "Team code",
+            "Code incorrect.": "Wrong code.",
             "Naissance": "Born",
             "Décès": "Died",
             "Nationalité": "Nationality",
@@ -23953,7 +23971,36 @@
             return _testWeather; // null = pas de simulation
         }
 
+        // Mode test (David, 19/10) : direct avec le code équipe ; avec un autre
+        // code, Paramètres → Mode test demande le code équipe (valable pour la session).
+        let _modeTestDeverrouille = false;
+        function _modeTestAutorise() { return _modeTestDeverrouille || !!(_acces && _acces.team); }
+        function ouvrirModeTest() {
+            if (_modeTestAutorise()) { closeSettings(); openTestPanel(); return; }
+            const zone = document.getElementById('modeTestCode');
+            const input = document.getElementById('modeTestCodeInput');
+            zone.style.display = 'flex';
+            input.placeholder = T('Code équipe');   // attribut : hors MutationObserver
+            input.value = '';
+            input.classList.remove('erreur');
+            document.getElementById('modeTestCodeMsg').textContent = '';
+            setTimeout(() => { try { input.focus(); } catch (e) {} }, 50);
+        }
+        function validerCodeModeTest() {
+            const input = document.getElementById('modeTestCodeInput');
+            if (_accesNormaliser(input.value) !== TEST_CODE_EQUIPE) {
+                input.classList.add('erreur');
+                document.getElementById('modeTestCodeMsg').textContent = T('Code incorrect.');
+                return;
+            }
+            _modeTestDeverrouille = true;
+            document.getElementById('modeTestCode').style.display = 'none';
+            closeSettings();
+            openTestPanel();
+        }
+
         function openTestPanel() {
+            if (!_modeTestAutorise()) return;
             document.getElementById('testPanel').style.display = 'flex';
             updateTestHour(document.getElementById('testHourSlider').value);
             refreshTestState();
@@ -27492,6 +27539,9 @@
 
         function toggleAvatarMenu() {
             const menu = document.getElementById('avatarMenu');
+            // Entrée « Mode test » : seulement avec le code équipe (ou déverrouillé)
+            const itemTest = menu.querySelector('.avatar-menu-item--test');
+            if (itemTest) itemTest.style.display = _modeTestAutorise() ? '' : 'none';
             menu.classList.toggle('hidden');
         }
 
