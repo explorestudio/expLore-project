@@ -9677,7 +9677,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.3.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v1.4.0 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -13883,6 +13883,13 @@
 
             // ── Carnet scrapbook : les clefs de la ville ──
             "Trois clefs, aucune serrure": "Three keys, no lock",
+            // Pages provisoires 2 et 3 des clefs (19/10)
+            "Ce que l'on offre": "What one gives",
+            "Offrir les clefs d'une ville, ce n'est pas donner une porte : c'est un geste. On remet au visiteur le signe d'un lieu qui, ce jour-là, se dit ouvert. En 1805, Lyon fait ce geste pour Napoléon.": "To offer the keys to a city is not to hand over a door: it is a gesture. The visitor receives the sign of a place that, on that day, declares itself open. In 1805, Lyon makes that gesture for Napoleon.",
+            "Une clef qui n'ouvre rien dit pourtant quelque chose.": "A key that opens nothing still says something.",
+            "Deux absentes": "Two missing",
+            "Des trois clefs, deux se sont perdues. Je ne sais ni quand, ni comment. Il reste celle du musée Gadagne, et la question qu'elle laisse derrière elle : où sont passées les deux autres ?": "Of the three keys, two were lost. I don't know when, or how. What remains is the one at the Gadagne museum, and the question it leaves behind: where did the other two go?",
+            "Une clef seule, et un plat qui se souvient.": "A single key, and a dish that remembers.",
             "l'unique rescapée, telle qu'on la voit aujourd'hui": "the sole survivor, as it is seen today",
 
             // ── Studio ──
@@ -14464,7 +14471,7 @@
                     { id: 'card9', cardKind: 'local', collections: ["pierres_memoire"], name: 'Place des Terreaux', type: 'Lieu', poiId: 'terreaux', rarity: 'common', supertype: 'histoire', supertype2: 'nature',
                       clueIcon: '💧',
                       incipit: 'Ici coulait autrefois un fleuve. On l\'a enfoui, pavé, décoré. Mais l\'eau revient toujours.' },
-                    { id: 'card10', cardKind: 'local', collections: ["pierres_memoire"], name: 'Fontaine Bartholdi', type: 'Objet', poiId: 'beaux_arts', rarity: 'rare', supertype: 'arts',
+                    { id: 'card10', cardKind: 'local', collections: ["pierres_memoire"], name: 'Fontaine Bartholdi', type: 'Objet', poiId: 'terreaux', rarity: 'rare', supertype: 'arts',
                       clueIcon: '🐎',
                       incipit: 'On m\'a commandée pour Paris. Lyon m\'a gardée. Je crois que c\'est la meilleure chose qui me soit arrivée.' },
                     { id: 'card19', cardKind: 'local', collections: ["pierres_memoire"], name: 'Musée des Beaux-Arts', type: 'Lieu', poiId: 'beaux_arts', rarity: 'rare', supertype: 'arts', supertype2: 'histoire',
@@ -15039,8 +15046,12 @@
             localCardId: 'card24',
             thematicPool: ['tc_imprimerie','tc_gutenberg','tc_masque','tc_commedia','tc_ver_a_soie','tc_guignol','tc_jacquard'] },
 
-            { id: 'beaux_arts',       name: 'Musée des Beaux-Arts',      lat: 45.7652, lng: 4.8325,
-            localCardId: 'card10',
+            // A9 (David, 19/10) : le musée donne sa propre carte. La Fontaine Bartholdi
+            // (card10) est rattachée à la place des Terreaux, où elle se trouve.
+            // Désactivé pour le test (David, 19/10) : la carte du musée n'a pas encore
+            // de contenu propre (carnet générique de _default).
+            { id: 'beaux_arts',       name: 'Musée des Beaux-Arts',      lat: 45.7652, lng: 4.8325, disabled: true,
+            localCardId: 'card19',
             thematicPool: ['tc_masque','tc_moliere','tc_cabinet','tc_bibliotheque'] },
 
             { id: 'guillotiere',      name: 'Pont de la Guillotière',    lat: 45.75192, lng: 4.83643,
@@ -22079,8 +22090,12 @@
         // ══ Système thématique ══
 
         // Tire une carte depuis le pool d'un POI (exclut les cartes déjà possédées)
+        // A8 (David, 19/10) : cartes thématiques encore vides (ni image ni carnet,
+        // incipit « [à définir] ») — jamais tirées. tc_guignol doublait aussi la
+        // carte locale « Guignol » au même POI.
+        const TC_NON_TIRABLES = ['tc_rhone', 'tc_saone', 'tc_ver_a_soie', 'tc_guignol', 'tc_celestins', 'tc_jacquard'];
         function drawThematicCard(poi) {
-            const pool = (poi.thematicPool || []).filter(id => !collectedCards.includes(id));
+            const pool = (poi.thematicPool || []).filter(id => !collectedCards.includes(id) && !TC_NON_TIRABLES.includes(id));
             if (pool.length === 0) return null; // pool épuisé
             return pool[Math.floor(Math.random() * pool.length)];
         }
@@ -22126,8 +22141,15 @@
                 if (!poi.localCardId) return;
                 if (!collectedCards.includes(poi.localCardId)) return;
                 const state = thematicState[poi.id];
-                const needsDraw = !state ||
-                    (state.collected && (now - state.drawnAt) >= THEMATIC_COOLDOWN_MS);
+                // Respawn (David, 19/10) : une carte locale obtenue hors rituel (scène
+                // finale, boutons de test) n'a pas d'état ; elle tirait aussitôt une
+                // thématique. Elle démarre désormais le même délai qu'une collecte.
+                if (!state) {
+                    thematicState[poi.id] = { drawnCardId: null, drawnAt: now, collected: true };
+                    changed = true;
+                    return;
+                }
+                const needsDraw = state.collected && (now - state.drawnAt) >= THEMATIC_COOLDOWN_MS;
                 if (needsDraw) {
                     const cardId = drawThematicCard(poi);
                     thematicState[poi.id] = {
@@ -30139,6 +30161,29 @@
                         + "aujourd'hui, au musée Gadagne — une clef seule, et un plat qui se souvient des deux autres.",
                     quote: "Trois clefs, et pas une serrure.",
                     decorations: ['tape_top', 'tape_corner', 'stamp_lyon_patrimoine'],
+                },
+                // [PROVISOIRE — David, 19/10] Pages 2 et 3 du chapitre I, en attendant
+                // le vrai texte. Sans elles, ces deux entrées répétaient la première.
+                // Aucun fait nouveau : elles ne reprennent que ceux de la page 1.
+                {
+                    level: 0, index: 1,
+                    template: 'image_citation',
+                    title: "Ce que l'on offre",
+                    body: "Offrir les clefs d'une ville, ce n'est pas donner une porte : c'est un geste. "
+                        + "On remet au visiteur le signe d'un lieu qui, ce jour-là, se dit ouvert. "
+                        + "En 1805, Lyon fait ce geste pour Napoléon.",
+                    quote: "Une clef qui n'ouvre rien dit pourtant quelque chose.",
+                    decorations: ['nebula_edge', 'corner_fold'],
+                },
+                {
+                    level: 0, index: 2,
+                    template: 'image_citation',
+                    title: "Deux absentes",
+                    body: "Des trois clefs, deux se sont perdues. Je ne sais ni quand, ni comment. "
+                        + "Il reste celle du musée Gadagne, et la question qu'elle laisse derrière elle : "
+                        + "où sont passées les deux autres ?",
+                    quote: "Une clef seule, et un plat qui se souvient.",
+                    decorations: ['paperclip_top', 'tape_corner'],
                 },
             ],
 
