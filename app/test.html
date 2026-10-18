@@ -1816,6 +1816,14 @@
             text-shadow: 0 2px 8px rgba(0,0,0,0.65);
         }
         .ob-exit-hint.left .ob-exit-hint-label { transform: rotate(180deg); }
+        /* Bandes « Mappe » allumées : le tap ramène à la mappe, pas à l'écran
+           précédent. Les écrans intermédiaires s'effacent derrière la fiche pour
+           que son flou montre la mappe (A3, David 19/10). */
+        body.fiche-vers-mappe #collectionsPanel,
+        body.fiche-vers-mappe #journalScreen,
+        body.fiche-vers-mappe #bagScreen,
+        body.fiche-vers-mappe #mindmapScreen,
+        body.fiche-vers-mappe #voutV2Screen { visibility: hidden !important; }
         /* Cible du guide : l'icône elle-même pulse, plus d'encadré violet autour.
            Propriété `scale` et non `transform` : nombre de boutons portent déjà
            un transform (centrage, survol) qu'une animation écraserait. */
@@ -9666,7 +9674,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.1.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v1.2.0 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -16086,9 +16094,16 @@
         // mappe après la section 11 (« La mappe affiche désormais tous les points
         // d'intérêt »), avant la fin du tutoriel (section 18). Le périmètre du
         // test en limite l'affichage (cf. _perimetreFiltrerMarqueurs).
+        // A3 (David, 19/10) : le terrain (périmètre + POI) n'apparaît qu'au bout du
+        // tunnel de fin de section 12 — journal de quête, puis jumelles — à la
+        // première vue haute (_tutoSection14, `_tutoEtat.terrain`). Avant, la
+        // mappe est vide. Parties déjà plus loin : s14 dite, ou section 15+.
         function _obFieldOpen() {
             if (_obDone) return true;
-            try { return _tutoSection >= 12; } catch (e) { return false; }   // déclaré plus bas
+            try {   // déclarés plus bas
+                return _tutoSection >= 15
+                    || (_tutoSection >= 12 && !!(_tutoEtat && (_tutoEtat.terrain || _tutoEtat.s14)));
+            } catch (e) { return false; }
         }
 
         // Seconde exception : l'Office du Tourisme. Il paraît avec les ressources du
@@ -18787,6 +18802,8 @@
                 if (lab) lab.textContent = T('Mappe');
             });
             hints.forEach(el => el.classList.toggle('show', !!on));
+            // A3 (David, 19/10) : le tap mène à la mappe → le flou montre la mappe
+            document.body.classList.toggle('fiche-vers-mappe', !!on);
         }
 
         let _obRingSelector = null;   // sélecteur actuellement entouré
@@ -20511,6 +20528,17 @@
             _tutoSauver();
             _tuto12FinT = Date.now();
         }
+        // A3 : cibles du tunnel de la feuille de route, selon qu'elle est ouverte.
+        function _tuto12FeuilleOuverte() {
+            const p = document.getElementById('questJournalPanel');
+            return !!(p && p.classList.contains('show'));
+        }
+        function _tuto12Cibles() {
+            return _tuto12FeuilleOuverte() ? ['#questJournalPanel .qj-close'] : ['#hudQuestJournal'];
+        }
+        function _tuto12Visibles() {
+            return _tuto12FeuilleOuverte() ? ['#questJournalPanel .qj-card'] : null;
+        }
         let _tuto12FinT = 0;   // la section 13 laisse voir la pastille un instant
         let _tutoFeuilleFermeeT = 0;   // fermeture de la feuille de route (cf. closeQuestJournal)
 
@@ -20530,6 +20558,9 @@
         // après leur apparition. Journalisée à ce moment-là (tuto_step 14).
         function _tutoSection14() {
             const e = _tutoEtat;
+            // A3 : fin du tunnel — périmètre et POI apparaissent sous la vue haute
+            guideFocusFin();
+            if (!e.terrain) { e.terrain = true; _tutoSauver(); _tuto12Terrain(0); }
             if (!e.s14) {
                 e.s14 = 'dite';
                 if (!_tutoAtteindre(14) && typeof journalLog === 'function') {
@@ -20759,6 +20790,12 @@
             if (ecran === 'map' && _obPendingSay) return;   // une réplique attend déjà
             // 12
             if (s === 12) {
+                // A3 (David, 19/10) : tunnel — ouvrir la feuille de route (journal
+                // de quête), la refermer ; le reste de l'écran est bloqué.
+                if (e.s12 === 'fini' && (!e.feuilleVue || _tuto12FeuilleOuverte())) {
+                    if (!_gf) guideFocus(_tuto12Cibles, { visibles: _tuto12Visibles });
+                    return;
+                }
                 if (ecran !== 'map') return;
                 if (!e.s12) _tuto12Cas();
                 if (e.s12 === 'p1') { _tutoDire('s12a', 'map', _tutoLignesS12a(), () => { e.s12 = 'don'; _tutoSauver(); }); return; }
@@ -20767,7 +20804,7 @@
                 // La section 13 attend un geste du joueur : avoir ouvert puis refermé
                 // la feuille de route (journal de quête) qui pulse. Elle partait
                 // seule 2,5 s après la 12, enchaînant deux dialogues sans action.
-                if (e.s12 === 'fini' && e.feuilleVue && Date.now() - _tutoFeuilleFermeeT > 700) _tutoSection13();
+                if (e.s12 === 'fini' && e.feuilleVue && Date.now() - _tutoFeuilleFermeeT > 700) { guideFocusFin(); _tutoSection13(); }
                 return;
             }
             // 14 : première vue haute, une fois les jumelles révélées
@@ -20777,6 +20814,8 @@
             if (s === 13 || s === 14) {
                 if (ecran !== 'map') return;
                 if (e.s13 !== 'fini') { _tutoSection13(); return; }
+                // A3 : tunnel, suite — les jumelles ; leur vue haute ouvre le terrain (14)
+                if (!e.terrain && !e.s14) { if (!_gf) guideFocus(['#viewToggleBtn']); return; }
                 if (_tutoQueteProgres('preuves').n >= TUTO_QUETES.preuves.max) _tutoSection15();
                 return;
             }
