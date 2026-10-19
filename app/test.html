@@ -9795,7 +9795,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.12</div>
+            <div class="hud-version" id="hudVersion">v1.9.13</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11828,7 +11828,6 @@
             <div class="orb-synth-title">Synthèse du chapitre</div>
             <div class="orb-synth-card-name" id="orbSynthCardName"></div>
             <div class="orb-synth-level" id="orbSynthLevel"></div>
-            <div class="orb-synth-orb">🔮</div>
             <div class="orb-synth-text" id="orbSynthText"></div>
             <button class="orb-synth-btn" onclick="orbSynthClose()">Continuer ›</button>
         </div>
@@ -12239,6 +12238,7 @@
             "Général": "General",
             "Niveau 1": "Level 1",
             "Niveau %1": "Level %1",
+            "Niveau MAX": "MAX level",
             "%1 pellicule": "%1 film", "%1 pellicules": "%1 films",
             "%1 cassette": "%1 tape", "%1 cassettes": "%1 tapes",
             "disposée": "eager",
@@ -16546,7 +16546,13 @@
                 });
             }
             const apparu = (dejaVisible || opts.anime === false) ? 0 : UI_APPARITION_MS + 60;
-            if (opts.pulse) setTimeout(() => els.forEach(el => uiPulser(el, opts)), apparu);
+            // Touché pendant l'éclosion (longue-vue, David 19/10) : le geste est
+            // déjà fait, la pulsation ne démarre pas après coup.
+            if (opts.pulse) {
+                const touches = new Set();
+                els.forEach(el => el.addEventListener('pointerdown', () => touches.add(el), { once: true }));
+                setTimeout(() => els.forEach(el => { if (!touches.has(el)) uiPulser(el, opts); }), apparu);
+            }
             if (typeof opts.apres === 'function') setTimeout(opts.apres, apparu);
             try { saveProgress(); } catch (e) {}
             return !dejaVisible;
@@ -19926,6 +19932,13 @@
         // Marge minimale : plus large, elle découvre le décor autour de l'élément
         // (le papier du carnet) et redessine une « zone » claire.
         const _GF_MARGE_PULSE = 2;
+        // Une pastille de notification déborde du coin de son bouton : le trou
+        // s'élargit pour ne pas la rogner (journal de quête, David 19/10).
+        const _GF_MARGE_PASTILLE = 9;
+        function _gfMarge(el) {
+            const p = el.querySelector && el.querySelector('.hud-qj-count, .vault-notif-dot');
+            return (p && getComputedStyle(p).display !== 'none') ? _GF_MARGE_PASTILLE : _GF_MARGE_PULSE;
+        }
         // Forme visible d'un élément qui pulse : lui-même s'il a un fond ou une
         // bordure ; sinon (bouton-icône sur fond transparent, ex. bouton de la
         // mappe du carnet) son icône — sans quoi le trou découvrirait un carré
@@ -20117,7 +20130,7 @@
                 return rects.some(r => b.left < r.right && r.left < b.right && b.top < r.bottom && r.top < b.bottom); };
             const isoles = visuels.filter(v => !dans(v))
                 .map(el => ({ el, q: _gfQuad(_gfForme(el)) })).filter(o => o.q);
-            const polys = isoles.map(o => _gfPolygone(o.q, _GF_MARGE_PULSE));
+            const polys = isoles.map(o => _gfPolygone(o.q, _gfMarge(o.el)));
             const masques = _gfElements(_gfListe(_gf.masques)).map(_gfRect).filter(Boolean);
             voile.style.clipPath = _gfDecoupe(_gfFusion(rects), polys, masques);
             _gfHalosMaj(isoles);
@@ -21162,7 +21175,6 @@
                 uiReveler('explorium_btn', { apres: () => {
                     _tutoEtat.s18 = 'fini';
                     _tutoQueteDemarrer('vdl');
-                    uiPulser('#hudQuestJournal');
                     try { updateQuestJournalBadge(); } catch (e) {}
                     _tutoTerminer();
                 } });
@@ -22487,6 +22499,9 @@
         // Date de collecte de chaque carte (ms) ; 0 = collectée avant que le jeu
         // ne la note (sauvegarde antérieure à la v1.9.5).
         let cardAcquisDates = {};
+        // Quêtes déjà vues dans le journal (clés de _qjClesEnCours) ; null = ancienne
+        // sauvegarde, les quêtes en cours y sont alors marquées vues au premier calcul.
+        let qjQuetesVues = [];
 
         // ── Sauvegarde / Chargement ──
         
@@ -22700,6 +22715,7 @@
                 const _saveData = {
                     collectedCards,
                     cardAcquisDates,
+                    qjQuetesVues,
                     collectedEchoes,
                     hasSeenMapointTutorial,
                     hasSeenEchoTuto,
@@ -22818,6 +22834,7 @@
                 if (d.collectedCards)        collectedCards      = d.collectedCards.filter(id => id !== 'v2_traboule');   // Traboule retirée (18/10)
                 cardAcquisDates = (d.cardAcquisDates && typeof d.cardAcquisDates === 'object') ? d.cardAcquisDates : {};
                 collectedCards.forEach(id => { if (!(id in cardAcquisDates)) cardAcquisDates[id] = 0; });
+                qjQuetesVues = Array.isArray(d.qjQuetesVues) ? d.qjQuetesVues : null;
                 if (d.v2ConsultedMedias && typeof d.v2ConsultedMedias === 'object') v2ConsultedMedias = d.v2ConsultedMedias;
                 if (d.v2CartesVues && typeof d.v2CartesVues === 'object') v2CartesVues = d.v2CartesVues;
                 v2CartesRevelees = Array.isArray(d.v2CartesRevelees) ? d.v2CartesRevelees : null;
@@ -28011,6 +28028,9 @@
 
         function toggleMapView() {
             _mapViewMode = _mapViewMode === 'close' ? 'far' : 'close';
+            // La longue-vue a servi : plus de pulsation pour réclamer le retour,
+            // se déplacer ramène aussi la vue proche.
+            uiArreterPulse('#viewToggleBtn');
             const v   = MAP_VIEW[_mapViewMode];
             const btn = document.getElementById('viewToggleBtn');
             // Cap de carte : nord en haut en vue d'ensemble ; en vue proche, celui du
@@ -29190,7 +29210,8 @@
             if (!selectedCard) return;
             updateCardDetailOrbesDisplay();   // lot 1.4 : même lecture que le bouton d'orbe
             const cl = cardLevels[selectedCard.id] || { level: 0, experience: 0 };
-            document.getElementById('cardLevelDisplay').textContent = TF('Niveau %1', cl.level);
+            // David, 19/10 : pas de « Niveau 3 » affiché, le dernier palier s'appelle MAX
+            document.getElementById('cardLevelDisplay').textContent = cl.level >= MAX_LEVEL ? T('Niveau MAX') : TF('Niveau %1', cl.level);
             document.getElementById('cardRarityGemFlavor').innerHTML = getRarityGemHTML(selectedCard.rarity);
             const gemEl = document.getElementById('cardRarityGemFlavor');
             if (cl.level >= MAX_LEVEL) gemEl.classList.add('gem-max');
@@ -37962,6 +37983,7 @@
             // Section 12 finie : la feuille de route consultée débloque la section 13.
             try { if (_tutoEtat.s12 === 'fini' && !_tutoEtat.feuilleVue) { _tutoEtat.feuilleVue = true; _tutoSauver(); } } catch (e) {}
             // Effacer la pastille notif sur le bouton journal (vu)
+            _qjMarquerVues();
             document.getElementById('hudQjCount').style.display = 'none';
         }
 
@@ -38127,10 +38149,31 @@
         // Set des étapes déjà notifiées (pour ne pas redéclencher la notif voûte)
         let _notifiedAvailable = new Set();
 
-        // Met à jour la pastille du bouton journal et la notif voûte
+        // Clés des quêtes en cours (grappes, tutoriel, scène finale)
+        function _qjClesEnCours() {
+            const cles = _getActiveQuests().map(q => 'g:' + q.grappeId + ':' + q.etape.id);
+            const fq = (_finale && _finale.quetes) || {};
+            Object.keys(fq).forEach(k => { if (fq[k] !== 'completed') cles.push('f:' + k); });
+            const tq = _tutoQuetes();
+            Object.keys(tq).forEach(k => { if (tq[k].etat !== 'completed') cles.push('t:' + k); });
+            return cles;
+        }
+        // Journal consulté : toutes les quêtes en cours deviennent « vues »
+        function _qjMarquerVues() {
+            const vues = new Set(qjQuetesVues || []);
+            _qjClesEnCours().forEach(k => vues.add(k));
+            qjQuetesVues = [...vues];
+            try { saveProgress(); } catch (e) {}
+        }
+
+        // Met à jour la pastille du bouton journal et la notif voûte.
+        // David, 19/10 : la pastille compte les quêtes NOUVELLES, jusqu'à ce que
+        // le journal soit consulté (plus de pulsation hors première apparition).
         function updateQuestJournalBadge() {
             const list = _getActiveQuests();
-            const count = list.length + _finaleQuetesNb(true) + _tutoQuetesNb(true);
+            if (qjQuetesVues === null || document.getElementById('questJournalPanel')?.classList.contains('show')) _qjMarquerVues();
+            const vues = new Set(qjQuetesVues);
+            const count = _qjClesEnCours().filter(k => !vues.has(k)).length;
             const btn = document.getElementById('hudQuestJournal');
             const cnt = document.getElementById('hudQjCount');
             if (!btn || !cnt) return;
@@ -38377,7 +38420,6 @@
             _finaleEcrire();
             _finaleMarqueurs.forEach(m => uiArreterPulse(m.getElement().querySelector('.finale-pnj-corps')));
             if (typeof uiEstRevele === 'function' && !uiEstRevele('journal_quetes')) uiReveler('journal_quetes', { pulse: true });
-            else uiPulser('#hudQuestJournal');
             updateQuestJournalBadge();
             showToast(T('📜 Deux nouvelles quêtes dans ton journal'), 3200);
         }
