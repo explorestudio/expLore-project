@@ -5142,6 +5142,17 @@
         .bp-milestone-info { flex: 1; }
         .bp-milestone-name { font-size: 14px; font-weight: 800; color: #FCD34D; }
         .bp-milestone-desc { font-size: 11px; color: rgba(252,211,77,0.6); margin-top: 2px; }
+        /* Palier atteint, à récupérer d'un toucher (David, 19/10) */
+        .bp-claim-btn { flex-shrink: 0; border: none; border-radius: 999px; padding: 6px 12px; cursor: pointer;
+            background: linear-gradient(135deg, #F59E0B, #D97706); color: #1f1300; font-size: 12px; font-weight: 800;
+            box-shadow: 0 0 12px rgba(245,158,11,0.45); }
+        .bp-claim-btn:active { transform: scale(0.94); }
+        .bp-node.a-recuperer { border-color: #FCD34D; box-shadow: 0 0 12px rgba(245,158,11,0.55); }
+        .bp-milestone.bp-a-recuperer { border-color: rgba(245,158,11,0.7); }
+        .hud-avatar-wrap .bp-notif-dot { top: 2px; right: 2px; width: 14px; height: 14px; z-index: 3; pointer-events: none; }
+        .bp-notif-compte { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+            background: #ef4444; color: #fff; font-size: 11px; font-weight: 800; align-items: center; justify-content: center; }
+        .levelup-reward-note { margin-top: 8px; font-size: 12px; color: #FCD34D; text-align: center; font-style: italic; }
         .bp-milestone-badge { background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); color: #FCD34D; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
 
         /* Achievements */
@@ -9521,8 +9532,10 @@
         .hud-avatar-wrap { margin-top: 60px; }
         .hud-avatar-btn { width: 66px; height: 66px; font-size: 34px; }
         /* Lot 3 : la boussole de quête (top 70px) recouvrait la moitié de l'avatar
-           descendu (≈ 74-140px) ; elle passe juste sous lui. */
-        .hud-quest-compass { top: 150px; }
+           descendu (≈ 74-140px). David, 20/10 : collée sous lui elle s'y confondait
+           (et le menu de l'avatar s'ouvre là) ; elle passe à droite, sous le
+           bouton du journal de quête (64-104px) qu'elle ouvre au toucher. */
+        .hud-quest-compass { top: 116px; left: auto; right: 12px; }
         .settings-toggle {
             top: 14px; left: 14px; bottom: auto; right: auto;
             width: 40px; height: 40px; font-size: 19px;
@@ -9704,6 +9717,7 @@
                     <button class="hud-avatar-btn" onclick="toggleAvatarMenu()" id="avatarBtn">
                         <span class="avatar-emoji">🧙</span>
                     </button>
+                    <span class="hub-notif-dot bp-notif-dot" id="bpNotifDot" style="display:none;"></span>
 
                     <!-- Dropdown menu -->
                     <div class="avatar-menu hidden" id="avatarMenu">
@@ -9722,7 +9736,7 @@
                             <span>👤</span> Mon profil
                         </button>
                         <button class="avatar-menu-item" onclick="closeAvatarMenu(); openProgressionScreen()">
-                            <span>⭐</span> Progression
+                            <span>⭐</span> Progression <span class="bp-notif-compte" id="bpNotifCompte" style="display:none;"></span>
                         </button>
                         <!-- Langue : déplacée dans le panneau paramètres (bouton ⚙️).
                              « Mon compte » et « Magasin — Bientôt » retirés pour le test (C2, 19/10). -->
@@ -9795,7 +9809,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.13</div>
+            <div class="hud-version" id="hudVersion">v1.9.23</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11645,7 +11659,7 @@
             <div class="quest-steps" id="questSteps"></div>
             <!-- Bouton activer quand tout est validé -->
             <button id="questActivateBtn" onclick="activateQuestCard()">
-                ✦ Stabiliser cette carte
+                ✦ Cristalliser cette carte
             </button>
         </div>
 
@@ -12239,6 +12253,9 @@
             "Niveau 1": "Level 1",
             "Niveau %1": "Level %1",
             "Niveau MAX": "MAX level",
+            "Récupérer": "Claim",
+            "🎁 Récupéré : %1": "🎁 Claimed: %1",
+            "À récupérer dans ta progression": "Claim it in your progression",
             "%1 pellicule": "%1 film", "%1 pellicules": "%1 films",
             "%1 cassette": "%1 tape", "%1 cassettes": "%1 tapes",
             "disposée": "eager",
@@ -12338,7 +12355,7 @@
             "Inventaire du voyageur": "Traveler's inventory",
             "Sélectionne un objet pour en savoir plus.": "Select an item to learn more.",
             "Utiliser": "Use",
-            "✦ Stabiliser cette carte": "✦ Stabilize this card",
+            "✦ Cristalliser cette carte": "✦ Crystallize this card",
 
             // ── Explorium ──
             "Grappes narratives": "Narrative clusters",
@@ -13258,7 +13275,7 @@
             "[à définir — panorama quartier Monplaisir / cinéma]": "[to be defined — Monplaisir district / cinema panorama]",
             // ── LOCAL_QUESTS ──
             "Les secrets de Saint-Jean": "The secrets of Saint-Jean",
-            "La cathédrale recèle des siècles d'histoire. Prends le temps d'observer avant de stabiliser cette carte.": "The cathedral holds centuries of history. Take the time to look before stabilizing this card.",
+            "La cathédrale recèle des siècles d'histoire. Prends le temps d'observer avant de cristalliser cette carte.": "The cathedral holds centuries of history. Take the time to look before crystallizing this card.",
             "La rosace": "The rose window",
             "Lève les yeux vers le portail principal — une rose de pierre filtre la lumière.": "Look up at the main portal — a rose of stone filters the light.",
             "L'horloge astronomique": "The astronomical clock",
@@ -13768,7 +13785,7 @@
             "Nébuleuse en orbite…": "Nebula in orbit…",
             "Convergence en cours…": "Converging…",
             "🗺️ Contribue à :": "🗺️ Contributes to:",
-            "Des parchemins accumulés au fil de tes explorations et de la progression de tes cartes. Utilise-les dans les panneaux d'information.": "Scrolls gathered over the course of your explorations and your cards' progress. Use them at information panels.",
+            "Des parchemins accumulés au fil de tes explorations. Utilise-les dans les panneaux d'information.": "Scrolls gathered over the course of your explorations. Use them at information panels.",
             "Éclairent automatiquement l'Explorium": "Automatically light up the Explorium",
             "Les Lumens s'accumulent à chaque palier de progression franchi. Ils s'inscrivent automatiquement sur l'Explorium à ta prochaine visite, révélant de nouvelles zones dans l'obscurité.": "Lumens accumulate at every progression tier you pass. They inscribe themselves on the Explorium at your next visit, revealing new zones in the darkness.",
             "En réserve": "In reserve",
@@ -16575,6 +16592,19 @@
             if (typeof el === 'string') el = document.querySelector(el);
             if (!el) return null;
             const v = _uiPulseVisuel(el);
+            // David, 20/10 : un élément large (entrée du carnet) ne doit pas sortir
+            // de l'écran en grossissant ; l'amplitude est bornée à ce qui tient
+            // dans la largeur (le trou du guidage lit la même variable).
+            if (!v.classList.contains('ui-pulse')) {
+                const r = v.getBoundingClientRect();
+                if (r.width > 0) {
+                    const cx = (r.left + r.right) / 2, marge = 6;
+                    const place = Math.min(cx, window.innerWidth - cx) - marge;
+                    const s = Math.max(1.02, Math.min(1.14, place / (r.width / 2)));
+                    if (s < 1.14) v.style.setProperty('--ob-pulse-scale', s.toFixed(3));
+                    else v.style.removeProperty('--ob-pulse-scale');
+                }
+            }
             v.classList.add('ui-pulse');
             if (!opts.garder) el.addEventListener('pointerdown', () => uiArreterPulse(el), { once: true });
             if (opts.pulseMs > 0) setTimeout(() => uiArreterPulse(el), opts.pulseMs);
@@ -20252,9 +20282,9 @@
         const _TUTO_LIGNES_S7B = [ { speaker: _TUTO_JF, air: 'enthousiaste', html: _TUTO_HTML_S7B } ];
         // Section 10 — « Monsieur » : le marchand de l'échoppe.
         const _TUTO_HTML_S10 = {
-            A: 'Il faut tout prendre quand on nous le propose, ce ne sera pas toujours le cas d’après l’Organisation. Je range le reste dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil !',
+            A: 'Il faut tout prendre quand on nous le propose, ce ne sera pas toujours le cas d’après l’Organisation. Je range le tout dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil !',
             B: 'Ce sont des ressources rares, mieux vaut faire un stock, comme l’a dit l’Organisation. Je range le reste dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil !',
-            C: 'T’as bien fait, l’Organisation nous a prévenus d’en faire un stock. Je range le reste dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil !',
+            C: 'T’as bien fait, l’Organisation nous a prévenus d’en faire un stock. Tout est dans ton ' + vnMot('sac', 'sac', true) + ', jettes-y un œil !',
         };
         // Seconde partie (David, 19/10), dite à la sortie du sac, avant la Collection.
         const _TUTO_HTML_S10_ENCRE = 'Bon, maintenant, allons lui donner son ' + vnMot('encre', 'encre', true) + ' ! J’ai trop hâte d’en savoir plus sur la carte, moi !';
@@ -20262,13 +20292,13 @@
         const _TUTO_LIGNES_S10 = {
             // CAS A : le joueur n'a rien pris
             A: [ { speaker: _TUTO_JF, air: 'renfrogné', line: 'Je dois vraiment tout faire ! Merci Monsieur, cet énergumène ne semble pas être réveillé aujourd’hui.' },
-                 { speaker: _TUTO_JF, air: 'enthousiaste', html: _TUTO_HTML_S10.A } ],
+                 { speaker: _TUTO_JF, air: 'renfrogné', html: _TUTO_HTML_S10.A } ],
             // CAS B : le joueur a pris des ressources de façon partielle
             B: [ { speaker: _TUTO_JF, air: 'exalté', line: 'Il fallait tout prendre, je m’en suis chargée ! Merci Monsieur.' },
-                 { speaker: _TUTO_JF, air: 'enthousiaste', html: _TUTO_HTML_S10.B } ],
+                 { speaker: _TUTO_JF, air: 'exalté', html: _TUTO_HTML_S10.B } ],
             // CAS C : le joueur a pris toutes les ressources
             C: [ { speaker: _TUTO_JF, air: 'neutre', line: 'Merci Monsieur.' },
-                 { speaker: _TUTO_JF, air: 'enthousiaste', html: _TUTO_HTML_S10.C } ],
+                 { speaker: _TUTO_JF, air: 'neutre', html: _TUTO_HTML_S10.C } ],
         };
         // Section 10, après la première entrée dévoilée : selon le nombre
         // d'entrées carnet débloquées sur la carte (1, 2 ou 3).
@@ -21051,8 +21081,12 @@
         // 12 caractères au plus ; blancs de tête et de queue retirés, blancs
         // internes réduits, caractères de contrôle et chevrons écartés.
         const PSEUDO_MAX = 12;
+        // David, 19/10 : pas d'emoji dans le pseudo, seulement des caractères
+        // classiques (lettres accentuées comprises, chiffres, espace, ' - _ .).
+        const _PSEUDO_INTERDIT = /[^\p{L}\p{N} '’\-_.]/gu;
+        function _pseudoFiltrer(v) { return String(v || '').normalize('NFC').replace(_PSEUDO_INTERDIT, ''); }
         function _pseudoNettoyer(v) {
-            const s = String(v || '').replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim();
+            const s = _pseudoFiltrer(v).replace(/\s+/g, ' ').trim();
             return Array.from(s).slice(0, PSEUDO_MAX).join('');
         }
         function _pseudoStyle() {
@@ -21090,6 +21124,8 @@
             input.maxLength = PSEUDO_MAX;
             btn.textContent = T('Valider');
             const maj = () => {
+                const filtre = _pseudoFiltrer(input.value);
+                if (filtre !== input.value) input.value = filtre;   // emoji refusé à la frappe
                 const brut = Array.from(input.value);
                 if (brut.length > PSEUDO_MAX) input.value = brut.slice(0, PSEUDO_MAX).join('');
                 compte.textContent = Array.from(input.value).length + '/' + PSEUDO_MAX;
@@ -21540,11 +21576,11 @@
                 + '. You could do with a little ' + vnMot('poussiere', 'memorial dust') + ' yourself, too! Right, follow me, let’s stock up. Let’s find a ' + vnMot('echoppe', 'stall', true) + ', apparently there are some all over town.',
             "Je dois vraiment tout faire ! Merci Monsieur, cet énergumène ne semble pas être réveillé aujourd’hui.": "Do I really have to do everything! Thank you, Sir, this character doesn’t seem to be awake today.",
             [_TUTO_HTML_S10_ENCRE]: 'Right, now let’s go and give it its ' + vnMot('encre', 'ink', true) + '! I can’t wait to learn more about the card!',
-            [_TUTO_HTML_S10.A]: 'You have to take everything when it’s offered, it won’t always be the case according to the Organisation. I’ll put the rest in your ' + vnMot('sac', 'bag', true) + ', take a look!',
+            [_TUTO_HTML_S10.A]: 'You have to take everything when it’s offered, it won’t always be the case according to the Organisation. I’ll put it all in your ' + vnMot('sac', 'bag', true) + ', take a look!',
             "Il fallait tout prendre, je m’en suis chargée ! Merci Monsieur.": "You had to take everything, I took care of it! Thank you, Sir.",
             [_TUTO_HTML_S10.B]: 'These are rare resources, better to stock up, as the Organisation said. I’ll put the rest in your ' + vnMot('sac', 'bag', true) + ', take a look!',
             "Merci Monsieur.": "Thank you, Sir.",
-            [_TUTO_HTML_S10.C]: 'You did well, the Organisation warned us to stock up. I’ll put the rest in your ' + vnMot('sac', 'bag', true) + ', take a look!',
+            [_TUTO_HTML_S10.C]: 'You did well, the Organisation warned us to stock up. It’s all in your ' + vnMot('sac', 'bag', true) + ', have a look!',
             "Wouah ! Elle a une histoire si intéressante. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story. I’ll give you time to read in peace.",
             "Wouah ! Elle a une histoire si intéressante, continue. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story, keep going. I’ll give you time to read in peace.",
             "Wouah ! Elle a une histoire si intéressante, nous pouvons découvrir encore 2 entrées. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story, we can still discover 2 entries. I’ll give you time to read in peace.",
@@ -27194,7 +27230,7 @@
                         name:    'Parchemin',
                         sub:     'Exploration & carnets',
                         qty:     bagInv.parchemins.length,
-                        desc:    "Des parchemins accumulés au fil de tes explorations et de la progression de tes cartes. Utilise-les dans les panneaux d'information.",
+                        desc:    "Des parchemins accumulés au fil de tes explorations. Utilise-les dans les panneaux d'information.",
                         svgIcon: scrollIconSVG(28)
                     }];
                 }
@@ -27791,7 +27827,7 @@
         const LOCAL_QUESTS = {
             card13: {
                 title: "Les secrets de Saint-Jean",
-                intro: "La cathédrale recèle des siècles d'histoire. Prends le temps d'observer avant de stabiliser cette carte.",
+                intro: "La cathédrale recèle des siècles d'histoire. Prends le temps d'observer avant de cristalliser cette carte.",
                 steps: [
                     { id: "sj_rosace", label: "La rosace", clue: "Lève les yeux vers le portail principal — une rose de pierre filtre la lumière.", relicIcon: "🌹",
                       question: "Au-dessus de quel portail la rose de pierre est-elle posée ?", choix: ["Le portail de gauche", "Le portail central", "Le portail de droite"], bonne: 1 },
@@ -28911,6 +28947,17 @@
 
         function openCardDetail(card) {
             if (card) journalEvenement('card_opened', { carte: card.id });
+            // David, 19/10 : une carte consultée, d'où que ce soit, n'est plus
+            // « NEW » ni dans la Collection ni dans l'Explorium.
+            if (card && collectedCards.includes(card.id)) {
+                _seenCardIds.add(card.id);
+                if (!v2CartesVues[card.id]) {
+                    v2CartesVues[card.id] = true;
+                    try { rafraichirPastilleExplorium(); } catch (e) {}
+                    try { if (document.getElementById('voutV2Screen')?.classList.contains('show')) { v2RenderNodes(); v2RenderGrappesStrip(); } } catch (e) {}
+                }
+                try { saveProgress(); } catch (e) {}
+            }
             _cacherConsoles();   // cf. _isAnyScreenOpen
             _obOnOpenCardDetail();
             selectedCard = card;
@@ -35029,20 +35076,41 @@
             _skinCarouselSwipeBound = true;
         }
 
-        // ── Battlepass : distribuer les récompenses débloquées ──
+        // ── Battlepass : récompenses débloquées ──
+        // David, 19/10 : un palier atteint ne se distribue plus tout seul, le joueur
+        // le récupère d'un toucher dans la Progression (_bpRecuperer). Seul le
+        // palier 1 (appareil photo de départ, 0 XP) reste donné d'office.
+        function _bpRecuperable(node) {
+            return !!node.rewardFn && !claimedPaliers.has(node.palier) && playerTotalXP >= node.xpRequired;
+        }
+        function _bpNbRecuperables() { return BATTLEPASS_NODES.filter(_bpRecuperable).length; }
         function checkBattlepassRewards() {
-            BATTLEPASS_NODES.forEach(node => {
-                if (!node.rewardFn) return;
-                if (claimedPaliers.has(node.palier)) return;
-                if (playerTotalXP >= node.xpRequired) {
-                    claimedPaliers.add(node.palier);
-                    node.rewardFn();
-                    saveProgress();
-                    // Lot 1.4 : un palier peut donner des orbes fiche carte ouverte ;
-                    // compteur et bouton « Utiliser une orbe » suivent le solde réel.
-                    try { if (selectedCard) updateCardLevelDisplay(); } catch (e) {}
-                }
-            });
+            const depart = BATTLEPASS_NODES.find(n => n.palier === 1);
+            if (depart && _bpRecuperable(depart)) _bpRecuperer(1, true);
+            _bpNotifMaj();
+        }
+        function _bpRecuperer(palier, silencieux) {
+            const node = BATTLEPASS_NODES.find(n => n.palier === palier);
+            if (!node || !_bpRecuperable(node)) return;
+            claimedPaliers.add(node.palier);
+            node.rewardFn();
+            saveProgress();
+            // Lot 1.4 : un palier peut donner des orbes fiche carte ouverte ;
+            // compteur et bouton « Utiliser une orbe » suivent le solde réel.
+            try { if (selectedCard) updateCardLevelDisplay(); } catch (e) {}
+            if (!silencieux) {
+                renderBattlepassNodes();
+                showToast(TF('🎁 Récupéré : %1', T(node.name)), 2200);
+            }
+            _bpNotifMaj();
+        }
+        // Pastille sur l'avatar et compteur sur la ligne « Progression » du menu
+        function _bpNotifMaj() {
+            const n = _bpNbRecuperables();
+            const dot = document.getElementById('bpNotifDot');
+            if (dot) dot.style.display = n ? 'block' : 'none';
+            const cpt = document.getElementById('bpNotifCompte');
+            if (cpt) { cpt.textContent = n; cpt.style.display = n ? 'inline-flex' : 'none'; }
         }
 
         // ── XP award ──
@@ -35159,7 +35227,7 @@
             rewardsEl.innerHTML = '';
             BATTLEPASS_NODES.forEach((node, i) => {
                 if (!node.rewardFn) return;
-                if (!claimedPaliers.has(node.palier)) return;
+                if (!_bpRecuperable(node)) return;   // à récupérer dans la Progression
                 if (!Array.isArray(playerStats._paliersVus)) playerStats._paliersVus = [];
                 if (playerStats._paliersVus.includes(node.palier)) return;
                 playerStats._paliersVus.push(node.palier);
@@ -35170,6 +35238,12 @@
                 rewardsEl.appendChild(item);
             });
 
+            if (rewardsEl.children.length) {
+                const note = document.createElement('div');
+                note.className = 'levelup-reward-note';
+                note.textContent = T('À récupérer dans ta progression');
+                rewardsEl.appendChild(note);
+            }
             document.getElementById('levelupOverlay').classList.add('show');
             saveProgress();
         }
@@ -35241,16 +35315,18 @@
             BATTLEPASS_NODES.forEach((node, idx) => {
                 const done      = playerTotalXP >= node.xpRequired;
                 const isCurrent = !done && (idx === 0 || playerTotalXP >= (BATTLEPASS_NODES[idx-1]?.xpRequired||0));
+                const aRecuperer = _bpRecuperable(node);
+                const btnRecup = '<button class="bp-claim-btn" onclick="event.stopPropagation(); _bpRecuperer(' + node.palier + ')">' + T('Récupérer') + '</button>';
                 if (node.milestone) {
                     const ms = document.createElement('div');
-                    ms.className = 'bp-milestone';
-                    ms.innerHTML = '<div class="bp-milestone-icon">' + node.icon + '</div><div class="bp-milestone-info"><div class="bp-milestone-name">' + node.name + '</div><div class="bp-milestone-desc">' + node.type + '</div></div><div class="bp-milestone-badge">' + (done ? '✓ Débloqué' : node.xpRequired + ' XP') + '</div>';
+                    ms.className = 'bp-milestone' + (aRecuperer ? ' bp-a-recuperer' : '');
+                    ms.innerHTML = '<div class="bp-milestone-icon">' + node.icon + '</div><div class="bp-milestone-info"><div class="bp-milestone-name">' + node.name + '</div><div class="bp-milestone-desc">' + node.type + '</div></div>' + (aRecuperer ? btnRecup : '<div class="bp-milestone-badge">' + (done ? '✓ Débloqué' : node.xpRequired + ' XP') + '</div>');
                     container.appendChild(ms);
                     return;
                 }
                 const row = document.createElement('div');
                 row.className = 'bp-node-row';
-                row.innerHTML = '<div class="bp-node ' + (done?'done':isCurrent?'current':'locked') + '">' + (done?'✓':node.icon) + '<span class="bp-node-num">' + node.palier + '</span></div><div style="width:10px;flex-shrink:0;"></div><div class="bp-reward-card ' + (done?'done':'') + '"><div class="bp-reward-icon">' + (done?'✅':isCurrent?'🔓':'🔒') + '</div><div class="bp-reward-info"><div class="bp-reward-name">' + node.name + '</div><div class="bp-reward-type">' + node.type + '</div></div><div class="bp-reward-status ' + (done?'':isCurrent?'current':'locked') + '">' + (done?'✓':node.xpRequired+' XP') + '</div></div>';
+                row.innerHTML = '<div class="bp-node ' + (done?'done':isCurrent?'current':'locked') + (aRecuperer?' a-recuperer':'') + '">' + (done?'✓':node.icon) + '<span class="bp-node-num">' + node.palier + '</span></div><div style="width:10px;flex-shrink:0;"></div><div class="bp-reward-card ' + (done?'done':'') + '"><div class="bp-reward-icon">' + (aRecuperer?'🎁':done?'✅':isCurrent?'🔓':'🔒') + '</div><div class="bp-reward-info"><div class="bp-reward-name">' + node.name + '</div><div class="bp-reward-type">' + node.type + '</div></div>' + (aRecuperer ? btnRecup : '<div class="bp-reward-status ' + (done?'':isCurrent?'current':'locked') + '">' + (done?'✓':node.xpRequired+' XP') + '</div>') + '</div>';
                 if (idx < BATTLEPASS_NODES.length-1) {
                     const conn = document.createElement('div'); conn.style.cssText = 'display:flex;align-items:center;padding-left:20px;'; conn.innerHTML = '<div class="bp-connector ' + (done?'done':'') + '"></div>'; container.appendChild(row); container.appendChild(conn);
                 } else { container.appendChild(row); }
@@ -37506,6 +37582,10 @@
             }
             if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
             grappeQuestState[grappeId][etapeId] = 'active';
+            // Acceptée par le joueur : il vient de la lire, elle ne compte pas
+            // dans la pastille du journal (quêtes en cours non consultées).
+            const _cleVue = 'g:' + grappeId + ':' + etapeId;
+            if (Array.isArray(qjQuetesVues) && !qjQuetesVues.includes(_cleVue)) qjQuetesVues.push(_cleVue);
             if (!opts.surPlace && aUnPin) window._selectedQuestKey = grappeId + ':' + etapeId;
             journalEvenement('quest_started', { grappe: grappeId, etape: etapeId });
             saveProgress();
@@ -40952,10 +41032,13 @@
         // Une grappe n'apparaît dans l'Explorium qu'une fois que le joueur en tient
         // au moins une carte (ou qu'une de ses étapes est déjà obtenue). Pendant le
         // prêt de focale (test.html), tout est montré : c'est l'atlas tel qu'il est.
+        const V2_GRAPPES_OUVERTES = ['ville_du_livre'];
         function v2GrappeVisible(gid) {
             // La grappe du tutoriel ne sert qu'au rendez-vous de Bellecour (journal
             // de quêtes, boussole) : elle n'existe pas dans l'Explorium.
             if (gid === 'tutoriel') return false;
+            // David, 19/10 : seule « Lyon, ville du livre » peut apparaître pour le test.
+            if (!V2_GRAPPES_OUVERTES.includes(gid)) return false;
             if (typeof _v2Focale !== 'undefined' && _v2Focale) return true;
             const g = GRAPPE_QUESTS[gid];
             if (!g || !g.quete || !g.quete.etapes) return false;
@@ -42174,10 +42257,19 @@
             const plane = document.getElementById('v2Plane');
             if (plane) plane.style.transform = `translate(${v2State.panX}px, ${v2State.panY}px) scale(${v2State.zoom})`;
         }
+        // Dézoom maximal (David, 19/10) : l'image couvre tout l'écran de l'Explorium,
+        // aucun bord noir au-delà.
+        function v2ZoomMin() {
+            const stage = document.getElementById('v2Stage');
+            const r = stage ? stage.getBoundingClientRect() : null;
+            if (!r || !r.width || !r.height) return 0.35;
+            return Math.max(r.width / V2_MAP_W, r.height / V2_MAP_H);
+        }
         function v2ClampPan() {
             const stage = document.getElementById('v2Stage');
             if (!stage) return;
             const r = stage.getBoundingClientRect();
+            if (r.width && r.height) v2State.zoom = Math.max(v2ZoomMin(), v2State.zoom);
             const w = V2_MAP_W * v2State.zoom, h = V2_MAP_H * v2State.zoom;
             if (w < r.width) v2State.panX = (r.width - w)/2;
             else v2State.panX = Math.max(r.width - w, Math.min(0, v2State.panX));
@@ -42342,7 +42434,7 @@
                         const cx = (pts[0].x + pts[1].x)/2, cy = (pts[0].y + pts[1].y)/2;
                         const sr = stage.getBoundingClientRect();
                         const mx = cx - sr.left, my = cy - sr.top;
-                        const newZoom = Math.max(0.35, Math.min(2.0, v2State.zoom * factor));
+                        const newZoom = Math.max(v2ZoomMin(), Math.min(2.0, v2State.zoom * factor));
                         v2State.panX = mx - (mx - v2State.panX) * (newZoom / v2State.zoom);
                         v2State.panY = my - (my - v2State.panY) * (newZoom / v2State.zoom);
                         v2State.zoom = newZoom;
@@ -42363,7 +42455,7 @@
                 const sr = stage.getBoundingClientRect();
                 const mx = e.clientX - sr.left, my = e.clientY - sr.top;
                 const factor = e.deltaY < 0 ? 1.1 : 0.9;
-                const newZoom = Math.max(0.35, Math.min(2.0, v2State.zoom * factor));
+                const newZoom = Math.max(v2ZoomMin(), Math.min(2.0, v2State.zoom * factor));
                 v2State.panX = mx - (mx - v2State.panX) * (newZoom / v2State.zoom);
                 v2State.panY = my - (my - v2State.panY) * (newZoom / v2State.zoom);
                 v2State.zoom = newZoom;
