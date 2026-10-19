@@ -9723,7 +9723,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.8.0</div>
+            <div class="hud-version" id="hudVersion">v1.8.1</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -9909,6 +9909,9 @@
                     <button onclick="testJouerSceneFinale()" class="test-action-btn">🎬 Jouer la scène finale</button>
                     <button onclick="closeTestPanel(); testExporterJournal()" class="test-action-btn">🧾 Exporter le journal utilisateur</button>
                     <button onclick="journalEnvoyer().then(ok => showToast(ok ? '🧾 Journal envoyé' : '🧾 Rien envoyé (pas de point de collecte, file vide ou réseau)'))" class="test-action-btn">🧾 Envoyer le journal maintenant</button>
+                    <button onclick="avChangerTenue(avTenueHasard())" class="test-action-btn">👕 Tenue au hasard</button>
+                    <button onclick="avChangerTenue(AV_TENUE_DEFAUT)" class="test-action-btn">👕 Tenue par défaut</button>
+                    <button onclick="testToutesLesCoupes()" class="test-action-btn">👕 Toutes les coupes</button>
                     <button onclick="addTestCards()" class="test-action-btn">🃏 Débloquer toutes les cartes</button>
                     <button onclick="addTestScrolls(5)" class="test-action-btn">📜 +5 parchemins</button>
                     <button onclick="addTestOrbes(3)" class="test-action-btn">🔮 +3 orbes</button>
@@ -22615,6 +22618,7 @@
                     _obDiscovered,
                     // Interface révélée pas à pas, sac, échoppe du tuto (cf. uiReveler)
                     _uiEtat: _uiEtatExporter(),
+                    tenueAvatar,       // tenue de l'avatar (brief personnalisation, lot 2)
                     _claraPresentee,   // Clara s'est présentée (section 12) : nomClara()
                     _joueurPseudo,     // pseudo saisi au QG (section 15) : nomJoueur()
                     // Tutoriel Bellecour : section atteinte, sous-étapes, « autre carte » (cf. _tuto*)
@@ -22739,6 +22743,9 @@
                 if (d._obGuideVu && typeof d._obGuideVu === 'object') _obGuideVu = d._obGuideVu;
                 if (d._obDiscovered && typeof d._obDiscovered === 'object') _obDiscovered = d._obDiscovered;
                 if (d._uiEtat && typeof d._uiEtat === 'object') _uiEtatCharger(d._uiEtat);
+                // Sauvegarde antérieure au brief : tenue par défaut ; champs complétés.
+                tenueAvatar = avTenueValide(d.tenueAvatar);
+                try { rafraichirAvatars(); } catch (e) {}
                 if (d._claraPresentee) _claraPresentee = true;
                 if (typeof d._tutoSection === 'number') _tutoSection = d._tutoSection;
                 if (d._tutoEtat && typeof d._tutoEtat === 'object') _tutoEtat = d._tutoEtat;
@@ -24096,14 +24103,18 @@
             { id: 'h11', n: 'manteau sable', c: '#b59a6e', b: '#9a8159', in: '#e8e0cc' },
             { id: 'h12', n: 'gilet sombre', c: '#3a3730', b: '#2d2b25', in: '#cfc6ad' },
         ];
+        // Bas (lot 2, David 19/10) : six pantalons et six jupes, mêmes teintes.
+        // Écart au prototype (12 pantalons) voulu par le brief. Jupe : trapèze à la
+        // taille, sous la veste, jambes en collant sombre.
         const AV_BAS = [
-            { id: 'b1', n: 'anthracite', c: '#36383c' }, { id: 'b2', n: 'olive', c: '#454c37' },
-            { id: 'b3', n: 'brun', c: '#5a4330' }, { id: 'b4', n: 'bleu nuit', c: '#2f3b52' },
-            { id: 'b5', n: 'sable', c: '#8c7a5c' }, { id: 'b6', n: 'noir', c: '#262628' },
-            { id: 'b7', n: 'gris', c: '#555a60' }, { id: 'b8', n: 'kaki', c: '#6b6a4a' },
-            { id: 'b9', n: 'terre', c: '#74543a' }, { id: 'b10', n: 'ardoise', c: '#3d4450' },
-            { id: 'b11', n: 'beige', c: '#a08e6c' }, { id: 'b12', n: 'prune', c: '#4a3340' },
+            { id: 'b1', n: 'pantalon anthracite', c: '#36383c' }, { id: 'b2', n: 'pantalon olive', c: '#454c37' },
+            { id: 'b3', n: 'pantalon brun', c: '#5a4330' }, { id: 'b4', n: 'pantalon bleu nuit', c: '#2f3b52' },
+            { id: 'b5', n: 'pantalon sable', c: '#8c7a5c' }, { id: 'b6', n: 'pantalon prune', c: '#4a3340' },
+            { id: 'j1', n: 'jupe anthracite', c: '#36383c', jupe: true }, { id: 'j2', n: 'jupe olive', c: '#454c37', jupe: true },
+            { id: 'j3', n: 'jupe brune', c: '#5a4330', jupe: true }, { id: 'j4', n: 'jupe bleu nuit', c: '#2f3b52', jupe: true },
+            { id: 'j5', n: 'jupe sable', c: '#8c7a5c', jupe: true }, { id: 'j6', n: 'jupe prune', c: '#4a3340', jupe: true },
         ];
+        const AV_COLLANT = '#3b302a';
         const AV_ACCESSOIRES = [
             { id: null, n: 'aucun' },
             { id: 'a_ech_r', n: 'écharpe grenat', k: 'echarpe', c: '#7a3b3f' },
@@ -24115,6 +24126,8 @@
             { id: 'a_sac_n', n: 'sacoche noire', k: 'sac', c: '#3a3730' },
             { id: 'a_etui', n: 'étui à parchemins', k: 'etui', c: '#6f5434' },
             { id: 'a_dos', n: 'sac à dos', k: 'dos', c: '#5e472e' },
+            // Lot 2 (David, 19/10) : la « sacoche » du brief, portée à la ceinture.
+            { id: 'a_ceinture', n: 'sacoche de ceinture', k: 'ceinture', c: '#6f5434' },
         ];
         const AV_CHAPEAUX = [
             { id: null, n: 'aucun' },
@@ -24133,6 +24146,36 @@
                                   bas: 'b1', accessoire: null, chapeau: null, visage: 'v_simple' };
         let tenueAvatar = Object.assign({}, AV_TENUE_DEFAUT);
         const _avGet = (cat, id) => cat.find(x => x.id === id) || cat[0];
+        // Familles de la tenue et leur catalogue (garde-robe, validation, hasard).
+        const AV_FAMILLES = [
+            { k: 'peau', n: 'Peau', cat: AV_PEAU }, { k: 'coupe', n: 'Coupe', cat: AV_COUPES },
+            { k: 'coulCheveux', n: 'Couleur', cat: AV_CHEVEUX_COUL }, { k: 'haut', n: 'Haut', cat: AV_HAUTS },
+            { k: 'bas', n: 'Bas', cat: AV_BAS }, { k: 'accessoire', n: 'Accessoire', cat: AV_ACCESSOIRES },
+            { k: 'chapeau', n: 'Chapeau', cat: AV_CHAPEAUX }, { k: 'visage', n: 'Visage', cat: AV_VISAGES },
+        ];
+        // Tenue sûre : champs manquants complétés par le défaut ; identifiant
+        // inconnu remplacé par le défaut de sa famille, avec un message en console.
+        function avTenueValide(t) {
+            const out = Object.assign({}, AV_TENUE_DEFAUT);
+            if (!t || typeof t !== 'object') return out;
+            AV_FAMILLES.forEach(f => {
+                if (!(f.k in t)) return;
+                if (f.cat.some(x => x.id === t[f.k])) out[f.k] = t[f.k];
+                else console.warn('[avatar] « ' + t[f.k] + ' » inconnu pour ' + f.k + ' → ' + AV_TENUE_DEFAUT[f.k]);
+            });
+            return out;
+        }
+        function avTenueHasard() {
+            const t = {};
+            AV_FAMILLES.forEach(f => { t[f.k] = f.cat[Math.floor(Math.random() * f.cat.length)].id; });
+            return t;
+        }
+        // Change la tenue, redessine les deux avatars et sauvegarde.
+        function avChangerTenue(t) {
+            tenueAvatar = avTenueValide(t);
+            rafraichirAvatars();
+            try { saveProgress(); } catch (e) {}
+        }
 
         // Repère 'carte' : viewBox 0 0 36 48, pieds vers y=45. Repère 'studio' :
         // le même dessin enveloppé (pieds à l'origine, ordonnées négatives, échelle
@@ -24146,7 +24189,8 @@
             const coupe = _avGet(AV_COUPES, t.coupe);
             const chev  = _avGet(AV_CHEVEUX_COUL, t.coulCheveux).c;
             const h     = _avGet(AV_HAUTS, t.haut);
-            const b     = _avGet(AV_BAS, t.bas).c;
+            const bas   = _avGet(AV_BAS, t.bas);
+            const b     = bas.jupe ? AV_COLLANT : bas.c;
             const acc   = AV_ACCESSOIRES.find(a => a.id === t.accessoire);
             const cha   = AV_CHAPEAUX.find(c => c.id === t.chapeau);
             const vis   = _avGet(AV_VISAGES, t.visage).id;
@@ -24159,6 +24203,7 @@
                     <rect x="18.4" y="31" width="6.4" height="11.4" rx="2.6" fill="${b}"/>
                     <rect x="17.8" y="41.4" width="8.2" height="4" rx="1.8" fill="#2a2420"/></g>`;
             s += `<g class="avatar-body-g" style="transform-origin:18px 24px;">`;
+            if (bas.jupe) s += `<path d="M11.4 28.6 L24.6 28.6 L27.2 37.4 Q18 39.2 8.8 37.4 Z" fill="${bas.c}"/>`;
             s += `<rect x="13.4" y="17.6" width="9.2" height="14" rx="2.6" fill="${h.in}"/>`;
             if (h.ray) s += `<g fill="rgba(0,0,0,.14)"><rect x="13.4" y="19.4" width="9.2" height="1.4"/>
                     <rect x="13.4" y="22.6" width="9.2" height="1.4"/><rect x="13.4" y="25.8" width="9.2" height="1.4"/></g>`;
@@ -24180,6 +24225,10 @@
                 s += `<path d="M12.4 18 L24 27" stroke="${acc.c}" stroke-width="1.4"/>
                       <rect x="23.6" y="22" width="4" height="10" rx="1.8" fill="${acc.c}"/>
                       <rect x="23.6" y="21" width="4" height="2" rx=".8" fill="#e3dac4"/>`;
+            if (acc && acc.k === 'ceinture')
+                s += `<rect x="10.4" y="29.4" width="15.2" height="1.6" rx=".6" fill="#3a2a1e"/>
+                      <rect x="21.4" y="29.8" width="4.8" height="4.6" rx="1.2" fill="${acc.c}"/>
+                      <rect x="21.4" y="29.8" width="4.8" height="1.6" rx=".6" fill="rgba(0,0,0,.25)"/>`;
             if (acc && acc.k === 'dos')
                 s += `<rect x="6.4" y="19.6" width="5.6" height="9" rx="2" fill="${acc.c}"/>
                       <rect x="6.4" y="22.6" width="5.6" height="1.6" fill="rgba(0,0,0,.25)"/>`;
@@ -24515,6 +24564,17 @@
             document.getElementById('modeTestCode').style.display = 'none';
             closeSettings();
             openTestPanel();
+        }
+
+        // Fait défiler les onze coupes (une par seconde), puis rend la coupe d'origine.
+        function testToutesLesCoupes() {
+            const depart = tenueAvatar.coupe;
+            AV_COUPES.forEach((c, i) => setTimeout(() => {
+                tenueAvatar = Object.assign({}, tenueAvatar, { coupe: c.id });
+                rafraichirAvatars();
+                showToast('👕 ' + c.n);
+            }, i * 1000));
+            setTimeout(() => avChangerTenue(Object.assign({}, tenueAvatar, { coupe: depart })), AV_COUPES.length * 1000);
         }
 
         function openTestPanel() {
