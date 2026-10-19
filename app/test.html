@@ -1075,6 +1075,11 @@
             gap: 8px 12px;
             padding-top: 10px;
         }
+        /* David, 19/10 : les collections ne sont pas encore jouables */
+        .alb-coll-a-venir { text-align: center; font-family: Georgia, serif; font-style: italic; font-size: 14px;
+            color: rgba(196,181,253,0.85); padding: 6px 0 2px; }
+        .alb-coll-detail .alb-coll-a-venir { margin-top: 14px; }
+        .alb-coll-a-venir--seul { padding-top: 38vh; font-size: 17px; }
         /* Cellule pentagone */
         .alb-penta-cell {
             display: flex;
@@ -2071,10 +2076,47 @@
         #cardArtEmoji { transition: filter 0.9s ease; }
         /* David, 19/10 : le visuel du niveau 0 s'affiche tel quel ; un niveau sans
            image propre montre « Image à venir » (cf. _otAVenir). */
-        .card-art-a-venir { display: none; position: absolute; inset: 0; z-index: 1; border-radius: 12px;
-            align-items: center; justify-content: center; text-align: center; padding: 0 24px;
-            border: 2px dashed rgba(30,58,138,0.25); background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
-            font-family: Georgia, serif; font-style: italic; font-size: 17px; color: rgba(30,58,138,0.6); }
+        /* David, 19/10 : le cadre reprend la nébuleuse des visuels de la grappe ;
+           sa présence dit le niveau (0 = nébuleuse pleine, 1 = à moitié dissipée,
+           2 = réduite aux bords), cf. classes .neb-N posées par _otAppliquerEtatAuto. */
+        .card-art-a-venir { display: none; position: absolute; inset: 0; z-index: 1; border-radius: 12px; overflow: hidden;
+            flex-direction: column; gap: 6px; align-items: center; justify-content: center; text-align: center; padding: 0 24px;
+            font-family: Georgia, serif; font-style: italic; color: #fff; text-shadow: 0 1px 8px rgba(30,10,60,0.85); }
+        .card-art-a-venir::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+            background:
+                radial-gradient(1.4px 1.4px at 12% 18%, #fff 50%, transparent 100%),
+                radial-gradient(1px 1px at 78% 12%, #fff 50%, transparent 100%),
+                radial-gradient(1.6px 1.6px at 88% 44%, #fde68a 50%, transparent 100%),
+                radial-gradient(1px 1px at 22% 62%, #e9d5ff 50%, transparent 100%),
+                radial-gradient(1.4px 1.4px at 64% 82%, #fff 50%, transparent 100%),
+                radial-gradient(1px 1px at 40% 30%, #f5d0fe 50%, transparent 100%),
+                radial-gradient(1.2px 1.2px at 8% 88%, #fff 50%, transparent 100%),
+                radial-gradient(1px 1px at 92% 90%, #e9d5ff 50%, transparent 100%),
+                radial-gradient(1.5px 1.5px at 54% 8%, #fde68a 50%, transparent 100%),
+                radial-gradient(1px 1px at 30% 44%, #fff 50%, transparent 100%),
+                radial-gradient(1.3px 1.3px at 70% 58%, #e9d5ff 50%, transparent 100%),
+                radial-gradient(1px 1px at 16% 36%, #fff 50%, transparent 100%),
+                radial-gradient(1.6px 1.6px at 84% 70%, #fff 50%, transparent 100%),
+                radial-gradient(1px 1px at 46% 92%, #fde68a 50%, transparent 100%),
+                radial-gradient(1.2px 1.2px at 60% 26%, #fff 50%, transparent 100%); }
+        .card-art-a-venir .caav-titre { font-size: 19px; }
+        .card-art-a-venir .caav-niv { font-size: 12px; font-style: normal; font-family: inherit; letter-spacing: 0.12em;
+            text-transform: uppercase; opacity: 0.85; }
+        /* Niveau 0 : nébuleuse partout, cœur rosé (Etienne_dolet1) */
+        .card-art-a-venir.neb-0 { background:
+            radial-gradient(ellipse 46% 38% at 50% 52%, rgba(244,214,236,0.85) 0%, rgba(214,170,220,0.55) 45%, transparent 100%),
+            conic-gradient(from 30deg at 50% 52%, rgba(167,110,210,0.55), rgba(110,60,170,0.2), rgba(190,130,220,0.5), rgba(90,50,150,0.25), rgba(167,110,210,0.55)),
+            radial-gradient(ellipse 120% 90% at 50% 50%, #8a5cc0 0%, #5b2f97 55%, #3a1a6b 100%); }
+        /* Niveau 1 : la nébuleuse se retire, ciel et sol commencent à poindre (Ot_art2) */
+        .card-art-a-venir.neb-1 { background:
+            radial-gradient(ellipse 70% 30% at 50% 22%, rgba(170,120,220,0.55) 0%, transparent 100%),
+            radial-gradient(ellipse 80% 26% at 40% 80%, rgba(180,120,200,0.45) 0%, transparent 100%),
+            linear-gradient(180deg, #5b3fa0 0%, #8a86cc 30%, #b3a0d6 50%, #c8a0b8 66%, #b48a9a 100%); }
+        /* Niveau 2 : couleurs franches, la nébuleuse ne borde plus que les coins (Ot_art3) */
+        .card-art-a-venir.neb-2 { background:
+            linear-gradient(180deg, #6f8fcf 0%, #a9c0e6 38%, #e7dccb 56%, #b8907c 100%);
+            box-shadow: inset 0 0 38px 10px rgba(120,70,180,0.55); }
+        .card-art-a-venir.neb-2::before { opacity: 0.45; }
         .ot-a-venir .card-art-a-venir { display: flex; }
         .ot-a-venir #cardArtImg, .ot-a-venir #cardArtEmoji { visibility: hidden; }
 
@@ -5658,6 +5700,7 @@
             color: #e8b86d; text-shadow: 0 0 20px rgba(201,145,58,0.4);
         }
         .bag-hdr-sub { font-size: 11px; color: rgba(232,223,200,0.45); letter-spacing: 1px; }
+        .ico-mappe { display: block; }
         .bag-hdr-back {
             background: none; border: none;
             color: rgba(232,223,200,0.5); font-size: 20px; cursor: pointer; padding: 6px;
@@ -9538,11 +9581,16 @@
            --win : largeur de la fenêtre, bornée par la largeur ET par la hauteur
            d'écran (300 px réservés au libellé, aux infos et à « Touche l'écran »).
            --s : échelle du PNG (1 px source = --s). */
-        #ritualReveal { padding-bottom: 64px; justify-content: center; cursor: pointer; }
-        #ritualReveal .ritual-obtained-label { margin-top: 0; font-size: 12px; }
+        /* David, 19/10 : écran plus aéré. « Carte obtenue » occupe l'espace libre
+           au-dessus du cadre et s'y centre ; le ::after équilibre l'espace du bas
+           (au-dessus de « Touche l'écran », 64 px réservés). */
+        #ritualReveal { padding: env(safe-area-inset-top, 0px) 0 64px; justify-content: flex-start; cursor: pointer; }
+        #ritualReveal::after { content: ''; flex: 1 1 0; min-height: 12px; }
+        #ritualReveal .ritual-obtained-label { margin-top: 0; font-size: 14px;
+            flex: 1 1 0; min-height: 44px; display: flex; align-items: center; }
         #ritualReveal .ritual-obtained-name { font-size: 20px; margin: 6px 0 12px; }
         .ritual-cadre {
-            --win: min(64vw, 300px, calc((100dvh - 314px) / (1 / var(--card-ratio, 0.5625) + 0.376)));
+            --win: min(64vw, 300px, calc((100dvh - 410px) / (1 / var(--card-ratio, 0.5625) + 0.376)));
             --s: calc(var(--win) / 665);
             position: relative; z-index: 2; flex-shrink: 0;
             width:  calc(var(--win) + 457 * var(--s));
@@ -9578,22 +9626,24 @@
         .ritual-cadre .ritual-big-card-border { display: none; }
         /* Zone d'informations sous le cadre */
         .ritual-infos {
-            /* 22 px sous le cadre (David, 19/10) : la carte respire ; --win réserve 314 px. */
-            position: relative; z-index: 2; max-width: 88vw; margin-top: 22px;
+            /* 28 px sous le cadre (David, 19/10) : la carte respire ; --win réserve 410 px. */
+            position: relative; z-index: 2; max-width: 88vw; margin-top: 28px;
             display: flex; flex-direction: column; align-items: center;
             opacity: 0; transition: opacity 0.6s 0.8s;
         }
         #ritualReveal.show .ritual-infos { opacity: 1; }
         .ritual-infos .ritual-big-card-body { padding: 0; }
-        .ritual-infos .ritual-big-card-name { font-size: 18px; margin-bottom: 3px; }
-        .ritual-infos .ritual-big-card-supertype { margin-bottom: 2px; }
-        .ritual-infos .ritual-big-card-type { color: rgba(255,255,255,0.55); }
+        /* David, 19/10 : polices agrandies et lignes plus espacées */
+        .ritual-infos .ritual-big-card-name { font-size: 23px; margin-bottom: 14px; }
+        .ritual-infos .ritual-big-card-supertype { font-size: 12px; margin-bottom: 10px; }
+        .ritual-infos .ritual-big-card-type { font-size: 15px; color: rgba(255,255,255,0.55); }
+        .ritual-infos .ritual-narrative-tag span { font-size: 12px; }
         .ritual-big-card-collections {
-            font-size: 11px; letter-spacing: 0.5px; text-align: center;
-            color: rgba(201,168,76,0.75); margin-top: 3px;
+            font-size: 13px; letter-spacing: 0.5px; text-align: center;
+            color: rgba(201,168,76,0.75); margin-top: 10px;
         }
         .ritual-big-card-collections:empty { display: none; }
-        .ritual-infos .ritual-narrative-tag { margin-top: 8px; }
+        .ritual-infos .ritual-narrative-tag { margin-top: 14px; }
         /* Repli sans l'image du cadre : simple bordure dorée */
         .ritual-cadre.sans-cadre {
             border: 2px solid rgba(201,168,76,0.55); border-radius: 18px;
@@ -9605,7 +9655,7 @@
             position: absolute; left: 0; right: 0;
             bottom: max(28px, env(safe-area-inset-bottom));
             text-align: center; z-index: 2; pointer-events: none;
-            font-family: system-ui, sans-serif; font-size: 14px; letter-spacing: 0.5px;
+            font-family: system-ui, sans-serif; font-size: 16px; letter-spacing: 0.5px;
             color: rgba(232,228,221,0.55);
             opacity: 0; transition: opacity 0.6s 1.4s;
         }
@@ -9634,6 +9684,15 @@
             <rect x="3" y="7" width="10" height="7.5" rx="1.6" fill="currentColor"/>
             <circle cx="8" cy="10.2" r="1.2" style="fill:var(--hub-keyhole, #1a1426)"/>
             <rect x="7.4" y="10.6" width="1.2" height="2.2" rx="0.5" style="fill:var(--hub-keyhole, #1a1426)"/>
+        </symbol>
+        <!-- Icône « mappe » du bouton retour de la Collection, reprise par les écrans
+             ouverts depuis la mappe (sac, échoppe, panneau, chasse, panorama). -->
+        <symbol id="icoMappe" viewBox="0 0 26 26">
+            <path d="M3,6 L9,4 L17,7 L23,5 L23,20 L17,22 L9,19 L3,21 Z" fill="currentColor" fill-opacity="0.18"/>
+            <path d="M9,4 L9,19" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,1.5"/>
+            <path d="M17,7 L17,22" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,1.5"/>
+            <path d="M3,6 L9,4 L17,7 L23,5 L23,20 L17,22 L9,19 L3,21 Z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="13" cy="12" r="2.5" fill="currentColor" fill-opacity="0.9"/>
         </symbol>
     </svg>
     <div id="mainApp" class="app-container">
@@ -9736,7 +9795,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.7</div>
+            <div class="hud-version" id="hudVersion">v1.9.12</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10338,7 +10397,7 @@
                                 <div class="card-art-placeholder" onclick="showClickDialogue()" id="cardArtContainer" style="position:relative;">
                                     <img id="cardArtImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;display:none;">
                                     <span id="cardArtEmoji">👤</span>
-                                    <div class="card-art-a-venir" id="cardArtAVenir">Image à venir</div>
+                                    <div class="card-art-a-venir" id="cardArtAVenir"><span class="caav-titre">Image à venir</span><span class="caav-niv" id="cardArtAVenirNiv"></span></div>
                                 </div>
                                 <div class="card-art-title" id="cardDetailName"></div>
                                 <div class="card-flavor-zone" id="cardFlavorZone">
@@ -10519,7 +10578,7 @@
                 </div>
 
                 <!-- Bouton retour -->
-                <button class="viewfinder-back" onclick="closeViewfinder()">←</button>
+                <button class="viewfinder-back" onclick="closeViewfinder()" title="Retour à la mappe"><svg class="ico-mappe" width="22" height="22" aria-hidden="true"><use href="#icoMappe"/></svg></button>
 
                 <!-- Flash -->
                 <div class="viewfinder-flash" id="vfFlash"></div>
@@ -11462,7 +11521,7 @@
         ═══════════════════════════════════════ -->
         <div id="panneauScreen">
             <div class="panneau-screen-header">
-                <button class="panneau-screen-back" onclick="closePanneauScreen()">←</button>
+                <button class="panneau-screen-back" onclick="closePanneauScreen()" title="Retour à la mappe"><svg class="ico-mappe" width="22" height="22" aria-hidden="true"><use href="#icoMappe"/></svg></button>
                 <div class="panneau-screen-title" id="panneauScreenTitle"></div>
                 <div class="panneau-screen-sub"   id="panneauScreenSub"></div>
             </div>
@@ -11479,7 +11538,7 @@
         ">
             <!-- Header -->
             <div style="display:flex;align-items:center;gap:12px;padding:18px 16px 12px;border-bottom:1px solid rgba(217,119,6,0.2);">
-                <button onclick="closeBazarScreen()" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:36px;height:36px;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">←</button>
+                <button onclick="closeBazarScreen()" title="Retour à la mappe" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:36px;height:36px;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><svg class="ico-mappe" width="22" height="22" aria-hidden="true"><use href="#icoMappe"/></svg></button>
                 <div>
                     <div style="font-size:16px;font-weight:800;color:#FCD34D;" id="bazarScreenTitle">Échoppe</div>
                     <div style="font-size:11px;color:rgba(217,119,6,0.7);">Fournitures mémorielles</div>
@@ -11545,7 +11604,7 @@
 
         <div id="bagScreen" class="bag-screen">
             <div class="bag-hdr">
-                <button class="bag-hdr-back" onclick="closeBagScreen()">←</button>
+                <button class="bag-hdr-back" onclick="closeBagScreen()" title="Retour à la mappe"><svg class="ico-mappe" width="22" height="22" aria-hidden="true"><use href="#icoMappe"/></svg></button>
                 <div class="bag-hdr-icon">🎒</div>
                 <div>
                     <div class="bag-hdr-title">SAC</div>
@@ -11575,7 +11634,7 @@
         ══════════════════════════════════════════ -->
         <div id="questScreen">
             <div class="quest-header">
-                <button class="quest-back-btn" onclick="closeQuestScreen()">←</button>
+                <button class="quest-back-btn" onclick="closeQuestScreen()" title="Retour à la mappe"><svg class="ico-mappe" width="22" height="22" aria-hidden="true"><use href="#icoMappe"/></svg></button>
                 <div class="quest-card-name" id="questCardName"></div>
                 <div class="quest-title" id="questTitle"></div>
                 <div class="quest-intro" id="questIntro"></div>
@@ -13936,6 +13995,7 @@
             "✦ Écho placé": "✦ Echo placed",
             "Aucun écho compatible pour cette carte.": "No compatible echo for this card.",
             "Image à venir": "Image coming soon",
+            "Collections à venir": "Collections coming soon",
             "📎 Dossier · %1": "📎 File · %1",
             "Dossier": "File",
             "À observer": "Look for",
@@ -16248,12 +16308,21 @@
             if (!holder) return;
             for (let i = 0; i < OT_NIVEAUX_AUTO; i++) holder.classList.remove('ot-auto-' + i);
             if (_otNiveauxAuto(card)) holder.classList.add('ot-auto-' + Math.max(0, Math.min(OT_NIVEAUX_AUTO - 1, idx)));
-            holder.classList.toggle('ot-a-venir', _otAVenir(card, idx));
+            const aVenir = _otAVenir(card, idx);
+            holder.classList.toggle('ot-a-venir', aVenir);
+            const cadre = document.getElementById('cardArtAVenir');
+            if (cadre) {
+                const n = Math.max(0, Math.min(OT_NIVEAUX_AUTO - 1, idx));
+                for (let i = 0; i < OT_NIVEAUX_AUTO; i++) cadre.classList.toggle('neb-' + i, aVenir && i === n);
+                const niv = document.getElementById('cardArtAVenirNiv');
+                if (niv) niv.textContent = aVenir ? TF('Niveau %1', n) : '';
+            }
         }
         // Niveau sans image propre : au-delà du niveau 0 pour une carte à visuel
-        // unique, ou une case vide (null) de artByLevel.
+        // unique, une case vide (null) de artByLevel, ou un niveau 0 sans illustration.
         function _otAVenir(card, idx) {
-            if (!card || idx <= 0) return false;
+            if (!card) return false;
+            if (idx <= 0) return !getCardArtForLevel(card, 0);
             return Array.isArray(card.artByLevel) ? !card.artByLevel[idx] : true;
         }
         let _obDone        = false;
@@ -28403,6 +28472,9 @@
         function _albRenderCollections() {
             const el = document.getElementById('albContent');
             if (!el) return;
+            // David, 19/10 : les pentagones sont masqués, l'onglet reste avec ce seul message
+            el.innerHTML = `<div class="alb-coll-a-venir alb-coll-a-venir--seul">${T('Collections à venir')}</div>`;
+            return;
             const all = getAllCards();
             let html = '<div class="alb-coll-grid">';
 
@@ -28450,6 +28522,7 @@
                 </div>
                 <div class="alb-coll-detail-name">${colDef.name}</div>
                 <div class="alb-coll-detail-count">${TF('%1 / %2 cartes', cards.filter(c=>collectedCards.includes(c.id)).length, cards.length)}</div>
+                <div class="alb-coll-a-venir">${T('Collections à venir')}</div>
             `;
 
             const overlay = document.getElementById('albCollOverlay');
