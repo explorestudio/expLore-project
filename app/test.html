@@ -4984,6 +4984,34 @@
                         opacity 0.28s ease, visibility 0s linear 0s;
         }
         .progression-screen.show { display: flex; }
+        /* ── Garde-robe (brief avatar, lot 3) : profil et penderie du QG ── */
+        .gr { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; color: #e8dfc8; }
+        .gr-apercu { flex: 0 0 auto; display: flex; justify-content: center; align-items: flex-end;
+            background: radial-gradient(ellipse at 50% 75%, #2a3550 0%, #141a2c 72%); }
+        .gr--ecran .gr-apercu { height: 200px; }
+        .gr--panneau .gr-apercu { height: 118px; border-radius: 12px; margin-bottom: 8px; }
+        .gr-apercu svg { height: 100%; width: auto; display: block; }
+        .gr-onglets { flex: 0 0 auto; display: flex; gap: 6px; overflow-x: auto; padding: 10px 12px 8px; scrollbar-width: none; }
+        .gr-onglets::-webkit-scrollbar { display: none; }
+        .gr--panneau .gr-onglets { padding: 2px 0 8px; }
+        .gr-onglet { flex: 0 0 auto; border: 1px solid rgba(232,223,200,.2); border-radius: 999px; background: rgba(232,223,200,.04);
+            color: #e8dfc8; font: inherit; font-size: 12px; padding: 7px 13px; cursor: pointer; white-space: nowrap; }
+        .gr-onglet.on { border-color: rgba(214,163,23,.8); color: #e3c48f; background: rgba(214,163,23,.1); }
+        .gr-grille { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 12px 12px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 7px; align-content: start; }
+        .gr--panneau .gr-grille { padding: 2px 0 10px; overflow: visible; }
+        .gr-opt { aspect-ratio: 1; border: 1px solid rgba(232,223,200,.16); border-radius: 10px; background: rgba(232,223,200,.04);
+            cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 0; }
+        .gr-opt.on { border-color: rgba(214,163,23,.9); background: rgba(214,163,23,.12); }
+        .gr-opt svg { width: 100%; height: 100%; display: block; }
+        .gr-opt-vide { font-size: 11px; opacity: .55; color: #e8dfc8; }
+        .gr-actions { flex: 0 0 auto; display: flex; gap: 8px; padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+            border-top: 1px solid rgba(232,223,200,.12); }
+        .gr--panneau .gr-actions { padding: 8px 0 4px; }
+        .gr-act { flex: 1; border: 1px solid rgba(232,223,200,.22); border-radius: 999px; background: rgba(232,223,200,.05);
+            color: #e8dfc8; font: inherit; font-size: 13px; padding: 10px 8px; cursor: pointer; }
+        .gr-act.primaire { border-color: rgba(214,163,23,.8); color: #e3c48f; background: rgba(214,163,23,.1); }
+        #profilScreen { background: #120c22; }
         .prog-header { background: linear-gradient(135deg, #1a0f2e 0%, #0f0a1e 100%); border-bottom: 1px solid rgba(139,92,246,0.3); padding: 14px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
         .prog-back { background: none; border: none; color: rgba(167,139,250,0.9); font-size: 22px; cursor: pointer; padding: 0; line-height: 1; }
         .prog-header-info { flex: 1; }
@@ -9649,6 +9677,9 @@
                             </div>
                             <div class="avatar-menu-xp-label" id="menuXpLabel">0 / 100 XP</div>
                         </div>
+                        <button class="avatar-menu-item" onclick="closeAvatarMenu(); openProfilScreen()">
+                            <span>👤</span> Mon profil
+                        </button>
                         <button class="avatar-menu-item" onclick="closeAvatarMenu(); openProgressionScreen()">
                             <span>⭐</span> Progression
                         </button>
@@ -9723,7 +9754,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.8.1</div>
+            <div class="hud-version" id="hudVersion">v1.9.1</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10601,6 +10632,17 @@
 
 
         <!-- ── PROGRESSION SCREEN ── -->
+        <!-- Écran « Mon profil » (brief avatar, lot 3) : même gabarit que la Progression -->
+        <div id="profilScreen" class="progression-screen">
+            <div class="prog-header">
+                <button class="prog-back" onclick="closeProfilScreen()">←</button>
+                <div class="prog-header-info">
+                    <div class="prog-header-title">Mon profil</div>
+                    <div class="prog-header-subtitle">Ta tenue d'Explorateur</div>
+                </div>
+            </div>
+            <div id="profilGardeRobe" class="gr gr--ecran"></div>
+        </div>
         <div id="progressionScreen" class="progression-screen">
             <div class="prog-header">
                 <button class="prog-back" onclick="closeProgressionScreen()">←</button>
@@ -10921,6 +10963,20 @@
     <polygon points="300.8,201.4 328.8,215.4 328.8,227.4 300.8,213.4" fill="var(--st-wood-l)"/>
     <ellipse cx="284" cy="199.4" rx="5" ry="2" fill="#c9913a" opacity="0.75"/>
     <ellipse cx="314.4" cy="214.6" rx="5" ry="2" fill="#c9913a" opacity="0.75"/>
+  </g>
+  <!-- ═══ PENDERIE — la tenue de l'avatar (brief avatar, lot 3) ═══
+       0,6 × 0,5 m, 1,9 m de haut, au bout du mur droit (wx 3,8–4,4) : hors de la zone
+       de marche de l'avatar (wy ≥ 0,7). -->
+  <g id="item-garderobe" class="studio-nav-item" onclick="openStudioPanel('garderobe')" style="cursor:pointer">
+    <polygon points="352,147 376,159 356,169 332,157" fill="#6b4523"/>
+    <polygon points="332,233 356,245 356,169 332,157" fill="#563718"/>
+    <polygon points="356,245 376,235 376,159 356,169" fill="#412911"/>
+    <polygon points="334.4,164 343.2,168.4 343.2,236.4 334.4,232" fill="#4a2f15"/>
+    <polygon points="344.8,169.2 353.6,173.6 353.6,241.6 344.8,237.2" fill="#4a2f15"/>
+    <line x1="344" y1="163" x2="344" y2="239" stroke="#2c1b0b" stroke-width="1"/>
+    <circle cx="341.6" cy="203" r="1.4" fill="#c9913a"/>
+    <circle cx="346.4" cy="205.4" r="1.4" fill="#c9913a"/>
+    <polygon points="333,156 352,146.4 352,148 333,157.6" fill="rgba(0,0,0,0.25)"/>
   </g>
   <!-- Coffre -->
   <g id="item-chest" class="studio-nav-item" onclick="openStudioPanel('chest')" style="cursor:pointer">
@@ -12383,6 +12439,8 @@
             "Collecter \"%1\"": "Collect \"%1\"",
             "Explore Lyon pour trouver une carte %1 à qui le confier.": "Explore Lyon to find a %1 card to entrust it to.",
             "📜 Parchemin collecté : %1": "📜 Scroll collected: %1",
+            "📜 Parchemin collecté": "📜 Scroll collected",
+            "Trouvé lors de ton exploration.": "Found while exploring.",
             "%1 / %2 cartes locales découvertes": "%1 / %2 local cards discovered",
             "Saison 1 · %1 / %2 cartes thématiques": "Season 1 · %1 / %2 themed cards",
             "Voir le visuel %1": "View artwork %1",
@@ -14062,6 +14120,12 @@
             "🗺️ Quête acceptée — « %1 » mise de côté": "🗺️ Quest accepted — “%1” set aside",
             "Voir grappe": "View cluster",
             "Voir l'histoire": "See the story",
+            // Garde-robe (brief avatar)
+            "Mon profil": "My profile", "Ta tenue d'Explorateur": "Your Explorer outfit",
+            "Peau": "Skin", "Coupe": "Haircut", "Couleur": "Colour", "Haut": "Top", "Bas": "Bottom",
+            "Accessoire": "Accessory", "Chapeau": "Hat", "Visage": "Face", "aucun": "none",
+            "Au hasard": "Random", "Réinitialiser": "Reset",
+            "Penderie": "Wardrobe", "Change de tenue avant de ressortir.": "Change your outfit before heading out.",
             "✓ Disponible": "✓ Available",
             "★ Quête suivie": "★ Quest tracked",
             "%1 — Planche": "%1 — Plate",
@@ -22745,6 +22809,8 @@
                 if (d._uiEtat && typeof d._uiEtat === 'object') _uiEtatCharger(d._uiEtat);
                 // Sauvegarde antérieure au brief : tenue par défaut ; champs complétés.
                 tenueAvatar = avTenueValide(d.tenueAvatar);
+                if (Object.keys(AV_TENUE_DEFAUT_V18).every(k => tenueAvatar[k] === AV_TENUE_DEFAUT_V18[k]))
+                    tenueAvatar = Object.assign({}, AV_TENUE_DEFAUT);
                 try { rafraichirAvatars(); } catch (e) {}
                 if (d._claraPresentee) _claraPresentee = true;
                 if (typeof d._tutoSection === 'number') _tutoSection = d._tutoSection;
@@ -24140,10 +24206,15 @@
             { id: 'v_carrees', n: 'besicles' }, { id: 'v_cache', n: 'cache-œil' },
             { id: 'v_taches', n: 'taches de rousseur' },
         ];
-        // Tenue par défaut : peau médiane, cheveux courts bruns, veste brune,
-        // pantalon sombre, ni accessoire ni chapeau.
-        const AV_TENUE_DEFAUT = { peau: 'p3', coupe: 'c_courts', coulCheveux: 'ch_brun', haut: 'h1',
+        // Tenue par défaut (David, 19/10) : distincte de Clara, qui porte la veste
+        // brune sur peau médiane — peau claire, cheveux châtains ébouriffés, manteau
+        // bleu, pantalon anthracite, ni accessoire ni chapeau.
+        const AV_TENUE_DEFAUT = { peau: 'p2', coupe: 'c_mop', coulCheveux: 'ch_chat', haut: 'h5',
                                   bas: 'b1', accessoire: null, chapeau: null, visage: 'v_simple' };
+        // Ancienne tenue par défaut (v1.8.x) : une sauvegarde qui la porte encore
+        // n'a jamais été personnalisée, elle passe à la nouvelle.
+        const AV_TENUE_DEFAUT_V18 = { peau: 'p3', coupe: 'c_courts', coulCheveux: 'ch_brun', haut: 'h1',
+                                      bas: 'b1', accessoire: null, chapeau: null, visage: 'v_simple' };
         let tenueAvatar = Object.assign({}, AV_TENUE_DEFAUT);
         const _avGet = (cat, id) => cat.find(x => x.id === id) || cat[0];
         // Familles de la tenue et leur catalogue (garde-robe, validation, hasard).
@@ -24279,6 +24350,61 @@
         }
 
         setTimeout(rafraichirAvatars, 0);   // avatar du QG (celui de la carte naît dans createMap)
+
+        // ── Garde-robe (brief avatar, lot 3) ───────────────────────────────
+        // Un seul rendu pour l'écran « Mon profil » et la penderie du QG ;
+        // presentation : 'ecran' | 'panneau'. Chaque choix s'applique tout de
+        // suite aux deux avatars et à l'aperçu, et la tenue est sauvegardée.
+        let _grFamille = 'peau';
+        function _grVignette(k, id) {
+            const t = Object.assign({}, tenueAvatar, { [k]: id });
+            const zoom = k === 'bas' ? 'translate(-6,-26) scale(1.5)'
+                : (k === 'haut' || k === 'accessoire') ? 'translate(-8,-14) scale(1.45)'
+                : 'translate(-10,2) scale(1.6)';
+            return '<svg viewBox="0 0 36 40"><g transform="' + zoom + '">' + construireAvatar(t, 'carte') + '</g></svg>';
+        }
+        function rendreGardeRobe(hote, presentation) {
+            if (!hote) return;
+            hote.className = 'gr gr--' + presentation;
+            const fam = AV_FAMILLES.find(x => x.k === _grFamille) || AV_FAMILLES[0];
+            const apercu = '<div class="gr-apercu"><svg viewBox="-34 -74 68 80">' + construireAvatar(tenueAvatar, 'studio') + '</svg></div>';
+            const onglets = '<div class="gr-onglets">' + AV_FAMILLES.map(x =>
+                '<button class="gr-onglet' + (x.k === fam.k ? ' on' : '') + '" data-k="' + x.k + '">' + T(x.n) + '</button>').join('') + '</div>';
+            const grille = '<div class="gr-grille">' + fam.cat.map((o, i) =>
+                '<button class="gr-opt' + (tenueAvatar[fam.k] === o.id ? ' on' : '') + '" data-i="' + i + '" title="' + o.n + '">'
+                + (o.id === null ? '<span class="gr-opt-vide">' + T('aucun') + '</span>' : _grVignette(fam.k, o.id)) + '</button>').join('') + '</div>';
+            const actions = '<div class="gr-actions"><button class="gr-act" data-a="hasard">' + T('Au hasard') + '</button>'
+                + '<button class="gr-act" data-a="defaut">' + T('Réinitialiser') + '</button>'
+                + (presentation === 'ecran' ? '<button class="gr-act primaire" data-a="fermer">' + T('Fermer') + '</button>' : '') + '</div>';
+            hote.innerHTML = apercu + onglets + grille + actions;
+            const ongletsEl = hote.querySelector('.gr-onglets');
+            const defile = ongletsEl.scrollLeft;
+            hote.querySelectorAll('.gr-onglet').forEach(b => b.onclick = () => {
+                _grFamille = b.dataset.k; rendreGardeRobe(hote, presentation);
+                hote.querySelector('.gr-onglets').scrollLeft = defile;
+            });
+            hote.querySelectorAll('.gr-opt').forEach(b => b.onclick = () => {
+                avChangerTenue(Object.assign({}, tenueAvatar, { [fam.k]: fam.cat[+b.dataset.i].id }));
+                rendreGardeRobe(hote, presentation);
+            });
+            hote.querySelectorAll('.gr-act').forEach(b => b.onclick = () => {
+                if (b.dataset.a === 'hasard') avChangerTenue(avTenueHasard());
+                else if (b.dataset.a === 'defaut') avChangerTenue(AV_TENUE_DEFAUT);
+                else if (b.dataset.a === 'fermer') { closeProfilScreen(); return; }
+                rendreGardeRobe(hote, presentation);
+            });
+        }
+        function openProfilScreen() {
+            _hideAllNearbyConsoles('profil');
+            rendreGardeRobe(document.getElementById('profilGardeRobe'), 'ecran');
+            document.getElementById('profilScreen').classList.add('show');
+        }
+        // La tenue est déjà sauvegardée à chaque choix ; la fermeture la confirme.
+        function closeProfilScreen() {
+            try { saveProgress(); } catch (e) {}
+            document.getElementById('profilScreen').classList.remove('show');
+            _showNearbyConsoles('profil');
+        }
 
         function _setAvatarFacing(deltaE) {
             const el = document.getElementById('avatarSvg');
@@ -25783,7 +25909,8 @@
             currentNearbyScroll = nearbyScroll;
             const nearbyScrollDiv = document.getElementById('nearbyScroll');
             if (nearbyScroll) {
-                document.getElementById('scrollName').textContent = '📜 ' + nearbyScroll.name;
+                // Les parchemins n'ont pas de nom (David, 19/10) : la console dit « Parchemin ».
+                document.getElementById('scrollName').textContent = '📜 ' + T('Parchemin');
                 const show = _shouldShowPoiConsole('scroll', nearbyScroll.id) && !_screenBlocked;
                 if (show) nearbyScrollDiv.classList.remove('hidden');
                 else if (_screenBlocked) nearbyScrollDiv.classList.add('hidden');
@@ -28088,7 +28215,7 @@
             markPoiCollected(scroll.id, 'scrolls');
             markVisitedPoint('scroll', scroll.id); // v3 : point-souvenir (n'affecte pas le % zone)
             if (typeof _obOnCollectScroll === 'function') _obOnCollectScroll();
-            bagInv.parchemins.push({ id: scroll.id, name: 'Parchemin', desc: TF("Trouvé près de %1 lors de ton exploration.", scroll.name) });
+            bagInv.parchemins.push({ id: scroll.id, name: 'Parchemin', desc: T("Trouvé lors de ton exploration.") });
             updateScrollVisibility();
             updateLootVisibility();
             setTimeout(() => {
@@ -28103,7 +28230,7 @@
             // Toast
             const toast = document.createElement('div');
             toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#78350F,#451a03);color:#FCD34D;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:700;z-index:9999;border:1px solid rgba(217,119,6,0.5);box-shadow:0 4px 16px rgba(217,119,6,0.4);pointer-events:none;';
-            toast.textContent = TF('📜 Parchemin collecté : %1', T(scroll.name));
+            toast.textContent = T('📜 Parchemin collecté');
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2500);
         }
@@ -32732,6 +32859,8 @@
         }
 
         const STUDIO_PANELS = {
+            garderobe: () => _stEntete('🧥', 'Penderie', 'Change de tenue avant de ressortir.')
+                + '<div id="studioGardeRobe" class="gr gr--panneau"></div>',
             home: () => _stEntete('🚪', 'Porte', "Elle donne sur la carte de Lyon. Tes découvertes t'attendent dehors.")
                 + _stTiles([{ emoji: '🗺️', nom: 'Retour à la carte', primaire: true, action: 'closeStudioPanel(); closeStudioScreen()' }]),
 
@@ -32819,6 +32948,8 @@
             const corps = document.getElementById('studioPanelBody');
             if (!panneau || !corps || !STUDIO_PANELS[cle]) return;
             corps.innerHTML = STUDIO_PANELS[cle]();
+            // Penderie : même outil que « Mon profil », présenté en panneau.
+            if (cle === 'garderobe') rendreGardeRobe(document.getElementById('studioGardeRobe'), 'panneau');
             panneau.classList.add('open');
             document.getElementById('studioScreen').classList.add('panel-open');
         }
