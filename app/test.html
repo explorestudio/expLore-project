@@ -3063,12 +3063,12 @@
         .avatar-walking .avatar-body-g { animation: avatarBob     0.45s ease-in-out infinite; }
         .avatar-walking .avatar-shadow { animation: avatarShadow  0.45s ease-in-out infinite; }
 
-        /* Studio avatar animations */
-        #studioPlayerAvatar.studio-walking #studioLegL { animation: avatarWalkLegL 0.4s ease-in-out infinite; }
-        #studioPlayerAvatar.studio-walking #studioLegR { animation: avatarWalkLegR 0.4s ease-in-out infinite; }
-        #studioPlayerAvatar.studio-walking #studioArmL { animation: avatarWalkArmL 0.4s ease-in-out infinite; }
-        #studioPlayerAvatar.studio-walking #studioArmR { animation: avatarWalkArmR 0.4s ease-in-out infinite; }
-        #studioPlayerAvatar.studio-walking #studioAvatarBody { animation: avatarBob 0.4s ease-in-out infinite; }
+        /* Studio avatar animations (avatar paramétrable : mêmes keyframes, classes générées) */
+        #studioPlayerAvatar.studio-walking .avatar-leg-l  { animation: avatarWalkLegL 0.4s ease-in-out infinite; }
+        #studioPlayerAvatar.studio-walking .avatar-leg-r  { animation: avatarWalkLegR 0.4s ease-in-out infinite; }
+        #studioPlayerAvatar.studio-walking .avatar-arm-l  { animation: avatarWalkArmL 0.4s ease-in-out infinite; }
+        #studioPlayerAvatar.studio-walking .avatar-arm-r  { animation: avatarWalkArmR 0.4s ease-in-out infinite; }
+        #studioPlayerAvatar.studio-walking .avatar-body-g { animation: avatarBob 0.4s ease-in-out infinite; }
 
         @keyframes levelUpPulse {
             0% { transform: scale(1); }
@@ -9723,7 +9723,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.7.1</div>
+            <div class="hud-version" id="hudVersion">v1.8.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10978,33 +10978,7 @@
 
   <!-- ═══ AVATAR — 1,75 m à l'échelle de la pièce ═══ -->
   <g id="studioPlayerAvatar" transform="translate(128,227)" style="cursor:pointer;">
-    <ellipse cx="0" cy="1.5" rx="10" ry="4" fill="rgba(0,0,0,0.32)" id="studioAvatarShadow"/>
-    <g id="studioAvatarBody">
-      <g id="studioLegL" style="transform-origin:-4px -30px;">
-        <rect x="-8" y="-30" width="7" height="24" rx="3" fill="#3730a3"/>
-        <rect x="-9.5" y="-8" width="9" height="4.5" rx="2" fill="#1e1b4b"/>
-      </g>
-      <g id="studioLegR" style="transform-origin:4px -30px;">
-        <rect x="1" y="-30" width="7" height="24" rx="3" fill="#4338ca"/>
-        <rect x="0" y="-8" width="9" height="4.5" rx="2" fill="#1e1b4b"/>
-      </g>
-      <rect x="-9" y="-50" width="18" height="21" rx="4" fill="#4F46E5"/>
-      <g id="studioArmL" style="transform-origin:-9px -47px;">
-        <rect x="-15" y="-48" width="6.5" height="16" rx="3" fill="#4338ca"/>
-      </g>
-      <g id="studioArmR" style="transform-origin:9px -47px;">
-        <rect x="8.5" y="-48" width="6.5" height="16" rx="3" fill="#4338ca"/>
-      </g>
-      <circle cx="0" cy="-58" r="8" fill="#fbbf24"/>
-      <path d="M-7.5,-61 Q-6,-68.5 0,-68.5 Q6,-68.5 7.5,-61" fill="#7c3aed"/>
-      <rect x="-8.5" y="-61.5" width="17" height="3" rx="1.5" fill="#6d28d9"/>
-      <rect x="-3" y="-59.5" width="8" height="2" rx="1" fill="#5b21b6"/>
-      <circle cx="-2.8" cy="-57.5" r="1.3" fill="#1e1b4b"/>
-      <circle cx="2.8"  cy="-57.5" r="1.3" fill="#1e1b4b"/>
-      <circle cx="-2.4" cy="-58" r="0.5" fill="white" opacity="0.6"/>
-      <circle cx="3.2"  cy="-58" r="0.5" fill="white" opacity="0.6"/>
-      <path d="M-2.3,-54 Q0,-52.3 2.3,-54" stroke="#92400e" stroke-width="1" fill="none" stroke-linecap="round"/>
-    </g>
+    <!-- Corps construit par construireAvatar(tenueAvatar, 'studio') (cf. rafraichirAvatars) -->
   </g>
 
 </svg>
@@ -23227,54 +23201,7 @@
                 <svg id="avatarSvg" width="36" height="48" viewBox="0 0 36 48"
                     xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible;
                     filter:drop-shadow(0 3px 0 rgba(0,0,0,0.4)) drop-shadow(0 0 6px rgba(255,255,255,0.25));">
-                    <!-- Ombre au sol -->
-                    <ellipse class="avatar-shadow" cx="18" cy="47" rx="8" ry="2.5" fill="rgba(0,0,0,0.25)"/>
-                    <!-- Jambe gauche -->
-                    <g class="avatar-leg-l" style="transform-origin:15px 30px;">
-                        <rect x="11" y="30" width="7" height="13" rx="3" fill="#3730a3"/>
-                        <rect x="9"  y="41" width="9" height="4"  rx="2" fill="#1e1b4b"/>
-                    </g>
-                    <!-- Jambe droite -->
-                    <g class="avatar-leg-r" style="transform-origin:21px 30px;">
-                        <rect x="18" y="30" width="7" height="13" rx="3" fill="#4338ca"/>
-                        <rect x="18" y="41" width="9" height="4"  rx="2" fill="#1e1b4b"/>
-                    </g>
-                    <!-- Corps -->
-                    <g class="avatar-body-g" style="transform-origin:18px 24px;">
-                        <rect x="10" y="17" width="16" height="15" rx="4" fill="#4F46E5"/>
-                        <rect x="10" y="17" width="16" height="15" rx="4" fill="none" stroke="white" stroke-width="1.2" opacity="0.35"/>
-                        <!-- Bras gauche -->
-                        <g class="avatar-arm-l" style="transform-origin:10px 21px;">
-                            <rect x="3"  y="19" width="8" height="10" rx="3" fill="#4338ca"/>
-                        </g>
-                        <!-- Bras droit -->
-                        <g class="avatar-arm-r" style="transform-origin:26px 21px;">
-                            <rect x="25" y="19" width="8" height="10" rx="3" fill="#4338ca"/>
-                        </g>
-                        <!-- Tête -->
-                        <circle cx="18" cy="10" r="7.5" fill="#fbbf24"/>
-                        <circle cx="18" cy="10" r="7.5" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
-                        <!-- Casquette -->
-                        <path d="M10,8 Q11,2 18,2 Q25,2 26,8" fill="#7c3aed"/>
-                        <rect x="8" y="7" width="20" height="3" rx="1.5" fill="#6d28d9"/>
-                        <rect x="14" y="9" width="9" height="2" rx="1" fill="#5b21b6"/>
-                        <!-- Yeux — blancs + pupilles -->
-                        <ellipse cx="15.5" cy="10.5" rx="2.2" ry="2.2" fill="white"/>
-                        <ellipse cx="20.5" cy="10.5" rx="2.2" ry="2.2" fill="white"/>
-                        <circle cx="15.8" cy="11" r="1.2" fill="#1e1b4b"/>
-                        <circle cx="20.8" cy="11" r="1.2" fill="#1e1b4b"/>
-                        <!-- Reflets yeux -->
-                        <circle cx="16.2" cy="10.3" r="0.45" fill="white" opacity="0.9"/>
-                        <circle cx="21.2" cy="10.3" r="0.45" fill="white" opacity="0.9"/>
-                        <!-- Sourcils -->
-                        <path d="M13.5,8.2 Q15.5,7.2 17.5,8.2" stroke="#92400e" stroke-width="0.9" fill="none" stroke-linecap="round"/>
-                        <path d="M18.5,8.2 Q20.5,7.2 22.5,8.2" stroke="#92400e" stroke-width="0.9" fill="none" stroke-linecap="round"/>
-                        <!-- Sourire -->
-                        <path d="M15,13 Q18,15.5 21,13" stroke="#92400e" stroke-width="1.1" fill="none" stroke-linecap="round"/>
-                        <!-- Joues rosées -->
-                        <ellipse cx="13.5" cy="13" rx="1.8" ry="1.1" fill="#f87171" opacity="0.35"/>
-                        <ellipse cx="22.5" cy="13" rx="1.8" ry="1.1" fill="#f87171" opacity="0.35"/>
-                    </g>
+                    ${construireAvatar(tenueAvatar, 'carte')}
                 </svg>`;
             playerMarker = new maplibregl.Marker({ element: playerEl, anchor: 'center', offset: [0, 0] })
                 .setLngLat([playerPos.lng, playerPos.lat])
@@ -24092,6 +24019,217 @@
         // le marqueur et la caméra sur GeoEngine.getDisplay(), à la cadence de l'écran.
         let _dispLat = null, _dispLng = null;   // position actuellement AFFICHÉE
         let _geoRAF = null;
+
+        // ══════════════════════════════════════════════════════════════════
+        // AVATAR PARAMÉTRABLE (brief « personnalisation de l'avatar », lot 1)
+        // Catalogues, tracés et palettes repris du prototype avatar_garderobe.html,
+        // qui fait foi. Une seule fonction de construction pour la carte et le QG.
+        // Les catalogues sont des données : une coupe, un haut = une ligne.
+        // ══════════════════════════════════════════════════════════════════
+        const AV_PEAU = [
+            { id: 'p1', n: 'très clair', c: '#f7dcc2' }, { id: 'p2', n: 'clair', c: '#ecc09a' },
+            { id: 'p3', n: 'médian', c: '#cf9a6f' }, { id: 'p4', n: 'mat', c: '#a9714a' },
+            { id: 'p5', n: 'foncé', c: '#6f4228' },
+        ];
+        const AV_CHEVEUX_COUL = [
+            { id: 'ch_noir', n: 'noir', c: '#1b1512' }, { id: 'ch_brun', n: 'brun', c: '#3a2a20' },
+            { id: 'ch_chat', n: 'châtain', c: '#6b4a30' }, { id: 'ch_roux', n: 'roux', c: '#a8552a' },
+            { id: 'ch_blond', n: 'blond', c: '#c9a86a' },
+        ];
+        // Chaque coupe : masse arrière (dessinée avant la tête) + masse avant (après).
+        const AV_COUPES = [
+            { id: 'c_courts', n: 'courts', back: '', front: (c) =>
+                `<path d="M9.4 10.2 Q9.2 2 18 2 Q26.8 2 26.6 10.2 Q25.6 6.4 18 6.2 Q11.2 6.1 9.4 10.2 Z" fill="${c}"/>` },
+            { id: 'c_mop', n: 'ébouriffés', back: '', front: (c) =>
+                `<path d="M9.2 10.6 Q8.6 1.6 18 1.6 Q27.4 1.6 26.8 10.6 Q26 7.4 23.4 7.8 Q22.6 5.2 19.8 6.4
+                  Q18 4.2 15.6 6.2 Q12.8 5 11.8 7.8 Q9.9 7.4 9.2 10.6 Z" fill="${c}"/>` },
+            { id: 'c_raie', n: 'avec raie', back: '', front: (c) =>
+                `<path d="M9.4 10 Q9.4 2 18 2 Q26.6 2 26.6 10 Q25.6 6 20.6 6.2 L16.4 8.6 Q12.4 6 9.4 10 Z" fill="${c}"/>` },
+            { id: 'c_ras', n: 'ras', back: '', front: (c) =>
+                `<path d="M10 9.4 Q10.4 3.2 18 3.2 Q25.6 3.2 26 9.4 Q24.6 6.6 18 6.4 Q11.4 6.4 10 9.4 Z" fill="${c}"/>` },
+            { id: 'c_boucle_c', n: 'bouclés courts', back: '', front: (c) =>
+                `<g fill="${c}"><circle cx="12" cy="5.6" r="3.1"/><circle cx="16.4" cy="3.8" r="3.3"/>
+                  <circle cx="21" cy="4.4" r="3.2"/><circle cx="24.6" cy="6.6" r="2.9"/>
+                  <path d="M9.6 10 Q9.6 5 18 5 Q26.4 5 26.4 10 Q25 6.6 18 6.6 Q11 6.6 9.6 10 Z"/></g>` },
+            { id: 'c_chignon', n: 'chignon', back: (c) =>
+                `<path d="M18 -1.6 a4.4 4.4 0 1 1 .1 0 Z" fill="${c}"/>`, front: (c) =>
+                `<path d="M9.4 11 Q9 2.2 18 2.2 Q27 2.2 26.6 11 Q25.4 6.4 18 6.2 Q10.6 6.2 9.4 11 Z" fill="${c}"/>
+                  <path d="M9.6 9 q-1.6 5 -.6 9 q1.4 -4 1.6 -8 Z" fill="${c}"/>
+                  <path d="M26.4 9 q1.6 5 .6 9 q-1.4 -4 -1.6 -8 Z" fill="${c}"/>` },
+            { id: 'c_long', n: 'longs', back: (c) =>
+                `<path d="M7.4 7 Q7 20 8.6 24 L12.4 24 Q10.6 16 11 8 Z" fill="${c}"/>
+                  <path d="M28.6 7 Q29 20 27.4 24 L23.6 24 Q25.4 16 25 8 Z" fill="${c}"/>`, front: (c) =>
+                `<path d="M9.2 11 Q8.8 2 18 2 Q27.2 2 26.8 11 Q25.4 6.2 18 6 Q10.6 6 9.2 11 Z" fill="${c}"/>` },
+            { id: 'c_ondule', n: 'ondulés', back: (c) =>
+                `<path d="M7.2 8 q-1.4 9 .6 15 q1.6 -2 3.4 -1 q-1.8 -7 -1.2 -14 Z" fill="${c}"/>
+                  <path d="M28.8 8 q1.4 9 -.6 15 q-1.6 -2 -3.4 -1 q1.8 -7 1.2 -14 Z" fill="${c}"/>`, front: (c) =>
+                `<path d="M9 11.4 Q8.4 1.8 18 1.8 Q27.6 1.8 27 11.4 Q25.6 6 18 5.8 Q10.4 5.8 9 11.4 Z" fill="${c}"/>` },
+            { id: 'c_carre', n: 'carré', back: (c) =>
+                `<path d="M7.6 7 L7.6 19 L12 19 L12 7 Z" fill="${c}"/>
+                  <path d="M28.4 7 L28.4 19 L24 19 L24 7 Z" fill="${c}"/>`, front: (c) =>
+                `<path d="M9.2 10.6 Q9 2 18 2 Q27 2 26.8 10.6 Q25.4 6 18 5.8 Q10.6 5.8 9.2 10.6 Z" fill="${c}"/>` },
+            { id: 'c_boucle_l', n: 'bouclés longs', back: (c) =>
+                `<g fill="${c}"><circle cx="8.6" cy="12" r="3.4"/><circle cx="9.4" cy="17.6" r="3.1"/>
+                  <circle cx="27.4" cy="12" r="3.4"/><circle cx="26.6" cy="17.6" r="3.1"/></g>`, front: (c) =>
+                `<g fill="${c}"><circle cx="11.6" cy="5.2" r="3.4"/><circle cx="16.6" cy="3.2" r="3.6"/>
+                  <circle cx="21.6" cy="4" r="3.4"/><circle cx="25.4" cy="6.6" r="3.1"/>
+                  <path d="M9.4 10.6 Q9.4 5 18 5 Q26.6 5 26.6 10.6 Q25 6.6 18 6.6 Q11 6.6 9.4 10.6 Z"/></g>` },
+            { id: 'c_tresse', n: 'tresse', back: (c) =>
+                `<g fill="${c}"><circle cx="27" cy="13" r="2.4"/><circle cx="28" cy="17" r="2.2"/>
+                  <circle cx="27.2" cy="21" r="2"/><circle cx="28" cy="24.6" r="1.8"/>
+                  <path d="M7.6 8 L7.6 15 L11 15 L11 8 Z"/></g>`, front: (c) =>
+                `<path d="M9.2 10.8 Q9 2 18 2 Q27 2 26.8 10.8 Q25.4 6 18 5.8 Q10.6 5.8 9.2 10.8 Z" fill="${c}"/>` },
+        ];
+        // Hauts : couleur des pans (c), des bras (b), de la chemise visible (in),
+        // rayures (ray) et bretelle (bret) éventuelles.
+        const AV_HAUTS = [
+            { id: 'h1', n: 'veste brune', c: '#8a6a44', b: '#6f5434', in: '#e8e0cc' },
+            { id: 'h2', n: 'veste verte', c: '#4d5c3f', b: '#3c4832', in: '#d9d2bc', ray: true },
+            { id: 'h3', n: 'gilet grenat', c: '#7a3b3f', b: '#5e2d30', in: '#e3d8c4' },
+            { id: 'h4', n: 'chemise crème', c: '#e3dac4', b: '#cdc3ab', in: '#e3dac4' },
+            { id: 'h5', n: 'manteau bleu', c: '#3f5570', b: '#334558', in: '#dcd4bd', bret: '#5c4028' },
+            { id: 'h6', n: 'manteau nuit', c: '#2e3344', b: '#242837', in: '#2e3344', bret: '#4a3522' },
+            { id: 'h7', n: 'cape grise', c: '#5b6070', b: '#484c5a', in: '#d6cdb6' },
+            { id: 'h8', n: 'veste olive', c: '#5d6341', b: '#4a4f33', in: '#d6cdb6', bret: '#6b4a2c' },
+            { id: 'h9', n: 'blouse lin', c: '#d8cbae', b: '#c2b69b', in: '#d8cbae', bret: '#8a6a44' },
+            { id: 'h10', n: 'veste prune', c: '#5d3a52', b: '#492e41', in: '#ddd4bd' },
+            { id: 'h11', n: 'manteau sable', c: '#b59a6e', b: '#9a8159', in: '#e8e0cc' },
+            { id: 'h12', n: 'gilet sombre', c: '#3a3730', b: '#2d2b25', in: '#cfc6ad' },
+        ];
+        const AV_BAS = [
+            { id: 'b1', n: 'anthracite', c: '#36383c' }, { id: 'b2', n: 'olive', c: '#454c37' },
+            { id: 'b3', n: 'brun', c: '#5a4330' }, { id: 'b4', n: 'bleu nuit', c: '#2f3b52' },
+            { id: 'b5', n: 'sable', c: '#8c7a5c' }, { id: 'b6', n: 'noir', c: '#262628' },
+            { id: 'b7', n: 'gris', c: '#555a60' }, { id: 'b8', n: 'kaki', c: '#6b6a4a' },
+            { id: 'b9', n: 'terre', c: '#74543a' }, { id: 'b10', n: 'ardoise', c: '#3d4450' },
+            { id: 'b11', n: 'beige', c: '#a08e6c' }, { id: 'b12', n: 'prune', c: '#4a3340' },
+        ];
+        const AV_ACCESSOIRES = [
+            { id: null, n: 'aucun' },
+            { id: 'a_ech_r', n: 'écharpe grenat', k: 'echarpe', c: '#7a3b3f' },
+            { id: 'a_ech_v', n: 'écharpe verte', k: 'echarpe', c: '#4d5c3f' },
+            { id: 'a_ech_b', n: 'écharpe bleue', k: 'echarpe', c: '#3f5570' },
+            { id: 'a_ech_c', n: 'écharpe crème', k: 'echarpe', c: '#ddd4bd' },
+            { id: 'a_sac_b', n: 'sacoche brune', k: 'sac', c: '#6f5434' },
+            { id: 'a_sac_v', n: 'sacoche verte', k: 'sac', c: '#4a5340' },
+            { id: 'a_sac_n', n: 'sacoche noire', k: 'sac', c: '#3a3730' },
+            { id: 'a_etui', n: 'étui à parchemins', k: 'etui', c: '#6f5434' },
+            { id: 'a_dos', n: 'sac à dos', k: 'dos', c: '#5e472e' },
+        ];
+        const AV_CHAPEAUX = [
+            { id: null, n: 'aucun' },
+            { id: 't_feutre', n: 'chapeau', c: '#5c4028' },
+            { id: 't_gavroche', n: 'casquette', c: '#36405a' },
+            { id: 't_beret', n: 'béret', c: '#3f4a36' },
+        ];
+        const AV_VISAGES = [
+            { id: 'v_simple', n: 'simple' }, { id: 'v_rondes', n: 'lunettes rondes' },
+            { id: 'v_carrees', n: 'besicles' }, { id: 'v_cache', n: 'cache-œil' },
+            { id: 'v_taches', n: 'taches de rousseur' },
+        ];
+        // Tenue par défaut : peau médiane, cheveux courts bruns, veste brune,
+        // pantalon sombre, ni accessoire ni chapeau.
+        const AV_TENUE_DEFAUT = { peau: 'p3', coupe: 'c_courts', coulCheveux: 'ch_brun', haut: 'h1',
+                                  bas: 'b1', accessoire: null, chapeau: null, visage: 'v_simple' };
+        let tenueAvatar = Object.assign({}, AV_TENUE_DEFAUT);
+        const _avGet = (cat, id) => cat.find(x => x.id === id) || cat[0];
+
+        // Repère 'carte' : viewBox 0 0 36 48, pieds vers y=45. Repère 'studio' :
+        // le même dessin enveloppé (pieds à l'origine, ordonnées négatives, échelle
+        // du QG). Classes et transform-origin : ceux que visent les animations de
+        // marche (avatarWalk*, avatarBob, avatarShadow), inchangées.
+        // Ordre de dessin : ombre, jambes, chemise, veste, bras, accessoire,
+        // cheveux arrière, oreilles, tête, yeux, visage, cheveux avant, couvre-chef.
+        function construireAvatar(t, repere) {
+            t = t || AV_TENUE_DEFAUT;
+            const peau  = _avGet(AV_PEAU, t.peau).c;
+            const coupe = _avGet(AV_COUPES, t.coupe);
+            const chev  = _avGet(AV_CHEVEUX_COUL, t.coulCheveux).c;
+            const h     = _avGet(AV_HAUTS, t.haut);
+            const b     = _avGet(AV_BAS, t.bas).c;
+            const acc   = AV_ACCESSOIRES.find(a => a.id === t.accessoire);
+            const cha   = AV_CHAPEAUX.find(c => c.id === t.chapeau);
+            const vis   = _avGet(AV_VISAGES, t.visage).id;
+            let s = '';
+            s += `<ellipse class="avatar-shadow" cx="18" cy="46.4" rx="8" ry="2.4" fill="rgba(0,0,0,0.28)"/>`;
+            s += `<g class="avatar-leg-l" style="transform-origin:14.4px 31px;">
+                    <rect x="11.2" y="31" width="6.4" height="11.4" rx="2.6" fill="${b}"/>
+                    <rect x="10" y="41.4" width="8.2" height="4" rx="1.8" fill="#2a2420"/></g>`;
+            s += `<g class="avatar-leg-r" style="transform-origin:21.6px 31px;">
+                    <rect x="18.4" y="31" width="6.4" height="11.4" rx="2.6" fill="${b}"/>
+                    <rect x="17.8" y="41.4" width="8.2" height="4" rx="1.8" fill="#2a2420"/></g>`;
+            s += `<g class="avatar-body-g" style="transform-origin:18px 24px;">`;
+            s += `<rect x="13.4" y="17.6" width="9.2" height="14" rx="2.6" fill="${h.in}"/>`;
+            if (h.ray) s += `<g fill="rgba(0,0,0,.14)"><rect x="13.4" y="19.4" width="9.2" height="1.4"/>
+                    <rect x="13.4" y="22.6" width="9.2" height="1.4"/><rect x="13.4" y="25.8" width="9.2" height="1.4"/></g>`;
+            s += `<path d="M10.4 21 q0 -3.4 3.4 -3.4 l1.4 0 l0 14 l-4.8 0 Z" fill="${h.c}"/>`;
+            s += `<path d="M25.6 21 q0 -3.4 -3.4 -3.4 l-1.4 0 l0 14 l4.8 0 Z" fill="${h.c}"/>`;
+            if (h.bret) s += `<path d="M14.6 17.8 L21.6 31.4" stroke="${h.bret}" stroke-width="1.8"/>`;
+            s += `<g class="avatar-arm-l" style="transform-origin:11px 20px;">
+                    <rect x="4.6" y="19.2" width="6.6" height="9.6" rx="3" fill="${h.b}"/></g>`;
+            s += `<g class="avatar-arm-r" style="transform-origin:25px 20px;">
+                    <rect x="24.8" y="19.2" width="6.6" height="9.6" rx="3" fill="${h.b}"/></g>`;
+            if (acc && acc.k === 'echarpe')
+                s += `<path d="M12.6 18.4 q5.4 2.6 10.8 0 l0 2.6 q-5.4 2.6 -10.8 0 Z" fill="${acc.c}"/>
+                      <path d="M21.4 20.6 l2.6 0 l-.6 6.4 l-2.4 0 Z" fill="${acc.c}"/>`;
+            if (acc && acc.k === 'sac')
+                s += `<path d="M12.4 18 L24 27" stroke="${acc.c}" stroke-width="1.4" opacity=".9"/>
+                      <rect x="23" y="25.6" width="6.4" height="5.4" rx="1.4" fill="${acc.c}"/>
+                      <rect x="23" y="25.6" width="6.4" height="1.8" rx=".8" fill="rgba(0,0,0,.25)"/>`;
+            if (acc && acc.k === 'etui')
+                s += `<path d="M12.4 18 L24 27" stroke="${acc.c}" stroke-width="1.4"/>
+                      <rect x="23.6" y="22" width="4" height="10" rx="1.8" fill="${acc.c}"/>
+                      <rect x="23.6" y="21" width="4" height="2" rx=".8" fill="#e3dac4"/>`;
+            if (acc && acc.k === 'dos')
+                s += `<rect x="6.4" y="19.6" width="5.6" height="9" rx="2" fill="${acc.c}"/>
+                      <rect x="6.4" y="22.6" width="5.6" height="1.6" fill="rgba(0,0,0,.25)"/>`;
+            if (coupe.back) s += coupe.back(chev);
+            s += `<circle cx="9.8" cy="11" r="1.7" fill="${peau}"/><circle cx="26.2" cy="11" r="1.7" fill="${peau}"/>`;
+            s += `<rect x="10" y="2.6" width="16" height="15" rx="6.4" fill="${peau}"/>`;
+            s += `<ellipse cx="15.2" cy="10.6" rx="1.5" ry="2" fill="#17120f"/>
+                  <ellipse cx="20.8" cy="10.6" rx="1.5" ry="2" fill="#17120f"/>`;
+            if (vis === 'v_taches')
+                s += `<g fill="rgba(0,0,0,.18)"><circle cx="13.4" cy="13" r=".5"/><circle cx="15.2" cy="13.8" r=".45"/>
+                      <circle cx="20.8" cy="13.8" r=".45"/><circle cx="22.6" cy="13" r=".5"/></g>`;
+            if (vis === 'v_rondes')
+                s += `<g fill="none" stroke="#9a7b45" stroke-width=".9">
+                      <circle cx="15.2" cy="10.6" r="2.8"/><circle cx="20.8" cy="10.6" r="2.8"/>
+                      <path d="M17.9 10.6 h.2"/><path d="M12.4 10.6 h-1.6"/><path d="M23.6 10.6 h1.6"/></g>`;
+            if (vis === 'v_carrees')
+                s += `<g fill="none" stroke="#9a7b45" stroke-width=".9">
+                      <rect x="12.4" y="8.4" width="5.2" height="4.4" rx=".8"/>
+                      <rect x="18.4" y="8.4" width="5.2" height="4.4" rx=".8"/>
+                      <path d="M17.6 10.6 h.8"/><path d="M12.4 10.6 h-1.6"/><path d="M23.6 10.6 h1.6"/></g>`;
+            if (vis === 'v_cache')
+                s += `<path d="M10.8 8 L25.4 9.6" stroke="#2a2420" stroke-width=".9"/>
+                      <ellipse cx="20.8" cy="10.6" rx="2.6" ry="2.8" fill="#2a2420"/>`;
+            s += coupe.front(chev);
+            if (cha && cha.id === 't_feutre')
+                s += `<ellipse cx="18" cy="5.4" rx="11" ry="2.4" fill="${cha.c}"/>
+                      <path d="M12.6 5.4 q0 -4.6 5.4 -4.6 q5.4 0 5.4 4.6 Z" fill="${cha.c}"/>
+                      <rect x="12.6" y="4.2" width="10.8" height="1.4" fill="rgba(0,0,0,.3)"/>`;
+            if (cha && cha.id === 't_gavroche')
+                s += `<path d="M10.2 6.4 q0 -5 7.8 -5 q7.8 0 7.8 5 Z" fill="${cha.c}"/>
+                      <path d="M10.2 6.4 q-2.4 .4 -2.6 1.8 q4 .6 6 -.6 Z" fill="${cha.c}"/>`;
+            if (cha && cha.id === 't_beret')
+                s += `<path d="M10.6 6.2 q0 -5 7.4 -5 q7.4 0 7.4 5 q-7.4 1.6 -14.8 0 Z" fill="${cha.c}"/>
+                      <circle cx="18" cy="1" r="1.2" fill="${cha.c}"/>`;
+            s += `</g>`;
+            if (repere === 'studio') return `<g transform="scale(1.42) translate(-18,-45.4)">${s}</g>`;
+            return s;
+        }
+
+        // Régénère l'avatar de la carte et celui du QG. Les classes de marche
+        // (.avatar-walking, .studio-walking) et l'orientation sont portées par les
+        // conteneurs, que l'on ne touche pas : la marche en cours continue.
+        function rafraichirAvatars() {
+            const carte = document.getElementById('avatarSvg');
+            if (carte) carte.innerHTML = construireAvatar(tenueAvatar, 'carte');
+            const qg = document.getElementById('studioPlayerAvatar');
+            if (qg) qg.innerHTML = construireAvatar(tenueAvatar, 'studio');
+        }
+
+        setTimeout(rafraichirAvatars, 0);   // avatar du QG (celui de la carte naît dans createMap)
 
         function _setAvatarFacing(deltaE) {
             const el = document.getElementById('avatarSvg');
