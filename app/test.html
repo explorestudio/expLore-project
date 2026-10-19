@@ -9379,13 +9379,32 @@
             overflow: hidden; visibility: hidden; pointer-events: none !important;
         }
         body.ui-masque-collection #btnCollections + .action-bar-btn { border-left-color: transparent; }
-        /* Barre du bas : visible mais grisée, non cliquable (sauf Collection et Sac) */
-        body.ui-masque-explorium #btnMemorial,
-        body.ui-masque-qg #btnStudio {
-            opacity: 0.32;
-            filter: grayscale(1);
-            pointer-events: none;
+        /* Sac (19/10) : même principe, au bout de la barre */
+        #btnBag { transition: width 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease, background 0.15s, transform 0.1s; }
+        body.ui-masque-sac #btnBag {
+            width: 0; min-width: 0; padding: 0; margin: 0; opacity: 0; border-left-width: 0;
+            overflow: hidden; visibility: hidden; pointer-events: none !important;
         }
+        /* QG et Explorium (19/10) : repliés comme la Collection, plus grisés */
+        #btnMemorial, #btnStudio { transition: width 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease, background 0.15s, transform 0.1s; }
+        body.ui-masque-explorium_btn #btnMemorial,
+        body.ui-masque-qg #btnStudio {
+            width: 0; min-width: 0; padding: 0; margin: 0; opacity: 0; border-left-width: 0;
+            overflow: hidden; visibility: hidden; pointer-events: none !important;
+        }
+        /* Premier bouton visible de la barre : pas de trait de séparation à sa gauche */
+        body.ui-masque-collection.ui-masque-explorium_btn #btnStudio,
+        body.ui-masque-collection.ui-masque-explorium_btn.ui-masque-qg #btnBag,
+        body.ui-masque-collection #btnMemorial { border-left-color: transparent; }
+        /* Barre vide : absente (elle apparaît avec le sac, section 10) */
+        .action-bar { transition: opacity 0.4s ease, visibility 0s linear 0s; }
+        body.ui-masque-collection.ui-masque-explorium_btn.ui-masque-qg.ui-masque-sac .action-bar {
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+        }
+        /* Accès à l'Explorium depuis la Collection et le carnet : absent avant sa découverte */
+        body.ui-masque-explorium .alb-memorial-btn,
+        body.ui-masque-explorium .journal-screen-memorial-btn { display: none !important; }
         /* Pulsation propre à uiPulser : le guide du tutoriel retire toutes les
            .ob-guide-pulse d'un coup, il ne doit pas éteindre celles-ci. */
         .ui-pulse { animation: obGuidePulse 1.3s ease-in-out infinite !important; }
@@ -9579,7 +9598,7 @@
         #ritualReveal.show .ritual-reveal-tap { opacity: 1; }
         </style>
 </head>
-<body class="ui-masque-avatar ui-masque-poussiere ui-masque-journal_quetes ui-masque-jumelles ui-masque-explorium ui-masque-qg ui-masque-collection">
+<body class="ui-masque-avatar ui-masque-poussiere ui-masque-journal_quetes ui-masque-jumelles ui-masque-explorium ui-masque-qg ui-masque-collection ui-masque-sac ui-masque-explorium_btn">
     <!-- Symbole partagé : le cadenas de l'Explorium, sur le sceau de la porte du QG
          et sur le badge des boutons Explorium. Le même signe aux deux endroits. -->
     <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -9692,7 +9711,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.5.1 · refonte</div>
+            <div class="hud-version" id="hudVersion">v1.6.0 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -16185,7 +16204,15 @@
         // jeune fille le mentionne (section 6).
         // 'collection' (19/10) : bouton Collection de la barre du bas, caché jusqu'au
         // dialogue de sortie de l'échoppe (section 10), qui ouvre son tunnel.
-        const UI_CLES = ['avatar', 'poussiere', 'journal_quetes', 'jumelles', 'parametres', 'explorium', 'qg', 'barre_bas', 'carnet', 'collection'];
+        // 'sac' (19/10) : bouton Sac, caché jusqu'au même dialogue ; il éclot le premier,
+        // son tunnel passe avant celui de la Collection.
+        // 'explorium_btn' (19/10) : le BOUTON Explorium de la barre. L'accès (clé
+        // 'explorium') s'ouvre en section 17 ; le bouton n'éclot qu'au retour sur la
+        // mappe, après la synthèse de Clara (section 18).
+        // Barre du bas (19/10) : absente au départ ; ses boutons éclosent dans l'ordre
+        // de découverte (sac, collection, QG, Explorium) mais gardent leur place :
+        // Collection, Explorium, QG, Sac.
+        const UI_CLES = ['avatar', 'poussiere', 'journal_quetes', 'jumelles', 'parametres', 'explorium', 'qg', 'barre_bas', 'carnet', 'collection', 'sac', 'explorium_btn'];
         const UI_REVELE_DEFAUT = { parametres: true };
         const UI_CIBLES = {
             avatar:         ['#avatarBtn'],
@@ -16198,6 +16225,8 @@
             barre_bas:      ['#btnMemorial', '#btnStudio'],
             carnet:         ['#journalTabBtn'],
             collection:     ['#btnCollections'],
+            sac:            ['#btnBag'],
+            explorium_btn:  ['#btnMemorial'],
         };
         let _uiRevele = {};              // { clé: true } — révélées pendant le tutoriel
         let _sacVus = {};                // objets du sac déjà possédés une fois (id → true)
@@ -16228,6 +16257,14 @@
             // Collection : une partie sauvegardée au-delà du dialogue de la section 10 l'a déjà vue
             if (cle === 'collection') {
                 if (_uiRevele.collection) return true;
+                try { return _tutoSection > 10 || (_tutoSection === 10 && !!_tutoEtat.s10 && _tutoEtat.s10 !== 'dialogue' && _tutoEtat.s10 !== 'sac'); }
+                catch (e) { return false; }
+            }
+            // Bouton Explorium : après la section 18 (le tutoriel est alors fini)
+            if (cle === 'explorium_btn') return !!_uiRevele.explorium_btn;
+            // Sac : idem, il paraît juste avant (état « sac » de la section 10)
+            if (cle === 'sac') {
+                if (_uiRevele.sac) return true;
                 try { return _tutoSection > 10 || (_tutoSection === 10 && !!_tutoEtat.s10 && _tutoEtat.s10 !== 'dialogue'); }
                 catch (e) { return false; }
             }
@@ -16374,9 +16411,22 @@
             } catch (e) { return; }
             if (nouveau) {
                 _sacPulseFait = true;
-                setTimeout(() => uiPulser('#btnBag'), 60);
+                _sacPulseEnAttente = true;
+                setTimeout(_sacPulserSiPossible, 60);
             }
         }
+        // David (19/10) : un sac qui pulse alors qu'un tunnel interdit de le toucher
+        // est inacceptable. La pulsation attend : sac révélé, aucun mode guidé,
+        // aucun dialogue, tunnel du tutoriel terminé.
+        let _sacPulseEnAttente = false;
+        function _sacPulserSiPossible() {
+            if (!_sacPulseEnAttente) return;
+            if (!uiEstRevele('sac') || document.body.classList.contains('vn-ouvert')) return;
+            if ((typeof _gf !== 'undefined' && _gf) || (typeof _tutoTunnelActif === 'function' && _tutoTunnelActif())) return;
+            _sacPulseEnAttente = false;
+            uiPulser('#btnBag');
+        }
+        setInterval(_sacPulserSiPossible, 1000);
 
         // ── Échoppe ────────────────────────────────────────────────────────
         const ECHOPPE_TUTO_ID = 'bazar_tuto';
@@ -19813,6 +19863,14 @@
                 uiPulser(el, { garder: true });
             });
             const rc = cibles.map(_gfRect).filter(Boolean);
+            // opts.toutBloquer (19/10) : sans cible, bloquer quand même tout l'écran.
+            if (!rc.length && _gf.toutBloquer) {
+                voile.style.background = 'rgba(4,2,14,' + _gf.opacite + ')';
+                voile.style.display = 'block'; bloq.style.display = 'block';
+                voile.style.clipPath = 'none'; bloq.style.clipPath = 'none';
+                _gfHalosMaj([]);
+                return;
+            }
             if (!rc.length) { voile.style.display = 'none'; bloq.style.display = 'none'; return; }
             voile.style.background = 'rgba(4,2,14,' + _gf.opacite + ')';
             voile.style.display = 'block';
@@ -19856,6 +19914,7 @@
                 masques: opts.masques || null,
                 pulse: opts.pulse === undefined ? null : opts.pulse,
                 opacite: (typeof opts.opacite === 'number') ? opts.opacite : 0.72,
+                toutBloquer: !!opts.toutBloquer,
                 pulses: new Set(),
                 timer: null,
             };
@@ -19962,9 +20021,9 @@
         const _TUTO_LIGNES_S7B = [ { speaker: _TUTO_JF, air: 'enthousiaste', html: _TUTO_HTML_S7B } ];
         // Section 10 — « Monsieur » : le marchand de l'échoppe.
         const _TUTO_HTML_S10 = {
-            A: 'Il faut tout prendre quand on nous le propose, ce ne sera pas toujours le cas d’après l’Organisation. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton ' + vnMot('sac', 'sac') + ' et donnons-lui l’' + vnMot('encre', 'encre', true) + '.',
-            B: 'Ce sont des ressources rares, mieux vaut faire un stock, comme l’a dit l’Organisation. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton ' + vnMot('sac', 'sac') + ' et donnons-lui l’' + vnMot('encre', 'encre', true) + '.',
-            C: 'T’as bien fait, l’Organisation nous a prévenu d’en faire un stock. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton ' + vnMot('sac', 'sac') + ' et donnons-lui l’' + vnMot('encre', 'encre', true) + '.',
+            A: 'Il faut tout prendre quand on nous le propose, ce ne sera pas toujours le cas d’après l’Organisation. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil ! Et ensuite, donnons-lui l’' + vnMot('encre', 'encre', true) + '.',
+            B: 'Ce sont des ressources rares, mieux vaut faire un stock, comme l’a dit l’Organisation. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil ! Et ensuite, donnons-lui l’' + vnMot('encre', 'encre', true) + '.',
+            C: 'T’as bien fait, l’Organisation nous a prévenu d’en faire un stock. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil ! Et ensuite, donnons-lui l’' + vnMot('encre', 'encre', true) + '.',
         };
         const _TUTO_LIGNES_S10 = {
             // CAS A : le joueur n'a rien pris
@@ -20089,8 +20148,11 @@
         // 3 — Carte recueillie : la réplique (bouton « Consulter »), puis la
         // poussière vole de la main de la jeune fille au compteur, qu'elle
         // révèle ; à la fin de l'animation, la carte s'ouvre (section 4).
+        // Bloqueur plein écran, sans voile visible (cf. ritualClose, section 3).
+        function _tutoBloquerTout() { guideFocus([], { opacite: 0, toutBloquer: true }); }
         function _tutoSection3() {
             if (_obDone) return;
+            _tutoBloquerTout();
             _tutoAtteindre(3);
             _tutoDemarrerTick();
             if (_tutoEtat.don) { _tutoSection4(); return; }
@@ -20213,15 +20275,42 @@
             }
             if (!_tutoEtat.s10) _tutoEtat.s10 = 'dialogue';
             _tutoSauver();
-            if (_tutoEtat.s10 !== 'dialogue' && _tutoEtat.s10 !== 'guide') return;
+            if (_tutoEtat.s10 !== 'dialogue' && _tutoEtat.s10 !== 'sac' && _tutoEtat.s10 !== 'guide') return;
             _tutoDire('s10', 'map', _TUTO_LIGNES_S10[_tutoEtat.cas10], () => {
                 _echoppeTutoRetirer();   // lot 2.2 : son office est rempli
-                // 19/10 : la Collection n'apparaît qu'ici, puis son tunnel
-                uiReveler('collection', { apres: () => {
-                    if (_tutoEtat.s10 === 'dialogue') { _tutoEtat.s10 = 'guide'; _tutoSauver(); }
-                    if (_tutoEtat.s10 === 'guide') guideFocus(_tuto10Cibles);
+                if (_tutoEtat.s10 === 'guide') { _tuto10VersCollection(); return; }
+                // 19/10 : le Sac éclot, tunnel vers le sac ; à sa sortie, la Collection
+                // éclot à son tour, puis son tunnel (cf. _tuto10TickSac).
+                if (_tutoEtat.s10 === 'dialogue') { _tutoEtat.s10 = 'sac'; _tutoSauver(); }
+                uiReveler('sac', { apres: () => {
+                    if (_tutoEtat.s10 === 'sac' && !_gf) guideFocus(_tuto10SacCibles, { visibles: _tuto10SacVisibles });
                 } });
             });
+        }
+        // Tunnel du sac : bouton Sac, puis son retour (le contenu reste lisible).
+        function _tuto10SacOuvert() {
+            const b = document.getElementById('bagScreen');
+            return !!(b && b.classList.contains('show'));
+        }
+        function _tuto10SacCibles() { return _tuto10SacOuvert() ? ['#bagScreen .bag-hdr-back'] : ['#btnBag']; }
+        function _tuto10SacVisibles() { return _tuto10SacOuvert() ? ['#bagScreen'] : null; }
+        function _tuto10TickSac(ecran) {
+            const e = _tutoEtat;
+            const ouvert = _tuto10SacOuvert();
+            if (ouvert && !e.sacOuvert) { e.sacOuvert = true; _tutoSauver(); }
+            if (!ouvert && e.sacOuvert) { if (ecran === 'map') _tuto10VersCollection(); return; }
+            if (!_gf && uiEstRevele('sac')) guideFocus(_tuto10SacCibles, { visibles: _tuto10SacVisibles });
+        }
+        let _tuto10CollEnCours = false;
+        function _tuto10VersCollection() {
+            if (_tuto10CollEnCours) return;
+            _tuto10CollEnCours = true;
+            guideFocusFin();
+            uiReveler('collection', { apres: () => {
+                _tuto10CollEnCours = false;
+                if (_tutoEtat.s10 === 'sac') { _tutoEtat.s10 = 'guide'; _tutoSauver(); }
+                if (_tutoEtat.s10 === 'guide') guideFocus(_tuto10Cibles);
+            } });
         }
         // Cibles du guidage de la section 10, selon l'écran ouvert.
         function _tuto10Cibles() {
@@ -20424,7 +20513,8 @@
         //            l'Explorium, cf. _verriereMajCompteur)
         const TUTO_QUETES = {
             preuves: { titre: 'Faire ses preuves', texte: 'Cristalliser 3 nébuleuses', max: 3 },
-            vdl:     { titreHtml: 'Finaliser <i>Lyon, ville du livre au XVIè siècle</i>', grappe: 'ville_du_livre' },
+            // 19/10 : plus « Finaliser » la grappe, mais en rassembler les cartes.
+            vdl:     { titre: '(Re)faire ses preuves', texteHtml: 'Rassembler les cartes de <i>Lyon, ville du livre au XVIᵉ siècle</i>', grappe: 'ville_du_livre' },
         };
         const _TUTO_QUETES_ORDRE = ['vdl', 'preuves'];   // la plus récente en tête
 
@@ -20445,10 +20535,11 @@
                 return { n: Math.min(n, TUTO_QUETES.preuves.max), max: TUTO_QUETES.preuves.max };
             }
             if (id === 'vdl') {
-                const g = GRAPPE_QUESTS[TUTO_QUETES.vdl.grappe];
-                const etapes = (g && g.quete && g.quete.etapes) || [];
-                const etat = (typeof grappeQuestState === 'object' && grappeQuestState[TUTO_QUETES.vdl.grappe]) || {};
-                return { n: etapes.filter(e => etat[e.id] === 'completed').length, max: etapes.length };
+                // Cartes de la collection « ville_du_livre » (7), possédées / total
+                const vues = new Set();
+                const cartes = Object.values(COLLECTIONS).flatMap(c => c.cards)
+                    .filter(c => !vues.has(c.id) && vues.add(c.id) && (c.collections || []).includes(TUTO_QUETES.vdl.grappe));
+                return { n: cartes.filter(c => collectedCards.includes(c.id)).length, max: cartes.length };
             }
             return { n: 0, max: 0 };
         }
@@ -20498,7 +20589,9 @@
                 if (def.titreHtml) titre.innerHTML = T(def.titreHtml) + (fait ? ' ✓' : '');
                 else titre.textContent = T(def.titre) + (fait ? ' ✓' : '');
                 const prog = (fait ? p.max : p.n) + '/' + p.max;
-                el.querySelector('.qj-quest-indice').textContent = def.texte ? T(def.texte) + ' ' + prog : prog;
+                const indice = el.querySelector('.qj-quest-indice');
+                if (def.texteHtml) indice.innerHTML = T(def.texteHtml) + ' ' + prog;
+                else indice.textContent = def.texte ? T(def.texte) + ' ' + prog : prog;
                 body.insertBefore(el, premier);
             });
         }
@@ -20817,11 +20910,15 @@
         function _tutoSection18() {
             _tutoAtteindre(18);
             _tutoDire('s18', 'map', _tutoLignesS18(), () => {
-                _tutoEtat.s18 = 'fini';
-                _tutoQueteDemarrer('vdl');
-                uiPulser('#hudQuestJournal');
-                try { updateQuestJournalBadge(); } catch (e) {}
-                _tutoTerminer();
+                // 19/10 : le bouton Explorium éclot au retour sur la mappe, une fois
+                // la synthèse dite ; le tutoriel se clôt ensuite (_obDone révèle tout).
+                uiReveler('explorium_btn', { apres: () => {
+                    _tutoEtat.s18 = 'fini';
+                    _tutoQueteDemarrer('vdl');
+                    uiPulser('#hudQuestJournal');
+                    try { updateQuestJournalBadge(); } catch (e) {}
+                    _tutoTerminer();
+                } });
             });
         }
 
@@ -21072,6 +21169,8 @@
                 _tutoMontrerRetour(ecran);
                 if (ecran === 'map') _tutoVersSection12();
             }
+            // 10 : tunnel du sac, avant celui de la Collection
+            if (s === 10 && e.s10 === 'sac') _tuto10TickSac(ecran);
             // 12 à 18 : déroulé piloté par l'état (cf. _tutoTick12)
             if (s >= 12) _tutoTick12(ecran);
         }
@@ -21149,7 +21248,7 @@
                 if (e.s7 === 'echoppe') setTimeout(_tutoSection8, 1000);   // déjà sur la mappe
                 else { _tutoOuvrirCarteTuto(); setTimeout(() => { openJournalScreen(); _tutoSection7(); }, 400); }
             }
-            else if (s === 10 && (e.s10 === 'dialogue' || e.s10 === 'guide')) setTimeout(_tutoSection10, 1000);
+            else if (s === 10 && (e.s10 === 'dialogue' || e.s10 === 'sac' || e.s10 === 'guide')) setTimeout(_tutoSection10, 1000);
             else if (s >= 10 && e.s11 === 'fini') setTimeout(_tutoSection12, 1000);
             else if (s >= 10 && e.s11 === 'retour') { /* sur la mappe : _tutoTick passe le relais */ }
             else if (s >= 10) {
@@ -21181,11 +21280,11 @@
             [_TUTO_HTML_S7B]: 'You don’t have any? They really insisted on it at ' + vnMot('qg', 'HQ') + ': ' + vnMot('encre', 'ink', true) + ', ' + vnMot('pellicule', 'film', true) + ' and ' + vnMot('cassette', 'tape', true)
                 + '. You could do with a little ' + vnMot('poussiere', 'memorial dust') + ' yourself, too! Right, follow me, let’s stock up. Let’s find a ' + vnMot('echoppe', 'stall', true) + ', apparently there are some all over town.',
             "Je dois vraiment tout faire ! Merci Monsieur, cet énergumène ne semble pas être réveillé aujourd’hui.": "Do I really have to do everything! Thank you, Sir, this character doesn’t seem to be awake today.",
-            [_TUTO_HTML_S10.A]: 'You have to take everything when it’s offered, it won’t always be the case according to the Organisation. Come on, I can’t wait to learn more about the card! I’ll put the rest in your ' + vnMot('sac', 'bag') + ' and let’s give it the ' + vnMot('encre', 'ink', true) + '.',
+            [_TUTO_HTML_S10.A]: 'You have to take everything when it’s offered, it won’t always be the case according to the Organisation. Come on, I can’t wait to learn more about the card! I’ll put the rest in your ' + vnMot('sac', 'bag', true) + ', take a look! And then, let’s give it the ' + vnMot('encre', 'ink', true) + '.',
             "Il fallait tout prendre, je m’en suis chargée ! Merci Monsieur.": "You had to take everything, I took care of it! Thank you, Sir.",
-            [_TUTO_HTML_S10.B]: 'These are rare resources, better to stock up, as the Organisation said. Come on, I can’t wait to learn more about the card! I’ll put the rest in your ' + vnMot('sac', 'bag') + ' and let’s give it the ' + vnMot('encre', 'ink', true) + '.',
+            [_TUTO_HTML_S10.B]: 'These are rare resources, better to stock up, as the Organisation said. Come on, I can’t wait to learn more about the card! I’ll put the rest in your ' + vnMot('sac', 'bag', true) + ', take a look! And then, let’s give it the ' + vnMot('encre', 'ink', true) + '.',
             "Merci Monsieur.": "Thank you, Sir.",
-            [_TUTO_HTML_S10.C]: 'You did well, the Organisation warned us to stock up. Come on, I can’t wait to learn more about the card! I’ll put the rest in your ' + vnMot('sac', 'bag') + ' and let’s give it the ' + vnMot('encre', 'ink', true) + '.',
+            [_TUTO_HTML_S10.C]: 'You did well, the Organisation warned us to stock up. Come on, I can’t wait to learn more about the card! I’ll put the rest in your ' + vnMot('sac', 'bag', true) + ', take a look! And then, let’s give it the ' + vnMot('encre', 'ink', true) + '.',
             "Wouah ! Elle a une histoire si intéressante. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story. I’ll give you time to read in peace.",
             "Wouah ! Elle a une histoire si intéressante, continue. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story, keep going. I’ll give you time to read in peace.",
             "Wouah ! Elle a une histoire si intéressante, nous pouvons découvrir encore 2 entrées. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story, we can still discover 2 entries. I’ll give you time to read in peace.",
@@ -21227,7 +21326,8 @@
             // Quêtes du tutoriel
             "Faire ses preuves": "Prove yourself",
             "Cristalliser 3 nébuleuses": "Crystallise 3 nebulae",
-            [TUTO_QUETES.vdl.titreHtml]: 'Complete <i>Lyon, City of Books in the 16th century</i>',
+            "(Re)faire ses preuves": "Prove yourself (again)",
+            [TUTO_QUETES.vdl.texteHtml]: 'Gather the cards of <i>Lyon, City of Books in the 16th century</i>',
             // Console du pseudo (« Valider » est déjà dans la table)
             "Ton pseudo": "Your username",
             "12 caractères maximum": "12 characters maximum",
@@ -26440,6 +26540,9 @@
             _showNearbyConsoles('rituel');
             const card = _ritualCard;
             _ritualCard = null;
+            // David (19/10) : carte des clefs recueillie → plus aucun clic possible
+            // jusqu'à l'ouverture de sa fiche (section 4, qui pose son propre tunnel).
+            if (card && card.id === OB_TUTORIAL_CARD.id && !_obAct2Done) _tutoBloquerTout();
             if (card) setTimeout(() => _obCheckAfterCollect(card), 400);
             ['ritualHunt','ritualEngrave','ritualReveal'].forEach(id => {
                 const el = document.getElementById(id);
@@ -26684,6 +26787,7 @@
         }
 
         function openBagScreen() {
+            _sacPulseEnAttente = false;   // vu : plus de pulsation en attente
             _hideAllNearbyConsoles('sac');
             _obOnOpenBag();
             _bagCat = _sacPremiereCat(); _bagSel = null;   // première catégorie déjà trouvée
@@ -37252,12 +37356,26 @@
             // Verrou d'écran : les consoles restaient affichées par-dessus le journal.
             _hideAllNearbyConsoles('journal_quetes');
             panel.classList.add('show');
+            _qjBornerHauteur();
             // Section 12 finie : la feuille de route consultée débloque la section 13.
             try { if (_tutoEtat.s12 === 'fini' && !_tutoEtat.feuilleVue) { _tutoEtat.feuilleVue = true; _tutoSauver(); } } catch (e) {}
             // Effacer la pastille notif sur le bouton journal (vu)
             document.getElementById('hudQjCount').style.display = 'none';
         }
 
+        // La carte du journal s'arrête au-dessus de la longue-vue (jumelles), quel
+        // que soit le nombre de quêtes : le reste défile dans le corps (.qj-body).
+        function _qjBornerHauteur() {
+            const card = document.querySelector('#questJournalPanel .qj-card');
+            const lv = document.getElementById('viewToggleBtn');
+            if (!card) return;
+            card.style.maxHeight = '';
+            if (!lv) return;
+            const rl = lv.getBoundingClientRect(), rc = card.getBoundingClientRect();
+            if (!rl.height || !rc.height) return;
+            const max = Math.round(rl.top - rc.top - 12);
+            if (max > 160) card.style.maxHeight = max + 'px';
+        }
         function closeQuestJournal() {
             document.getElementById('questJournalPanel').classList.remove('show');
             _showNearbyConsoles('journal_quetes');
