@@ -9596,6 +9596,19 @@
             opacity: 0; transition: opacity 0.6s 1.4s;
         }
         #ritualReveal.show .ritual-reveal-tap { opacity: 1; }
+
+        /* C4 (19/10) : petites cibles tactiles (22 à 30 px) — zone de toucher élargie
+           de 9 px tout autour par un pseudo-élément invisible, sans rien changer au
+           dessin. Les boutons « static » passent en relative (sans effet de mise en page). */
+        .studio-back, .prog-back, .panneau-screen-back, .quest-back-btn, .info-card-close,
+        .verriere-back, .fresque-back, .v2-back, .v2-grappes-strip-nav-btn, .jsb-dsr-close,
+        .bag-hdr-back { position: relative; }
+        .studio-back::after, .prog-back::after, .panneau-screen-back::after, .quest-back-btn::after,
+        .info-card-close::after, .verriere-back::after, .fresque-back::after, .v2-back::after,
+        .v2-grappes-strip-nav-btn::after, .jsb-dsr-close::after, .bag-hdr-back::after,
+        .qj-close::after, .fragment-close::after {
+            content: ''; position: absolute; inset: -9px;
+        }
         </style>
 </head>
 <body class="ui-masque-avatar ui-masque-poussiere ui-masque-journal_quetes ui-masque-jumelles ui-masque-explorium ui-masque-qg ui-masque-collection ui-masque-sac ui-masque-explorium_btn">
@@ -9621,7 +9634,7 @@
 
                     <!-- Dropdown menu -->
                     <div class="avatar-menu hidden" id="avatarMenu">
-                        <div class="avatar-menu-name">Lyon Cards</div>
+                        <div class="avatar-menu-name">ExpLore</div>
                         <div class="avatar-menu-xp">
                             <div class="avatar-menu-xp-top">
                                 <span class="avatar-menu-rank" id="menuRankName">Novice</span>
@@ -9632,16 +9645,11 @@
                             </div>
                             <div class="avatar-menu-xp-label" id="menuXpLabel">0 / 100 XP</div>
                         </div>
-                        <button class="avatar-menu-item avatar-menu-item--disabled">
-                            <span>👤</span> Mon compte <span class="soon-badge">Bientôt</span>
-                        </button>
                         <button class="avatar-menu-item" onclick="closeAvatarMenu(); openProgressionScreen()">
                             <span>⭐</span> Progression
                         </button>
-                        <!-- Langue : déplacée dans le panneau paramètres (bouton ⚙️) -->
-                        <button class="avatar-menu-item avatar-menu-item--disabled">
-                            <span>🛒</span> Magasin <span class="soon-badge">Bientôt</span>
-                        </button>
+                        <!-- Langue : déplacée dans le panneau paramètres (bouton ⚙️).
+                             « Mon compte » et « Magasin — Bientôt » retirés pour le test (C2, 19/10). -->
                         <div class="avatar-menu-divider"></div>
                         <button class="avatar-menu-item avatar-menu-item--test" onclick="closeAvatarMenu(); openTestPanel()">
                             <span>🧪</span> Mode test
@@ -9711,7 +9719,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.6.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v1.7.0</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11488,9 +11496,6 @@
                     </div>
                     <button id="bazarBtn_cassettes" onclick="bazarTake('cassettes')" style="background:linear-gradient(135deg,#6D28D9,#5B21B6);border:none;border-radius:10px;padding:8px 14px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Prendre +1</button>
                 </div>
-                <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.25);margin-top:8px;">
-                    Gratuit pour l'instant · Payant en or bientôt
-                </div>
             </div>
         </div>
 
@@ -12158,7 +12163,12 @@
             "Carte": "Card",
             "Général": "General",
             "Niveau 1": "Level 1",
-            "disposée": "placed",
+            "Niveau %1": "Level %1",
+            "%1 pellicule": "%1 film", "%1 pellicules": "%1 films",
+            "%1 cassette": "%1 tape", "%1 cassettes": "%1 tapes",
+            "disposée": "eager",
+            "somnolente": "drowsy",
+            "infuse": "steeping",
             "Ouvrir le carnet de la carte": "Open the card's journal",
             "Défaut": "Default",
             "Actif": "Active",
@@ -12209,7 +12219,7 @@
             // Scène finale du test Bellecour (section 24)
             "Canelle et David": "Canelle and David",
             "Chers testeurs, votre session touche à sa fin. Sa fin ? Non, pas vraiment, mais pour l’instant, nous vous attendons à l’adresse communiquée sur votre feuille de route !<br>En chemin ou juste après, vous pourrez nous donner vos retours !": "Dear testers, your session is coming to an end. Its end? No, not really, but for now, we are waiting for you at the address given on your route sheet!<br>On the way or right after, you can give us your feedback!",
-            "Eeeeet on vous attends avec impatience pour l’after, pour rigoler et discuter tous ensemble ! A très vite ! (Les premiers arrivés ont un p’tit badge)": "Aaaaand we can't wait to see you at the after-party, to laugh and chat all together! See you very soon! (The first to arrive get a little badge)",
+            "Eeeeet on vous attend avec impatience pour l’after, pour rigoler et discuter tous ensemble ! À très vite ! (Les premiers arrivés ont un p’tit badge)": "Aaaaand we can't wait to see you at the after-party, to laugh and chat all together! See you very soon! (The first to arrive get a little badge)",
             "Remplir le Google Form": "Fill in the Google Form",
             "Se rendre à l’after": "Go to the after-party",
             "Aide les développeurs d’ExpLore à faire de ton expérience une pierre à l’édifice de ce jeu !": "Help the ExpLore developers turn your experience into a building block of this game!",
@@ -12309,7 +12319,7 @@
             "❌ Aucune encre disponible": "❌ No ink available",
             "😴 Cette carte a besoin de repos": "😴 This card needs rest",
             "Aucune orbe disponible": "No orb available",
-            "La carte est déjà disposée": "The card is already placed",
+            "La carte est déjà disposée": "The card is already eager",
             "✨ Orbe utilisée — la carte se ravive": "✨ Orb used — the card comes back to life",
             "Ce slot est déjà rempli": "This slot is already filled",
             "❌ Tu ne possèdes aucun parchemin": "❌ You don't have any scrolls",
@@ -12452,6 +12462,7 @@
 
             // Bandeaux de proximité
             "Rapproche-toi !": "Come closer!",
+            "Reste un instant…": "Stay a moment…",
             "Carte à portée !": "Card in range!",
             "Parchemin à portée !": "Scroll in range!",
             "Mystère à portée !": "Mystery in range!",
@@ -13734,6 +13745,9 @@
             "✓ Complété": "✓ Completed",
             "Inséré": "Inserted",
             "Spécial": "Special",
+            "🌧 Pluie": "🌧 Rain", "🌙 Nuit": "🌙 Night", "🌫 Brouillard": "🌫 Fog", "☀️ Soleil": "☀️ Sun",
+            "🌅 Aube": "🌅 Dawn", "🌤 Jour": "🌤 Day", "🌇 Crépuscule": "🌇 Dusk",
+            "Il faut un parchemin d'exploration": "You need an exploration scroll",
             "Ce slot s'ouvre": "This slot opens",
             "à certaines heures": "at certain hours",
             "Épuisé": "Depleted",
@@ -13917,6 +13931,90 @@
 
             // ── Carnet scrapbook : les clefs de la ville ──
             "Trois clefs, aucune serrure": "Three keys, no lock",
+            // Carnet de l'Office du Tourisme (C3, 19/10)
+            "Bienvenue à l'Office du Tourisme !": "Welcome to the Tourist Office!",
+            "Ouvert tous les jours, 9 h – 18 h.": "Open every day, 9 am – 6 pm.",
+            "Entrer, regarder, demander": "Step in, look around, ask",
+            "Tu ne sais pas par où commencer ? Entre.": "Not sure where to start? Come in.",
+            "Trois regards sur le Pavillon": "Three views of the Pavilion",
+            "Trouve des idées adaptées à tes attentes.": "Find ideas that suit what you're looking for.",
+            "Demande conseil aux Lyon City Experts.": "Ask the Lyon City Experts for advice.",
+            "Des infos pratiques 💡": "Practical info 💡",
+            "Rapport fourni par l'Organisation sur les références numériques": "Report provided by the Organisation on digital resources",
+            "Vers le site": "To the website",
+            "Un site pour préparer ta découverte de Lyon": "A website to plan your discovery of Lyon",
+            "Vers l'appli": "To the app",
+            "Lyon City Card — ONLYLYON, sur le Play Store": "Lyon City Card — ONLYLYON, on the Play Store",
+            "Un bâtiment jumeau": "A twin building",
+            "Observe attentivement les deux bâtiments sur la place : beaucoup de ressemblance, mais quelques singularités cristallisées au fil du temps.": "Look closely at the two buildings on the square: a strong resemblance, but a few singularities that have crystallised over time.",
+            "Une symétrie occident/orient — photo Michel Djaoui": "A west/east symmetry — photo Michel Djaoui",
+            "Pavillon Est": "East Pavilion",
+            "Celui qui accueille : l'Office du Tourisme, portes ouvertes sur la place.": "The one that welcomes: the Tourist Office, its doors open onto the square.",
+            "Pavillon Ouest": "West Pavilion",
+            "Son jumeau, sous l'enseigne ONLYLYON. Même gabarit, même allure — mais tout ne s'y est pas passé pareil.": "Its twin, under the ONLYLYON sign. Same size, same look — but not everything happened the same way there.",
+            "Statue de Louis XIV": "Statue of Louis XIV",
+            "Louis XIV": "Louis XIV",
+            "Le point fixe de la place : les deux pavillons l'encadrent à égale distance, un de chaque côté de l'axe.": "The square's fixed point: the two pavilions frame it at equal distance, one on each side of the axis.",
+            "Les deux pavillons": "The two pavilions",
+            "Les deux pavillons de Bellecour, face à face : l'accueil à l'est, les bureaux à l'ouest.": "The two pavilions of Bellecour, face to face: the welcome desk to the east, the offices to the west.",
+            "La place vue du ciel — leur symétrie tient toute la largeur de Bellecour. Photo Michel Djaoui.": "The square seen from the sky — their symmetry spans the full width of Bellecour. Photo Michel Djaoui.",
+            "Apollon et le fronton vide": "Apollo and the empty pediment",
+            "Fronton Est": "East Pediment",
+            "Fronton Ouest": "West Pediment",
+            "Les arts d'un côté, l'autorité militaire de l'autre.": "The arts on one side, military authority on the other.",
+            "Mars, casqué, sur le fronton est — avant son retrait en 1956.": "Mars, helmeted, on the east pediment — before being removed in 1956.",
+            "Le pavillon est du temps du Corps de Garde, Mars encore en place.": "The east pavilion in the days of the Corps de Garde, Mars still in place.",
+            "Apollon, dieu des arts, de la musique et de la lumière, sur le fronton ouest.": "Apollo, god of the arts, music and light, on the west pediment.",
+            "Le pavillon ouest aujourd'hui, sous l'enseigne ONLYLYON.": "The west pavilion today, under the ONLYLYON sign.",
+            "Une même mission": "One shared mission",
+            "Enregistrement — Office du Tourisme": "Recording — Tourist Office",
+            "Bande jointe à la fiche. Je la range ici, avec le reste.": "Tape attached to the file. I'm keeping it here, with the rest.",
+            "Urbaniser la ville autrement": "Urbanising the city differently",
+            "ni maison, ni édifice, pour quelque usage que ce puisse être": "neither house nor building, for any use whatsoever",
+            "La sécurité, symétrie du plaisir": "Security, the symmetry of pleasure",
+            "Deux pavillons, deux destins": "Two pavilions, two destinies",
+            "Côte à côte, sans jamais se croiser mais pourtant liés.": "Side by side, never crossing paths, yet bound together.",
+            "Milieu XIXe": "Mid-19th c.",
+            "Corps de Garde": "Corps de Garde",
+            "Maison Dorée": "Maison Dorée",
+            "Fin XIXe — début XXe": "Late 19th — early 20th c.",
+            "Poste de Police": "Police Station",
+            "Développement de l'établissement": "Expansion of the establishment",
+            "Pavillon cédé au Syndicat d'Initiative de Lyon": "Pavilion handed over to the Syndicat d'Initiative de Lyon",
+            "Sites classés, avec la place Bellecour": "Listed sites, along with Place Bellecour",
+            "Restauration en Maison du Tourisme": "Restored as the Maison du Tourisme",
+            "Mars retiré du fronton": "Mars removed from the pediment",
+            "Acquisition par la ville, devient la Maison de Lyon": "Acquired by the city, becomes the Maison de Lyon",
+            "Inauguration du Rectangle": "Opening of the Rectangle",
+            "Travaux d'aménagement pour les bureaux de l'Office du Tourisme": "Fit-out works for the Tourist Office's offices",
+            "Réaménagement du Pavillon ONLYLYON": "Redevelopment of the ONLYLYON Pavilion",
+            "Aujourd'hui": "Today",
+            "Point d'infos": "Info point",
+            "Point de gestion": "Management point",
+            "Tout le monde passe devant moi. Peu s'arrêtent pour se demander ce que j'étais avant.": "Everyone walks past me. Few stop to wonder what I used to be.",
+            "Neuf heures à dix-huit heures, tous les jours. Je n'ai pas des horaires de monument, j'ai des horaires de maison.": "Nine to six, every day. I don't keep a monument's hours, I keep a home's.",
+            "Je suis le Pavillon qui aime accueillir les curieux. Toi compris.": "I'm the Pavilion that loves welcoming the curious. You included.",
+            "Arc I · Un point de départ pour découvrir Lyon": "Arc I · A starting point to discover Lyon",
+            "Au cœur de Lyon, je suis le Pavillon qui aime accueillir les curieux : visiteurs, Lyonnais et même toi se croisent avant de repartir explorer la métropole.\n\nJ'ouvre mes portes tous les jours de 9 h à 18 h et tu peux trouver en mon sein mes alliés pour t'aider avec des conseils personnalisés, de la documentation, un grand écran, une borne d'information Vélo'v et… du wifi gratuit si tu es à court de data.\n\nSi tu as l'œil tu reconnaîtras un grand chef qui nous a quitté en 2018 ! Il trône très fier à l'intérieur pour faire un selfie si ça te dit ? Quel est son nom ? {{sp:Paul Bocuse}}": "In the heart of Lyon, I'm the Pavilion that loves welcoming the curious: visitors, Lyonnais and even you cross paths here before setting off again to explore the metropolis.\n\nI open my doors every day from 9 am to 6 pm, and inside you'll find my allies, ready to help you with personalised advice, documentation, a big screen, a Vélo'v information terminal and… free wifi if you're running out of data.\n\nIf you've got a keen eye, you'll recognise a great chef who left us in 2018! He sits proudly inside, ready for a selfie if you fancy one? What's his name? {{sp:Paul Bocuse}}",
+            "Trois images de moi, prises à trois moments différents. Regarde-les défiler.": "Three pictures of me, taken at three different moments. Watch them go by.",
+            "Une partie de moi tient dans ta poche. Emporte-la.": "Part of me fits in your pocket. Take it with you.",
+            "Je ne tiens pas entièrement dans mes murs. Une partie de moi vit sur un écran, et celle-là, tu peux l'emporter avec toi.": "I don't fit entirely within my walls. Part of me lives on a screen, and that part you can take with you.",
+            "Regarde à l'autre bout de la place. Quelqu'un me ressemble beaucoup trop pour que ce soit un hasard.": "Look at the other end of the square. Someone looks far too much like me for it to be a coincidence.",
+            "Mars veillait sur mon fronton. On l'a décroché en 1956, et personne ne l'a remplacé.": "Mars kept watch over my pediment. He was taken down in 1956, and no one ever replaced him.",
+            "Je ne suis pas seul sur cette place. Nous sommes deux, et on nous a voulus semblables.": "I'm not alone on this square. There are two of us, and we were meant to look alike.",
+            "Arc II · Un pavillon peut en cacher un autre": "Arc II · One pavilion may hide another",
+            "Lève les yeux sur les frontons. L'un a gardé son dieu, l'autre a perdu le sien.": "Look up at the pediments. One has kept its god, the other has lost his.",
+            "Observe les frontons ! L'un porte encore une figure d'Apollon, dieu des arts, de la musique et de la lumière, sculptée par Joseph-Hugues Fabisch. L'autre paraît aujourd'hui beaucoup plus sobre… mais son fronton n'a pas toujours été vide : il était autrefois orné de Mars, dieu de la guerre, rappelant parfaitement son ancienne fonction. Une idée de laquelle ?\n\nLa sculpture fut retirée en 1956. Deux pavillons presque jumeaux, donc, mais deux symboles opposés : les arts d'un côté, l'autorité militaire de l'autre. Une opposition qui correspond étonnamment bien à leur histoire, même si rien ne permet encore d'affirmer qu'elle avait été pensée ainsi dès l'origine.": "Look at the pediments! One still bears a figure of Apollo, god of the arts, music and light, sculpted by Joseph-Hugues Fabisch. The other looks much plainer today… but its pediment hasn't always been empty: it was once adorned with Mars, god of war, a perfect reminder of its former function. Any idea which one?\n\nThe sculpture was removed in 1956. So: two near-twin pavilions, but two opposing symbols — the arts on one side, military authority on the other. An opposition that matches their history surprisingly well, even though nothing yet allows us to say it was intended that way from the start.",
+            "Maison de Lyon, puis le Rectangle, puis des bureaux. On m'a donné trois noms en un demi-siècle.": "Maison de Lyon, then the Rectangle, then offices. I was given three names in half a century.",
+            "Au milieu du XXème siècle, c'est déjà un lieu dédié à la culture lyonnaise. Sous le nom de « Maison de Lyon », le bâtiment est un centre d'art contemporain et un lieu d'exposition municipal. Ce n'est qu'en 1998 qu'il prend le nom du Rectangle. Il accueillera régulièrement des événements liés à la Biennale de Lyon.\n\nLe pavillon a ensuite cessé ses activités artistiques début 2006 pour devenir les bureaux de l'Office du Tourisme de Lyon.": "By the middle of the 20th century, it was already a place devoted to Lyonnais culture. Under the name « Maison de Lyon », the building was a contemporary art centre and a municipal exhibition venue. It was only in 1998 that it took the name of the Rectangle. It would regularly host events linked to the Biennale de Lyon.\n\nThe pavilion then ended its artistic activities in early 2006 to become the offices of the Lyon Tourist Office.",
+            "Avant la pierre, il y a eu des planches. Et avant les planches, un refus.": "Before the stone, there were planks. And before the planks, a refusal.",
+            "Corps de garde, poste de police, bureau du tourisme : j'ai toujours servi à renseigner quelqu'un. Sur des routes, ou sur des ennemis.": "Corps de Garde, police station, tourist office: I've always been there to inform someone. About roads, or about enemies.",
+            "Cette place a bien failli ne jamais nous connaître.": "This square very nearly never knew us.",
+            "Arc III · Une histoire de destins liés": "Arc III · A story of linked destinies",
+            "Il faut savoir que cette grande place où tu marches n'a failli jamais connaître ces bâtiments. Une opposition préfectorale rappelle à la ville qu'elle ne peut bâtir aucune maison, ni édifice, soit pour le public ou les particuliers ni même pour quelque usage que ce puisse être.\n\nCependant, par l'astuce de l'esthétique, un nouveau et joli Corps-de-garde en forme de tente est érigé en mars 1828 du côté de la verdure de la Place Bellecour. Habile ! L'année qui suit, l'homme d'affaires Adrien-Alfred Granier obtient l'autorisation d'élever, à l'autre extrémité, un pavillon de même allure en planches et mortier.\n\nCe dernier sera un café, il ouvre dès le 21 juin 1829 sous la direction de Garnier et son épouse qu'on appellera « La Reine des Tilleuls », petit clin d'œil pour les arbres se trouvant de ce côté de la place.": "You should know that this great square you're walking on very nearly never knew these buildings. A prefectoral objection reminded the city that it could build no house nor building, whether for the public or for private individuals, nor for any use whatsoever.\n\nHowever, through the trick of aesthetics, a new and pretty tent-shaped Corps-de-garde was erected in March 1828 on the green side of Place Bellecour. Clever! The following year, the businessman Adrien-Alfred Granier obtained permission to raise, at the other end, a pavilion of the same look in planks and mortar.\n\nThe latter would be a café; it opened on 21 June 1829 under the management of Garnier and his wife, who would be nicknamed « La Reine des Tilleuls » (the Queen of the Lime Trees), a little nod to the trees on that side of the square.",
+            "Les flammes, puis la faillite, puis un couple qui rachète les ruines. La suite tient en une page.": "The flames, then bankruptcy, then a couple who bought back the ruins. The rest fits on a single page.",
+            ">> Les Pavillons traversent ensuite des années mouvementées. En 1831, le Corps-de-garde disparaît dans les flammes lors de la première révolte des Canuts, tandis que le Pavillon des époux Girard résiste. Il grandit même peu à peu, mais… En 1839, les Girard criblés de dettes, font faillite. La fête était finie !\nCe qui reste finira par rester à l'abandon jusqu'à ce qu'un certain Jean-Baptiste Vollot et son épouse Agathe Dupont s'y installent.\n\nAu milieu du XIXème siècle, changement de décor ! Jean-Baptiste Vollot permettra l'impulsion qui mènera à la reconstruction entière des deux pavillons de Bellecour. Fini les constructions légères : sous la direction des architectes René Dardel et Tony Desjardins, le Corps-de-garde et son pendant sont rebâtis en pierre de taille. L'opération coûtera cher, au point que Vollot fera appel à plusieurs investisseurs et artisans lyonnais pour mener le chantier à terme. Le 21 octobre 1856, l'ancien Café du Pavillon renaît sous un nom autrement plus éclatant : la Maison Dorée et le Corps-de-Garde sera bientôt flambant neuf.": ">> The Pavilions then went through turbulent years. In 1831, the Corps-de-garde vanished in the flames during the first Canuts revolt, while the Girard couple's Pavilion held out. It even grew little by little, but… In 1839, the Girards, riddled with debt, went bankrupt. The party was over!\nWhat remained was eventually left abandoned until a certain Jean-Baptiste Vollot and his wife Agathe Dupont moved in.\n\nIn the middle of the 19th century, a change of scenery! Jean-Baptiste Vollot provided the impetus that would lead to the complete rebuilding of the two pavilions of Bellecour. No more light structures: under the direction of the architects René Dardel and Tony Desjardins, the Corps-de-garde and its counterpart were rebuilt in dressed stone. The operation proved costly, to the point that Vollot called on several Lyonnais investors and craftsmen to see the work through. On 21 October 1856, the former Café du Pavillon was reborn under a far more dazzling name: the Maison Dorée, and the Corps-de-Garde would soon be brand new.",
+            "Mets nos deux vies côte à côte. Elles se répondent plus qu'elles ne se ressemblent.": "Put our two lives side by side. They echo each other more than they resemble each other.",
             // Pages provisoires 2 et 3 des clefs (19/10)
             "Ce que l'on offre": "What one gives",
             "Offrir les clefs d'une ville, ce n'est pas donner une porte : c'est un geste. On remet au visiteur le signe d'un lieu qui, ce jour-là, se dit ouvert. En 1805, Lyon fait ce geste pour Napoléon.": "To offer the keys to a city is not to hand over a door: it is a gesture. The visitor receives the sign of a place that, on that day, declares itself open. In 1805, Lyon makes that gesture for Napoleon.",
@@ -13937,6 +14035,9 @@
 
             // ── Rangs et progression ──
             "Flâneur": "Wanderer",
+            "💜 +100 poussière": "💜 +100 dust",
+            "🎴 Carte bonus : %1": "🎴 Bonus card: %1",
+            "⭐ Titre obtenu : %1": "⭐ Title earned: %1",
             "🖋️ +5 encres": "🖋️ +5 inks",
             "📼 +5 cassettes": "📼 +5 tapes",
             "🖋️ +8 encres": "🖋️ +8 inks",
@@ -13979,6 +14080,7 @@
             "Ne plus suivre": "Stop tracking",
             "🗺️ Quête acceptée — « %1 » mise de côté": "🗺️ Quest accepted — “%1” set aside",
             "Voir grappe": "View cluster",
+            "Voir l'histoire": "See the story",
             "✓ Disponible": "✓ Available",
             "★ Quête suivie": "★ Quest tracked",
             "%1 — Planche": "%1 — Plate",
@@ -14355,7 +14457,8 @@
 
         // Envoi de secours : la page passe en arrière-plan ou se ferme.
         function _jrnBalise() {
-            if (_jrnStopped || !_jrnPret() || !navigator.sendBeacon) return;
+            // B7 : après l'arrêt, la balise vide encore ce qui reste en file.
+            if (!_jrnPret() || !navigator.sendBeacon) return;
             const lot = _jrnQueue.slice();
             let ok = false;
             try { ok = navigator.sendBeacon(JOURNAL_ENDPOINT, _jrnCorps(lot)); } catch (e) {}
@@ -14365,13 +14468,17 @@
         function journalArreter(raison) {
             if (_jrnStopped) return;
             journalEvenement('journal_stop', { raison });
-            journalEnvoyer(true);          // dernier envoi ; la file reste exportable s'il échoue
+            // B7 (19/10) : un envoi déjà en vol n'est plus doublé (lignes en double
+            // au Sheet) ; ce qui reste en file repart toutes les 30 s jusqu'à succès.
+            journalEnvoyer();
             _jrnStopped = true;
             try { localStorage.setItem(JOURNAL_STOP_KEY, '1'); } catch (e) {}
             console.log('[journal] arrêt définitif :', raison);
         }
 
         setInterval(() => { if (!_jrnStopped) journalEnvoyer(); }, JOURNAL_ENVOI_MS);
+        // Après l'arrêt : plus aucun événement, mais la file se vide (réessai 30 s).
+        setInterval(() => { if (_jrnStopped && _jrnQueue.length) journalEnvoyer(); }, 30 * 1000);
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) { journalEvenement('app_hide'); _jrnBalise(); }
             else journalEvenement('app_show');
@@ -18461,7 +18568,7 @@
             + '. J’aime prendre le temps parfois, de juste regarder autour de moi. Garder un bout de ce que je vis l’espace d’un instant. Essaie, toi aussi.';
         const _OB_HTML_PANNEAU = 'L’Organisation en a brièvement parlé lors de la dernière réunion des Sensibles Novices. Les '
             + vnMot('info', 'points d\'information', true)
-            + ' sont des supports d’ancrage très liés au lieu où ils se trouvent. Ce serait trop long de t’expliquer maintenant mais sache que tu peux agir avec grâce à des ' + vnMot('parchemin', 'parchemins') + ' que tu récupères en chemin. Une fois assemblés, ils te livrent ce qu\'ils cachaient.';
+            + ' sont des supports d’ancrage très liés au lieu où ils se trouvent. Ce serait trop long de t’expliquer maintenant mais sache que tu peux agir grâce à des ' + vnMot('parchemin', 'parchemins') + ' que tu récupères en chemin. Une fois assemblés, ils te livrent ce qu\'ils cachaient.';
         const _OB_HTML_PARCHEMIN = 'Oh un ' + vnMot('parchemin', 'parchemin', true)
             + '. J’en ai déjà accumulé quelques-uns. Pris isolément, ça ne sert pas à grand-chose. Vois ça comme une pièce de puzzle. Fais-lui une place dans ton ' + vnMot('sac', 'sac') + ', ça peut être important.';
 
@@ -18495,7 +18602,7 @@
             const qui = nomClara();
             if (avecOrbe) _obDiscovered.orbe = true;   // l'orbe est présentée : _obVerifierOrbe se tait
             return [
-                { speaker: qui, line: 'La carte s\'épuise. La mémoire a besoin de temps, attends quelques heures qu’elle se ravive d’elle mêmes' },
+                { speaker: qui, line: 'La carte s\'épuise. La mémoire a besoin de temps, attends quelques heures qu’elle se ravive d’elle-même' },
                 avecOrbe
                     ? { speaker: qui, html: _OB_HTML_ORBE }
                     : { speaker: qui, line: 'Ou tu sors chercher de quoi la ranimer.' },
@@ -20011,20 +20118,23 @@
         const _TUTO_LIGNES_S4 = [
             { speaker: _TUTO_JF, air: 'petit doigt en l’air', html: _TUTO_HTML_S4 },
         ];
-        const _TUTO_HTML_S6 = 'Ca marche ! Regardons ce qui a émergé dans le ' + vnMot('carnet', 'carnet', true) + '.';
+        const _TUTO_HTML_S6 = 'Ça marche ! Regardons ce qui a émergé dans le ' + vnMot('carnet', 'carnet', true) + '.';
         const _TUTO_LIGNES_S6 = [ { speaker: _TUTO_JF, air: 'enjoué', html: _TUTO_HTML_S6 } ];
         const _TUTO_HTML_S7A = 'C’est fascinant ! Le ' + vnMot('carnet', 'carnet', true) + ' réagit vraiment au réveil de la carte ! Je t’avais dit qu’il suffisait d’un peu de ' + vnMot('poussiere', 'poussière') + ', son histoire commence à se dévoiler, je suis si contente. Regarde, il nous faut de l’' + vnMot('encre', 'encre', true);
         // Première « échoppe » : icône et orange (demande de David).
         const _TUTO_HTML_S7B = 'Tu n’en as pas ? Ils avaient pourtant insisté sur ça au ' + vnMot('qg', 'QG') + ' : ' + vnMot('encre', 'encre', true) + ', ' + vnMot('pellicule', 'pellicule', true) + ' et ' + vnMot('cassette', 'cassette', true)
-            + '. Tu aurais bien besoin d\'un peu de ' + vnMot('poussiere', 'poussière mémorielle') + ' toi aussi ! Bon, suis-moi, on va faire le plein. Trouvons une ' + vnMot('echoppe', 'échoppe', true) + ', il parait qu’il y en a un peu partout en ville.';
+            + '. Tu aurais bien besoin d\'un peu de ' + vnMot('poussiere', 'poussière mémorielle') + ' toi aussi ! Bon, suis-moi, on va faire le plein. Trouvons une ' + vnMot('echoppe', 'échoppe', true) + ', il paraît qu’il y en a un peu partout en ville.';
         const _TUTO_LIGNES_S7A = [ { speaker: _TUTO_JF, air: 'enjoué',       html: _TUTO_HTML_S7A } ];
         const _TUTO_LIGNES_S7B = [ { speaker: _TUTO_JF, air: 'enthousiaste', html: _TUTO_HTML_S7B } ];
         // Section 10 — « Monsieur » : le marchand de l'échoppe.
         const _TUTO_HTML_S10 = {
-            A: 'Il faut tout prendre quand on nous le propose, ce ne sera pas toujours le cas d’après l’Organisation. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil ! Et ensuite, donnons-lui l’' + vnMot('encre', 'encre', true) + '.',
-            B: 'Ce sont des ressources rares, mieux vaut faire un stock, comme l’a dit l’Organisation. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil ! Et ensuite, donnons-lui l’' + vnMot('encre', 'encre', true) + '.',
-            C: 'T’as bien fait, l’Organisation nous a prévenu d’en faire un stock. Allez, j’ai hâte d’en savoir plus sur la carte moi ! Je range le reste dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil ! Et ensuite, donnons-lui l’' + vnMot('encre', 'encre', true) + '.',
+            A: 'Il faut tout prendre quand on nous le propose, ce ne sera pas toujours le cas d’après l’Organisation. Je range le reste dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil !',
+            B: 'Ce sont des ressources rares, mieux vaut faire un stock, comme l’a dit l’Organisation. Je range le reste dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil !',
+            C: 'T’as bien fait, l’Organisation nous a prévenus d’en faire un stock. Je range le reste dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil !',
         };
+        // Seconde partie (David, 19/10), dite à la sortie du sac, avant la Collection.
+        const _TUTO_HTML_S10_ENCRE = 'Bon, maintenant, allons lui donner son ' + vnMot('encre', 'encre', true) + ' ! J’ai trop hâte d’en savoir plus sur la carte, moi !';
+        const _TUTO_LIGNES_S10_ENCRE = [ { speaker: _TUTO_JF, air: 'enthousiaste', html: _TUTO_HTML_S10_ENCRE } ];
         const _TUTO_LIGNES_S10 = {
             // CAS A : le joueur n'a rien pris
             A: [ { speaker: _TUTO_JF, air: 'renfrogné', line: 'Je dois vraiment tout faire ! Merci Monsieur, cet énergumène ne semble pas être réveillé aujourd’hui.' },
@@ -20163,11 +20273,13 @@
                 // portrait affiché. TODO : recaler sur la main de clara_poussiere.png.
                 const r = _vnDernierBust;
                 const depuis = r ? { x: r.left + r.width * 0.62, y: r.top + r.height * 0.7 } : null;
+                // B8 (19/10) : le don est noté AVANT l'animation, qui crédite aussitôt :
+                // une app tuée pendant le vol de la poussière ne la reverse plus.
+                _tutoEtat.don = true;
                 animerGainPoussiere(depuis, TUTO_DON_POUSSIERE, () => {
-                    _tutoEtat.don = true;
-                    _tutoSauver();
                     _tutoSection4();
                 });
+                _tutoSauver();   // crédit (synchrone) et don enregistrés ensemble
             });
         }
 
@@ -20262,6 +20374,22 @@
             guideFocusFin();
             if (!_tutoEtat.ressources) { _tutoEtat.ressources = true; _tutoSauver(); }
             _obSpawnTutorialResources();
+            // 19/10 : la jeune fille vient d'enjoindre d'y aller : l'échoppe pulse.
+            _tutoPulserEchoppe(0);
+        }
+        function _tutoPulserEchoppe(essais) {
+            if (_tutoEtat.echoppeRetiree || _echoppeTutoPrise) return;
+            const m = (typeof bazarMarkers !== 'undefined') && bazarMarkers.find(x => x.bazar && x.bazar.id === 'bazar_tuto');
+            const el = m && (m.inner || (m.el && (m.el.firstElementChild || m.el)));
+            if (!el) { if (essais < 20) setTimeout(() => _tutoPulserEchoppe(essais + 1), 500); return; }
+            uiPulser(el, { garder: true });
+            // Pulsation éteinte dès que l'échoppe est ouverte (console ou marqueur).
+            const veille = setInterval(() => {
+                const ecran = document.getElementById('bazarScreen');
+                if ((ecran && ecran.style.pointerEvents === 'all') || _echoppeTutoPrise || _tutoEtat.echoppeRetiree || _obDone) {
+                    uiArreterPulse(el); clearInterval(veille);
+                }
+            }, 400);
         }
 
         // 10 — Sortie de l'échoppe du tutoriel : cas A/B/C (echoppeTutoPrise),
@@ -20306,11 +20434,14 @@
             if (_tuto10CollEnCours) return;
             _tuto10CollEnCours = true;
             guideFocusFin();
-            uiReveler('collection', { apres: () => {
-                _tuto10CollEnCours = false;
-                if (_tutoEtat.s10 === 'sac') { _tutoEtat.s10 = 'guide'; _tutoSauver(); }
-                if (_tutoEtat.s10 === 'guide') guideFocus(_tuto10Cibles);
-            } });
+            // 19/10 : seconde partie du dialogue (l'encre), puis la Collection éclot.
+            _tutoDire('s10_encre', 'map', _TUTO_LIGNES_S10_ENCRE, () => {
+                uiReveler('collection', { apres: () => {
+                    _tuto10CollEnCours = false;
+                    if (_tutoEtat.s10 === 'sac') { _tutoEtat.s10 = 'guide'; _tutoSauver(); }
+                    if (_tutoEtat.s10 === 'guide') guideFocus(_tuto10Cibles);
+                } });
+            });
         }
         // Cibles du guidage de la section 10, selon l'écran ouvert.
         function _tuto10Cibles() {
@@ -20411,7 +20542,7 @@
         // 16  première sortie du QG : menu avatar révélé, pseudo sous le bouton
         // 17  5e carte : Explorium révélé, arrivée (jouerArriveeExplorium)
         // 18  de retour sur la mappe : Clara, quête « Finaliser Lyon, ville du
-        //     livre au XVIè siècle » x/7, puis fin du tutoriel (_tutoTerminer)
+        //     livre au XVIᵉ siècle » x/7, puis fin du tutoriel (_tutoTerminer)
         // Piloté par l'état (_tutoEtat.s12 … s18, sauvegardé) depuis _tutoTick
         // (cf. _tutoTick12) : _tutoSection12() n'est que le point d'entrée,
         // appelé au retour de la section 11 et à chaque reprise ; idempotent.
@@ -20423,10 +20554,10 @@
         // Ressources du tutoriel (section 8) que Clara ramasse à la place du joueur (cas A).
         const TUTO_RESSOURCES_S8 = { poussiere: ['dust_tuto', 'dust_tuto2'], orbe: ['orb_tuto'] };
         const _TUTO_S12_DON = 'Tiens, je me suis permise de récupérer %1, tu es passé à côté !';
-        const _TUTO_HTML_S18_VDL = 'Tu as réussi à voir “<i>Lyon, ville du livre au XVIème siècle</i>” ou c’était autre chose ?';
+        const _TUTO_HTML_S18_VDL = 'Tu as réussi à voir “<i>Lyon, ville du livre au XVIᵉ siècle</i>” ou c’était autre chose ?';
         // Répliques à mots-clés (VN_MOTS_CLES : couleur, l'icône est déjà passée en 1).
         const _TUTO_HTML_S12_EQUIPE = 'Bon, tu es doué et moi j’ai les connaissances… Faisons équipe pour cette fois ! Nous devons cristalliser 3 ' + vnMot('nebuleuse', 'nébuleuses') + ' supplémentaires. Au fait, moi c’est Clara !';
-        const _TUTO_HTML_S15_QG = "Assez parlé, c'est toi qui a trouvé toutes les " + vnMot('nebuleuse', 'nébuleuses') + " de toute façon ! Il faut que je te présente à ma personne préférée. Direction le " + vnMot('qg', 'QG') + " !";
+        const _TUTO_HTML_S15_QG = "Assez parlé, c'est toi qui as trouvé toutes les " + vnMot('nebuleuse', 'nébuleuses') + " de toute façon ! Il faut que je te présente à ma personne préférée. Direction le " + vnMot('qg', 'QG') + " !";
         const _TUTO_HTML_S18_RETOUR = 'Ah, te revoilà. Tu étais dans l’' + vnMot('explorium', 'Explorium') + ' c’est ça ? Je ne comprends pas comment tu as fait sans “ça”. Le Professeur Ricardo nous avait dit… Enfin, j’ai pu apprendre qu’avec l’expérience, “UNE GRANDE EXPERIENCE”, on pouvait atteindre l’' + vnMot('explorium', 'Explorium') + ' sans…';
         const _TUTO_HTML_S18_SALLE = 'Il y a une salle, à droite du hall du ' + vnMot('qg', 'QG') + ', je ne sais pas si tu as remarqué. En tout cas, ne me refais plus ça, j’ai eu peur ! Allez, maintenant tu sais ce qu’on cherche en priorité, reprenons notre route.';
 
@@ -20453,7 +20584,7 @@
         function _tutoLignesS12b() {
             const casA = !!_tutoEtat.casA12;
             return [].concat(
-                casA ? [ { speaker: _TUTO_JF, air: 'choqué', line: 'Tiens d’ailleurs..où est ta feuille de mission ?' } ]
+                casA ? [ { speaker: _TUTO_JF, air: 'choqué', line: 'Tiens, d’ailleurs… où est ta feuille de mission ?' } ]
                      : [ _tutoToi(), { speaker: _TUTO_JF, air: 'choqué', line: 'Où est ta feuille de mission ?' } ],
                 [
                     _tutoToi(),
@@ -20610,7 +20741,9 @@
             _tuto12Terrain(0);
             _claraPnjMaj();
             // Reprise : pastille du QG, pulsation de l'avatar (non sauvegardées)
-            if (_tutoEtat.s15 === 'qg') _tutoQgNotif();
+            // B8 (19/10) : repris au milieu de la scène du QG (pseudo, suite d'Odile),
+            // le joueur doit aussi savoir qu'il y retourne.
+            if (_tutoEtat.s15 === 'qg' || _tutoEtat.s15 === 'pseudo' || _tutoEtat.s15 === 'odile2') _tutoQgNotif();
             if (_tutoEtat.s16 === 'avatar') setTimeout(() => uiPulser('#avatarBtn'), 900);
         }
         // Le terrain s'ouvre (cf. _obFieldOpen) : marqueurs rendus, puis ceux
@@ -21280,11 +21413,12 @@
             [_TUTO_HTML_S7B]: 'You don’t have any? They really insisted on it at ' + vnMot('qg', 'HQ') + ': ' + vnMot('encre', 'ink', true) + ', ' + vnMot('pellicule', 'film', true) + ' and ' + vnMot('cassette', 'tape', true)
                 + '. You could do with a little ' + vnMot('poussiere', 'memorial dust') + ' yourself, too! Right, follow me, let’s stock up. Let’s find a ' + vnMot('echoppe', 'stall', true) + ', apparently there are some all over town.',
             "Je dois vraiment tout faire ! Merci Monsieur, cet énergumène ne semble pas être réveillé aujourd’hui.": "Do I really have to do everything! Thank you, Sir, this character doesn’t seem to be awake today.",
-            [_TUTO_HTML_S10.A]: 'You have to take everything when it’s offered, it won’t always be the case according to the Organisation. Come on, I can’t wait to learn more about the card! I’ll put the rest in your ' + vnMot('sac', 'bag', true) + ', take a look! And then, let’s give it the ' + vnMot('encre', 'ink', true) + '.',
+            [_TUTO_HTML_S10_ENCRE]: 'Right, now let’s go and give it its ' + vnMot('encre', 'ink', true) + '! I can’t wait to learn more about the card!',
+            [_TUTO_HTML_S10.A]: 'You have to take everything when it’s offered, it won’t always be the case according to the Organisation. I’ll put the rest in your ' + vnMot('sac', 'bag', true) + ', take a look!',
             "Il fallait tout prendre, je m’en suis chargée ! Merci Monsieur.": "You had to take everything, I took care of it! Thank you, Sir.",
-            [_TUTO_HTML_S10.B]: 'These are rare resources, better to stock up, as the Organisation said. Come on, I can’t wait to learn more about the card! I’ll put the rest in your ' + vnMot('sac', 'bag', true) + ', take a look! And then, let’s give it the ' + vnMot('encre', 'ink', true) + '.',
+            [_TUTO_HTML_S10.B]: 'These are rare resources, better to stock up, as the Organisation said. I’ll put the rest in your ' + vnMot('sac', 'bag', true) + ', take a look!',
             "Merci Monsieur.": "Thank you, Sir.",
-            [_TUTO_HTML_S10.C]: 'You did well, the Organisation warned us to stock up. Come on, I can’t wait to learn more about the card! I’ll put the rest in your ' + vnMot('sac', 'bag', true) + ', take a look! And then, let’s give it the ' + vnMot('encre', 'ink', true) + '.',
+            [_TUTO_HTML_S10.C]: 'You did well, the Organisation warned us to stock up. I’ll put the rest in your ' + vnMot('sac', 'bag', true) + ', take a look!',
             "Wouah ! Elle a une histoire si intéressante. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story. I’ll give you time to read in peace.",
             "Wouah ! Elle a une histoire si intéressante, continue. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story, keep going. I’ll give you time to read in peace.",
             "Wouah ! Elle a une histoire si intéressante, nous pouvons découvrir encore 2 entrées. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story, we can still discover 2 entries. I’ll give you time to read in peace.",
@@ -21301,7 +21435,7 @@
             "une orbe": "an orb",
             "%1 et %2": "%1 and %2",
             "🔮 +1 Orbe de mémoire !": "🔮 +1 Memory orb!",
-            "Tiens d’ailleurs..où est ta feuille de mission ?": "By the way..where’s your mission sheet?",
+            "Tiens, d’ailleurs… où est ta feuille de mission ?": "By the way..where’s your mission sheet?",
             "Où est ta feuille de mission ?": "Where’s your mission sheet?",
             "Pourquoi tu me regardes comme ça ? Cette expression, mais… C'est de l'incompréhension ! Tu n'es pas de l'Organisation, c’est ça ?": "Why are you looking at me like that? That expression, but… It’s incomprehension! You’re not from the Organisation, are you?",
             "Oh la boulette…": "Oops, what a blunder…",
@@ -21332,7 +21466,7 @@
             "Ton pseudo": "Your username",
             "12 caractères maximum": "12 characters maximum",
             // Annexe B : Odile et Clara au QG
-            "Ca y est, tu as fait le tour ? N’hésite pas à retourner parler à tout le monde quand tu le souhaites !": "So, have you looked around? Feel free to go back and talk to everyone whenever you like!",
+            "Ça y est, tu as fait le tour ? N’hésite pas à retourner parler à tout le monde quand tu le souhaites !": "So, have you looked around? Feel free to go back and talk to everyone whenever you like!",
         });
 
         // ── Highlight d'un élément avec trou dans l'overlay ──
@@ -23044,7 +23178,16 @@
                     _basculerStyle('erreur');
                 }
             });
-            setTimeout(() => _basculerStyle('délai'), 10000);
+            // B8 (19/10) : en 4G faible, 10 s ne suffisent pas toujours et le fond uni
+            // restait pour toute la session. En ligne, on patiente jusqu'à 20 s ;
+            // hors ligne, on bascule tout de suite au premier délai.
+            let _styleAttenteMs = 0;
+            const _attendreStyle = () => {
+                _styleAttenteMs += 10000;
+                if (navigator.onLine !== false && _styleAttenteMs < 20000) { setTimeout(_attendreStyle, 10000); return; }
+                _basculerStyle('délai');
+            };
+            setTimeout(_attendreStyle, 10000);
 
             // ── Verrouiller totalement la caméra (style Pokémon GO / DQ Walk) ──
             // Le joueur ne peut ni zoomer, ni faire pivoter, ni déplacer la caméra
@@ -23651,6 +23794,14 @@
                         if (currentNearbyPOI || currentNearbyThematic) {
                             document.getElementById('nearbyPOI').classList.remove('hidden');
                             stackNearbyPanels();
+                        } else {
+                            // B8 (19/10) : à portée mais console pas encore ouverte (temps de
+                            // présence, précision GPS) : dire au joueur de patienter.
+                            const st = (typeof getPoiThematicStatus === 'function') ? getPoiThematicStatus(poi) : null;
+                            if ((st === 'local' || st === 'thematic_available')
+                                && (_zoneDernierStatut === 'attente' || _zoneDernierStatut === 'precision')) {
+                                _showPoiTapFeedback(_zoneDernierStatut, true);
+                            }
                         }
                     } else {
                         _showPoiTapFeedback('too_far', false);
@@ -25149,6 +25300,7 @@
                 scroll:   { text: 'Parchemin à portée !', icon: '✦', color: 'rgba(245,158,11,0.95)' },
                 loot:     { text: 'Mystère à portée !', icon: '✦', color: 'rgba(234,88,12,0.95)' },
                 precision: { text: 'Précision GPS insuffisante, patiente…', icon: '📡', color: 'rgba(217,119,6,0.95)' },
+                attente:   { text: 'Reste un instant…', icon: '⏳', color: 'rgba(124,58,237,0.95)' },
             };
             // Refus pour précision (hystérésis de capture) : « rapproche-toi » serait trompeur.
             const m = inRange ? (msgs[type] || msgs.too_far)
@@ -25163,7 +25315,7 @@
                 white-space:nowrap;
                 box-shadow:0 4px 12px rgba(0,0,0,0.3);
             `;
-            el.textContent = m.icon + ' ' + m.text;
+            el.textContent = m.icon + ' ' + T(m.text);   // C3 : le texte, pas l'icône, est la clé
             document.body.appendChild(el);
             setTimeout(() => { if (el.parentNode) el.remove(); }, 1600);
         }
@@ -26487,7 +26639,7 @@
                     if (_revealIcon) _revealIcon.style.display = '';
                 }
             }
-            document.getElementById('ritualRevealSupertype').textContent = `${info.symbol || ''} ${info.name || ''}`;
+            document.getElementById('ritualRevealSupertype').textContent = `${info.symbol || ''} ${T(info.name || '')}`;
             document.getElementById('ritualRevealCardName').textContent  = card.name;
             // Lot 4 : rareté par son nom (« Rare »), collections affichées.
             const _rar = (RARITY_CONFIG[card.rarity] || {}).name || card.rarity || '';
@@ -26503,7 +26655,7 @@
             if (zones.length > 0) {
                 tag.style.borderColor    = `${color}30`;
                 tag.style.background     = `${color}0d`;
-                document.getElementById('ritualNarrativeText').textContent = `✦ ${zones[0].title || zones[0].id}`;
+                document.getElementById('ritualNarrativeText').textContent = `✦ ${T(zones[0].title || zones[0].id)}`;
                 tag.style.display = 'flex';
             } else {
                 tag.style.display = 'none';
@@ -27359,9 +27511,13 @@
                 if (!activeQuests[cardId]) activeQuests[cardId] = { steps: {}, started: Date.now() };
                 activeQuests[cardId].steps[stepId] = true;
                 saveProgress();
-                // Refresh screen
+                // Refresh screen ; B4 (David, 19/10) : les autres questions déjà
+                // ouvertes le restent après le rafraîchissement.
+                const ouvertes = quest.steps.filter(s => s.id !== stepId
+                    && document.querySelector('#qstep_' + s.id + ' .quest-question')).map(s => s.id);
                 const card = Object.values(COLLECTIONS).flatMap(c => c.cards).find(c => c.id === cardId);
                 if (card) openQuestScreen(card);
+                ouvertes.forEach(id => tryValidateStep(cardId, id));
                 // Petit feedback haptique si dispo
                 if (navigator.vibrate) navigator.vibrate([40, 20, 40]);
             } else {
@@ -27764,6 +27920,8 @@
             // Entrée « Mode test » : seulement avec le code équipe (ou déverrouillé)
             const itemTest = menu.querySelector('.avatar-menu-item--test');
             if (itemTest) itemTest.style.display = _modeTestAutorise() ? '' : 'none';
+            const sep = menu.querySelector('.avatar-menu-divider');
+            if (sep) sep.style.display = _modeTestAutorise() ? '' : 'none';
             menu.classList.toggle('hidden');
         }
 
@@ -28639,7 +28797,7 @@
             if (!selectedCard) return;
             updateCardDetailOrbesDisplay();   // lot 1.4 : même lecture que le bouton d'orbe
             const cl = cardLevels[selectedCard.id] || { level: 0, experience: 0 };
-            document.getElementById('cardLevelDisplay').textContent = `Niveau ${cl.level}`;
+            document.getElementById('cardLevelDisplay').textContent = TF('Niveau %1', cl.level);
             document.getElementById('cardRarityGemFlavor').innerHTML = getRarityGemHTML(selectedCard.rarity);
             const gemEl = document.getElementById('cardRarityGemFlavor');
             if (cl.level >= MAX_LEVEL) gemEl.classList.add('gem-max');
@@ -29853,7 +30011,7 @@
                             innerAvail = '<div class="scrap-available-visual">'
                                 + '<div class="avail-icon">' + item.icon + '</div>'
                                 + '<div class="avail-label">Fragment visuel · non développé</div>'
-                                + '<div class="avail-cost">' + item.icon + ' ' + (hasItem ? qty + ' pellicule' + (qty > 1 ? 's' : '') : 'Aucune pellicule') + '</div>'
+                                + '<div class="avail-cost">' + item.icon + ' ' + (hasItem ? TF(qty > 1 ? '%1 pellicules' : '%1 pellicule', qty) : T('Aucune pellicule')) + '</div>'
                                 + '</div>';
                         } else if (type === 'audio') {
                             const bars = [10,16,8,20,12,18,7,14,9,17,11,15].map(h =>
@@ -29861,7 +30019,7 @@
                             innerAvail = '<div class="scrap-available-audio">'
                                 + '<div class="avail-icon">' + item.icon + '</div>'
                                 + '<div class="avail-wave">' + bars + '</div>'
-                                + '<div class="avail-cost">' + item.icon + ' ' + (hasItem ? qty + ' cassette' + (qty > 1 ? 's' : '') : 'Aucune cassette') + '</div>'
+                                + '<div class="avail-cost">' + item.icon + ' ' + (hasItem ? TF(qty > 1 ? '%1 cassettes' : '%1 cassette', qty) : T('Aucune cassette')) + '</div>'
                                 + '</div>';
                         } else {
                             const lines = [90,75,85,60,80].map(w =>
@@ -30621,7 +30779,9 @@
         // Tout passe par _jsbEsc avant d'être balisé : rien d'injectable.
         function _jsbPara(txt) {
             if (!txt) return '';
-            return String(txt).split(/\n[ \t]*\n/).map(function (p) {
+            // C3 (19/10) : traduit le texte ENTIER avant de le découper — une fois en
+            // paragraphes et spoilers, ses nœuds ne correspondaient plus à aucune clé.
+            return String(T(String(txt))).split(/\n[ \t]*\n/).map(function (p) {
                 p = p.trim();
                 if (!p) return '';
                 const letter = /^>>\s*/.test(p);
@@ -32475,7 +32635,7 @@
             porte:     "Derrière cette porte, l'" + vnMot('explorium', 'Explorium') + ". Toutes les mémoires extraites, remises à leur place d'origine.",
             dedans:    "Tu te demandes où tu es ? À l'intérieur d'une " + vnMot('nebuleuse', 'nébuleuse') + ". Le " + vnMot('qg', 'QG') + " tout entier n'existe que là-dedans.",
             science:   "Longtemps, on a seulement su observer les " + vnMot('nebuleuse', 'nébuleuses') + ". Puis la science de l'exploration de la mémoire a progressé, et on a appris à y entrer. Aujourd'hui, on y travaille.",
-            clara:     'J’en reviens pas, tu étais si rapide quand tu cristallisais les ' + vnMot('nebuleuse', 'nébuleuses') + ' ! Ca m’a pris des jours pour les premières moi',
+            clara:     'J’en reviens pas, tu étais si rapide quand tu cristallisais les ' + vnMot('nebuleuse', 'nébuleuses') + ' ! Ça m’a pris des jours pour les premières, moi.',
         };
         const HUB_LINES = {
             accueil: [
@@ -32614,7 +32774,7 @@
         // l'Annexe B du document de dialogues v0.83.
         const HUB_JF_LIGNES = {
             qg: () => [
-                { speaker: nomClara(), line: 'Ca y est, tu as fait le tour ? N’hésite pas à retourner parler à tout le monde quand tu le souhaites !' },
+                { speaker: nomClara(), line: 'Ça y est, tu as fait le tour ? N’hésite pas à retourner parler à tout le monde quand tu le souhaites !' },
                 { speaker: nomClara(), html: _HUB_HTML.clara },
             ],
             nebuleuse: [
@@ -33980,14 +34140,16 @@
               rewardFn: () => addDust(50) },
             { palier:3,  icon:'🔮', name:'+3 Orbes de mémoire',           type:'Orbes',                xpRequired:85,
               rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+3; saveProgress(); showToast('🔮 +3 orbes de mémoire'); } },
-            { palier:4,  icon:'🎴', name:'Carte bonus : Guignol',           type:'Carte rare',           xpRequired:120 },
+            { palier:4,  icon:'🎴', name:'Carte bonus : Guignol',           type:'Carte rare',           xpRequired:120,
+              rewardFn: () => _bpCarteBonus('card4') },
             { palier:5,  icon:'💜', name:'+100 Poussière',                     type:'Poussière mémorielle',   xpRequired:220,
               rewardFn: () => addDust(100) },
             { palier:6,  icon:'🎨', name:'Skin Aurora',                     type:'Skin de carte',        xpRequired:350,
               rewardFn: () => unlockSkin('aurora') },
             { palier:7,  icon:'🔮', name:'+3 Orbes de mémoire',           type:'Orbes',                xpRequired:425,
               rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+3; saveProgress(); showToast('🔮 +3 orbes de mémoire'); } },
-            { palier:8,  icon:'⭐', name:'Badge Flâneur',                   type:'Titre spécial',        xpRequired:500,  milestone:true },
+            { palier:8,  icon:'⭐', name:'Badge Flâneur',                   type:'Titre spécial',        xpRequired:500,  milestone:true,
+              rewardFn: () => _bpTitre('Flâneur') },
             { palier:9,  icon:'💜', name:'+150 Poussière',                     type:'Poussière mémorielle',   xpRequired:680,
               rewardFn: () => addDust(150) },
             { palier:10, icon:'🎞️', name:'+5 pellicules',                   type:'Fournitures',          xpRequired:880,
@@ -34054,10 +34216,7 @@
             { id:'ach_cards15',    cat:'Explorateur', icon:'🧭', name:'Grand Explorateur',   desc:'Collecter 15 cartes différentes',      xpReward:150, goal:15,  stat:'cards' },
             { id:'ach_dust100',    cat:'Explorateur', icon:'💜', name:'Collecteur de poussière',desc:'Accumuler 100 poussières au total',       xpReward:30,  goal:100, stat:'dust_total' },
             { id:'ach_dust500',    cat:'Explorateur', icon:'💫', name:'Riche en mémoire',    desc:'Accumuler 500 poussières au total',       xpReward:80,  goal:500, stat:'dust_total' },
-            { id:'ach_first_echo', cat:'Archiviste',  icon:'✨', name:'Premier Écho',        desc:'Collecter votre premier écho',         xpReward:20,  goal:1,   stat:'echoes' },
-            { id:'ach_echoes5',    cat:'Archiviste',  icon:'🔮', name:'Résonance',           desc:'Collecter 5 échos',                    xpReward:60,  goal:5,   stat:'echoes' },
-            { id:'ach_echoes10',   cat:'Archiviste',  icon:'🌀', name:"Maître des Échos",    desc:'Collecter 10 échos',                   xpReward:120, goal:10,  stat:'echoes' },
-            { id:'ach_place_echo', cat:'Archiviste',  icon:'📖', name:'Premier Souvenir',    desc:'Placer un écho dans un carnet',        xpReward:30,  goal:1,   stat:'echoes_placed' },
+            // Succès des échos retirés (David, 19/10) : les échos ne sont pas collectables.
             { id:'ach_level_card', cat:'Alchimiste',  icon:'⬆️', name:'Première évolution',  desc:'Faire monter une carte de niveau',     xpReward:40,  goal:1,   stat:'card_levels' },
             { id:'ach_dust_spent', cat:'Alchimiste',  icon:'🔥', name:'Investisseur',        desc:'Dépenser 200 poussières sur les cartes',  xpReward:70,  goal:200, stat:'dust_spent' },
             { id:'ach_max_level',  cat:'Alchimiste',  icon:'💎', name:'Maîtrise totale',     desc:'Atteindre le niveau max sur une carte', xpReward:200, goal:1,   stat:'max_level_cards' },
@@ -34090,11 +34249,11 @@
         // ── Skins ──
         const CARD_SKINS = [
             { id:'default',     name:'Défaut',       paletteGrad:['#1e3a8a','#7C3AED'], emoji:'✨', unlockedByDefault: true },
-            { id:'aurora',      name:'Aurora',        paletteGrad:['#065f46','#0d9488'], emoji:'🌿', palier:5  },
-            { id:'crepuscule',  name:'Crépuscule',    paletteGrad:['#7c2d12','#ea580c'], emoji:'🌅', palier:15 },
-            { id:'nebula',      name:'Nebula',        paletteGrad:['#1e1b4b','#6d28d9'], emoji:'🌌', palier:22 },
-            { id:'sepia',       name:'Sépia',         paletteGrad:['#92400e','#d4a574'], emoji:'📜', palier:19 },
-            { id:'lyon_antique',name:'Lyon Antique',  paletteGrad:['#78350f','#d97706'], emoji:'🏛️', palier:28 },
+            { id:'aurora',      name:'Aurora',        paletteGrad:['#065f46','#0d9488'], emoji:'🌿', palier:6  },
+            { id:'crepuscule',  name:'Crépuscule',    paletteGrad:['#7c2d12','#ea580c'], emoji:'🌅', palier:19 },
+            { id:'nebula',      name:'Nebula',        paletteGrad:['#1e1b4b','#6d28d9'], emoji:'🌌', palier:28 },
+            { id:'sepia',       name:'Sépia',         paletteGrad:['#92400e','#d4a574'], emoji:'📜', palier:24 },
+            { id:'lyon_antique',name:'Lyon Antique',  paletteGrad:['#78350f','#d97706'], emoji:'🏛️', palier:35 },
         ];
         let unlockedSkins = new Set(['default']);  // skins débloqués
         let cardSkins     = {};                     // skin actif par carte : { cardId: skinId }
@@ -34131,9 +34290,33 @@
             hasCamera  = true;
             // Sac vide à l'origine (brief Bellecour, section 1) : ce palier est
             // réclamé dès le lancement, les 10 pellicules rempliraient le sac
-            // avant même le tutoriel. Elles ne sont données que hors tutoriel.
-            if (_obDone) bagInv.pellicules = Math.max(bagInv.pellicules || 0, 10);
+            // avant même le tutoriel. B6 (19/10) : elles restent dues et arrivent
+            // à la fin du tutoriel (elles n'arrivaient jamais).
             updateCameraHUD();
+            _bpPelliculesCamera();
+        }
+        function _bpPelliculesCamera() {
+            if (!_obDone || !claimedPaliers.has(1) || playerStats._pelliculesCamera) return;
+            playerStats._pelliculesCamera = true;
+            addFilm(10);
+        }
+        setInterval(() => { try { _bpPelliculesCamera(); } catch (e) {} }, 2000);
+        // Palier « carte bonus » : la carte rejoint la collection (sinon, poussière).
+        function _bpCarteBonus(cardId) {
+            const card = getCardById(cardId);
+            if (!card || collectedCards.includes(cardId)) { addDust(100); showToast(T('💜 +100 poussière')); return; }
+            collectedCards.push(cardId);
+            if (!cardLevels[cardId]) cardLevels[cardId] = { level: 0, experience: 0, dustSpent: 0 };
+            saveProgress();
+            try { updatePOIVisibility(); } catch (e) {}
+            showToast(TF('🎴 Carte bonus : %1', T(card.name)));
+        }
+        // Palier « titre » : retenu dans la progression du joueur.
+        function _bpTitre(nom) {
+            if (!Array.isArray(playerStats.titres)) playerStats.titres = [];
+            if (!playerStats.titres.includes(nom)) playerStats.titres.push(nom);
+            saveProgress();
+            showToast(TF('⭐ Titre obtenu : %1', T(nom)));
         }
         function addFilm(n) {
             bagInv.pellicules = (bagInv.pellicules || 0) + n;
@@ -34560,8 +34743,9 @@
             BATTLEPASS_NODES.forEach((node, i) => {
                 if (!node.rewardFn) return;
                 if (!claimedPaliers.has(node.palier)) return;
-                if (node._shownInOverlay) return;
-                node._shownInOverlay = true;
+                if (!Array.isArray(playerStats._paliersVus)) playerStats._paliersVus = [];
+                if (playerStats._paliersVus.includes(node.palier)) return;
+                playerStats._paliersVus.push(node.palier);
                 const item = document.createElement('div');
                 item.className = 'levelup-reward-item';
                 item.style.animationDelay = (i * 0.06 + 0.12) + 's';
@@ -34678,17 +34862,37 @@
         }
 
         // ── Hook collect/addExp actions ──
-        const _origCollectCard2 = collectCard;
-        collectCard = function() {
-            const before = collectedCards.length; _origCollectCard2();
-            if (collectedCards.length > before) {
-                awardXP(XP_REWARDS.collect_card); playerStats.cards = collectedCards.length;
-                const allC = Object.values(COLLECTIONS).flatMap(c=>c.cards);
-                const newC = allC.find(c => collectedCards.includes(c.id) && !collectedCards.slice(0,-1).includes(c.id));
-                if (newC && newC.rarity === 'legendary') playerStats.legendary_cards++;
-                const types = new Set(collectedCards.map(id => allC.find(c=>c.id===id)?.supertype).filter(Boolean));
-                playerStats.supertypes_collected = types.size;
-                updateStat('cards', collectedCards.length);
+        // B6 (19/10) : l'XP de collecte suivait collectCard, qui pour une carte à
+        // chasse (Saint-Jean) n'ouvre que la chasse, et ignorait les thématiques.
+        // Elle suit désormais l'obtention réelle (collectCardDirect, collectThematicCard).
+        function _xpCarteObtenue(cardId) {
+            awardXP(XP_REWARDS.collect_card);
+            const allC = Object.values(COLLECTIONS).flatMap(c => c.cards);
+            const carte = allC.find(c => c.id === cardId);
+            if (carte && carte.rarity === 'legendary') playerStats.legendary_cards++;
+            playerStats.supertypes_collected = new Set(collectedCards.map(id => (allC.find(c => c.id === id) || {}).supertype).filter(Boolean)).size;
+            updateStat('cards', collectedCards.length);
+        }
+        const _origCollectCardDirect2 = collectCardDirect;
+        collectCardDirect = function(card) {
+            const avant = card && collectedCards.includes(card.id);
+            _origCollectCardDirect2(card);
+            if (card && !avant && collectedCards.includes(card.id)) _xpCarteObtenue(card.id);
+        };
+        const _origCollectThematic2 = collectThematicCard;
+        collectThematicCard = function() {
+            const before = collectedCards.length; _origCollectThematic2();
+            if (collectedCards.length > before) _xpCarteObtenue(collectedCards[collectedCards.length - 1]);
+        };
+        const _origPlaceOrbe2 = placeOrbe;
+        placeOrbe = function() {
+            const id = selectedCard && selectedCard.id;
+            const lvBefore = id ? ((cardLevels[id] || {}).level || 0) : 0;
+            _origPlaceOrbe2.apply(this, arguments);
+            const lvAfter = id ? ((cardLevels[id] || {}).level || 0) : 0;
+            if (lvAfter > lvBefore) {
+                awardXP(XP_REWARDS.level_card); playerStats.card_levels++; updateStat('card_levels', playerStats.card_levels);
+                if (lvAfter >= MAX_LEVEL) { awardXP(XP_REWARDS.max_level_card); playerStats.max_level_cards++; updateStat('max_level_cards', playerStats.max_level_cards); }
             }
         };
         const _origCollectEcho2 = collectEcho;
@@ -34863,7 +35067,8 @@
             compterLecture('ouvertures', 'panneau:' + pan.id);
             const state = getPanneauState(pan.id);
             const CLABELS = { simple: 'Point simple', moyen: 'Point moyen', important: 'Point important' };
-            const SLABELS = { rain: '🌧 Pluie', night: '🌙 Nuit', fog: '🌫 Brouillard', sun: '☀️ Soleil' };
+            // B9 (19/10) : aube, jour et crépuscule manquaient (affichés « Spécial »).
+            const SLABELS = { rain: '🌧 Pluie', night: '🌙 Nuit', fog: '🌫 Brouillard', sun: '☀️ Soleil', dawn: '🌅 Aube', day: '🌤 Jour', dusk: '🌇 Crépuscule' };
 
             document.getElementById('panneauScreenTitle').textContent = pan.title;
             document.getElementById('panneauScreenSub').textContent   = CLABELS[pan.complexity] || '';
@@ -34884,8 +35089,8 @@
                 const canFill    = filled ? false : (isSpecial ? exploCount > 0 : anyCount > 0);
                 const label = filled ? 'Inséré'
                     : (isSpecial
-                        ? (SLABELS[slot.special.condition] || 'Spécial') + (exploCount === 0 ? ' 🔒' : '')
-                        : 'Libre' + (anyCount === 0 ? ' 🔒' : ''));
+                        ? T(SLABELS[slot.special.condition] || 'Spécial') + (exploCount === 0 ? ' 🔒' : '')
+                        : T('Libre') + (anyCount === 0 ? ' 🔒' : ''));
                 html += `<div class="${cls}" onclick="insertScrollInSlot('${pan.id}',${i})">`;
                 html += `<div class="panneau-slot-icon">${icon}</div>`;
                 html += `<div class="panneau-slot-label">${label}</div></div>`;
@@ -34963,7 +35168,11 @@
                 }
             }
 
-            const used = bagInv.parchemins.splice(0, 1)[0];
+            // B9 (19/10) : un emplacement spécial n'accepte qu'un parchemin d'exploration
+            // (le cadenas l'annonçait, mais n'importe quel parchemin passait).
+            const idx = isSpecial ? bagInv.parchemins.findIndex(p => !p.typed && !p.supertype) : 0;
+            if (idx < 0) { showToast(T("Il faut un parchemin d'exploration")); return; }
+            const used = bagInv.parchemins.splice(idx, 1)[0];
             state.slots[slotIdx] = used.id || 'parchemin';
             compterLecture('validations', 'insertion:' + panId + ':' + slotIdx);
             if (!state.unlocked.includes(slotIdx)) state.unlocked.push(slotIdx);
@@ -34974,8 +35183,13 @@
             const pan    = PANNEAU_POINTS.find(p => p.id === panId);
             const textEl = document.getElementById('pat_' + panId + '_' + idx);
             if (!textEl) return;
+            // B9 (19/10) : ■ arrête vraiment la frappe (sinon ▶ ■ ▶ en lançait une
+            // seconde, entrelacée avec la première).
+            clearTimeout(btn._frappe);
             if (btn.classList.contains('playing')) {
-                btn.classList.remove('playing'); btn.textContent = '▶'; return;
+                btn.classList.remove('playing'); btn.textContent = '▶';
+                textEl.textContent = pan.contents[idx].audio;
+                return;
             }
             btn.classList.add('playing'); btn.textContent = '■';
             compterLecture('ouvertures', 'ecoute:' + panId + ':' + idx);
@@ -34986,7 +35200,7 @@
             function type() {
                 if (i >= full.length) { btn.classList.remove('playing'); btn.textContent = '▶'; return; }
                 textEl.textContent += full[i++];
-                setTimeout(type, speed);
+                btn._frappe = setTimeout(type, speed);
             }
             type();
         }
@@ -35510,6 +35724,10 @@
             const label   = document.getElementById('vfFilmLabel');
             const shutter = document.getElementById('vfShutter');
 
+            // B2 : plus de pellicule au viseur (photo gratuite) ; badge masqué.
+            if (badge) badge.style.display = 'none';
+            if (shutter) shutter.classList.remove('no-film');
+            if (badge) return;
             const n = filmCount;
             count.textContent = n;
             label.textContent = n <= 1 ? 'pellicule' : 'pellicules';
@@ -35535,23 +35753,11 @@
             if (currentViewfinderInfo) openInfoScreen(currentViewfinderInfo);
         }
 
+        // B2 (David, 19/10) : photographier un panorama ne coûte plus de pellicule —
+        // les pellicules servent aux entrées visuelles du carnet, pas de double usage.
         function capturePhoto() {
             if (!currentViewfinderInfo) return;
-            if (filmCount <= 0) {
-                // Message d'erreur
-                const msg = document.getElementById('vfNoFilmMsg');
-                msg.classList.remove('show');
-                void msg.offsetWidth; // reflow pour relancer l'animation
-                msg.classList.add('show');
-                return;
-            }
-
             compterLecture('validations', 'photo:' + currentViewfinderInfo.id);
-            // Consommer une pellicule
-            bagInv.pellicules = Math.max(0, (bagInv.pellicules || 0) - 1);
-            filmCount = bagInv.pellicules;
-            updateCameraHUD();
-            updateVFFilmBadge();
 
             // Flash
             const flash = document.getElementById('vfFlash');
@@ -37495,17 +37701,26 @@
                     };
                     actions.appendChild(unfollowBtn);
                 }
-                const detailBtn = document.createElement('button');
-                detailBtn.className = 'qj-quest-btn';
-                detailBtn.textContent = 'Voir grappe';
-                detailBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    if (!_exploriumAccessible()) return;   // avant la section 17 : rien
-                    closeQuestJournal();
-                    openMindmap();
-                    setTimeout(() => openGrappeQuestModal(grappeId), 200);
-                };
-                actions.appendChild(detailBtn);
+                // B3 (David, 19/10) : « Voir l'histoire » ramène dans l'Explorium, sur le
+                // calque de la grappe. Absent tant que l'Explorium n'est pas découvert,
+                // et pour la grappe du tutoriel (absente de l'Explorium).
+                if (_exploriumAccessible() && v2GrappeVisible(grappeId)) {
+                    const detailBtn = document.createElement('button');
+                    detailBtn.className = 'qj-quest-btn';
+                    detailBtn.textContent = T("Voir l'histoire");
+                    detailBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        closeQuestJournal();
+                        openMindmap();
+                        setTimeout(() => {
+                            v2SelectedGrappeId = grappeId;
+                            v2RenderAll();
+                            const strip = document.querySelector('.v2-grappe-pill.selected');
+                            if (strip && typeof v2ScrollPillIntoView === 'function') v2ScrollPillIntoView(strip);
+                        }, 250);
+                    };
+                    actions.appendChild(detailBtn);
+                }
 
                 body.appendChild(el);
             });
@@ -37573,7 +37788,7 @@
         // Répliques recopiées du PDF (le saut de ligne de la première est rendu par <br>).
         const FINALE_REPLIQUES = [
             { speaker: FINALE_LOCUTEUR, html: 'Chers testeurs, votre session touche à sa fin. Sa fin ? Non, pas vraiment, mais pour l’instant, nous vous attendons à l’adresse communiquée sur votre feuille de route !<br>En chemin ou juste après, vous pourrez nous donner vos retours !' },
-            { speaker: FINALE_LOCUTEUR, line: 'Eeeeet on vous attends avec impatience pour l’after, pour rigoler et discuter tous ensemble ! A très vite ! (Les premiers arrivés ont un p’tit badge)' },
+            { speaker: FINALE_LOCUTEUR, line: 'Eeeeet on vous attend avec impatience pour l’after, pour rigoler et discuter tous ensemble ! À très vite ! (Les premiers arrivés ont un p’tit badge)' },
         ];
         const FINALE_QUETES = [
             { id: 'posttest_form', titre: 'Remplir le Google Form',
@@ -41395,9 +41610,10 @@
             // En mode démo, clic = toggle rencontré/non — mais cette fois c'est officiel :
             // on met à jour collectedCards + cardLevels pour que ça compte dans les prérequis.
             if (V2_NEW_ACTORS[cardId]) {
+                // B5 (David, 19/10) : une fois rencontré, l'élément reste acquis
+                // (le « délaissé » du mode démo est retiré).
                 if (v2IsOwned(cardId)) {
-                    v2UnmarkWorldActorEncountered(cardId);
-                    if (typeof showToast === 'function') showToast(TF('%1 — délaissé', T(name)));
+                    if (typeof showToast === 'function') showToast(TF('%1 — rencontré', T(name)));
                 } else {
                     v2MarkWorldActorEncountered(cardId);
                     if (typeof showToast === 'function') showToast(TF('%1 — rencontré', T(name)));
@@ -42367,7 +42583,7 @@
                 + ' are anchoring supports, closely tied to the place where they stand. It would take too long to explain now, but know that you can act on them with the ' + vnMot('parchemin', 'scrolls') + ' you pick up along the way. Once assembled, they give up what they were hiding.',
             [_OB_HTML_PARCHEMIN]: 'Oh, a ' + vnMot('parchemin', 'scroll', true)
                 + '. I’ve already gathered a few. On its own, it’s not much use. Think of it as a puzzle piece. Make room for it in your ' + vnMot('sac', 'bag') + ', it might be important.',
-            "La carte s'épuise. La mémoire a besoin de temps, attends quelques heures qu’elle se ravive d’elle mêmes": "The card is wearing out. Memory needs time, wait a few hours for it to revive on its own",
+            "La carte s'épuise. La mémoire a besoin de temps, attends quelques heures qu’elle se ravive d’elle-même": "The card is wearing out. Memory needs time, wait a few hours for it to revive on its own",
             [_OB_HTML_ORBE]: 'You\'re already carrying a ' + vnMot('orbe', 'memory orb', true) + ', place it on the card: it gives back all its energy at once.',
             // QG (hub et Clara, Annexe B) : répliques à mots-clés (cf. _HUB_HTML)
             [_HUB_HTML.qg]: "Don't ask me where " + vnMot('qg', 'HQ') + " is. Professor Ricardo will explain, if you have an hour to spare.",
