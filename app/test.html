@@ -431,7 +431,7 @@
         .quest-journal-panel {
             position: fixed; inset: 0;
             background: rgba(0,0,0,0.5);
-            z-index: 280;
+            z-index: 650;   /* B10 : au-dessus de ⚙️ et de la longue-vue (500) */
             display: none;
             align-items: flex-start;
             justify-content: flex-end;
@@ -1407,10 +1407,14 @@
         }
         .settings-overlay.open { opacity: 1; pointer-events: auto; }
 
+        /* B10 (19/10) : sous le bouton ⚙️ (déplacé en haut à gauche), et défilant
+           sur un petit écran au lieu d'être coupé. */
         .settings-panel {
             position: absolute;
-            right: 14px;
-            bottom: 182px;
+            left: 14px;
+            top: calc(62px + env(safe-area-inset-top, 0px));
+            max-height: calc(100% - 80px - env(safe-area-inset-top, 0px));
+            overflow-y: auto;
             width: min(268px, calc(100% - 28px));
             background: rgba(15,15,25,0.94);
             backdrop-filter: blur(10px);
@@ -9719,7 +9723,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.7.0</div>
+            <div class="hud-version" id="hudVersion">v1.7.1</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -22392,7 +22396,14 @@
             // ne plus s'afficher.
             const ids = ['nearbyQuest','nearbyPOI','nearbyInfo','nearbyPanneau','nearbyDust','nearbyEcho','nearbyOrb','nearbyScroll','nearbyBazar','nearbyLoot','nearbyCarnetResource'];
             const gap = 8;
-            const base = 20;
+            // B1 (19/10) : les consoles s'empilent AU-DESSUS de la barre du bas (elles
+            // la recouvraient : Collection, Explorium, QG et Sac devenaient intouchables).
+            let base = 20;
+            const barre = document.querySelector('#mainApp .action-bar');
+            if (barre && getComputedStyle(barre).visibility !== 'hidden') {
+                const rb = barre.getBoundingClientRect();
+                if (rb.height) base = Math.max(base, Math.round(window.innerHeight - rb.top + gap));
+            }
             let currentBottom = base;
             // Parcourir dans l'ordre inverse pour empiler du bas vers le haut
             ids.slice().reverse().forEach(id => {
@@ -27602,6 +27613,8 @@
         let _speedPanelOpen = false;
         function toggleSpeedPanel(e) {
             if (e) e.preventDefault();
+            // B10 (19/10) : outil de développement — réservé au mode test
+            if (!_speedPanelOpen && !_modeTestAutorise()) return;
             _speedPanelOpen = !_speedPanelOpen;
             const panel = document.getElementById('walkSpeedPanel');
             if (panel) panel.classList.toggle('open', _speedPanelOpen);
