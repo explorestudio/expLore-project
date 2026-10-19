@@ -271,6 +271,7 @@
             border: none;
             padding: 9px;
             width: 40px; height: 40px;
+            border-radius: 12px;   /* carré arrondi (David, 19/10) */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -694,8 +695,8 @@
         .console--poussiere { --acc: 192,132,252; }
         .console--orbe      { --acc: 103,232,249; }
         .console--parchemin { --acc: 251,191,36; }
-        .console--loot      { --acc: 165,180,252; }
-        .console--ressource { --acc: 244,114,182; }
+        .console--loot      { --acc: 249,168,212; }   /* rose du marqueur et de la zone (19/10) */
+        .console--ressource { --acc: 252,211,77; }    /* fournitures : jaune (19/10) */
         .console--echo      { --acc: 216,180,254; }
         /* Croix du parchemin : pastille au coin, hors du bouton de collecte */
         .console--parchemin > button[aria-label] {
@@ -1345,7 +1346,7 @@
             right: 14px;
             width: 42px;
             height: 42px;
-            border-radius: 50%;
+            border-radius: 12px;   /* carré arrondi (David, 19/10) */
             background: rgba(255,255,255,0.92);
             backdrop-filter: blur(6px);
             border: none;
@@ -1380,7 +1381,7 @@
             right: 14px;
             width: 42px;
             height: 42px;
-            border-radius: 50%;
+            border-radius: 12px;   /* carré arrondi (David, 19/10) */
             background: rgba(255,255,255,0.92);
             backdrop-filter: blur(6px);
             border: none;
@@ -1999,6 +2000,7 @@
             border: 0;
         }
 
+        .type-cube { width: 1.2em; height: 1.2em; display: block; }
         .card-type-pin {
             position: absolute;
             top: -18px;
@@ -2016,18 +2018,6 @@
             font-size: 26px;
             box-shadow: 0 12px 26px rgba(0,0,0,0.26);
             z-index: 2;
-        }
-        .card-type-pin::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 14px;
-            height: 14px;
-            background: rgba(255,255,255,0.92);
-            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.18);
         }
 
         .card-art-area {
@@ -2079,9 +2069,14 @@
         /* Trois niveaux automatiques des cartes sans visuels par niveau
            (cf. _otNiveauxAuto) : voilé → à moitié → net, avec une lueur dorée. */
         #cardArtEmoji { transition: filter 0.9s ease; }
-        .ot-auto-0 #cardArtImg, .ot-auto-0 #cardArtEmoji { filter: grayscale(1) blur(2px) brightness(0.75) opacity(0.55); }
-        .ot-auto-1 #cardArtImg, .ot-auto-1 #cardArtEmoji { filter: grayscale(0.45) blur(0.6px) brightness(0.9) opacity(0.85); }
-        .ot-auto-2 #cardArtEmoji { filter: drop-shadow(0 0 10px rgba(245,184,65,0.85)) drop-shadow(0 0 22px rgba(245,184,65,0.45)); }
+        /* David, 19/10 : le visuel du niveau 0 s'affiche tel quel ; un niveau sans
+           image propre montre « Image à venir » (cf. _otAVenir). */
+        .card-art-a-venir { display: none; position: absolute; inset: 0; z-index: 1; border-radius: 12px;
+            align-items: center; justify-content: center; text-align: center; padding: 0 24px;
+            border: 2px dashed rgba(30,58,138,0.25); background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+            font-family: Georgia, serif; font-style: italic; font-size: 17px; color: rgba(30,58,138,0.6); }
+        .ot-a-venir .card-art-a-venir { display: flex; }
+        .ot-a-venir #cardArtImg, .ot-a-venir #cardArtEmoji { visibility: hidden; }
 
         /* ════════════════════════════════════════════════════════════
            Timeline des visuels multi-niveaux
@@ -2259,28 +2254,33 @@
 
         .card-art-title {
             position: absolute;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: transparent;
-            border: none;
-            padding: 0;
-            font-size: 18px;
+            top: 26px;
+            /* Centré sans translate : avec left 50 %, la boîte n'aurait que la
+               moitié de la largeur et couperait les noms en plein mot. */
+            left: 0; right: 0;
+            margin: 0 auto;
+            width: fit-content;
+            background: rgba(249, 250, 251, 0.72);
+            border: 1px solid rgba(29, 78, 216, 0.28);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 7px 16px;
+            font-size: 22px;
             font-weight: bold;
-            color: #1f2937;
+            color: #1e3a8a;
             text-align: center;
-            max-width: calc(100% - 32px);
+            max-width: calc(100% - 48px);
             line-height: 1.2;
             word-break: break-word;
             z-index: 1;
         }
-        .card-art-title.title-long   { font-size: 14px; padding: 6px 14px; }
-        .card-art-title.title-medium { font-size: 16px; padding: 7px 16px; }
+        .card-art-title.title-long   { font-size: 17px; }
+        .card-art-title.title-medium { font-size: 19px; }
 
         @media (max-width: 480px) {
-            .card-art-title { font-size: 15px; padding: 6px 16px; }
-            .card-art-title.title-long   { font-size: 12px; }
-            .card-art-title.title-medium { font-size: 13px; }
+            .card-art-title { font-size: 19px; padding: 6px 14px; }
+            .card-art-title.title-long   { font-size: 15px; }
+            .card-art-title.title-medium { font-size: 17px; }
         }
 
         @media (max-width: 480px) {
@@ -3540,6 +3540,7 @@
         .scrap-available.has-item .avail-cost {
             animation: availPulse 2s ease-in-out infinite;
         }
+        .scrap-available:is(.ui-pulse, .ob-guide-pulse) .avail-cost { animation: none; opacity: 1; }
 
         /* Coin corné — signal discret d'interactivité */
         .scrap-corner {
@@ -5324,27 +5325,21 @@
            - L'icône (le span) pulse en taille pour attirer le regard
            - Un halo doré scintille AUTOUR du bouton via box-shadow (pas par-dessus) */
         .card-carnet-btn.has-new {
-            animation: carnetBtnHalo 1.1s ease-in-out infinite;
+            animation: carnetBtnHalo 1.3s ease-in-out infinite;
         }
         .card-carnet-btn.has-new .card-carnet-icon {
-            animation: carnetIconPulse 1.1s ease-in-out infinite;
+            animation: carnetIconPulse 1.3s ease-in-out infinite;
         }
+        /* Le bouton pulse déjà (guide du tutoriel) : l'icône ne bat pas en plus. */
+        .card-carnet-btn:is(.ui-pulse, .ob-guide-pulse) .card-carnet-icon { animation: none; }
+        /* Pulsations harmonisées (19/10) : violet du guide, rythme d'obGuidePulse. */
         @keyframes carnetBtnHalo {
-            0%, 100% {
-                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.85);
-                border-color: #fcd34d;
-                background: white;
-            }
-            50% {
-                box-shadow: 0 0 0 13px rgba(251, 191, 36, 0),
-                            0 0 20px 5px rgba(251, 191, 36, 0.75);
-                border-color: #f59e0b;
-                background: #fffbeb;
-            }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(167,139,250,0); }
+            50%      { box-shadow: 0 0 10px 3px rgba(167,139,250,0.9); }
         }
         @keyframes carnetIconPulse {
-            0%, 100% { transform: scale(1);    filter: none; }
-            50%      { transform: scale(1.28); filter: drop-shadow(0 0 7px rgba(251, 191, 36, 0.95)); }
+            0%, 100% { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(167,139,250,0)); }
+            50%      { transform: scale(1.14); filter: drop-shadow(0 0 8px rgba(167,139,250,0.95)); }
         }
 
         /* ══ Œil « observer » : ouvre la carte en plein écran, sans UI ══ */
@@ -5362,12 +5357,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
             line-height: 1;
-            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
             transition: transform 0.15s ease;
             -webkit-tap-highlight-color: transparent;
         }
+        /* Œil de calque (David, 19/10) : pastille sobre, trait blanc, comme le
+           bouton « visible / masqué » d'un calque. Zone tactile de 46 px gardée. */
+        .card-eye-btn::before { content: ''; position: absolute; width: 34px; height: 34px; border-radius: 10px;
+            background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.28);
+            -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+        .card-eye-btn svg { position: relative; color: #fff; }
         .card-eye-btn:hover  { transform: scale(1.12); }
         .card-eye-btn:active { transform: scale(0.92); }
 
@@ -5737,27 +5736,6 @@
             color: #e8b86d; margin-bottom: 4px;
         }
         .bag-detail-desc { font-size: 13px; color: rgba(232,223,200,0.5); font-style: italic; line-height: 1.5; }
-        .bag-popup {
-            position: absolute; right: 12px; bottom: 96px;
-            background: #16121f; border: 1px solid rgba(201,145,58,0.6);
-            border-radius: 10px; overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-            z-index: 20; display: none; min-width: 200px;
-        }
-        .bag-popup.show { display: block; animation: bagPop 0.15s ease; }
-        @keyframes bagPop {
-            from { opacity:0; transform: scale(0.93) translateY(6px); }
-            to   { opacity:1; transform: scale(1)   translateY(0);    }
-        }
-        .bag-popup-row {
-            padding: 13px 16px; font-size: 14px; font-weight: 600;
-            cursor: pointer; display: flex; align-items: center; gap: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            color: #e8dfc8; transition: background 0.1s;
-        }
-        .bag-popup-row:last-child { border-bottom: none; }
-        .bag-popup-row:active { background: rgba(201,145,58,0.15); }
-        .bag-popup-cancel { font-size: 13px; color: rgba(232,223,200,0.4); }
 
         /* ==================== STUDIO ==================== */
         /* ══════════════════════════════════════════════════════════════
@@ -6021,10 +5999,10 @@
         }
         /* Clé en main : la flèche vers la salle de l'Explorium pulse dans le hall.
            Pas de transform ici : il porte déjà le centrage vertical du bouton. */
-        .studio-nav-btn.hub-nav-pulse { animation: hubNavPulse 1.8s ease-in-out infinite; }
+        .studio-nav-btn.hub-nav-pulse { animation: hubNavPulse 1.3s ease-in-out infinite; }
         @keyframes hubNavPulse {
-            0%,100% { box-shadow: 0 0 0 0 rgba(201,164,92,0); border-color: rgba(255,200,80,0.35); }
-            50%     { box-shadow: 0 0 14px 3px rgba(201,164,92,0.55); border-color: #c9a45c; }
+            0%,100% { box-shadow: 0 0 0 0 rgba(167,139,250,0); }
+            50%     { box-shadow: 0 0 10px 3px rgba(167,139,250,0.9); }
         }
         /* Porte scellée : door--sealed / door--ready / door--open */
         .hub-seal { transform-box: fill-box; transform-origin: center; transition: transform 0.5s ease, opacity 0.5s ease; }
@@ -9436,7 +9414,9 @@
         }
         /* Accès à l'Explorium depuis la Collection et le carnet : absent avant sa découverte */
         body.ui-masque-explorium .alb-memorial-btn,
-        body.ui-masque-explorium .journal-screen-memorial-btn { display: none !important; }
+        /* Carnet : le bouton garde sa place (invisible), sinon le titre et la
+           miniature se décentrent dans l'en-tête (David, 19/10). */
+        body.ui-masque-explorium .journal-screen-memorial-btn { visibility: hidden !important; pointer-events: none !important; }
         /* Pulsation propre à uiPulser : le guide du tutoriel retire toutes les
            .ob-guide-pulse d'un coup, il ne doit pas éteindre celles-ci. */
         .ui-pulse { animation: obGuidePulse 1.3s ease-in-out infinite !important; }
@@ -9462,7 +9442,8 @@
         #guideHalos { position: fixed; inset: 0; z-index: 9060; pointer-events: none; }
         /* Un bouton-icône qui pulse prend l'aspect qu'il a au survol (léger fond
            clair) : sa forme entière se lit, pas seulement son icône. */
-        .ui-pulse:is(.journal-screen-back, .alb-back) { background: rgba(255,255,255,0.08); color: white; }
+        .ui-pulse:is(.journal-screen-back, .alb-back, .bag-hdr-back) { background: rgba(255,255,255,0.08); color: white; }
+        .ui-pulse.bag-hdr-back { border-radius: 10px; }
         .ui-pulse.action-bar-btn { background: rgba(255,255,255,0.07); }
         .guide-halo { position: absolute; pointer-events: none; animation: guideHalo 1.3s ease-in-out infinite; }
         @keyframes guideHalo {
@@ -9561,7 +9542,7 @@
         #ritualReveal .ritual-obtained-label { margin-top: 0; font-size: 12px; }
         #ritualReveal .ritual-obtained-name { font-size: 20px; margin: 6px 0 12px; }
         .ritual-cadre {
-            --win: min(64vw, 300px, calc((100dvh - 300px) / (1 / var(--card-ratio, 0.5625) + 0.376)));
+            --win: min(64vw, 300px, calc((100dvh - 314px) / (1 / var(--card-ratio, 0.5625) + 0.376)));
             --s: calc(var(--win) / 665);
             position: relative; z-index: 2; flex-shrink: 0;
             width:  calc(var(--win) + 457 * var(--s));
@@ -9597,7 +9578,8 @@
         .ritual-cadre .ritual-big-card-border { display: none; }
         /* Zone d'informations sous le cadre */
         .ritual-infos {
-            position: relative; z-index: 2; max-width: 88vw; margin-top: 8px;
+            /* 22 px sous le cadre (David, 19/10) : la carte respire ; --win réserve 314 px. */
+            position: relative; z-index: 2; max-width: 88vw; margin-top: 22px;
             display: flex; flex-direction: column; align-items: center;
             opacity: 0; transition: opacity 0.6s 0.8s;
         }
@@ -9754,7 +9736,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.1</div>
+            <div class="hud-version" id="hudVersion">v1.9.7</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10033,7 +10015,7 @@
                                 background:linear-gradient(135deg,#F59E0B,#D97706);color:white;
                                 padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">⋆ Thématique</span>
                         </div>
-                        <div class="nearby-poi-distance">À portée de collecte !</div>
+                        <div class="nearby-poi-distance">À portée de collecte</div>
                     </div>
                 </div>
                 <button class="collect-btn" id="poiCollectBtn" onclick="collectCard()">Interagir</button>
@@ -10079,18 +10061,18 @@
             <div id="nearbyDust" class="nearby-poi console-poi console-collectable console--poussiere hidden" style="background: #F3E8FF; border-color: #A855F7;">
                 <div class="nearby-poi-header">
                     <div>
-                        <div class="nearby-poi-name" style="color: #7C3AED;"><img src="./assets/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> Poussière mémorielle</div>
-                        <div class="nearby-poi-distance" style="color: #9333EA;">À portée de collecte!</div>
+                        <div class="nearby-poi-name" style="color: #7C3AED;"><img src="./assets/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> Poussière</div>
+                        <div class="nearby-poi-distance" style="color: #9333EA;">À portée de collecte</div>
                     </div>
                 </div>
-                <button onclick="collectDust()" class="collect-btn" style="background: #A855F7;">Collecter la poussière</button>
+                <button onclick="collectDust()" class="collect-btn" style="background: #A855F7;">Collecter</button>
             </div>
 
             <div id="nearbyCarnetResource" class="nearby-poi console-poi console-collectable console--ressource hidden" style="background: #FEF3C7; border-color: #D97706;">
                 <div class="nearby-poi-header">
                     <div>
                         <div class="nearby-poi-name" id="carnetResourceName" style="color: #92400E;">📼 Ressource de carnet</div>
-                        <div class="nearby-poi-distance" style="color: #B45309;">À portée de collecte!</div>
+                        <div class="nearby-poi-distance" style="color: #B45309;">À portée de collecte</div>
                     </div>
                 </div>
                 <button onclick="collectCarnetResource()" class="collect-btn" style="background: #D97706;">Collecter</button>
@@ -10100,20 +10082,20 @@
                 <div class="nearby-poi-header">
                     <div>
                         <div class="nearby-poi-name" style="color: #7C3AED;" id="echoName">✨ Écho</div>
-                        <div class="nearby-poi-distance" style="color: #9333EA;">À portée de collecte!</div>
+                        <div class="nearby-poi-distance" style="color: #9333EA;">À portée de collecte</div>
                     </div>
                 </div>
-                <button onclick="collectEcho()" class="collect-btn" style="background: #A855F7;">Collecter l'écho</button>
+                <button onclick="collectEcho()" class="collect-btn" style="background: #A855F7;">Collecter</button>
             </div>
 
             <div id="nearbyOrb" class="nearby-poi console-poi console-collectable console--orbe hidden" style="background: #EEF2FF; border-color: #6366F1;">
                 <div class="nearby-poi-header">
                     <div>
-                        <div class="nearby-poi-name" style="color: #4338CA;">🔮 Orbe de mémoire</div>
-                        <div class="nearby-poi-distance" style="color: #6366F1;">À portée de collecte !</div>
+                        <div class="nearby-poi-name" style="color: #4338CA;">🔮 Orbe</div>
+                        <div class="nearby-poi-distance" style="color: #6366F1;">À portée de collecte</div>
                     </div>
                 </div>
-                <button onclick="collectOrb()" class="collect-btn" style="background: #6366F1;">Collecter l'orbe</button>
+                <button onclick="collectOrb()" class="collect-btn" style="background: #6366F1;">Collecter</button>
             </div>
 
             <div id="nearbyScroll" class="nearby-poi console-poi console-collectable console--parchemin hidden" style="background: #FFFBEB; border-color: #D97706;">
@@ -10123,20 +10105,20 @@
                 <div class="nearby-poi-header">
                     <div>
                         <div class="nearby-poi-name" style="color: #92400E;" id="scrollName" style="display:flex;align-items:center;gap:5px;"><span id="scrollNearbyIcon" style="display:inline-flex;align-items:center;"></span>Parchemin</div>
-                        <div class="nearby-poi-distance" style="color: #D97706;">À portée de collecte !</div>
+                        <div class="nearby-poi-distance" style="color: #D97706;">À portée de collecte</div>
                     </div>
                 </div>
-                <button onclick="collectScroll()" class="collect-btn" style="background: #D97706;">Collecter le parchemin</button>
+                <button onclick="collectScroll()" class="collect-btn" style="background: #D97706;">Collecter</button>
             </div>
 
             <div id="nearbyLoot" class="nearby-poi console-poi console-collectable console--loot hidden" style="background: #1a1a2e; border-color: #6366f1;">
                 <div class="nearby-poi-header">
                     <div>
                         <div class="nearby-poi-name" style="color: #a5b4fc;">⬡ Objet mystère</div>
-                        <div class="nearby-poi-distance" style="color: #6366f1;">Un fragment inconnu à portée</div>
+                        <div class="nearby-poi-distance" style="color: #6366f1;">À portée de collecte</div>
                     </div>
                 </div>
-                <button onclick="collectLoot()" class="collect-btn" style="background: #6366f1;">Ramasser</button>
+                <button onclick="collectLoot()" class="collect-btn" style="background: #6366f1;">Collecter</button>
             </div>
 
             <!-- Console de validation d'une étape de quête (au contact) -->
@@ -10326,7 +10308,7 @@
             <div class="alb-type-strip" id="albTypeStrip">
                 <button class="alb-type-btn alb-type-btn--toutes" data-type="" onclick="_albSetCardTypeFilter(null)">Toutes</button>
                 <button class="alb-type-btn" data-type="Personnage" onclick="_albSetCardTypeFilter('Personnage')" title="Personnage">👤</button>
-                <button class="alb-type-btn" data-type="Objet" onclick="_albSetCardTypeFilter('Objet')" title="Objet">⚙️</button>
+                <button class="alb-type-btn" data-type="Objet" onclick="_albSetCardTypeFilter('Objet')" title="Objet"><svg class="type-cube" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 20.5 7.4 12 12 3.5 7.4Z" fill="#e5e7eb"/><path d="M3.5 7.4 12 12v9.2l-8.5-4.6Z" fill="#9ca3af"/><path d="M20.5 7.4 12 12v9.2l8.5-4.6Z" fill="#6b7280"/><path d="M12 2.8 20.5 7.4v9.2L12 21.2 3.5 16.6V7.4ZM3.5 7.4 12 12l8.5-4.6M12 12v9.2" fill="none" stroke="#1f2937" stroke-width="1.3" stroke-linejoin="round"/></svg></button>
                 <button class="alb-type-btn" data-type="Lieu" onclick="_albSetCardTypeFilter('Lieu')" title="Lieu">🏛️</button>
             </div>
             <div class="alb-scroll" id="albScrollZone">
@@ -10350,12 +10332,13 @@
                         <div class="card-frame" onclick="event.stopPropagation()" style="position:relative;">
                             <div class="card-type-pin" id="cardTypePin" role="img" aria-label="Type de carte"></div>
                             <!-- Œil « observer » : affiche la carte en plein écran, sans UI -->
-                            <button class="card-eye-btn" id="cardEyeBtn" onclick="openCardFullscreen(event)" title="Voir la carte en plein écran" aria-label="Voir la carte en plein écran">👁️</button>
+                            <button class="card-eye-btn" id="cardEyeBtn" onclick="openCardFullscreen(event)" title="Voir la carte en plein écran" aria-label="Voir la carte en plein écran"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.8"/></svg></button>
                             <div class="card-category-badge sr-only" id="cardCategory">Personnage</div>
                             <div class="card-art-area">
                                 <div class="card-art-placeholder" onclick="showClickDialogue()" id="cardArtContainer" style="position:relative;">
                                     <img id="cardArtImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;display:none;">
                                     <span id="cardArtEmoji">👤</span>
+                                    <div class="card-art-a-venir" id="cardArtAVenir">Image à venir</div>
                                 </div>
                                 <div class="card-art-title" id="cardDetailName"></div>
                                 <div class="card-flavor-zone" id="cardFlavorZone">
@@ -10449,7 +10432,8 @@
                                     <div id="generalTab" class="tab-content active" style="display:block;padding:0;">
                                         <!-- Contenu par carte pas encore rédigé (David, 19/10) : l'ancien gabarit
                                              (fiche Marie Curie + Lorem ipsum) s'affichait sur toutes les cartes. -->
-                                        <p style="margin-top:12px; padding:0 4px; color:#4b5563; font-size:13px; line-height:1.6;">Informations à venir.</p>
+                                        <p id="cardAcquisDate" style="margin-top:12px; padding:0 4px; color:#1f2937; font-size:13px; font-weight:600; line-height:1.6;"></p>
+                                        <p style="margin-top:6px; padding:0 4px; color:#4b5563; font-size:13px; line-height:1.6;">Informations à venir.</p>
                                     </div>
                                 </div>
 
@@ -11583,15 +11567,6 @@
                     </div>
                 </div>
             </div>
-            <div class="bag-popup" id="bagPopupEl">
-                <div class="bag-popup-row" id="bagPopupRow" onclick="bagDoAction()">
-                    <span id="bagPopupIco">✦</span>
-                    <span id="bagPopupLbl">Utiliser</span>
-                </div>
-                <div class="bag-popup-row bag-popup-cancel" onclick="bagClosePopup()">
-                    <span>✕</span><span>Annuler</span>
-                </div>
-            </div>
         </div>
 
 
@@ -12057,15 +12032,15 @@
             "Elle est un peu bavarde, en tout cas elle a encore des choses à dire.": "It is a bit of a talker — either way, it still has things to say.",
             "Prends le temps de lire ce qu'elle a déjà retrouvé. Le reste viendra après.": "Take the time to read what it has already recovered. The rest will come after.",
             "Pour revenir en arrière, touche son image en haut : tu quitteras ce carnet dès que tu le souhaites.": "To go back, touch its picture at the top: you can leave this notebook whenever you like.",
-            "Les pages voilées demandent autre chose que de la poussière : une <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span> pour une image, une <span style=\"color:#C4B5FD;font-weight:600\">📼 cassette</span> pour une voix, de l'<span style=\"color:#E0A458;font-weight:600\">🖋️ encre</span> pour un texte.": "Veiled pages ask for something other than dust: a <span style=\"color:#FCD34D;font-weight:600\">🎞️ roll of film</span> for an image, a <span style=\"color:#C4B5FD;font-weight:600\">📼 tape</span> for a voice, <span style=\"color:#E0A458;font-weight:600\">🖋️ ink</span> for a text.",
+            "Les pages voilées demandent autre chose que de la poussière : une <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span> pour une image, une <span style=\"color:#FCD34D;font-weight:600\">📼 cassette</span> pour une voix, de l'<span style=\"color:#FCD34D;font-weight:600\">🖋️ encre</span> pour un texte.": "Veiled pages ask for something other than dust: a <span style=\"color:#FCD34D;font-weight:600\">🎞️ roll of film</span> for an image, a <span style=\"color:#FCD34D;font-weight:600\">📼 tape</span> for a voice, <span style=\"color:#FCD34D;font-weight:600\">🖋️ ink</span> for a text.",
             "Ces pages resteront voilées tant que tu n'auras rien pour les révéler. Une échoppe en tient, à %1 mètres d'ici.": "These pages will stay veiled until you have something to reveal them with. A stall keeps some, %1 metres from here.",
             "Ces pages resteront voilées tant que tu n'auras rien pour les révéler. Les échoppes de la ville en tiennent — cherche-les sur la mappe.": "These pages will stay veiled until you have something to reveal them with. The city's stalls keep some — look for them on the map.",
             "D'ailleurs, n'hésite pas à aller te fournir à l'échoppe, à %1 mètres d'ici. Profites-en pour collecter de la poussière ou une orbe si tu en trouves sur ton chemin.": "And do go stock up at the stall, %1 metres from here. While you are out, pick up dust or an orb if you come across any on the way.",
             "D'ailleurs, n'hésite pas à aller te fournir dans une échoppe. Profites-en pour collecter de la poussière ou une orbe si tu en trouves sur ton chemin.": "And do go stock up at a stall. While you are out, pick up dust or an orb if you come across any on the way.",
             // Étape « journal1 » et leçon des trois traces
             "Tu l'as réveillée. Une page s'est inscrite dans son <span style=\"font-weight:600\">📖 carnet</span> — il t'appelle.": "You have woken it. A page has written itself into its <span style=\"font-weight:600\">📖 notebook</span> — it is calling you.",
-            "L'<span style=\"color:#E0A458;font-weight:600\">🖋️ encre</span> révèle les mots. La <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span>, les images. La <span style=\"color:#C4B5FD;font-weight:600\">📼 cassette</span>, les sons. Tu en as quelques-unes — sers-t'en.": "<span style=\"color:#E0A458;font-weight:600\">🖋️ Ink</span> reveals words. <span style=\"color:#FCD34D;font-weight:600\">🎞️ Film</span>, images. A <span style=\"color:#C4B5FD;font-weight:600\">📼 tape</span>, sounds. You have a few — use them.",
-            "L'<span style=\"color:#E0A458;font-weight:600\">🖋️ encre</span> révèle les mots. La <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span>, les images. La <span style=\"color:#C4B5FD;font-weight:600\">📼 cassette</span>, les sons.": "<span style=\"color:#E0A458;font-weight:600\">🖋️ Ink</span> reveals words. <span style=\"color:#FCD34D;font-weight:600\">🎞️ Film</span>, images. A <span style=\"color:#C4B5FD;font-weight:600\">📼 tape</span>, sounds.",
+            "L'<span style=\"color:#FCD34D;font-weight:600\">🖋️ encre</span> révèle les mots. La <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span>, les images. La <span style=\"color:#FCD34D;font-weight:600\">📼 cassette</span>, les sons. Tu en as quelques-unes — sers-t'en.": "<span style=\"color:#FCD34D;font-weight:600\">🖋️ Ink</span> reveals words. <span style=\"color:#FCD34D;font-weight:600\">🎞️ Film</span>, images. A <span style=\"color:#FCD34D;font-weight:600\">📼 tape</span>, sounds. You have a few — use them.",
+            "L'<span style=\"color:#FCD34D;font-weight:600\">🖋️ encre</span> révèle les mots. La <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span>, les images. La <span style=\"color:#FCD34D;font-weight:600\">📼 cassette</span>, les sons.": "<span style=\"color:#FCD34D;font-weight:600\">🖋️ Ink</span> reveals words. <span style=\"color:#FCD34D;font-weight:600\">🎞️ Film</span>, images. A <span style=\"color:#FCD34D;font-weight:600\">📼 tape</span>, sounds.",
             // Acte I — la nébuleuse et la première carte
             "Oh, tu la vois ? Une <span style=\"color:#B98CE8;font-weight:600\">nébuleuse</span> ! Plusieurs <span style=\"color:#E09AC0;font-weight:600\">présences</span> flottent à l'intérieur. Ce sera ta première <span style=\"color:#F5B841;font-weight:600\">carte</span>.": "Oh, do you see it? A <span style=\"color:#B98CE8;font-weight:600\">nebula</span>! Several <span style=\"color:#E09AC0;font-weight:600\">presences</span> drift inside. This will be your first <span style=\"color:#F5B841;font-weight:600\">card</span>.",
             "Une <span style=\"color:#F5B841;font-weight:600\">carte</span>. Le nom qu'on donne à une mémoire qu'on a réussi à fixer : un <span style=\"color:#5FC9E8;font-weight:600\">personnage</span>, un <span style=\"color:#5FC9E8;font-weight:600\">lieu</span> ou un <span style=\"color:#5FC9E8;font-weight:600\">objet</span> que la ville avait presque oublié.": "A <span style=\"color:#F5B841;font-weight:600\">card</span>. The name we give a memory we have managed to fix in place: a <span style=\"color:#5FC9E8;font-weight:600\">figure</span>, a <span style=\"color:#5FC9E8;font-weight:600\">place</span> or an <span style=\"color:#5FC9E8;font-weight:600\">object</span> the city had all but forgotten.",
@@ -12142,6 +12117,10 @@
             "Collecter la poussière": "Collect the dust",
             "📼 Ressource de carnet": "📼 Journal resource",
             "Collecter": "Collect",
+            "À portée de collecte": "Within collecting range",
+            "Poussière": "Dust",
+            "🔮 Orbe": "🔮 Orb",
+            "Écho": "Echo",
             "✨ Écho": "✨ Echo",
             "Collecter l'écho": "Collect the echo",
             "🔮 Orbe de mémoire": "🔮 Memory orb",
@@ -12523,7 +12502,6 @@
             "Une pellicule photographique non développée. Utilise-la dans le carnet d'une carte pour révéler une entrée visuelle, ou dans l'appareil photo pour capturer un panorama.": "An undeveloped roll of film. Use it in a card's notebook to reveal a visual entry, or in the camera to capture a panorama.",
             "Un flacon d'encre mémorielle. Verse-la sur une entrée textuelle dans le carnet d'une carte pour en révéler le contenu.": "A vial of memorial ink. Pour it over a text entry in a card's notebook to reveal its content.",
             "Une cassette vierge. Insère-la dans une entrée audio dans le carnet d'une carte pour en libérer le son.": "A blank tape. Insert it into an audio entry in a card's notebook to release its sound.",
-            "Concentré de poussière mémorielle. Glisse-le dans le carnet d'une carte pour valider le passage de niveau et clôturer le chapitre narratif.": "Concentrated memorial dust. Slip it into a card's notebook to confirm the level up and close the narrative chapter.",
             "Les photos se prennent depuis les points d'information sur la carte. Chacune est accompagnée d'une note et d'une date de visite.": "Photos are taken from the information points on the map. Each comes with a note and a visit date.",
 
             // Chemin de l'Explorateur — jalons
@@ -12565,7 +12543,7 @@
             "L'histoire, c'est mon rayon. Une vieille pierre, une plaque, une date gravée : rapporte-moi ça.": "History is my department. An old stone, a plaque, a carved date: bring me those.",
             "Samir te dira qu'on range trop. Samir n'a jamais retrouvé un dossier de sa vie.": "Samir will tell you we tidy too much. Samir has never once found a file.",
             // Samir
-            "Tu arrives de dehors ? Raconte-moi. Il y a longtemps que je n'ai pas vu les berges.": "Just in from outside? Tell me. It's been a long time since I saw the riverbanks.",
+            "J'aime traîner sur les berges parfois. J'espère que je t'y croiserai.": "I like hanging around the riverbanks sometimes. I hope I'll run into you there.",
             "Les parcs, les jardins, les quais. La ville a une mémoire verte, et on la collecte trop peu.": "Parks, gardens, embankments. The city has a green memory, and we collect too little of it.",
             "Odile veut tout mettre en tiroirs. Moi je dis qu'un arbre ne tient pas dans un tiroir.": "Odile wants everything in drawers. I say a tree doesn't fit in a drawer.",
             // Aurèle
@@ -12746,7 +12724,7 @@
 
             // ── Carnet : économie des fournitures ──
             "Son carnet. Le premier chapitre s'y est déjà écrit — celui-là, tu peux le lire.": "Its notebook. The first chapter is already written there — that one you can read.",
-            "Les pages voilées demandent autre chose que de la poussière : une <span style=\"color:#FCD34D;font-weight:600\">pellicule</span> pour une image, une <span style=\"color:#C4B5FD;font-weight:600\">cassette</span> pour une voix, de l'<span style=\"color:#E0A458;font-weight:600\">encre</span> pour un texte.": "Veiled pages ask for more than dust: a <span style=\"color:#FCD34D;font-weight:600\">film roll</span> for an image, a <span style=\"color:#C4B5FD;font-weight:600\">tape</span> for a voice, <span style=\"color:#E0A458;font-weight:600\">ink</span> for a text.",
+            "Les pages voilées demandent autre chose que de la poussière : une <span style=\"color:#FCD34D;font-weight:600\">pellicule</span> pour une image, une <span style=\"color:#FCD34D;font-weight:600\">cassette</span> pour une voix, de l'<span style=\"color:#FCD34D;font-weight:600\">encre</span> pour un texte.": "Veiled pages ask for more than dust: a <span style=\"color:#FCD34D;font-weight:600\">film roll</span> for an image, a <span style=\"color:#FCD34D;font-weight:600\">tape</span> for a voice, <span style=\"color:#FCD34D;font-weight:600\">ink</span> for a text.",
             "L'échoppe en tient, juste au nord d'ici. Sers-toi.": "The stall keeps some, just north of here. Help yourself.",
             "Tu en as déjà sur toi. Touche une page voilée pour la révéler.": "You already have some on you. Touch a veiled page to reveal it.",
             "Le chapitre est plein — mais il garde encore des pages voilées. Ouvre son carnet et dévoile-les : c'est à cette condition qu'il pourra être scellé.": "The chapter is full — but it still keeps veiled pages. Open its notebook and reveal them: only then can it be sealed.",
@@ -12779,8 +12757,8 @@
                 `You've woken it. A page has written itself in its <span style="font-weight:600">📖 notebook</span> — it's calling you.`,
             "Cette première page est voilée. Cette fois, c'est moi qui l'écris pour toi.": "This first page is veiled. This time I'll write it for you.",
             "Les voix laissent trois sortes de traces : des mots, des images, des sons.": "Voices leave three kinds of traces: words, images, sounds.",
-            [`L'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> révèle les mots. La <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span>, les images. La <span style="color:#C4B5FD;font-weight:600">📼 cassette</span>, les sons.`]:
-                `<span style="color:#E0A458;font-weight:600">🖋️ Ink</span> reveals words. <span style="color:#FCD34D;font-weight:600">🎞️ Film</span>, images. <span style="color:#C4B5FD;font-weight:600">📼 Tape</span>, sounds.`,
+            [`L'<span style="color:#FCD34D;font-weight:600">🖋️ encre</span> révèle les mots. La <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span>, les images. La <span style="color:#FCD34D;font-weight:600">📼 cassette</span>, les sons.`]:
+                `<span style="color:#FCD34D;font-weight:600">🖋️ Ink</span> reveals words. <span style="color:#FCD34D;font-weight:600">🎞️ Film</span>, images. <span style="color:#FCD34D;font-weight:600">📼 Tape</span>, sounds.`,
             "L'encre révèle les mots. La pellicule, les images. La cassette, les sons. Tu en as quelques-unes — sers-t'en.": "Ink reveals words. Film, images. Tape, sounds. You have a few — use them.",
             "Tu en as déjà sur toi — sers-t'en. Quand tu n'en auras plus, une échoppe en ville en tient toujours.": "You already have some on you — use them. When you run out, a stall in town always keeps some.",
             "Et l'échoppe n'est pas loin, va voir ce que tu peux y trouver !": "And the stall isn't far, go and see what you can find there!",
@@ -13891,6 +13869,10 @@
             "Aucune boussole": "No compass",
             "%1 · Active": "%1 · Active",
             "Consommable · Level up": "Consumable · Level up",
+            "Consommable · Ravive une carte": "Consumable · Revives a card",
+            "Date d'acquisition : %1": "Acquired on: %1",
+            "inconnue": "unknown",
+            "Un concentré d'énergie. Il redonne de la vigueur à une carte : sa mémoire infuse plus vite, et la poussière revient plus tôt.": "Concentrated energy. It gives a card back its strength: its memory steeps faster, and the dust comes back sooner.",
             "Aucune photo": "No photo",
             "Prends des photos sur la carte": "Take photos on the map",
             "Aucune note.": "No note.",
@@ -15901,8 +15883,8 @@
         // Types possibles ; à chaque collecte on tire au sort
         const CARNET_RESOURCE_TYPES = [
             { key: 'pellicules', label: 'pellicule', emoji: '🎞️', image: './assets/Icon Pellicule.png', color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
-            { key: 'cassettes',  label: 'cassette',  emoji: '📼', image: './assets/Icon Cassette.png',  color: { top: 'rgba(196,181,253,0.95)', mid: 'rgba(139,92,246,0.55)', bot: 'rgba(91,33,182,0.85)', glow: 'rgba(196,181,253,0.8)', disk: 'rgba(237,233,254,0.7)', stroke: 'rgba(245,243,255,0.9)' } },
-            { key: 'encre',      label: 'encre',     emoji: '🖋️', image: './assets/Icon Encre.png',     color: { top: 'rgba(146,64,14,0.95)', mid: 'rgba(120,53,15,0.55)', bot: 'rgba(67,20,7,0.85)', glow: 'rgba(217,119,6,0.6)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(245,158,11,0.9)' } },
+            { key: 'cassettes',  label: 'cassette',  emoji: '📼', image: './assets/Icon Cassette.png',  color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
+            { key: 'encre',      label: 'encre',     emoji: '🖋️', image: './assets/Icon Encre.png',     color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
         ];
         // Mémorise les ressources collectées (pour respawn ou pas)
         let collectedCarnetResources = []; // ids déjà collectées
@@ -16206,8 +16188,8 @@
             // morphing — à remplacer par les illustrations définitives.
             artByLevel: [
                 './assets/Cards/Clef_de_la_ville/Clef_de_la_ville1.jpg',   // niveau 0 — une clef
-                './assets/clef_chapitre2.svg',           // niveau 1 — la deuxième se devine
-                './assets/clef_chapitre3.svg',           // niveau 2 — les trois sur le plat
+                null,   // niveau 1 — image à venir (les SVG provisoires sont retirés, 19/10)
+                null,   // niveau 2 — image à venir
             ],
         }
 
@@ -16222,6 +16204,14 @@
         // le lit dans --card-ratio (écran « Carte obtenue », .ritual-cadre).
         const CARD_VISUAL_RATIO = 9 / 16;
         try { document.documentElement.style.setProperty('--card-ratio', String(CARD_VISUAL_RATIO)); } catch (e) {}
+
+        // Icône du type « Objet » (David, 19/10) : un cube générique, faces grises
+        // et contour sombre comme 👤 et 🏛️ (le carton 📦 ne convenait pas).
+        const TYPE_ICONE_OBJET = '<svg class="type-cube" viewBox="0 0 24 24" aria-hidden="true">'
+            + '<path d="M12 2.8 20.5 7.4 12 12 3.5 7.4Z" fill="#e5e7eb"/>'
+            + '<path d="M3.5 7.4 12 12v9.2l-8.5-4.6Z" fill="#9ca3af"/>'
+            + '<path d="M20.5 7.4 12 12v9.2l8.5-4.6Z" fill="#6b7280"/>'
+            + '<path d="M12 2.8 20.5 7.4v9.2L12 21.2 3.5 16.6V7.4ZM3.5 7.4 12 12l8.5-4.6M12 12v9.2" fill="none" stroke="#1f2937" stroke-width="1.3" stroke-linejoin="round"/></svg>';
 
         function getCardArtForLevel(card, level) {
             if (!card) return null;
@@ -16258,6 +16248,13 @@
             if (!holder) return;
             for (let i = 0; i < OT_NIVEAUX_AUTO; i++) holder.classList.remove('ot-auto-' + i);
             if (_otNiveauxAuto(card)) holder.classList.add('ot-auto-' + Math.max(0, Math.min(OT_NIVEAUX_AUTO - 1, idx)));
+            holder.classList.toggle('ot-a-venir', _otAVenir(card, idx));
+        }
+        // Niveau sans image propre : au-delà du niveau 0 pour une carte à visuel
+        // unique, ou une case vide (null) de artByLevel.
+        function _otAVenir(card, idx) {
+            if (!card || idx <= 0) return false;
+            return Array.isArray(card.artByLevel) ? !card.artByLevel[idx] : true;
         }
         let _obDone        = false;
         let _villeDuLivreUnlocked = false;  // true quand le rendez-vous Bellecour est validé → POI du parcours visibles
@@ -18021,8 +18018,8 @@
                 // animation propre, sur l'échelle et la lueur portée.
                 s.textContent = '@keyframes obMarkerPulse{0%,100%{box-shadow:0 0 0 6px rgba(139,92,246,0.3)}50%{box-shadow:0 0 0 14px rgba(139,92,246,0.1)}}'
                     + '@keyframes obTutoCardPulse{'
-                    + '0%,100%{transform:scale(1);filter:drop-shadow(0 0 5px rgba(139,92,246,0.75)) drop-shadow(0 2px 4px rgba(0,0,0,0.55))}'
-                    + '50%{transform:scale(1.09);filter:drop-shadow(0 0 13px rgba(167,139,250,0.95)) drop-shadow(0 2px 4px rgba(0,0,0,0.55))}}';
+                    + '0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(167,139,250,0)) drop-shadow(0 2px 4px rgba(0,0,0,0.55))}'
+                    + '50%{transform:scale(1.14);filter:drop-shadow(0 0 8px rgba(167,139,250,0.95)) drop-shadow(0 2px 4px rgba(0,0,0,0.55))}}';
                 document.head.appendChild(s);
             }
 
@@ -18049,7 +18046,7 @@
                 'background-size:contain',
                 'background-repeat:no-repeat',
                 'background-position:center',
-                'animation:obTutoCardPulse 2.4s ease-in-out infinite'
+                'animation:obTutoCardPulse 1.3s ease-in-out infinite'
             ].join(';');
             el.appendChild(elPulse);
 
@@ -18589,9 +18586,9 @@
             info:      { icone: './assets/PanelInfoIcon.png?v=2',  couleur: '#7BD88F' },
             parchemin: { icone: './assets/parchemin.png',          couleur: '#EBCC7E' },
             carnet:    { emoji: '📖', couleur: '#F2DDB5' },   // papier du carnet
-            encre:     { emoji: '🖋️', couleur: '#E0A458' },
+            encre:     { emoji: '🖋️', couleur: '#FCD34D' },   // fournitures : jaune (David, 19/10)
             pellicule: { emoji: '🎞️', couleur: '#FCD34D' },
-            cassette:  { emoji: '📼', couleur: '#C4B5FD' },
+            cassette:  { emoji: '📼', couleur: '#FCD34D' },
             orbe:      { emoji: '🔮', couleur: '#67E8F9' },
             sac:       { couleur: '#F87171' },
             qg:        { couleur: '#A78BFA' },
@@ -19266,7 +19263,7 @@
             const voilees = _guideVaEnseigner ? 0 : _obVeiledEntries().length;
             // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour que la
             // réplique et l'inventaire montrent le même signe.
-            const REPLIQUE_FOURNITURES = { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poussière : une <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">📼 cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> pour un texte.' };
+            const REPLIQUE_FOURNITURES = { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poussière : une <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span> pour une image, une <span style="color:#FCD34D;font-weight:600">📼 cassette</span> pour une voix, de l\'<span style="color:#FCD34D;font-weight:600">🖋️ encre</span> pour un texte.' };
 
             if (!_obJournalSeen) {
                 _obJournalSeen = true;
@@ -19651,7 +19648,7 @@
                                     { speaker: 'La jeune fille', line: 'Les voix laissent trois sortes de traces : des mots, des images, des sons.' },
                                     // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour
                                     // que la réplique et l'inventaire montrent le même signe.
-                                    { speaker: 'La jeune fille', html: 'L\'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> révèle les mots. La <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span>, les images. La <span style="color:#C4B5FD;font-weight:600">📼 cassette</span>, les sons.' },
+                                    { speaker: 'La jeune fille', html: 'L\'<span style="color:#FCD34D;font-weight:600">🖋️ encre</span> révèle les mots. La <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span>, les images. La <span style="color:#FCD34D;font-weight:600">📼 cassette</span>, les sons.' },
                                 ];
                                 if (_sup > 0) {
                                     _lines.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi — sers-t\'en. Quand tu n\'en auras plus, une échoppe en ville en tient toujours.' });
@@ -20456,7 +20453,7 @@
                 // éclot à son tour, puis son tunnel (cf. _tuto10TickSac).
                 if (_tutoEtat.s10 === 'dialogue') { _tutoEtat.s10 = 'sac'; _tutoSauver(); }
                 uiReveler('sac', { apres: () => {
-                    if (_tutoEtat.s10 === 'sac' && !_gf) guideFocus(_tuto10SacCibles, { visibles: _tuto10SacVisibles });
+                    if (_tutoEtat.s10 === 'sac' && !_gf) guideFocus(_tuto10SacCibles, { visibles: _tuto10SacVisibles, pulse: _tuto10SacPulse });
                 } });
             });
         }
@@ -20465,14 +20462,17 @@
             const b = document.getElementById('bagScreen');
             return !!(b && b.classList.contains('show'));
         }
-        function _tuto10SacCibles() { return _tuto10SacOuvert() ? ['#bagScreen .bag-hdr-back'] : ['#btnBag']; }
+        // Sac ouvert : tout le sac reste touchable (onglets, ressources), seul le
+        // retour pulse (David, 19/10).
+        function _tuto10SacCibles() { return _tuto10SacOuvert() ? ['#bagScreen'] : ['#btnBag']; }
         function _tuto10SacVisibles() { return _tuto10SacOuvert() ? ['#bagScreen'] : null; }
+        function _tuto10SacPulse() { return _tuto10SacOuvert() ? ['#bagScreen .bag-hdr-back'] : ['#btnBag']; }
         function _tuto10TickSac(ecran) {
             const e = _tutoEtat;
             const ouvert = _tuto10SacOuvert();
             if (ouvert && !e.sacOuvert) { e.sacOuvert = true; _tutoSauver(); }
             if (!ouvert && e.sacOuvert) { if (ecran === 'map') _tuto10VersCollection(); return; }
-            if (!_gf && uiEstRevele('sac')) guideFocus(_tuto10SacCibles, { visibles: _tuto10SacVisibles });
+            if (!_gf && uiEstRevele('sac')) guideFocus(_tuto10SacCibles, { visibles: _tuto10SacVisibles, pulse: _tuto10SacPulse });
         }
         let _tuto10CollEnCours = false;
         function _tuto10VersCollection() {
@@ -20644,7 +20644,7 @@
             { speaker: 'Clara', air: 'exalté', line: 'Je ne sais pas toi, mais j’arrive à avoir une vision plus globale en prenant du recul, j’ai fait une carte du périmètre. Ils ne mentaient pas, il y a tant à découvrir, t’as vu ça ?' },
         ];
         const _TUTO_LIGNES_S14 = [
-            { speaker: 'Clara', air: 'joueur/de défi', line: 'Par où allons-nous ? Tu es prêt à faire chauffer un peu tes mollets ?' },
+            { speaker: 'Clara', air: 'joueur/de défi', line: 'Je te suis où que tu ailles, prêt à faire chauffer tes mollets ?' },
         ];
         const _TUTO_LIGNES_S15 = [
             { speaker: 'Clara', air: 'épuisé', line: 'Et de trois ! Pfiou, j’ai mal aux pieds mais on l’a fait !' },
@@ -21487,7 +21487,7 @@
             [_TUTO_HTML_S12_EQUIPE]: 'Well, you’re gifted and I have the knowledge… Let’s team up this time! We need to crystallise 3 more ' + vnMot('nebuleuse', 'nebulae') + '. By the way, I’m Clara!',
             "Je te laisse ma feuille de route, j’ai déjà tout en tête, n’hésite pas à la consulter quand tu le souhaites.": "I’ll leave you my roadmap, I already have it all in my head, feel free to check it whenever you like.",
             "Je ne sais pas toi, mais j’arrive à avoir une vision plus globale en prenant du recul, j’ai fait une carte du périmètre. Ils ne mentaient pas, il y a tant à découvrir, t’as vu ça ?": "I don’t know about you, but I get a more global view by stepping back, I made a map of the perimeter. They weren’t lying, there’s so much to discover, have you seen that?",
-            "Par où allons-nous ? Tu es prêt à faire chauffer un peu tes mollets ?": "Which way are we going? Ready to warm up your calves a bit?",
+            "Je te suis où que tu ailles, prêt à faire chauffer tes mollets ?": "I'll follow you wherever you go. Ready to warm up your calves?",
             "Et de trois ! Pfiou, j’ai mal aux pieds mais on l’a fait !": "And that’s three! Phew, my feet hurt but we did it!",
             'Je ne sais pas si toi aussi tu le sens, mais j\'ai l\'impression de "ressentir" la mémoire autour de nous.': 'I don’t know if you feel it too, but I have the impression of "feeling" the memory around us.',
             [_TUTO_HTML_S15_QG]: 'Enough talk, you’re the one who found all the ' + vnMot('nebuleuse', 'nebulae') + ' anyway! I have to introduce you to my favourite person. Off to ' + vnMot('qg', 'HQ') + '!',
@@ -22415,6 +22415,9 @@
 
         let playerPos = { ...LYON_CENTER };
         let collectedCards = [];
+        // Date de collecte de chaque carte (ms) ; 0 = collectée avant que le jeu
+        // ne la note (sauvegarde antérieure à la v1.9.5).
+        let cardAcquisDates = {};
 
         // ── Sauvegarde / Chargement ──
         
@@ -22624,8 +22627,10 @@
                         }
                     } catch(e) {}
                 }
+                collectedCards.forEach(id => { if (!(id in cardAcquisDates)) cardAcquisDates[id] = Date.now(); });
                 const _saveData = {
                     collectedCards,
+                    cardAcquisDates,
                     collectedEchoes,
                     hasSeenMapointTutorial,
                     hasSeenEchoTuto,
@@ -22742,6 +22747,8 @@
                 const d = JSON.parse(raw);
                 console.log('[expLore] Sauvegarde chargée — _obDone:', d._obDone, 'cartes:', (d.collectedCards||[]).length, 'poussière:', d.memorialDust);
                 if (d.collectedCards)        collectedCards      = d.collectedCards.filter(id => id !== 'v2_traboule');   // Traboule retirée (18/10)
+                cardAcquisDates = (d.cardAcquisDates && typeof d.cardAcquisDates === 'object') ? d.cardAcquisDates : {};
+                collectedCards.forEach(id => { if (!(id in cardAcquisDates)) cardAcquisDates[id] = 0; });
                 if (d.v2ConsultedMedias && typeof d.v2ConsultedMedias === 'object') v2ConsultedMedias = d.v2ConsultedMedias;
                 if (d.v2CartesVues && typeof d.v2CartesVues === 'object') v2CartesVues = d.v2CartesVues;
                 v2CartesRevelees = Array.isArray(d.v2CartesRevelees) ? d.v2CartesRevelees : null;
@@ -23452,7 +23459,7 @@
                 paint: {
                     'fill-color': ['match', ['get', 'status'],
                         'thematic_available', '#F59E0B',
-                        'cooldown', '#9CA3AF', '#EF4444'],
+                        'cooldown', '#9CA3AF', '#A78BFA'],
                     'fill-opacity': 0.13
                 }
             });
@@ -23464,7 +23471,7 @@
                 paint: {
                     'line-color': ['match', ['get', 'status'],
                         'thematic_available', '#F59E0B',
-                        'cooldown', '#9CA3AF', '#EF4444'],
+                        'cooldown', '#9CA3AF', '#A78BFA'],
                     'line-opacity': 0.95,
                     'line-width': 2.5
                 }
@@ -23483,7 +23490,7 @@
                 paint: {
                     'fill-color': ['match', ['get', 'status'],
                         'thematic_available', '#F59E0B',
-                        'cooldown', '#9CA3AF', '#EF4444'],
+                        'cooldown', '#9CA3AF', '#A78BFA'],
                     'fill-opacity': 0.75
                 }
             });
@@ -23495,7 +23502,7 @@
                 paint: {
                     'line-color': ['match', ['get', 'status'],
                         'thematic_available', '#FFE580',
-                        'cooldown', '#D1D5DB', '#FF8888'],
+                        'cooldown', '#D1D5DB', '#C4B5FD'],
                     'line-opacity': 1.0,
                     'line-width': 1.5
                 }
@@ -23565,14 +23572,14 @@
                     type: 'fill',
                     source: 'orb-circles',
                     layout: { visibility: 'none' },
-                    paint: { 'fill-color': '#6366F1', 'fill-opacity': 0.08 }
+                    paint: { 'fill-color': '#67E8F9', 'fill-opacity': 0.08 }
                 });
                 map.addLayer({
                     id: 'orb-circles-stroke',
                     type: 'line',
                     source: 'orb-circles',
                     layout: { visibility: 'none' },
-                    paint: { 'line-color': '#06B6D4', 'line-opacity': 0.75, 'line-width': 2 }
+                    paint: { 'line-color': '#67E8F9', 'line-opacity': 0.75, 'line-width': 2 }
                 });
 
                 map.addSource('scroll-circles', {
@@ -23668,14 +23675,14 @@
                     type: 'fill',
                     source: 'carnet-resource-circles',
                     layout: { visibility: 'none' },
-                    paint: { 'fill-color': '#F59E0B', 'fill-opacity': 0.09 }
+                    paint: { 'fill-color': '#FCD34D', 'fill-opacity': 0.09 }
                 });
                 map.addLayer({
                     id: 'carnet-resource-circles-stroke',
                     type: 'line',
                     source: 'carnet-resource-circles',
                     layout: { visibility: 'none' },
-                    paint: { 'line-color': '#F59E0B', 'line-opacity': 0.80, 'line-width': 2 }
+                    paint: { 'line-color': '#FCD34D', 'line-opacity': 0.80, 'line-width': 2 }
                 });
 
                 map.addSource('info-circles', {
@@ -23782,12 +23789,12 @@
                 _img.style.opacity = _collected ? '0.5' : '1';
                 _img.style.borderRadius = '50%';
                 const _poiWrap = _buildPoiVisual(_pid2, {
-                    top:    _collected ? 'rgba(147,197,253,0.9)'  : 'rgba(253,186,116,0.9)',
-                    mid:    _collected ? 'rgba(96,165,250,0.55)'  : 'rgba(249,115,22,0.55)',
-                    bot:    _collected ? 'rgba(59,130,246,0.85)'  : 'rgba(234,88,12,0.85)',
-                    glow:   _collected ? 'rgba(96,165,250,0.8)'   : 'rgba(249,115,22,0.8)',
-                    disk:   _collected ? 'rgba(147,197,253,0.7)'  : 'rgba(253,186,116,0.7)',
-                    stroke: _collected ? 'rgba(186,230,253,0.9)'  : 'rgba(254,215,170,0.9)'
+                    top:    _collected ? 'rgba(147,197,253,0.9)'  : 'rgba(196,181,253,0.9)',
+                    mid:    _collected ? 'rgba(96,165,250,0.55)'  : 'rgba(139,92,246,0.55)',
+                    bot:    _collected ? 'rgba(59,130,246,0.85)'  : 'rgba(109,40,217,0.85)',
+                    glow:   _collected ? 'rgba(96,165,250,0.8)'   : 'rgba(167,139,250,0.8)',
+                    disk:   _collected ? 'rgba(147,197,253,0.7)'  : 'rgba(196,181,253,0.7)',
+                    stroke: _collected ? 'rgba(186,230,253,0.9)'  : 'rgba(221,214,254,0.9)'
                 }, _img, 54, 75);
                 inner.appendChild(_poiWrap);
                 el.appendChild(inner);
@@ -25197,7 +25204,7 @@
 
         // Couleurs des zones de capture adaptées à la condition (résistent au filtre CSS)
         // Correspondance exacte cylindres ↔ zones :
-        // Carte     : cylindre orange    #F97316 / #FB923C nuit
+        // Carte     : cylindre violet    #A78BFA / #B388FF nuit (couleur de la console, 19/10)
         // Poussière    : cylindre violet    #A855F7 / #D946EF nuit
         // Écho      : cylindre vert      #10B981 / #34D399 nuit
         // Orbe      : cylindre cyan      #06B6D4 / #22D3EE nuit
@@ -25208,7 +25215,7 @@
             // Nuit : couleurs pre-compensées pour contrer brightness(0.45) saturate(0.5) hue-rotate(200deg)
             // On utilise des couleurs très saturées/lumineuses qui résistent au filtre
             night: {
-                poi:    ['#FF8C00', 0.45, '#FF8C00', 1.0, 3.5],  // orange → reste orange nuit
+                poi:    ['#B388FF', 0.45, '#B388FF', 1.0, 3.5],  // violet vif → reste violet nuit
                 dust:   ['#CC00FF', 0.45, '#CC00FF', 1.0, 3.5],  // violet vif → reste violet
                 echo:   ['#00FF88', 0.45, '#00FF88', 1.0, 3.5],  // vert vif → reste vert
                 orb:    ['#00E5FF', 0.45, '#00E5FF', 1.0, 3.5],  // cyan vif → reste cyan
@@ -25216,10 +25223,10 @@
                 loot:   ['#FF1493', 0.45, '#FF1493', 1.0, 3.5],  // rose vif → reste rose
             },
             day: {
-                poi:    ['#F97316', 0.10, '#F97316', 0.85, 2.0],
+                poi:    ['#A78BFA', 0.10, '#A78BFA', 0.85, 2.0],
                 dust:   ['#A855F7', 0.10, '#A855F7', 0.85, 2.0],
                 echo:   ['#10B981', 0.10, '#10B981', 0.85, 2.0],
-                orb:    ['#06B6D4', 0.10, '#06B6D4', 0.85, 2.0],
+                orb:    ['#67E8F9', 0.10, '#67E8F9', 0.85, 2.0],
                 scroll: ['#F59E0B', 0.10, '#F59E0B', 0.85, 2.0],
                 loot:   ['#EC4899', 0.10, '#EC4899', 0.85, 2.0],
             },
@@ -25236,15 +25243,15 @@
         let _capCtx = null, _capAnim = null, _capZones = [];
 
         const _CAP_COLORS = {
-            poi_local:        '#F97316',
+            poi_local:        '#A78BFA',   // zones = couleur de leur console (19/10)
             poi_thematic:     '#F59E0B',
             poi_cooldown:     '#9CA3AF',
             dust:             '#A855F7',
             echo:             '#10B981',
-            orb:              '#06B6D4',
+            orb:              '#67E8F9',
             scroll:           '#F59E0B',
             loot:             '#EC4899',
-            carnet_resource:  '#F59E0B',
+            carnet_resource:  '#FCD34D',   // fournitures : jaune
         };
 
         let _capResizeBound = false;
@@ -25872,7 +25879,7 @@
             const nearbyEchoDiv = document.getElementById('nearbyEcho');
             if (nearbyEcho) {
                 const info = SUPERTYPES[nearbyEcho.supertype];
-                document.getElementById('echoName').textContent = `${info.symbol} ${TF('Écho %1', T(info.name))}`;
+                document.getElementById('echoName').textContent = `${info.symbol} ${T('Écho')}`;
                 const show = _shouldShowPoiConsole('echo', nearbyEcho.id) && !_screenBlocked;
                 if (show) nearbyEchoDiv.classList.remove('hidden');
                 else if (_screenBlocked) nearbyEchoDiv.classList.add('hidden');
@@ -25946,7 +25953,7 @@
             const nearbyCRDiv = document.getElementById('nearbyCarnetResource');
             if (nearbyCR) {
                 const type = _getCarnetResourceType(nearbyCR.id);
-                document.getElementById('carnetResourceName').innerHTML = '<img src="' + encodeURI(type.image) + '" alt="' + T(type.label || 'ressource') + '" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:6px;display:inline-block;" draggable="false" onerror="this.style.display=\'none\';"/>' + type.label.charAt(0).toUpperCase() + type.label.slice(1);
+                document.getElementById('carnetResourceName').innerHTML = '<img src="' + encodeURI(type.image) + '" alt="' + T(type.label || 'ressource') + '" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:6px;display:inline-block;" draggable="false" onerror="this.style.display=\'none\';"/>' + T(type.label.charAt(0).toUpperCase() + type.label.slice(1));
                 const show = _shouldShowPoiConsole('carnetResource', nearbyCR.id) && !_screenBlocked;
                 if (show) nearbyCRDiv.classList.remove('hidden');
                 else if (_screenBlocked) nearbyCRDiv.classList.add('hidden');
@@ -25968,17 +25975,17 @@
                     // Photographié : le « TAP » et le halo vert allumés à l'entrée
                     // restaient affichés pour toujours sur le marqueur.
                     if (prompt) prompt.classList.remove('show');
-                    if (halo) { halo.style.borderColor = 'rgba(245,158,11,0.7)'; halo.style.boxShadow = ''; }
+                    if (halo) { halo.style.borderColor = 'rgba(96,165,250,0.7)'; halo.style.boxShadow = ''; }
                     return;
                 }
                 const inZone = !horsZoneDuJour(info.lat, info.lng) && _zoneOk('info:' + info.id, info, INFO_RADIUS)
                     && _marqueurAffiche(infoMarkers, 'info', info.id);
                 if (inZone) {
                     currentNearbyInfo = info;
-                    if (halo) { halo.style.borderColor = 'rgba(52,211,153,0.9)'; halo.style.boxShadow = '0 0 6px 2px rgba(52,211,153,0.4)'; halo.style.background = 'transparent'; }
+                    if (halo) { halo.style.borderColor = 'rgba(96,165,250,0.95)'; halo.style.boxShadow = '0 0 6px 2px rgba(96,165,250,0.45)'; halo.style.background = 'transparent'; }
                     if (prompt) prompt.classList.add('show');
                 } else {
-                    if (halo) { halo.style.borderColor = 'rgba(245,158,11,0.7)'; halo.style.boxShadow = ''; halo.style.background = 'transparent'; }
+                    if (halo) { halo.style.borderColor = 'rgba(96,165,250,0.7)'; halo.style.boxShadow = ''; halo.style.background = 'transparent'; }
                     if (prompt) prompt.classList.remove('show');
                 }
             });
@@ -26072,13 +26079,13 @@
                 map.setPaintProperty('poi-capture-circles', 'fill-color', [
                     'match', ['get', 'status'],
                     'thematic_available', '#F59E0B',
-                    'cooldown', '#9CA3AF', '#F97316'
+                    'cooldown', '#9CA3AF', '#A78BFA'
                 ]);
                 if (map.getLayer('poi-capture-circles-stroke')) {
                     map.setPaintProperty('poi-capture-circles-stroke', 'line-color', [
                         'match', ['get', 'status'],
                         'thematic_available', '#F59E0B',
-                        'cooldown', '#9CA3AF', '#F97316'
+                        'cooldown', '#9CA3AF', '#A78BFA'
                     ]);
                 }
             }
@@ -27136,8 +27143,8 @@
                 id: "orbes", icon: "🔮", label: "Orbes",
                 action: { icon: "💜", label: "Utiliser pour un level up" },
                 getItems() {
-                    return [{ id: "orbe", icon: "🔮", name: "Orbe de mémoire", sub: "Consommable · Level up", qty: bagInv.orbes,
-                        desc: "Concentré de poussière mémorielle. Glisse-le dans le carnet d'une carte pour valider le passage de niveau et clôturer le chapitre narratif." }];
+                    return [{ id: "orbe", icon: "🔮", name: "Orbe de mémoire", sub: "Consommable · Ravive une carte", qty: bagInv.orbes,
+                        desc: "Un concentré d'énergie. Il redonne de la vigueur à une carte : sa mémoire infuse plus vite, et la poussière revient plus tôt." }];
                 }
             },
             {
@@ -27335,57 +27342,23 @@
 
         function _bagSelCat(i) {
             _bagCat = i; _bagSel = null;
-            bagClosePopup(); _bagRender();
+            _bagRender();
         }
 
+        // Le sac ne fait que montrer (David, 19/10) : aucun chemin n'en part.
+        // Un tap sélectionne la ressource ; un double tap agrandit une photo.
+        let _bagDernierTap = { id: null, t: 0 };
         function _bagSelItem(id) {
             const items = BAG_CATS[_bagCat].getItems();
             const item  = items.find(it => it.id === id);
             if (!item || item.empty) return;
-            if (_bagSel === id) {
-                if (item.qty > 0) bagShowPopup(item);
-                return;
-            }
+            const now = Date.now();
+            const double = _bagDernierTap.id === id && now - _bagDernierTap.t < 350;
+            _bagDernierTap = double ? { id: null, t: 0 } : { id, t: now };
+            if (double && BAG_CATS[_bagCat].id === 'photos') { openPhotoViewer(item._photoData); return; }
+            if (_bagSel === id) return;
             _bagSel = id;
-            bagClosePopup(); _bagList(); _bagDetail(item);
-        }
-
-        function bagShowPopup(item) {
-            const cat = BAG_CATS[_bagCat];
-            document.getElementById("bagPopupIco").textContent = cat.action.icon;
-            document.getElementById("bagPopupLbl").textContent = cat.action.label;
-            document.getElementById("bagPopupEl")._item = item;
-            document.getElementById("bagPopupEl").classList.add("show");
-        }
-
-        function bagClosePopup() {
-            document.getElementById("bagPopupEl").classList.remove("show");
-        }
-
-        function bagDoAction() {
-            const item = document.getElementById("bagPopupEl")._item;
-            bagClosePopup();
-            if (!item) return;
-            const cat = BAG_CATS[_bagCat];
-
-            // ── Voir une photo ──
-            if (cat.id === 'photos') {
-                openPhotoViewer(item._photoData);
-                return;
-            }
-
-            // ── Assignation d'écho ──
-            if (cat.id === 'echos') {
-                const supertype = item.id.replace('echo_', '');
-                bagShowEchoAssign(supertype);
-                return;
-            }
-            // ── Utilisation d'orbe ──
-            if (cat.id === 'orbes') {
-                bagShowOrbAssign();
-                return;
-            }
-            // Autres catégories — à implémenter
+            _bagList(); _bagDetail(item);
         }
 
 
@@ -27641,9 +27614,6 @@
             if (selectedCard) openJournalScreen();
         }
 
-        document.addEventListener("click", e => {
-            if (!e.target.closest("#bagPopupEl") && !e.target.closest(".bag-item")) bagClosePopup();
-        });
 
 
         // Toggle caméra dev — permet de zoomer/pan/rotate pour le debug
@@ -28874,17 +28844,29 @@
             _otAppliquerEtatAuto(card, _otIdx);   // états automatiques, sans flash
             const typeIcon = {
                 'Personnage': '👤',
-                'Objet': '⚙️',
+                'Objet': TYPE_ICONE_OBJET,
                 'Lieu': '🏛️'
             }[card.type] || '❖';
             const typePin = document.getElementById('cardTypePin');
             if (typePin) {
-                typePin.textContent = typeIcon;
+                typePin.innerHTML = typeIcon;
+                // Fond de l'épingle : couleur du supertype de la carte (David, 19/10).
+                const _st = card.supertype && SUPERTYPES[card.supertype];
+                typePin.style.background = _st
+                    ? 'linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(0,0,0,0.16) 100%), ' + _st.color
+                    : '';
                 typePin.setAttribute('aria-label', TF('Type de carte : %1', T(card.type)));
             }
             if (!cardLevels[card.id]) cardLevels[card.id] = { level: 0, experience: 0, dustSpent: 0 };
             const _hdrTitle = document.getElementById('cardDetailHeaderTitle');
             if (_hdrTitle) _hdrTitle.textContent = card.name;
+            const _acq = document.getElementById('cardAcquisDate');
+            if (_acq) {
+                const t = cardAcquisDates[card.id] || (collectedCards.includes(card.id) && !(card.id in cardAcquisDates) ? Date.now() : 0);
+                _acq.textContent = TF("Date d'acquisition : %1", t
+                    ? new Date(t).toLocaleDateString(CURRENT_LANG === 'en' ? 'en-GB' : 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+                    : T('inconnue'));
+            }
             const nameEl = document.getElementById('cardDetailName');
             nameEl.textContent = card.name;
             nameEl.classList.remove('title-long', 'title-medium');
@@ -30805,7 +30787,7 @@
                     level: 0, index: 0,
                     template: 'image_citation',
                     title: "Trois clefs, aucune serrure",
-                    image: './assets/Cards/Clef_de_la_ville/Clef_de_la_ville1.jpg',
+                    image: './assets/Cards/Clef_de_la_ville/clef_a1.png',
                     imageCaption: "l'unique rescapée, telle qu'on la voit aujourd'hui",
                     body: "Les Clefs de la Ville de Lyon. Elles étaient trois, en bronze doré sur un plat d'argent, "
                         + "offertes à Napoléon en 1805 quand il est venu ici. Le plus étrange, c'est qu'elles n'ouvrent "
@@ -32977,7 +32959,7 @@
             porte:     "Derrière cette porte, l'" + vnMot('explorium', 'Explorium') + ". Toutes les mémoires extraites, remises à leur place d'origine.",
             dedans:    "Tu te demandes où tu es ? À l'intérieur d'une " + vnMot('nebuleuse', 'nébuleuse') + ". Le " + vnMot('qg', 'QG') + " tout entier n'existe que là-dedans.",
             science:   "Longtemps, on a seulement su observer les " + vnMot('nebuleuse', 'nébuleuses') + ". Puis la science de l'exploration de la mémoire a progressé, et on a appris à y entrer. Aujourd'hui, on y travaille.",
-            clara:     'J’en reviens pas, tu étais si rapide quand tu cristallisais les ' + vnMot('nebuleuse', 'nébuleuses') + ' ! Ça m’a pris des jours pour les premières, moi.',
+            clara:     'J’en reviens pas, tu étais si rapide quand tu cristallisais les ' + vnMot('nebuleuse', 'nébuleuses') + ' ! Ça m’a pris un temps fou d’y arriver sur un artefact lors de ma préparation.',
         };
         const HUB_LINES = {
             accueil: [
@@ -32989,11 +32971,10 @@
                 // Annexe B du document de dialogues v0.83 (Odile, l'Archiviste)
                 _hubSay('odile', _HUB_HTML.nebuleuses),
                 _hubSay('odile', "Chaque carte que tu rapportes, je la classe. Personnage, lieu ou objet, puis un domaine. C'est comme ça qu'on s'y retrouve."),
-                _hubSay('odile', "L'histoire, c'est mon rayon. Une vieille pierre, une plaque, une date gravée : rapporte-moi ça."),
                 _hubSay('odile', "Samir te dira qu'on range trop. Samir n'a jamais retrouvé un dossier de sa vie."),
             ],
             samir: [
-                _hubSay('samir', "Tu arrives de dehors ? Raconte-moi. Il y a longtemps que je n'ai pas vu les berges."),
+                _hubSay('samir', "J'aime traîner sur les berges parfois. J'espère que je t'y croiserai."),
                 _hubSay('samir', "Les parcs, les jardins, les quais. La ville a une mémoire verte, et on la collecte trop peu."),
                 _hubSay('samir', "Odile veut tout mettre en tiroirs. Moi je dis qu'un arbre ne tient pas dans un tiroir."),
             ],
@@ -35606,7 +35587,7 @@
                     <div class="interact-halo" style="
                         position:absolute;bottom:-4px;left:50%;
                         width:52px;height:52px;
-                        border:1.5px solid rgba(251,191,36,0.7);
+                        border:1.5px solid rgba(251,146,60,0.7);
                         border-radius:50%;
                         transform:translateX(-50%) scaleY(0.38);
                         pointer-events:none;
@@ -35659,14 +35640,14 @@
                     const prompt = inner.querySelector('.tap-prompt');
                     if (inZone) {
                         if (halo) {
-                            halo.style.borderColor = 'rgba(52,211,153,0.9)';
-                            halo.style.boxShadow = '0 0 6px 2px rgba(52,211,153,0.4)';
+                            halo.style.borderColor = 'rgba(251,146,60,0.95)';
+                            halo.style.boxShadow = '0 0 6px 2px rgba(251,146,60,0.45)';
                             halo.style.animation = '';
                         }
                         if (prompt) prompt.classList.add('show');
                     } else {
                         if (halo) {
-                            halo.style.borderColor = 'rgba(251,191,36,0.7)';
+                            halo.style.borderColor = 'rgba(251,146,60,0.7)';
                             halo.style.boxShadow = '';
                             halo.style.animation = '';
                         }
@@ -35777,7 +35758,7 @@
                     <div class="interact-halo" style="
                         position:absolute;bottom:-4px;left:50%;
                         width:52px;height:52px;
-                        border:1.5px solid rgba(245,158,11,0.7);
+                        border:1.5px solid rgba(96,165,250,0.7);
                         border-radius:50%;
                         transform:translateX(-50%) scaleY(0.38);
                         pointer-events:none;
@@ -39892,7 +39873,7 @@
                 mmCtx.stroke();
 
                 // Icône selon type
-                const typeIcon = card.type === 'Personnage' ? '👤' : card.type === 'Objet' ? '⚙️' : '🏛️';
+                const typeIcon = card.type === 'Personnage' ? '👤' : card.type === 'Objet' ? '⬛' : '🏛️';
                 mmCtx.font = '9px system-ui';
                 mmCtx.textAlign = 'center';
                 mmCtx.textBaseline = 'middle';
@@ -42934,7 +42915,7 @@
             [_HUB_HTML.porte]: "Behind this door, the " + vnMot('explorium', 'Explorium') + ". Every memory ever extracted, put back where it came from.",
             [_HUB_HTML.dedans]: "Wondering where you are? Inside a " + vnMot('nebuleuse', 'nebula') + ". The whole of " + vnMot('qg', 'HQ') + " exists only in there.",
             [_HUB_HTML.science]: "For a long time, we could only observe the " + vnMot('nebuleuse', 'nebulae') + ". Then the science of memory exploration moved on, and we learned to go inside. Now we work in them.",
-            [_HUB_HTML.clara]: 'I can’t get over it, you were so fast crystallising the ' + vnMot('nebuleuse', 'nebulae') + '! It took me days for my first ones',
+            [_HUB_HTML.clara]: 'I can’t get over it, you were so fast crystallising the ' + vnMot('nebuleuse', 'nebulae') + '! It took me ages to manage it on an artefact during my training.',
             "J’ai besoin que tu m’aides, je sens que quelque chose se passe.": "I need you to help me, I can feel something is happening.",
             "Je me sens changer, comme moins morcelée.": "I feel myself changing, as if less fragmented.",
             "Merci, il n’y a rien de pire que de s’oublier soi-même. Grâce à toi, j’ai récupéré mes souvenirs.": "Thank you, there is nothing worse than forgetting yourself. Thanks to you, I have my memories back.",
