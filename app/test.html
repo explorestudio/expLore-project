@@ -9366,11 +9366,19 @@
         body.ui-masque-journal_quetes #hudQuestCompass,
         body.ui-masque-jumelles #viewToggleBtn,
         body.ui-masque-parametres #settingsToggleBtn,
-        body.ui-masque-carnet #journalTabBtn,
-        body.ui-masque-collection #btnCollections {
+        body.ui-masque-carnet #journalTabBtn {
             visibility: hidden !important;
             pointer-events: none !important;
         }
+        /* Collection (19/10) : cachée en début de tutoriel SANS laisser de trou — la
+           barre se resserre sur les trois autres boutons, puis s'élargit quand la
+           Collection éclot (section 10). */
+        #btnCollections { transition: width 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease, background 0.15s, transform 0.1s; }
+        body.ui-masque-collection #btnCollections {
+            width: 0; min-width: 0; padding: 0; margin: 0; opacity: 0;
+            overflow: hidden; visibility: hidden; pointer-events: none !important;
+        }
+        body.ui-masque-collection #btnCollections + .action-bar-btn { border-left-color: transparent; }
         /* Barre du bas : visible mais grisée, non cliquable (sauf Collection et Sac) */
         body.ui-masque-explorium #btnMemorial,
         body.ui-masque-qg #btnStudio {
@@ -9684,7 +9692,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.5.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v1.5.1 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
