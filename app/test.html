@@ -9366,7 +9366,8 @@
         body.ui-masque-journal_quetes #hudQuestCompass,
         body.ui-masque-jumelles #viewToggleBtn,
         body.ui-masque-parametres #settingsToggleBtn,
-        body.ui-masque-carnet #journalTabBtn {
+        body.ui-masque-carnet #journalTabBtn,
+        body.ui-masque-collection #btnCollections {
             visibility: hidden !important;
             pointer-events: none !important;
         }
@@ -9409,10 +9410,16 @@
             0%, 100% { box-shadow: 0 0 0 0 rgba(167,139,250,0); }
             50%      { box-shadow: 0 0 10px 3px rgba(167,139,250,0.9); }
         }
-        .ui-apparait { animation: uiApparait 0.7s cubic-bezier(0.34,1.56,0.64,1) both; }
+        /* Éclosion d'un élément d'interface nouveau (19/10) : plus lente, avec un
+           halo qui s'ouvre puis retombe, comme une carte qui apparaît dans l'Explorium. */
+        .ui-apparait { animation: uiApparait 1.1s cubic-bezier(0.22,1,0.36,1) both; }
+        /* Cible déjà en pulsation (guideFocus) : l'éclosion passe d'abord. */
+        .ui-apparait.ui-pulse, .ui-apparait.ob-guide-pulse { animation: uiApparait 1.1s cubic-bezier(0.22,1,0.36,1) both !important; }
         @keyframes uiApparait {
-            from { opacity: 0; scale: 0.3; }
-            to   { opacity: 1; scale: 1; }
+            0%   { opacity: 0; scale: 0.2; box-shadow: 0 0 0 0 rgba(192,132,252,0); }
+            45%  { opacity: 1; scale: 1.22; box-shadow: 0 0 22px 8px rgba(192,132,252,0.75); }
+            70%  { scale: 0.94; }
+            100% { opacity: 1; scale: 1; box-shadow: 0 0 0 0 rgba(192,132,252,0); }
         }
         .hud-dust.ui-gain { animation: uiGainPop 0.45s ease-out; }
         @keyframes uiGainPop {
@@ -9564,7 +9571,7 @@
         #ritualReveal.show .ritual-reveal-tap { opacity: 1; }
         </style>
 </head>
-<body class="ui-masque-avatar ui-masque-poussiere ui-masque-journal_quetes ui-masque-jumelles ui-masque-explorium ui-masque-qg">
+<body class="ui-masque-avatar ui-masque-poussiere ui-masque-journal_quetes ui-masque-jumelles ui-masque-explorium ui-masque-qg ui-masque-collection">
     <!-- Symbole partagé : le cadenas de l'Explorium, sur le sceau de la porte du QG
          et sur le badge des boutons Explorium. Le même signe aux deux endroits. -->
     <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -9677,7 +9684,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.4.0 · refonte</div>
+            <div class="hud-version" id="hudVersion">v1.5.0 · refonte</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -16168,7 +16175,9 @@
         // zéro par « Relancer le tutoriel » (resetOnboarding).
         // 'carnet' (16/10) : bouton du carnet de la fiche carte, révélé quand la
         // jeune fille le mentionne (section 6).
-        const UI_CLES = ['avatar', 'poussiere', 'journal_quetes', 'jumelles', 'parametres', 'explorium', 'qg', 'barre_bas', 'carnet'];
+        // 'collection' (19/10) : bouton Collection de la barre du bas, caché jusqu'au
+        // dialogue de sortie de l'échoppe (section 10), qui ouvre son tunnel.
+        const UI_CLES = ['avatar', 'poussiere', 'journal_quetes', 'jumelles', 'parametres', 'explorium', 'qg', 'barre_bas', 'carnet', 'collection'];
         const UI_REVELE_DEFAUT = { parametres: true };
         const UI_CIBLES = {
             avatar:         ['#avatarBtn'],
@@ -16180,6 +16189,7 @@
             qg:             ['#btnStudio'],
             barre_bas:      ['#btnMemorial', '#btnStudio'],
             carnet:         ['#journalTabBtn'],
+            collection:     ['#btnCollections'],
         };
         let _uiRevele = {};              // { clé: true } — révélées pendant le tutoriel
         let _sacVus = {};                // objets du sac déjà possédés une fois (id → true)
@@ -16207,6 +16217,12 @@
             if (cle === 'explorium' || cle === 'qg') return !!(_uiRevele[cle] || _uiRevele.barre_bas);
             // Carnet : une partie sauvegardée au-delà de la section 6 l'a déjà vu
             if (cle === 'carnet') return !!_uiRevele.carnet || (typeof _tutoSection === 'number' && _tutoSection > 6);
+            // Collection : une partie sauvegardée au-delà du dialogue de la section 10 l'a déjà vue
+            if (cle === 'collection') {
+                if (_uiRevele.collection) return true;
+                try { return _tutoSection > 10 || (_tutoSection === 10 && !!_tutoEtat.s10 && _tutoEtat.s10 !== 'dialogue'); }
+                catch (e) { return false; }
+            }
             return !!(_uiRevele[cle] || UI_REVELE_DEFAUT[cle]);
         }
 
@@ -16227,9 +16243,32 @@
         // Révèle l'élément de la clé. opts.pulse : le fait pulser ensuite
         // (jusqu'au premier toucher, ou opts.pulseMs). opts.anime === false :
         // pas d'animation d'apparition. Renvoie true si la clé était encore cachée.
+        // opts.apres : appelé une fois l'élément apparu (après son animation).
+        // Apparition (David, 19/10) : jamais sous une bulle de dialogue. Elle attend
+        // que le dialogue soit fermé, marque un temps, puis l'élément éclot plus
+        // lentement — « tiens, un truc nouveau » —, avant de pulser.
+        const UI_APPARITION_PAUSE = 450;   // ms entre la fermeture du dialogue et l'apparition
+        const UI_APPARITION_MS    = 1100;  // durée de l'éclosion (cf. .ui-apparait)
+        const _uiEnAttente = {};
         function uiReveler(cle, opts) {
             opts = opts || {};
             if (UI_CLES.indexOf(cle) < 0) { console.warn('[ui] clé inconnue :', cle); return false; }
+            // opts.immediat : révélation synchrone (compteur visé par une animation,
+            // Explorium ouvert par une cinématique qui le teste aussitôt).
+            if (!uiEstRevele(cle) && opts.anime !== false && !opts._pret && !opts.immediat) {
+                if (_uiEnAttente[cle]) return true;
+                _uiEnAttente[cle] = true;
+                const attendre = () => {
+                    if (document.body.classList.contains('vn-ouvert')) { setTimeout(attendre, 150); return; }
+                    setTimeout(() => {
+                        if (document.body.classList.contains('vn-ouvert')) { attendre(); return; }
+                        delete _uiEnAttente[cle];
+                        uiReveler(cle, Object.assign({}, opts, { _pret: true }));
+                    }, UI_APPARITION_PAUSE);
+                };
+                attendre();
+                return true;
+            }
             const dejaVisible = uiEstRevele(cle);
             _uiRevele[cle] = true;
             if (cle === 'barre_bas') { _uiRevele.explorium = true; _uiRevele.qg = true; }
@@ -16240,10 +16279,12 @@
                     el.classList.remove('ui-apparait');
                     void el.offsetWidth;   // relance l'animation
                     el.classList.add('ui-apparait');
-                    setTimeout(() => el.classList.remove('ui-apparait'), 750);
+                    setTimeout(() => el.classList.remove('ui-apparait'), UI_APPARITION_MS + 50);
                 });
             }
-            if (opts.pulse) setTimeout(() => els.forEach(el => uiPulser(el, opts)), dejaVisible ? 0 : 760);
+            const apparu = (dejaVisible || opts.anime === false) ? 0 : UI_APPARITION_MS + 60;
+            if (opts.pulse) setTimeout(() => els.forEach(el => uiPulser(el, opts)), apparu);
+            if (typeof opts.apres === 'function') setTimeout(opts.apres, apparu);
             try { saveProgress(); } catch (e) {}
             return !dejaVisible;
         }
@@ -16458,7 +16499,7 @@
             const finir = () => {
                 if (termine) return;
                 termine = true;
-                uiReveler('poussiere');
+                uiReveler('poussiere', { immediat: true });
                 const fin = memorialDust, debut = avant, t0 = performance.now(), DUREE = 700;
                 const monter = (t) => {
                     const k = Math.min(1, (t - t0) / DUREE);
@@ -16497,7 +16538,7 @@
                 anim.onfinish = () => {
                     g.remove();
                     arrives++;
-                    if (!revele) { revele = true; uiReveler('poussiere'); }
+                    if (!revele) { revele = true; uiReveler('poussiere', { immediat: true }); }
                     if (pastille) { pastille.classList.remove('ui-gain'); void pastille.offsetWidth; pastille.classList.add('ui-gain'); }
                     if (arrives === NB) finir();
                 };
@@ -20167,8 +20208,11 @@
             if (_tutoEtat.s10 !== 'dialogue' && _tutoEtat.s10 !== 'guide') return;
             _tutoDire('s10', 'map', _TUTO_LIGNES_S10[_tutoEtat.cas10], () => {
                 _echoppeTutoRetirer();   // lot 2.2 : son office est rempli
-                if (_tutoEtat.s10 === 'dialogue') { _tutoEtat.s10 = 'guide'; _tutoSauver(); }
-                if (_tutoEtat.s10 === 'guide') guideFocus(_tuto10Cibles);
+                // 19/10 : la Collection n'apparaît qu'ici, puis son tunnel
+                uiReveler('collection', { apres: () => {
+                    if (_tutoEtat.s10 === 'dialogue') { _tutoEtat.s10 = 'guide'; _tutoSauver(); }
+                    if (_tutoEtat.s10 === 'guide') guideFocus(_tuto10Cibles);
+                } });
             });
         }
         // Cibles du guidage de la section 10, selon l'écran ouvert.
@@ -20751,7 +20795,7 @@
             _hubExploriumOpened = true;
             _hubPadlockPopPending = false;
             try { _hubRefreshLockUI(); _hubRefreshDoor(); } catch (e) {}
-            uiReveler('explorium');
+            uiReveler('explorium', { immediat: true });
             _tutoSauver();
             _tuto17EnCours = true;
             jouerArriveeExplorium(() => {
