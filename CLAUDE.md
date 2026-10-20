@@ -55,7 +55,7 @@ Explorer · Collectionner · Découvrir.
 - Dernière version du jeu, utilisée pour le test terrain de
   Bellecour (codes d'accès, journal envoyé au Google Sheet,
   tutoriel Bellecour)
-- Point d'entrée des testeurs (page `test-bellecour/`)
+- Point d'entrée des testeurs (page `test-terrain/`)
 - Service Worker partagé avec `/app/index.html` :
   incrémenter la version cache à chaque push
 - `/app/indextest.html` = ancienne version de test.html
