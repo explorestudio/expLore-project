@@ -7530,6 +7530,7 @@
         .gq-prereq:hover { background: rgba(255,255,255,0.08); }
         .gq-prereq.met { border-color: rgba(52,211,153,0.5); background: rgba(52,211,153,0.08); }
         .gq-prereq.missing-card { opacity: 0.5; }
+        .gq-prereq-reste { font-size: 11px; font-style: italic; opacity: 0.6; padding: 4px 2px; }
         .gq-prereq-icon { width: 18px; height: 18px; border-radius: 4px; background: #555; flex-shrink: 0; }
         .gq-prereq-name { font-weight: 600; }
         .gq-prereq-level {
@@ -7538,10 +7539,12 @@
         }
         .gq-prereq.met .gq-prereq-level { background: rgba(52,211,153,0.3); color: rgb(180,255,210); }
         /* Nouveautés de la fiche de grappe (16/10) */
-        .gq-etape--nouveau { box-shadow: inset 3px 0 0 #f0c674; }
+        /* David, 20/10 : orange, replié, appelle le toucher */
+        .gq-etape--nouveau { box-shadow: inset 3px 0 0 #fb923c, 0 0 0 1px rgba(251,146,60,0.55), 0 0 14px rgba(251,146,60,0.28); }
+        .gq-etape--nouveau .gq-etape-head::after { color: #fb923c; opacity: 1; }
         .gq-etape-nouveau {
             display: inline-block; margin-left: 8px; padding: 1px 6px; border-radius: 8px;
-            background: #f0c674; color: #1a1206; font-size: 9px; font-weight: 800; letter-spacing: 0.6px;
+            background: #fb923c; color: #1a1206; font-size: 9px; font-weight: 800; letter-spacing: 0.6px;
             vertical-align: middle; animation: v2NouveauPulse 1.6s ease-in-out infinite;
         }
         .gq-prereq--revele { animation: gqPrereqRevele 1.3s ease-out; }
@@ -8845,6 +8848,7 @@
             border: 1px solid rgba(217,164,65,0.35); border-radius: 12px; padding: 3px 10px;
         }
         .verriere-stage { flex: 1; position: relative; overflow: hidden; min-height: 0; }
+        .vr-acteur-reste { font-size: 12px; font-style: italic; opacity: 0.6; padding: 6px 2px; }
         .verriere-svg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: block; touch-action: manipulation;
@@ -9809,7 +9813,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.23</div>
+            <div class="hud-version" id="hudVersion">v1.9.27</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11236,25 +11240,12 @@
                         <div class="studio-zone">
                         <svg id="hubExploriumSvg" viewBox="0 0 400 370" preserveAspectRatio="xMidYMid meet" style="overflow:visible;">
   <defs>
-    <linearGradient id="hubDoorLightGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.95"/>
-      <stop offset="100%" stop-color="#bae6fd" stop-opacity="0.9"/>
-    </linearGradient>
-    <linearGradient id="hubDoorSpillGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.75"/>
-      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
-    </linearGradient>
-    <!-- Nébuleuse derrière la porte : cœur clair, violet, bords sombres -->
-    <radialGradient id="hubNebulaGrad" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#f5d0fe" stop-opacity="0.95"/>
-      <stop offset="35%" stop-color="#a78bfa" stop-opacity="0.75"/>
-      <stop offset="75%" stop-color="#5b21b6" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="#150b2c" stop-opacity="0"/>
+    <!-- Lueur violette autour des dormeurs « en transe » dans l'Explorium -->
+    <radialGradient id="hubTranseGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c4b5fd" stop-opacity="0.55"/>
+      <stop offset="60%" stop-color="#7c3aed" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
     </radialGradient>
-    <!-- Découpe de l'ouverture (repère du mur droit) -->
-    <clipPath id="hubDoorClip" clipPathUnits="userSpaceOnUse">
-      <rect x="2.58" y="0" width="1.04" height="2.12"/>
-    </clipPath>
   </defs>
   <!-- ═══ COQUILLE — dimétrie 2:1, 1 m = 40 px (couleurs fixes : pas de --st-*) ═══ -->
   <polygon points="200,47 24,135 24,235 200,147" fill="#2b3350"/>
@@ -11300,11 +11291,6 @@
   <line x1="248" y1="171" x2="72" y2="259" stroke="rgba(0,0,0,0.10)" stroke-width="0.8"/>
   <line x1="296" y1="195" x2="120" y2="283" stroke="rgba(0,0,0,0.10)" stroke-width="0.8"/>
   <line x1="344" y1="219" x2="168" y2="307" stroke="rgba(0,0,0,0.10)" stroke-width="0.8"/>
-  <!-- Arc de seuil devant la porte -->
-  <g transform="matrix(40,20,-40,20,200,147)">
-    <path d="M1.85,0 A1.25,1.25 0 0 0 4.35,0" fill="none" stroke="#c9a45c" stroke-width="0.04" opacity="0.55"/>
-    <path d="M2.05,0 A1.05,1.05 0 0 0 4.15,0" fill="rgba(56,189,248,0.06)" stroke="#c9a45c" stroke-width="0.02" opacity="0.6"/>
-  </g>
 
   <!-- ═══ MACHINERIE — mur gauche : conduites et manomètre ═══ -->
   <g transform="matrix(-40,20,0,-40,200,147)">
@@ -11319,76 +11305,41 @@
     <circle cx="2.55" cy="1.2" r="0.06" fill="#38BDF8" opacity="0.7"/>
   </g>
 
-  <!-- ═══ PORTE SCELLÉE DE L'EXPLORIUM — mur droit ═══
-       États portés par la classe du groupe : door--sealed / door--ready / door--open
-       (transitoires : door--breaking, door--highlight). Cf. _hubRefreshDoor. -->
-  <g id="hubDoor" class="door--sealed" onclick="hubDoorTap()" style="cursor:pointer">
-    <g transform="matrix(40,20,-40,20,200,147)">
-      <polygon class="hub-door-spill" points="2.6,0 3.6,0 4.05,1.9 2.1500000000000004,1.9" fill="url(#hubDoorSpillGrad)" pointer-events="none"/>
-      <!-- Volutes de poussière qui s'échappent de la porte ouverte, sur le sol -->
-      <g class="hub-door-dust" fill="#e9d5ff" pointer-events="none">
-        <circle cx="2.85" cy="0.1" r="0.035" opacity="0"><animate attributeName="cy" values="0.1;1.7" dur="6s" begin="0s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="6s" begin="0s" repeatCount="indefinite"/></circle>
-        <circle cx="3.15" cy="0.1" r="0.035" opacity="0"><animate attributeName="cy" values="0.1;1.7" dur="7s" begin="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="7s" begin="1.4s" repeatCount="indefinite"/></circle>
-        <circle cx="3.4" cy="0.1" r="0.035" opacity="0"><animate attributeName="cy" values="0.1;1.7" dur="5.5s" begin="2.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="5.5s" begin="2.8s" repeatCount="indefinite"/></circle>
-        <circle cx="3" cy="0.1" r="0.035" opacity="0"><animate attributeName="cy" values="0.1;1.7" dur="6.5s" begin="3.9s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="6.5s" begin="3.9s" repeatCount="indefinite"/></circle>
-        <circle cx="3.3" cy="0.1" r="0.035" opacity="0"><animate attributeName="cy" values="0.1;1.7" dur="7.5s" begin="5.1s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="7.5s" begin="5.1s" repeatCount="indefinite"/></circle>
-      </g>
-    </g>
-    <g transform="matrix(40,20,0,-40,200,147)">
-      <!-- Encadrement de pierre, filet doré -->
-      <rect x="2.42" y="0" width="1.36" height="2.36" fill="#1b2033"/>
-      <rect x="2.5" y="0" width="1.2" height="2.24" fill="none" stroke="#c9a45c" stroke-width="0.035"/>
-      <rect class="hub-door-glow" x="2.38" y="-0.02" width="1.44" height="2.42" fill="none" stroke="#f0c674" stroke-width="0.09"/>
-      <!-- Ouverture : la lumière de l'Explorium, cachée tant que le battant est fermé -->
-      <rect x="2.58" y="0" width="1.04" height="2.12" fill="#0b1020"/>
-      <rect class="hub-door-light" x="2.58" y="0" width="1.04" height="2.12" fill="url(#hubDoorLightGrad)"/>
-      <!-- Nébuleuse de l'Explorium, visible porte ouverte : fond violet, deux
-           volutes qui tournent en sens contraire, poussière en suspension.
-           Animations SMIL (rotation autour du centre de l'ouverture). -->
-      <g class="hub-door-nebula" clip-path="url(#hubDoorClip)" pointer-events="none">
-        <rect x="2.58" y="0" width="1.04" height="2.12" fill="#150b2c"/>
-        <ellipse cx="3.1" cy="1.06" rx="0.62" ry="0.98" fill="url(#hubNebulaGrad)">
-          <animate attributeName="opacity" values="0.75;1;0.75" dur="5s" repeatCount="indefinite"/>
-        </ellipse>
-        <g fill="none" stroke-linecap="round">
-          <animateTransform attributeName="transform" type="rotate" from="0 3.1 1.06" to="360 3.1 1.06" dur="22s" repeatCount="indefinite"/>
-          <polyline points="3.13,1.06 3.139,1.07 3.147,1.084 3.151,1.101 3.152,1.122 3.149,1.144 3.142,1.166 3.13,1.188 3.114,1.206 3.094,1.221 3.071,1.23 3.045,1.232 3.017,1.227 2.99,1.214 2.963,1.193 2.939,1.163 2.918,1.126 2.902,1.082 2.893,1.032 2.89,0.979 2.896,0.924 2.909,0.869 2.931,0.816 2.96,0.768 2.998,0.726 3.042,0.694 3.091,0.672 3.144,0.663 3.199,0.667 3.254,0.686 3.308,0.719 3.357,0.766 3.4,0.826 3.436,0.898 3.462,0.98 3.476,1.069 3.479,1.162 3.468,1.257 3.445,1.35 3.408,1.437 3.359,1.516 3.299,1.584 3.229,1.636 3.152,1.671 3.069,1.687 2.984,1.683 2.899,1.657 2.818,1.61 2.743,1.542 2.676,1.455 2.622,1.352 2.581,1.235 2.556,1.108 2.549,0.974 2.56,0.838 2.589,0.705" stroke="#c4b5fd" stroke-width="0.05" opacity="0.35"/>
-          <polyline points="3.07,1.06 3.061,1.05 3.053,1.036 3.049,1.019 3.048,0.998 3.051,0.976 3.058,0.954 3.07,0.932 3.086,0.914 3.106,0.899 3.129,0.89 3.155,0.888 3.183,0.893 3.21,0.906 3.237,0.927 3.261,0.957 3.282,0.994 3.298,1.038 3.307,1.088 3.31,1.141 3.304,1.196 3.291,1.251 3.269,1.304 3.24,1.352 3.202,1.394 3.158,1.426 3.109,1.448 3.056,1.457 3.001,1.453 2.946,1.434 2.892,1.401 2.843,1.354 2.8,1.294 2.764,1.222 2.738,1.14 2.724,1.051 2.721,0.958 2.732,0.863 2.755,0.77 2.792,0.683 2.841,0.604 2.901,0.536 2.971,0.484 3.048,0.449 3.131,0.433 3.216,0.437 3.301,0.463 3.382,0.51 3.457,0.578 3.524,0.665 3.578,0.768 3.619,0.885 3.644,1.012 3.651,1.146 3.64,1.282 3.611,1.415" stroke="#f0b8c8" stroke-width="0.04" opacity="0.3"/>
-        </g>
-        <g fill="#f5e6c8" opacity="0.85">
-          <animateTransform attributeName="transform" type="rotate" from="0 3.1 1.06" to="360 3.1 1.06" dur="16s" repeatCount="indefinite"/>
-          <circle cx="2.905" cy="0.752" r="0.014"/><circle cx="3.031" cy="1.266" r="0.021"/><circle cx="3.196" cy="1.157" r="0.023"/><circle cx="2.867" cy="0.992" r="0.026"/><circle cx="3.311" cy="0.692" r="0.021"/><circle cx="3.038" cy="1.29" r="0.015"/><circle cx="3.056" cy="0.62" r="0.015"/><circle cx="3.201" cy="1.119" r="0.029"/><circle cx="3.158" cy="1.179" r="0.029"/><circle cx="3.104" cy="1.246" r="0.022"/><circle cx="3.358" cy="0.705" r="0.015"/><circle cx="2.995" cy="1.773" r="0.016"/><circle cx="3.025" cy="0.654" r="0.015"/><circle cx="3.524" cy="1.077" r="0.018"/>
-        </g>
-        <g fill="#ddd6fe" opacity="0.7">
-          <animateTransform attributeName="transform" type="rotate" from="360 3.1 1.06" to="0 3.1 1.06" dur="27s" repeatCount="indefinite"/>
-          <circle cx="3.001" cy="0.959" r="0.016"/><circle cx="2.811" cy="0.527" r="0.016"/><circle cx="3.027" cy="1.513" r="0.026"/><circle cx="2.898" cy="1.442" r="0.016"/><circle cx="3.308" cy="1.227" r="0.013"/><circle cx="3.364" cy="1.142" r="0.024"/><circle cx="3.073" cy="0.368" r="0.02"/><circle cx="3.28" cy="1.372" r="0.027"/><circle cx="3.332" cy="1.248" r="0.017"/><circle cx="3.167" cy="0.823" r="0.014"/><circle cx="3.223" cy="0.836" r="0.027"/><circle cx="3.132" cy="0.294" r="0.027"/>
-        </g>
-        <circle cx="3.1" cy="1.06" r="0.07" fill="#fdf4ff" opacity="0.8">
-          <animate attributeName="r" values="0.05;0.09;0.05" dur="3.2s" repeatCount="indefinite"/>
-        </circle>
-      </g>
-      <!-- Battant, charnière à gauche -->
-      <g class="hub-door-leaf">
-        <rect x="2.58" y="0" width="1.04" height="2.12" fill="#3a2c22" stroke="#241a13" stroke-width="0.03"/>
-        <rect x="2.68" y="1.25" width="0.84" height="0.72" fill="none" stroke="#c9a45c" stroke-width="0.025" opacity="0.7"/>
-        <rect x="2.68" y="0.12" width="0.84" height="0.72" fill="none" stroke="#c9a45c" stroke-width="0.025" opacity="0.7"/>
-      </g>
-      <!-- Plaque « Explorium » au linteau -->
-      <rect x="2.72" y="2.02" width="0.76" height="0.16" fill="#c9a45c" opacity="0.85"/>
-      <text transform="scale(1,-1)" x="3.1" y="-2.06" text-anchor="middle" font-size="0.11" font-weight="700" letter-spacing="0.02" fill="#1b2033" font-family="Georgia, serif">EXPLORIUM</text>
-      <!-- Sceau : halo, disque, cadenas (#hubPadlock, le même que sur le bouton) -->
-      <g class="hub-seal">
-        <circle class="hub-seal-halo" cx="3.1" cy="1.08" r="0.4" fill="#c9a45c"/>
-        <circle class="hub-seal-disc" cx="3.1" cy="1.08" r="0.26" stroke="#241a13" stroke-width="0.03"/>
-        <g transform="translate(3.1,1.08) scale(1,-1)">
-          <use class="hub-seal-lock" href="#hubPadlock" x="-0.16" y="-0.16" width="0.32" height="0.32"/>
-        </g>
-      </g>
-    </g>
+  <!-- ═══ FAUTEUILS DE L'EXPLORIUM — mur droit (David, 20/10) ═══
+       La porte n'existe plus : on rejoint l'Explorium assis, en transe. Cinq
+       fauteuils, deux dormeurs anonymes (volutes de poussière autour d'eux).
+       Toucher : hubFauteuilTap / hubDormeurTap. Généré dans le repère du sol
+       (x = 200 + 40u − 40w, y = 147 + 20u + 20w − 40h). -->
+  <g class="hub-fauteuil studio-nav-item" data-libre="1" onclick="hubFauteuilTap(this)" style="cursor:pointer">
+    <polygon points="208.4,153.6 237.2,168 210.8,181.2 182,166.8" fill="rgba(0,0,0,0.28)"/><polygon points="189.2,165.6 191.6,166.8 191.6,161.2 189.2,160" fill="#2a1e12"/><polygon points="194,165.6 191.6,166.8 191.6,161.2 194,160" fill="#33251a"/><polygon points="191.6,158.8 194,160 191.6,161.2 189.2,160" fill="#3a2a18"/><polygon points="210,176 212.4,177.2 212.4,171.6 210,170.4" fill="#2a1e12"/><polygon points="214.8,176 212.4,177.2 212.4,171.6 214.8,170.4" fill="#33251a"/><polygon points="212.4,169.2 214.8,170.4 212.4,171.6 210,170.4" fill="#3a2a18"/><polygon points="203.6,152 228.4,164.4 228.4,126.8 203.6,114.4" fill="#8a3d52"/><polygon points="234.8,161.2 228.4,164.4 228.4,126.8 234.8,123.6" fill="#4a1f2a"/><polygon points="210,111.2 234.8,123.6 228.4,126.8 203.6,114.4" fill="#5a2632"/><circle cx="211.2" cy="132.6" r="0.9" fill="#c9a45c" opacity="0.85"/><circle cx="220.8" cy="137.4" r="0.9" fill="#c9a45c" opacity="0.85"/><circle cx="216" cy="143" r="0.9" fill="#c9a45c" opacity="0.85"/><polygon points="187.6,160 192,162.2 192,143 187.6,140.8" fill="#5e4528"/><polygon points="214.4,151 192,162.2 192,143 214.4,131.8" fill="#725434"/><polygon points="210,129.6 214.4,131.8 192,143 187.6,140.8" fill="#9a7848"/><polygon points="192,162.2 208,170.2 208,159 192,151" fill="#4a1f2a"/><polygon points="224,162.2 208,170.2 208,159 224,151" fill="#5a2632"/><polygon points="208,143 224,151 208,159 192,151" fill="#7a3446"/><line x1="192" y1="151" x2="208" y2="159" stroke="#c9a45c" stroke-width="0.7" opacity="0.7"/>
+    <polygon points="208,170.2 212.4,172.4 212.4,153.2 208,151" fill="#5e4528"/><polygon points="234.8,161.2 212.4,172.4 212.4,153.2 234.8,142" fill="#725434"/><polygon points="230.4,139.8 234.8,142 212.4,153.2 208,151" fill="#9a7848"/>
+    <rect x="189.2" y="112.2" width="44" height="60" fill="rgba(0,0,0,0)" pointer-events="all"/>
+  </g>
+  <g class="hub-fauteuil studio-nav-item" data-libre="0" onclick="hubFauteuilTap(this)" style="cursor:pointer">
+    <polygon points="240.4,169.6 269.2,184 242.8,197.2 214,182.8" fill="rgba(0,0,0,0.28)"/><polygon points="221.2,181.6 223.6,182.8 223.6,177.2 221.2,176" fill="#2a1e12"/><polygon points="226,181.6 223.6,182.8 223.6,177.2 226,176" fill="#33251a"/><polygon points="223.6,174.8 226,176 223.6,177.2 221.2,176" fill="#3a2a18"/><polygon points="242,192 244.4,193.2 244.4,187.6 242,186.4" fill="#2a1e12"/><polygon points="246.8,192 244.4,193.2 244.4,187.6 246.8,186.4" fill="#33251a"/><polygon points="244.4,185.2 246.8,186.4 244.4,187.6 242,186.4" fill="#3a2a18"/><polygon points="235.6,168 260.4,180.4 260.4,142.8 235.6,130.4" fill="#8a3d52"/><polygon points="266.8,177.2 260.4,180.4 260.4,142.8 266.8,139.6" fill="#4a1f2a"/><polygon points="242,127.2 266.8,139.6 260.4,142.8 235.6,130.4" fill="#5a2632"/><circle cx="243.2" cy="148.6" r="0.9" fill="#c9a45c" opacity="0.85"/><circle cx="252.8" cy="153.4" r="0.9" fill="#c9a45c" opacity="0.85"/><circle cx="248" cy="159" r="0.9" fill="#c9a45c" opacity="0.85"/><polygon points="219.6,176 224,178.2 224,159 219.6,156.8" fill="#5e4528"/><polygon points="246.4,167 224,178.2 224,159 246.4,147.8" fill="#725434"/><polygon points="242,145.6 246.4,147.8 224,159 219.6,156.8" fill="#9a7848"/><polygon points="224,178.2 240,186.2 240,175 224,167" fill="#4a1f2a"/><polygon points="256,178.2 240,186.2 240,175 256,167" fill="#5a2632"/><polygon points="240,159 256,167 240,175 224,167" fill="#7a3446"/><line x1="224" y1="167" x2="240" y2="175" stroke="#c9a45c" stroke-width="0.7" opacity="0.7"/>
+    <g class="hub-dormeur" onclick="event.stopPropagation(); hubDormeurTap()"><ellipse cx="241" cy="139.4" rx="17" ry="20" fill="url(#hubTranseGrad)" pointer-events="none"><animate attributeName="opacity" values="0.45;0.8;0.45" dur="4.5s" begin="1s" repeatCount="indefinite"/></ellipse><rect x="235.2" y="142.4" width="16" height="22" rx="4" fill="#4c3a6b"/><path d="M236.2,146.4 Q234.2,159.4 230.2,168.4" fill="none" stroke="#4c3a6b" stroke-width="4.5" stroke-linecap="round"/><path d="M250.2,146.4 Q252.2,159.4 234.2,168.4" fill="none" stroke="#4c3a6b" stroke-width="4.5" stroke-linecap="round"/><g transform="rotate(-18 241 135.4)"><circle cx="241" cy="135.4" r="7.5" fill="#d8a47f"/><path d="M233.5,134.4 Q234,126.4 241,126.9 Q248,126.4 248.5,134.4 Q244,130.4 233.5,134.4 Z" fill="#2f2624"/><path d="M237,135.9 q1.4,1.3 2.8,0 M242.2,135.9 q1.4,1.3 2.8,0" fill="none" stroke="#1e1b4b" stroke-width="0.9" stroke-linecap="round"/></g><path d="M239.7,163.4 L227.7,171.4 L223.7,189.4" fill="none" stroke="#2e2442" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M246.7,163.4 L234.7,171.4 L230.7,189.4" fill="none" stroke="#2e2442" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="222.2" cy="190.4" rx="3.6" ry="2" fill="#1f1b2e"/><ellipse cx="229.2" cy="190.4" rx="3.6" ry="2" fill="#1f1b2e"/><rect x="227.2" y="123.4" width="32" height="70" fill="rgba(0,0,0,0)" pointer-events="all"/></g>
+    <polygon points="240,186.2 244.4,188.4 244.4,169.2 240,167" fill="#5e4528"/><polygon points="266.8,177.2 244.4,188.4 244.4,169.2 266.8,158" fill="#725434"/><polygon points="262.4,155.8 266.8,158 244.4,169.2 240,167" fill="#9a7848"/>
+    <g fill="#e9d5ff" pointer-events="none"><circle cx="229" cy="135.4" r="1.3" opacity="0"><animate attributeName="cy" values="135.4;113.4" dur="6s" begin="0s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.85;0" dur="6s" begin="0s" repeatCount="indefinite"/><animate attributeName="r" values="1;1.8;0.8" dur="6s" begin="0s" repeatCount="indefinite"/></circle><circle cx="251" cy="131.4" r="1.3" opacity="0"><animate attributeName="cy" values="131.4;109.4" dur="7s" begin="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.85;0" dur="7s" begin="1.6s" repeatCount="indefinite"/><animate attributeName="r" values="1;1.8;0.8" dur="7s" begin="1.6s" repeatCount="indefinite"/></circle><circle cx="237" cy="125.4" r="1.3" opacity="0"><animate attributeName="cy" values="125.4;103.4" dur="5.5s" begin="3.1s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.85;0" dur="5.5s" begin="3.1s" repeatCount="indefinite"/><animate attributeName="r" values="1;1.8;0.8" dur="5.5s" begin="3.1s" repeatCount="indefinite"/></circle><circle cx="255" cy="143.4" r="1.3" opacity="0"><animate attributeName="cy" values="143.4;121.4" dur="6.5s" begin="4.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.85;0" dur="6.5s" begin="4.2s" repeatCount="indefinite"/><animate attributeName="r" values="1;1.8;0.8" dur="6.5s" begin="4.2s" repeatCount="indefinite"/></circle><circle cx="226" cy="147.4" r="1.3" opacity="0"><animate attributeName="cy" values="147.4;125.4" dur="7.5s" begin="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.85;0" dur="7.5s" begin="2.4s" repeatCount="indefinite"/><animate attributeName="r" values="1;1.8;0.8" dur="7.5s" begin="2.4s" repeatCount="indefinite"/></circle></g>
+  </g>
+  <g class="hub-fauteuil studio-nav-item" data-libre="1" onclick="hubFauteuilTap(this)" style="cursor:pointer">
+    <polygon points="272.4,185.6 301.2,200 274.8,213.2 246,198.8" fill="rgba(0,0,0,0.28)"/><polygon points="253.2,197.6 255.6,198.8 255.6,193.2 253.2,192" fill="#2a1e12"/><polygon points="258,197.6 255.6,198.8 255.6,193.2 258,192" fill="#33251a"/><polygon points="255.6,190.8 258,192 255.6,193.2 253.2,192" fill="#3a2a18"/><polygon points="274,208 276.4,209.2 276.4,203.6 274,202.4" fill="#2a1e12"/><polygon points="278.8,208 276.4,209.2 276.4,203.6 278.8,202.4" fill="#33251a"/><polygon points="276.4,201.2 278.8,202.4 276.4,203.6 274,202.4" fill="#3a2a18"/><polygon points="267.6,184 292.4,196.4 292.4,158.8 267.6,146.4" fill="#8a3d52"/><polygon points="298.8,193.2 292.4,196.4 292.4,158.8 298.8,155.6" fill="#4a1f2a"/><polygon points="274,143.2 298.8,155.6 292.4,158.8 267.6,146.4" fill="#5a2632"/><circle cx="275.2" cy="164.6" r="0.9" fill="#c9a45c" opacity="0.85"/><circle cx="284.8" cy="169.4" r="0.9" fill="#c9a45c" opacity="0.85"/><circle cx="280" cy="175" r="0.9" fill="#c9a45c" opacity="0.85"/><polygon points="251.6,192 256,194.2 256,175 251.6,172.8" fill="#5e4528"/><polygon points="278.4,183 256,194.2 256,175 278.4,163.8" fill="#725434"/><polygon points="274,161.6 278.4,163.8 256,175 251.6,172.8" fill="#9a7848"/><polygon points="256,194.2 272,202.2 272,191 256,183" fill="#4a1f2a"/><polygon points="288,194.2 272,202.2 272,191 288,183" fill="#5a2632"/><polygon points="272,175 288,183 272,191 256,183" fill="#7a3446"/><line x1="256" y1="183" x2="272" y2="191" stroke="#c9a45c" stroke-width="0.7" opacity="0.7"/>
+    <polygon points="272,202.2 276.4,204.4 276.4,185.2 272,183" fill="#5e4528"/><polygon points="298.8,193.2 276.4,204.4 276.4,185.2 298.8,174" fill="#725434"/><polygon points="294.4,171.8 298.8,174 276.4,185.2 272,183" fill="#9a7848"/>
+    <rect x="253.2" y="144.2" width="44" height="60" fill="rgba(0,0,0,0)" pointer-events="all"/>
+  </g>
+  <g class="hub-fauteuil studio-nav-item" data-libre="0" onclick="hubFauteuilTap(this)" style="cursor:pointer">
+    <polygon points="304.4,201.6 333.2,216 306.8,229.2 278,214.8" fill="rgba(0,0,0,0.28)"/><polygon points="285.2,213.6 287.6,214.8 287.6,209.2 285.2,208" fill="#2a1e12"/><polygon points="290,213.6 287.6,214.8 287.6,209.2 290,208" fill="#33251a"/><polygon points="287.6,206.8 290,208 287.6,209.2 285.2,208" fill="#3a2a18"/><polygon points="306,224 308.4,225.2 308.4,219.6 306,218.4" fill="#2a1e12"/><polygon points="310.8,224 308.4,225.2 308.4,219.6 310.8,218.4" fill="#33251a"/><polygon points="308.4,217.2 310.8,218.4 308.4,219.6 306,218.4" fill="#3a2a18"/><polygon points="299.6,200 324.4,212.4 324.4,174.8 299.6,162.4" fill="#8a3d52"/><polygon points="330.8,209.2 324.4,212.4 324.4,174.8 330.8,171.6" fill="#4a1f2a"/><polygon points="306,159.2 330.8,171.6 324.4,174.8 299.6,162.4" fill="#5a2632"/><circle cx="307.2" cy="180.6" r="0.9" fill="#c9a45c" opacity="0.85"/><circle cx="316.8" cy="185.4" r="0.9" fill="#c9a45c" opacity="0.85"/><circle cx="312" cy="191" r="0.9" fill="#c9a45c" opacity="0.85"/><polygon points="283.6,208 288,210.2 288,191 283.6,188.8" fill="#5e4528"/><polygon points="310.4,199 288,210.2 288,191 310.4,179.8" fill="#725434"/><polygon points="306,177.6 310.4,179.8 288,191 283.6,188.8" fill="#9a7848"/><polygon points="288,210.2 304,218.2 304,207 288,199" fill="#4a1f2a"/><polygon points="320,210.2 304,218.2 304,207 320,199" fill="#5a2632"/><polygon points="304,191 320,199 304,207 288,199" fill="#7a3446"/><line x1="288" y1="199" x2="304" y2="207" stroke="#c9a45c" stroke-width="0.7" opacity="0.7"/>
+    <g class="hub-dormeur" onclick="event.stopPropagation(); hubDormeurTap()"><ellipse cx="309.1" cy="171.4" rx="17" ry="20" fill="url(#hubTranseGrad)" pointer-events="none"><animate attributeName="opacity" values="0.45;0.8;0.45" dur="4.5s" begin="3s" repeatCount="indefinite"/></ellipse><rect x="299.2" y="174.4" width="16" height="22" rx="4" fill="#3f5a52"/><path d="M300.2,178.4 Q298.2,191.4 294.2,200.4" fill="none" stroke="#3f5a52" stroke-width="4.5" stroke-linecap="round"/><path d="M314.2,178.4 Q316.2,191.4 298.2,200.4" fill="none" stroke="#3f5a52" stroke-width="4.5" stroke-linecap="round"/><g transform="rotate(16 309.1 167.4)"><circle cx="309.1" cy="167.4" r="7.5" fill="#c98d64"/><path d="M301.6,166.4 Q302.1,158.4 309.1,158.9 Q316.1,158.4 316.6,166.4 Q312.1,162.4 301.6,166.4 Z" fill="#6b4a2e"/><path d="M305.1,167.9 q1.4,1.3 2.8,0 M310.3,167.9 q1.4,1.3 2.8,0" fill="none" stroke="#1e1b4b" stroke-width="0.9" stroke-linecap="round"/></g><path d="M303.7,195.4 L291.7,203.4 L287.7,221.4" fill="none" stroke="#26372f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M310.7,195.4 L298.7,203.4 L294.7,221.4" fill="none" stroke="#26372f" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="286.2" cy="222.4" rx="3.6" ry="2" fill="#1f1b2e"/><ellipse cx="293.2" cy="222.4" rx="3.6" ry="2" fill="#1f1b2e"/><rect x="291.2" y="155.4" width="32" height="70" fill="rgba(0,0,0,0)" pointer-events="all"/></g>
+    <polygon points="304,218.2 308.4,220.4 308.4,201.2 304,199" fill="#5e4528"/><polygon points="330.8,209.2 308.4,220.4 308.4,201.2 330.8,190" fill="#725434"/><polygon points="326.4,187.8 330.8,190 308.4,201.2 304,199" fill="#9a7848"/>
+    <g fill="#e9d5ff" pointer-events="none"><circle cx="297.1" cy="167.4" r="1.3" opacity="0"><animate attributeName="cy" values="167.4;145.4" dur="6s" begin="0s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.85;0" dur="6s" begin="0s" repeatCount="indefinite"/><animate attributeName="r" values="1;1.8;0.8" dur="6s" begin="0s" repeatCount="indefinite"/></circle><circle cx="319.1" cy="163.4" r="1.3" opacity="0"><animate attributeName="cy" values="163.4;141.4" dur="7s" begin="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.85;0" dur="7s" begin="1.6s" repeatCount="indefinite"/><animate attributeName="r" values="1;1.8;0.8" dur="7s" begin="1.6s" repeatCount="indefinite"/></circle><circle cx="305.1" cy="157.4" r="1.3" opacity="0"><animate attributeName="cy" values="157.4;135.4" dur="5.5s" begin="3.1s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.85;0" dur="5.5s" begin="3.1s" repeatCount="indefinite"/><animate attributeName="r" values="1;1.8;0.8" dur="5.5s" begin="3.1s" repeatCount="indefinite"/></circle><circle cx="323.1" cy="175.4" r="1.3" opacity="0"><animate attributeName="cy" values="175.4;153.4" dur="6.5s" begin="4.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.85;0" dur="6.5s" begin="4.2s" repeatCount="indefinite"/><animate attributeName="r" values="1;1.8;0.8" dur="6.5s" begin="4.2s" repeatCount="indefinite"/></circle><circle cx="294.1" cy="179.4" r="1.3" opacity="0"><animate attributeName="cy" values="179.4;157.4" dur="7.5s" begin="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.85;0" dur="7.5s" begin="2.4s" repeatCount="indefinite"/><animate attributeName="r" values="1;1.8;0.8" dur="7.5s" begin="2.4s" repeatCount="indefinite"/></circle></g>
+  </g>
+  <g class="hub-fauteuil studio-nav-item" data-libre="1" onclick="hubFauteuilTap(this)" style="cursor:pointer">
+    <polygon points="336.4,217.6 365.2,232 338.8,245.2 310,230.8" fill="rgba(0,0,0,0.28)"/><polygon points="317.2,229.6 319.6,230.8 319.6,225.2 317.2,224" fill="#2a1e12"/><polygon points="322,229.6 319.6,230.8 319.6,225.2 322,224" fill="#33251a"/><polygon points="319.6,222.8 322,224 319.6,225.2 317.2,224" fill="#3a2a18"/><polygon points="338,240 340.4,241.2 340.4,235.6 338,234.4" fill="#2a1e12"/><polygon points="342.8,240 340.4,241.2 340.4,235.6 342.8,234.4" fill="#33251a"/><polygon points="340.4,233.2 342.8,234.4 340.4,235.6 338,234.4" fill="#3a2a18"/><polygon points="331.6,216 356.4,228.4 356.4,190.8 331.6,178.4" fill="#8a3d52"/><polygon points="362.8,225.2 356.4,228.4 356.4,190.8 362.8,187.6" fill="#4a1f2a"/><polygon points="338,175.2 362.8,187.6 356.4,190.8 331.6,178.4" fill="#5a2632"/><circle cx="339.2" cy="196.6" r="0.9" fill="#c9a45c" opacity="0.85"/><circle cx="348.8" cy="201.4" r="0.9" fill="#c9a45c" opacity="0.85"/><circle cx="344" cy="207" r="0.9" fill="#c9a45c" opacity="0.85"/><polygon points="315.6,224 320,226.2 320,207 315.6,204.8" fill="#5e4528"/><polygon points="342.4,215 320,226.2 320,207 342.4,195.8" fill="#725434"/><polygon points="338,193.6 342.4,195.8 320,207 315.6,204.8" fill="#9a7848"/><polygon points="320,226.2 336,234.2 336,223 320,215" fill="#4a1f2a"/><polygon points="352,226.2 336,234.2 336,223 352,215" fill="#5a2632"/><polygon points="336,207 352,215 336,223 320,215" fill="#7a3446"/><line x1="320" y1="215" x2="336" y2="223" stroke="#c9a45c" stroke-width="0.7" opacity="0.7"/>
+    <polygon points="336,234.2 340.4,236.4 340.4,217.2 336,215" fill="#5e4528"/><polygon points="362.8,225.2 340.4,236.4 340.4,217.2 362.8,206" fill="#725434"/><polygon points="358.4,203.8 362.8,206 340.4,217.2 336,215" fill="#9a7848"/>
+    <rect x="317.2" y="176.2" width="44" height="60" fill="rgba(0,0,0,0)" pointer-events="all"/>
   </g>
 
   <!-- PNJ aurele -->
-  <g class="hub-npc studio-nav-item" id="hubNpc-aurele" data-hub-npc="aurele" transform="translate(228,201)" onclick="hubTalkTo('aurele')" style="cursor:pointer">
+  <g class="hub-npc studio-nav-item" id="hubNpc-aurele" data-hub-npc="aurele" transform="translate(160,197)" onclick="hubTalkTo('aurele')" style="cursor:pointer">
     <ellipse cx="0" cy="1.5" rx="10" ry="4" fill="rgba(0,0,0,0.32)"/>
     <rect x="-8" y="-30" width="7" height="24" rx="3" fill="#1e3a8a"/><rect x="-9.5" y="-8" width="9" height="4.5" rx="2" fill="#1f1b2e"/>
       <rect x="1" y="-30" width="7" height="24" rx="3" fill="#1e3a8a"/><rect x="0" y="-8" width="9" height="4.5" rx="2" fill="#1f1b2e"/>
@@ -11748,7 +11699,7 @@
                 <div class="verriere-header">
                     <button class="verriere-back" onclick="fermerVerriere()" aria-label="Fermer">&#8592;</button>
                     <div class="verriere-title-block">
-                        <div class="verriere-eyebrow" id="verriereEyebrow">Verrière</div>
+                        <div class="verriere-eyebrow" id="verriereEyebrow">Médias</div>
                         <div class="verriere-title" id="verriereTitle"></div>
                     </div>
                     <div class="verriere-compteur" id="verriereCompteur">0 / 0</div>
@@ -11783,7 +11734,7 @@
                 <div class="verriere-volet" id="verriereVolet">
                     <div class="verriere-volet-poignee"></div>
                     <div class="verriere-volet-corps" id="verriereVoletCorps"></div>
-                    <button class="verriere-volet-retour" onclick="verriereDezoomer()">Retour à la verrière</button>
+                    <button class="verriere-volet-retour" onclick="verriereDezoomer()">Retour aux médias</button>
                 </div>
             </div>
 
@@ -12633,10 +12584,10 @@
             "Professeur Ricardo": "Professor Ricardo",
             "Celle-ci, on l'a stabilisée nous-mêmes. Tant qu'elle tient, l'Organisation a un toit.": "We stabilized this one ourselves. As long as it holds, the Organisation has a roof over its head.",
             // ══════════ VERRIÈRE — planche BD (test.html) ══════════
-            "Verrière · %1": "Glasswork · %1",
-            "Retour à la verrière": "Back to the glasswork",
+            "Médias · %1": "Media · %1",
+            "Retour aux médias": "Back to the media",
             "🪟 Voir la verrière (%1/%2)": "🪟 View the glasswork (%1/%2)",
-            "🪟 Voir la planche (%1/%2)": "🪟 View the plate (%1/%2)",
+            "🪟 Voir les médias (%1/%2)": "🪟 View the media (%1/%2)",
             "Colorisé · média obtenu": "Coloured · media obtained",
             "Quête en cours": "Quest in progress",
             "Encré · quête disponible": "Inked · quest available",
@@ -12645,6 +12596,9 @@
             "Crayonné · il manque des voix": "Pencilled · voices missing",
             "La scène est esquissée. Il manque des voix, ou des niveaux, pour l'encrer.": "The scene is sketched. It still lacks voices, or levels, to be inked.",
             "Les voix de cette case": "The voices of this panel",
+            "D’autres voix restent à découvrir.": "Other voices are still to be found.",
+            "D’autres cartes restent à découvrir.": "Other cards are still to be found.",
+            "Cette grappe n'a pas de médias": "This cluster has no media",
             "Étage %1 · fermé": "Tier %1 · closed",
             "Case hors d'atteinte": "Panel out of reach",
             "Cet étage ne s'ouvrira qu'une fois l'étage précédent achevé. Il y reste %1 cases à mettre en couleur.": "This tier will only open once the tier below is complete. %1 panels there still need colouring.",
@@ -33100,6 +33054,8 @@
             porte:     "Derrière cette porte, l'" + vnMot('explorium', 'Explorium') + ". Toutes les mémoires extraites, remises à leur place d'origine.",
             dedans:    "Tu te demandes où tu es ? À l'intérieur d'une " + vnMot('nebuleuse', 'nébuleuse') + ". Le " + vnMot('qg', 'QG') + " tout entier n'existe que là-dedans.",
             science:   "Longtemps, on a seulement su observer les " + vnMot('nebuleuse', 'nébuleuses') + ". Puis la science de l'exploration de la mémoire a progressé, et on a appris à y entrer. Aujourd'hui, on y travaille.",
+            fauteuil:  "On peut s'asseoir ici, pendant qu'on rejoint l'" + vnMot('explorium', 'Explorium') + ". Tu es encore Novice. Ça viendra.",
+            dormeur:   "Chut… Ne les réveille pas. Ils sont dans l'" + vnMot('explorium', 'Explorium') + ", ils reviendront d'eux-mêmes.",
             clara:     'J’en reviens pas, tu étais si rapide quand tu cristallisais les ' + vnMot('nebuleuse', 'nébuleuses') + ' ! Ça m’a pris un temps fou d’y arriver sur un artefact lors de ma préparation.',
         };
         const HUB_LINES = {
@@ -33120,7 +33076,8 @@
                 _hubSay('samir', "Odile veut tout mettre en tiroirs. Moi je dis qu'un arbre ne tient pas dans un tiroir."),
             ],
             aureleSansCle: [
-                _hubSay('aurele', _HUB_HTML.porte),
+                // [AJOUT] 20/10, à valider par David : la porte a disparu, les fauteuils la remplacent.
+                _hubSay('aurele', "Ces fauteuils, c'est moi qui les entretiens. On y part plus loin que n'importe quelle porte, sans bouger d'un pouce."),
                 _hubSay('aurele', "Comment il marche ? Il tourne. C'est tout ce qu'on a besoin de savoir, ici."),
             ],
             aureleCle: [
@@ -33133,10 +33090,16 @@
                 _hubSay('aurele', "Il tourne bien, aujourd'hui."),
                 _hubSay('aurele', "Il y a des jours où on l'entend presque. Comme un murmure. Ne fais pas attention."),
             ],
+            // Fauteuils de l'Explorium (David, 20/10). « dormeur » : [AJOUT] à valider.
+            fauteuilVerrou: [
+                _hubSay('scientifique', _HUB_HTML.fauteuil),
+            ],
+            dormeur: [
+                _hubSay('scientifique', _HUB_HTML.dormeur),
+            ],
             scientifique: [
-                _hubSay('scientifique', _HUB_HTML.dedans),
+                // David, 20/10 : « Tu te demandes où tu es ?… » et « Celle-ci, on l'a stabilisée… » retirées.
                 _hubSay('scientifique', _HUB_HTML.science),
-                _hubSay('scientifique', "Celle-ci, on l'a stabilisée nous-mêmes. Tant qu'elle tient, l'Organisation a un toit."),
             ],
         };
 
@@ -33259,6 +33222,20 @@
             // Section 15 : « Accompagne-le dans ses quartiers sur la gauche » —
             // la flèche des quartiers pulse jusqu'à ce que le joueur y entre.
             if (_studioZone === 0) uiArreterPulse('#studioNavLeft');
+        }
+
+        // ── Fauteuils de l'Explorium (David, 20/10) ──
+        // Explorium débloqué : un fauteuil libre l'ouvre. Sinon Ricardo explique.
+        function hubFauteuilTap(el) {
+            if (_hubVnOpen() || _hubOpening) return;
+            if (!_exploriumAccessible()) { vnShow(HUB_LINES.fauteuilVerrou); return; }
+            if (el && el.dataset.libre !== '1') { hubDormeurTap(); return; }
+            closeStudioScreen();
+            openMindmap();
+        }
+        function hubDormeurTap() {
+            if (_hubVnOpen() || _hubOpening) return;
+            vnShow(HUB_LINES.dormeur);
         }
 
         function hubDoorTap() {
@@ -38948,10 +38925,14 @@
                 const prereqList = document.createElement('div');
                 prereqList.className = 'gq-prereq-list';
                 const _allCardsLocal = Object.values(COLLECTIONS).flatMap(c => c.cards);
+                // David, 20/10 : les cartes que le joueur n'a pas ne sont pas montrées
+                // (plus de « ??? ») ; une ligne dit qu'il en reste à découvrir.
+                const _manquent = etape.prerequis.some(req => !_getCardLevelDisplay(req.cardId).has);
                 etape.prerequis.forEach(req => {
                     const card = _allCardsLocal.find(c => c.id === req.cardId);
                     const cardName = card ? card.name : req.cardId;
                     const cardState = _getCardLevelDisplay(req.cardId);
+                    if (!cardState.has) return;
                     const isMet = cardState.has && cardState.level >= req.minLevel;
 
                     const reqEl = document.createElement('div');
@@ -39005,6 +38986,12 @@
                     }
                     prereqList.appendChild(reqEl);
                 });
+                if (_manquent) {
+                    const reste = document.createElement('div');
+                    reste.className = 'gq-prereq-reste';
+                    reste.textContent = T('D’autres cartes restent à découvrir.');
+                    prereqList.appendChild(reste);
+                }
                 etapeEl.appendChild(prereqList);
 
                 // Objectif (si available, active ou completed)
@@ -39123,7 +39110,7 @@
             const verriereBtn = document.createElement('button');
             verriereBtn.className = 'gq-bd-btn';
             verriereBtn.style.marginTop = '8px';
-            verriereBtn.textContent = TF('🪟 Voir la planche (%1/%2)', fresqueCompletedCount, fresqueTotalEtapes);
+            verriereBtn.textContent = TF('🪟 Voir les médias (%1/%2)', fresqueCompletedCount, fresqueTotalEtapes);
             verriereBtn.onclick = () => ouvrirVerriere(grappeId);
             body.appendChild(verriereBtn);
 
@@ -39146,32 +39133,34 @@
                     lieu.textContent = '📍 ' + T(etape.objectifGeo.nom);
                     head.insertAdjacentElement('afterend', lieu);
                 }
-                // Un chapitre qui a du nouveau reste déplié (16/10)
-                if (!el.classList.contains('active') && !el.classList.contains('gq-etape--nouveau')) el.classList.add('gq-etape--replie');
+                // David, 20/10 : un chapitre qui a du nouveau reste REPLIÉ, signalé en
+                // orange ; c'est le déplier qui le marque vu (_gqChapitreVu).
+                if (!el.classList.contains('active') || el.classList.contains('gq-etape--nouveau')) el.classList.add('gq-etape--replie');
                 head.style.cursor = 'pointer';
-                head.addEventListener('click', () => el.classList.toggle('gq-etape--replie'));
-            });
-
-            // Ce que la fiche vient de montrer compte comme vu : stades de prérequis
-            // et médias des chapitres signalés. Compteur de grappe et pastille suivent.
-            // Seulement si la fiche est à l'écran (elle est aussi rendue en coulisse,
-            // p. ex. à l'acceptation d'une quête depuis la verrière).
-            const _visible = document.getElementById('grappeQuestModal')?.classList.contains('show');
-            if (v2PrereqVus && _visible) {
-                let change = false;
-                grappe.quete.etapes.forEach(etape => {
-                    if (v2EtapeAPrereqNouveau(grappeId, etape)) { v2MarquerPrereqVus(grappeId, etape); change = true; }
-                    if (_mediasNouveaux.has(etape.id)) {
-                        const m = v2GetAllEtapes().find(x => x.etape.id === etape.id);
-                        if (m) { v2ConsultedMedias[etape.id] = v2GetEtapeStatusV2(m.grappeId, m); change = true; }
+                head.addEventListener('click', () => {
+                    el.classList.toggle('gq-etape--replie');
+                    if (!el.classList.contains('gq-etape--replie') && el.classList.contains('gq-etape--nouveau')) {
+                        el.classList.remove('gq-etape--nouveau');
+                        el.querySelectorAll('.gq-etape-nouveau').forEach(b => b.remove());
+                        _gqChapitreVu(grappeId, etape);
                     }
                 });
-                if (change) {
-                    try { saveProgress(); } catch (e) {}
-                    try { rafraichirPastilleExplorium(); } catch (e) {}
-                    try { v2RefreshIfOpen(); } catch (e) {}
-                }
-            }
+            });
+
+        }
+
+        // Chapitre déplié (David, 20/10) : son nouveau compte comme vu — stades de
+        // prérequis et média. Compteur de grappe et pastille de l'Explorium suivent.
+        function _gqChapitreVu(grappeId, etape) {
+            if (!v2PrereqVus) return;
+            let change = false;
+            if (v2EtapeAPrereqNouveau(grappeId, etape)) { v2MarquerPrereqVus(grappeId, etape); change = true; }
+            const m = v2GetAllEtapes().find(x => x.etape.id === etape.id);
+            if (m && v2MediaIsVisible(m) && v2MediaEstNouveau(m)) { v2ConsultedMedias[etape.id] = v2GetEtapeStatusV2(m.grappeId, m); change = true; }
+            if (!change) return;
+            try { saveProgress(); } catch (e) {}
+            try { rafraichirPastilleExplorium(); } catch (e) {}
+            try { v2RefreshIfOpen(); } catch (e) {}
         }
 
         function renderGrappeBar() {
@@ -43119,6 +43108,9 @@
             [_HUB_HTML.qg]: "Don't ask me where " + vnMot('qg', 'HQ') + " is. Professor Ricardo will explain, if you have an hour to spare.",
             [_HUB_HTML.explorium]: "To the left, your quarters. Here, the hall. At the back, the " + vnMot('explorium', 'Explorium') + " room. We don't open it to just anyone.",
             [_HUB_HTML.nebuleuses]: 'What ' + vnMot('nebuleuse', 'nebulae') + ' are? Go and talk to Professor Ricardo about it, he’s the expert on the matter',
+            "Ces fauteuils, c'est moi qui les entretiens. On y part plus loin que n'importe quelle porte, sans bouger d'un pouce.": "I look after these armchairs. They take you further than any door, without moving an inch.",
+            [_HUB_HTML.fauteuil]: "We can sit here while we join the " + vnMot('explorium', 'Explorium') + ". You're still a Novice. It'll come.",
+            [_HUB_HTML.dormeur]: "Shh… Don't wake them. They're in the " + vnMot('explorium', 'Explorium') + ", they'll come back on their own.",
             [_HUB_HTML.porte]: "Behind this door, the " + vnMot('explorium', 'Explorium') + ". Every memory ever extracted, put back where it came from.",
             [_HUB_HTML.dedans]: "Wondering where you are? Inside a " + vnMot('nebuleuse', 'nebula') + ". The whole of " + vnMot('qg', 'HQ') + " exists only in there.",
             [_HUB_HTML.science]: "For a long time, we could only observe the " + vnMot('nebuleuse', 'nebulae') + ". Then the science of memory exploration moved on, and we learned to go inside. Now we work in them.",
@@ -43461,7 +43453,7 @@
         // état normal, pas un état d'erreur.
         function ouvrirVerriere(grappeId, focusIdx) {
             const grappe = GRAPPE_QUESTS[grappeId];
-            if (!grappe) { showToast('Cette grappe n\'a pas de verrière'); return; }
+            if (!grappe) { showToast('Cette grappe n\'a pas de médias'); return; }
 
             // Placer l'écran dans #mainApp pour qu'il passe au-dessus de l'Explorium
             const screen = document.getElementById('verriereScreen');
@@ -43475,7 +43467,7 @@
             verriereState.panneauOuvert = null;
 
             document.getElementById('verriereEyebrow').textContent =
-                TF('Verrière · %1', T(grappe.title).toUpperCase());
+                TF('Médias · %1', T(grappe.title).toUpperCase());
             document.getElementById('verriereTitle').textContent =
                 (grappe.quete && grappe.quete.titre) || grappe.title;
 
@@ -43724,12 +43716,13 @@
             return c ? c.name : cardId;
         }
 
-        // Liste des acteurs, ceux qu'on a et ceux qui manquent, avec le niveau exigé.
-        // On NOMME les acteurs manquants : tout l'intérêt de l'état « entrevu » est que
-        // le joueur sache exactement ce qui lui manque. La modale de quête, elle, masque
-        // encore les cartes non collectées derrière « ??? ».
+        // Liste des acteurs obtenus, avec le niveau exigé. David, 20/10 : une carte
+        // que le joueur n'a pas n'est ni nommée ni comptée ; une ligne dit seulement
+        // qu'il en reste à découvrir.
         function _vrListeActeurs(etape) {
-            const lignes = (etape.prerequis || []).map(req => {
+            const prerequis = etape.prerequis || [];
+            const manquent = prerequis.some(req => !collectedCards.includes(req.cardId));
+            const lignes = prerequis.filter(req => collectedCards.includes(req.cardId)).map(req => {
                 const possede = collectedCards.includes(req.cardId);
                 const niveau = possede ? ((cardLevels[req.cardId] || {}).level || 0) : 0;
                 const min = req.minLevel || 0;
@@ -43746,6 +43739,7 @@
                     + '<span class="vr-acteur-niveau">' + chip + '</span>'
                     + '</div>';
             });
+            if (manquent) lignes.push('<div class="vr-acteur-reste">' + T('D’autres voix restent à découvrir.') + '</div>');
             return lignes.join('');
         }
 
