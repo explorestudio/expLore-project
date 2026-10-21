@@ -20210,7 +20210,7 @@
             { speaker: _TUTO_JF, air: 'enthousiaste', expr: 'poussiere', bouton: 'Consulter', html: _TUTO_HTML_S3 },
         ];
         // Première « poussière mémorielle » : icône et violet (demande de David).
-        const _TUTO_HTML_S4 = 'C’est l’Office du Tourisme ! Il semble vidé de toute substance. Comme disait le Professeur Ricardo, “elle s’éveille si on s’y attarde un peu. Pour qu’une carte retrouve ses souvenirs il faut lui donner de la '
+        const _TUTO_HTML_S4 = 'C’est l’Office du Tourisme ! Sa carte est encore endormie. Comme disait le Professeur Ricardo, “elle s’éveille si on s’y attarde un peu. Pour qu’une carte retrouve ses souvenirs il faut lui donner de la '
             + vnMot('poussiere', 'poussière mémorielle', true) + '”.';
         const _TUTO_LIGNES_S4 = [
             { speaker: _TUTO_JF, air: 'petit doigt en l’air', html: _TUTO_HTML_S4 },
@@ -20893,7 +20893,7 @@
                 'position:fixed', 'inset:0', 'z-index:100000',
                 'background:radial-gradient(circle at 50% 40%, #1b1636 0%, #0a0814 100%)',
                 'display:flex', 'text-align:center',
-                'padding:24px 16px calc(24px + env(safe-area-inset-bottom))',
+                'padding:calc(84px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))',
                 'overflow-y:auto', '-webkit-overflow-scrolling:touch',
                 'opacity:0', 'transition:opacity 0.9s ease'
             ].join(';');
@@ -20905,7 +20905,23 @@
             const lien = 'background:none;border:none;font-family:inherit;font-size:12.5px;'
                        + 'color:rgba(237,233,254,0.55);text-decoration:none;cursor:pointer;padding:6px 2px;min-height:44px;';
             const fait = (_tutoQuetes().avis || {}).etat === 'completed';
+            // Pastilles du bandeau du haut : courtes, pour tenir à droite de la mappe.
+            const pastille = 'display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:8px 14px;'
+                           + 'border-radius:20px;background:rgba(237,233,254,0.06);border:1px solid rgba(237,233,254,0.26);'
+                           + 'color:#EDE9FE;font-family:inherit;font-size:13px;font-weight:700;text-decoration:none;';
             ov.innerHTML =
+                // Bandeau fixe : retour à la carte à gauche (l'icône « mappe » des autres
+                // écrans, qui pulse), réseaux à droite.
+                '<div style="position:fixed;top:0;left:0;right:0;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;'
+                    + 'padding:calc(14px + env(safe-area-inset-top)) 16px 12px;background:rgba(10,8,20,0.88);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);">' +
+                    '<button id="demoEndFermer" style="display:flex;align-items:center;justify-content:center;flex:0 0 52px;width:52px;height:52px;'
+                        + 'border-radius:50%;border:1px solid rgba(237,233,254,0.3);background:rgba(237,233,254,0.08);color:#EDE9FE;cursor:pointer;">'
+                        + '<svg class="ico-mappe" width="26" height="26" aria-hidden="true"><use href="#icoMappe"/></svg></button>' +
+                    '<div style="display:flex;gap:8px;">' +
+                        '<a id="demoEndDiscord" href="https://discord.gg/hzbvYW69Ma" target="_blank" rel="noopener" style="' + pastille + '">Discord</a>' +
+                        '<a id="demoEndInsta" href="https://www.instagram.com/explorestudiofr/" target="_blank" rel="noopener" style="' + pastille + '">Instagram</a>' +
+                    '</div>' +
+                '</div>' +
                 '<div style="margin:auto;width:100%;max-width:560px;display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0;">' +
                     '<div id="demoEndTitre" style="font-family:Georgia,\'Times New Roman\',serif;font-size:25px;line-height:1.25;color:#F5B841;font-weight:700;"></div>' +
                     '<div id="demoEndTexte" style="font-size:14.5px;line-height:1.55;color:#EDE9FE;opacity:0.82;max-width:420px;"></div>' +
@@ -20913,24 +20929,20 @@
                     '<div id="demoEndFormSlot" style="width:100%;border-radius:14px;overflow:hidden;border:1px solid rgba(245,184,65,0.22);background:#f3f1ea;"></div>' +
                     '<div style="width:100%;max-width:420px;display:flex;flex-direction:column;gap:10px;margin-top:4px;">' +
                         (fait ? '' : '<button id="demoEndEnvoye" style="' + btn + 'background:linear-gradient(135deg,#F5B841,#d99b2a);border:none;color:#1b1636;box-shadow:0 6px 22px rgba(245,184,65,0.26);"></button>') +
-                        '<a id="demoEndDiscord" href="https://discord.gg/hzbvYW69Ma" target="_blank" rel="noopener" style="' + btn + 'background:rgba(237,233,254,0.06);border:1px solid rgba(237,233,254,0.26);color:#EDE9FE;"></a>' +
-                        '<a id="demoEndInsta" href="https://www.instagram.com/explorestudiofr/" target="_blank" rel="noopener" style="' + btn + 'background:rgba(237,233,254,0.06);border:1px solid rgba(237,233,254,0.26);color:#EDE9FE;"></a>' +
                     '</div>' +
                     '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;">' +
                         '<a id="demoEndPlus" href="https://explorestudio.github.io/expLore-project/" target="_blank" rel="noopener" style="' + lien + 'display:inline-flex;align-items:center;"></a>' +
                     '</div>' +
-                    // Retour à la carte : l'icône « mappe » des autres écrans, qui pulse.
-                    '<button id="demoEndFermer" style="display:flex;align-items:center;justify-content:center;width:52px;height:52px;margin-top:4px;'
-                        + 'border-radius:50%;border:1px solid rgba(237,233,254,0.3);background:rgba(237,233,254,0.08);color:#EDE9FE;cursor:pointer;">'
-                        + '<svg class="ico-mappe" width="26" height="26" aria-hidden="true"><use href="#icoMappe"/></svg></button>' +
                 '</div>';
             const txt = (id, s) => { const el = ov.querySelector('#' + id); if (el) el.textContent = T(s); };
             txt('demoEndTitre', "Bravo, tu as terminé l'aperçu.");
             txt('demoEndTexte', "Ceci n'est qu'un aperçu jouable, découvert assis. La vraie expérience se vit dehors, en marchant dans Lyon.");
             txt('demoEndAppel', 'Quelques minutes pour nous aider à faire grandir ExpLore :');
             txt('demoEndEnvoye', "C'est envoyé !");
-            txt('demoEndDiscord', 'Rejoindre le Discord');
-            txt('demoEndInsta', 'Suivre sur Instagram');
+            // Libellés complets en infobulle : la pastille ne garde que le nom du réseau.
+            [['demoEndDiscord', 'Rejoindre le Discord'], ['demoEndInsta', 'Suivre sur Instagram']].forEach(([id, s]) => {
+                const a = ov.querySelector('#' + id); a.title = T(s); a.setAttribute('aria-label', a.title);
+            });
             txt('demoEndPlus', 'En savoir plus');
             const fermer = ov.querySelector('#demoEndFermer');
             fermer.title = T('Revenir à la carte');
@@ -21636,7 +21648,7 @@
             "Je suis trop émue… Je n’arriverai pas à me concentrer, je te laisse la cristalliser.": "I’m too moved… I won’t be able to concentrate, I’ll let you crystallise it.",
             [_TUTO_HTML_S3]: 'You got it! Please don’t put this card away just yet. I’ll give you my '
                 + vnMot('poussiere', 'dust', true) + ' if you like, I can’t wait to find out what it has to tell us.',
-            [_TUTO_HTML_S4]: 'It’s the Tourist Office! It seems drained of all substance. As Professor Ricardo used to say, “it wakes up if you linger on it a little. For a card to recover its memories, you have to give it '
+            [_TUTO_HTML_S4]: 'It’s the Tourist Office! Its card is still asleep. As Professor Ricardo used to say, “it wakes up if you linger on it a little. For a card to recover its memories, you have to give it '
                 + vnMot('poussiere', 'memorial dust', true) + '”.',
             [_TUTO_HTML_S6]: 'It works! Let’s see what has emerged in the ' + vnMot('carnet', 'notebook', true) + '.',
             [_TUTO_HTML_S7A]: 'It’s fascinating! The ' + vnMot('carnet', 'notebook', true) + ' really reacts to the card waking up! I told you a little ' + vnMot('poussiere', 'dust') + ' would be enough, its story is starting to unfold, I’m so happy. Look, we need some ' + vnMot('encre', 'ink', true),
@@ -21700,6 +21712,8 @@
             "Bravo, tu as terminé l'aperçu.": "Well done, you've finished the preview.",
             "Ceci n'est qu'un aperçu jouable, découvert assis. La vraie expérience se vit dehors, en marchant dans Lyon.": "This is only a playable preview, discovered sitting down. The real experience happens outside, walking through Lyon.",
             "Quelques minutes pour nous aider à faire grandir ExpLore :": "A few minutes to help us grow ExpLore:",
+            "Cette carte a été conçue avec l'Office du Tourisme, avant l'incident du 17 octobre 2026 qui a gravement endommagé le Pavillon. Nos pensées vont à ses équipes.": "This card was created with the Tourist Office, before the incident of 17 October 2026 that severely damaged the Pavilion. Our thoughts are with its teams.",
+            "Note de l'équipe ExpLore": "A note from the ExpLore team",
             "Rejoindre le Discord": "Join the Discord",
             "Suivre sur Instagram": "Follow on Instagram",
             "En savoir plus": "Learn more",
@@ -30398,8 +30412,19 @@
             const _stInfo = SUPERTYPES[selectedCard.supertype] || {};
             notebook.style.setProperty('--jsb-nebula', _stInfo.color || '#8B5CF6');
 
+            // Carte OT : note de l'équipe sur l'incident du 17 octobre 2026, toujours en
+            // tête du carnet. Style volontairement hors carnet (sombre, sans-serif, droit)
+            // pour qu'on ne la confonde pas avec une entrée.
+            const bandeauOT = cardId === 'ob_tutorial_card'
+                ? '<div style="margin:0 0 16px;padding:12px 14px;border-radius:10px;background:#1b1636;border:1px solid rgba(245,184,65,0.35);'
+                  + 'box-shadow:0 4px 14px rgba(0,0,0,0.25);transform:none;font-family:system-ui,-apple-system,\'Segoe UI\',Roboto,sans-serif;'
+                  + 'font-style:normal;font-size:12.5px;line-height:1.55;color:#EDE9FE;text-align:left;">'
+                  + '<div style="font-size:11.5px;font-weight:700;letter-spacing:0.4px;color:#F5B841;margin-bottom:6px;">'
+                  + _jsbEsc(T("Note de l'équipe ExpLore")) + '</div>' + _jsbEsc(T("Cette carte a été conçue avec l'Office du Tourisme, avant l'incident du 17 octobre 2026 qui a gravement endommagé le Pavillon. Nos pensées vont à ses équipes.")) + '</div>'
+                : '';
+
             if (entries.length === 0) {
-                notebook.innerHTML = '<div class="journal-quote">Offre de la poussière à cette carte pour qu\'elle te raconte son histoire...</div>';
+                notebook.innerHTML = bandeauOT + '<div class="journal-quote">Offre de la poussière à cette carte pour qu\'elle te raconte son histoire...</div>';
                 return;
             }
 
@@ -30467,7 +30492,7 @@
                 },
             ];
 
-            let html2 = '';
+            let html2 = bandeauOT;
             let globalIdx = 0;
 
             [0,1,2].forEach(lvl => {
