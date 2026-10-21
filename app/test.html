@@ -9813,7 +9813,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.27</div>
+            <div class="hud-version" id="hudVersion">v1.9.28</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -13475,7 +13475,8 @@
             "+50 Poussière": "+50 Dust",
             "+3 Orbes de mémoire": "+3 Memory orbs",
             "Orbes": "Orbs",
-            "Carte bonus : Guignol": "Bonus card: Guignol",
+            "+2 parchemins": "+2 scrolls",
+            "📜 +2 parchemins": "📜 +2 scrolls",
             "Carte rare": "Rare card",
             "+100 Poussière": "+100 Dust",
             "Skin Aurora": "Aurora skin",
@@ -34581,8 +34582,11 @@
               rewardFn: () => addDust(50) },
             { palier:3,  icon:'🔮', name:'+3 Orbes de mémoire',           type:'Orbes',                xpRequired:85,
               rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+3; saveProgress(); showToast('🔮 +3 orbes de mémoire'); } },
-            { palier:4,  icon:'🎴', name:'Carte bonus : Guignol',           type:'Carte rare',           xpRequired:120,
-              rewardFn: () => _bpCarteBonus('card4') },
+            { palier:4,  icon:'📜', name:'+2 parchemins',                  type:'Parchemins',           xpRequired:120,
+              rewardFn: () => {
+                  for (let i = 0; i < 2; i++) bagInv.parchemins.push({ id: 'bp_scroll_' + Date.now() + '_' + i, name: 'Parchemin', desc: T("Trouvé lors de ton exploration.") });
+                  saveProgress(); showToast('📜 +2 parchemins');
+              } },
             { palier:5,  icon:'💜', name:'+100 Poussière',                     type:'Poussière mémorielle',   xpRequired:220,
               rewardFn: () => addDust(100) },
             { palier:6,  icon:'🎨', name:'Skin Aurora',                     type:'Skin de carte',        xpRequired:350,
