@@ -11942,7 +11942,7 @@
         <!-- Code d'accès du test Bellecour (après le choix de langue, avant la partie) -->
         <div id="codeAccesOverlay" class="lang-select-overlay">
             <div class="lang-select-logo">Exp<em>Lore</em></div>
-            <div class="lang-select-sub" id="codeAccesSub">Saisis le code de ta feuille de route.</div>
+            <div class="lang-select-sub" id="codeAccesSub">Saisis ton code d'accès.</div>
             <div class="lang-select-title">Code d'accès</div>
             <div class="lang-select-btns">
                 <input id="codeAccesInput" class="code-acces-input" type="text" maxlength="12"
@@ -12250,7 +12250,7 @@
             "📷 Enregistrer la photo": "📷 Save the photo",
             "Annuler": "Cancel",
             // Code d'accès du test Bellecour
-            "Saisis le code de ta feuille de route.": "Enter the code from your route sheet.",
+            "Saisis ton code d'accès.": "Enter your access code.",
             "Pour terminer ta session, saisis à nouveau ton code.": "To end your session, enter your code again.",
             "Code d'accès": "Access code",
             "Code inconnu.": "Unknown code.",
@@ -14235,8 +14235,8 @@
             const ov = document.getElementById('langSelectOverlay');
             if (ov) ov.classList.remove('show');
             applyLanguage(lang);
-            // Démo : pas de code d'accès (ni scène finale chronométrée), la partie démarre.
-            if (typeof _initAppAfterLang === 'function') _initAppAfterLang();
+            // Démo : code d'accès, puis la partie (sans scène finale chronométrée).
+            if (typeof _initAppAfterLang === 'function') _accesPuisDemarrer();
         }
 
         // Bascule en cours de partie (menu avatar). On recharge : le DOM a été
@@ -14264,7 +14264,9 @@
         let _accesVeille = null;
 
         function _accesNormaliser(s) { return String(s || '').toUpperCase().replace(/\s+/g, ''); }
-        function codeAccesEstValide(code) { return TEST_CODES.includes(_accesNormaliser(code)); }
+        // Démo : un seul code d'accès, sans journal ni échéance (cf. _accesPuisDemarrer).
+        const DEMO_CODE_ACCES = 'MSMILL0';
+        function codeAccesEstValide(code) { return _accesNormaliser(code) === DEMO_CODE_ACCES; }
         function _accesLire() {
             try { const raw = localStorage.getItem(ACCES_KEY); _acces = raw ? JSON.parse(raw) : null; }
             catch (e) { _acces = null; }
@@ -14281,7 +14283,7 @@
         // Appelé à la place de _initAppAfterLang : code déjà saisi → partie, sinon écran.
         function _accesPuisDemarrer() {
             _accesLire();
-            const demarrer = () => { _initAppAfterLang(); _accesDemarrerVeille(); };
+            const demarrer = () => { _initAppAfterLang(); };   // démo : pas de veille (ni scène finale, ni arrêt du journal)
             if (_acces && _acces.code) { demarrer(); return; }
             _accesOuvrir('entree', demarrer);
         }
@@ -14291,7 +14293,7 @@
             _accesSuite = suite || null;
             document.getElementById('codeAccesSub').textContent = mode === 'cloture'
                 ? T('Pour terminer ta session, saisis à nouveau ton code.')
-                : T('Saisis le code de ta feuille de route.');
+                : T("Saisis ton code d'accès.");
             document.getElementById('codeAccesAnnuler').style.display = mode === 'cloture' ? '' : 'none';
             const input = document.getElementById('codeAccesInput');
             input.value = '';
@@ -20914,9 +20916,11 @@
                     '</div>' +
                     '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;">' +
                         '<a id="demoEndPlus" href="https://explorestudio.github.io/expLore-project/" target="_blank" rel="noopener" style="' + lien + 'display:inline-flex;align-items:center;"></a>' +
-                        '<span aria-hidden="true" style="color:#EDE9FE;opacity:0.25;">·</span>' +
-                        '<button id="demoEndFermer" style="' + lien + '"></button>' +
                     '</div>' +
+                    // Retour à la carte : l'icône « mappe » des autres écrans, qui pulse.
+                    '<button id="demoEndFermer" style="display:flex;align-items:center;justify-content:center;width:52px;height:52px;margin-top:4px;'
+                        + 'border-radius:50%;border:1px solid rgba(237,233,254,0.3);background:rgba(237,233,254,0.08);color:#EDE9FE;cursor:pointer;">'
+                        + '<svg class="ico-mappe" width="26" height="26" aria-hidden="true"><use href="#icoMappe"/></svg></button>' +
                 '</div>';
             const txt = (id, s) => { const el = ov.querySelector('#' + id); if (el) el.textContent = T(s); };
             txt('demoEndTitre', "Bravo, tu as terminé l'aperçu.");
@@ -20926,7 +20930,9 @@
             txt('demoEndDiscord', 'Rejoindre le Discord');
             txt('demoEndInsta', 'Suivre sur Instagram');
             txt('demoEndPlus', 'En savoir plus');
-            txt('demoEndFermer', 'Plus tard, revenir à la carte');
+            const fermer = ov.querySelector('#demoEndFermer');
+            fermer.title = T('Revenir à la carte');
+            fermer.setAttribute('aria-label', fermer.title);
             // Le formulaire est affiché d'emblée : un toucher de moins avant de répondre.
             const fr = document.createElement('iframe');
             fr.src = DEMO_FORM_URL;
@@ -20935,8 +20941,9 @@
             ov.querySelector('#demoEndFormSlot').appendChild(fr);
             const envoye = ov.querySelector('#demoEndEnvoye');
             if (envoye) envoye.onclick = _demoAvisEnvoye;
-            ov.querySelector('#demoEndFermer').onclick = _demoFermerEndScreen;
+            fermer.onclick = _demoFermerEndScreen;
             document.body.appendChild(ov);
+            uiPulser(fermer, { garder: true });
             requestAnimationFrame(() => { ov.style.opacity = '1'; });
         }
 
@@ -21694,7 +21701,7 @@
             "Rejoindre le Discord": "Join the Discord",
             "Suivre sur Instagram": "Follow on Instagram",
             "En savoir plus": "Learn more",
-            "Plus tard, revenir à la carte": "Later, back to the map",
+            "Revenir à la carte": "Back to the map",
             "Formulaire d'avis sur la démo": "Demo feedback form",
             [TUTO_QUETES.vdl.texteHtml]: 'Gather the cards of <i>Lyon, City of Books in the 16th century</i>',
             // Console du pseudo (« Valider » est déjà dans la table)
@@ -23303,7 +23310,7 @@
                 if (_ov) { _ov.classList.add('show'); return; }
             }
             applyLanguage(_savedLang || 'fr');
-            _initAppAfterLang();   // démo : pas de code d'accès
+            _accesPuisDemarrer();   // démo : code d'accès, puis _initAppAfterLang
         }
 
         // Corps historique de initApp, appelé une fois la langue connue.
@@ -28122,9 +28129,10 @@
 
         function toggleMapView() {
             _mapViewMode = _mapViewMode === 'close' ? 'far' : 'close';
-            // La longue-vue a servi : plus de pulsation pour réclamer le retour,
-            // se déplacer ramène aussi la vue proche.
-            uiArreterPulse('#viewToggleBtn');
+            // Démo (expérience de salon) : en vue planification, les jumelles
+            // pulsent pour inviter à revenir en vue normale ; en vue proche, non.
+            if (_mapViewMode === 'far') uiPulser('#viewToggleBtn', { garder: true });
+            else uiArreterPulse('#viewToggleBtn');
             const v   = MAP_VIEW[_mapViewMode];
             const btn = document.getElementById('viewToggleBtn');
             // Cap de carte : nord en haut en vue d'ensemble ; en vue proche, celui du
@@ -28202,6 +28210,13 @@
                 try { _obGuideEvent('map_planning'); _obGuideRefresh(); } catch (e) {}
             }
         }
+        // Démo : la pulsation des jumelles survit aux remises à zéro du guidage
+        // (guideFocusFin, fin de tunnel) tant que dure la vue planification.
+        setInterval(() => {
+            if (typeof _mapViewMode === 'undefined' || _mapViewMode !== 'far' || _gf) return;
+            const b = document.getElementById('viewToggleBtn');
+            if (b && !b.classList.contains('ui-pulse') && !b.querySelector('.ui-pulse')) uiPulser(b, { garder: true });
+        }, 1000);
 
         function collectCarnetResource() {
             if (!currentNearbyCarnetResource) return;
