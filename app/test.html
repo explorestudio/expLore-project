@@ -5219,7 +5219,7 @@
         .levelup-text { font-size: 28px; font-weight: 900; color: #e9d5ff; text-align: center; letter-spacing: 1px; }
         .levelup-rank { font-size: 16px; font-weight: 700; color: #A78BFA; }
         .levelup-xp { font-size: 14px; color: #FCD34D; font-weight: 700; }
-        .levelup-close { margin-top: 8px; background: rgba(168,85,247,0.2); border: 1px solid rgba(168,85,247,0.4); color: #C084FC; padding: 10px 28px; border-radius: 20px; font-size: 14px; font-weight: 700; cursor: pointer; pointer-events: all; }
+        .levelup-close { margin-top: 8px; background: rgba(168,85,247,0.2); border: 1px solid rgba(168,85,247,0.4); color: #C084FC; padding: 10px 28px; border-radius: 20px; font-size: 14px; font-weight: 700; cursor: pointer; }   /* pas de pointer-events: all : caché, le bouton captait les taps des écrans dessous */
 
         /* Récompenses dans l'overlay level-up */
         .levelup-rewards {
@@ -9652,7 +9652,7 @@
         .ritual-infos .ritual-big-card-body { padding: 0; }
         /* David, 19/10 : polices agrandies et lignes plus espacées */
         .ritual-infos .ritual-big-card-name { font-size: 23px; margin-bottom: 14px; }
-        .ritual-infos .ritual-big-card-supertype { font-size: 12px; margin-bottom: 10px; }
+        .ritual-infos .ritual-big-card-supertype { font-size: 15px; margin-bottom: 10px; opacity: 1; }
         .ritual-infos .ritual-big-card-type { font-size: 15px; color: rgba(255,255,255,0.55); }
         .ritual-infos .ritual-narrative-tag span { font-size: 12px; }
         .ritual-big-card-collections {
@@ -9813,7 +9813,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.28</div>
+            <div class="hud-version" id="hudVersion">v1.9.29</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -20269,7 +20269,7 @@
         ];
         // TODO (document) : « [emoji de la feuille de route à définir] » après
         // « la Mission ? » — à insérer quand l'emoji sera choisi.
-        const _TUTO_HTML_S11B = 'Je suis tellement émue d’avoir partagé ça avec toi, mais on doit se reprendre ! Aujourd’hui le ' + vnMot('qg', 'QG') + ' nous a donné rendez-vous à Bellecour et ce n’est pas pour rien ! Tu te souviens de la Mission ?';
+        const _TUTO_HTML_S11B = 'Je suis tellement émue d’avoir partagé ça avec toi, mais on doit se reprendre ! Aujourd’hui le ' + vnMot('qg', 'QG') + ' nous a donné rendez-vous devant le Parvis de la Cathédrale St-Jean et ce n’est pas pour rien ! Tu te souviens de la Mission ?';
         const _TUTO_LIGNES_S11B = [
             { speaker: _TUTO_JF, air: 'inquisiteur', html: _TUTO_HTML_S11B },
         ];
@@ -20708,9 +20708,10 @@
             );
         }
         const _TUTO_LIGNES_S13 = [
-            { speaker: 'Clara', air: 'exalté', line: 'Je ne sais pas toi, mais j’arrive à avoir une vision plus globale en prenant du recul, j’ai fait une carte du périmètre. Ils ne mentaient pas, il y a tant à découvrir, t’as vu ça ?' },
+            { speaker: 'Clara', air: 'exalté', line: 'Je ne sais pas toi, mais j’arrive à avoir une vision plus globale en prenant du recul, j’ai fait une carte du périmètre.' },
         ];
         const _TUTO_LIGNES_S14 = [
+            { speaker: 'Clara', air: 'exalté', line: 'Ils ne mentaient pas, il y a tant à découvrir, t’as vu ça ?' },
             { speaker: 'Clara', air: 'joueur/de défi', line: 'Je te suis où que tu ailles, prêt à faire chauffer tes mollets ?' },
         ];
         const _TUTO_LIGNES_S15 = [
@@ -21541,7 +21542,7 @@
             "Wouah ! Elle a une histoire si intéressante, nous pouvons découvrir encore 2 entrées. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story, we can still discover 2 entries. I’ll give you time to read in peace.",
             "Lorsque tu auras fini de considérer ce qu’elle a réussi à se remémorer, tu pourras la retrouver via sa miniature.": "When you’ve finished taking in what it managed to remember, you can find it again through its thumbnail.",
             "Allez s’il te plaît, prenons quelques secondes pour la regarder.": "Come on, please, let’s take a few seconds to look at it.",
-            [_TUTO_HTML_S11B]: "I’m so moved to have shared that with you, but we have to pull ourselves together! Today " + vnMot('qg', 'HQ') + " gave us a meeting point at Bellecour, and not for nothing! Do you remember the Mission?",
+            [_TUTO_HTML_S11B]: "I’m so moved to have shared that with you, but we have to pull ourselves together! Today " + vnMot('qg', 'HQ') + " gave us a meeting point in front of the Parvis of St-Jean Cathedral, and not for nothing! Do you remember the Mission?",
         });
 
         // ── Traductions des nouvelles chaînes (sections 12 à 18, Annexe B) ──
@@ -21558,7 +21559,8 @@
             "Oh la boulette…": "Oops, what a blunder…",
             [_TUTO_HTML_S12_EQUIPE]: 'Well, you’re gifted and I have the knowledge… Let’s team up this time! We need to crystallise 3 more ' + vnMot('nebuleuse', 'nebulae') + '. By the way, I’m Clara!',
             "Je te laisse ma feuille de route, j’ai déjà tout en tête, n’hésite pas à la consulter quand tu le souhaites.": "I’ll leave you my roadmap, I already have it all in my head, feel free to check it whenever you like.",
-            "Je ne sais pas toi, mais j’arrive à avoir une vision plus globale en prenant du recul, j’ai fait une carte du périmètre. Ils ne mentaient pas, il y a tant à découvrir, t’as vu ça ?": "I don’t know about you, but I get a more global view by stepping back, I made a map of the perimeter. They weren’t lying, there’s so much to discover, have you seen that?",
+            "Je ne sais pas toi, mais j’arrive à avoir une vision plus globale en prenant du recul, j’ai fait une carte du périmètre.": "I don’t know about you, but I get a more global view by stepping back, I made a map of the perimeter.",
+            "Ils ne mentaient pas, il y a tant à découvrir, t’as vu ça ?": "They weren’t lying, there’s so much to discover, have you seen that?",
             "Je te suis où que tu ailles, prêt à faire chauffer tes mollets ?": "I'll follow you wherever you go. Ready to warm up your calves?",
             "Et de trois ! Pfiou, j’ai mal aux pieds mais on l’a fait !": "And that’s three! Phew, my feet hurt but we did it!",
             'Je ne sais pas si toi aussi tu le sens, mais j\'ai l\'impression de "ressentir" la mémoire autour de nous.': 'I don’t know if you feel it too, but I have the impression of "feeling" the memory around us.',
@@ -23290,7 +23292,9 @@
                         return { url: url.replace('http://', 'https://') };
                     }
                 },
-                center: [playerPos.lng, playerPos.lat],
+                // Même cadrage que le suivi (joueur décalé vers le bas de l'écran) :
+                // sans le décalage nord, le premier pas faisait sauter la caméra.
+                center: [playerPos.lng, playerPos.lat + CAM_NORTH_OFFSET],
                 zoom: 17,
                 pitch: ISOMETRIC_TILT,
                 bearing: ISOMETRIC_HEADING,
@@ -27059,27 +27063,18 @@
                     if (_revealIcon) _revealIcon.style.display = '';
                 }
             }
-            document.getElementById('ritualRevealSupertype').textContent = `${info.symbol || ''} ${T(info.name || '')}`;
+            document.getElementById('ritualRevealSupertype').textContent = T(info.name || '');   // couleur seule, sans icône
             document.getElementById('ritualRevealCardName').textContent  = card.name;
-            // Lot 4 : rareté par son nom (« Rare »), collections affichées.
+            // Lot 4 : rareté par son nom (« Rare »). Collections non affichées : elles
+            // sont « à venir » (David, 22/10).
             const _rar = (RARITY_CONFIG[card.rarity] || {}).name || card.rarity || '';
             document.getElementById('ritualRevealCardType').textContent  = [T(card.type || ''), T(_rar)].filter(Boolean).join(' · ');
-            const _cols = (card.collections || []).map(id => COLLECTION_DEFS[id] ? T(COLLECTION_DEFS[id].name) : null).filter(Boolean);
-            document.getElementById('ritualRevealCollections').textContent = _cols.join(' · ');
+            document.getElementById('ritualRevealCollections').textContent = '';
             document.getElementById('ritualBigCard').style.boxShadow     =
                 `0 0 0 1px ${color}50, 0 0 40px ${color}30, 0 20px 60px rgba(0,0,0,0.7)`;
 
-            // Grappe narrative
-            const zones = getCardZones(card.id);
-            const tag   = document.getElementById('ritualNarrativeTag');
-            if (zones.length > 0) {
-                tag.style.borderColor    = `${color}30`;
-                tag.style.background     = `${color}0d`;
-                document.getElementById('ritualNarrativeText').textContent = `✦ ${T(zones[0].title || zones[0].id)}`;
-                tag.style.display = 'flex';
-            } else {
-                tag.style.display = 'none';
-            }
+            // Grappe narrative : plus affichée à la collecte (David, 22/10).
+            document.getElementById('ritualNarrativeTag').style.display = 'none';
 
             _ritualShowPhase('ritualReveal');
             setTimeout(_ritualSpawnParticles, 200);
@@ -34446,7 +34441,7 @@
                 gpsActive = true;
                 _gpsEstablished = true;
                 _updateJoystickVisibility();
-                if (map) { try { map.jumpTo({ center: [playerPos.lng, playerPos.lat] }); } catch(e) {} }
+                if (map) { try { map.jumpTo({ center: _geoCentreCamera(playerPos, map.getBearing()) }); } catch(e) {} }   // cadrage du suivi, pas de saut ensuite
             }
             _cameraMoving = false;
             if (playerMarker && map) updatePlayerOnMapSmooth();
@@ -35161,7 +35156,7 @@
                 const cs = getComputedStyle(el);
                 return cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity) > 0.05;
             });
-            if (ouvert || document.getElementById('achieveToast')) return true;
+            if (ouvert || document.getElementById('achieveToast') || _levelupBoucle) return true;
             if (typeof _viewTransition !== 'undefined' && _viewTransition) return true;
             if (typeof document.getAnimations !== 'function') return false;
             if (Date.now() - _succesAttenteDepuis > _SUCCES_ANIM_MAX_MS) return false;
@@ -35197,7 +35192,30 @@
         }
 
         // ── Level-up overlay ──
+        // Différé comme les succès : il ne se superpose jamais à une interface
+        // (rituel de cristallisation, fiche de carte, carnet, dialogue…). Il paraît
+        // après 1 s de calme, une fois l'écran en cours fermé, au niveau du moment.
+        let _levelupBoucle = null;
         function showLevelupOverlay() {
+            if (_levelupBoucle) return;
+            const depuis = Date.now();
+            let calmeDepuis = 0;
+            _levelupBoucle = setInterval(() => {
+                // Garde-fou : un écran resté inscrit par erreur ne bloque pas plus de 90 s.
+                const ecranOuvert = _isAnyScreenOpen() && Date.now() - depuis < 90000;
+                const ouvert = Array.from(document.querySelectorAll(_SUCCES_OVERLAYS)).some(el => {
+                    const cs = getComputedStyle(el);
+                    return cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity) > 0.05;
+                });
+                if (document.hidden || ecranOuvert || ouvert || document.getElementById('achieveToast')
+                    || (typeof _viewTransition !== 'undefined' && _viewTransition)) { calmeDepuis = 0; return; }
+                if (!calmeDepuis) { calmeDepuis = Date.now(); return; }
+                if (Date.now() - calmeDepuis < _SUCCES_CALME_MS) return;
+                clearInterval(_levelupBoucle); _levelupBoucle = null;
+                _afficherLevelup();
+            }, 200);
+        }
+        function _afficherLevelup() {
             const rank = getCurrentRank(playerLevel);
             document.getElementById('levelupNum').textContent   = playerLevel;
             document.getElementById('levelupRank').textContent  = rank.name;
