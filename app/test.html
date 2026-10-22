@@ -9813,7 +9813,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.29</div>
+            <div class="hud-version" id="hudVersion">v1.9.30</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11461,7 +11461,7 @@
                     <div class="journal-screen-card-subtitle" id="journalScreenCardType">Personnage</div>
                     <div class="journal-screen-card-image" id="journalScreenCardImage" onclick="journalBackBtn()" title="Retour à la carte">🎴</div>
                 </div>
-                <button class="journal-screen-memorial-btn" onclick="if (_exploriumAccessible()) { journalBackBtn(); setTimeout(openMindmap, 300); }" title="Explorium" style="position:relative;">
+                <button class="journal-screen-memorial-btn" onclick="if (_exploriumAccessible()) { closeJournalScreen(); closeCardDetail(); closeCollections(); setTimeout(openMindmap, 300); }" title="Explorium" style="position:relative;">
                     <span class="vault-notif-dot vault-notif-dot-journal" style="display:none;"></span>
                     <svg class="hub-lock-badge" aria-hidden="true"><use href="#hubPadlock"/></svg>
                     <svg width="20" height="20" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="22" y1="22" x2="6" y2="22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="22" y1="22" x2="38" y2="22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="22" y1="22" x2="14" y2="8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="22" y1="22" x2="14" y2="36" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="6" cy="22" r="4" fill="currentColor" opacity="0.75"/><circle cx="38" cy="22" r="4" fill="currentColor" opacity="0.75"/><circle cx="14" cy="8" r="4" fill="currentColor" opacity="0.75"/><circle cx="14" cy="36" r="4" fill="currentColor" opacity="0.75"/><circle cx="22" cy="22" r="6" fill="currentColor"/></svg>
@@ -33169,14 +33169,11 @@
 
         // ── Porte scellée ──
         function _hubRefreshDoor() {
-            const porte = document.getElementById('hubDoor');
-            if (!porte || _hubOpening) return;
-            porte.classList.toggle('door--sealed', !_hubExploriumKey && !_hubExploriumOpened);
-            porte.classList.toggle('door--ready',   _hubExploriumKey && !_hubExploriumOpened);
-            porte.classList.toggle('door--open',    _hubExploriumOpened);
             // Clara au QG (section 15) : elle accompagne le joueur dans le hall,
             // entre Odile et Samir (son dessin vit dans la salle de l'Explorium :
             // on le déplace une fois dans le SVG du hall, même repère 400×370).
+            // Placée avant le test de la porte : la porte est retirée (20/10) et
+            // ce retour anticipé la laissait cachée.
             const jf = document.getElementById('hubNpc-jeune_fille');
             const hall = document.getElementById('hubHallSvg');
             if (jf && hall && jf.parentNode !== hall) {
@@ -33184,6 +33181,11 @@
                 jf.setAttribute('transform', 'translate(192,262)');
             }
             if (jf) jf.style.display = _hubJfPresente() ? '' : 'none';
+            const porte = document.getElementById('hubDoor');
+            if (!porte || _hubOpening) return;
+            porte.classList.toggle('door--sealed', !_hubExploriumKey && !_hubExploriumOpened);
+            porte.classList.toggle('door--ready',   _hubExploriumKey && !_hubExploriumOpened);
+            porte.classList.toggle('door--open',    _hubExploriumOpened);
         }
 
         // ── La jeune fille au QG ──
@@ -37462,6 +37464,7 @@
                             prerequis: [{ cardId: 'card6', minLevel: 0 }, { cardId: 'card_presse_gutenberg', minLevel: 0 }, { cardId: 'card_dolet', minLevel: 0 }],
                             objectifGeo: { lat: 45.7632, lng: 4.8328, rayon: 80, nom: 'Rue Mercière (la Doloire)' },
                             rewardCases: ['vdl_case1'],
+                            voix: true,   // quête donnée par la Voix mémorielle (David, 23/10)
                         },
                         {
                             id: 'vdl_1b',
@@ -37471,6 +37474,7 @@
                             prerequis: [{ cardId: 'card_gryphe', minLevel: 1 }, { cardId: 'card_palais_st_jean', minLevel: 0 }],
                             objectifGeo: { lat: 45.7628, lng: 4.8266, rayon: 80, nom: 'Vieux-Lyon (Saint-Jean)' },
                             rewardCases: ['vdl_case2'],
+                            voix: true,
                         },
                         {
                             id: 'vdl_1c',
@@ -37550,6 +37554,30 @@
                 return cl && cl.level >= req.minLevel;
             });
             return allMet ? 'available' : 'locked';
+        }
+
+        // Médias sans quête de la Voix mémorielle (David, 23/10) : ils se colorisent
+        // dès que leurs prérequis (cartes et niveaux) sont réunis, sans déplacement.
+        // L'allumage se joue à la prochaine ouverture de la planche.
+        function _mediasSansVoixObtenir() {
+            let total = 0, obtenu = true;
+            while (obtenu) {   // un étage achevé peut en ouvrir un autre
+                obtenu = false;
+                Object.entries(GRAPPE_QUESTS).forEach(([gid, g]) => {
+                    if (typeof v2GrappeVisible === 'function' && !v2GrappeVisible(gid)) return;
+                    ((g.quete || {}).etapes || []).forEach(e => {
+                        if (e.voix || _getEtapeStatus(gid, e) !== 'available') return;
+                        grappeQuestState[gid][e.id] = 'completed';
+                        if (!grappeBDUnlocked[gid]) grappeBDUnlocked[gid] = [];
+                        (e.rewardCases || []).forEach(c => { if (!grappeBDUnlocked[gid].includes(c)) grappeBDUnlocked[gid].push(c); });
+                        journalEvenement('quest_completed', { grappe: gid, etape: e.id, auto: true });
+                        obtenu = true; total++;
+                    });
+                });
+            }
+            if (!total) return;
+            saveProgress();
+            if (typeof showVaultNotification === 'function') showVaultNotification();
         }
 
         function _getCardLevelDisplay(cardId) {
@@ -38089,6 +38117,12 @@
             if (e.target.id === 'questJournalPanel') closeQuestJournal();
         }
 
+        // Symbole de l'Explorium (bouton #btnMemorial), en tête des quêtes de médias.
+        const _QJ_ICO_EXPLORIUM = '<svg width="12" height="12" viewBox="0 0 44 44" fill="none" aria-hidden="true" style="vertical-align:-2px;margin-right:5px;">'
+            + '<g stroke="#38BDF8" stroke-width="3" stroke-linecap="round"><line x1="22" y1="22" x2="6" y2="22"/><line x1="22" y1="22" x2="38" y2="22"/>'
+            + '<line x1="22" y1="22" x2="14" y2="8"/><line x1="22" y1="22" x2="14" y2="36"/></g>'
+            + '<g fill="#38BDF8"><circle cx="6" cy="22" r="5"/><circle cx="38" cy="22" r="5"/><circle cx="14" cy="8" r="5"/><circle cx="14" cy="36" r="5"/><circle cx="22" cy="22" r="7"/></g></svg>';
+
         function renderQuestJournal() {
             const body = document.getElementById('qjBody');
             const subtitle = document.getElementById('qjSubtitle');
@@ -38126,7 +38160,7 @@
                     ? '<span class="qj-hors-zone">' + T('hors zone du jour') + '</span>' : '';
                 if (horsZone) el.classList.add('qj-quest--hors-zone');
                 el.innerHTML = `
-                    <div class="qj-quest-grappe">${grappe.title}${selectedBadge}</div>
+                    <div class="qj-quest-grappe">${grappeId !== 'tutoriel' ? _QJ_ICO_EXPLORIUM : ''}${grappe.title}${selectedBadge}</div>
                     <div class="qj-quest-title">${etape.titre}</div>
                     <div class="qj-quest-indice">${etape.indice}</div>
                     <div class="qj-quest-place">📍 ${T(etape.objectifGeo?.nom || 'Lieu à découvrir')}${horsZone}</div>
@@ -38249,6 +38283,7 @@
         // David, 19/10 : la pastille compte les quêtes NOUVELLES, jusqu'à ce que
         // le journal soit consulté (plus de pulsation hors première apparition).
         function updateQuestJournalBadge() {
+            try { _mediasSansVoixObtenir(); } catch (e) { console.warn('[Médias] colorisation directe', e); }
             const list = _getActiveQuests();
             if (qjQuetesVues === null || document.getElementById('questJournalPanel')?.classList.contains('show')) _qjMarquerVues();
             const vues = new Set(qjQuetesVues);
@@ -38713,6 +38748,7 @@
                     // ouvre aussi la console : arriver sur place suffit, le joueur n'a
                     // plus à repasser par l'Explorium pour accepter avant de valider.
                     if (status !== 'active' && status !== 'available') return;
+                    if (status === 'available' && etape.voix) return;   // la Voix n'a pas encore donné la quête
                     if (!etape.objectifGeo) return;
                     const dist = getDistance(
                         playerPos.lat, playerPos.lng,
@@ -39219,7 +39255,7 @@
                 // Sinon retomber sur l'ancien comportement (fragments)
                 chip.addEventListener('click', () => {
                     if (GRAPPE_QUESTS[zone.id]) {
-                        openGrappeQuestModal(zone.id);
+                        ouvrirVerriere(zone.id);   // fiche de grappe retirée (23/10)
                     } else if (isUnlocked || isWhispered) {
                         showFragmentForZone(zone);
                     } else {
@@ -42099,11 +42135,9 @@
                     // nouveau est montré (16/10).
                     if (nouveaux && v2SelectedGrappeId !== gid) { v2SelectedGrappeId = gid; v2RenderAll(); }
                     if (v2SelectedGrappeId === gid) {
-                        // Grappe déjà sélectionnée : un 2e tap ouvre le détail de la quête
-                        if (typeof openGrappeQuestModal === 'function') {
-                            document.body.classList.add('v2-modal-context');
-                            openGrappeQuestModal(gid);
-                        }
+                        // Grappe déjà sélectionnée : un 2e tap ouvre sa planche (la fiche
+                        // de grappe est retirée, David 23/10)
+                        ouvrirVerriere(gid);
                     } else {
                         v2SelectedGrappeId = gid;
                         v2RenderAll();
@@ -42191,57 +42225,13 @@
             openCardDetail(card);
         }
 
-        // ── Ouverture du sheet média (réutilise grappeQuestModal) ──
+        // ── Ouverture d'un média : la planche, sur sa case ──
+        // La fiche de grappe est retirée (David, 23/10) : tout média, obtenu ou non,
+        // ouvre la planche zoomée sur sa case (où la Voix peut donner sa quête).
         function v2OpenMediaSheet(merged, status) {
             // Marquer le média comme consulté (arrête le pulse)
             v2MarkMediaConsulted(merged, status);
-            // Si l'étape est COMPLÉTÉE → ouvrir directement la fresque, scrollée sur ce tableau
-            if (status === 'completed' && typeof openFresqueModal === 'function') {
-                document.body.classList.add('v2-modal-context');
-                ouvrirVerriere(merged.grappeId, merged.etapeIdx);   // test.html : planche au lieu de la fresque
-                return;
-            }
-            // Sinon, ouverture classique de la modale grappe + surlignage de l'étape
-            if (typeof openGrappeQuestModal !== 'function') {
-                if (typeof showToast === 'function') showToast(merged.etape.titre);
-                return;
-            }
-            // Marquer le contexte V2 pour que la modale reste dans le cadre téléphone
-            document.body.classList.add('v2-modal-context');
-            // Conserver le contexte pour le scroll + surlignage
-            window._v2PendingEtapeId = merged.etape.id;
-            window._v2PendingEtapeIdx = merged.etapeIdx;
-            window._v2PendingGrappeColor = V2_GRAPPE_COLORS[merged.grappeId] || merged.color;
-            try {
-                openGrappeQuestModal(merged.grappeId);
-            } catch (err) {
-                console.error('[V2] Erreur openGrappeQuestModal:', err);
-                if (typeof showToast === 'function') showToast('Erreur d\'ouverture quête');
-                return;
-            }
-            // Après render : scroller vers l'étape + surligner pour la rendre identifiable
-            setTimeout(() => {
-                const body = document.getElementById('grappeQuestBody');
-                if (!body) return;
-                const candidates = body.querySelectorAll('.quest-etape, .qj-quest-row, .grappe-etape, [data-etape], [data-etape-id]');
-                let target = body.querySelector(`[data-etape-id="${merged.etape.id}"]`);
-                if (!target && candidates.length) target = candidates[merged.etapeIdx];
-                if (!target) {
-                    const allEtapeNodes = body.querySelectorAll('div, section, article');
-                    for (const node of allEtapeNodes) {
-                        if (node.textContent && node.textContent.includes(merged.etape.titre)
-                            && node.children.length > 0 && node.offsetHeight > 50 && node.offsetHeight < 400) {
-                            target = node; break;
-                        }
-                    }
-                }
-                if (target) {
-                    const color = V2_GRAPPE_COLORS[merged.grappeId] || merged.color || '#d9a441';
-                    target.classList.add('v2-highlighted-etape');
-                    target.style.setProperty('--v2-highlight-color', color);
-                    body.scrollTo({ top: Math.max(0, target.offsetTop - 90), behavior: 'smooth' });
-                }
-            }, 220);
+            ouvrirVerriere(merged.grappeId, merged.etapeIdx);
         }
 
         // Cleanup du contexte V2 quand la modale se ferme
@@ -42534,6 +42524,10 @@
             else img.onload = finishSetup;
         }
         function closeVoutV2() {
+            // La planche vit dans #mainApp, hors de l'Explorium : sans ça, elle
+            // restait affichée seule sur la mappe.
+            const vr = document.getElementById('verriereScreen');
+            if (vr && vr.classList.contains('show') && typeof fermerVerriere === 'function') fermerVerriere();
             document.getElementById('voutV2Screen').classList.remove('show');
             // Fermer aussi l'ancien mindmapScreen qui peut être ouvert en arrière-plan
             const oldMindmap = document.getElementById('mindmapScreen');
@@ -43109,6 +43103,8 @@
         // Gabarits HTML : la clé est la chaîne exacte (cf. _vnRender → T(entry.html)).
         Object.assign(I18N_EN, {
             "Voix mémorielle": "Memory Voice",
+            "Ces cartes se reconnaissent. Leur mémoire est restée là où elles se sont croisées, il y a longtemps : %1.": "These cards recognise each other. Their memory stayed where they crossed paths, long ago: %1.",
+            "Rends-toi là-bas avec elles. Sur place, elles résonneront ensemble, et la scène retrouvera ses couleurs.": "Go there with them. On the spot, they will resonate together, and the scene will get its colours back.",
             "la jeune fille": "the girl",
             "Les cartes commencent à prendre leur place. Félicitations.": "The cards are starting to take their place. Congratulations.",
             [_ARR_HTML.ou]: 'You\'re probably wondering where you are? The ' + vnMot('explorium', 'Explorium') + '.',
@@ -43482,6 +43478,7 @@
             const mainApp = document.getElementById('mainApp');
             if (screen && mainApp && screen.parentElement !== mainApp) mainApp.appendChild(screen);
 
+            try { _mediasSansVoixObtenir(); } catch (e) {}
             const geo = verriereGeometrie(grappeId);
             verriereState.grappeId = grappeId;
             verriereState.geo = geo;
@@ -43771,6 +43768,7 @@
             const etat = etats[i];
             const t = _verriereEtapeDeCase(grappeId, pan.caseId);
             const etape = t ? t.etape : null;
+            if (etat === 'pret' && etape && etape.voix) { _verriereVoixDonneQuete(i, etape); return; }
             const bdCase = ((GRAPPE_QUESTS[grappeId].bd || {}).cases || []).find(c => c.id === pan.caseId);
             const lieu = etape && etape.objectifGeo ? etape.objectifGeo.nom : null;
             const corps = document.getElementById('verriereVoletCorps');
@@ -43831,6 +43829,18 @@
             corps.innerHTML = html;
             corps.scrollTop = 0;
             document.getElementById('verriereVolet').classList.add('show');
+        }
+
+        // Média à quête de la Voix (David, 23/10) : qu'on y arrive par l'Explorium ou
+        // par la planche, la Voix mémorielle parle à l'ouverture du média, puis la
+        // quête est prise et suivie (pin et boussole), comme « Suivre cette quête ».
+        function _verriereVoixDonneQuete(i, etape) {
+            const v = 'Voix mémorielle';
+            const lieu = T((etape.objectifGeo && etape.objectifGeo.nom) || 'Lieu à découvrir');
+            vnShow([
+                { speaker: v, line: TF('Ces cartes se reconnaissent. Leur mémoire est restée là où elles se sont croisées, il y a longtemps : %1.', lieu) },
+                { speaker: v, line: 'Rends-toi là-bas avec elles. Sur place, elles résonneront ensemble, et la scène retrouvera ses couleurs.' },
+            ], () => verriereSuivreQuete(i));
         }
 
         // ── Parcours de quête ──────────────────────────────────────
