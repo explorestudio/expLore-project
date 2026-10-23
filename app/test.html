@@ -9817,7 +9817,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.36</div>
+            <div class="hud-version" id="hudVersion">v1.9.38</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -20244,9 +20244,10 @@
             { speaker: _TUTO_JF, air: 'enthousiaste', expr: 'poussiere', bouton: 'Consulter', html: _TUTO_HTML_S3 },
         ];
         // Première « poussière mémorielle » : icône et violet (demande de David).
-        const _TUTO_HTML_S4 = 'Ce sont les Clés de la Ville ! Elles semblent vidées de toute substance. Comme disait le Professeur Ricardo, “elle s’éveille si on s’y attarde un peu. Pour qu’une carte retrouve ses souvenirs il faut lui donner de la '
+        const _TUTO_HTML_S4 = 'Comme disait le Professeur Ricardo, “elle s’éveille si on s’y attarde un peu. Pour qu’une carte retrouve ses souvenirs il faut lui donner de la '
             + vnMot('poussiere', 'poussière mémorielle', true) + '”.';
         const _TUTO_LIGNES_S4 = [
+            { speaker: _TUTO_JF, air: 'petit doigt en l’air', line: 'Ce sont les Clés de la Ville ! Elles semblent vidées de toute substance.' },
             { speaker: _TUTO_JF, air: 'petit doigt en l’air', html: _TUTO_HTML_S4 },
         ];
         const _TUTO_HTML_S6 = 'Ça marche ! Regardons ce qui a émergé dans le ' + vnMot('carnet', 'carnet', true) + '.';
@@ -20297,8 +20298,9 @@
         ];
         // TODO (document) : « [emoji de la feuille de route à définir] » après
         // « la Mission ? » — à insérer quand l'emoji sera choisi.
-        const _TUTO_HTML_S11B = 'Je suis tellement émue d’avoir partagé ça avec toi, mais on doit se reprendre ! Aujourd’hui le ' + vnMot('qg', 'QG') + ' nous a donné rendez-vous devant le Parvis de la Cathédrale St-Jean et ce n’est pas pour rien ! Tu te souviens de la Mission ?';
+        const _TUTO_HTML_S11B = 'Aujourd’hui le ' + vnMot('qg', 'QG') + ' nous a donné rendez-vous devant le Parvis de la Cathédrale St-Jean et ce n’est pas pour rien ! Tu te souviens de la Mission ?';
         const _TUTO_LIGNES_S11B = [
+            { speaker: _TUTO_JF, air: 'inquisiteur', line: 'Je suis tellement émue d’avoir partagé ça avec toi, mais on doit se reprendre !' },
             { speaker: _TUTO_JF, air: 'inquisiteur', html: _TUTO_HTML_S11B },
         ];
 
@@ -20698,8 +20700,9 @@
         // Répliques à mots-clés (VN_MOTS_CLES : couleur, l'icône est déjà passée en 1).
         const _TUTO_HTML_S12_EQUIPE = 'Bon, tu es doué et moi j’ai les connaissances… Faisons équipe pour cette fois ! Nous devons cristalliser 3 ' + vnMot('nebuleuse', 'nébuleuses') + ' supplémentaires. Au fait, moi c’est Clara !';
         const _TUTO_HTML_S15_QG = "Assez parlé, c'est toi qui as trouvé toutes les " + vnMot('nebuleuse', 'nébuleuses') + " de toute façon ! Il faut que je te présente à ma personne préférée. Direction le " + vnMot('qg', 'QG') + " !";
-        const _TUTO_HTML_S18_RETOUR = 'Ah, te revoilà. Tu étais dans l’' + vnMot('explorium', 'Explorium') + ' c’est ça ? Je ne comprends pas comment tu as fait sans “ça”. Le Professeur Ricardo nous avait dit… Enfin, j’ai pu apprendre qu’avec l’expérience, “UNE GRANDE EXPERIENCE”, on pouvait atteindre l’' + vnMot('explorium', 'Explorium') + ' sans…';
-        const _TUTO_HTML_S18_SALLE = 'Il y a une salle, à droite du hall du ' + vnMot('qg', 'QG') + ', je ne sais pas si tu as remarqué. En tout cas, ne me refais plus ça, j’ai eu peur ! Allez, maintenant tu sais ce qu’on cherche en priorité, reprenons notre route.';
+        const _TUTO_HTML_S18_RETOUR = 'Ah, te revoilà. Tu étais dans l’' + vnMot('explorium', 'Explorium') + ' c’est ça ?';
+        const _TUTO_HTML_S18_RETOUR3 = 'Enfin, j’ai pu apprendre qu’avec l’expérience, “UNE GRANDE EXPERIENCE”, on pouvait atteindre l’' + vnMot('explorium', 'Explorium') + ' sans…';
+        const _TUTO_HTML_S18_SALLE = 'Il y a une salle, à droite du hall du ' + vnMot('qg', 'QG') + ', je ne sais pas si tu as remarqué.';
 
         // Le joueur : « Toi », puis son pseudo (section 15).
         function _tutoToi() { return { speaker: nomJoueur(), line: '…' }; }
@@ -20756,7 +20759,8 @@
             return [
                 { speaker: 'Clara', air: 'souriant', line: p },
                 { speaker: odile, air: 'suspicieux', line: 'Je connais pourtant tout le monde ici, mais vous je ne vous connais pas.' },
-                { speaker: 'Clara', air: 'soulagé', line: TF("C'est vrai, %1 ne fait pas partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser ! Sans lui, ma journée ne serait pas encore finie.", p) },
+                { speaker: 'Clara', air: 'soulagé', line: TF("C'est vrai, %1 ne fait pas partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser !", p) },
+                { speaker: 'Clara', air: 'soulagé', line: 'Sans lui, ma journée ne serait pas encore finie.' },
                 { speaker: odile, air: 'de réflexion', line: TF('Hmm, en effet, nous devrions pouvoir trouver une place à %1', p) },
                 { speaker: odile, air: 'chaleureux', line: TF("Accompagne %1 dans ses quartiers sur la gauche, la porte juste en face de la tienne, je m'occupe de tout.", p) },
             ];
@@ -20765,10 +20769,14 @@
             return [
                 { speaker: 'Clara', air: 'inquiet', line: TF('Hey %1, reviens à toi. Hého !', nomJoueur()) },
                 { speaker: 'Clara', air: 'doigt levé', html: _TUTO_HTML_S18_RETOUR },
+                { speaker: 'Clara', air: 'doigt levé', line: 'Je ne comprends pas comment tu as fait sans “ça”. Le Professeur Ricardo nous avait dit…' },
+                { speaker: 'Clara', air: 'doigt levé', html: _TUTO_HTML_S18_RETOUR3 },
                 { speaker: 'Clara', line: 'Moi, j’arrive à peine à me projeter dedans avec…' },
                 { speaker: 'Clara', air: 'questionné', html: _TUTO_HTML_S18_VDL },
-                { speaker: 'Clara', air: 'choqué', line: 'Peu importe ! Ce que je veux dire c’est qu’il est préférable que tu puisses te projeter depuis un endroit sûr pour ne pas finir dans les pommes n’importe où ! Imagine si je n’avais pas été là.' },
+                { speaker: 'Clara', air: 'choqué', line: 'Peu importe ! Ce que je veux dire c’est qu’il est préférable que tu puisses te projeter depuis un endroit sûr pour ne pas finir dans les pommes n’importe où !' },
+                { speaker: 'Clara', air: 'choqué', line: 'Imagine si je n’avais pas été là.' },
                 { speaker: 'Clara', air: 'enjoué', html: _TUTO_HTML_S18_SALLE },
+                { speaker: 'Clara', air: 'enjoué', line: 'En tout cas, ne me refais plus ça, j’ai eu peur ! Allez, maintenant tu sais ce qu’on cherche en priorité, reprenons notre route.' },
             ];
         }
 
@@ -21552,7 +21560,8 @@
             "Je suis trop émue… Je n’arriverai pas à me concentrer, je te laisse la cristalliser.": "I’m too moved… I won’t be able to concentrate, I’ll let you crystallise it.",
             [_TUTO_HTML_S3]: 'You got it! Please don’t put this card away just yet. I’ll give you my '
                 + vnMot('poussiere', 'dust', true) + ' if you like, I can’t wait to find out what it has to tell us.',
-            [_TUTO_HTML_S4]: 'These are the Keys of the City! They seem drained of all substance. As Professor Ricardo used to say, “it wakes up if you linger on it a little. For a card to recover its memories, you have to give it '
+            "Ce sont les Clés de la Ville ! Elles semblent vidées de toute substance.": "These are the Keys of the City! They seem drained of all substance.",
+            [_TUTO_HTML_S4]: 'As Professor Ricardo used to say, “it wakes up if you linger on it a little. For a card to recover its memories, you have to give it '
                 + vnMot('poussiere', 'memorial dust', true) + '”.',
             [_TUTO_HTML_S6]: 'It works! Let’s see what has emerged in the ' + vnMot('carnet', 'notebook', true) + '.',
             [_TUTO_HTML_S7A]: 'It’s fascinating! The ' + vnMot('carnet', 'notebook', true) + ' really reacts to the card waking up! I told you a little ' + vnMot('poussiere', 'dust') + ' would be enough, its story is starting to unfold, I’m so happy.',
@@ -21573,7 +21582,8 @@
             "Wouah ! Elle a une histoire si intéressante, nous pouvons découvrir encore 2 entrées. Je te laisse le temps de lire tranquillement.": "Wow! It has such an interesting story, we can still discover 2 entries. I’ll give you time to read in peace.",
             "Lorsque tu auras fini de considérer ce qu’elle a réussi à se remémorer, tu pourras la retrouver via sa miniature.": "When you’ve finished taking in what it managed to remember, you can find it again through its thumbnail.",
             "Allez s’il te plaît, prenons quelques secondes pour la regarder.": "Come on, please, let’s take a few seconds to look at it.",
-            [_TUTO_HTML_S11B]: "I’m so moved to have shared that with you, but we have to pull ourselves together! Today " + vnMot('qg', 'HQ') + " gave us a meeting point in front of the Parvis of St-Jean Cathedral, and not for nothing! Do you remember the Mission?",
+            "Je suis tellement émue d’avoir partagé ça avec toi, mais on doit se reprendre !": "I’m so moved to have shared that with you, but we have to pull ourselves together!",
+            [_TUTO_HTML_S11B]: "Today " + vnMot('qg', 'HQ') + " gave us a meeting point in front of the Parvis of St-Jean Cathedral, and not for nothing! Do you remember the Mission?",
         });
 
         // ── Traductions des nouvelles chaînes (sections 12 à 18, Annexe B) ──
@@ -21598,15 +21608,20 @@
             [_TUTO_HTML_S15_QG]: 'Enough talk, you’re the one who found all the ' + vnMot('nebuleuse', 'nebulae') + ' anyway! I have to introduce you to my favourite person. Off to ' + vnMot('qg', 'HQ') + '!',
             "Ah te voilà Clara ! Mais qui est avec toi ?": "Ah, there you are Clara! But who’s with you?",
             "Je connais pourtant tout le monde ici, mais vous je ne vous connais pas.": "I know everyone here, and yet you, I don’t know you.",
-            "C'est vrai, %1 ne fait pas partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser ! Sans lui, ma journée ne serait pas encore finie.": "That’s true, %1 isn’t part of the Organisation, but look at what they managed to crystallise! Without them, my day wouldn’t be over yet.",
+            "C'est vrai, %1 ne fait pas partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser !": "That’s true, %1 isn’t part of the Organisation, but look at what they managed to crystallise!",
+            "Sans lui, ma journée ne serait pas encore finie.": "Without them, my day wouldn’t be over yet.",
             "Hmm, en effet, nous devrions pouvoir trouver une place à %1": "Hmm, indeed, we should be able to find a place for %1",
             "Accompagne %1 dans ses quartiers sur la gauche, la porte juste en face de la tienne, je m'occupe de tout.": "Take %1 to their quarters on the left, the door right across from yours, I’ll take care of everything.",
             "Hey %1, reviens à toi. Hého !": "Hey %1, snap out of it. Hello-o!",
-            [_TUTO_HTML_S18_RETOUR]: 'Ah, there you are again. You were in the ' + vnMot('explorium', 'Explorium') + ', weren’t you? I don’t understand how you did it without “that”. Professor Ricardo had told us… Well, I learned that with experience, “A GREAT EXPERIENCE”, you could reach the ' + vnMot('explorium', 'Explorium') + ' without…',
+            [_TUTO_HTML_S18_RETOUR]: 'Ah, there you are again. You were in the ' + vnMot('explorium', 'Explorium') + ', weren’t you?',
+            "Je ne comprends pas comment tu as fait sans “ça”. Le Professeur Ricardo nous avait dit…": "I don’t understand how you did it without “that”. Professor Ricardo had told us…",
+            [_TUTO_HTML_S18_RETOUR3]: 'Well, I learned that with experience, “A GREAT EXPERIENCE”, you could reach the ' + vnMot('explorium', 'Explorium') + ' without…',
             "Moi, j’arrive à peine à me projeter dedans avec…": "Me, I can barely project myself into it with…",
             [_TUTO_HTML_S18_VDL]: 'Did you manage to see “<i>Lyon, City of Books in the 16th century</i>” or was it something else?',
-            "Peu importe ! Ce que je veux dire c’est qu’il est préférable que tu puisses te projeter depuis un endroit sûr pour ne pas finir dans les pommes n’importe où ! Imagine si je n’avais pas été là.": "Never mind! What I mean is that it’s better for you to project yourself from a safe place so you don’t pass out just anywhere! Imagine if I hadn’t been there.",
-            [_TUTO_HTML_S18_SALLE]: 'There’s a room, to the right of the ' + vnMot('qg', 'HQ') + ' hall, I don’t know if you noticed. Anyway, don’t ever do that to me again, I got scared! Come on, now you know what we’re looking for first, let’s get back on our way.',
+            "Peu importe ! Ce que je veux dire c’est qu’il est préférable que tu puisses te projeter depuis un endroit sûr pour ne pas finir dans les pommes n’importe où !": "Never mind! What I mean is that it’s better for you to project yourself from a safe place so you don’t pass out just anywhere!",
+            "Imagine si je n’avais pas été là.": "Imagine if I hadn’t been there.",
+            [_TUTO_HTML_S18_SALLE]: 'There’s a room, to the right of the ' + vnMot('qg', 'HQ') + ' hall, I don’t know if you noticed.',
+            "En tout cas, ne me refais plus ça, j’ai eu peur ! Allez, maintenant tu sais ce qu’on cherche en priorité, reprenons notre route.": "Anyway, don’t ever do that to me again, I got scared! Come on, now you know what we’re looking for first, let’s get back on our way.",
             // Quêtes du tutoriel
             "Faire ses preuves": "Prove yourself",
             "Cristalliser 3 nébuleuses": "Crystallise 3 nebulae",
@@ -35913,7 +35928,9 @@
                     }
                 });
                 const nearbyDiv = document.getElementById('nearbyBazar');
-                const bazarScreenOpen = document.getElementById('bazarScreen').style.transform.includes('translateY(0)');
+                // Le navigateur écrit « translateY(0px) » : includes('translateY(0)') ne le
+                // voyait jamais ouvert, et l'échoppe était oubliée hors de sa zone.
+                const bazarScreenOpen = /translateY\(0/.test(document.getElementById('bazarScreen').style.transform);
                 if (nearest) {
                     currentNearbyBazar = nearest;
                     document.getElementById('bazarName').textContent = nearest.name;
