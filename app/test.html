@@ -9817,7 +9817,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.38</div>
+            <div class="hud-version" id="hudVersion">v1.9.39</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -20997,6 +20997,11 @@
         // ── Section 14 (hors du fil) ───────────────────────────────────────
         // Première vue haute aux jumelles, à n'importe quel moment du tutoriel
         // après leur apparition. Journalisée à ce moment-là (tuto_step 14).
+        // Premier dézoom (cf. toggleMapView) : vol lent, puis Clara parle après un
+        // temps, pour que le joueur voie la vue. Mémoire de session.
+        const DUREE_PREMIER_DEZOOM = 2400;
+        const DELAI_CLARA_DEZOOM = 1500;
+        let _tutoDezoomPret = 0;
         function _tutoSection14() {
             const e = _tutoEtat;
             // A3 : fin du tunnel — périmètre et POI apparaissent sous la vue haute
@@ -21259,7 +21264,8 @@
             }
             // 14 : première vue haute, une fois les jumelles révélées
             if (s >= 13 && e.s13 === 'fini' && e.s14 !== 'fini' && ecran === 'map'
-                && typeof _mapViewMode !== 'undefined' && _mapViewMode === 'far') { _tutoSection14(); return; }
+                && typeof _mapViewMode !== 'undefined' && _mapViewMode === 'far'
+                && Date.now() >= _tutoDezoomPret) { _tutoSection14(); return; }
             // 13, puis la quête « Faire ses preuves »
             if (s === 13 || s === 14) {
                 if (ecran !== 'map') return;
@@ -28127,16 +28133,33 @@
                 const btnR = document.getElementById('geoRecentrerBtn');
                 if (btnR) btnR.classList.remove('show');
             }
-            const DUREE_BASCULE = 600;
+            // Premier dézoom du tutoriel (David, 23/10) : vol lent cadré sur le
+            // périmètre, qui apparaît dès le départ ; Clara attend que le joueur ait
+            // vu la vue (_tutoDezoomPret). Les fois suivantes : bascule habituelle.
+            const premierDezoom = _mapViewMode === 'far' && _tutoActif() && !_tutoEtat.s14 && !_tutoEtat.dezoomLent;
+            const DUREE_BASCULE = premierDezoom ? DUREE_PREMIER_DEZOOM : 600;
+            let cadrage = { center: centreVue, zoom: v.zoom };
+            if (premierDezoom) {
+                _tutoEtat.dezoomLent = true;
+                _tutoDezoomPret = Date.now() + DUREE_PREMIER_DEZOOM + DELAI_CLARA_DEZOOM;
+                guideFocusFin();
+                if (!_tutoEtat.terrain) { _tutoEtat.terrain = true; _tuto12Terrain(0); }
+                _tutoSauver();
+                const co = TEST_PERIMETER.geometry.coordinates[0];
+                const lngs = co.map(c => c[0]), lats = co.map(c => c[1]);
+                const cam = map.cameraForBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
+                    { padding: { top: 130, bottom: 170, left: 30, right: 30 }, bearing: 0 });
+                if (cam && cam.center) cadrage = { center: cam.center, zoom: cam.zoom };
+            }
             // Le joystick et le GPS recentraient la caméra pendant le vol, ce qui
             // coupait l'animation net à chaque pas. Ils s'effacent le temps du trajet.
             _viewTransition = true;
             if (_viewTransitionTimer) { clearTimeout(_viewTransitionTimer); _viewTransitionTimer = null; }
             map.easeTo({
-                center:  centreVue,
+                center:  cadrage.center,
                 bearing: capVue,
                 pitch:   v.pitch,
-                zoom:    v.zoom,
+                zoom:    cadrage.zoom,
                 duration: DUREE_BASCULE,
                 easing: t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t
             });
