@@ -9672,6 +9672,133 @@
         }
         .ritual-cadre.sans-cadre .ritual-cadre-bord { display: none; }
         .ritual-cadre.sans-cadre .ritual-big-card { left: 4%; top: 4%; right: 4%; bottom: 4%; border-radius: 14px; }
+        /* ── Fiche carte dans Cadre_carte.png (brief « fiche carte cadre », 24/10) ──
+           Même découpe que l'écran Carte obtenue (.ritual-cadre-bord, partagée).
+           Ici .card-frame est la partie OPAQUE du PNG (927 × 1202 source) : le
+           bord déborde dans les marges transparentes (94 / 76 / 101 / 124), si bien
+           que l'ombre de milestoneFlash épouse le cadre visible. Positions en pixels
+           source, ramenées depuis le bord de la boîte complète (x − 94, y − 76).
+           --win : largeur de la fenêtre, bornée par la largeur du panneau
+           d'informations (100cqw + 2 débords ; visible = 927/665 de --win) et par
+           la hauteur au-dessus de lui (visible = --win × (1/ratio + 251/665)). */
+        #cardDetailView .card-stage { container-type: size; justify-content: center; --fiche-debord: 26px; }
+        @media (max-width: 360px) { #cardDetailView .card-stage { --fiche-debord: 18px; } }
+        #cardDetailView .card-frame {
+            --win: min(calc((100cqw + 2 * var(--fiche-debord)) * 665 / 927),
+                       calc((100cqh - 6px) / (1 / var(--card-ratio, 0.5625) + 0.3774)));
+            --s: calc(var(--win) / 665);
+            flex-shrink: 0; display: block; padding: 0;
+            width:  calc(var(--win) + 262 * var(--s)); max-width: none;
+            height: calc(var(--win) / var(--card-ratio, 0.5625) + 251 * var(--s)); min-height: 0;
+            border-radius: 0; box-shadow: none;
+            /* La teinte du supertype que openCardDetail écrit en style en ligne
+               ne doit plus se voir autour du cadre : neutralisée ici, le JS reste. */
+            background: transparent !important;
+        }
+        #cardDetailView .ritual-cadre-bord {
+            inset: calc(-76 * var(--s)) calc(-101 * var(--s)) calc(-124 * var(--s)) calc(-94 * var(--s));
+        }
+        /* Fenêtre : encart 221 / 198 / 228 / 245 de la boîte complète */
+        #cardDetailView .card-art-area {
+            position: absolute; min-height: 0; margin: 0; border-radius: 4px;
+            left:  calc(127 * var(--s)); top:    calc(122 * var(--s));
+            right: calc(127 * var(--s)); bottom: calc(121 * var(--s));
+        }
+        #cardDetailView .card-art-placeholder,
+        #cardDetailView .card-art-a-venir { border-radius: 4px; }
+        #cardDetailView .card-eye-btn { right: calc(127 * var(--s) + 2px); bottom: calc(121 * var(--s) + 4px); }
+        /* Fenêtre plus étroite qu'avant : la rangée de pastilles, centrée, se
+           resserre pour laisser libre la place de l'œil (48 px depuis le bord
+           droit de la fenêtre, soit 36 de plus que la boîte de texte). */
+        #cardDetailView .card-flavor-zone .ot-tl { max-width: calc(100% - 36px); }
+        /* Lot 4 : l'épingle de type heurterait l'ornement et la plaque. Masquée,
+           le JS qui la remplit continue de tourner. */
+        #cardDetailView .card-type-pin { display: none; }
+
+        /* Plaque du nom : centrée, 582 × 99, haut à y 154. L'ombre est portée par
+           le parent (.fiche-plaque) : le clip-path de l'octogone la rognerait. */
+        .fiche-plaque {
+            position: absolute; z-index: 4; pointer-events: none;
+            left: calc(172.5 * var(--s)); top: calc(78 * var(--s));
+            width: calc(582 * var(--s)); height: calc(99 * var(--s));
+            filter: drop-shadow(0 calc(5 * var(--s)) calc(7 * var(--s)) rgba(0,0,0,0.6));
+        }
+        .fiche-plaque-nom, .fiche-plaque-nom::before, .fiche-plaque-nom::after, .fiche-ornement {
+            clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% var(--c), 100% calc(100% - var(--c)),
+                               calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c)), 0 var(--c));
+        }
+        .fiche-plaque-nom {
+            --c: calc(13 * var(--s));
+            position: relative; z-index: 0;
+            width: 100%; height: 100%; box-sizing: border-box;
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            /* 20 source en haut : l'ornement recouvre ce bord, jamais les lettres */
+            padding: calc(20 * var(--s)) calc(30 * var(--s)) calc(6 * var(--s));
+            background: #0b0812;   /* liseré sombre */
+            font-family: Georgia, serif; font-weight: 600;
+            font-size: calc(44 * var(--s)); line-height: 1.05;
+            text-transform: uppercase; letter-spacing: 1.6px;
+            color: #f1ebff;
+            text-shadow: 0 0 8px rgba(167,139,250,0.8), 0 1px 1px rgba(0,0,0,0.9);
+        }
+        .fiche-plaque-nom.title-medium { font-size: calc(39 * var(--s)); }
+        .fiche-plaque-nom.title-long   { font-size: calc(34 * var(--s)); letter-spacing: 0.8px; }
+        .fiche-plaque-nom::before, .fiche-plaque-nom::after { content: ''; position: absolute; z-index: -1; }
+        /* biseau lilas */
+        .fiche-plaque-nom::before {
+            --c: calc(13 * var(--s) - 0.6px);
+            inset: 1.5px;
+            background: linear-gradient(180deg, #ece3ff 0%, #b49cf0 30%, #7a62b8 68%, #4d3a80 100%);
+        }
+        /* face sombre étoilée, lueur violette au centre, filet et ombre intérieurs */
+        .fiche-plaque-nom::after {
+            --c: calc(13 * var(--s) - 1.7px);
+            inset: 4px;
+            background:
+                radial-gradient(1.2px 1.2px at 9% 30%, #fff 50%, transparent 100%),
+                radial-gradient(1px 1px at 21% 72%, #e9d5ff 50%, transparent 100%),
+                radial-gradient(1.4px 1.4px at 34% 22%, #fde68a 50%, transparent 100%),
+                radial-gradient(1px 1px at 63% 78%, #fff 50%, transparent 100%),
+                radial-gradient(1.3px 1.3px at 77% 26%, #e9d5ff 50%, transparent 100%),
+                radial-gradient(1px 1px at 91% 64%, #fff 50%, transparent 100%),
+                radial-gradient(ellipse 60% 75% at 50% 55%, rgba(139,92,246,0.38) 0%, transparent 100%),
+                linear-gradient(180deg, #2b2147 0%, #1a1430 55%, #120e22 100%);
+            box-shadow: inset 0 0 0 1px rgba(8,5,16,0.9), inset 0 2px 5px rgba(0,0,0,0.6);
+        }
+        /* Ornement central du haut redessiné par-dessus la plaque, tiré du PNG
+           lui-même (rectangle x 507-615 / y 74-174, coins coupés de 13). */
+        .fiche-ornement {
+            --c: calc(13 * var(--s));
+            position: absolute; z-index: 5; pointer-events: none;
+            left: calc(413 * var(--s)); top: calc(-2 * var(--s));
+            width: calc(108 * var(--s)); height: calc(100 * var(--s));
+            background: url('./assets/Cadre_carte.png') no-repeat
+                calc(-507 * var(--s)) calc(-74 * var(--s)) / calc(1122 * var(--s)) calc(1402 * var(--s));
+        }
+        /* Gemme sertie dans le carré central du bas (centre x 558, 180 au-dessus
+           du bas de la boîte), sur un siège sombre de 70 source. */
+        .fiche-gemme-siege {
+            position: absolute; z-index: 4; pointer-events: none;
+            left: calc(429 * var(--s)); bottom: calc(21 * var(--s));
+            width: calc(70 * var(--s)); height: calc(70 * var(--s)); border-radius: 50%;
+            background: radial-gradient(circle, rgba(8,6,18,0.8) 0%, rgba(8,6,18,0.45) 45%, transparent 70%);
+            display: flex; align-items: center; justify-content: center;
+        }
+        #cardDetailView .fiche-gemme-siege .rarity-gem {
+            position: static; transform: none;
+            width: calc(57 * var(--s)); height: calc(57 * var(--s));
+        }
+        .fiche-gemme-siege .rarity-gem > svg { width: calc(53 * var(--s)); height: calc(45 * var(--s)); }
+        .fiche-gemme-siege .gem-pentagon { width: calc(38 * var(--s)); height: calc(34 * var(--s)); }
+        .fiche-gemme-siege .gem-hexagon  { width: calc(46 * var(--s)); height: calc(46 * var(--s)); }
+        .fiche-gemme-siege .gem-diamond  { width: calc(38 * var(--s)); height: calc(38 * var(--s)); }
+        /* Repli sans le PNG : simple bordure, fenêtre et plaque à leur place */
+        #cardDetailView .card-frame.sans-cadre {
+            border: 2px solid rgba(201,168,76,0.55); border-radius: 18px;
+            background: #120e1f !important; box-shadow: 0 0 40px rgba(167,139,250,0.3);
+        }
+        #cardDetailView .card-frame.sans-cadre .ritual-cadre-bord,
+        #cardDetailView .card-frame.sans-cadre .fiche-ornement { display: none; }
         .ritual-reveal-tap {
             position: absolute; left: 0; right: 0;
             bottom: max(28px, env(safe-area-inset-bottom));
@@ -9817,7 +9944,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.39</div>
+            <div class="hud-version" id="hudVersion">v1.9.41</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10411,6 +10538,11 @@
                     <!-- ── Zone haute : la carte ───────────────── -->
                     <div class="card-stage" id="cardStage">
                         <div class="card-frame" onclick="event.stopPropagation()" style="position:relative;">
+                            <!-- Cadre_carte.png en border-image (découpe partagée avec Carte obtenue) ;
+                                 l'<img> ne sert qu'à détecter l'absence du PNG (repli sans-cadre). -->
+                            <img class="ritual-cadre-img" src="./assets/Cadre_carte.png" alt="" draggable="false"
+                                 onerror="this.parentNode.classList.add('sans-cadre')">
+                            <div class="ritual-cadre-bord" aria-hidden="true"></div>
                             <div class="card-type-pin" id="cardTypePin" role="img" aria-label="Type de carte"></div>
                             <!-- Œil « observer » : affiche la carte en plein écran, sans UI -->
                             <button class="card-eye-btn" id="cardEyeBtn" onclick="openCardFullscreen(event)" title="Voir la carte en plein écran" aria-label="Voir la carte en plein écran"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.8"/></svg></button>
@@ -10421,14 +10553,15 @@
                                     <span id="cardArtEmoji">👤</span>
                                     <div class="card-art-a-venir" id="cardArtAVenir"><span class="caav-titre">Image à venir</span><span class="caav-niv" id="cardArtAVenirNiv"></span></div>
                                 </div>
-                                <div class="card-art-title" id="cardDetailName"></div>
                                 <div class="card-flavor-zone" id="cardFlavorZone">
-                                    <div class="rarity-gem flavor-gem" id="cardRarityGemFlavor"></div>
                                     <div class="card-flavor-text" id="cardFlavorText">
                                         Chaque nom est une porte entrouverte. Derrière, une vie entière à explorer.
                                     </div>
                                 </div>
                             </div>
+                            <div class="fiche-plaque"><div class="fiche-plaque-nom" id="cardDetailName"></div></div>
+                            <div class="fiche-ornement" aria-hidden="true"></div>
+                            <div class="fiche-gemme-siege"><div class="rarity-gem flavor-gem" id="cardRarityGemFlavor"></div></div>
                         </div>
                     </div>
 
@@ -11507,7 +11640,7 @@
         ">
             <!-- Header -->
             <div style="display:flex;align-items:center;gap:12px;padding:18px 16px 12px;border-bottom:1px solid rgba(217,119,6,0.2);">
-                <button onclick="closeBazarScreen()" title="Retour à la mappe" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:36px;height:36px;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><svg class="ico-mappe" width="22" height="22" aria-hidden="true"><use href="#icoMappe"/></svg></button>
+                <button class="panneau-screen-back" onclick="closeBazarScreen()" title="Retour à la mappe"><svg class="ico-mappe" width="22" height="22" aria-hidden="true"><use href="#icoMappe"/></svg></button>
                 <div>
                     <div style="font-size:16px;font-weight:800;color:#FCD34D;" id="bazarScreenTitle">Échoppe</div>
                     <div style="font-size:11px;color:rgba(217,119,6,0.7);">Fournitures mémorielles</div>
@@ -28155,6 +28288,16 @@
             // coupait l'animation net à chaque pas. Ils s'effacent le temps du trajet.
             _viewTransition = true;
             if (_viewTransitionTimer) { clearTimeout(_viewTransitionTimer); _viewTransitionTimer = null; }
+            // Pendant la bascule, un voile transparent avale taps et clics
+            // (David, 24/10) : rien ne se déclenche au milieu du vol.
+            let voile = document.getElementById('basculeVoile');
+            if (!voile) {
+                voile = document.createElement('div');
+                voile.id = 'basculeVoile';
+                voile.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:none;touch-action:none;';
+                document.body.appendChild(voile);
+            }
+            voile.style.display = 'block';
             map.easeTo({
                 center:  cadrage.center,
                 bearing: capVue,
@@ -28183,6 +28326,7 @@
             _viewTransitionTimer = setTimeout(() => {
                 _viewTransitionTimer = null;
                 _viewTransition = false;
+                voile.style.display = 'none';
                 if (!isPlanning) {
                     document.body.classList.remove('planning-mode');
                     try { checkNearbyPOI(); } catch (e) {}   // ressources de nouveau visibles
