@@ -9813,7 +9813,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.30</div>
+            <div class="hud-version" id="hudVersion">v1.9.31</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -43735,13 +43735,11 @@
             return c ? c.name : cardId;
         }
 
-        // Liste des acteurs obtenus, avec le niveau exigé. David, 20/10 : une carte
-        // que le joueur n'a pas n'est ni nommée ni comptée ; une ligne dit seulement
-        // qu'il en reste à découvrir.
+        // Liste des voix de la case, avec le niveau exigé. David, 23/10 : une carte
+        // que le joueur n'a pas est comptée et typée, jamais nommée (« ??? »).
         function _vrListeActeurs(etape) {
             const prerequis = etape.prerequis || [];
-            const manquent = prerequis.some(req => !collectedCards.includes(req.cardId));
-            const lignes = prerequis.filter(req => collectedCards.includes(req.cardId)).map(req => {
+            const lignes = prerequis.map(req => {
                 const possede = collectedCards.includes(req.cardId);
                 const niveau = possede ? ((cardLevels[req.cardId] || {}).level || 0) : 0;
                 const min = req.minLevel || 0;
@@ -43752,13 +43750,22 @@
                 if (!possede)   chip = min > 0 ? 'exige LV' + min : 'à collecter';
                 else if (ok)    chip = 'LV' + niveau;
                 else            chip = 'LV' + niveau + ' · exige LV' + min;
+                if (!possede) {
+                    // Inconnue : son type seul (icône et nom), comme sur la fiche.
+                    const type = (Object.values(COLLECTIONS).flatMap(cc => cc.cards).find(cc => cc.id === req.cardId) || {}).type;
+                    const icone = { 'Personnage': '👤', 'Objet': TYPE_ICONE_OBJET, 'Lieu': '🏛️' }[type] || '❖';
+                    return '<div class="vr-acteur">'
+                        + '<span class="vr-acteur-pastille">' + icone + '</span>'
+                        + '<span class="vr-acteur-nom">???' + (type ? ' · ' + T(type) : '') + '</span>'
+                        + '<span class="vr-acteur-niveau">' + chip + '</span>'
+                        + '</div>';
+                }
                 return '<div class="vr-acteur' + (ok ? ' ok' : '') + '">'
-                    + '<span class="vr-acteur-pastille">' + (ok ? '✦' : (possede ? '◔' : '·')) + '</span>'
+                    + '<span class="vr-acteur-pastille">' + (ok ? '✦' : '◔') + '</span>'
                     + '<span class="vr-acteur-nom">' + T(_vrNomCarte(req.cardId)) + '</span>'
                     + '<span class="vr-acteur-niveau">' + chip + '</span>'
                     + '</div>';
             });
-            if (manquent) lignes.push('<div class="vr-acteur-reste">' + T('D’autres voix restent à découvrir.') + '</div>');
             return lignes.join('');
         }
 
