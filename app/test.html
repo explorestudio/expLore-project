@@ -9813,7 +9813,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.31</div>
+            <div class="hud-version" id="hudVersion">v1.9.34</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -20728,7 +20728,7 @@
             return [
                 { speaker: 'Clara', air: 'souriant', line: p },
                 { speaker: odile, air: 'suspicieux', line: 'Je connais pourtant tout le monde ici, mais vous je ne vous connais pas.' },
-                { speaker: 'Clara', air: 'soulagé', line: "C'est vrai, il ne fait pas encore partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser ! Sans lui, ma journée ne serait pas encore finie." },
+                { speaker: 'Clara', air: 'soulagé', line: TF("C'est vrai, %1 ne fait pas partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser ! Sans lui, ma journée ne serait pas encore finie.", p) },
                 { speaker: odile, air: 'de réflexion', line: TF('Hmm, en effet, nous devrions pouvoir trouver une place à %1', p) },
                 { speaker: odile, air: 'chaleureux', line: TF("Accompagne %1 dans ses quartiers sur la gauche, la porte juste en face de la tienne, je m'occupe de tout.", p) },
             ];
@@ -21567,7 +21567,7 @@
             [_TUTO_HTML_S15_QG]: 'Enough talk, you’re the one who found all the ' + vnMot('nebuleuse', 'nebulae') + ' anyway! I have to introduce you to my favourite person. Off to ' + vnMot('qg', 'HQ') + '!',
             "Ah te voilà Clara ! Mais qui est avec toi ?": "Ah, there you are Clara! But who’s with you?",
             "Je connais pourtant tout le monde ici, mais vous je ne vous connais pas.": "I know everyone here, and yet you, I don’t know you.",
-            "C'est vrai, il ne fait pas encore partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser ! Sans lui, ma journée ne serait pas encore finie.": "That’s true, they’re not part of the Organisation yet, but look at what they managed to crystallise! Without them, my day wouldn’t be over yet.",
+            "C'est vrai, %1 ne fait pas partie de l'Organisation mais regarde ce qu'il a réussi à cristalliser ! Sans lui, ma journée ne serait pas encore finie.": "That’s true, %1 isn’t part of the Organisation, but look at what they managed to crystallise! Without them, my day wouldn’t be over yet.",
             "Hmm, en effet, nous devrions pouvoir trouver une place à %1": "Hmm, indeed, we should be able to find a place for %1",
             "Accompagne %1 dans ses quartiers sur la gauche, la porte juste en face de la tienne, je m'occupe de tout.": "Take %1 to their quarters on the left, the door right across from yours, I’ll take care of everything.",
             "Hey %1, reviens à toi. Hého !": "Hey %1, snap out of it. Hello-o!",
@@ -43736,7 +43736,8 @@
         }
 
         // Liste des voix de la case, avec le niveau exigé. David, 23/10 : une carte
-        // que le joueur n'a pas est comptée et typée, jamais nommée (« ??? »).
+        // que le joueur n'a pas est comptée, jamais nommée (« ??? · Carte ») : on dit
+        // seulement carte ou non-carte, pas son type (aucun non-carte en prérequis).
         function _vrListeActeurs(etape) {
             const prerequis = etape.prerequis || [];
             const lignes = prerequis.map(req => {
@@ -43751,12 +43752,9 @@
                 else if (ok)    chip = 'LV' + niveau;
                 else            chip = 'LV' + niveau + ' · exige LV' + min;
                 if (!possede) {
-                    // Inconnue : son type seul (icône et nom), comme sur la fiche.
-                    const type = (Object.values(COLLECTIONS).flatMap(cc => cc.cards).find(cc => cc.id === req.cardId) || {}).type;
-                    const icone = { 'Personnage': '👤', 'Objet': TYPE_ICONE_OBJET, 'Lieu': '🏛️' }[type] || '❖';
                     return '<div class="vr-acteur">'
-                        + '<span class="vr-acteur-pastille">' + icone + '</span>'
-                        + '<span class="vr-acteur-nom">???' + (type ? ' · ' + T(type) : '') + '</span>'
+                        + '<span class="vr-acteur-pastille">?</span>'
+                        + '<span class="vr-acteur-nom">??? · ' + T('Carte') + '</span>'
                         + '<span class="vr-acteur-niveau">' + chip + '</span>'
                         + '</div>';
                 }
@@ -43775,6 +43773,9 @@
             const etat = etats[i];
             const t = _verriereEtapeDeCase(grappeId, pan.caseId);
             const etape = t ? t.etape : null;
+            // Fiche de grappe retirée (23/10) : c'est le volet qui montre les
+            // prérequis, son ouverture éteint donc leur nouveauté.
+            if (etape) _gqChapitreVu(grappeId, etape);
             if (etat === 'pret' && etape && etape.voix) { _verriereVoixDonneQuete(i, etape); return; }
             const bdCase = ((GRAPPE_QUESTS[grappeId].bd || {}).cases || []).find(c => c.id === pan.caseId);
             const lieu = etape && etape.objectifGeo ? etape.objectifGeo.nom : null;
