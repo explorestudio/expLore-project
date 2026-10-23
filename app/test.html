@@ -5048,6 +5048,10 @@
         .gr-opt.on { border-color: rgba(214,163,23,.9); background: rgba(214,163,23,.12); }
         .gr-opt svg { width: 100%; height: 100%; display: block; }
         .gr-opt-vide { font-size: 11px; opacity: .55; color: #e8dfc8; }
+        /* Pièce à gagner (23/10) : visible, grisée, cadenas en coin. */
+        .gr-opt { position: relative; }
+        .gr-opt.verrou svg { filter: grayscale(1) brightness(.55); }
+        .gr-opt-cadenas { position: absolute; right: 4px; bottom: 3px; font-size: 13px; pointer-events: none; }
         .gr-actions { flex: 0 0 auto; display: flex; gap: 8px; padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
             border-top: 1px solid rgba(232,223,200,.12); }
         .gr--panneau .gr-actions { padding: 8px 0 4px; }
@@ -9813,7 +9817,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.34</div>
+            <div class="hud-version" id="hudVersion">v1.9.36</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11541,6 +11545,8 @@
                     </div>
                     <button id="bazarBtn_cassettes" onclick="bazarTake('cassettes')" style="background:linear-gradient(135deg,#6D28D9,#5B21B6);border:none;border-radius:10px;padding:8px 14px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Prendre +1</button>
                 </div>
+                <!-- Pièce de tenue en stock (cf. _bazarRefreshStock) -->
+                <div id="bazarPiece"></div>
             </div>
         </div>
 
@@ -14139,6 +14145,22 @@
             "Peau": "Skin", "Coupe": "Haircut", "Couleur": "Colour", "Haut": "Top", "Bas": "Bottom",
             "Accessoire": "Accessory", "Chapeau": "Hat", "Visage": "Face", "aucun": "none",
             "Au hasard": "Random", "Réinitialiser": "Reset",
+            // Pièces de tenue à gagner (23/10)
+            "Tenue : %1": "Outfit: %1", "👕 Tenue : %1": "👕 Outfit: %1", "Tenue": "Outfit",
+            "Tenue : béret": "Outfit: beret", "Tenue : cape grise": "Outfit: grey cape",
+            "Tenue : cache-œil": "Outfit: eyepatch", "Tenue : manteau nuit": "Outfit: night coat",
+            "🔒 Récompense du battle pass": "🔒 Battle pass reward", "🔒 À trouver dans les coffres mystère": "🔒 Found in mystery chests",
+            "Pièce de tenue · une seule en stock": "Outfit piece · only one in stock", "Prendre": "Take",
+            "veste verte": "green jacket", "gilet grenat": "garnet waistcoat", "manteau nuit": "night coat",
+            "cape grise": "grey cape", "veste olive": "olive jacket", "veste prune": "plum jacket",
+            "manteau sable": "sand coat", "gilet sombre": "dark waistcoat",
+            "pantalon olive": "olive trousers", "pantalon bleu nuit": "midnight-blue trousers",
+            "pantalon sable": "sand trousers", "pantalon prune": "plum trousers",
+            "jupe olive": "olive skirt", "jupe bleu nuit": "midnight-blue skirt", "jupe sable": "sand skirt", "jupe prune": "plum skirt",
+            "écharpe grenat": "garnet scarf", "écharpe verte": "green scarf", "écharpe bleue": "blue scarf",
+            "sacoche verte": "green satchel", "sacoche noire": "black satchel", "étui à parchemins": "scroll case",
+            "sac à dos": "backpack", "sacoche de ceinture": "belt pouch",
+            "casquette": "cap", "béret": "beret", "besicles": "spectacles", "cache-œil": "eyepatch",
             "Penderie": "Wardrobe", "Change de tenue avant de ressortir.": "Change your outfit before heading out.",
             "✓ Disponible": "✓ Available",
             "★ Quête suivie": "★ Quest tracked",
@@ -20229,12 +20251,18 @@
         ];
         const _TUTO_HTML_S6 = 'Ça marche ! Regardons ce qui a émergé dans le ' + vnMot('carnet', 'carnet', true) + '.';
         const _TUTO_LIGNES_S6 = [ { speaker: _TUTO_JF, air: 'enjoué', html: _TUTO_HTML_S6 } ];
-        const _TUTO_HTML_S7A = 'C’est fascinant ! Le ' + vnMot('carnet', 'carnet', true) + ' réagit vraiment au réveil de la carte ! Je t’avais dit qu’il suffisait d’un peu de ' + vnMot('poussiere', 'poussière') + ', son histoire commence à se dévoiler, je suis si contente. Regarde, il nous faut de l’' + vnMot('encre', 'encre', true);
+        const _TUTO_HTML_S7A = 'C’est fascinant ! Le ' + vnMot('carnet', 'carnet', true) + ' réagit vraiment au réveil de la carte ! Je t’avais dit qu’il suffisait d’un peu de ' + vnMot('poussiere', 'poussière') + ', son histoire commence à se dévoiler, je suis si contente.';
+        // Dialogues aérés (David, 23/10) : une idée par bulle.
+        const _TUTO_HTML_S7A2 = 'Regarde, il nous faut de l’' + vnMot('encre', 'encre', true);
         // Première « échoppe » : icône et orange (demande de David).
-        const _TUTO_HTML_S7B = 'Tu n’en as pas ? Ils avaient pourtant insisté sur ça au ' + vnMot('qg', 'QG') + ' : ' + vnMot('encre', 'encre', true) + ', ' + vnMot('pellicule', 'pellicule', true) + ' et ' + vnMot('cassette', 'cassette', true)
-            + '. Tu aurais bien besoin d\'un peu de ' + vnMot('poussiere', 'poussière mémorielle') + ' toi aussi ! Bon, suis-moi, on va faire le plein. Trouvons une ' + vnMot('echoppe', 'échoppe', true) + ', il paraît qu’il y en a un peu partout en ville.';
-        const _TUTO_LIGNES_S7A = [ { speaker: _TUTO_JF, air: 'enjoué',       html: _TUTO_HTML_S7A } ];
-        const _TUTO_LIGNES_S7B = [ { speaker: _TUTO_JF, air: 'enthousiaste', html: _TUTO_HTML_S7B } ];
+        const _TUTO_HTML_S7B = 'Ils avaient pourtant insisté sur ça au ' + vnMot('qg', 'QG') + ' : ' + vnMot('encre', 'encre', true) + ', ' + vnMot('pellicule', 'pellicule', true) + ' et ' + vnMot('cassette', 'cassette', true)
+            + '. Tu aurais bien besoin d\'un peu de ' + vnMot('poussiere', 'poussière mémorielle') + ' toi aussi !';
+        const _TUTO_HTML_S7B2 = 'Bon, suis-moi, on va faire le plein. Trouvons une ' + vnMot('echoppe', 'échoppe', true) + ', il paraît qu’il y en a un peu partout en ville.';
+        const _TUTO_LIGNES_S7A = [ { speaker: _TUTO_JF, air: 'enjoué',       html: _TUTO_HTML_S7A },
+                                   { speaker: _TUTO_JF, air: 'enjoué',       html: _TUTO_HTML_S7A2 } ];
+        const _TUTO_LIGNES_S7B = [ { speaker: _TUTO_JF, air: 'enthousiaste', line: 'Tu n’en as pas ?' },
+                                   { speaker: _TUTO_JF, air: 'enthousiaste', html: _TUTO_HTML_S7B },
+                                   { speaker: _TUTO_JF, air: 'enthousiaste', html: _TUTO_HTML_S7B2 } ];
         // Section 10 — « Monsieur » : le marchand de l'échoppe.
         const _TUTO_HTML_S10 = {
             A: 'Il faut tout prendre quand on nous le propose, ce ne sera pas toujours le cas d’après l’Organisation. Je range le tout dans ton ' + vnMot('sac', 'sac', true) + ', jette un œil !',
@@ -21527,9 +21555,12 @@
             [_TUTO_HTML_S4]: 'These are the Keys of the City! They seem drained of all substance. As Professor Ricardo used to say, “it wakes up if you linger on it a little. For a card to recover its memories, you have to give it '
                 + vnMot('poussiere', 'memorial dust', true) + '”.',
             [_TUTO_HTML_S6]: 'It works! Let’s see what has emerged in the ' + vnMot('carnet', 'notebook', true) + '.',
-            [_TUTO_HTML_S7A]: 'It’s fascinating! The ' + vnMot('carnet', 'notebook', true) + ' really reacts to the card waking up! I told you a little ' + vnMot('poussiere', 'dust') + ' would be enough, its story is starting to unfold, I’m so happy. Look, we need some ' + vnMot('encre', 'ink', true),
-            [_TUTO_HTML_S7B]: 'You don’t have any? They really insisted on it at ' + vnMot('qg', 'HQ') + ': ' + vnMot('encre', 'ink', true) + ', ' + vnMot('pellicule', 'film', true) + ' and ' + vnMot('cassette', 'tape', true)
-                + '. You could do with a little ' + vnMot('poussiere', 'memorial dust') + ' yourself, too! Right, follow me, let’s stock up. Let’s find a ' + vnMot('echoppe', 'stall', true) + ', apparently there are some all over town.',
+            [_TUTO_HTML_S7A]: 'It’s fascinating! The ' + vnMot('carnet', 'notebook', true) + ' really reacts to the card waking up! I told you a little ' + vnMot('poussiere', 'dust') + ' would be enough, its story is starting to unfold, I’m so happy.',
+            [_TUTO_HTML_S7A2]: 'Look, we need some ' + vnMot('encre', 'ink', true),
+            "Tu n’en as pas ?": "You don’t have any?",
+            [_TUTO_HTML_S7B]: 'They really insisted on it at ' + vnMot('qg', 'HQ') + ': ' + vnMot('encre', 'ink', true) + ', ' + vnMot('pellicule', 'film', true) + ' and ' + vnMot('cassette', 'tape', true)
+                + '. You could do with a little ' + vnMot('poussiere', 'memorial dust') + ' yourself, too!',
+            [_TUTO_HTML_S7B2]: 'Right, follow me, let’s stock up. Let’s find a ' + vnMot('echoppe', 'stall', true) + ', apparently there are some all over town.',
             "Je dois vraiment tout faire ! Merci Monsieur, cet énergumène ne semble pas être réveillé aujourd’hui.": "Do I really have to do everything! Thank you, Sir, this character doesn’t seem to be awake today.",
             [_TUTO_HTML_S10_ENCRE]: 'Right, now let’s go and give it its ' + vnMot('encre', 'ink', true) + '! I can’t wait to learn more about the card!',
             [_TUTO_HTML_S10.A]: 'You have to take everything when it’s offered, it won’t always be the case according to the Organisation. I’ll put it all in your ' + vnMot('sac', 'bag', true) + ', take a look!',
@@ -22766,6 +22797,8 @@
                     // Interface révélée pas à pas, sac, échoppe du tuto (cf. uiReveler)
                     _uiEtat: _uiEtatExporter(),
                     tenueAvatar,       // tenue de l'avatar (brief personnalisation, lot 2)
+                    avPiecesObtenues,  // pièces de tenue gagnées (23/10)
+                    avEchoppesDonnees, // échoppes qui ont déjà donné leur pièce
                     _claraPresentee,   // Clara s'est présentée (section 12) : nomClara()
                     _joueurPseudo,     // pseudo saisi au QG (section 15) : nomJoueur()
                     // Tutoriel Bellecour : section atteinte, sous-étapes, « autre carte » (cf. _tuto*)
@@ -22897,6 +22930,10 @@
                 tenueAvatar = avTenueValide(d.tenueAvatar);
                 if (Object.keys(AV_TENUE_DEFAUT_V18).every(k => tenueAvatar[k] === AV_TENUE_DEFAUT_V18[k]))
                     tenueAvatar = Object.assign({}, AV_TENUE_DEFAUT);
+                if (Array.isArray(d.avPiecesObtenues))  avPiecesObtenues  = d.avPiecesObtenues;
+                if (Array.isArray(d.avEchoppesDonnees)) avEchoppesDonnees = d.avEchoppesDonnees;
+                // Une pièce déjà portée devenue à gagner reste au joueur : on ne déshabille personne.
+                AV_FAMILLES.forEach(f => { const id = tenueAvatar[f.k]; if (!avPieceLibre(id)) avPiecesObtenues.push(id); });
                 try { rafraichirAvatars(); } catch (e) {}
                 if (d._claraPresentee) _claraPresentee = true;
                 if (typeof d._tutoSection === 'number') _tutoSection = d._tutoSection;
@@ -24312,6 +24349,37 @@
             { k: 'bas', n: 'Bas', cat: AV_BAS }, { k: 'accessoire', n: 'Accessoire', cat: AV_ACCESSOIRES },
             { k: 'chapeau', n: 'Chapeau', cat: AV_CHAPEAUX }, { k: 'visage', n: 'Visage', cat: AV_VISAGES },
         ];
+        // Pièces à gagner (David, 23/10). Peau, couleur et coupes restent toutes
+        // libres (identité). AV_PIECES_BP sont réservées au battle pass ; les autres
+        // sortent des coffres mystère et, parfois, des échoppes.
+        const AV_PIECES_A_GAGNER = ['h2', 'h3', 'h6', 'h7', 'h8', 'h10', 'h11', 'h12',
+            'b2', 'b4', 'b5', 'b6', 'j2', 'j4', 'j5', 'j6',
+            'a_ech_r', 'a_ech_v', 'a_ech_b', 'a_sac_v', 'a_sac_n', 'a_etui', 'a_dos', 'a_ceinture',
+            't_gavroche', 't_beret', 'v_carrees', 'v_cache'];
+        const AV_PIECES_BP = ['t_beret', 'h7', 'v_cache', 'h6'];
+        let avPiecesObtenues = [];    // pièces gagnées (sauvegardé)
+        let avEchoppesDonnees = [];   // échoppes qui ont déjà donné leur pièce (sauvegardé)
+        function avPieceLibre(id) { return !AV_PIECES_A_GAGNER.includes(id) || avPiecesObtenues.includes(id); }
+        function avPieceInfo(id) {
+            for (const f of AV_FAMILLES) { const o = f.cat.find(x => x.id === id); if (o) return { f, o }; }
+            return null;
+        }
+        // Pièce au hasard parmi celles à gagner hors battle pass, jamais un doublon.
+        function avTirerPiece() {
+            const reste = AV_PIECES_A_GAGNER.filter(p => !AV_PIECES_BP.includes(p) && !avPiecesObtenues.includes(p));
+            return reste.length ? reste[Math.floor(Math.random() * reste.length)] : null;
+        }
+        function avDonnerPiece(id) {
+            if (!id) return null;
+            if (!avPiecesObtenues.includes(id)) avPiecesObtenues.push(id);
+            try { saveProgress(); } catch (e) {}
+            return avPieceInfo(id);
+        }
+        // Icône d'une pièce pour les écrans de récompense (vignette de la garde-robe).
+        function avPieceIcone(id) {
+            const p = avPieceInfo(id);
+            return p ? '<div style="width:84px;height:84px;margin:0 auto;">' + _grVignette(p.f.k, id).replace('<svg ', '<svg style="width:100%;height:100%;display:block;" ') + '</div>' : '👕';
+        }
         // Tenue sûre : champs manquants complétés par le défaut ; identifiant
         // inconnu remplacé par le défaut de sa famille, avec un message en console.
         function avTenueValide(t) {
@@ -24326,7 +24394,10 @@
         }
         function avTenueHasard() {
             const t = {};
-            AV_FAMILLES.forEach(f => { t[f.k] = f.cat[Math.floor(Math.random() * f.cat.length)].id; });
+            AV_FAMILLES.forEach(f => {
+                const libres = f.cat.filter(o => avPieceLibre(o.id));
+                t[f.k] = libres[Math.floor(Math.random() * libres.length)].id;
+            });
             return t;
         }
         // Change la tenue, redessine les deux avatars et sauvegarde.
@@ -24459,8 +24530,9 @@
             const onglets = '<div class="gr-onglets">' + AV_FAMILLES.map(x =>
                 '<button class="gr-onglet' + (x.k === fam.k ? ' on' : '') + '" data-k="' + x.k + '">' + T(x.n) + '</button>').join('') + '</div>';
             const grille = '<div class="gr-grille">' + fam.cat.map((o, i) =>
-                '<button class="gr-opt' + (tenueAvatar[fam.k] === o.id ? ' on' : '') + '" data-i="' + i + '" title="' + o.n + '">'
-                + (o.id === null ? '<span class="gr-opt-vide">' + T('aucun') + '</span>' : _grVignette(fam.k, o.id)) + '</button>').join('') + '</div>';
+                '<button class="gr-opt' + (tenueAvatar[fam.k] === o.id ? ' on' : '') + (avPieceLibre(o.id) ? '' : ' verrou') + '" data-i="' + i + '" title="' + o.n + '">'
+                + (o.id === null ? '<span class="gr-opt-vide">' + T('aucun') + '</span>' : _grVignette(fam.k, o.id))
+                + (avPieceLibre(o.id) ? '' : '<span class="gr-opt-cadenas">🔒</span>') + '</button>').join('') + '</div>';
             const actions = '<div class="gr-actions"><button class="gr-act" data-a="hasard">' + T('Au hasard') + '</button>'
                 + '<button class="gr-act" data-a="defaut">' + T('Réinitialiser') + '</button>'
                 + (presentation === 'ecran' ? '<button class="gr-act primaire" data-a="fermer">' + T('Fermer') + '</button>' : '') + '</div>';
@@ -24472,6 +24544,11 @@
                 hote.querySelector('.gr-onglets').scrollLeft = defile;
             });
             hote.querySelectorAll('.gr-opt').forEach(b => b.onclick = () => {
+                const id = fam.cat[+b.dataset.i].id;
+                if (!avPieceLibre(id)) {
+                    showToast(T(AV_PIECES_BP.includes(id) ? '🔒 Récompense du battle pass' : '🔒 À trouver dans les coffres mystère'));
+                    return;
+                }
                 avChangerTenue(Object.assign({}, tenueAvatar, { [fam.k]: fam.cat[+b.dataset.i].id }));
                 rendreGardeRobe(hote, presentation);
             });
@@ -26331,6 +26408,13 @@
             { weight: ECHOES_DISABLED ? 0 : 8,  give: () => { const types = Object.keys(SUPERTYPES); const t = types[Math.floor(Math.random()*types.length)]; bagInv.echos[t] = (bagInv.echos[t]||0)+1; saveProgress(); return { iconHtml: SUPERTYPES[t].symbol, label: TF('Écho %1', T(SUPERTYPES[t].name)) }; } },
             { weight: 5,  give: () => { bagInv.orbes++; saveProgress(); return { iconHtml: '🔮', label: '+1 orbe de mémoire' }; } },
             { weight: 3,  give: () => { bagInv.parchemins.push({ id:'loot_scroll_'+Date.now(), name:'Parchemin', desc:'Trouvé dans un objet mystère.' }); saveProgress(); return { iconHtml: '📜', label: '+1 parchemin' }; } },
+            // Pièce de tenue (David, 23/10) ; toutes obtenues : retombe sur la poussière.
+            { weight: 25, give: () => {
+                const id = avTirerPiece();
+                if (!id) return LOOT_TABLE[0].give();
+                const p = avDonnerPiece(id);
+                return { iconHtml: avPieceIcone(id), label: TF('Tenue : %1', T(p.o.n)) };
+            } },
         ];
 
         function collectLoot() {
@@ -34572,11 +34656,14 @@
             saveProgress();
         }
 
+        // Pièce de tenue réservée au battle pass (AV_PIECES_BP, David 23/10).
+        // Le toast « Récupéré : … » de _bpRecuperer suffit.
+        function _bpPiece(id) { avDonnerPiece(id); }
         const BATTLEPASS_NODES = [
             { palier:1,  icon:'📷', name:'Appareil photo + 10 pellicules', type:'Objet unique',        xpRequired:0,    milestone:true,
               rewardFn: () => { giveCamera(); } },
-            { palier:2,  icon:'💜', name:'+50 Poussière',                     type:'Poussière mémorielle',   xpRequired:50,
-              rewardFn: () => addDust(50) },
+            { palier:2,  icon:'👕', name:'Tenue : béret',                     type:'Tenue',                xpRequired:50,
+              rewardFn: () => _bpPiece('t_beret') },
             { palier:3,  icon:'🔮', name:'+3 Orbes de mémoire',           type:'Orbes',                xpRequired:85,
               rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+3; saveProgress(); showToast('🔮 +3 orbes de mémoire'); } },
             { palier:4,  icon:'📜', name:'+2 parchemins',                  type:'Parchemins',           xpRequired:120,
@@ -34592,16 +34679,16 @@
               rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+3; saveProgress(); showToast('🔮 +3 orbes de mémoire'); } },
             { palier:8,  icon:'⭐', name:'Badge Flâneur',                   type:'Titre spécial',        xpRequired:500,  milestone:true,
               rewardFn: () => _bpTitre('Flâneur') },
-            { palier:9,  icon:'💜', name:'+150 Poussière',                     type:'Poussière mémorielle',   xpRequired:680,
-              rewardFn: () => addDust(150) },
+            { palier:9,  icon:'👕', name:'Tenue : cape grise',                type:'Tenue',                xpRequired:680,
+              rewardFn: () => _bpPiece('h7') },
             { palier:10, icon:'🎞️', name:'+5 pellicules',                   type:'Fournitures',          xpRequired:880,
               rewardFn: () => addFilm(5) },
             { palier:11, icon:'⚙️',  name:'Cadre Fer',                        type:'Cadre musée',          xpRequired:1100,
               rewardFn: () => unlockFrame('fer') },
             { palier:12, icon:'🔮', name:'+2 Orbes de mémoire',           type:'Orbes',                xpRequired:1225,
               rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+2; saveProgress(); showToast('🔮 +2 orbes de mémoire'); } },
-            { palier:13, icon:'💜', name:'+200 Poussière',                     type:'Poussière mémorielle',   xpRequired:1350,
-              rewardFn: () => addDust(200) },
+            { palier:13, icon:'👕', name:'Tenue : cache-œil',                 type:'Tenue',                xpRequired:1350,
+              rewardFn: () => _bpPiece('v_cache') },
             { palier:14, icon:'🦁', name:'Titre : Gardien de Fourvière',    type:'Titre spécial',        xpRequired:1620, milestone:true,
               rewardFn: () => addDust(350) },
             { palier:15, icon:'🖋️', name:'+5 encres',                       type:'Fournitures',          xpRequired:1920,
@@ -34615,8 +34702,8 @@
             { palier:19, icon:'🎨', name:'Skin Crépuscule',                 type:'Skin de carte',        xpRequired:3000,
               rewardFn: () => unlockSkin('crepuscule') },
             { palier:20, icon:'👑', name:'Titre : Passeur de Mémoire',      type:'Titre légendaire',     xpRequired:3420, milestone:true },
-            { palier:21, icon:'💜', name:'+300 Poussière',                     type:'Poussière mémorielle',   xpRequired:3870,
-              rewardFn: () => addDust(300) },
+            { palier:21, icon:'👕', name:'Tenue : manteau nuit',              type:'Tenue',                xpRequired:3870,
+              rewardFn: () => _bpPiece('h6') },
             { palier:22, icon:'🔮', name:'+1 Orbe de mémoire',            type:'Orbes',                xpRequired:4110,
               rewardFn: () => { bagInv.orbes = (bagInv.orbes||0)+1; saveProgress(); showToast('🔮 +1 orbe de mémoire'); } },
             { palier:23, icon:'🔶', name:'Cadre Cuivre',                      type:'Cadre musée',          xpRequired:4350,
@@ -35850,6 +35937,11 @@
             _hideAllNearbyConsoles('echoppe');
             if (!currentNearbyBazar.stock) currentNearbyBazar.stock = { pellicules: 3, encre: 3, cassettes: 3 };
             document.getElementById('bazarScreenTitle').textContent = currentNearbyBazar.name;
+            // Pièce de tenue (David, 23/10) : une chance sur trois, tirée une fois par
+            // échoppe et par session ; chaque échoppe n'en donne qu'une (tuto exclu).
+            const bz = currentNearbyBazar;
+            if (bz._piece === undefined)
+                bz._piece = (bz.id !== ECHOPPE_TUTO_ID && !avEchoppesDonnees.includes(bz.id) && Math.random() < 1 / 3) ? avTirerPiece() : null;
             _bazarRefreshStock();
             const el = document.getElementById('bazarScreen');
             el.style.transform    = 'translateY(0)';
@@ -35873,6 +35965,26 @@
                     btn.textContent = empty ? 'Épuisé' : 'Prendre +1';
                 }
             });
+            const zone = document.getElementById('bazarPiece');
+            const id = currentNearbyBazar._piece;
+            const p = id && !avPiecesObtenues.includes(id) ? avPieceInfo(id) : null;
+            zone.innerHTML = p
+                ? '<div style="background:rgba(214,163,23,0.1);border:1px solid rgba(214,163,23,0.35);border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;">'
+                    + '<div style="width:52px;flex-shrink:0;">' + avPieceIcone(id).replace('width:84px;height:84px;', 'width:52px;height:52px;') + '</div>'
+                    + '<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:#FCD34D;">' + T(p.o.n) + '</div>'
+                    + '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;">' + T('Pièce de tenue · une seule en stock') + '</div></div>'
+                    + '<button onclick="bazarTakePiece()" style="background:linear-gradient(135deg,#D97706,#B45309);border:none;border-radius:10px;padding:10px 14px;color:white;font-size:13px;font-weight:700;cursor:pointer;">' + T('Prendre') + '</button></div>'
+                : '';
+        }
+
+        function bazarTakePiece() {
+            const bz = currentNearbyBazar;
+            if (!bz || !bz._piece) return;
+            if (!avEchoppesDonnees.includes(bz.id)) avEchoppesDonnees.push(bz.id);
+            const p = avDonnerPiece(bz._piece);
+            bz._piece = null;
+            _bazarRefreshStock();
+            if (p) showToast(TF('👕 Tenue : %1', T(p.o.n)));
         }
 
         function closeBazarScreen() {
