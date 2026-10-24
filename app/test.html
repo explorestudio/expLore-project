@@ -8909,6 +8909,21 @@
             100% { opacity: 1; filter: brightness(1); }
         }
 
+        /* Dessin apparu depuis la dernière visite (David, 24/10) : le crayonné ou
+           l'encrage monte dans la case avec un halo, une seule fois par état */
+        #verriereSvg .case.vr-trace-crayon .crayon { animation: vrTraceCrayon 1500ms ease-out .35s both; }
+        #verriereSvg .case.vr-trace-encre .encre   { animation: vrTraceEncre 1500ms ease-out .35s both; }
+        @keyframes vrTraceCrayon {
+            0%   { opacity: 0; }
+            40%  { opacity: 1;   filter: drop-shadow(0 0 7px rgba(251,146,60,.95)); }
+            100% { opacity: .85; filter: none; }
+        }
+        @keyframes vrTraceEncre {
+            0%   { opacity: 0; }
+            40%  { opacity: 1; filter: drop-shadow(0 0 8px rgba(251,146,60,.95)); }
+            100% { opacity: 1; filter: none; }
+        }
+
         /* Ouverture d'un étage : animée pour elle-même, sans compter sur un
            crayonné. Les sèves s'encrent (le tracé se déroule), puis la lumière
            monte dans les cases de l'étage qui s'ouvre. */
@@ -9962,7 +9977,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.43</div>
+            <div class="hud-version" id="hudVersion">v1.9.44</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -41472,6 +41487,9 @@
         // Option A (24/10) : une étape dont le média est encore dans l'ombre ne
         // compte pas, même si un de ses prérequis a monté : rien ne la montrerait.
         function v2EtapeANouveau(gid, etape) {
+            // Étage fermé non plus (24/10) : son volet ne montre rien. Le nouveau est
+            // gardé, il s'allume quand l'étage s'ouvre.
+            if (!_etapeEtageOuvert(gid, etape)) return false;
             const m = v2GetAllEtapes().find(x => x.etape.id === etape.id);
             if (!m || !v2MediaIsVisible(m)) return false;
             return v2MediaEstNouveau(m) || v2EtapeAPrereqNouveau(gid, etape);
@@ -41749,9 +41767,11 @@
             if (!v2PrereqVus) return;
             (etape.prerequis || []).forEach(req => { v2PrereqVus[_v2PrereqCle(gid, etape.id, req.cardId)] = v2PrereqStade(req); });
         }
+        // David, 24/10 : plus d'instantané à la première ouverture. Les cartes réunies
+        // avant l'Explorium (celles qui l'ont ouvert) étaient comptées comme vues :
+        // les cases de l'étage 1 se dessinaient sans pastille. Tout est nouveau.
         function v2InitPrereqVus() {
             v2PrereqVus = {};
-            Object.entries(GRAPPE_QUESTS).forEach(([gid, g]) => ((g.quete || {}).etapes || []).forEach(e => v2MarquerPrereqVus(gid, e)));
         }
         function v2RevelerToutesLesCartes() {
             v2CartesRevelees = Object.keys(V2_POSITIONS).filter(id => !V2_NEW_ACTORS[id] && v2IsOwned(id));
@@ -43862,6 +43882,7 @@
             _verriereConstruire();
             _verriereMajCompteur();
             _verriereMajNouveautes();
+            _verriereTracesNouvelles(grappeId);
             _verriereFermerVolet();
             screen.classList.add('show');
             _verriereDustDemarrer();
@@ -43905,6 +43926,41 @@
             // cartes D'ABORD, puis lumens (seuls les lumens étaient relancés ici).
             window._v2SuppressLumenSequence = false;
             if (typeof v2OnReturnToExplorium === 'function') v2OnReturnToExplorium();
+        }
+
+        // ── Dessins apparus depuis la dernière visite (David, 24/10) ──
+        // Crayonné (entrevu) puis encrage (prêt, en cours) : chacun s'anime une
+        // fois par case, mémorisé dans verriereVues ('trait:case:crayon|encre').
+        // La colorisation garde son animation propre (_verriereJouerAllumages).
+        function _verriereTracesNouvelles(grappeId) {
+            if (!verriereVues[grappeId]) verriereVues[grappeId] = [];
+            const vues = verriereVues[grappeId];
+            const avant = vues.length;
+            // Déjà vu ? Sinon, l'enregistre et répond non.
+            const vu = cle => { if (vues.includes(cle)) return true; vues.push(cle); return false; };
+            let n = 0;
+            document.querySelectorAll('#verrierePanneaux .case').forEach(g => {
+                const i = parseInt(g.getAttribute('data-i'), 10);
+                const pan = verriereState.geo.panneaux[i];
+                const etat = verriereState.etats[i];
+                if (!pan) return;
+                const kC = 'trait:' + pan.caseId + ':crayon', kE = 'trait:' + pan.caseId + ':encre';
+                let cls = null;
+                if (etat === 'entrevu') {
+                    if (!vu(kC)) cls = 'vr-trace-crayon';
+                } else if (etat === 'pret' || etat === 'encours') {
+                    vu(kC);
+                    if (!vu(kE)) cls = 'vr-trace-encre';
+                } else if (etat === 'obtenu') {
+                    vu(kC); vu(kE);
+                }
+                if (!cls) return;
+                n++;
+                g.classList.add(cls);
+                setTimeout(() => g.classList.remove(cls), 2000);
+            });
+            if (vues.length !== avant) { try { saveProgress(); } catch (_) {} }
+            return n;
         }
 
         // ── Allumage des nouveaux panneaux + mise en lumière au complet ──
@@ -44168,7 +44224,8 @@
             const etape = t ? t.etape : null;
             // Fiche de grappe retirée (23/10) : c'est le volet qui montre les
             // prérequis, son ouverture éteint donc leur nouveauté.
-            if (etape) { _gqChapitreVu(grappeId, etape); _verriereMajNouveautes(); }
+            // Une case d'étage fermé ne marque rien comme vu : ses prérequis n'y sont pas montrés.
+            if (etape && _etapeEtageOuvert(grappeId, etape)) { _gqChapitreVu(grappeId, etape); _verriereMajNouveautes(); }
             // La Voix ne parle qu'une fois par média (David, 24/10) : ensuite, le
             // volet « quête disponible » ordinaire, avec son bouton.
             const _cleVoix = etape ? 'voix:' + etape.id : '';
