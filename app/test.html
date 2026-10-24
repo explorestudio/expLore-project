@@ -10185,7 +10185,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.55</div>
+            <div class="hud-version" id="hudVersion">v1.9.56</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -20337,6 +20337,12 @@
                 for (let i = 0; i < rs.length && !fus; i++) {
                     for (let j = i + 1; j < rs.length; j++) {
                         const a = rs[i], b = rs[j];
+                        // Un trou contenu dans un autre (bouton dans la colonne de la
+                        // fiche) disparaît dans celui-ci, qui garde son bornage (m, k) :
+                        // fusionnés, le trou débordait à nouveau du panneau arrondi.
+                        const dans = (p, q) => p.left >= q.left && p.right <= q.right && p.top >= q.top && p.bottom <= q.bottom;
+                        if (dans(b, a)) { rs.splice(j, 1); fus = true; break; }
+                        if (dans(a, b)) { rs.splice(i, 1); fus = true; break; }
                         if (a.left < b.right + m && b.left < a.right + m && a.top < b.bottom + m && b.top < a.bottom + m) {
                             rs[i] = { left: Math.min(a.left, b.left), top: Math.min(a.top, b.top),
                                       right: Math.max(a.right, b.right), bottom: Math.max(a.bottom, b.bottom) };
@@ -20358,12 +20364,37 @@
         // Marge minimale : plus large, elle découvre le décor autour de l'élément
         // (le papier du carnet) et redessine une « zone » claire.
         const _GF_MARGE_PULSE = 2;
-        // Une pastille de notification déborde du coin de son bouton : le trou
-        // s'élargit pour ne pas la rogner (journal de quête, David 19/10).
-        const _GF_MARGE_PASTILLE = 9;
-        function _gfMarge(el) {
+        // Une pastille de notification déborde du coin de son bouton (journal de
+        // quête) : le trou épouse le bouton (marge minimale) et s'étend seulement
+        // à la pastille (David, 24/10) — contour de l'union bouton + disque de la
+        // pastille, relevé rayon par rayon depuis le centre du bouton. L'ancienne
+        // marge de 9 px tout autour dessinait un carré clair trop grand.
+        function _gfAvecPastille(el, q, pts) {
             const p = el.querySelector && el.querySelector('.hud-qj-count, .vault-notif-dot');
-            return (p && getComputedStyle(p).display !== 'none') ? _GF_MARGE_PASTILLE : _GF_MARGE_PULSE;
+            if (!p || getComputedStyle(p).display === 'none') return pts;
+            const b = p.getBoundingClientRect();
+            if (b.width < 2) return pts;
+            const bx = (b.left + b.right) / 2, by = (b.top + b.bottom) / 2, br = Math.max(b.width, b.height) / 2 + 2;
+            const out = [];
+            for (let i = 0; i < 96; i++) {
+                const a = i * Math.PI * 2 / 96, dx = Math.cos(a), dy = Math.sin(a);
+                // Bord du polygone du bouton le long du rayon
+                let rP = 0;
+                for (let k = 0; k < pts.length; k++) {
+                    const [x1, y1] = pts[k], [x2, y2] = pts[(k + 1) % pts.length];
+                    const ex = x2 - x1, ey = y2 - y1, den = dx * ey - dy * ex;
+                    if (Math.abs(den) < 1e-9) continue;
+                    const t = ((x1 - q.cx) * ey - (y1 - q.cy) * ex) / den;
+                    const s = ((x1 - q.cx) * dy - (y1 - q.cy) * dx) / den;
+                    if (t > 0 && s >= 0 && s <= 1) rP = Math.max(rP, t);
+                }
+                // Sortie du disque de la pastille le long du même rayon
+                const ox = q.cx - bx, oy = q.cy - by, B = dx * ox + dy * oy, D = B * B - (ox * ox + oy * oy - br * br);
+                const rC = D >= 0 ? -B + Math.sqrt(D) : 0;
+                const r = Math.max(rP, rC);
+                out.push([q.cx + r * dx, q.cy + r * dy]);
+            }
+            return out;
         }
         // Forme visible d'un élément qui pulse : lui-même s'il a un fond ou une
         // bordure ; sinon (bouton-icône sur fond transparent, ex. bouton de la
@@ -20556,7 +20587,7 @@
                 return rects.some(r => b.left < r.right && r.left < b.right && b.top < r.bottom && r.top < b.bottom); };
             const isoles = visuels.filter(v => !dans(v))
                 .map(el => ({ el, q: _gfQuad(_gfForme(el)) })).filter(o => o.q);
-            const polys = isoles.map(o => _gfPolygone(o.q, _gfMarge(o.el)));
+            const polys = isoles.map(o => _gfAvecPastille(o.el, o.q, _gfPolygone(o.q, _GF_MARGE_PULSE)));
             const masques = _gfElements(_gfListe(_gf.masques)).map(_gfRect).filter(Boolean);
             voile.style.clipPath = _gfDecoupe(_gfFusion(rects), polys, masques);
             _gfHalosMaj(isoles);
@@ -21128,7 +21159,7 @@
         // Le joueur : « Toi », puis son pseudo (section 15).
         function _tutoToi() { return { speaker: nomJoueur(), line: '…' }; }
 
-        // Section 12, partie 1 (cas A seulement) : « Toi : … » et la récupération.
+        // Section 12, partie 1 (cas A seulement) : la récupération.
         function _tutoLignesS12a() {
             const c = _tutoEtat.cas12 || {};
             const morceaux = [];
@@ -21137,8 +21168,8 @@
             if ((c.poussiere || []).length) morceaux.push(T('de la poussière').replace(/\S+$/, m => vnMot('poussiere', m)));
             if ((c.orbe || []).length) morceaux.push(T('une orbe').replace(/\S+$/, m => vnMot('orbe', m, true)));
             const liste = morceaux.length === 2 ? TF('%1 et %2', morceaux[0], morceaux[1]) : (morceaux[0] || '');
+            // Plus de « Toi : … » en ouverture au retour sur la mappe (David, 24/10).
             return [
-                _tutoToi(),
                 // Liste injectée : la ligne arrive déjà traduite, T() ne la retouche pas.
                 { speaker: _TUTO_JF, air: 'satisfait', html: TF(_TUTO_S12_DON, liste) },
             ];
@@ -21149,7 +21180,7 @@
             const casA = !!_tutoEtat.casA12;
             return [].concat(
                 casA ? [ { speaker: _TUTO_JF, air: 'choqué', line: 'Tiens, d’ailleurs… où est ta feuille de mission ?' } ]
-                     : [ _tutoToi(), { speaker: _TUTO_JF, air: 'choqué', line: 'Où est ta feuille de mission ?' } ],
+                     : [ { speaker: _TUTO_JF, air: 'choqué', line: 'Où est ta feuille de mission ?' } ],
                 [
                     _tutoToi(),
                     { speaker: _TUTO_JF, air: 'affolé', line: "Pourquoi tu me regardes comme ça ? Cette expression, mais… C'est de l'incompréhension ! Tu n'es pas de l'Organisation, c’est ça ?" },
