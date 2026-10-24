@@ -6061,14 +6061,35 @@
         /* Fauteuils de l'Explorium (David, 24/10) : Explorium ouvert, les fauteuils
            libres respirent d'un halo violet, plus discret que celui des dormeurs ;
            au premier passage, le symbole flotte au-dessus du premier libre. */
-        .hub-fauteuil-halo, .hub-fauteuil-indice { display: none; }
+        .hub-fauteuil-halo { display: none; }
         #hubExploriumSvg.hub-explo-ouvert .hub-fauteuil-halo { display: inline; animation: hubHaloFauteuil 4.5s ease-in-out infinite; }
-        #hubExploriumSvg.hub-explo-indice .hub-fauteuil-indice { display: inline; }
-        .hub-fauteuil-indice-flotte { animation: hubIndiceFlotte 2.4s ease-in-out infinite; }
         @keyframes hubHaloFauteuil { 0%,100% { opacity: 0.25; } 50% { opacity: 0.6; } }
-        @keyframes hubIndiceFlotte {
-            0%,100% { transform: translateY(0);    opacity: 0.8; }
-            50%     { transform: translateY(-4px); opacity: 1; }
+
+        /* Transition d'entrée / de sortie de l'Explorium (David, 24/10) : voile
+           violet, flou et désaturation de la vue, poussière qui monte, symbole.
+           Piloté par _exploTransitionEntree / _exploTransitionSortie. Sous les
+           dialogues (9100), au-dessus de tous les écrans. */
+        #exploTransition {
+            position: fixed; inset: 0; z-index: 9000; display: none; opacity: 0;
+            background: radial-gradient(ellipse at 50% 55%, rgba(124,58,237,0.55) 0%, rgba(30,16,60,0.88) 60%, rgba(8,6,18,0.96) 100%);
+            -webkit-backdrop-filter: blur(10px) saturate(0.35);
+                    backdrop-filter: blur(10px) saturate(0.35);
+            align-items: center; justify-content: center; overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #exploTransition.actif { display: flex; }
+        .explo-trans-symbole { width: 76px; height: 76px; opacity: 0; filter: drop-shadow(0 0 14px rgba(196,181,253,0.9)); }
+        #exploTransition.sortie .explo-trans-symbole { display: none; }
+        .explo-trans-poussiere { position: absolute; inset: 0; pointer-events: none; }
+        .explo-trans-poussiere i {
+            position: absolute; width: 3px; height: 3px; border-radius: 50%;
+            background: #ddd6fe; box-shadow: 0 0 6px rgba(196,181,253,0.9); opacity: 0;
+        }
+        #exploTransition.actif:not(.sortie) .explo-trans-poussiere i { animation: exploPoussiere calc(var(--t, 1) * 1s) ease-out forwards; }
+        @keyframes exploPoussiere {
+            0%   { opacity: 0; transform: translateY(0); }
+            30%  { opacity: 0.9; }
+            100% { opacity: 0; transform: translateY(-120px); }
         }
         @keyframes hubNavPulse {
             0%,100% { box-shadow: 0 0 0 0 rgba(167,139,250,0); }
@@ -10070,7 +10091,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.45</div>
+            <div class="hud-version" id="hudVersion">v1.9.46</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -11614,20 +11635,6 @@
     <polygon points="336,234.2 340.4,236.4 340.4,217.2 336,215" fill="#5e4528"/><polygon points="362.8,225.2 340.4,236.4 340.4,217.2 362.8,206" fill="#725434"/><polygon points="358.4,203.8 362.8,206 340.4,217.2 336,215" fill="#9a7848"/>
     <ellipse class="hub-fauteuil-halo" cx="337" cy="187.4" rx="17" ry="20" fill="url(#hubTranseGrad)" pointer-events="none"/>
     <rect x="317.2" y="176.2" width="44" height="60" fill="rgba(0,0,0,0)" pointer-events="all"/>
-  </g>
-
-  <!-- Indice du premier passage (David, 24/10) : le symbole de l'Explorium flotte
-       au-dessus du premier fauteuil libre, jusqu'à ce que le joueur s'y soit assis
-       (_hubFauteuilUtilise). Toucher = s'asseoir. -->
-  <g class="hub-fauteuil-indice" data-libre="1" onclick="hubFauteuilTap(this)" style="cursor:pointer">
-    <g class="hub-fauteuil-indice-flotte">
-      <circle cx="209" cy="92" r="15" fill="url(#hubTranseGrad)"/>
-      <g transform="translate(200.6,83.6) scale(0.38)">
-        <g stroke="#38BDF8" stroke-width="3" stroke-linecap="round"><line x1="22" y1="22" x2="6" y2="22"/><line x1="22" y1="22" x2="38" y2="22"/><line x1="22" y1="22" x2="14" y2="8"/><line x1="22" y1="22" x2="14" y2="36"/></g>
-        <g fill="#38BDF8"><circle cx="6" cy="22" r="5"/><circle cx="38" cy="22" r="5"/><circle cx="14" cy="8" r="5"/><circle cx="14" cy="36" r="5"/><circle cx="22" cy="22" r="7"/></g>
-      </g>
-    </g>
-    <rect x="191" y="74" width="36" height="36" fill="rgba(0,0,0,0)" pointer-events="all"/>
   </g>
 
   <!-- ═══ L'OBJET DE RICARDO — guéridon (David, 24/10). Il aide à se concentrer ;
@@ -16643,7 +16650,6 @@
         let _hubExploriumOpened   = false;  // porte ouverte depuis le QG, cadenas levé
         let _hubPadlockPopPending = false;  // animation de chute du cadenas à jouer
         let _hubWelcomeSeen       = false;  // accueil d'Odile déjà joué
-        let _hubFauteuilUtilise   = false;  // le joueur s'est déjà assis dans un fauteuil (indice éteint)
         let _hubJfSceneVue        = false;  // la jeune fille a parlé de l'Explorium au QG
         let _hubVaultNotifPending = false;  // pastille Explorium retenue pendant le verrouillage
         function _hubExploriumLocked() { return !_hubExploriumOpened; }
@@ -23153,7 +23159,6 @@
                     _hubExploriumOpened,
                     _hubPadlockPopPending,
                     _hubWelcomeSeen,
-                    _hubFauteuilUtilise,
                     _hubJfSceneVue,
                     _hubVaultNotifPending,
                     // Test 2 : périmètre levé après la scène finale
@@ -23285,7 +23290,6 @@
                 if (d._hubExploriumOpened)   _hubExploriumOpened   = d._hubExploriumOpened;
                 if (d._hubPadlockPopPending) _hubPadlockPopPending = d._hubPadlockPopPending;
                 if (d._hubWelcomeSeen)       _hubWelcomeSeen       = d._hubWelcomeSeen;
-                if (d._hubFauteuilUtilise)   _hubFauteuilUtilise   = true;
                 if (d._hubJfSceneVue)        _hubJfSceneVue        = true;
                 if (d._hubVaultNotifPending) _hubVaultNotifPending = d._hubVaultNotifPending;
                 if (d._perimetreLeve) _perimetreLeve = true;
@@ -33682,13 +33686,9 @@
                 jf.setAttribute('transform', 'translate(192,262)');
             }
             if (jf) jf.style.display = _hubJfPresente() ? '' : 'none';
-            // Fauteuils (24/10) : halo dès l'Explorium ouvert, indice jusqu'au premier assis
+            // Fauteuils (24/10) : halo dès l'Explorium ouvert
             const salle = document.getElementById('hubExploriumSvg');
-            if (salle) {
-                const ouvert = _exploriumAccessible();
-                salle.classList.toggle('hub-explo-ouvert', ouvert);
-                salle.classList.toggle('hub-explo-indice', ouvert && !_hubFauteuilUtilise);
-            }
+            if (salle) salle.classList.toggle('hub-explo-ouvert', _exploriumAccessible());
             const porte = document.getElementById('hubDoor');
             if (!porte || _hubOpening) return;
             porte.classList.toggle('door--sealed', !_hubExploriumKey && !_hubExploriumOpened);
@@ -33736,15 +33736,14 @@
             if (_hubVnOpen() || _hubOpening) return;
             if (!_exploriumAccessible()) { vnShow(HUB_LINES.fauteuilVerrou); return; }
             if (el && el.dataset.libre !== '1') { hubDormeurTap(); return; }
-            if (!_hubFauteuilUtilise) { _hubFauteuilUtilise = true; try { saveProgress(); } catch (e) {} _hubRefreshDoor(); }
             _hubVersExplorium();
         }
         // Entrée dans l'Explorium depuis le QG : le bouton retour y ramènera,
         // dans la salle de l'Explorium (David, 24/10 ; v2Retour).
         let _exploriumDepuisQG = false;
         function _hubVersExplorium() {
-            closeStudioScreen();
-            openMindmap();
+            // Le QG reste à l'écran pendant la transition, il se ferme une fois parti
+            openMindmap(() => closeStudioScreen());
             _exploriumDepuisQG = true;
         }
         function hubDormeurTap() {
@@ -38520,7 +38519,97 @@
             });
         }
 
-        function openMindmap() {
+        // ── Transition d'entrée / de sortie de l'Explorium (David, 24/10) ──
+        // Entrée (~0,9 s) : la vue se floute et se désature, un voile violet monte
+        // avec la poussière, le symbole pulse une fois ; l'Explorium s'ouvre au
+        // plus fort du voile, qui se retire. Sortie (~0,5 s) : le voile se dissipe,
+        // la netteté revient. Un toucher passe ; mouvement réduit : rien.
+        // La première entrée (section 17, accidentelle) garde sa propre scène.
+        let _exploTransition = null;
+        let _exploGen = 0;   // une transition plus récente l'emporte sur la fin d'une ancienne
+        function _exploVoile() {
+            let v = document.getElementById('exploTransition');
+            if (v) return v;
+            v = document.createElement('div');
+            v.id = 'exploTransition';
+            v.innerHTML = '<div class="explo-trans-poussiere"></div>'
+                + '<svg class="explo-trans-symbole" viewBox="0 0 44 44" aria-hidden="true">'
+                + '<g stroke="#c4b5fd" stroke-width="3" stroke-linecap="round"><line x1="22" y1="22" x2="6" y2="22"/><line x1="22" y1="22" x2="38" y2="22"/>'
+                + '<line x1="22" y1="22" x2="14" y2="8"/><line x1="22" y1="22" x2="14" y2="36"/></g>'
+                + '<g fill="#c4b5fd"><circle cx="6" cy="22" r="5"/><circle cx="38" cy="22" r="5"/><circle cx="14" cy="8" r="5"/><circle cx="14" cy="36" r="5"/><circle cx="22" cy="22" r="7"/></g></svg>';
+            const p = v.firstChild;
+            for (let i = 0; i < 26; i++) {
+                const g = document.createElement('i');
+                g.style.left = (Math.random() * 100).toFixed(1) + '%';
+                g.style.top = (35 + Math.random() * 70).toFixed(1) + '%';
+                g.style.animationDelay = (Math.random() * 0.5).toFixed(2) + 's';
+                g.style.setProperty('--t', (0.6 + Math.random() * 1.2).toFixed(2));
+                p.appendChild(g);
+            }
+            v.addEventListener('click', () => { if (_exploTransition) _exploTransition.passer(); });
+            (document.getElementById('mainApp') || document.body).appendChild(v);
+            return v;
+        }
+        function _exploMouvementReduit() {
+            return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+        }
+        function _exploTransitionEntree(ouvrir) {
+            if (_exploTransition) _exploTransition.passer();
+            if (_exploMouvementReduit() || typeof Element.prototype.animate !== 'function') { ouvrir(); return; }
+            const v = _exploVoile();
+            const sym = v.querySelector('.explo-trans-symbole');
+            const gen = ++_exploGen;
+            v.classList.remove('sortie');
+            v.classList.add('actif');
+            let ouvert = false, fini = false;
+            const anims = [];
+            const ouvrirUneFois = () => { if (!ouvert) { ouvert = true; try { ouvrir(); } catch (e) { console.warn('[Explorium] transition', e); } } };
+            const terminer = () => {
+                if (fini) return; fini = true; anims.forEach(a => a.cancel());
+                if (gen === _exploGen) { v.classList.remove('actif'); _exploTransition = null; }
+            };
+            const monte = v.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 450, easing: 'ease-in', fill: 'forwards' });
+            anims.push(monte, sym.animate([
+                { opacity: 0, transform: 'scale(0.7)' },
+                { opacity: 1, transform: 'scale(1.05)' },
+                { opacity: 0, transform: 'scale(1.25)' },
+            ], { duration: 900, easing: 'ease-in-out', fill: 'forwards' }));
+            monte.onfinish = () => {
+                ouvrirUneFois();
+                const retire = v.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 450, easing: 'ease-out', fill: 'forwards' });
+                anims.push(retire);
+                retire.onfinish = terminer;
+            };
+            _exploTransition = {
+                passer: () => {
+                    ouvrirUneFois();
+                    if (fini) return;
+                    const o = parseFloat(getComputedStyle(v).opacity) || 0;
+                    anims.forEach(a => a.cancel());
+                    const vite = v.animate([{ opacity: o }, { opacity: 0 }], { duration: 150, fill: 'forwards' });
+                    anims.push(vite);
+                    vite.onfinish = terminer;
+                },
+            };
+        }
+        function _exploTransitionSortie() {
+            if (_exploTransition) _exploTransition.passer();
+            if (_exploMouvementReduit() || typeof Element.prototype.animate !== 'function') return;
+            const v = _exploVoile();
+            const gen = ++_exploGen;
+            v.classList.add('actif', 'sortie');
+            let fini = false;
+            const a = v.animate([{ opacity: 0.9 }, { opacity: 0 }], { duration: 500, easing: 'ease-out', fill: 'forwards' });
+            const terminer = () => {
+                if (fini) return; fini = true; a.cancel();
+                if (gen === _exploGen) { v.classList.remove('actif', 'sortie'); _exploTransition = null; }
+            };
+            a.onfinish = terminer;
+            _exploTransition = { passer: terminer };
+        }
+
+        // apres : appelée une fois l'Explorium ouvert (après la transition)
+        function openMindmap(apres) {
             // Correctifs playtest (lot 1.1) : avant la section 17, le tap ne fait
             // rien (le cadenas suffit). L'ancienne fiche « Explorium scellé » et
             // son « Aller au QG » ne s'ouvrent plus.
@@ -38531,7 +38620,8 @@
             _obOnOpenMindmap();
             refreshMindmapState();
             if (typeof openVoutV2 === 'function') {
-                openVoutV2();
+                // David, 24/10 : on « part » dans l'Explorium (transition de concentration)
+                _exploTransitionEntree(() => { openVoutV2(); if (typeof apres === 'function') apres(); });
                 return;
             }
             // Fallback ancien comportement si Explorium pas dispo (ne devrait pas arriver)
@@ -38781,13 +38871,13 @@
                     detailBtn.onclick = (e) => {
                         e.stopPropagation();
                         closeQuestJournal();
-                        openMindmap();
-                        setTimeout(() => {
+                        // Après la transition d'entrée : l'Explorium est alors ouvert
+                        openMindmap(() => setTimeout(() => {
                             v2SelectedGrappeId = grappeId;
                             v2RenderAll();
                             const strip = document.querySelector('.v2-grappe-pill.selected');
                             if (strip && typeof v2ScrollPillIntoView === 'function') v2ScrollPillIntoView(strip);
-                        }, 250);
+                        }, 250));
                     };
                     actions.appendChild(detailBtn);
                 }
@@ -43093,6 +43183,7 @@
         // dans la salle de l'Explorium ; sinon, la mappe (David, 24/10).
         function v2Retour() {
             const versQG = _exploriumDepuisQG;
+            _exploTransitionSortie();   // « retour à soi » (24/10)
             closeVoutV2();
             if (versQG) { _studioNextZone = 2; openStudioScreen(); }
         }
