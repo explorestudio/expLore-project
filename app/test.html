@@ -9687,6 +9687,7 @@
             --win: min(calc((100cqw + 2 * var(--fiche-debord)) * 665 / 927),
                        calc((100cqh - 6px) / (1 / var(--card-ratio, 0.5625) + 0.3774)));
             --s: calc(var(--win) / 665);
+            --ox: 94; --oy: 76; --ob: 124;   /* marges transparentes rognées (plaque, ornement, gemme) */
             flex-shrink: 0; display: block; padding: 0;
             width:  calc(var(--win) + 262 * var(--s)); max-width: none;
             height: calc(var(--win) / var(--card-ratio, 0.5625) + 251 * var(--s)); min-height: 0;
@@ -9716,11 +9717,13 @@
         #cardDetailView .card-type-pin { display: none; }
 
         /* Plaque du nom : centrée, 582 × 99, haut à y 154. L'ombre est portée par
-           le parent (.fiche-plaque) : le clip-path de l'octogone la rognerait. */
+           le parent (.fiche-plaque) : le clip-path de l'octogone la rognerait.
+           Commune à la fiche et à l'écran Carte obtenue : --ox / --oy / --ob
+           (0 par défaut) retranchent les marges rognées par la fiche. */
         .fiche-plaque {
             position: absolute; z-index: 4; pointer-events: none;
-            left: calc(172.5 * var(--s)); top: calc(78 * var(--s));
-            width: calc(582 * var(--s)); height: calc(99 * var(--s));
+            left: calc((266.5 - var(--ox, 0)) * var(--s)); top: calc((154 - var(--oy, 0)) * var(--s));
+            width: calc(582 * var(--s));   /* 99 de haut, davantage pour un nom sur deux lignes */
             filter: drop-shadow(0 calc(5 * var(--s)) calc(7 * var(--s)) rgba(0,0,0,0.6));
         }
         .fiche-plaque-nom, .fiche-plaque-nom::before, .fiche-plaque-nom::after, .fiche-ornement {
@@ -9730,10 +9733,10 @@
         .fiche-plaque-nom {
             --c: calc(13 * var(--s));
             position: relative; z-index: 0;
-            width: 100%; height: 100%; box-sizing: border-box;
+            width: 100%; min-height: calc(99 * var(--s)); box-sizing: border-box;
             display: flex; align-items: center; justify-content: center; text-align: center;
-            /* 20 source en haut : l'ornement recouvre ce bord, jamais les lettres */
-            padding: calc(20 * var(--s)) calc(30 * var(--s)) calc(6 * var(--s));
+            /* 22 source en haut : l'ornement recouvre 20 de ce bord, jamais les lettres */
+            padding: calc(22 * var(--s) + 2px) calc(30 * var(--s)) calc(6 * var(--s));
             background: #0b0812;   /* liseré sombre */
             font-family: Georgia, serif; font-weight: 600;
             font-size: calc(44 * var(--s)); line-height: 1.05;
@@ -9770,7 +9773,7 @@
         .fiche-ornement {
             --c: calc(13 * var(--s));
             position: absolute; z-index: 5; pointer-events: none;
-            left: calc(413 * var(--s)); top: calc(-2 * var(--s));
+            left: calc((507 - var(--ox, 0)) * var(--s)); top: calc((74 - var(--oy, 0)) * var(--s));
             width: calc(108 * var(--s)); height: calc(100 * var(--s));
             background: url('./assets/Cadre_carte.png') no-repeat
                 calc(-507 * var(--s)) calc(-74 * var(--s)) / calc(1122 * var(--s)) calc(1402 * var(--s));
@@ -9779,26 +9782,33 @@
            du bas de la boîte), sur un siège sombre de 70 source. */
         .fiche-gemme-siege {
             position: absolute; z-index: 4; pointer-events: none;
-            left: calc(429 * var(--s)); bottom: calc(21 * var(--s));
+            left: calc((523 - var(--ox, 0)) * var(--s)); bottom: calc((145 - var(--ob, 0)) * var(--s));
             width: calc(70 * var(--s)); height: calc(70 * var(--s)); border-radius: 50%;
-            background: radial-gradient(circle, rgba(8,6,18,0.8) 0%, rgba(8,6,18,0.45) 45%, transparent 70%);
+            background: radial-gradient(circle, rgba(8,6,18,0.92) 0%, rgba(8,6,18,0.6) 50%, transparent 72%);
             display: flex; align-items: center; justify-content: center;
         }
-        #cardDetailView .fiche-gemme-siege .rarity-gem {
+        /* Gemme plus visible (David, 24/10) : elle remplit la face du carré, un
+           liseré clair la détache du fond, un halo de sa couleur (color posée
+           par le JS) la fait briller. Au niveau max, gemCandle prend le relais. */
+        .fiche-gemme-siege > .rarity-gem {
             position: static; transform: none;
-            width: calc(57 * var(--s)); height: calc(57 * var(--s));
+            width: calc(62 * var(--s)); height: calc(62 * var(--s));
         }
-        .fiche-gemme-siege .rarity-gem > svg { width: calc(53 * var(--s)); height: calc(45 * var(--s)); }
-        .fiche-gemme-siege .gem-pentagon { width: calc(38 * var(--s)); height: calc(34 * var(--s)); }
-        .fiche-gemme-siege .gem-hexagon  { width: calc(46 * var(--s)); height: calc(46 * var(--s)); }
-        .fiche-gemme-siege .gem-diamond  { width: calc(38 * var(--s)); height: calc(38 * var(--s)); }
+        .fiche-gemme-siege > .rarity-gem:not(.gem-max) {
+            filter: drop-shadow(0 0 1px rgba(255,255,255,0.95)) drop-shadow(0 0 calc(9 * var(--s)) currentColor);
+        }
+        .fiche-gemme-siege .rarity-gem > svg { width: calc(60 * var(--s)); height: calc(51 * var(--s)); }
+        .fiche-gemme-siege .gem-pentagon { width: calc(52 * var(--s)); height: calc(47 * var(--s)); }
+        .fiche-gemme-siege .gem-hexagon  { width: calc(54 * var(--s)); height: calc(54 * var(--s)); }
+        .fiche-gemme-siege .gem-diamond  { width: calc(52 * var(--s)); height: calc(52 * var(--s)); }
         /* Repli sans le PNG : simple bordure, fenêtre et plaque à leur place */
         #cardDetailView .card-frame.sans-cadre {
             border: 2px solid rgba(201,168,76,0.55); border-radius: 18px;
             background: #120e1f !important; box-shadow: 0 0 40px rgba(167,139,250,0.3);
         }
         #cardDetailView .card-frame.sans-cadre .ritual-cadre-bord,
-        #cardDetailView .card-frame.sans-cadre .fiche-ornement { display: none; }
+        #cardDetailView .card-frame.sans-cadre .fiche-ornement,
+        .ritual-cadre.sans-cadre .fiche-ornement { display: none; }
         .ritual-reveal-tap {
             position: absolute; left: 0; right: 0;
             bottom: max(28px, env(safe-area-inset-bottom));
@@ -9944,7 +9954,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.41</div>
+            <div class="hud-version" id="hudVersion">v1.9.42</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10426,11 +10436,13 @@
                 </div>
                 <div class="ritual-big-card-border"></div>
             </div>
+            <div class="fiche-plaque"><div class="fiche-plaque-nom" id="ritualRevealCardName"></div></div>
+            <div class="fiche-ornement" aria-hidden="true"></div>
+            <div class="fiche-gemme-siege"><div class="rarity-gem" id="ritualRevealGem"></div></div>
             </div>
             <!-- Lot 4 : informations SOUS le cadre, jamais sur le visuel. -->
             <div class="ritual-infos">
                 <div class="ritual-big-card-body">
-                    <div class="ritual-big-card-name" id="ritualRevealCardName"></div>
                     <div class="ritual-big-card-supertype" id="ritualRevealSupertype"></div>
                     <div class="ritual-big-card-type" id="ritualRevealCardType"></div>
                     <div class="ritual-big-card-collections" id="ritualRevealCollections"></div>
@@ -27302,7 +27314,16 @@
                 }
             }
             document.getElementById('ritualRevealSupertype').textContent = T(info.name || '');   // couleur seule, sans icône
-            document.getElementById('ritualRevealCardName').textContent  = card.name;
+            // Nom sur la plaque et gemme sertie, comme sur la fiche (David, 24/10)
+            const _nomPlaque = document.getElementById('ritualRevealCardName');
+            _nomPlaque.textContent = card.name;
+            _nomPlaque.classList.toggle('title-long', card.name.length > 20);
+            _nomPlaque.classList.toggle('title-medium', card.name.length > 12 && card.name.length <= 20);
+            const _gemRevel = document.getElementById('ritualRevealGem');
+            if (_gemRevel) {
+                _gemRevel.innerHTML = getRarityGemHTML(card.rarity);
+                _gemRevel.style.color = (RARITY_CONFIG[card.rarity] || RARITY_CONFIG.common).color;
+            }
             // Lot 4 : rareté par son nom (« Rare »). Collections non affichées : elles
             // sont « à venir » (David, 22/10).
             const _rar = (RARITY_CONFIG[card.rarity] || {}).name || card.rarity || '';
@@ -27315,6 +27336,7 @@
             document.getElementById('ritualNarrativeTag').style.display = 'none';
 
             _ritualShowPhase('ritualReveal');
+            _plaqueAjuster(_nomPlaque);
             setTimeout(_ritualSpawnParticles, 200);
             // L'écran reste affiché jusqu'au prochain tap (cf. _ritualRevealTap).
             _ritualRevealDepuis = Date.now();
@@ -29228,6 +29250,7 @@
             nameEl.classList.remove('title-long', 'title-medium');
             if (card.name.length > 20) nameEl.classList.add('title-long');
             else if (card.name.length > 12) nameEl.classList.add('title-medium');
+            _plaqueAjuster(nameEl);
             document.getElementById('cardCategory').textContent = card.type;
             if (card.supertype) {
                 const info = SUPERTYPES[card.supertype];
@@ -29376,6 +29399,32 @@
             // 'reveal' et null : on reste sur la mappe, rien à restaurer
         }
 
+        // Plaque du nom (fiche et Carte obtenue) : le palier de taille ne suffit
+        // pas toujours à tenir sur une ligne ; la police descend alors par demi-pixel
+        // jusqu'à 72 % du palier, jamais sous 11 px. Au-delà seulement, le nom passe
+        // sur deux lignes et la plaque s'allonge vers le bas.
+        function _plaqueAjuster(el) {
+            if (!el) return;
+            el.style.fontSize = '';
+            el.style.whiteSpace = 'nowrap';
+            const cs = getComputedStyle(el);
+            // Largeur du texte mesurée par un Range (scrollWidth ne compte pas la
+            // marge intérieure d'un conteneur flex), ramenée hors transformation :
+            // le cadre de Carte obtenue est encore en scale() quand on l'appelle.
+            const k = el.getBoundingClientRect().width / (el.offsetWidth || 1) || 1;
+            const dispo = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+            const rg = document.createRange();
+            rg.selectNodeContents(el);
+            const trop = () => rg.getBoundingClientRect().width / k > dispo + 0.5;
+            let taille = parseFloat(cs.fontSize);
+            const mini = Math.max(taille * 0.72, 11);
+            while (trop() && taille > mini) {
+                taille -= 0.5;
+                el.style.fontSize = taille + 'px';
+            }
+            if (trop()) el.style.whiteSpace = '';
+        }
+
         function getRarityGemHTML(rarity) {
             const cfg = RARITY_CONFIG[rarity] || RARITY_CONFIG.common;
             if (cfg.shape === 'triangle') {
@@ -29477,6 +29526,7 @@
             document.getElementById('cardLevelDisplay').textContent = cl.level >= MAX_LEVEL ? T('Niveau MAX') : TF('Niveau %1', cl.level);
             document.getElementById('cardRarityGemFlavor').innerHTML = getRarityGemHTML(selectedCard.rarity);
             const gemEl = document.getElementById('cardRarityGemFlavor');
+            gemEl.style.color = (RARITY_CONFIG[selectedCard.rarity] || RARITY_CONFIG.common).color;   // halo
             if (cl.level >= MAX_LEVEL) gemEl.classList.add('gem-max');
             else gemEl.classList.remove('gem-max');
 
