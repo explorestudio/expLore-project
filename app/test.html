@@ -10091,7 +10091,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.46</div>
+            <div class="hud-version" id="hudVersion">v1.9.47</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -38861,9 +38861,10 @@
                     };
                     actions.appendChild(unfollowBtn);
                 }
-                // B3 (David, 19/10) : « Voir l'histoire » ramène dans l'Explorium, sur le
-                // calque de la grappe. Absent tant que l'Explorium n'est pas découvert,
-                // et pour la grappe du tutoriel (absente de l'Explorium).
+                // B3 (David, 19/10) : « Voir l'histoire ». David, 24/10 : ouvre directement
+                // la planche de la grappe, zoomée sur le média de la quête (volet ouvert).
+                // Absent tant que l'Explorium n'est pas découvert, et pour la grappe du
+                // tutoriel (absente de l'Explorium).
                 if (_exploriumAccessible() && v2GrappeVisible(grappeId)) {
                     const detailBtn = document.createElement('button');
                     detailBtn.className = 'qj-quest-btn';
@@ -38871,13 +38872,8 @@
                     detailBtn.onclick = (e) => {
                         e.stopPropagation();
                         closeQuestJournal();
-                        // Après la transition d'entrée : l'Explorium est alors ouvert
-                        openMindmap(() => setTimeout(() => {
-                            v2SelectedGrappeId = grappeId;
-                            v2RenderAll();
-                            const strip = document.querySelector('.v2-grappe-pill.selected');
-                            if (strip && typeof v2ScrollPillIntoView === 'function') v2ScrollPillIntoView(strip);
-                        }, 250));
+                        v2SelectedGrappeId = grappeId;   // l'Explorium, s'il est ouvert ensuite, est sur cette grappe
+                        ouvrirVerriere(grappeId, grappe.quete.etapes.indexOf(etape));
                     };
                     actions.appendChild(detailBtn);
                 }
@@ -44148,6 +44144,8 @@
             if (screen && mainApp && screen.parentElement !== mainApp) mainApp.appendChild(screen);
 
             try { _mediasSansVoixObtenir(); } catch (e) {}
+            // Ouverte aussi hors de l'Explorium (journal, 24/10) : consoles et pins masqués
+            _hideAllNearbyConsoles('verriere');
             const geo = verriereGeometrie(grappeId);
             verriereState.grappeId = grappeId;
             verriereState.geo = geo;
@@ -44196,6 +44194,7 @@
         function fermerVerriere() {
             const screen = document.getElementById('verriereScreen');
             if (screen) screen.classList.remove('show');
+            _showNearbyConsoles('verriere');
             _verriereDustArreter();
             _verriereFermerVolet();
             _verriereArreterAnim();
