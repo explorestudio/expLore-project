@@ -1769,7 +1769,9 @@
                avec 16px elle dépassait du panneau et se faisait rogner. */
             /* 14px en bas : le panneau d'infos est une boîte posée, pas une
                feuille qui file hors écran — il lui faut une marge sous elle. */
-            padding: 30px 0 14px;
+            /* 60px en haut (David, 24/10) : le cadre commence sous le bouton
+               « mappe » (16 + 40 px), il ne le chevauche plus. */
+            padding: 60px 0 14px;
             cursor: default;
             position: relative;
         }
@@ -1784,12 +1786,13 @@
             .card-info-panel { margin-left: -18px; margin-right: -18px; }
         }
 
-        /* ── Sortie de la fiche carte, montrée par le guide ──────────────
+        /* ── Retour à l'écran précédent, de part et d'autre de la fiche ────
            La fiche se ferme en touchant le fond de part et d'autre de la
-           carte (cf. handleCardDetailBackdropClick). Plutôt qu'un bouton
-           parallèle, le guide allume ces deux bandes : elles montrent le
-           geste réel. Décoratives — pointer-events:none, le clic passe au
-           travers et c'est bien le backdrop qui ferme. */
+           carte (cf. handleCardDetailBackdropClick). Depuis le bouton « mappe »
+           (David, 24/10), ces deux repères sont toujours visibles et disent
+           « retour » : même icône des deux côtés, sans libellé. Décoratifs —
+           pointer-events:none, le clic passe au travers et c'est bien le
+           backdrop qui ferme. */
         .ob-exit-hint {
             position: absolute;
             top: 0; bottom: 0;
@@ -1801,31 +1804,24 @@
             justify-content: center;
             gap: 8px;
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
             z-index: 1;
         }
         @media (max-width: 360px) {
             .ob-exit-hint { width: calc(50% - 135px); }
         }
-        /* La bande reste fixe : seule la flèche pulse (une icône, pas une zone). */
-        .ob-exit-hint.show { opacity: 1; }
         .ob-exit-hint.show .ob-exit-hint-arrow { animation: obGuidePulse 1.3s ease-in-out infinite; --ob-pulse-scale: 1.3; }
-        .ob-exit-hint.left  { left: 0;  background: linear-gradient(to right, rgba(139,92,246,0.32), rgba(139,92,246,0)); }
-        .ob-exit-hint.right { right: 0; background: linear-gradient(to left,  rgba(139,92,246,0.32), rgba(139,92,246,0)); }
+        .ob-exit-hint.left  { left: 0; }
+        .ob-exit-hint.right { right: 0; }
         .ob-exit-hint-arrow {
-            font-size: 20px; line-height: 1; color: #EDE9FE;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.65);
+            /* 30 px : la bande ne fait qu'une cinquantaine de pixels, le cadre
+               commence juste après. */
+            width: 30px; height: 30px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: rgba(255,255,255,0.85);
         }
-        /* Vertical : la marge ne fait qu'une quarantaine de pixels de large. */
-        .ob-exit-hint-label {
-            writing-mode: vertical-rl;
-            font-size: 10px; font-weight: 700; letter-spacing: 2px;
-            text-transform: uppercase;
-            color: rgba(237,233,254,0.92);
-            text-shadow: 0 2px 8px rgba(0,0,0,0.65);
-        }
-        .ob-exit-hint.left .ob-exit-hint-label { transform: rotate(180deg); }
         /* Bandes « Mappe » allumées : le tap ramène à la mappe, pas à l'écran
            précédent. Les écrans intermédiaires s'effacent derrière la fiche pour
            que son flou montre la mappe (A3, David 19/10). */
@@ -9686,7 +9682,9 @@
             flex: 1 1 0; min-height: 44px; display: flex; align-items: center; }
         #ritualReveal .ritual-obtained-name { font-size: 20px; margin: 6px 0 12px; }
         .ritual-cadre {
-            --win: min(64vw, 300px, calc((100dvh - 410px) / (1 / var(--card-ratio, 0.5625) + 0.376)));
+            /* 260 px réservés et non plus 410 (David, 24/10) : le nom est passé sur
+               la plaque du cadre, il ne reste sous la carte que la ligne de type. */
+            --win: min(64vw, 300px, calc((100dvh - 260px) / (1 / var(--card-ratio, 0.5625) + 0.376)));
             --s: calc(var(--win) / 665);
             position: relative; z-index: 2; flex-shrink: 0;
             width:  calc(var(--win) + 457 * var(--s));
@@ -9722,7 +9720,7 @@
         .ritual-cadre .ritual-big-card-border { display: none; }
         /* Zone d'informations sous le cadre */
         .ritual-infos {
-            /* 28 px sous le cadre (David, 19/10) : la carte respire ; --win réserve 410 px. */
+            /* 28 px sous le cadre (David, 19/10) : la carte respire ; --win réserve 260 px. */
             position: relative; z-index: 2; max-width: 88vw; margin-top: 28px;
             display: flex; flex-direction: column; align-items: center;
             opacity: 0; transition: opacity 0.6s 0.8s;
@@ -10145,7 +10143,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.51</div>
+            <div class="hud-version" id="hudVersion">v1.9.52</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10736,6 +10734,9 @@
         <div id="cardDetailView" class="card-detail-view" onclick="handleCardDetailBackdropClick(event)">
             <!-- Retour direct à la mappe (David, 24/10) ; toucher les côtés ramène à l'écran d'origine -->
             <button class="card-detail-mappe" onclick="event.stopPropagation(); retourMappe()" title="Retour à la mappe"><svg class="ico-mappe" width="22" height="22" aria-hidden="true"><use href="#icoMappe"/></svg></button>
+            <!-- Repères « retour à l'écran précédent » : même icône des deux côtés -->
+            <div class="ob-exit-hint left" aria-hidden="true"><span class="ob-exit-hint-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span></div>
+            <div class="ob-exit-hint right" aria-hidden="true"><span class="ob-exit-hint-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span></div>
             <div class="card-detail-inner" onclick="event.stopPropagation()">
                 <!-- Bouton fermer flottant -->
 
@@ -19501,33 +19502,12 @@
             return _obBackToMapSelector();
         }
 
-        // Allume / éteint les deux marges de sortie de la fiche carte.
-        // Les bandes sont créées à la première demande et restent dans le DOM.
+        // Montre / éteint le chemin de la mappe depuis la fiche carte. Depuis le
+        // bouton « mappe » (David, 24/10), c'est lui qui pulse ; les repères
+        // des côtés ne disent plus que « retour à l'écran précédent ».
         function _obExitHint(on) {
-            const view = document.getElementById('cardDetailView');
-            if (!view) return;
-            let hints = view.querySelectorAll('.ob-exit-hint');
-            if (!hints.length) {
-                if (!on) return;                       // rien à éteindre
-                ['left', 'right'].forEach(side => {
-                    const el = document.createElement('div');
-                    el.className = 'ob-exit-hint ' + side;
-                    el.setAttribute('aria-hidden', 'true');   // doublon visuel du geste
-                    el.innerHTML = '<span class="ob-exit-hint-arrow"></span>'
-                                 + '<span class="ob-exit-hint-label"></span>';
-                    el.querySelector('.ob-exit-hint-arrow').textContent = (side === 'left' ? '←' : '→');
-                    view.appendChild(el);
-                });
-                hints = view.querySelectorAll('.ob-exit-hint');
-            }
-            // Libellé réécrit à chaque allumage : la langue a pu changer depuis.
-            if (on) hints.forEach(el => {
-                const lab = el.querySelector('.ob-exit-hint-label');
-                if (lab) lab.textContent = T('Mappe');
-            });
-            hints.forEach(el => el.classList.toggle('show', !!on));
-            // A3 (David, 19/10) : le tap mène à la mappe → le flou montre la mappe
-            document.body.classList.toggle('fiche-vers-mappe', !!on);
+            const btn = document.querySelector('#cardDetailView .card-detail-mappe');
+            if (btn) btn.classList.toggle('ob-guide-pulse', !!on);
         }
 
         let _obRingSelector = null;   // sélecteur actuellement entouré
@@ -29587,9 +29567,8 @@
         function handleCardDetailBackdropClick(e) {
             // Fermer si clic sur le backdrop (pas sur le contenu intérieur)
             if (e.target !== document.getElementById('cardDetailView')) return;
-            // Lot 1.5 : bandes « Mappe » allumées → le tap mène à la mappe, quel
-            // que soit l'écran d'origine (collection, sac, carnet…).
-            if (document.querySelector('#cardDetailView .ob-exit-hint.show')) { retourMappe(); return; }
+            // Les côtés ramènent toujours à l'écran précédent ; la mappe a son
+            // bouton (David, 24/10).
             closeCardDetail();
         }
 
