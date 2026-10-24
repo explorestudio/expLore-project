@@ -10009,8 +10009,9 @@
             .card-detail-mappe, .studio-back, .prog-back, .fresque-back, .verriere-back, .v2-back):active {
             transform: scale(0.93);
         }
-        /* Fiche de carte : en haut à gauche, dans la marge au-dessus du cadre. */
-        .card-detail-mappe { position: absolute; top: 6px; left: 10px; z-index: 6; }
+        /* Fiche de carte : en haut à gauche, exactement à la place de celui de
+           la Collection (left 10, top 16) pour qu'il ne saute pas d'un écran à l'autre. */
+        .card-detail-mappe { position: absolute; top: 16px; left: 10px; z-index: 6; }
         /* Viseur : posé sur l'image de la caméra, il garde un fond sombre. */
         .viewfinder-back { background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
         /* Quête : le bouton est seul sur sa ligne, au-dessus du titre. */
@@ -10138,7 +10139,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.49</div>
+            <div class="hud-version" id="hudVersion">v1.9.50</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
