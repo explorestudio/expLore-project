@@ -5294,11 +5294,19 @@
             padding: 8px 10px;
             position: relative;
         }
+        /* Panneau blanc à hauteur fixe (David, 24/10) : les volets sont
+           superposés dans la même case de grille, le plus haut donne la
+           hauteur ; changer d'onglet ne fait plus bouger la carte. */
+        .card-vtab-content {
+            display: grid;
+            grid-template: 1fr / minmax(0, 1fr);
+        }
         .card-vtab-pane {
-            display: none;
+            grid-area: 1 / 1;
+            visibility: hidden;
         }
         .card-vtab-pane.active {
-            display: block;
+            visibility: visible;
         }
 
         /* ══ Onglet "Carte" : bloc niveau + orbes/carnet ══ */
@@ -5461,31 +5469,36 @@
         }
 
         /* ══ Onglet "Skins" : carrousel ══ */
+        /* Compact (David, 24/10) : vignette et flèches à gauche, nom, statut,
+           points et bouton à droite, pour tenir dans la hauteur du volet Carte. */
         .skins-carousel {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            grid-template-rows: repeat(4, auto);
+            column-gap: 10px;
             align-items: center;
-            padding: 4px 0;
+            justify-items: center;
+            padding: 2px 0;
         }
         .skins-carousel-stage {
+            grid-row: 1 / 5;
             position: relative;
-            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 130px;
+            gap: 4px;
             user-select: none;
             touch-action: pan-y;
         }
         .skins-carousel-track {
-            width: 130px;
-            height: 130px;
+            width: 84px;
+            height: 84px;
             border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 44px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+            font-size: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
             transition: background 0.3s, transform 0.18s;
             position: relative;
             overflow: hidden;
@@ -5510,13 +5523,13 @@
             background: rgba(255,255,255,0.92);
             border: 1.5px solid #e5e7eb;
             border-radius: 50%;
-            width: 32px;
-            height: 32px;
+            width: 26px;
+            height: 26px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             color: #4b5563;
             box-shadow: 0 2px 6px rgba(0,0,0,0.12);
             transition: transform 0.12s, background 0.15s;
@@ -5533,20 +5546,20 @@
             font-size: 14px;
             font-weight: 700;
             color: #1f2937;
-            margin-top: 12px;
             text-align: center;
+            line-height: 1.2;
         }
         .skins-carousel-status {
             font-size: 11px;
             color: #6b7280;
-            margin-top: 3px;
+            margin-top: 2px;
             text-align: center;
         }
         .skins-carousel-status.active-status { color: #059669; font-weight: 700; }
         .skins-carousel-dots {
             display: flex;
             gap: 6px;
-            margin-top: 12px;
+            margin-top: 6px;
             justify-content: center;
         }
         .skins-carousel-dot {
@@ -5562,7 +5575,7 @@
             transform: scale(1.35);
         }
         .skins-carousel-apply {
-            margin-top: 12px;
+            margin-top: 6px;
             background: linear-gradient(135deg, #1D4ED8, #2563eb);
             color: white;
             border: none;
@@ -10091,7 +10104,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.47</div>
+            <div class="hud-version" id="hudVersion">v1.9.48</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -20769,8 +20782,10 @@
             _tutoAtteindre(4);
             _tutoMajMappe();
             _tutoOuvrirCarteTuto();
-            // Lot 3.1 : tunnel dès la section 4 (assombri pendant la réplique).
-            guideFocus(['#addExpBtn'], { visibles: _TUTO_FICHE_COLONNE, pulse: false });
+            // Pas de voile pendant la réplique (David, 24/10) : il s'ajoutait au
+            // tamisage du dialogue et la carte disparaissait. Bloqueur invisible ;
+            // le tunnel sur la poussière arrive avec la section 5.
+            _tutoBloquerTout();
             _tutoDire('s4', 'carddetail', _TUTO_LIGNES_S4, _tutoSection5);
         }
 
@@ -28470,9 +28485,10 @@
             }
             // Premier dézoom du tutoriel (David, 23/10) : vol lent cadré sur le
             // périmètre, qui apparaît dès le départ ; Clara attend que le joueur ait
-            // vu la vue (_tutoDezoomPret). Les fois suivantes : bascule habituelle.
+            // vu la vue (_tutoDezoomPret). Tous les dézooms gardent ce vol lent
+            // (David, 24/10) ; seul le rezoom reste rapide.
             const premierDezoom = _mapViewMode === 'far' && _tutoActif() && !_tutoEtat.s14 && !_tutoEtat.dezoomLent;
-            const DUREE_BASCULE = premierDezoom ? DUREE_PREMIER_DEZOOM : 600;
+            const DUREE_BASCULE = _mapViewMode === 'far' ? DUREE_PREMIER_DEZOOM : 600;
             let cadrage = { center: centreVue, zoom: v.zoom };
             if (premierDezoom) {
                 _tutoEtat.dezoomLent = true;
