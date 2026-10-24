@@ -9574,7 +9574,7 @@
         /* Un bouton-icône qui pulse prend l'aspect qu'il a au survol (léger fond
            clair) : sa forme entière se lit, pas seulement son icône. */
         .ui-pulse:is(.journal-screen-back, .alb-back, .bag-hdr-back) { background: rgba(255,255,255,0.08); color: white; }
-        .ui-pulse.bag-hdr-back { border-radius: 10px; }
+        .ui-pulse.bag-hdr-back { border-radius: 12px; }
         .ui-pulse.action-bar-btn { background: rgba(255,255,255,0.07); }
         .guide-halo { position: absolute; pointer-events: none; animation: guideHalo 1.3s ease-in-out infinite; }
         @keyframes guideHalo {
@@ -9981,6 +9981,40 @@
         .qj-close::after, .fragment-close::after {
             content: ''; position: absolute; inset: -9px;
         }
+
+        /* Bouton « mappe » (David, 24/10) : le même carré arrondi sur tous les
+           écrans (collection, carnet, sac, panneau, échoppe, quête, viseur,
+           fiche de carte), et les flèches de retour (QG, profil, progression,
+           fresque, planche, Explorium) dans le même carré.
+           Placement propre à chaque écran inchangé. */
+        :is(.alb-back, .journal-screen-back, .viewfinder-back, .panneau-screen-back, .bag-hdr-back, .quest-back-btn,
+            .card-detail-mappe, .studio-back, .prog-back, .fresque-back, .verriere-back, .v2-back) {
+            line-height: 1;
+            width: 40px; height: 40px; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: rgba(255,255,255,0.9);
+            font-size: 20px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, transform 0.1s;
+        }
+        :is(.alb-back, .journal-screen-back, .viewfinder-back, .panneau-screen-back, .bag-hdr-back, .quest-back-btn,
+            .card-detail-mappe, .studio-back, .prog-back, .fresque-back, .verriere-back, .v2-back):hover {
+            background: rgba(255,255,255,0.14); color: white;
+        }
+        :is(.alb-back, .journal-screen-back, .viewfinder-back, .panneau-screen-back, .bag-hdr-back, .quest-back-btn,
+            .card-detail-mappe, .studio-back, .prog-back, .fresque-back, .verriere-back, .v2-back):active {
+            transform: scale(0.93);
+        }
+        /* Fiche de carte : en haut à gauche, dans la marge au-dessus du cadre. */
+        .card-detail-mappe { position: absolute; top: 6px; left: 10px; z-index: 6; }
+        /* Viseur : posé sur l'image de la caméra, il garde un fond sombre. */
+        .viewfinder-back { background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+        /* Quête : le bouton est seul sur sa ligne, au-dessus du titre. */
+        .quest-back-btn { margin-bottom: 8px; }
         </style>
 </head>
 <body class="ui-masque-avatar ui-masque-poussiere ui-masque-journal_quetes ui-masque-jumelles ui-masque-explorium ui-masque-qg ui-masque-collection ui-masque-sac ui-masque-explorium_btn">
@@ -10104,7 +10138,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.48</div>
+            <div class="hud-version" id="hudVersion">v1.9.49</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10693,6 +10727,8 @@
 
         <!-- Card Detail View -->
         <div id="cardDetailView" class="card-detail-view" onclick="handleCardDetailBackdropClick(event)">
+            <!-- Retour direct à la mappe (David, 24/10) ; toucher les côtés ramène à l'écran d'origine -->
+            <button class="card-detail-mappe" onclick="event.stopPropagation(); retourMappe()" title="Retour à la mappe"><svg class="ico-mappe" width="22" height="22" aria-hidden="true"><use href="#icoMappe"/></svg></button>
             <div class="card-detail-inner" onclick="event.stopPropagation()">
                 <!-- Bouton fermer flottant -->
 
@@ -20247,8 +20283,24 @@
         }
         // Les trous qui se touchent sont fusionnés : en evenodd, deux trous qui
         // se chevauchent rebouchent leur intersection (bouton dans son panneau).
+        // Zone visible logée dans un panneau arrondi qui la rogne (colonne blanche
+        // de la fiche, David 24/10) : le trou, marge comprise, ne déborde pas du
+        // panneau et prend son arrondi ; sinon il découvrait le décor autour.
+        function _gfBorne(el, r) {
+            for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
+                const c = getComputedStyle(n);
+                const rad = parseFloat(c.borderTopLeftRadius) || 0;
+                if (c.overflow === 'visible' || !rad) continue;
+                const a = n.getBoundingClientRect(), bord = parseFloat(c.borderTopWidth) || 0;
+                return { left: Math.max(r.left - _GF_MARGE, a.left + bord), top: Math.max(r.top - _GF_MARGE, a.top + bord),
+                         right: Math.min(r.right + _GF_MARGE, a.right - bord), bottom: Math.min(r.bottom + _GF_MARGE, a.bottom - bord),
+                         m: 0, k: Math.max(0, rad - bord) };
+            }
+            return r;
+        }
         function _gfFusion(rects) {
-            const rs = rects.map(r => ({ left: r.left, top: r.top, right: r.right, bottom: r.bottom }));
+            // m et k (cf. _gfBorne) ne survivent pas à une fusion.
+            const rs = rects.map(r => ({ left: r.left, top: r.top, right: r.right, bottom: r.bottom, m: r.m, k: r.k }));
             const m = 2 * _GF_MARGE;
             for (let fus = true; fus; ) {
                 fus = false;
@@ -20393,13 +20445,13 @@
         function _gfDecoupe(rects, polys, masques) {
             const W = window.innerWidth, H = window.innerHeight, f = n => n.toFixed(1);
             let d = 'M0 0H' + W + 'V' + H + 'H0Z';
-            const tous = rects.map(r => ({ r, m: _GF_MARGE })).concat((masques || []).map(r => ({ r, m: 2 })));
-            tous.forEach(({ r, m }) => {
+            const tous = rects.map(r => ({ r, m: r.m ?? _GF_MARGE, kMax: r.k ?? 12 })).concat((masques || []).map(r => ({ r, m: 2, kMax: 12 })));
+            tous.forEach(({ r, m, kMax }) => {
                 const x1 = Math.max(0, r.left - m), y1 = Math.max(0, r.top - m);
                 const x2 = Math.min(W, r.right + m), y2 = Math.min(H, r.bottom + m);
                 // Coins arrondis (12 px, comme les panneaux et boutons) : un trou à
                 // angles droits tranchait sur l'interface (retour de David, 16/10).
-                const k = Math.max(0, Math.min(12, (x2 - x1) / 2, (y2 - y1) / 2));
+                const k = Math.max(0, Math.min(kMax, (x2 - x1) / 2, (y2 - y1) / 2));
                 d += 'M' + f(x1 + k) + ' ' + f(y1) + 'H' + f(x2 - k)
                    + 'A' + k + ' ' + k + ' 0 0 1 ' + f(x2) + ' ' + f(y1 + k) + 'V' + f(y2 - k)
                    + 'A' + k + ' ' + k + ' 0 0 1 ' + f(x2 - k) + ' ' + f(y2) + 'H' + f(x1 + k)
@@ -20464,7 +20516,7 @@
             const visuels = [..._gf.pulses].map(_uiPulseVisuel);
             const rcSansPulse = cibles.filter(el => !visuels.some(v => el === v || el.contains(v)))
                 .map(_gfRect).filter(Boolean);
-            const rv = _gfElements(_gfListe(_gf.visibles)).map(_gfRect).filter(Boolean);
+            const rv = _gfElements(_gfListe(_gf.visibles)).map(el => { const r = _gfRect(el); return r && _gfBorne(el, r); }).filter(Boolean);
             const rects = rcSansPulse.concat(rv);
             // Un élément qui pulse DANS une interface laissée visible (bouton de
             // dose dans le panneau de la fiche) n'a pas de trou propre : la zone
@@ -29539,6 +29591,9 @@
             const carnet = document.getElementById('journalScreen');
             if (carnet && carnet.classList.contains('show')) closeJournalScreen();
             closeCardDetail();
+            // Fiche ouverte depuis la planche : closeCardDetail vient de la rouvrir.
+            const planche = document.getElementById('verriereScreen');
+            if (planche && planche.classList.contains('show')) fermerVerriere();
             const sac = document.getElementById('bagScreen');
             if (sac && sac.classList.contains('show')) closeBagScreen();
             closeCollections();
