@@ -8897,6 +8897,10 @@
            l'étage du bas n'est pas achevé, trait d'encre ensuite. */
         #verriereSvg .seve { transition: opacity .7s ease, stroke .7s ease; }
 
+        /* Case qui a du nouveau (prérequis monté de stade, média jamais ouvert) :
+           pastille orange au coin, éteinte à l'ouverture de son volet */
+        #verriereSvg .case .nouv { display: none; }
+        #verriereSvg .case.vr-nouveau .nouv { display: inline; animation: v2NouveauPulse 1.6s ease-in-out infinite; }
         /* Colorisation d'une case nouvellement obtenue, au retour dans la planche */
         #verriereSvg .case.vr-allumage .coul { animation: vrAllumage 1600ms ease-out; }
         @keyframes vrAllumage {
@@ -8988,6 +8992,10 @@
             font-family: 'Helvetica Neue', sans-serif;
         }
         .vr-acteur.ok { border-color: rgba(52,211,153,0.42); background: rgba(52,211,153,0.07); }
+        /* Prérequis possédé : un toucher ouvre sa fiche */
+        .vr-acteur--carte { cursor: pointer; }
+        .vr-acteur--carte:active { filter: brightness(1.25); }
+        .vr-acteur--carte::after { content: '›'; flex-shrink: 0; font-size: 16px; line-height: 1; opacity: 0.55; }
         .vr-acteur-pastille { font-size: 13px; flex-shrink: 0; width: 15px; text-align: center; }
         .vr-acteur-nom { flex: 1; font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .vr-acteur-niveau {
@@ -9954,7 +9962,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.42</div>
+            <div class="hud-version" id="hudVersion">v1.9.43</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -29391,6 +29399,9 @@
                 if (typeof v2RefreshIfOpen === 'function') v2RefreshIfOpen();
                 // Si des lumens ont été gagnés (level up de carte), lancer la séquence cinématique
                 if (typeof v2OnReturnToExplorium === 'function') v2OnReturnToExplorium();
+            } else if (src === 'verriere') {
+                // Prérequis ouvert depuis le volet de la planche : on y revient
+                _verriereRetourDeCarte();
             } else if (src === 'collections') {
                 // Rétablir les interactions sur la collection (toujours visible en fond)
                 const panel = document.getElementById('collectionsPanel');
@@ -37939,20 +37950,11 @@
         // proximité, sans toucher à la quête en cours.
         function _acceptQuestEtape(grappeId, etapeId, opts) {
             opts = opts || {};
-            const miseDeCote = [];
             const cible = ((GRAPPE_QUESTS[grappeId] || {}).quete || {}).etapes || [];
             if (!_etapeEtageOuvert(grappeId, cible.find(e => e.id === etapeId))) return;   // lot 4.2
             const aUnPin = !!(cible.find(e => e.id === etapeId) || {}).objectifGeo;
-            if (!opts.surPlace && aUnPin) {
-                Object.entries(GRAPPE_QUESTS).forEach(([gid, g]) => {
-                    ((g.quete || {}).etapes || []).forEach(e => {
-                        if (gid === grappeId && e.id === etapeId) return;
-                        if (!e.objectifGeo || !grappeQuestState[gid] || grappeQuestState[gid][e.id] !== 'active') return;
-                        delete grappeQuestState[gid][e.id];
-                        miseDeCote.push(e.titre);
-                    });
-                });
-            }
+            // David, 24/10 : les autres quêtes en cours ne sont plus mises de côté.
+            // Elles restent toutes au journal ; seule la suivie a son pin et la boussole.
             if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
             grappeQuestState[grappeId][etapeId] = 'active';
             // Acceptée par le joueur : il vient de la lire, elle ne compte pas
@@ -37966,9 +37968,7 @@
             updateQuestMarkers();
             try { updateQuestCompass(); } catch (e) {}
             if (opts.surPlace) return;
-            showToast(miseDeCote.length
-                ? TF('🗺️ Quête acceptée — « %1 » mise de côté', T(miseDeCote[0]))
-                : '🗺️ Quête acceptée — direction le terrain');
+            showToast('🗺️ Quête acceptée — direction le terrain');
         }
         // Quête suivie = son pin sur la mappe et la boussole (une au plus).
         function _queteSuivie(gid, etapeId) { return window._selectedQuestKey === gid + ':' + etapeId; }
@@ -38484,7 +38484,7 @@
             subtitle.textContent = TF('%1 quête(s) — %2 en cours', list.length, activeCount);
 
             body.innerHTML = '';
-            // Quête suivie disparue (terminée, mise de côté) : plus rien de suivi.
+            // Quête suivie disparue (terminée) : plus rien de suivi.
             // Plus de sélection automatique : « ne plus suivre » est respecté.
             const activeList = list.filter(q => q.status === 'active');
             const currentSelected = window._selectedQuestKey;
@@ -41469,11 +41469,17 @@
             return new Set(v2GetAllEtapes().filter(m => m.grappeId === gid
                 && v2MediaIsVisible(m) && v2MediaEstNouveau(m)).map(m => m.etape.id));
         }
+        // Option A (24/10) : une étape dont le média est encore dans l'ombre ne
+        // compte pas, même si un de ses prérequis a monté : rien ne la montrerait.
+        function v2EtapeANouveau(gid, etape) {
+            const m = v2GetAllEtapes().find(x => x.etape.id === etape.id);
+            if (!m || !v2MediaIsVisible(m)) return false;
+            return v2MediaEstNouveau(m) || v2EtapeAPrereqNouveau(gid, etape);
+        }
         function v2GrappeNouveautes(gid) {
             const g = GRAPPE_QUESTS[gid];
             if (!g || !g.quete) return 0;
-            const medias = v2EtapesMediasNouveaux(gid);
-            return g.quete.etapes.filter(e => medias.has(e.id) || v2EtapeAPrereqNouveau(gid, e)).length;
+            return g.quete.etapes.filter(e => v2EtapeANouveau(gid, e)).length;
         }
         function v2ExploriumANouveau() {
             return v2GrappesVisibles().some(gid => v2GrappeNouveautes(gid) > 0);
@@ -43786,6 +43792,10 @@
                 g.appendChild(rect('cadre', 'none', VR_TRAIT, 5));
                 g.appendChild(rect('rim', 'none', '#c08a1e', 7));
 
+                // Pastille « nouveau » : au coin haut gauche, à cheval sur le cadre
+                g.appendChild(_vrEl('circle', { class: 'nouv', cx: x + 4, cy: y + 4, r: 11,
+                    fill: '#fb923c', stroke: '#1a1206', 'stroke-width': 3 }));
+
                 g.addEventListener('click', () => verriereTapPanneau(i));
                 panes.appendChild(g);
             });
@@ -43803,6 +43813,19 @@
             });
             _verrierePeindreSeves();
             _verriereMajCompteur();
+            _verriereMajNouveautes();
+        }
+
+        // Option A (David, 24/10) : la planche montre quelles cases ont du nouveau,
+        // celles-là mêmes que comptent le badge de grappe et la pastille.
+        function _verriereMajNouveautes() {
+            const { grappeId, geo } = verriereState;
+            if (!grappeId || !geo) return;
+            document.querySelectorAll('#verrierePanneaux .case').forEach(g => {
+                const pan = geo.panneaux[parseInt(g.getAttribute('data-i'), 10)];
+                const t = pan && _verriereEtapeDeCase(grappeId, pan.caseId);
+                g.classList.toggle('vr-nouveau', !!(t && v2EtapeANouveau(grappeId, t.etape)));
+            });
         }
 
         function _verriereMajCompteur() {
@@ -43838,6 +43861,7 @@
 
             _verriereConstruire();
             _verriereMajCompteur();
+            _verriereMajNouveautes();
             _verriereFermerVolet();
             screen.classList.add('show');
             _verriereDustDemarrer();
@@ -44104,13 +44128,36 @@
                         + '<span class="vr-acteur-niveau">' + chip + '</span>'
                         + '</div>';
                 }
-                return '<div class="vr-acteur' + (ok ? ' ok' : '') + '">'
+                // David, 24/10 : une carte possédée ouvre sa fiche au toucher
+                const fiche = typeof getCardById === 'function' && getCardById(req.cardId);
+                return '<div class="vr-acteur' + (ok ? ' ok' : '') + (fiche ? ' vr-acteur--carte' : '') + '"'
+                    + (fiche ? ' data-carte="' + req.cardId + '" onclick="verriereOuvrirCarte(this.dataset.carte)"' : '') + '>'
                     + '<span class="vr-acteur-pastille">' + (ok ? '✦' : '◔') + '</span>'
                     + '<span class="vr-acteur-nom">' + T(_vrNomCarte(req.cardId)) + '</span>'
                     + '<span class="vr-acteur-niveau">' + chip + '</span>'
                     + '</div>';
             });
             return lignes.join('');
+        }
+
+        // Fiche d'un prérequis depuis le volet : la planche s'efface le temps de la
+        // fiche (elle passerait sinon au-dessus), puis revient sur la même case.
+        function verriereOuvrirCarte(cardId) {
+            const card = getCardById(cardId);
+            if (!card) return;
+            const screen = document.getElementById('verriereScreen');
+            if (screen) screen.classList.remove('show');
+            _verriereDustArreter();
+            _cardDetailSource = 'verriere';
+            openCardDetail(card);
+        }
+        function _verriereRetourDeCarte() {
+            const screen = document.getElementById('verriereScreen');
+            if (!screen) return;
+            screen.classList.add('show');
+            _verriereDustDemarrer();
+            // Un niveau gagné dans la fiche se lit aussitôt dans la liste des voix
+            if (verriereState.panneauOuvert !== null) _verriereOuvrirVolet(verriereState.panneauOuvert);
         }
 
         function _verriereOuvrirVolet(i) {
@@ -44121,8 +44168,18 @@
             const etape = t ? t.etape : null;
             // Fiche de grappe retirée (23/10) : c'est le volet qui montre les
             // prérequis, son ouverture éteint donc leur nouveauté.
-            if (etape) _gqChapitreVu(grappeId, etape);
-            if (etat === 'pret' && etape && etape.voix) { _verriereVoixDonneQuete(i, etape); return; }
+            if (etape) { _gqChapitreVu(grappeId, etape); _verriereMajNouveautes(); }
+            // La Voix ne parle qu'une fois par média (David, 24/10) : ensuite, le
+            // volet « quête disponible » ordinaire, avec son bouton.
+            const _cleVoix = etape ? 'voix:' + etape.id : '';
+            const _voixEntendue = (verriereVues[grappeId] || []).includes(_cleVoix);
+            if (etat === 'pret' && etape && etape.voix && !_voixEntendue) {
+                if (!verriereVues[grappeId]) verriereVues[grappeId] = [];
+                verriereVues[grappeId].push(_cleVoix);
+                try { saveProgress(); } catch (_) {}
+                _verriereVoixDonneQuete(i, etape);
+                return;
+            }
             const bdCase = ((GRAPPE_QUESTS[grappeId].bd || {}).cases || []).find(c => c.id === pan.caseId);
             const lieu = etape && etape.objectifGeo ? etape.objectifGeo.nom : null;
             const corps = document.getElementById('verriereVoletCorps');
