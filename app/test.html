@@ -2625,6 +2625,17 @@
         .card-level-actions .card-carnet-icon { font-size: 23px; }
         #cardPaneCard .card-level-row { margin-bottom: 3px; }
         #cardPaneCard .card-energy-row { margin: 3px 0 4px; }
+        /* Carte épuisée (David, 24/10) : l'invitation prend la place de la jauge,
+           sur la même hauteur (28 px + marges), pour que le panneau et la carte
+           ne changent pas de taille. Deux lignes au plus, minuteur à la suite. */
+        #cardPaneCard .card-level-block:has(> #cardRestHint[style*="block"]) > #cardEnergyRow { display: none; }
+        #cardPaneCard .card-rest-hint {
+            height: 28px; margin: 3px 0 4px; padding: 1px 4px 0; box-sizing: border-box;
+            font-size: 10.5px; line-height: 12.5px;
+            overflow: hidden; display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+        }
+        #cardPaneCard .card-rest-hint[style*="none"] { display: none !important; }
+        #cardPaneCard .card-rest-hint .card-rest-timer { display: inline; margin: 0 0 0 4px; }
         /* Icône de la poussière à la place de l'ancien cœur 💜 (section 5) */
         .card-dust-ico { width: 15px; height: 15px; object-fit: contain; vertical-align: -2px; pointer-events: none; }
 
@@ -9704,8 +9715,11 @@
             border-image-slice: 202 232 249 225 fill;
             border-image-width: 1;
             border-image-repeat: stretch;
-            filter: drop-shadow(0 0 22px rgba(167,139,250,0.35));
         }
+        /* Halo du cadre porté par le PARENT (David, 24/10) : sur .ritual-cadre-bord,
+           le masque du carré (plus bas) rognait l'ombre au bord de la boîte, et le
+           halo se lisait comme un rectangle autour de la carte. */
+        .ritual-cadre, #cardDetailView .card-frame { filter: drop-shadow(0 0 22px rgba(167,139,250,0.35)); }
         /* La carte déborde un peu (4 px source) sous la moulure : aucun jour. */
         .ritual-cadre .ritual-big-card {
             position: absolute; width: auto; height: auto;
@@ -10143,7 +10157,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.52</div>
+            <div class="hud-version" id="hudVersion">v1.9.53</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -12766,8 +12780,8 @@
             "📥 Photo enregistrée dans tes téléchargements": "📥 Photo saved to your downloads",
             "🔮 +1 Orbe de mémoire !": "🔮 +1 Memory orb!",
             "✨ Niveau maximum atteint": "✨ Maximum level reached",
-            "La mémoire infuse. Reviens plus tard ou ravive-la avec une orbe.": "Memory is steeping. Come back later, or revive it with an orb.",
-            "La mémoire infuse. Tu peux explorer ailleurs en attendant.": "Memory is steeping. You can explore elsewhere in the meantime.",
+            "La mémoire infuse. Ravive-la avec une orbe.": "Memory is steeping. Revive it with an orb.",
+            "La mémoire infuse. Explore ailleurs en attendant.": "Memory is steeping. Explore elsewhere meanwhile.",
             "Utiliser une orbe": "Use an orb",
             "Offre de la poussière à cette carte pour qu'elle te raconte son histoire...": "Offer dust to this card so it tells you its story...",
             "Approfondis tes cartes dans l'Explorium pour débloquer de nouvelles quêtes.": "Deepen your cards in the Explorium to unlock new quests.",
@@ -29852,9 +29866,9 @@
                     if (restHint) {
                         restHint.style.display = 'block';
                         if (hasOrb) {
-                            restHint.innerHTML = 'La mémoire infuse. Reviens plus tard ou ravive-la avec une orbe.<span class="card-rest-timer">' + TF('elle reviendra à elle dans %1', formatTimeLeft(timeLeft)) + '</span>';
+                            restHint.innerHTML = 'La mémoire infuse. Ravive-la avec une orbe.<span class="card-rest-timer">' + TF('elle reviendra à elle dans %1', formatTimeLeft(timeLeft)) + '</span>';
                         } else {
-                            restHint.innerHTML = 'La mémoire infuse. Tu peux explorer ailleurs en attendant.<span class="card-rest-timer">' + TF('elle reviendra à elle dans %1', formatTimeLeft(timeLeft)) + '</span>';
+                            restHint.innerHTML = 'La mémoire infuse. Explore ailleurs en attendant.<span class="card-rest-timer">' + TF('elle reviendra à elle dans %1', formatTimeLeft(timeLeft)) + '</span>';
                         }
                     }
 
