@@ -1,0 +1,35 @@
+{
+  "id": "./test1/test1.html",
+  "name": "ExpLore · Test 1",
+  "short_name": "ExpLore Test1",
+  "description": "Explorateurs de la Mémoire — version de test terrain (Bellecour)",
+  "start_url": "./test1/test1.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a0f2e",
+  "theme_color": "#1a0f2e",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["games", "education", "entertainment"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
