@@ -41,6 +41,19 @@
             padding: 0;
             box-sizing: border-box;
         }
+        /* Appli, pas page web : ni surlignage bleu au tap, ni sélection de texte
+           (appui long, double tap). Les champs de saisie restent sélectionnables. */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        input, textarea, [contenteditable] {
+            -webkit-user-select: text;
+            user-select: text;
+            -webkit-touch-callout: default;
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

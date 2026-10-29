@@ -64,6 +64,19 @@
             padding: 0;
             box-sizing: border-box;
         }
+        /* Appli, pas page web : ni surlignage bleu au tap, ni sélection de texte
+           (appui long, double tap). Les champs de saisie restent sélectionnables. */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        input, textarea, [contenteditable] {
+            -webkit-user-select: text;
+            user-select: text;
+            -webkit-touch-callout: default;
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -10033,7 +10046,7 @@
            fresque, planche, Explorium) dans le même carré.
            Placement propre à chaque écran inchangé. */
         :is(.alb-back, .journal-screen-back, .viewfinder-back, .panneau-screen-back, .bag-hdr-back, .quest-back-btn,
-            .card-detail-mappe, .studio-back, .prog-back, .fresque-back, .verriere-back, .v2-back) {
+            .card-detail-mappe, .card-detail-collection, .studio-back, .prog-back, .fresque-back, .verriere-back, .v2-back) {
             line-height: 1;
             width: 40px; height: 40px; padding: 0;
             display: flex; align-items: center; justify-content: center;
@@ -10047,16 +10060,20 @@
             transition: background 0.15s, color 0.15s, transform 0.1s;
         }
         :is(.alb-back, .journal-screen-back, .viewfinder-back, .panneau-screen-back, .bag-hdr-back, .quest-back-btn,
-            .card-detail-mappe, .studio-back, .prog-back, .fresque-back, .verriere-back, .v2-back):hover {
+            .card-detail-mappe, .card-detail-collection, .studio-back, .prog-back, .fresque-back, .verriere-back, .v2-back):hover {
             background: rgba(255,255,255,0.14); color: white;
         }
         :is(.alb-back, .journal-screen-back, .viewfinder-back, .panneau-screen-back, .bag-hdr-back, .quest-back-btn,
-            .card-detail-mappe, .studio-back, .prog-back, .fresque-back, .verriere-back, .v2-back):active {
+            .card-detail-mappe, .card-detail-collection, .studio-back, .prog-back, .fresque-back, .verriere-back, .v2-back):active {
             transform: scale(0.93);
         }
         /* Fiche de carte : en haut à gauche, exactement à la place de celui de
            la Collection (left 10, top 16) pour qu'il ne saute pas d'un écran à l'autre. */
         .card-detail-mappe { position: absolute; top: 16px; left: 10px; z-index: 6; }
+        /* Bouton Collection (David, 29/10) : en haut à droite, en miroir du bouton
+           mappe ; absent tant que la Collection n'est pas révélée (tutoriel). */
+        .card-detail-collection { position: absolute; top: 16px; right: 10px; z-index: 6; }
+        body.ui-masque-collection .card-detail-collection { display: none; }
         /* Viseur : posé sur l'image de la caméra, il garde un fond sombre. */
         .viewfinder-back { background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
         /* Quête : le bouton est seul sur sa ligne, au-dessus du titre. */
@@ -10184,7 +10201,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.59</div>
+            <div class="hud-version" id="hudVersion">v1.9.60</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10775,6 +10792,19 @@
         <div id="cardDetailView" class="card-detail-view" onclick="handleCardDetailBackdropClick(event)">
             <!-- Retour direct à la mappe (David, 24/10) ; toucher les côtés ramène à l'écran d'origine -->
             <button class="card-detail-mappe" onclick="event.stopPropagation(); retourMappe()" title="Retour à la mappe"><svg class="ico-mappe" width="22" height="22" aria-hidden="true"><use href="#icoMappe"/></svg></button>
+            <!-- Accès direct à la Collection (David, 29/10), même icône que dans la barre de la mappe -->
+            <button class="card-detail-collection" onclick="event.stopPropagation(); allerCollection()" title="Collection">
+                <svg width="24" height="24" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect x="3" y="7" width="13" height="17" rx="2" fill="#FB923C" transform="rotate(-12 9.5 15.5)"/>
+                    <rect x="3" y="7" width="13" height="17" rx="2" fill="none" stroke="#C2410C" stroke-width="1" transform="rotate(-12 9.5 15.5)"/>
+                    <rect x="10" y="7" width="13" height="17" rx="2" fill="#FDBA74" transform="rotate(12 16.5 15.5)"/>
+                    <rect x="10" y="7" width="13" height="17" rx="2" fill="none" stroke="#C2410C" stroke-width="1" transform="rotate(12 16.5 15.5)"/>
+                    <rect x="6" y="5" width="14" height="18" rx="2" fill="#F97316"/>
+                    <rect x="6" y="5" width="14" height="18" rx="2" fill="none" stroke="#C2410C" stroke-width="1"/>
+                    <circle cx="13" cy="13" r="3.5" fill="#FED7AA" opacity="0.9"/>
+                    <circle cx="13" cy="13" r="3.5" fill="none" stroke="#C2410C" stroke-width="0.8"/>
+                </svg>
+            </button>
             <!-- Repères « retour à l'écran précédent » : flèches vers les bords (on sort par là) -->
             <div class="ob-exit-hint left" aria-hidden="true"><span class="ob-exit-hint-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></svg></span></div>
             <div class="ob-exit-hint right" aria-hidden="true"><span class="ob-exit-hint-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span></div>
@@ -29760,6 +29790,13 @@
             if (sac && sac.classList.contains('show')) closeBagScreen();
             closeCollections();
             closeMindmap();
+        }
+
+        // Bouton Collection de la fiche carte : on referme tout comme pour la
+        // mappe, puis on ouvre la Collection (onglet en cours).
+        function allerCollection() {
+            retourMappe();
+            openCollections();
         }
 
         function closeCardDetail() {
