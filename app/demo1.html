@@ -8072,10 +8072,7 @@
         .vn-bust { width:72px;height:72px;flex-shrink:0;object-fit:cover;object-position:top center;border-radius:50%;border:2px solid rgba(255,255,255,0.3);filter:drop-shadow(0 4px 12px rgba(0,0,0,0.7)); }
         /* Portrait (jeune fille) : buste à gauche montant au-dessus de la boîte.
            Fond transparent (PNG RGBA) ; le bas de l'image passe derrière la boîte opaque.
-           C'est la LARGEUR qui pilote : le buste est presque aussi large que haut
-           (ratio ~0,84), donc un dimensionnement en vh le faisait déborder de l'écran
-           sur mobile. max-height ne sert que de garde-fou en paysage.
-           Pour ajuster : la valeur centrale du clamp (42%) et `left`. */
+           Pour ajuster : la valeur centrale du clamp (46%) et margin-left. */
         .vn-bust--full {
             /* Dans le flux (et non en absolute) : le buste s'assoit sur le haut de la
                boîte quelle que soit la longueur du texte. La marge négative fait passer
@@ -8084,13 +8081,17 @@
             display: block;
             margin-left: -6px;
             margin-bottom: -22px;
-            width: clamp(130px, 42%, 210px) !important;
+            /* Images de Clara en pied (1086×1448) : on ne garde que le haut du
+               corps (tête → hanches), recadré par aspect-ratio + object-fit:cover.
+               Le reste passerait de toute façon derrière la boîte. */
+            width: clamp(150px, 46%, 230px) !important;
             height: auto !important;
+            aspect-ratio: 1086 / 900;
             max-height: 46vh;
+            object-position: top center;
             border: none !important;
             border-radius: 0 !important;
-            object-fit: contain;
-            object-position: bottom center;
+            object-fit: cover;
             filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6));
             z-index: 0;
             pointer-events: none;
@@ -8820,6 +8821,8 @@
             cursor:pointer;user-select:none;
         }
         #intro2Overlay.hidden{display:none}
+        /* PC : l'intro reste dans l'écran du téléphone (.app-container) au lieu de couvrir la fenêtre */
+        @media (min-width: 481px){ #intro2Overlay{position:absolute} }
         #intro2Overlay,#intro2Overlay *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
         #intro2Overlay *{margin:0;padding:0}
         #intro2Canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -15258,7 +15261,7 @@
 
             // Dialogue initial
             setTimeout(() => {
-                vnShow([{ speaker: 'La jeune fille', line: 'Il y a quelque chose là-bas. Pas un lieu, pas un monument. Quelque chose de plus discret. Approche-toi.' }], null);
+                vnShow([{ speaker: 'La jeune fille', air: 'inquisiteur', line: 'Il y a quelque chose là-bas. Pas un lieu, pas un monument. Quelque chose de plus discret. Approche-toi.' }], null);
             }, 1200);
 
             // Surveiller la proximité — afficher la bannière quand dans la zone,
@@ -15451,14 +15454,14 @@
         function _obOnOpenCollections() {
             if (_obGuide.active) { _obGuideEvent('collections'); _obGuideRefresh(); return; }
             _obContextualHint('collections', [
-                { speaker: 'La jeune fille', line: 'Tes cartes s\'organisent ici. Des groupes se forment : des ensembles qui racontent quelque chose de plus grand que chaque fragment.' },
+                { speaker: 'La jeune fille', air: 'doigt levé', line: 'Tes cartes s\'organisent ici. Des groupes se forment : des ensembles qui racontent quelque chose de plus grand que chaque fragment.' },
             ]);
         }
 
         // Appelé depuis openBagScreen()
         function _obOnOpenBag() {
             _obContextualHint('bag', [
-                { speaker: 'La jeune fille', line: 'La poussière, les échos, les orbes. Tout ce que tu accumules en explorant.' },
+                { speaker: 'La jeune fille', air: 'neutre', line: 'La poussière, les échos, les orbes. Tout ce que tu accumules en explorant.' },
             ]);
         }
 
@@ -15466,7 +15469,7 @@
         function _obOnOpenJournal() {
             if (_obGuide.active) { _obGuideEvent('journal'); _obGuideRefresh(); return; }
             _obContextualHint('journal', [
-                { speaker: 'La jeune fille', line: 'Les fragments que tu réveilles laissent des traces. Certaines te surprendront.' },
+                { speaker: 'La jeune fille', air: 'souriant', line: 'Les fragments que tu réveilles laissent des traces. Certaines te surprendront.' },
             ]);
         }
 
@@ -15474,8 +15477,8 @@
         function _obOnOpenMindmap() {
             if (_obGuide.active) { _obGuideRefresh(); return; }
             _obContextualHint('mindmap', [
-                { speaker: 'La jeune fille', line: 'L\'Explorium. Il est vide pour l\'instant.' },
-                { speaker: 'La jeune fille', line: 'Certains fragments que tu collecteras s\'y inscriront. Ceux qui appartiennent à quelque chose de plus grand.' },
+                { speaker: 'La jeune fille', air: 'réflexion', line: 'L\'Explorium. Il est vide pour l\'instant.' },
+                { speaker: 'La jeune fille', air: 'fasciné', line: 'Certains fragments que tu collecteras s\'y inscriront. Ceux qui appartiennent à quelque chose de plus grand.' },
             ]);
         }
 
@@ -15483,7 +15486,7 @@
         function _obOnOpenCardDetail() {
             if (_obGuide.active) { _obGuideEvent('carddetail'); _obGuideRefresh(); return; }
             _obContextualHint('carddetail', [
-                { speaker: 'La jeune fille', line: 'La poussière mémorielle réveille ce qui s\'était tu. Essaie.' },
+                { speaker: 'La jeune fille', air: 'enthousiaste', line: 'La poussière mémorielle réveille ce qui s\'était tu. Essaie.' },
             ]);
         }
 
@@ -15803,9 +15806,9 @@
             // inutile d'en ajouter un second au même moment. La carte vient de la
             // nébuleuse : la jeune fille l'a rattrapée, elle ne l'a pas « trouvée ».
             vnShow([
-                { speaker: 'La jeune fille', line: 'Je l\'ai rattrapée avant qu\'elle ne tombe à terre. Je vais lui rendre un peu de mémoire avec ma poussière mémorielle.' },
-                { speaker: 'La jeune fille', line: 'Elle a quelques souvenirs. Oh… Mais c\'est ta carte, tu veux lui en donner toi-même ?' },
-                { speaker: 'La jeune fille', line: 'Ouvre ta Collection, puis la carte. Tout se passe dans son détail.' },
+                { speaker: 'La jeune fille', air: 'satisfait', line: 'Je l\'ai rattrapée avant qu\'elle ne tombe à terre. Je vais lui rendre un peu de mémoire avec ma poussière mémorielle.' },
+                { speaker: 'La jeune fille', air: 'surpris', line: 'Elle a quelques souvenirs. Oh… Mais c\'est ta carte, tu veux lui en donner toi-même ?' },
+                { speaker: 'La jeune fille', air: 'doigt levé', line: 'Ouvre ta Collection, puis la carte. Tout se passe dans son détail.' },
             ], () => _obGuideRefresh());
         }
 
@@ -15817,7 +15820,7 @@
             // visuels non plus — ils s'annoncent au scellement du chapitre I,
             // quand le second apparaît vraiment. Ne reste que la poussière.
             vnShow([
-                { speaker: 'La jeune fille', html: 'Pour qu\'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poussière mémorielle</span>. Chaque dose réveille un peu son histoire.' },
+                { speaker: 'La jeune fille', air: 'doigt levé', html: 'Pour qu\'une carte se souvienne, donne-lui de la <span style="color:#A78BFA;font-weight:600">poussière mémorielle</span>. Chaque dose réveille un peu son histoire.' },
             ], () => _obGuideRefresh());
         }
 
@@ -15834,13 +15837,13 @@
             // l'Organisation, en fait un disciple et pose le pacte (il stabilise,
             // elle note) puis l'accroche de suite (rendre le carnet à l'Organisation).
             vnShow([
-                { speaker: 'La jeune fille', line: 'Voilà, le carnet est complet ! Tu t\'en sors drôlement bien, pour quelqu\'un qui oublie tout.' },
-                { speaker: 'La jeune fille', line: 'Quand je te vois faire, ça semble si facile, je ne sais pas où tu en es du quartier que tu dois couvrir mais moi j\'ai à peine commencé… Tant de cartes et leur mémoire à réunir et si peu de temps, pfiou' },
-                { speaker: 'La jeune fille', line: 'Pourquoi tu me regardes comme ça ? Cette expression, mais… C\'est de l\'incompréhension ! Tu n\'es pas de l\'Organisation, toi, hein ?' },
-                { speaker: 'La jeune fille', line: 'Oh la boulette… Oh. Oh, mais c\'est encore mieux ! Un don pareil, et sans même le savoir !' },
-                { speaker: 'La jeune fille', line: 'Allez, c\'est officiel : tu es mon tout premier disciple. Un explorateur de la mémoire, un vrai.' },
-                { speaker: 'La jeune fille', line: 'Toi tu as la ville, moi j\'ai le carnet. Dénichons ces mémoires une par une, et tu stabilises, je note. Ça me sauverait, franchement !' },
-                { speaker: 'La jeune fille', line: 'Dès qu\'on a tout réuni, tu viens avec moi le rendre à l\'Organisation ? Ça va leur faire tout drôle !' },
+                { speaker: 'La jeune fille', air: 'enjoué', line: 'Voilà, le carnet est complet ! Tu t\'en sors drôlement bien, pour quelqu\'un qui oublie tout.' },
+                { speaker: 'La jeune fille', air: 'épuisé', line: 'Quand je te vois faire, ça semble si facile, je ne sais pas où tu en es du quartier que tu dois couvrir mais moi j\'ai à peine commencé… Tant de cartes et leur mémoire à réunir et si peu de temps, pfiou' },
+                { speaker: 'La jeune fille', air: 'confus', line: 'Pourquoi tu me regardes comme ça ? Cette expression, mais… C\'est de l\'incompréhension ! Tu n\'es pas de l\'Organisation, toi, hein ?' },
+                { speaker: 'La jeune fille', air: 'exalté', line: 'Oh la boulette… Oh. Oh, mais c\'est encore mieux ! Un don pareil, et sans même le savoir !' },
+                { speaker: 'La jeune fille', air: 'enjoué', line: 'Allez, c\'est officiel : tu es mon tout premier disciple. Un explorateur de la mémoire, un vrai.' },
+                { speaker: 'La jeune fille', air: 'suppliant', line: 'Toi tu as la ville, moi j\'ai le carnet. Dénichons ces mémoires une par une, et tu stabilises, je note. Ça me sauverait, franchement !' },
+                { speaker: 'La jeune fille', air: 'joueur/de défi', line: 'Dès qu\'on a tout réuni, tu viens avec moi le rendre à l\'Organisation ? Ça va leur faire tout drôle !' },
             ], () => {
                 _obDone = true;
                 _obAct3Done = true;
@@ -16000,7 +16003,7 @@
         function _obAfterXpFullCh1() {
             _obGuide.step = 'seal_ch1';
             vnShow([
-                { speaker: 'La jeune fille', line: 'Le chapitre est plein. Scelle-le : qu\'il prenne racine.' },
+                { speaker: 'La jeune fille', air: 'résolu', line: 'Le chapitre est plein. Scelle-le : qu\'il prenne racine.' },
             ], () => _obGuideRefresh());
         }
 
@@ -16017,9 +16020,9 @@
             if (_demoUnrevealedAtLevel() > 0) {
                 // 📖 : l'icône que porte le bouton du carnet sur la fiche carte
                 // (cardCarnetIcon) — le joueur cherche ce signe-là.
-                rep.push({ speaker: 'La jeune fille', html: 'Le chapitre est plein, mais son <span style="font-weight:600">📖 carnet</span> garde encore des pages voilées. Ouvre-le : c\'est à cette condition qu\'il pourra être scellé.' });
+                rep.push({ speaker: 'La jeune fille', air: 'doigt levé', html: 'Le chapitre est plein, mais son <span style="font-weight:600">📖 carnet</span> garde encore des pages voilées. Ouvre-le : c\'est à cette condition qu\'il pourra être scellé.' });
             } else {
-                rep.push({ speaker: 'La jeune fille', line: 'Le chapitre est plein. Scelle-le : qu\'il prenne racine.' });
+                rep.push({ speaker: 'La jeune fille', air: 'résolu', line: 'Le chapitre est plein. Scelle-le : qu\'il prenne racine.' });
             }
             vnShow(rep, () => _obGuideRefresh());
         }
@@ -16031,13 +16034,13 @@
             _obGuide.step = 'seal_ch3';
             const rep = [];
             if (_demoUnrevealedAtLevel() > 0) {
-                rep.push({ speaker: 'La jeune fille', line: 'Le dernier chapitre est plein, mais son carnet garde encore des pages voilées. Dévoile-les : une mémoire à trous ne se scelle pas.' });
+                rep.push({ speaker: 'La jeune fille', air: 'doigt levé', line: 'Le dernier chapitre est plein, mais son carnet garde encore des pages voilées. Dévoile-les : une mémoire à trous ne se scelle pas.' });
                 if (_demoMissingSupplies() > 0) {
                     _demoUnlockField();
-                    rep.push({ speaker: 'La jeune fille', line: 'L\'échoppe en tient, juste au nord d\'ici. Sers-toi.' });
+                    rep.push({ speaker: 'La jeune fille', air: 'souriant', line: 'L\'échoppe en tient, juste au nord d\'ici. Sers-toi.' });
                 }
             } else {
-                rep.push({ speaker: 'La jeune fille', line: 'Le dernier chapitre est plein, et pas une page ne manque. Scelle-le : elle aura regagné toute sa mémoire.' });
+                rep.push({ speaker: 'La jeune fille', air: 'satisfait', line: 'Le dernier chapitre est plein, et pas une page ne manque. Scelle-le : elle aura regagné toute sa mémoire.' });
 
             }
             vnShow(rep, () => _obGuideRefresh());
@@ -16094,7 +16097,7 @@
             const voilees = _demoVeiledEntries().length;
             // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour que la
             // réplique et l'inventaire montrent le même signe.
-            const REPLIQUE_FOURNITURES = { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poussière : une <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">📼 cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> pour un texte.' };
+            const REPLIQUE_FOURNITURES = { speaker: 'La jeune fille', air: 'doigt levé', html: 'Les pages voilées demandent autre chose que de la poussière : une <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span> pour une image, une <span style="color:#C4B5FD;font-weight:600">📼 cassette</span> pour une voix, de l\'<span style="color:#E0A458;font-weight:600">🖋️ encre</span> pour un texte.' };
 
             if (!_obJournalSeen) {
                 _obJournalSeen = true;
@@ -16102,11 +16105,11 @@
                 // Il vient de L'Organisation, il appartient au joueur (« garde
                 // celui-ci »), et l'oubli du joueur le relie à l'Oubli.
                 const rep = [
-                    { speaker: 'La jeune fille', html: 'Ah, tu l\'as trouvé. C\'est le <span style="font-weight:600">📖 carnet</span> de la carte — j\'y ai noté tout ce qu\'elle m\'a déjà raconté.' },
+                    { speaker: 'La jeune fille', air: 'souriant', html: 'Ah, tu l\'as trouvé. C\'est le <span style="font-weight:600">📖 carnet</span> de la carte — j\'y ai noté tout ce qu\'elle m\'a déjà raconté.' },
                     { speaker: 'Toi', line: 'Le carnet ?' },
-                    { speaker: 'La jeune fille', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poussière mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' },
-                    { speaker: 'La jeune fille', line: 'Elle est un peu bavarde, en tout cas elle a encore des choses à dire.' },
-                    { speaker: 'La jeune fille', line: 'Prends le temps de lire ce qu\'elle a déjà retrouvé. Le reste viendra après.' },
+                    { speaker: 'La jeune fille', air: 'se tape le front', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poussière mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' },
+                    { speaker: 'La jeune fille', air: 'souriant', line: 'Elle est un peu bavarde, en tout cas elle a encore des choses à dire.' },
+                    { speaker: 'La jeune fille', air: 'neutre', line: 'Prends le temps de lire ce qu\'elle a déjà retrouvé. Le reste viendra après.' },
                 ];
                 // L'économie des fournitures n'a de sens que devant une page voilée.
                 // Au chapitre I il n'y en a aucune : inutile d'annoncer une contrainte
@@ -16119,7 +16122,7 @@
                     // dit tout de suite. Sinon on ne dit rien de plus ici — l'échoppe
                     // attend qu'il ait fini de lire.
                     if (manque === 0) {
-                        rep.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' });
+                        rep.push({ speaker: 'La jeune fille', air: 'doigt levé', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' });
                     }
                 }
                 // Toujours en dernier, quel que soit l'état des fournitures : c'est
@@ -16130,7 +16133,7 @@
                 // la carte — l'anneau se pose dessus pendant toute cette première
                 // visite (cf. _obGuideTick). Dit une fois, à la première ouverture ;
                 // les relances plus bas ne le répètent pas.
-                rep.push({ speaker: 'La jeune fille', line: 'Pour revenir en arrière, touche son image en haut : tu quitteras ce carnet dès que tu le souhaites.' });
+                rep.push({ speaker: 'La jeune fille', air: 'neutre', line: 'Pour revenir en arrière, touche son image en haut : tu quitteras ce carnet dès que tu le souhaites.' });
                 try { saveProgress(); } catch (e) {}
                 // Plus de closeJournalScreen() : il reste dans le carnet et le parcourt.
                 vnShow(rep, () => _obGuideRefresh());
@@ -16144,7 +16147,7 @@
                 try { saveProgress(); } catch (e) {}
                 const rep = [REPLIQUE_FOURNITURES];
                 if (manque === 0) {
-                    rep.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' });
+                    rep.push({ speaker: 'La jeune fille', air: 'doigt levé', line: 'Tu en as déjà sur toi. Touche une page voilée pour la révéler.' });
                 }
                 vnShow(rep, () => _obGuideRefresh());
                 return;
@@ -16153,7 +16156,7 @@
             // Ne relancer que s'il reste des pages voilées ET de quoi manquer.
             if (manque > 0 && voilees > 0) {
                 vnShow([
-                    { speaker: 'La jeune fille', line: 'Ces pages resteront voilées tant que tu n\'auras rien pour les révéler. L\'échoppe est au nord, tout près.' },
+                    { speaker: 'La jeune fille', air: 'réflexion', line: 'Ces pages resteront voilées tant que tu n\'auras rien pour les révéler. L\'échoppe est au nord, tout près.' },
                 ], () => _obGuideRefresh());
             }
         }
@@ -16177,7 +16180,7 @@
             // (Échoppe de Bellecour, 🛖) : les deux, sinon le joueur cherche
             // sur la mappe un lieu dont le nom n'existe nulle part.
             vnShow([
-                { speaker: 'La jeune fille', line: 'D\'ailleurs, n\'hésite pas à aller chercher des fournitures au Bazar, l\'échoppe un peu plus au Nord. Profites-en pour collecter de la poussière ou une orbe si tu en trouves sur ton chemin.' },
+                { speaker: 'La jeune fille', air: 'enjoué', line: 'D\'ailleurs, n\'hésite pas à aller chercher des fournitures au Bazar, l\'échoppe un peu plus au Nord. Profites-en pour collecter de la poussière ou une orbe si tu en trouves sur ton chemin.' },
             ], () => { showDemoToast('Le quartier s\'anime. De quoi glaner, dehors.'); _obGuideRefresh(); });
         }
 
@@ -16252,7 +16255,7 @@
                         // être dépensée ailleurs. On oriente sans changer d'étape —
                         // le détour orbe appartient au chapitre II.
                         vnShow([
-                            { speaker: 'La jeune fille', line: 'La voilà à bout de souffle. Pose-lui une orbe, ou laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' },
+                            { speaker: 'La jeune fille', air: 'inquiet', line: 'La voilà à bout de souffle. Pose-lui une orbe, ou laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' },
                         ], () => _obGuideRefresh());
                     }
                     break;
@@ -16261,8 +16264,8 @@
                     if (ev === 'sealed') {
                         _obGuide.step = 'feed_ch2';
                         vnShow([
-                            { speaker: 'La jeune fille', line: 'Tu as vu ? Elle n\'a plus tout à fait le même visage. Une pastille de plus s\'est allumée sous son portrait.' },
-                            { speaker: 'La jeune fille', line: 'Touche-la, va la regarder. Chaque chapitre scellé lui en révèle un — c\'est comme ça qu\'on voit une mémoire revenir.' },
+                            { speaker: 'La jeune fille', air: 'fasciné', line: 'Tu as vu ? Elle n\'a plus tout à fait le même visage. Une pastille de plus s\'est allumée sous son portrait.' },
+                            { speaker: 'La jeune fille', air: 'enthousiaste', line: 'Touche-la, va la regarder. Chaque chapitre scellé lui en révèle un — c\'est comme ça qu\'on voit une mémoire revenir.' },
                         ], () => {
                             // Le halo n'a de sens qu'une fois le VN refermé, sinon il
                             // pulse derrière l'overlay (même arbitrage qu'au Bloc 4).
@@ -16279,7 +16282,7 @@
                             // Retour Canelle (OdT) : « la première de ta Collection » ne disait
                             // rien au joueur. On ne nomme plus le rangement, on l'invite à
                             // regarder la carte — l'anneau désigne déjà la vignette.
-                            { speaker: 'La jeune fille', line: 'Elle est bien là, n\'hésite pas à l\'inspecter.' },
+                            { speaker: 'La jeune fille', air: 'souriant', line: 'Elle est bien là, n\'hésite pas à l\'inspecter.' },
                         ], () => _obGuideRefresh());
                     } else if (ev === 'carddetail') {
                         _obGuideEnterFeed1();
@@ -16305,17 +16308,17 @@
                         // ce que le joueur a déjà en poche, ni ce qui n'est plus sur la mappe.
                         const rep = [];
                         if (bagInv.orbes > 0) {
-                            rep.push({ speaker: 'La jeune fille', line: 'La voilà à bout de souffle. Tu as déjà une orbe sur toi : pose-la sur la carte, elle se ravivera d\'un coup.' });
+                            rep.push({ speaker: 'La jeune fille', air: 'inquiet', line: 'La voilà à bout de souffle. Tu as déjà une orbe sur toi : pose-la sur la carte, elle se ravivera d\'un coup.' });
                         } else if (_demoOrbsLeft() > 0) {
                             // Elle l'envoie dehors : le terrain doit s'ouvrir, sinon
                             // il chercherait une orbe qu'aucun marqueur ne montre.
                             _demoUnlockField();
-                            rep.push({ speaker: 'La jeune fille', line: 'La voilà à bout de souffle. La mémoire a besoin d\'une orbe pour se raviver d\'un coup. Il y en a une tout près, sur la mappe. Va la chercher.' });
+                            rep.push({ speaker: 'La jeune fille', air: 'inquiet', line: 'La voilà à bout de souffle. La mémoire a besoin d\'une orbe pour se raviver d\'un coup. Il y en a une tout près, sur la mappe. Va la chercher.' });
                         } else {
-                            rep.push({ speaker: 'La jeune fille', line: 'Les orbes du quartier sont épuisées. Laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' });
+                            rep.push({ speaker: 'La jeune fille', air: 'réflexion', line: 'Les orbes du quartier sont épuisées. Laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' });
                         }
                         if (memorialDust < _DEMO_DUST_CH3 && _demoDustLeft() > 0) {
-                            rep.push({ speaker: 'La jeune fille', line: 'Profites-en pour ramasser la poussière que tu croiseras : tu en manqueras bientôt.' });
+                            rep.push({ speaker: 'La jeune fille', air: 'doigt levé', line: 'Profites-en pour ramasser la poussière que tu croiseras : tu en manqueras bientôt.' });
                         }
                         // Toast APRÈS le dialogue : sa durée de vie (4,2 s) est plus courte
                         // que la lecture des répliques, il expirait sans être vu.
@@ -16333,7 +16336,7 @@
                             // Retour Canelle (OdT) : « elle revit » supposait une carte morte,
                             // alors que la jeune fille l'a déjà ranimée — c'est d'épuisement
                             // qu'il s'agit. Et « niveau » parle mieux que « chapitre » ici.
-                            { speaker: 'La jeune fille', line: 'Elle retrouve de la force pour te parler. Continue, aide-la à se souvenir et à monter au niveau suivant !' },
+                            { speaker: 'La jeune fille', air: 'enthousiaste', line: 'Elle retrouve de la force pour te parler. Continue, aide-la à se souvenir et à monter au niveau suivant !' },
                         ], () => { showDemoToast('La mémoire s\'ouvre à nouveau.'); _obGuideRefresh(); });
                     } else if (ev === 'carddetail') {
                         // Cas 1 : l'orbe est déjà en poche → l'utiliser.
@@ -16342,22 +16345,22 @@
                             // La carte est déjà pleine : l'orbe n'y changerait rien,
                             // ce sont les pages voilées qui bloquent.
                             vnShow([
-                                { speaker: 'La jeune fille', line: 'Garde ton orbe, cette carte n\'a plus soif. Ce sont ses pages voilées qui la retiennent : ouvre son carnet.' },
+                                { speaker: 'La jeune fille', air: 'doigt levé', line: 'Garde ton orbe, cette carte n\'a plus soif. Ce sont ses pages voilées qui la retiennent : ouvre son carnet.' },
                             ], () => _obGuideRefresh());
                         } else if (bagInv.orbes > 0) {
                             vnShow([
-                                { speaker: 'La jeune fille', line: 'Tu as l\'orbe. Pose-la sur la carte pour la raviver.' },
+                                { speaker: 'La jeune fille', air: 'déterminé', line: 'Tu as l\'orbe. Pose-la sur la carte pour la raviver.' },
                             ], () => _obGuideRefresh());
                         } else if (_demoOrbsLeft() > 0) {
                             _demoUnlockField();
                             vnShow([
-                                { speaker: 'La jeune fille', line: 'Il te manque encore une orbe. Elle t\'attend sur la mappe, tout près. Referme la carte, va la chercher, puis reviens.' },
+                                { speaker: 'La jeune fille', air: 'doigt levé', line: 'Il te manque encore une orbe. Elle t\'attend sur la mappe, tout près. Referme la carte, va la chercher, puis reviens.' },
                             ], () => _obGuideRefresh());
                         } else {
                             // Plus aucune orbe en poche ni sur la mappe : ne pas envoyer
                             // le joueur chercher ce qui n'existe plus.
                             vnShow([
-                                { speaker: 'La jeune fille', line: 'Les orbes du quartier sont épuisées. Laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' },
+                                { speaker: 'La jeune fille', air: 'réflexion', line: 'Les orbes du quartier sont épuisées. Laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' },
                             ], () => _obGuideRefresh());
                         }
                     }
@@ -16384,8 +16387,8 @@
                         // au joueur au scellement du chapitre I. Elle constate, et
                         // c'est le halo sur les pastilles (Action UX 4) qui désigne.
                         const rep = [
-                            { speaker: 'La jeune fille', line: 'Un chapitre se ferme, un autre s\'ouvre — le dernier de cette carte.' },
-                            { speaker: 'La jeune fille', line: 'Et un troisième visage avec lui. Tu commences à savoir où regarder.' },
+                            { speaker: 'La jeune fille', air: 'ému', line: 'Un chapitre se ferme, un autre s\'ouvre — le dernier de cette carte.' },
+                            { speaker: 'La jeune fille', air: 'souriant', line: 'Et un troisième visage avec lui. Tu commences à savoir où regarder.' },
                         ];
                         // L'épuisement se constate avant de parler de poussière : sans
                         // énergie, la poussière ne sert à rien, et le bouton de la fiche
@@ -16393,19 +16396,19 @@
                         const _en2 = (() => { try { return getCardEnergyState(OB_TUTORIAL_CARD.id).value; } catch (e) { return 1; } })();
                         if (_en2 <= 0) {
                             if (bagInv.orbes > 0) {
-                                rep.push({ speaker: 'La jeune fille', line: 'Mais la voilà à bout de souffle — elle a tout donné. Pose-lui l\'orbe que tu as ramassée : elle se ravivera d\'un coup.' });
+                                rep.push({ speaker: 'La jeune fille', air: 'inquiet', line: 'Mais la voilà à bout de souffle — elle a tout donné. Pose-lui l\'orbe que tu as ramassée : elle se ravivera d\'un coup.' });
                             } else if (_demoOrbsLeft() > 0) {
                                 _demoUnlockField();
-                                rep.push({ speaker: 'La jeune fille', line: 'Mais la voilà à bout de souffle — elle a tout donné. Il te faut une orbe pour la raviver : il y en a une sur la mappe, tout près.' });
+                                rep.push({ speaker: 'La jeune fille', air: 'inquiet', line: 'Mais la voilà à bout de souffle — elle a tout donné. Il te faut une orbe pour la raviver : il y en a une sur la mappe, tout près.' });
                             } else {
-                                rep.push({ speaker: 'La jeune fille', line: 'Mais la voilà à bout de souffle — elle a tout donné. Laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' });
+                                rep.push({ speaker: 'La jeune fille', air: 'inquiet', line: 'Mais la voilà à bout de souffle — elle a tout donné. Laisse-lui le temps : la mémoire revient d\'elle-même, lentement.' });
                             }
                         }
                         if (memorialDust >= _DEMO_DUST_CH3) {
-                            rep.push({ speaker: 'La jeune fille', line: 'Il te faudra plus de poussière. Sers-toi de celle que tu as ramassée.' });
+                            rep.push({ speaker: 'La jeune fille', air: 'doigt levé', line: 'Il te faudra plus de poussière. Sers-toi de celle que tu as ramassée.' });
                         } else if (_demoDustLeft() > 0) {
                             _demoUnlockField();
-                            rep.push({ speaker: 'La jeune fille', line: 'Il t\'en faudra beaucoup, plus que tu n\'en as. Va en récolter sur la mappe avant de continuer.' });
+                            rep.push({ speaker: 'La jeune fille', air: 'inquiet', line: 'Il t\'en faudra beaucoup, plus que tu n\'en as. Va en récolter sur la mappe avant de continuer.' });
                         }
                         vnShow(rep, () => {
                             // Action UX 4 — le halo n'a de sens qu'une fois le VN
@@ -16426,7 +16429,7 @@
                         // L'orbe posée au seuil du chapitre III : la carte repart pour
                         // 20 crans, largement de quoi encaisser ses 16 doses.
                         vnShow([
-                            { speaker: 'La jeune fille', line: 'La voilà d\'aplomb. Vas-y, ce dernier chapitre est le plus long — elle a beaucoup à dire.' },
+                            { speaker: 'La jeune fille', air: 'enthousiaste', line: 'La voilà d\'aplomb. Vas-y, ce dernier chapitre est le plus long — elle a beaucoup à dire.' },
                         ], () => { showDemoToast('La mémoire s\'ouvre à nouveau.'); _obGuideRefresh(); });
                     } else if (ev === 'carddetail') {
                         // La carte ranimée d'abord, la poussière ensuite : sans énergie,
@@ -16437,12 +16440,12 @@
                         if (_en3 <= 0 && bagInv.orbes <= 0 && _demoOrbsLeft() > 0) {
                             _demoUnlockField();
                             vnShow([
-                                { speaker: 'La jeune fille', line: 'Elle dort encore. Referme la carte, va chercher l\'orbe sur la mappe, puis reviens la réveiller.' },
+                                { speaker: 'La jeune fille', air: 'doigt levé', line: 'Elle dort encore. Referme la carte, va chercher l\'orbe sur la mappe, puis reviens la réveiller.' },
                             ], () => _obGuideRefresh());
                         } else if (_en3 > 0 && memorialDust < 50 && _demoDustLeft() > 0) {
                             _demoUnlockField();
                             vnShow([
-                                { speaker: 'La jeune fille', line: 'Tu n\'as plus de poussière... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.' },
+                                { speaker: 'La jeune fille', air: 'inquiet', line: 'Tu n\'as plus de poussière... Referme la carte, va en récolter sur la mappe, puis reviens achever ce dernier chapitre.' },
                             ], () => _obGuideRefresh());
                         }
                     }
@@ -16557,16 +16560,16 @@
             openMindmap();
             setTimeout(() => {
                 vnShow([
-                    { speaker: 'La jeune fille', line: 'Une carte thématique. Je n\'en avais pas vu depuis...' },
-                    { speaker: 'La jeune fille', line: 'Ce n\'est pas n\'importe qui qui peut les voir. Encore moins les récupérer.' },
-                    { speaker: 'La jeune fille', line: 'Le Grand Livre nous a parlé. À toi — et à travers toi, à moi.' },
-                    { speaker: 'La jeune fille', line: 'Tu es explorateur de la mémoire. Je ne sais pas pourquoi toi. Mais c\'est ce que tu es.' },
+                    { speaker: 'La jeune fille', air: 'surpris', line: 'Une carte thématique. Je n\'en avais pas vu depuis...' },
+                    { speaker: 'La jeune fille', air: 'fasciné', line: 'Ce n\'est pas n\'importe qui qui peut les voir. Encore moins les récupérer.' },
+                    { speaker: 'La jeune fille', air: 'ému', line: 'Le Grand Livre nous a parlé. À toi — et à travers toi, à moi.' },
+                    { speaker: 'La jeune fille', air: 'résolu', line: 'Tu es explorateur de la mémoire. Je ne sais pas pourquoi toi. Mais c\'est ce que tu es.' },
                     { speaker: 'La Gardienne', line: 'Marcus a raison. Et tort en même temps.' },
                     { speaker: 'La Gardienne', line: 'Tu n\'es pas explorateur parce que tu en es capable. Tu en es capable parce que tu regardes encore.' },
                     { speaker: 'La Gardienne', line: 'Le Grand Livre ne choisit pas des héros. Il remarque ceux qui regardent.' },
                     { speaker: 'La Gardienne', line: 'Et maintenant qu\'il t\'a remarqué, eux aussi.' },
-                    { speaker: 'La jeune fille', line: 'Ils ont détecté la collecte. Je leur ai dit que tu étais avec nous. Pour l\'instant, tu es protégé.' },
-                    { speaker: 'La jeune fille', line: 'Mais ils regardent maintenant.' },
+                    { speaker: 'La jeune fille', air: 'inquiet', line: 'Ils ont détecté la collecte. Je leur ai dit que tu étais avec nous. Pour l\'instant, tu es protégé.' },
+                    { speaker: 'La jeune fille', air: 'inquiet', line: 'Mais ils regardent maintenant.' },
                     { speaker: 'La Gardienne', line: 'Les cartes locales ouvrent les lieux. Dans ces lieux se cachent les fragments thématiques, ceux qui reconstruisent le Grand Livre.' },
                     { speaker: 'La Gardienne', line: 'Explore. Je serai là quand tu auras reconstitué quelque chose d\'important. Pas avant.' },
                 ], () => closeMindmap());
@@ -16587,11 +16590,40 @@
             _vnOnDone = onDone || null;
             document.getElementById('vnOverlay').classList.add('show');
             document.getElementById('vnActionBtn').classList.remove('show');
+            // Précharge les expressions de la séquence : pas de blanc au changement d'image.
+            lines.forEach(l => { if (l.speaker === 'La jeune fille') {
+                const src = VN_CLARA_EXPR[_vnExprCle(l)]; if (src) new Image().src = src; } });
             _vnRender();
         }
 
-        // Portrait de la jeune fille (référencé par chemin — 6,5 Mo, pas d'inline base64).
-        const _VN_JEUNEFILLE_IMG = './assets/Character%20Bust%20Icon%20_%20Take%202.png';
+        // Expressions de la jeune fille (Clara), une image en pied par expression,
+        // comme dans test.html (référencées par chemin, pas d'inline base64).
+        // Image d'une réplique : son `expr` (clé d'image), sinon son `air` via
+        // VN_CLARA_AIRS ; sans l'un ni l'autre → neutre.
+        const _VN_CLARA_DIR = './assets/visual%20novel/Clara/';
+        const VN_CLARA_EXPR = {};
+        [['neutre', 'image.png'], ['admirative', 'admirative.png'], ['enjouee', 'enjouée.png'],
+         ['evidence', 'évidence.png'], ['excitee', 'excitée.png'], ['interloquee', 'interloquée.png'],
+         ['prete', 'prête.png'], ['salutation', 'salutation.png'],
+        ].forEach(([cle, fichier]) => { VN_CLARA_EXPR[cle] = _VN_CLARA_DIR + encodeURIComponent(fichier); });
+        const _VN_JEUNEFILLE_IMG = VN_CLARA_EXPR.neutre;
+        // Indication d'air → image (même table que test.html).
+        const VN_CLARA_AIRS = {
+            'neutre': 'neutre', 'petit doigt en l’air': 'neutre', 'doigt levé': 'neutre',
+            'fasciné': 'admirative', 'ému': 'admirative', 'suppliant': 'admirative',
+            'enthousiaste': 'prete', 'exalté': 'prete', 'déterminé': 'prete',
+            'résolu': 'prete', 'joueur/de défi': 'prete',
+            'enjoué': 'salutation', 'souriant': 'salutation',
+            'inquisiteur': 'enjouee', 'questionné': 'enjouee', 'réflexion': 'enjouee',
+            'satisfait': 'evidence', 'soulagé': 'evidence', 'épuisé': 'evidence',
+            'choqué': 'interloquee', 'affolé': 'interloquee', 'inquiet': 'interloquee',
+            'surpris': 'interloquee', 'confus': 'interloquee', 'se tape le front': 'interloquee',
+            'renfrogné': 'excitee',
+        };
+        function _vnExprCle(entry) {
+            if (entry.expr && VN_CLARA_EXPR[entry.expr]) return entry.expr;
+            return VN_CLARA_AIRS[entry.air] || entry.expr;
+        }
 
         function _vnRender() {
             if (_vnIdx >= _vnQueue.length) {
@@ -16610,7 +16642,7 @@
             const speakerEl=document.getElementById('vnSpeaker');
             const speakerBox=document.getElementById('vnSpeakerBox');
             const dialogBox=document.querySelector('.vn-dialogue-box');
-            if(isMarcus||isGardienne||isJeuneFille){bustImg2.src=isMarcus?_VN_MARCUS_IMG:isGardienne?_VN_GARDIENNE_IMG:_VN_JEUNEFILLE_IMG;bustImg2.style.display='block';}
+            if(isMarcus||isGardienne||isJeuneFille){bustImg2.src=isMarcus?_VN_MARCUS_IMG:isGardienne?_VN_GARDIENNE_IMG:(VN_CLARA_EXPR[_vnExprCle(entry)]||_VN_JEUNEFILLE_IMG);bustImg2.style.display='block';}
             else{bustImg2.style.display='none';}
             // Jeune fille : grand portrait à gauche (au-dessus de la boîte). Autres : buste rond.
             bustImg2.classList.toggle('vn-bust--full', isJeuneFille);
@@ -21154,11 +21186,11 @@
             if (_instr) _instr.style.opacity = '0';
             if (_halo)  _halo.style.opacity  = '0';
             vnShow([
-                { speaker: 'La jeune fille', html: 'Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> flottent à l\'intérieur. Ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span>.' },
+                { speaker: 'La jeune fille', air: 'fasciné', html: 'Oh, tu la vois ? Une <span style="color:#B98CE8;font-weight:600">nébuleuse</span> ! Plusieurs <span style="color:#E09AC0;font-weight:600">présences</span> flottent à l\'intérieur. Ce sera ta première <span style="color:#F5B841;font-weight:600">carte</span>.' },
                 { speaker: 'Toi', line: 'Ma quoi ?' },
-                { speaker: 'La jeune fille', html: 'Une <span style="color:#F5B841;font-weight:600">carte</span>. Le nom qu\'on donne à une mémoire qu\'on a réussi à fixer : un <span style="color:#5FC9E8;font-weight:600">personnage</span>, un <span style="color:#5FC9E8;font-weight:600">lieu</span> ou un <span style="color:#5FC9E8;font-weight:600">objet</span> que la ville avait presque oublié.' },
-                { speaker: 'La jeune fille', line: 'Cristallise-la, et découvre ce qu\'elle garde. Elle est à toi.' },
-                { speaker: 'La jeune fille', line: 'Pose ton doigt sur la nébuleuse et tiens, jusqu\'à ce qu\'elle se stabilise.' },
+                { speaker: 'La jeune fille', air: 'doigt levé', html: 'Une <span style="color:#F5B841;font-weight:600">carte</span>. Le nom qu\'on donne à une mémoire qu\'on a réussi à fixer : un <span style="color:#5FC9E8;font-weight:600">personnage</span>, un <span style="color:#5FC9E8;font-weight:600">lieu</span> ou un <span style="color:#5FC9E8;font-weight:600">objet</span> que la ville avait presque oublié.' },
+                { speaker: 'La jeune fille', air: 'enthousiaste', line: 'Cristallise-la, et découvre ce qu\'elle garde. Elle est à toi.' },
+                { speaker: 'La jeune fille', air: 'déterminé', line: 'Pose ton doigt sur la nébuleuse et tiens, jusqu\'à ce qu\'elle se stabilise.' },
             ], () => {
                 ov.classList.remove('vn-over-scene');
                 if (_instr) _instr.style.opacity = '';
