@@ -9449,6 +9449,8 @@
             cursor:pointer;user-select:none;
         }
         #intro2Overlay.hidden{display:none}
+        /* PC : l'intro reste dans l'écran du téléphone (.app-container) au lieu de couvrir la fenêtre */
+        @media (min-width: 481px){ #intro2Overlay{position:absolute} }
         #intro2Overlay,#intro2Overlay *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
         #intro2Overlay *{margin:0;padding:0}
         #intro2Canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -10182,7 +10184,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.58</div>
+            <div class="hud-version" id="hudVersion">v1.9.59</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
