@@ -10261,7 +10261,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.69</div>
+            <div class="hud-version" id="hudVersion">v1.9.70</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -12021,7 +12021,7 @@
                     <div style="font-size:32px;">🎞️</div>
                     <div style="flex:1;">
                         <div style="font-size:14px;font-weight:700;color:#FCD34D;">Pellicule</div>
-                        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;">Révèle les entrées visuelles · Panoramas</div>
+                        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;">Révèle les entrées visuelles</div>
                         <div style="font-size:12px;color:#FCD34D;margin-top:6px;">En stock : <span id="bazarPellicules">0</span></div>
                     </div>
                     <button id="bazarBtn_pellicules" onclick="bazarTake('pellicules')" style="background:linear-gradient(135deg,#D97706,#B45309);border:none;border-radius:10px;padding:8px 14px;color:white;font-weight:700;font-size:13px;cursor:pointer;">Prendre +1</button>
@@ -12801,7 +12801,7 @@
             "Échoppe": "Stall",
             "Fournitures mémorielles": "Memorial supplies",
             "Pellicule": "Film",
-            "Révèle les entrées visuelles · Panoramas": "Reveals visual entries · Panoramas",
+            "Révèle les entrées visuelles": "Reveals visual entries",
             "En stock :": "In stock:",
             "Prendre +1": "Take +1",
             "Encre": "Ink",
@@ -13034,7 +13034,7 @@
             "Les plaques de rues se collectent en marchant dans la ville. Chacune porte une histoire courte et dense.": "Street plaques are collected by walking through the city. Each one carries a short, dense story.",
             "Des parchemins se collectent en explorant la ville ou en faisant progresser tes cartes.": "Scrolls are collected by exploring the city or by advancing your cards.",
             "Une boussole te guidera vers quelque chose d'inexploré dans la ville.": "A compass will guide you towards something unexplored in the city.",
-            "Une pellicule photographique non développée. Utilise-la dans le carnet d'une carte pour révéler une entrée visuelle, ou dans l'appareil photo pour capturer un panorama.": "An undeveloped roll of film. Use it in a card's notebook to reveal a visual entry, or in the camera to capture a panorama.",
+            "Une pellicule photographique non développée. Utilise-la dans le carnet d'une carte pour révéler une entrée visuelle.": "An undeveloped roll of film. Use it in a card's notebook to reveal a visual entry.",
             "Un flacon d'encre mémorielle. Verse-la sur une entrée textuelle dans le carnet d'une carte pour en révéler le contenu.": "A vial of memorial ink. Pour it over a text entry in a card's notebook to reveal its content.",
             "Une cassette vierge. Insère-la dans une entrée audio dans le carnet d'une carte pour en libérer le son.": "A blank tape. Insert it into an audio entry in a card's notebook to release its sound.",
             "Les photos se prennent depuis les points d'information sur la carte. Chacune est accompagnée d'une note et d'une date de visite.": "Photos are taken from the information points on the map. Each comes with a note and a visit date.",
@@ -13978,7 +13978,7 @@
             "[à définir — Confluence, contenu 1]": "[to be defined — Confluence, content 1]",
             "[à définir — Confluence, contenu 2]": "[to be defined — Confluence, content 2]",
             // ── BATTLEPASS_NODES ──
-            "Appareil photo + 10 pellicules": "Camera + 10 film rolls",
+            "Appareil photo": "Camera",
             "Objet unique": "Unique item",
             "+50 Poussière": "+50 Dust",
             "+3 Orbes de mémoire": "+3 Memory orbs",
@@ -27988,9 +27988,9 @@
                 action: { icon: "📖", label: "Utiliser dans un carnet" },
                 getItems() {
                     return [
-                        { id: "pellicule", icon: "🎞️", name: "Pellicule", sub: "Révèle les entrées visuelles · Panoramas",
+                        { id: "pellicule", icon: "🎞️", name: "Pellicule", sub: "Révèle les entrées visuelles",
                           qty: bagInv.pellicules || 0,
-                          desc: "Une pellicule photographique non développée. Utilise-la dans le carnet d'une carte pour révéler une entrée visuelle, ou dans l'appareil photo pour capturer un panorama." },
+                          desc: "Une pellicule photographique non développée. Utilise-la dans le carnet d'une carte pour révéler une entrée visuelle." },
                         { id: "encre", icon: "🖋️", name: "Encre", sub: "Révèle les entrées textuelles",
                           qty: bagInv.encre || 0,
                           desc: "Un flacon d'encre mémorielle. Verse-la sur une entrée textuelle dans le carnet d'une carte pour en révéler le contenu." },
@@ -35530,7 +35530,7 @@
         // pastille qui l'accueille.
         const ICONE_POUSSIERE = '<img class="ico-poussiere" src="./assets/Powder.png" alt="" draggable="false">';
         const BATTLEPASS_NODES = [
-            { palier:1,  icon:'📷', name:'Appareil photo + 10 pellicules', type:'Objet unique',        xpRequired:0,    milestone:true,
+            { palier:1,  icon:'📷', name:'Appareil photo', type:'Objet unique',       xpRequired:0,    milestone:true,
               rewardFn: () => { giveCamera(); } },
             { palier:2,  icon:'👕', name:'Tenue : béret',                     type:'Tenue',                xpRequired:50,
               rewardFn: () => _bpPiece('t_beret') },
@@ -35687,19 +35687,11 @@
         function giveCamera() {
             if (hasCamera) return;
             hasCamera  = true;
-            // Sac vide à l'origine (brief Bellecour, section 1) : ce palier est
-            // réclamé dès le lancement, les 10 pellicules rempliraient le sac
-            // avant même le tutoriel. B6 (19/10) : elles restent dues et arrivent
-            // à la fin du tutoriel (elles n'arrivaient jamais).
+            // 31/10 (David) : l'appareil photo ne donne plus de pellicules (les
+            // 10 pellicules dues à la fin du tutoriel, _bpPelliculesCamera, sont
+            // retirées). Les pellicules ne servent qu'aux entrées visuelles.
             updateCameraHUD();
-            _bpPelliculesCamera();
         }
-        function _bpPelliculesCamera() {
-            if (!_obDone || !claimedPaliers.has(1) || playerStats._pelliculesCamera) return;
-            playerStats._pelliculesCamera = true;
-            addFilm(10);
-        }
-        setInterval(() => { try { _bpPelliculesCamera(); } catch (e) {} }, 2000);
         // Palier « carte bonus » : la carte rejoint la collection (sinon, poussière).
         function _bpCarteBonus(cardId) {
             const card = getCardById(cardId);
