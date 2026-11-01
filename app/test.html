@@ -9022,26 +9022,38 @@
            Un pur jeu d'opacités sur des calques tous présents dès la construction :
            le SVG n'est jamais reconstruit pour un changement d'état. Portée
            restreinte à #verriereSvg pour ne rien heurter dans le reste du fichier. */
+        /* Brief « ville du livre » (1er nov.) : trois lectures au premier coup
+           d'œil. Obtenue : teinte, pictogramme net, titre lisible (halo violet de
+           l'Explorium). Non obtenue : sombre, pictogramme à ~20 %, titre estompé.
+           Verrouillée : contour en pointillés. « pret » et « encours » gardent leurs
+           repères de quête (liseré doré qui pulse, signet). */
         #verriereSvg .case { cursor: pointer; }
         #verriereSvg .case .coul   { opacity: 0; transition: opacity .7s ease; }
-        #verriereSvg .case .encre  { opacity: 0; transition: opacity .7s ease; }
-        #verriereSvg .case .crayon { opacity: 0; transition: opacity .7s ease; }
+        #verriereSvg .case .pic    { opacity: .22; transition: opacity .6s ease; }
+        #verriereSvg .case .ti     { opacity: .32; transition: opacity .6s ease; }
         #verriereSvg .case .rim    { opacity: 0; transition: opacity .45s ease; }
         #verriereSvg .case .mark   { opacity: 0; transition: opacity .45s ease; }
         #verriereSvg .case .feuille { transition: opacity .6s ease; }
-        #verriereSvg .case .cadre  { transition: stroke-dasharray .4s ease, opacity .5s ease; }
+        #verriereSvg .case .cadre  { opacity: .28; transition: stroke-dasharray .4s ease, opacity .5s ease; }
 
-        #verriereSvg .case[data-s="verrouille"] .feuille { opacity: .26; }
-        #verriereSvg .case[data-s="verrouille"] .cadre   { stroke-dasharray: 11 9; opacity: .45; }
-        #verriereSvg .case[data-s="inconnu"]    .feuille { opacity: .82; }
-        #verriereSvg .case[data-s="entrevu"]    .crayon  { opacity: .85; }
-        #verriereSvg .case[data-s="pret"]       .encre   { opacity: 1; }
+        #verriereSvg .case[data-s="verrouille"] .feuille { opacity: .5; }
+        #verriereSvg .case[data-s="verrouille"] .pic     { opacity: .1; }
+        #verriereSvg .case[data-s="verrouille"] .ti      { opacity: .2; }
+        #verriereSvg .case[data-s="verrouille"] .cadre   { stroke-dasharray: 9 7; opacity: .42; }
+        #verriereSvg .case[data-s="pret"]       .pic     { opacity: .45; }
         #verriereSvg .case[data-s="pret"]       .rim     { opacity: 1; animation: vrPuls 2.1s ease-in-out infinite; }
-        #verriereSvg .case[data-s="encours"]    .encre   { opacity: 1; }
+        #verriereSvg .case[data-s="encours"]    .pic     { opacity: .45; }
         #verriereSvg .case[data-s="encours"]    .rim     { opacity: .85; }
         #verriereSvg .case[data-s="encours"]    .mark    { opacity: 1; }
-        #verriereSvg .case[data-s="obtenu"]     .encre   { opacity: 1; }
-        #verriereSvg .case[data-s="obtenu"]     .coul    { opacity: 1; }
+        #verriereSvg .case[data-s="obtenu"]     .coul    { opacity: 1; filter: drop-shadow(0 0 10px rgba(167,139,250,.38)); }
+        #verriereSvg .case[data-s="obtenu"]     .pic     { opacity: .9; }
+        #verriereSvg .case[data-s="obtenu"]     .ti      { opacity: .92; }
+        #verriereSvg .case[data-s="obtenu"]     .cadre   { opacity: .4; }
+        /* Consigne de lecture, sous la planche */
+        .verriere-hint { position: absolute; left: 0; right: 0; bottom: 8px; z-index: 2; pointer-events: none;
+            text-align: center; font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: .1em;
+            color: rgba(244,236,219,.38); transition: opacity .3s; }
+        .verriere-screen:has(.verriere-volet.show) .verriere-hint { opacity: 0; }
         @keyframes vrPuls { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
 
         /* Sèves : ce qui relie un étage au suivant. Crayon pointillé tant que
@@ -10261,7 +10273,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.70</div>
+            <div class="hud-version" id="hudVersion">v1.9.71</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -12231,11 +12243,12 @@
                         <!-- Feuille de papier de la planche -->
                         <g id="verriereDecor"></g>
                         <!-- Sèves entre étages, non cliquables -->
-                        <g id="verriereSeves" filter="url(#vrTrembl)" pointer-events="none"></g>
-                        <g id="verrierePanneaux" filter="url(#vrTrembl)"></g>
+                        <g id="verriereSeves" pointer-events="none"></g>
+                        <g id="verrierePanneaux"></g>
                     </svg>
                     <canvas class="verriere-dust" id="verriereDust"></canvas>
                     <div class="verriere-eclat" id="verriereEclat"></div>
+                    <div class="verriere-hint">tape une case · lecture de bas en haut</div>
                 </div>
                 <!-- Volet montant : aucun état n'est une impasse muette -->
                 <div class="verriere-volet" id="verriereVolet">
@@ -12711,6 +12724,7 @@
             "Niveau %1": "Level %1",
             "Niveau MAX": "MAX level",
             "Récupérer": "Claim",
+            "tape une case · lecture de bas en haut": "tap a panel · read from bottom to top",
             "✓ Obtenu": "✓ Obtained",
             "encore %1 XP": "%1 XP to go",
             "🎁 Récupéré : %1": "🎁 Claimed: %1",
@@ -15171,7 +15185,7 @@
                 type: 'locale',
                 description: 'Trésors de la Presqu\'île lyonnaise',
                 cards: [
-                    { id: 'card6', cardKind: 'local', collections: ["pierres_memoire", "ville_du_livre"], name: 'Place Bellecour', type: 'Lieu', poiId: 'vdl_bellecour', rarity: 'legendary', supertype: 'histoire',
+                    { id: 'card6', cardKind: 'local', collections: ["pierres_memoire"], name: 'Place Bellecour', type: 'Lieu', poiId: 'vdl_bellecour', rarity: 'legendary', supertype: 'histoire',
                       art: './assets/Cards/Place_Bellecour/Place_Bellecour1.jpg',
                       clueIcon: '🏇',
                       incipit: 'J\'ai été le cœur de mille révolutions et de mille fêtes. Les villes oublient, moi jamais.' },
@@ -21463,7 +21477,8 @@
                 return { n: Math.min(n, TUTO_QUETES.preuves.max), max: TUTO_QUETES.preuves.max };
             }
             if (id === 'vdl') {
-                // Cartes de la collection « ville_du_livre » (7), possédées / total
+                // Cartes de la collection « ville_du_livre » (6 : Place Bellecour en est
+                // sortie le 1er nov.), possédées / total
                 const vues = new Set();
                 const cartes = Object.values(COLLECTIONS).flatMap(c => c.cards)
                     .filter(c => !vues.has(c.id) && vues.add(c.id) && (c.collections || []).includes(TUTO_QUETES.vdl.grappe));
@@ -23652,6 +23667,7 @@
                 if (d.grappeBDUnlocked) grappeBDUnlocked = d.grappeBDUnlocked;
                 if (d.verriereVues)     verriereVues     = d.verriereVues;
                 if (d.verriereEclatVu)  verriereEclatVu  = d.verriereEclatVu;
+                try { _vdlMigrerMedias(); } catch (e) { console.warn('[ExpLore] migration ville du livre :', e); }
                 if (Array.isArray(d.collectedCarnetResources)) collectedCarnetResources = d.collectedCarnetResources;
                 if (d._carnetResourceTypeMap) _carnetResourceTypeMap = d._carnetResourceTypeMap;
                 if (d.cardEnergy) cardEnergy = d.cardEnergy;
@@ -38181,7 +38197,8 @@
         // Pas une carte : pas de slot dans COLLECTIONS. Ils s'éclairent dans
         // l'Explorium par accumulation — dès que ≥2 cartes de la grappe sont
         // stabilisées à C1 ou plus (doc "grappe_lyon_ville_du_livre", section 4).
-        const VDL_CARD_IDS = ['card6', 'card_louise_labe', 'card_gryphe', 'card13', 'card_dolet', 'card_presse_gutenberg', 'card_palais_st_jean'];
+        // Place Bellecour sortie de la grappe (brief « ville du livre », 1er nov.).
+        const VDL_CARD_IDS = ['card_louise_labe', 'card_gryphe', 'card13', 'card_dolet', 'card_presse_gutenberg', 'card_palais_st_jean'];
         function griffarinsUnlocked() {
             const stabilized = VDL_CARD_IDS.filter(id => {
                 const cl = cardLevels[id];
@@ -38411,101 +38428,155 @@
             ville_du_livre: {
                 title: 'Lyon, ville du livre',
                 color: '#b45309',
-                // Planche en quatre étages, lue de bas en haut. Ordre libre dans un
-                // étage ; un étage ne s'ouvre qu'une fois le précédent entièrement
-                // obtenu (voir verriereEtageOuvert). Seul l'étage 1 est joué le 24 oct.
+                // Brief « grappe ville du livre » (1er nov.) : sept médias en quatre
+                // étages, lus de bas en haut. Ordre libre dans un étage ; un étage ne
+                // s'ouvre qu'une fois le précédent entièrement obtenu (verriereEtageOuvert).
+                // Place Bellecour ne fait plus partie de la grappe. Arbitrages de David :
+                // les médias gardent leur quête sur place ; l'étage 1 se joue au niveau 0.
                 verriere: {
-                    viewBox: [0, 0, 600, 940],
+                    viewBox: [0, 0, 600, 900],
                     etages: [
-                        ['vdl_case1', 'vdl_case2'],   // l'arrivée des presses, les lettrés dans l'atelier
-                        ['vdl_case4', 'vdl_case6'],   // le Grand Tric, l'autre incendie
-                        ['vdl_case3', 'vdl_case5'],   // Louise Labé, la condamnation de Dolet
-                        ['vdl_case7'],                // ce qui a survécu
+                        ['vdl_m1', 'vdl_m2'],
+                        ['vdl_m3', 'vdl_m4'],
+                        ['vdl_m5', 'vdl_m6'],
+                        ['vdl_m7'],
                     ],
+                    // Sèves : chaque case relie celle qu'elle alimente (numéros de média).
+                    liens: [[1, 3], [2, 4], [3, 5], [4, 6], [5, 7], [6, 7]],
                     panneaux: [
-                        { caseId: 'vdl_case1', box: [40, 700, 254, 196],  rot: -1.1, coul: '#c98b3a', pic: 'presse', date: 'v.1500' },
-                        { caseId: 'vdl_case2', box: [306, 700, 254, 196], rot: 0.9,  coul: '#3c5a8c', pic: 'lettre', date: 'v.1530' },
-                        { caseId: 'vdl_case4', box: [60, 478, 228, 180],  rot: 1.2,  coul: '#a8472f', pic: 'foule',  date: '1539' },
-                        { caseId: 'vdl_case6', box: [312, 478, 228, 180], rot: -1.4, coul: '#26314f', pic: 'flamme', date: '1562' },
-                        { caseId: 'vdl_case3', box: [80, 268, 210, 168],  rot: 0.6,  coul: '#6b4a9e', pic: 'plume',  date: '1555' },
-                        { caseId: 'vdl_case5', box: [310, 268, 210, 168], rot: -0.8, coul: '#7a2e2e', pic: 'presse', date: '1546' },
-                        { caseId: 'vdl_case7', box: [150, 58, 300, 170],  rot: -0.4, coul: '#b8891a', pic: 'livre',  date: 'aujourd\'hui' },
+                        { caseId: 'vdl_m1', n: 1, box: [40, 700, 250, 160],  coul: '#3a5a7a', pic: 'copiste' },
+                        { caseId: 'vdl_m2', n: 2, box: [310, 700, 250, 160], coul: '#7a5a2a', pic: 'maison' },
+                        { caseId: 'vdl_m3', n: 3, box: [40, 510, 250, 160],  coul: '#2f6b52', pic: 'atelier' },
+                        { caseId: 'vdl_m4', n: 4, box: [310, 510, 250, 160], coul: '#8a6a2a', pic: 'contrat' },
+                        { caseId: 'vdl_m5', n: 5, box: [40, 320, 250, 160],  coul: '#7a3b3f', pic: 'presse_arret' },
+                        { caseId: 'vdl_m6', n: 6, box: [310, 320, 250, 160], coul: '#6b4a8a', pic: 'supplique' },
+                        { caseId: 'vdl_m7', n: 7, box: [150, 110, 300, 170], coul: '#3a4a6b', pic: 'cloitre' },
                     ],
                 },
                 bd: {
                     totalCases: 7,
                     cases: [
-                        { id: 'vdl_case1', title: 'Une ville qui imprime', text: 'Au début du XVIe siècle, Lyon, ville de foires et de marchands, s\'empare de l\'imprimerie encore jeune. Près de cent ateliers s\'entassent autour de la rue Mercière — la place Bellecour, elle, reste le vide organisé au cœur d\'une ville qui, juste à côté, imprime déjà pour toute l\'Europe.' },
-                        { id: 'vdl_case2', title: 'Le maître et son atelier', text: 'Sébastien Gryphe, imprimeur humaniste venu d\'Allemagne, introduit l\'italique en France et imprime Rabelais et les Anciens. Sous ses presses, Lyon devient un nœud du réseau européen de l\'imprimerie — et forme, sans le vouloir, ceux qui lui succéderont.' },
-                        { id: 'vdl_case3', title: 'Une voix singulière', text: 'En 1555, Louise Labé publie sous son nom un recueil de sonnets sur le désir — un geste presque unique pour une femme de son temps. À Lyon, cette liberté-là est possible ; ailleurs, presque nulle part.' },
-                        { id: 'vdl_case4', title: 'Le Grand Tric', text: 'Une presse ne travaille jamais seule : il faut des compagnons pour composer, corriger, tirer chaque feuille. En avril 1539, ces compagnons — les Griffarins, confrérie clandestine des imprimeurs lyonnais — déclenchent le Grand Tric, la première grève ouvrière de France. Les ateliers ferment trois mois ; le roi craint que l\'imprimerie ne quitte la ville.' },
-                        { id: 'vdl_case5', title: 'Trois mots de trop', text: 'Étienne Dolet, imprimeur à l\'enseigne de la Doloire, va plus loin que les autres. Trois mots ajoutés à une traduction, jugés hérétiques, suffisent à le condamner. Il est brûlé à Paris avec ses livres en 1546 — la ville qui imprime tout est aussi la ville qu\'on surveille tout autant.' },
-                        { id: 'vdl_case6', title: 'L\'autre incendie', text: 'En 1562, en pleine guerre de religion, la bibliothèque du chapitre de la cathédrale Saint-Jean est pillée et incendiée à son tour. On croit toujours que l\'Église est du côté de ceux qui brûlent les livres des autres — le feu, lui, ne choisit pas son camp.' },
-                        { id: 'vdl_case7', title: 'Ce qui a survécu', text: 'Manuscrits du chapitre, livres de Dolet, vers de Louise Labé : ce que le feu et la censure ont épargné a fini, un temps, sous le toit du Palais Saint-Jean, juste à côté de la cathédrale. Les fonds ont depuis émigré vers la Part-Dieu — mais leur dernière maison de quartier reste là, à deux pas du lieu d\'origine.' },
+                        { id: 'vdl_m1', title: 'Avant qu\'il y ait des ateliers', text: 'Dans cette ville, faire un livre est un travail d\'homme seul.' },
+                        { id: 'vdl_m2', title: 'On monte une machine dans une maison', text: 'La première presse lyonnaise est montée chez un particulier.' },
+                        { id: 'vdl_m3', title: 'Le premier jour d\'un apprenti', text: '' },
+                        { id: 'vdl_m4', title: 'Le correcteur qui est parti monter le sien', text: '' },
+                        { id: 'vdl_m5', title: 'Le matin où personne n\'est venu', text: '' },
+                        { id: 'vdl_m6', title: 'Une cliente apporte un manuscrit', text: '' },
+                        { id: 'vdl_m7', title: 'La nuit où ça s\'est éteint de l\'autre côté', text: '' },
                     ]
                 },
                 quete: {
                     titre: 'Les voix imprimées',
+                    // media : contenu lu dans le lecteur (lot 3 du brief).
+                    //   texteValide : false → animation « Récit à venir » ; passer à true
+                    //   et renseigner ecrans suffit à activer un média.
+                    //   ecrans : { a: pictogramme, b: intitulé de temps, d: ancrage, t: texte }.
+                    //   Dans t, {{cardId|mots}} souligne une carte QUAND ELLE AGIT dans la
+                    //   scène (marqueur explicite, jamais de détection automatique).
+                    // Indices : PROVISOIRES (textes non définitifs, cf. brief).
                     etapes: [
                         {
-                            id: 'vdl_1a',
-                            titre: 'Une ville qui imprime',
-                            indice: 'Depuis Bellecour, l\'histoire du livre se joue juste à côté. Trouve l\'atelier où l\'on tirait les feuilles une à une.',
-                            // Étage 1 (test Bellecour) : des cartes, aucun niveau exigé.
-                            prerequis: [{ cardId: 'card6', minLevel: 0 }, { cardId: 'card_presse_gutenberg', minLevel: 0 }, { cardId: 'card_dolet', minLevel: 0 }],
-                            objectifGeo: { lat: 45.7632, lng: 4.8328, rayon: 80, nom: 'Rue Mercière (la Doloire)' },
-                            rewardCases: ['vdl_case1'],
-                            voix: true,   // quête donnée par la Voix mémorielle (David, 23/10)
-                        },
-                        {
-                            id: 'vdl_1b',
-                            titre: 'Le maître et son atelier',
-                            indice: 'Un maître humaniste a formé les meilleurs imprimeurs de la ville. Cherche du côté de Saint-Jean.',
-                            // Étage 1 (test Bellecour) : le seul niveau exigé de l'étage.
-                            prerequis: [{ cardId: 'card_gryphe', minLevel: 1 }, { cardId: 'card_palais_st_jean', minLevel: 0 }],
+                            id: 'vdl_m1',
+                            titre: 'Avant qu\'il y ait des ateliers',
+                            indice: 'Avant les ateliers, les beaux livres de la ville dormaient de l\'autre côté de la Saône. Cherche du côté de Saint-Jean.',
+                            prerequis: [{ cardId: 'card_palais_st_jean', minLevel: 0 }, { cardId: 'card13', minLevel: 0 }],
                             objectifGeo: { lat: 45.7628, lng: 4.8266, rayon: 80, nom: 'Vieux-Lyon (Saint-Jean)' },
-                            rewardCases: ['vdl_case2'],
+                            rewardCases: ['vdl_m1'],
+                            voix: true,   // quête donnée par la Voix mémorielle (David, 23/10)
+                            media: {
+                                texteValide: true,
+                                ecrans: [
+                                    { a: 'copiste',  b: 'couverture', d: 'Lyon, milieu du XVe siècle',
+                                      t: 'Dans cette ville, faire un livre est un travail d\'homme seul.' },
+                                    { a: 'copiste',  b: 'le geste', d: 'Un pupitre, une plume',
+                                      t: 'Il copie. Une page, puis la suivante, pendant trois ou quatre mois pour un seul ouvrage. Quand le texte est long, on découpe le volume en cahiers et on se répartit le travail à plusieurs : c\'est la seule façon d\'aller plus vite.' },
+                                    { a: 'supports', b: 'la matière', d: 'Peau ou papier',
+                                      t: 'Devant lui, du parchemin, fait de peaux. Il existe du papier, quatre fois moins cher dès le siècle précédent, treize fois moins cher maintenant, mais il n\'a pas encore pris toute la place.' },
+                                    { a: 'armoire',  b: 'où ça finit', d: 'De l\'autre côté de la Saône',
+                                      t: 'Ce qu\'il copie ne lui appartiendra pas. Les plus beaux volumes de la ville sont rangés dans le cloître de Saint-Jean, où la {{card_palais_st_jean|bibliothèque du chapitre}} s\'est constituée pendant des siècles par les legs de ses chanoines.' },
+                                ],
+                                sources: [
+                                    'Trois à quatre mois pour un manuscrit d\'importance moyenne : dossier sur le livre et l\'enseignement au Moyen Âge.',
+                                    'Division en cahiers répartis entre plusieurs copistes : Université de Liège ; dossier du Scriptorial.',
+                                    'Papier quatre fois moins cher au XIVe siècle, treize fois moins au XVe : Université Montpellier 3.',
+                                    'Manuscrits, objets de luxe réservés à la noblesse et au clergé : Université de Liège.',
+                                    'Bibliothèque capitulaire constituée par legs : revue Chrétiens et sociétés.',
+                                ],
+                            },
+                        },
+                        {
+                            id: 'vdl_m2',
+                            titre: 'On monte une machine dans une maison',
+                            indice: 'La première presse de la ville a tourné dans une maison, près des quais de Saône. Retourne rue Mercière.',
+                            prerequis: [{ cardId: 'card_presse_gutenberg', minLevel: 0 }, { cardId: 'card_palais_st_jean', minLevel: 0 }],
+                            objectifGeo: { lat: 45.7632, lng: 4.8328, rayon: 80, nom: 'Rue Mercière' },
+                            rewardCases: ['vdl_m2'],
                             voix: true,
+                            media: {
+                                texteValide: true,
+                                ecrans: [
+                                    { a: 'maison',   b: 'couverture', d: 'Quai de Saône, 1472',
+                                      t: 'La première {{card_presse_gutenberg|presse}} lyonnaise est montée chez un particulier.' },
+                                    { a: 'presse',   b: 'qui paie', d: 'Un marchand, pas un savant',
+                                      t: 'Barthélemy Buyer est d\'une famille du consulat. Il a vu fonctionner une presse pendant ses études à Paris. Il fournit le matériel, choisit les titres, et fait venir de Liège un typographe, Guillaume Le Roy, pour la faire tourner.' },
+                                    { a: 'colophon', b: 'la première feuille', d: '17 septembre 1473',
+                                      t: 'Le premier livre daté imprimé à Lyon sort de cette maison. Buyer vend aussi du papier et du matériel d\'imprimerie : c\'est un commerce, et son nom est le plus ancien nom d\'éditeur relevé sur un livre imprimé en France.' },
+                                    { a: 'rue',      b: 'ce que ça déclenche', d: '1480, puis 1500',
+                                      t: 'Ce qui demandait trois mois à un copiste prend désormais quelques jours par exemplaire. Neuf villes françaises impriment en 1480, quarante en 1500. À la fin du siècle, Lyon compte une cinquantaine d\'imprimeurs et sort un tiers des éditions du royaume.' },
+                                ],
+                                sources: [
+                                    'Buyer, famille consulaire, études à Paris, presse vue en fonctionnement : support des Archives de Lyon.',
+                                    'Presse installée dans sa maison sur le quai de Saône, matériel fourni, titres choisis, vente de papeterie et de matériel typographique, plus ancien nom d\'éditeur en France : Presses universitaires de Lyon.',
+                                    'Guillaume Le Roy, typographe venu de Liège : notice Connaître la Wallonie.',
+                                    'Premier livre daté le 17 septembre 1473 ; neuf villes en 1480, quarante en 1500 : BM Lyon, exposition Impressions premières.',
+                                    'Une cinquantaine d\'imprimeurs et un tiers des éditions françaises : Histoire de l\'imprimerie à Lyon.',
+                                ],
+                            },
                         },
                         {
-                            id: 'vdl_1c',
-                            titre: 'Une voix singulière',
-                            indice: 'Une femme a publié ses vers sous son nom, tout près de Bellecour. Trouve la rue qui porte son nom.',
-                            prerequis: [{ cardId: 'card_louise_labe', minLevel: 2 }],
-                            objectifGeo: { lat: 45.7584, lng: 4.8357, rayon: 80, nom: 'Rue Bellecordière' },
-                            rewardCases: ['vdl_case3'],
+                            id: 'vdl_m3',
+                            titre: 'Le premier jour d\'un apprenti',
+                            indice: 'Un garçon de quatorze ans entre dans le plus grand atelier de la ville. Cherche l\'atelier de Gryphe, rue Mercière.',
+                            prerequis: [{ cardId: 'card_gryphe', minLevel: 1 }, { cardId: 'card_presse_gutenberg', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7616, lng: 4.8330, rayon: 80, nom: 'Rue Mercière (Gryphe)' },
+                            rewardCases: ['vdl_m3'],
+                            media: { texteValide: false, ecrans: [], sources: [] },
                         },
                         {
-                            id: 'vdl_2_tric',
-                            titre: 'Le Grand Tric',
-                            indice: 'Une presse ne travaille jamais seule. Retourne du côté des ateliers de la Doloire, là où les compagnons s\'organisaient.',
-                            prerequis: [{ cardId: 'card_presse_gutenberg', minLevel: 2 }, { cardId: 'card_gryphe', minLevel: 2 }],
-                            objectifGeo: { lat: 45.7632, lng: 4.8328, rayon: 80, nom: 'Rue Mercière (la Doloire)' },
-                            rewardCases: ['vdl_case4'],
-                        },
-                        {
-                            id: 'vdl_2_dolet',
-                            titre: 'Trois mots de trop',
-                            indice: 'Un imprimeur est allé plus loin que les autres. Cherche l\'enseigne d\'une hache, rue Mercière.',
-                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_gutenberg', minLevel: 2 }],
+                            id: 'vdl_m4',
+                            titre: 'Le correcteur qui est parti monter le sien',
+                            indice: 'Un correcteur a quitté l\'atelier où il relisait les autres pour ouvrir le sien. Cherche son enseigne, rue Mercière.',
+                            prerequis: [{ cardId: 'card_dolet', minLevel: 1 }, { cardId: 'card_presse_gutenberg', minLevel: 2 }],
                             objectifGeo: { lat: 45.7640, lng: 4.8327, rayon: 80, nom: 'Rue Mercière (Dolet)' },
-                            rewardCases: ['vdl_case5'],
+                            rewardCases: ['vdl_m4'],
+                            media: { texteValide: false, ecrans: [], sources: [] },
                         },
                         {
-                            id: 'vdl_3_incendie',
-                            titre: 'L\'autre incendie',
-                            indice: 'Une bibliothèque a brûlé, et ce n\'est pas celle qu\'on croit. Retourne à la cathédrale Saint-Jean.',
-                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_gutenberg', minLevel: 2 }, { cardId: 'card13', minLevel: 2 }],
+                            id: 'vdl_m5',
+                            titre: 'Le matin où personne n\'est venu',
+                            indice: 'Un matin d\'avril, toutes les presses de la ville se sont tues. Retourne là où les compagnons travaillaient, rue Mercière.',
+                            prerequis: [{ cardId: 'card_presse_gutenberg', minLevel: 3 }, { cardId: 'card_gryphe', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7632, lng: 4.8328, rayon: 80, nom: 'Rue Mercière' },
+                            rewardCases: ['vdl_m5'],
+                            media: { texteValide: false, ecrans: [], sources: [] },
+                        },
+                        {
+                            id: 'vdl_m6',
+                            titre: 'Une cliente apporte un manuscrit',
+                            indice: 'Une Lyonnaise a fait imprimer ses vers sous son nom. Trouve la rue qui porte son surnom.',
+                            prerequis: [{ cardId: 'card_louise_labe', minLevel: 2 }, { cardId: 'card_dolet', minLevel: 2 }],
+                            objectifGeo: { lat: 45.7584, lng: 4.8357, rayon: 80, nom: 'Rue Bellecordière' },
+                            rewardCases: ['vdl_m6'],
+                            media: { texteValide: false, ecrans: [], sources: [] },
+                        },
+                        {
+                            id: 'vdl_m7',
+                            titre: 'La nuit où ça s\'est éteint de l\'autre côté',
+                            indice: 'Une nuit de 1562, le cloître de l\'autre rive a été forcé. Retourne à la cathédrale Saint-Jean.',
+                            prerequis: [{ cardId: 'card_palais_st_jean', minLevel: 3 }, { cardId: 'card13', minLevel: 2 }],
                             objectifGeo: { lat: 45.7606, lng: 4.8268, rayon: 80, nom: 'Cathédrale Saint-Jean' },
-                            rewardCases: ['vdl_case6'],
-                        },
-                        {
-                            id: 'vdl_3_survivant',
-                            titre: 'Ce qui a survécu',
-                            indice: 'Juste à côté de la cathédrale, un ancien palais a gardé ce que le feu a épargné.',
-                            prerequis: [{ cardId: 'card_dolet', minLevel: 2 }, { cardId: 'card_presse_gutenberg', minLevel: 2 }, { cardId: 'card13', minLevel: 2 }, { cardId: 'card_palais_st_jean', minLevel: 2 }],
-                            objectifGeo: { lat: 45.7602, lng: 4.8272, rayon: 80, nom: 'Palais Saint-Jean' },
-                            rewardCases: ['vdl_case7'],
+                            rewardCases: ['vdl_m7'],
+                            media: { texteValide: false, ecrans: [], sources: [] },
                         },
                     ]
                 }
@@ -38517,6 +38588,37 @@
         let grappeQuestState = {};
         // Cases BD débloquées : grappeBDUnlocked[grappeId] = Set des caseIds
         let grappeBDUnlocked = {};
+
+        // Brief « ville du livre » (1er nov.) : les sept médias ont de nouveaux
+        // identifiants (vdl_m1…vdl_m7). Ce qui était obtenu à l'étage 1 est repris :
+        // l'ancien vdl_1a (la presse, rue Mercière) devient le média 2, l'ancien
+        // vdl_1b (Saint-Jean) le média 1. Les étages suivants n'étaient pas jouables :
+        // leurs anciens états sont simplement effacés.
+        function _vdlMigrerMedias() {
+            const G = 'ville_du_livre';
+            const ETAPES = { vdl_1a: 'vdl_m2', vdl_1b: 'vdl_m1' };
+            const CASES = { vdl_case1: 'vdl_m2', vdl_case2: 'vdl_m1' };
+            const ancien = k => /^vdl_(1[abc]|2_|3_|case\d)/.test(k);
+            const st = grappeQuestState[G];
+            if (st) Object.keys(st).forEach(k => {
+                if (!ancien(k)) return;
+                if (ETAPES[k] && !st[ETAPES[k]]) st[ETAPES[k]] = st[k];
+                delete st[k];
+            });
+            const bd = grappeBDUnlocked[G];
+            if (Array.isArray(bd)) grappeBDUnlocked[G] = [...new Set(bd.map(c => CASES[c] || c).filter(c => !ancien(c)))];
+            const vues = verriereVues[G];
+            if (Array.isArray(vues)) verriereVues[G] = [...new Set(vues.map(v => {
+                const [p, k] = v.indexOf(':') > 0 ? v.split(':') : ['', v];
+                const n = ETAPES[k] || CASES[k] || k;
+                return p ? p + ':' + n : n;
+            }).filter(v => !ancien(v.split(':').pop())))];
+            const sel = window._selectedQuestKey;
+            if (typeof sel === 'string' && sel.startsWith(G + ':')) {
+                const k = sel.slice(G.length + 1);
+                if (ancien(k)) window._selectedQuestKey = ETAPES[k] ? G + ':' + ETAPES[k] : null;
+            }
+        }
 
         // ── Helpers quête ──
         // Lot 4.2 (playtest 2, David 18/10) : un média d'un étage ne peut être ni
@@ -44253,6 +44355,55 @@
         const VERRIERE_PICS     = ['presse', 'lettre', 'foule', 'plume', 'flamme', 'livre'];
         const VR_TRAIT = '#1a1714', VR_CRAYON = '#8b93ad', VR_PAPIER = '#e8dfd0', VR_FEUILLE = '#efe9dc';
 
+        // ── Pictogrammes au trait (planche_atelier.html, brief « ville du livre ») ──
+        // Tracés dans un cadre 400 × 300, trait papier ; les traits dorés portent
+        // leur propre couleur. Servent aux cases de la planche et aux écrans du lecteur.
+        const VR_OR = '#d9a441', VR_PAPIER_TRAIT = '#f4ecdb';
+        const VR_PICTOS = {
+            copiste: `<path d="M110 220 l70 -36 l0 -16 l-70 36 z"/><path d="M126 184 l62 -32"/>
+              <path d="M196 140 a18 18 0 1 0 .1 0"/><path d="M196 158 v44 M196 196 l-20 28 M196 196 l20 26"/>
+              <path d="M196 170 l-24 10"/><path d="M250 128 h34 v72 h-34 z" opacity=".5"/>`,
+            supports: `<path d="M84 110 h110 v94 h-110 z"/><path d="M94 130 h90 M94 150 h90 M94 170 h66"/>
+              <path d="M226 110 h88 v94 h-88 z" stroke="${VR_OR}"/>
+              <path d="M236 130 h68 M236 150 h68 M236 170 h48" stroke="${VR_OR}"/>
+              <path d="M118 236 h58 M248 236 h46" opacity=".5"/>`,
+            armoire: `<path d="M120 70 h160 v170 h-160 z"/><path d="M200 70 v170"/>
+              <path d="M140 96 h40 M140 120 h40 M140 144 h40 M140 168 h40"/>
+              <path d="M220 96 h40 M220 120 h40 M220 144 h40 M220 168 h40"/>
+              <circle cx="200" cy="206" r="12" stroke="${VR_OR}"/><path d="M200 206 v14" stroke="${VR_OR}"/>`,
+            presse: `<path d="M120 90 v134 M280 90 v134"/><path d="M108 100 h184 M112 168 h176 M116 218 h168"/>
+              <path d="M200 90 v-26 M172 64 h56"/><path d="M158 130 l44 -12 l10 34 l-44 12 z" stroke="${VR_OR}"/>`,
+            maison: `<path d="M70 230 h120 v-90 l-60 -40 l-60 40 z"/><path d="M100 230 v-50 h40 v50"/>
+              <path d="M210 224 v-66 M282 224 v-66" stroke="${VR_OR}"/>
+              <path d="M202 162 h88 M206 198 h80" stroke="${VR_OR}"/>
+              <path d="M40 250 q90 -20 180 -6 q90 14 150 -4" opacity=".45"/>`,
+            colophon: `<path d="M120 70 h160 v170 h-160 z"/>
+              <path d="M142 102 h116 M142 122 h116 M142 142 h116 M142 162 h78"/>
+              <path d="M142 198 h116" stroke="${VR_OR}"/><path d="M152 216 h96" stroke="${VR_OR}"/>`,
+            rue: `<path d="M40 240 h320"/><path d="M62 240 v-92 l32 -26 l32 26 v92"/>
+              <path d="M142 240 v-104 l30 -24 l30 24 v104"/><path d="M222 240 v-96 l30 -24 l30 24 v96"/>
+              <path d="M302 240 v-88 l28 -22 l28 22 v88"/>
+              <path d="M78 150 h32 M158 138 h32 M238 146 h32 M316 152 h28" stroke="${VR_OR}"/>`,
+            atelier: `<path d="M60 230 v-92 M150 230 v-92"/><path d="M50 146 h110 M54 196 h102"/>
+              <path d="M105 138 v-20 M84 118 h42"/>
+              <path d="M228 140 a16 16 0 1 0 .1 0"/><path d="M228 156 v44 M228 194 l-18 26 M228 194 l18 24"/>
+              <path d="M296 146 a15 15 0 1 0 .1 0"/><path d="M296 161 v42 M296 196 l-16 24 M296 196 l16 22"/>
+              <path d="M244 174 l38 -10" stroke="${VR_OR}"/>`,
+            contrat: `<path d="M110 80 h170 v160 h-170 z"/><path d="M130 112 h130 M130 134 h130 M130 156 h90"/>
+              <circle cx="246" cy="196" r="18" stroke="${VR_OR}"/>
+              <path d="M246 214 v18 M240 232 h12" stroke="${VR_OR}"/>`,
+            presse_arret: `<path d="M120 90 v134 M280 90 v134"/><path d="M108 100 h184 M116 218 h168"/>
+              <path d="M200 90 v-26 M172 64 h56"/>
+              <path d="M150 140 l100 60 M250 140 l-100 60" stroke="${VR_OR}"/>`,
+            supplique: `<path d="M120 76 h160 v152 h-160 z"/>
+              <path d="M140 108 h120 M140 130 h120 M140 152 h80"/>
+              <path d="M196 186 h64" stroke="${VR_OR}"/>
+              <circle cx="156" cy="192" r="16" stroke="${VR_OR}"/>`,
+            cloitre: `<path d="M60 240 h280"/><path d="M90 240 v-110 M160 240 v-110 M230 240 v-110 M300 240 v-110"/>
+              <path d="M90 130 q35 -40 70 0 q35 -40 70 0 q35 -40 70 0"/>
+              <path d="M60 110 h280" opacity=".5"/>`,
+        };
+
         // ── Étages : déclarés, sinon un seul étage ouvert ───────────
         // Retourne [[caseId…], …] du bas vers le haut.
         function verriereEtages(grappeId) {
@@ -44418,51 +44569,70 @@
             return g;
         }
 
-        // ── Décor : la feuille de papier ────────────────────────────
+        // ── Décor : la nuit de l'Explorium ──────────────────────────
+        // Brief « ville du livre » (1er nov.) : plus de feuille de papier. Fond
+        // d'encre et halo violet, celui de l'Explorium ; la poussière (canvas
+        // #verriereDust) monte par-dessus.
         function _verriereDessinerDecor(vb) {
             const decor = document.getElementById('verriereDecor');
             decor.innerHTML = '';
-            const W = vb[2], H = vb[3];
-            // 31/10 : la feuille commençait à 14 pour une largeur W − 36 (centre à
-            // W/2 − 4) : la planche paraissait décalée vers la gauche. Feuille
-            // centrée (marges de 18), seule l'ombre reste décalée de 4.
-            decor.appendChild(_vrEl('rect', { x: 22, y: 22, width: W - 36, height: H - 36, rx: 3, fill: '#000', opacity: .5 }));
-            decor.appendChild(_vrEl('rect', { x: 18, y: 18, width: W - 36, height: H - 36, rx: 2, fill: VR_PAPIER }));
-            decor.appendChild(_vrEl('rect', { x: 18, y: 18, width: W - 36, height: H - 36, rx: 2, fill: VR_PAPIER,
-                filter: 'url(#vrGrainPapier)', opacity: .9 }));
+            const [X, Y, W, H] = vb;
+            const halo = _vrEl('radialGradient', { id: 'vrHalo', cx: '50%', cy: '58%', r: '62%' });
+            halo.appendChild(_vrEl('stop', { offset: '0%', 'stop-color': '#5a3ca0', 'stop-opacity': '.22' }));
+            halo.appendChild(_vrEl('stop', { offset: '100%', 'stop-color': '#5a3ca0', 'stop-opacity': '0' }));
+            decor.appendChild(halo);
+            decor.appendChild(_vrEl('rect', { x: X - W, y: Y - H, width: W * 3, height: H * 3, fill: '#08070a' }));
+            decor.appendChild(_vrEl('rect', { x: X, y: Y, width: W, height: H, fill: 'url(#vrHalo)' }));
         }
 
-        // ── Sèves : ce qui relie un étage au suivant ────────────────
-        // Une barre dans la gouttière, et un filet depuis chaque case des deux
-        // étages. data-tier = index de l'étage du BAS.
+        // ── Sèves : chaque case relie celle qu'elle alimente ────────
+        // Liens déclarés (verriere.liens, en numéros de média), sinon chaque case
+        // rejoint la plus proche de l'étage suivant. Retourne [[caseBas, caseHaut]…].
+        function _verriereLiens(grappeId, panneaux) {
+            const decl = GRAPPE_QUESTS[grappeId] && GRAPPE_QUESTS[grappeId].verriere
+                && GRAPPE_QUESTS[grappeId].verriere.liens;
+            const parN = n => (panneaux.find(p => p.n === n) || {}).caseId;
+            if (Array.isArray(decl)) return decl.map(([a, b]) => [parN(a), parN(b)]).filter(([a, b]) => a && b);
+            const etages = verriereEtages(grappeId), cx = id => {
+                const b = (panneaux.find(p => p.caseId === id) || {}).box; return b ? b[0] + b[2] / 2 : 0;
+            };
+            const out = [];
+            for (let i = 0; i < etages.length - 1; i++) etages[i].forEach(c => {
+                const haut = etages[i + 1].slice().sort((u, v) => Math.abs(cx(u) - cx(c)) - Math.abs(cx(v) - cx(c)))[0];
+                if (haut) out.push([c, haut]);
+            });
+            return out;
+        }
+
+        // Courbe du haut de la case du bas au bas de la case du haut.
+        // data-tier = étage de la case du BAS (sert à l'animation d'ouverture d'étage).
         function _verriereDessinerSeves(grappeId, panneaux) {
             const g = document.getElementById('verriereSeves');
             g.innerHTML = '';
-            const etages = verriereEtages(grappeId);
             const boxDe = id => (panneaux.find(p => p.caseId === id) || {}).box;
-            for (let i = 0; i < etages.length - 1; i++) {
-                const bas = etages[i].map(boxDe).filter(Boolean);
-                const haut = etages[i + 1].map(boxDe).filter(Boolean);
-                if (!bas.length || !haut.length) continue;
-                const yBas = Math.min(...bas.map(b => b[1]));
-                const yHaut = Math.max(...haut.map(b => b[1] + b[3]));
-                const yBar = (yBas + yHaut) / 2;
-                const attrs = d => ({ d, class: 'seve', 'data-tier': i, fill: 'none', 'stroke-width': 3, 'stroke-linecap': 'round' });
-                g.appendChild(_vrEl('path', attrs(`M70 ${yBar} H530`)));
-                bas.forEach(b => { const cx = b[0] + b[2] / 2; g.appendChild(_vrEl('path', attrs(`M${cx} ${b[1]} V${yBar}`))); });
-                haut.forEach(b => { const cx = b[0] + b[2] / 2; g.appendChild(_vrEl('path', attrs(`M${cx} ${b[1] + b[3]} V${yBar}`))); });
-            }
+            _verriereLiens(grappeId, panneaux).forEach(([a, b]) => {
+                const A = boxDe(a), B = boxDe(b);
+                if (!A || !B) return;
+                const x1 = A[0] + A[2] / 2, y1 = A[1], x2 = B[0] + B[2] / 2, y2 = B[1] + B[3], ym = (y1 + y2) / 2;
+                g.appendChild(_vrEl('path', {
+                    d: `M${x1} ${y1} C ${x1} ${ym}, ${x2} ${ym}, ${x2} ${y2}`,
+                    class: 'seve', 'data-a': a, 'data-b': b, 'data-tier': _verriereEtageDeCase(grappeId, a),
+                    fill: 'none', 'stroke-width': 2.5, 'stroke-linecap': 'round',
+                }));
+            });
             _verrierePeindreSeves();
         }
 
+        // Dorée et pleine quand les deux cases sont obtenues, grise et hachurée sinon.
         function _verrierePeindreSeves() {
             const gid = verriereState.grappeId;
             document.querySelectorAll('#verriereSeves .seve').forEach(el => {
-                const ok = verriereEtageAcheve(gid, +el.getAttribute('data-tier'));
-                el.setAttribute('stroke', ok ? VR_TRAIT : VR_CRAYON);
-                el.setAttribute('opacity', ok ? '.85' : '.3');
+                const ok = _verriereCaseObtenue(gid, el.getAttribute('data-a'))
+                    && _verriereCaseObtenue(gid, el.getAttribute('data-b'));
+                el.setAttribute('stroke', ok ? VR_OR : '#3a3650');
+                el.setAttribute('opacity', ok ? '.8' : '.6');
                 if (ok) el.removeAttribute('stroke-dasharray');
-                else el.setAttribute('stroke-dasharray', '9 8');
+                else el.setAttribute('stroke-dasharray', '8 7');
             });
         }
 
@@ -44493,45 +44663,54 @@
                 };
                 const coul = p.coul || VERRIERE_COULEURS[i % VERRIERE_COULEURS.length];
                 const motif = p.pic || VERRIERE_PICS[i % VERRIERE_PICS.length];
-
-                const ombre = rect(null, '#0a0a0a');
-                ombre.setAttribute('x', x + 4); ombre.setAttribute('y', y + 5); ombre.setAttribute('opacity', '.2');
-                g.appendChild(ombre);
-                g.appendChild(rect('feuille', VR_FEUILLE));
-
+                // Brief « ville du livre » (1er nov.) : l'état se lit sans texte.
+                // Obtenue : fond à la teinte du média, pictogramme net, titre lisible.
+                // Non obtenue : fond très sombre, pictogramme à 20 %, titre estompé.
+                // Verrouillée par son étage : contour en pointillés (CSS, data-s).
+                const feuille = rect('feuille', '#13111c'); feuille.setAttribute('rx', 3);
+                g.appendChild(feuille);
                 const gCoul = _vrEl('g', { class: 'coul' });
-                gCoul.appendChild(rect(null, coul));
-                const lavis = rect(null, '#fff'); lavis.setAttribute('opacity', '.08');
-                gCoul.appendChild(lavis);
+                const fond = rect(null, coul); fond.setAttribute('rx', 3); fond.setAttribute('opacity', '.6');
+                gCoul.appendChild(fond);
                 g.appendChild(gCoul);
 
-                const cr = _vrEl('g', { class: 'crayon' });
-                cr.appendChild(_vrPic(motif, x, y, w, h, VR_CRAYON, 4.4));
-                g.appendChild(cr);
-                const en = _vrEl('g', { class: 'encre' });
-                en.appendChild(_vrPic(motif, x, y, w, h, VR_TRAIT, 6));
-                g.appendChild(en);
-
-                // Cartouche de date : n'apparaît qu'à la colorisation
-                if (p.date) {
-                    const rec = _vrEl('g', { class: 'coul' });
-                    const wRec = Math.max(76, p.date.length * 12);
-                    rec.appendChild(_vrEl('rect', { x: x + 9, y: y + 9, width: wRec, height: 28,
-                        fill: VR_FEUILLE, stroke: VR_TRAIT, 'stroke-width': 3 }));
-                    const tx = _vrEl('text', { x: x + 9 + wRec / 2, y: y + 29, 'text-anchor': 'middle',
-                        fill: VR_TRAIT, 'font-family': 'Courier New, monospace', 'font-size': 15 });
-                    tx.textContent = p.date;
-                    rec.appendChild(tx);
-                    g.appendChild(rec);
+                const pic = _vrEl('g', { class: 'pic' });
+                if (VR_PICTOS[motif]) {
+                    // Cadre 400 × 300 réduit dans la case, remonté pour laisser le titre.
+                    const s = Math.min(w / 400, (h - 34) / 300) * 0.92;
+                    const tr = _vrEl('g', { transform: `translate(${x + w / 2 - 200 * s} ${y + (h - 30) / 2 - 150 * s + 2}) scale(${s})` });
+                    const trace = _vrEl('g', { fill: 'none', stroke: VR_PAPIER_TRAIT, 'stroke-width': 7,
+                        'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+                    trace.innerHTML = VR_PICTOS[motif];
+                    tr.appendChild(trace);
+                    pic.appendChild(tr);
+                } else {
+                    pic.appendChild(_vrPic(motif, x, y, w, h, VR_PAPIER_TRAIT, 6));
                 }
+                g.appendChild(pic);
+
+                // Titre en pied de case : « n. titre », tronqué à la largeur.
+                const etTitre = _verriereEtapeDeCase(grappeId, p.caseId);
+                const bdTitre = (((GRAPPE_QUESTS[grappeId] || {}).bd || {}).cases || []).find(c => c.id === p.caseId);
+                let titre = T((etTitre && etTitre.etape.titre) || (bdTitre && bdTitre.title) || '');
+                const maxCar = Math.floor((w - 20) / 7.9) - 3;
+                if (titre.length > maxCar) titre = titre.slice(0, maxCar - 1).trimEnd() + '…';
+                const ti = _vrEl('text', { class: 'ti', x: x + 10, y: y + h - 12, fill: VR_PAPIER_TRAIT,
+                    'font-family': 'Courier New, monospace', 'font-size': 13 });
+                ti.textContent = (p.n || i + 1) + '. ' + titre;
+                g.appendChild(ti);
 
                 // Signet : quête suivie
                 const mk = _vrEl('g', { class: 'mark' });
-                mk.appendChild(_vrEl('path', { d: `M${x + w - 28} ${y + 12} l13 0 l0 25 l-6.5 -7.5 l-6.5 7.5 z`, fill: '#c08a1e' }));
+                mk.appendChild(_vrEl('path', { d: `M${x + w - 28} ${y + 10} l13 0 l0 25 l-6.5 -7.5 l-6.5 7.5 z`, fill: VR_OR }));
                 g.appendChild(mk);
 
-                g.appendChild(rect('cadre', 'none', VR_TRAIT, 5));
-                g.appendChild(rect('rim', 'none', '#c08a1e', 7));
+                const cadre = rect('cadre', 'none', VR_PAPIER_TRAIT, 2);
+                cadre.setAttribute('rx', 3);
+                g.appendChild(cadre);
+                const rim = rect('rim', 'none', VR_OR, 3.5);
+                rim.setAttribute('rx', 3);
+                g.appendChild(rim);
 
                 // Pastille « nouveau » : au coin haut gauche, à cheval sur le cadre
                 g.appendChild(_vrEl('circle', { class: 'nouv', cx: x + 4, cy: y + 4, r: 11,
@@ -44747,7 +44926,7 @@
                     el.classList.remove('vr-encrage');
                     void el.getBoundingClientRect();
                     el.classList.add('vr-encrage');
-                    setTimeout(() => { el.classList.remove('vr-encrage'); el.removeAttribute('stroke-dasharray'); }, 1250);
+                    setTimeout(() => { el.classList.remove('vr-encrage'); _verrierePeindreSeves(); }, 1250);
                 });
                 const cases = verriereEtages(grappeId)[n] || [];
                 setTimeout(() => {
