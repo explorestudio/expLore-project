@@ -49,6 +49,9 @@ function doPost(e) {
   }
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    // Journal GPS envoyé d'un clic par le testeur (Paramètres) : trop gros pour une
+    // cellule, il part entier dans un fichier Drive ; une ligne le résume.
+    if (body.kind === 'gps') return gps_(body);
     const events = Array.isArray(body.events) ? body.events : [];
     if (events.length === 0) return respond_('empty');
 
@@ -97,6 +100,47 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// ── Journal GPS ─────────────────────────────────────────────
+// Reçoit { kind: 'gps', session_id, code, team, plateforme, navigateur, app_version,
+//          points, nom, journal } où journal est le JSON complet (jusqu'à ~2 Mo).
+// Rangé dans l'onglet "gps" du Sheet, sans Drive (aucune autorisation de plus) :
+// trop gros pour une cellule (50 000 caractères), il est découpé en morceaux de
+// GPS_MORCEAU caractères, une ligne par morceau, numérotés « n / total ». Pour
+// retrouver le fichier : recoller la colonne contenu des lignes d'un même
+// session_id + nom, dans l'ordre des morceaux.
+const GPS_SHEET = 'gps';
+const GPS_MORCEAU = 45000;
+const GPS_HEADER = ['recu_le', 'code', 'session_id', 'team', 'points', 'plateforme',
+                    'navigateur', 'app_version', 'nom', 'morceau', 'nb_morceaux', 'contenu'];
+
+function gps_(body) {
+  const journal = typeof body.journal === 'string' ? body.journal : '';
+  if (!journal) return respond_('empty');
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(GPS_SHEET);
+  if (!sheet) sheet = ss.insertSheet(GPS_SHEET);
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, GPS_HEADER.length).setValues([GPS_HEADER]);
+    sheet.setFrozenRows(1);
+  }
+  const total = Math.ceil(journal.length / GPS_MORCEAU);
+  const now = new Date();
+  const lignes = [];
+  for (let i = 0; i < total; i++) {
+    lignes.push([now, String(body.code || ''), String(body.session_id || ''),
+      body.team ? 'oui' : 'non', Number(body.points) || '', String(body.plateforme || ''),
+      String(body.navigateur || ''), String(body.app_version || ''), String(body.nom || ''),
+      i + 1, total,
+      journal.slice(i * GPS_MORCEAU, (i + 1) * GPS_MORCEAU)]);
+  }
+  const debut = sheet.getLastRow() + 1;
+  // Colonne contenu en texte brut : sinon un morceau qui commence par un chiffre ou
+  // un signe serait converti en nombre ou en formule, et le journal corrompu.
+  sheet.getRange(debut, GPS_HEADER.length, lignes.length, 1).setNumberFormat('@');
+  sheet.getRange(debut, 1, lignes.length, GPS_HEADER.length).setValues(lignes);
+  return respond_('ok:gps:' + total);
 }
 
 function getSheet_() {

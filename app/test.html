@@ -1496,6 +1496,8 @@
             color: rgba(255,255,255,0.8);
             margin-bottom: 9px;
         }
+        /* Texte d'explication sous un réglage (journal GPS, 1er nov.) */
+        .settings-note { margin: -2px 0 12px; font-size: 11px; line-height: 1.5; color: rgba(255,255,255,0.55); }
         /* Langue : segmenté FR / EN. La bascule recharge la page. */
         .settings-seg { display: flex; gap: 6px; }
         .settings-seg button {
@@ -9002,6 +9004,7 @@
             color: rgba(244,236,219,0.82); font-family: 'Helvetica Neue', sans-serif;
             border: 1px solid rgba(217,164,65,0.35); border-radius: 12px; padding: 3px 10px;
         }
+        .verriere-compteur:empty { visibility: hidden; }
         .verriere-stage { flex: 1; position: relative; overflow: hidden; min-height: 0; }
         .vr-acteur-reste { font-size: 12px; font-style: italic; opacity: 0.6; padding: 6px 2px; }
         .verriere-svg {
@@ -9049,11 +9052,79 @@
         #verriereSvg .case[data-s="obtenu"]     .pic     { opacity: .9; }
         #verriereSvg .case[data-s="obtenu"]     .ti      { opacity: .92; }
         #verriereSvg .case[data-s="obtenu"]     .cadre   { opacity: .4; }
+        /* Médias en chantier (David, 1er nov.) : la case émerge sans livrer de
+           quête. Étage pas atteint : pointillés (verrouille). Puis échafaudage (une
+           des cartes trouvée), puis forge (toutes, aux niveaux) : enclume dorée qui
+           pulse, halo violet. Jamais de pictogramme réel ni de titre. */
+        #verriereSvg .case .enclume { opacity: 0; transition: opacity .6s ease; }
+        /* Bandeau « EN CONSTRUCTION » : toujours là, atténué tant que l'étage est fermé. */
+        #verriereSvg .case .bande { opacity: .9; transition: opacity .6s ease; }
+        #verriereSvg .case[data-s="verrouille"] .bande { opacity: .5; }
+        #verriereSvg .case.chantier[data-s="verrouille"] .pic { opacity: .07; }
+        #verriereSvg .case.chantier[data-s="inconnu"] .pic  { opacity: .14; }
+        #verriereSvg .case[data-s="echafaudage"] .pic   { opacity: .55; }
+        #verriereSvg .case[data-s="echafaudage"] .cadre { opacity: .34; }
+        #verriereSvg .case[data-s="forge"] .pic     { opacity: .28; }
+        #verriereSvg .case[data-s="forge"] .cadre   { opacity: .4; }
+        #verriereSvg .case[data-s="forge"] .coul    { opacity: .35; filter: drop-shadow(0 0 10px rgba(167,139,250,.35)); }
+        #verriereSvg .case[data-s="forge"] .enclume { opacity: 1; animation: vrForge 2s ease-in-out infinite; }
+        @keyframes vrForge {
+            0%, 100% { filter: drop-shadow(0 0 3px rgba(217,164,65,.35)); }
+            50%      { filter: drop-shadow(0 0 9px rgba(167,139,250,.75)); }
+        }
         /* Consigne de lecture, sous la planche */
         .verriere-hint { position: absolute; left: 0; right: 0; bottom: 8px; z-index: 2; pointer-events: none;
             text-align: center; font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: .1em;
             color: rgba(244,236,219,.38); transition: opacity .3s; }
         .verriere-screen:has(.verriere-volet.show) .verriere-hint { opacity: 0; }
+
+        /* ── Lecteur de média (brief « ville du livre », lot 3) ──
+           Posé dans la scène : l'en-tête reste au-dessus, sa flèche toujours
+           atteignable. La poussière violette passe devant (z-index 4). */
+        .verriere-dust { z-index: 4; }
+        .vr-lecteur { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column;
+            background: #08070a; opacity: 0; pointer-events: none; transition: opacity .35s ease; }
+        .vr-lecteur.on { opacity: 1; pointer-events: auto; }
+        .verriere-screen:has(.vr-lecteur.on) .verriere-hint { opacity: 0; }
+        .vr-lect-scene { position: relative; flex: 1 1 auto; min-height: 0; margin: 6px 16px 0; border-radius: 4px;
+            overflow: hidden; box-shadow: 0 8px 28px rgba(0,0,0,.55), 0 0 0 1px rgba(167,139,250,.12); }
+        .vr-lect-scene svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .vr-lect-num { position: absolute; top: 12px; left: 12px; z-index: 2; background: rgba(8,7,10,.85);
+            font: 700 10px/1.4 'Helvetica Neue', Arial, sans-serif; letter-spacing: .1em; padding: 3px 8px;
+            border-radius: 2px; border: 1px solid rgba(244,236,219,.22); }
+        .vr-lect-date { position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 2; opacity: .9;
+            font: 10px 'Helvetica Neue', Arial, sans-serif; letter-spacing: .18em; text-transform: uppercase; color: #d9a441; }
+        .vr-lect-texte { flex: 0 0 auto; padding: 13px 18px 4px; min-height: 122px; }
+        .vr-lect-beat { font: 9px 'Courier New', monospace; letter-spacing: .16em; text-transform: uppercase;
+            color: rgba(244,236,219,.4); margin-bottom: 5px; }
+        .vr-lect-corps { font-size: 15px; line-height: 1.55; opacity: 0; transition: opacity .45s ease; }
+        .vr-lect-corps.on { opacity: .96; }
+        /* Carte qui agit dans la scène : trait doré fin (marqueur {{cardId|mots}}) */
+        .vr-lect-corps .k { border-bottom: 1px solid rgba(217,164,65,.75); padding-bottom: 1px; }
+        .vr-lect-pre { flex: 0 0 auto; padding: 2px 18px 2px; font: 10.5px/1.6 'Helvetica Neue', Arial, sans-serif;
+            letter-spacing: .03em; color: rgba(244,236,219,.55); }
+        .vr-lect-pre b { font-weight: 400; color: #d9a441; }
+        .vr-lect-pre .ko, .vr-lect-pre .ko b { color: rgba(244,236,219,.32); }
+        .vr-lect-dots { display: flex; justify-content: center; gap: 7px; padding: 6px 0 2px; flex-shrink: 0; }
+        .vr-lect-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(244,236,219,.25); cursor: pointer;
+            border: 0; padding: 0; transition: all .25s ease; }
+        .vr-lect-dot.on { background: #d9a441; transform: scale(1.3); }
+        .vr-lect-nav { display: flex; justify-content: space-between; padding: 4px 20px calc(12px + env(safe-area-inset-bottom, 0px)); flex-shrink: 0; }
+        .vr-lect-nb { width: 40px; height: 40px; border-radius: 50%; background: rgba(244,236,219,.06);
+            border: 1px solid rgba(244,236,219,.2); color: #f4ecdb; font-size: 22px; line-height: 1; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; }
+        .vr-lect-nb:disabled { opacity: .28; cursor: default; }
+        /* Média dont le texte n'est pas validé : « Récit en construction » (animation : lot 4) */
+        .vr-lect-avenir { display: none; flex: 1 1 auto; flex-direction: column; min-height: 0; }
+        .vr-lecteur.avenir > :not(.vr-lect-avenir) { display: none; }
+        .vr-lecteur.avenir .vr-lect-avenir { display: flex; }
+        .vr-lect-avenir-scene { position: relative; flex: 1 1 auto; min-height: 0; margin: 6px 16px 0; border-radius: 4px;
+            overflow: hidden; background: #0d0c16; box-shadow: 0 8px 28px rgba(0,0,0,.55); }
+        .vr-lect-avenir-scene canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+        .vr-lect-avenir-t { position: absolute; left: 0; right: 0; bottom: 20px; text-align: center; z-index: 3; pointer-events: none;
+            font: 12.5px 'Courier New', monospace; letter-spacing: .3em; text-transform: uppercase; color: #f4ecdb; opacity: .82; }
+        .vr-lect-avenir p { flex: 0 0 auto; margin: 0; text-align: center; font-size: 13px; line-height: 1.55; opacity: .55;
+            padding: 14px 20px calc(16px + env(safe-area-inset-bottom, 0px)); }
         @keyframes vrPuls { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
 
         /* Sèves : ce qui relie un étage au suivant. Crayon pointillé tant que
@@ -10273,7 +10344,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.71</div>
+            <div class="hud-version" id="hudVersion">v1.9.76</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10470,15 +10541,12 @@
                     <button onclick="bagInv.encre=(bagInv.encre||0)+3;saveProgress();showToast('🖋️ +3 encres');" class="test-action-btn">🖋️ +3 encres</button>
                     <button onclick="bagInv.cassettes=(bagInv.cassettes||0)+3;saveProgress();showToast('📼 +3 cassettes');" class="test-action-btn">📼 +3 cassettes</button>
                     <button onclick="testPlaceAllLumens()" class="test-action-btn">🕯️ Tout éclairer (lumens)</button>
-                    <button onclick="testUnlockGrappeCards()" class="test-action-btn">🃏 Débloquer cartes (grappe)</button>
-                    <button onclick="testUnlockGrappeEntries()" class="test-action-btn">📖 Débloquer entrées carnet (grappe)</button>
                     <button onclick="testQueueGrappeLumens()" class="test-action-btn">✨ Éclairer hidden points (grappe)</button>
-                    <button onclick="testOuvrirVerriere()" class="test-action-btn">🪟 Ouvrir la verrière</button>
-                    <button onclick="testDebloquerPanneau()" class="test-action-btn">🪟 Débloquer un panneau</button>
-                    <button onclick="testCyclerPanneau()" class="test-action-btn" id="btnTestCyclePanneau">🪟 Cycler l'état d'un panneau</button>
-                    <button onclick="testVerriereVierge()" class="test-action-btn">🪟 Verrière vierge</button>
-                    <button onclick="testLevelUpGrappeCards()" class="test-action-btn">⭐ Cartes grappe LV3 (test quête)</button>
-                    <button onclick="testCompleteAllGrappeQuests()" class="test-action-btn">🏆 Terminer toutes étapes grappe</button>
+                    <button onclick="testOuvrirVerriere()" class="test-action-btn">📖 Ouvrir la planche</button>
+                    <button onclick="testDebloquerPanneau()" class="test-action-btn">📖 Débloquer un média</button>
+                    <button onclick="testPlancheComplete()" class="test-action-btn">📖 Planche complète</button>
+                    <button onclick="testVerriereVierge()" class="test-action-btn">📖 Remettre à zéro</button>
+                    <button onclick="testForcerNiveauxGrappe()" class="test-action-btn" id="btnTestNiveauxGrappe">📖 Forcer les niveaux de cartes</button>
                     <button onclick="testForceCompleteCurrentQuest()" class="test-action-btn">⚡ Forcer validation quête active</button>
                     <button onclick="startIntroBD()" class="test-action-btn">🎬 Rejouer l'intro</button>
                     <button onclick="testToggleCompleteZones()" class="test-action-btn">🗺️ Compléter les zones (aperçu)</button>
@@ -12216,7 +12284,7 @@
                  de chaque média manquant. Accessible dès le premier jour, même vide. -->
             <div class="verriere-screen" id="verriereScreen">
                 <div class="verriere-header">
-                    <button class="verriere-back" onclick="fermerVerriere()" aria-label="Fermer">&#8592;</button>
+                    <button class="verriere-back" onclick="verriereRetour()" aria-label="Retour">&#8592;</button>
                     <div class="verriere-title-block">
                         <div class="verriere-eyebrow" id="verriereEyebrow">Médias</div>
                         <div class="verriere-title" id="verriereTitle"></div>
@@ -12249,6 +12317,29 @@
                     <canvas class="verriere-dust" id="verriereDust"></canvas>
                     <div class="verriere-eclat" id="verriereEclat"></div>
                     <div class="verriere-hint">tape une case · lecture de bas en haut</div>
+                    <!-- Lecteur de média (brief « ville du livre », lot 3) : dans la scène,
+                         sous l'en-tête, dont la flèche reste toujours atteignable. -->
+                    <div class="vr-lecteur" id="vrLecteur" aria-hidden="true">
+                        <div class="vr-lect-scene" id="vrLectScene">
+                            <svg id="vrLectArt" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"></svg>
+                            <div class="vr-lect-num" id="vrLectNum"></div>
+                            <div class="vr-lect-date" id="vrLectDate"></div>
+                        </div>
+                        <div class="vr-lect-texte">
+                            <div class="vr-lect-beat" id="vrLectBeat"></div>
+                            <div class="vr-lect-corps" id="vrLectCorps"></div>
+                        </div>
+                        <div class="vr-lect-pre" id="vrLectPre"></div>
+                        <div class="vr-lect-dots" id="vrLectDots"></div>
+                        <div class="vr-lect-nav">
+                            <button class="vr-lect-nb" id="vrLectPrev" onclick="vrLecteurAller(-1)" aria-label="Écran précédent">&#8249;</button>
+                            <button class="vr-lect-nb" id="vrLectNext" onclick="vrLecteurAller(1)" aria-label="Écran suivant">&#8250;</button>
+                        </div>
+                        <div class="vr-lect-avenir" id="vrLectAvenir">
+                            <div class="vr-lect-avenir-scene"><canvas id="vrForgeCanvas"></canvas><div class="vr-lect-avenir-t">Récit en construction</div></div>
+                            <p>Cette partie du récit est encore en construction.</p>
+                        </div>
+                    </div>
                 </div>
                 <!-- Volet montant : aucun état n'est une impasse muette -->
                 <div class="verriere-volet" id="verriereVolet">
@@ -12398,13 +12489,16 @@
                     </div>
                 </div>
 
-                <!-- Journal GPS du test terrain : le testeur l'envoie lui-même (cf. geoEnvoyerJournal) -->
+                <!-- Journal GPS du test terrain : le testeur l'envoie lui-même, d'un clic
+                     (cf. geoEnvoyerJournal). Le texte dit ce qui part, et ce qui part seul. -->
                 <div class="settings-row">
                     <div class="settings-row-label"><span>📍</span> Journal GPS</div>
                     <div class="settings-seg">
-                        <button type="button" onclick="geoEnvoyerJournal()">Envoyer mon journal</button>
+                        <button type="button" id="geoJournalBtn" onclick="geoEnvoyerJournal()">Envoyer mon journal</button>
                     </div>
                 </div>
+                <p class="settings-note">Pendant le test, ton téléphone garde le tracé de ton parcours (positions et heures). Il ne nous parvient que si tu appuies sur ce bouton : il nous aide à régler la détection des lieux.</p>
+                <p class="settings-note">Le journal de jeu (écrans ouverts, cartes trouvées, quêtes) nous est envoyé automatiquement, avec ton code d'accès. Il ne contient jamais ta position.</p>
 
                 <!-- Mode test : le menu avatar est caché au début du tutoriel
                      (cf. uiReveler) ; sans cette ligne, plus d'accès au panneau test.
@@ -12627,9 +12721,13 @@
             // Journal GPS du test terrain (GeoEngine, test.html seul)
             "Journal GPS": "GPS log",
             "Envoyer mon journal": "Send my log",
+            "Pendant le test, ton téléphone garde le tracé de ton parcours (positions et heures). Il ne nous parvient que si tu appuies sur ce bouton : il nous aide à régler la détection des lieux.": "During the test, your phone keeps a trace of your route (positions and times). It only reaches us if you tap this button: it helps us tune how places are detected.",
+            "Le journal de jeu (écrans ouverts, cartes trouvées, quêtes) nous est envoyé automatiquement, avec ton code d'accès. Il ne contient jamais ta position.": "The game log (screens opened, cards found, quests) is sent to us automatically, with your access code. It never contains your position.",
+            "Envoi…": "Sending…",
+            "📍 Journal GPS envoyé. Merci !": "📍 GPS log sent. Thank you!",
+            "📍 Envoi impossible : vérifie ta connexion, puis réessaie.": "📍 Could not send: check your connection, then try again.",
+            "📍 Envoi impossible : aucun point de collecte.": "📍 Could not send: no collection point.",
             "📍 Journal vide : aucun point GPS enregistré pour l'instant.": "📍 Empty log: no GPS point recorded yet.",
-            "Ton prénom ou ton code testeur (il figurera dans le nom du fichier) :": "Your first name or tester code (it will appear in the file name):",
-            "📍 Journal téléchargé : joins-le à un mail.": "📍 Log downloaded: attach it to an email.",
             "📍 Localisation refusée. Pour jouer, autorise-la dans les réglages du navigateur (Paramètres du site › Position), puis recharge la page.": "📍 Location denied. To play, allow it in your browser settings (Site settings › Location), then reload the page.",
             "📍 Position introuvable pour l'instant. Reste à découvert : le signal revient en général vite.": "📍 Position not found for now. Stay in the open: the signal usually comes back quickly.",
             "📍 Le GPS tarde à répondre. Patiente un instant…": "📍 The GPS is slow to respond. Hold on a moment…",
@@ -12725,6 +12823,15 @@
             "Niveau MAX": "MAX level",
             "Récupérer": "Claim",
             "tape une case · lecture de bas en haut": "tap a panel · read from bottom to top",
+            "Média %1": "Media %1",
+            "En construction": "Under construction",
+            "EN CONSTRUCTION": "UNDER CONSTRUCTION",
+            "Ce pan du récit est encore en construction. Trouve l'une de ses cartes pour lancer le chantier.": "This part of the story is still under construction. Find one of its cards to start the work.",
+            "Ce pan du récit n'est pas encore atteint. Il apparaîtra quand le chantier de l'étage précédent sera à la forge : toutes ses cartes trouvées, aux niveaux voulus.": "This part of the story is not reached yet. It will appear once the work on the floor below reaches the forge: all its cards found, at the required levels.",
+            "niv. %1": "lvl %1",
+            "Écran %1": "Screen %1",
+            "Récit en construction": "Story under construction",
+            "Cette partie du récit est encore en construction.": "This part of the story is still being built.",
             "✓ Obtenu": "✓ Obtained",
             "encore %1 XP": "%1 XP to go",
             "🎁 Récupéré : %1": "🎁 Claimed: %1",
@@ -25698,72 +25805,6 @@
             showToast('🕯️ ' + placedLumens.length + ' lumens — carte entièrement éclairée');
         }
 
-        function testUnlockGrappeCards() {
-            const ids = ['tc_gutenberg','tc_imprimerie','tc_bibliotheque','tc_ibn_battuta','card18','card1'];
-            let added = 0;
-            ids.forEach(id => {
-                if (!collectedCards.includes(id)) { collectedCards.push(id); added++; }
-                if (!cardLevels[id]) cardLevels[id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
-            });
-            saveProgress();
-            refreshMindmapState();
-            showToast('🃏 ' + added + ' carte(s) débloquée(s) — grappe "Les passeurs" complète');
-        }
-
-        function testLevelUpGrappeCards() {
-            // Les IDs sont dérivés des prérequis réels de GRAPPE_QUESTS (déjà patchés
-            // par v2PatchGrappeQuests). L'ancienne liste en dur ignorait la grappe
-            // « Lyon, ville du livre » et les acteurs-monde de la Voûte V2 : leurs
-            // étapes restaient verrouillées après un clic sur le bouton.
-            const ids = new Set();
-            Object.values(GRAPPE_QUESTS).forEach(grappe => {
-                ((grappe.quete && grappe.quete.etapes) || []).forEach(etape => {
-                    (etape.prerequis || []).forEach(req => ids.add(req.cardId));
-                });
-            });
-            // Verrou du tutoriel : il appartient à l'onboarding, on ne le force pas.
-            ids.delete('__tuto_lock__');
-            let entriesAdded = 0;
-            ids.forEach(id => {
-                // Acteurs-monde de la Voûte V2 : ils ont leur propre voie de déblocage
-                if (typeof V2_NEW_ACTORS !== 'undefined' && V2_NEW_ACTORS[id]) {
-                    if (typeof v2MarkWorldActorEncountered === 'function') v2MarkWorldActorEncountered(id);
-                    return;
-                }
-                if (!collectedCards.includes(id)) collectedCards.push(id);
-                if (!cardLevels[id]) cardLevels[id] = { level: 0, experience: 0, dustSpent: 0, heartsDone: {0:[],1:[],2:[]} };
-                cardLevels[id].level = 3;
-                cardLevels[id].experience = 9999;
-                cardLevels[id].dustSpent = 9999;
-                // Marquer toutes les entrées heart comme heartsDone
-                if (!cardLevels[id].heartsDone) cardLevels[id].heartsDone = {0:[],1:[],2:[]};
-                // Générer les entrées carnet pour tous les niveaux
-                const dialogues = (CARD_DIALOGUES[id] || []).filter(d => d.heart && d.entry);
-                if (!cardJournalEntries[id]) cardJournalEntries[id] = [];
-                dialogues.forEach((d, i) => {
-                    const lvl = d.level !== undefined ? d.level : 0;
-                    if (!cardLevels[id].heartsDone[lvl]) cardLevels[id].heartsDone[lvl] = [];
-                    if (!cardLevels[id].heartsDone[lvl].includes(i)) cardLevels[id].heartsDone[lvl].push(i);
-                    if (!cardJournalEntries[id].some(e => e.text === d.entry.text)) {
-                        cardJournalEntries[id].push({
-                            date: d.entry.date,
-                            text: d.entry.text,
-                            photo: d.entry.photo || null,
-                            audio: d.entry.audio || null,
-                            level: lvl,
-                            _available: true,
-                            _revealed: true
-                        });
-                        entriesAdded++;
-                    }
-                });
-            });
-            saveProgress();
-            if (typeof refreshMindmapState === 'function') refreshMindmapState();
-            if (typeof updateQuestMarkers === 'function') updateQuestMarkers();
-            showToast('⭐ ' + ids.size + ' acteurs de grappe LV3 + ' + entriesAdded + ' entrées carnet');
-        }
-
         // Force la validation de la première quête active trouvée (test sans GPS)
         function testForceCompleteCurrentQuest() {
             for (const [gid, grappe] of Object.entries(GRAPPE_QUESTS)) {
@@ -25776,38 +25817,6 @@
                 }
             }
             showToast('Aucune quête active à valider');
-        }
-
-        function testCompleteAllGrappeQuests() {
-            Object.entries(GRAPPE_QUESTS).forEach(([gid, grappe]) => {
-                grappeQuestState[gid] = {};
-                grappeBDUnlocked[gid] = [];
-                grappe.quete.etapes.forEach(e => {
-                    grappeQuestState[gid][e.id] = 'completed';
-                    (e.rewardCases || []).forEach(c => {
-                        if (!grappeBDUnlocked[gid].includes(c)) grappeBDUnlocked[gid].push(c);
-                    });
-                });
-            });
-            saveProgress();
-            showToast('🏆 Toutes étapes de toutes les grappes terminées');
-        }
-
-        function testUnlockGrappeEntries() {
-            const ids = ['tc_gutenberg','tc_imprimerie','tc_bibliotheque','tc_ibn_battuta'];
-            let count = 0;
-            ids.forEach(cardId => {
-                if (!collectedCards.includes(cardId)) return;
-                const firstHeart = (CARD_DIALOGUES[cardId] || []).find(d => d.heart && d.entry);
-                if (!firstHeart) return;
-                if (!cardJournalEntries[cardId]) cardJournalEntries[cardId] = [];
-                if (!cardJournalEntries[cardId].some(e => e.text === firstHeart.entry.text)) {
-                    cardJournalEntries[cardId].push({ date: firstHeart.entry.date, text: firstHeart.entry.text, photo: firstHeart.entry.photo || null, audio: firstHeart.entry.audio || null });
-                    count++;
-                }
-            });
-            saveProgress();
-            showToast('📖 ' + count + ' entrée(s) carnet débloquée(s)');
         }
 
         function testQueueGrappeLumens() {
@@ -25827,48 +25836,67 @@
             ouvrirVerriere(TEST_VERRIERE_GRAPPE);
         }
 
-        // Accorde la case suivante de la grappe de test
-        function testDebloquerPanneau() {
-            const gid = TEST_VERRIERE_GRAPPE;
-            const grappe = GRAPPE_QUESTS[gid];
-            const geo = verriereGeometrie(gid);
+        // Accorde le média suivant, dans l'ordre (les médias en chantier ne
+        // s'obtiennent pas : seuls les médias 1 et 2 peuvent l'être).
+        function _testAccorderMedia(gid, etape) {
             if (!grappeQuestState[gid]) grappeQuestState[gid] = {};
             if (!grappeBDUnlocked[gid]) grappeBDUnlocked[gid] = [];
-            const suivant = geo.panneaux.find(p => {
-                const t = _verriereEtapeDeCase(gid, p.caseId);
-                return t && grappeQuestState[gid][t.etape.id] !== 'completed';
-            });
-            if (!suivant) { showToast('🪟 Verrière déjà complète'); return; }
-            const t = _verriereEtapeDeCase(gid, suivant.caseId);
-            grappeQuestState[gid][t.etape.id] = 'completed';
-            (t.etape.rewardCases || []).forEach(cid => {
+            grappeQuestState[gid][etape.id] = 'completed';
+            (etape.rewardCases || []).forEach(cid => {
                 if (!grappeBDUnlocked[gid].includes(cid)) grappeBDUnlocked[gid].push(cid);
             });
+        }
+        function _testApresPlanche(gid) {
             saveProgress();
+            try { updateQuestMarkers(); updateQuestCompass(); } catch (_) {}
             if (verriereState.grappeId === gid) verriereRafraichirEtats();
+        }
+        function testDebloquerPanneau() {
+            const gid = TEST_VERRIERE_GRAPPE;
+            const suivant = (GRAPPE_QUESTS[gid].quete.etapes || []).find(e =>
+                !e.chantier && (grappeQuestState[gid] || {})[e.id] !== 'completed');
+            if (!suivant) { showToast('📖 Médias lisibles tous obtenus · les autres sont en chantier'); return; }
+            _testAccorderMedia(gid, suivant);
+            _testApresPlanche(gid);
             if (typeof showVaultNotification === 'function') showVaultNotification();
-            showToast('🪟 Panneau accordé — ' + T(suivant.caseId));
+            showToast('📖 Média accordé — ' + T(suivant.titre));
         }
 
-        // Fait parcourir à un panneau la chaîne des six états
-        const _TEST_CHAINE_ETATS = ['verrouille', 'inconnu', 'entrevu', 'pret', 'encours', 'obtenu'];
-        let _testEtatIdx = -1;
-        function testCyclerPanneau() {
+        // Planche complète : médias lisibles obtenus, et les six cartes de la
+        // grappe au niveau 3 (tous les chantiers passent à la forge).
+        function testPlancheComplete() {
             const gid = TEST_VERRIERE_GRAPPE;
-            _testEtatIdx++;
-            const btn = document.getElementById('btnTestCyclePanneau');
-            if (_testEtatIdx >= _TEST_CHAINE_ETATS.length) {
-                _testEtatIdx = -1;
-                delete _vrForcage[gid];
-                if (btn) btn.textContent = '🪟 Cycler l\'état d\'un panneau';
-                showToast('🪟 Panneau 1 — état réel rétabli');
-            } else {
-                const etat = _TEST_CHAINE_ETATS[_testEtatIdx];
-                _vrForcage[gid] = { 0: etat };
-                if (btn) btn.textContent = '🪟 Panneau 1 : ' + etat;
-                showToast('🪟 Panneau 1 forcé en « ' + etat + ' »');
-            }
-            if (verriereState.grappeId === gid) verriereRafraichirEtats();
+            (GRAPPE_QUESTS[gid].quete.etapes || []).forEach(e => { if (!e.chantier) _testAccorderMedia(gid, e); });
+            _testNiveauxGrappe(3);
+            _testApresPlanche(gid);
+            showToast('📖 Planche complète · chantiers à la forge');
+        }
+
+        // Règle les six cartes de la grappe à un niveau. Chaque appui passe au
+        // suivant : absentes → 0 → 1 → 2 → 3 → absentes (pour voir les stades du
+        // chantier et les ronds de prérequis sans jouer).
+        const _TEST_NIVEAUX = [null, 0, 1, 2, 3];
+        let _testNiveauIdx = 0;
+        function _testNiveauxGrappe(niv) {
+            VDL_CARD_IDS.forEach(id => {
+                if (niv === null) {
+                    collectedCards = collectedCards.filter(c => c !== id);
+                    return;
+                }
+                if (!collectedCards.includes(id)) collectedCards.push(id);
+                cardLevels[id] = Object.assign({ experience: 0, dustSpent: 0 }, cardLevels[id] || {}, { level: niv });
+            });
+        }
+        function testForcerNiveauxGrappe() {
+            _testNiveauIdx = (_testNiveauIdx + 1) % _TEST_NIVEAUX.length;
+            const niv = _TEST_NIVEAUX[_testNiveauIdx];
+            _testNiveauxGrappe(niv);
+            _testApresPlanche(TEST_VERRIERE_GRAPPE);
+            try { updatePOIVisibility(); } catch (_) {}
+            const lib = niv === null ? 'absentes' : 'niveau ' + niv;
+            const btn = document.getElementById('btnTestNiveauxGrappe');
+            if (btn) btn.textContent = '📖 Forcer les niveaux de cartes (' + lib + ')';
+            showToast('📖 Cartes de la grappe : ' + lib);
         }
 
         // Remet toutes les cases de la grappe à zéro : l'état du premier jour
@@ -25879,16 +25907,11 @@
             delete verriereVues[gid];
             delete verriereEclatVu[gid];
             delete _vrForcage[gid];
-            _testEtatIdx = -1;
-            const btn = document.getElementById('btnTestCyclePanneau');
-            if (btn) btn.textContent = '🪟 Cycler l\'état d\'un panneau';
             if (window._selectedQuestKey && window._selectedQuestKey.startsWith(gid + ':')) {
                 window._selectedQuestKey = null;
             }
-            saveProgress();
-            try { updateQuestMarkers(); } catch (_) {}
-            if (verriereState.grappeId === gid) verriereRafraichirEtats();
-            showToast('🪟 Verrière remise à vierge');
+            _testApresPlanche(gid);
+            showToast('📖 Planche remise à zéro');
         }
 
         async function resetProgress() {
@@ -28520,8 +28543,9 @@
         function addTestCards() {
             // Toutes les cartes : locales + thématiques saison 1 + requises par la la voûte
             const allCards = getAllCards();
+            let ajoutees = 0;
             allCards.forEach(card => {
-                if (!collectedCards.includes(card.id)) collectedCards.push(card.id);
+                if (!collectedCards.includes(card.id)) { collectedCards.push(card.id); ajoutees++; }
                 if (!cardLevels[card.id]) cardLevels[card.id] = { level: 0, experience: 0, dustSpent: 0 };
             });
             saveProgress();
@@ -28529,6 +28553,10 @@
             refreshThematicDraws();
             updatePOIVisibility();
             renderCollectionsList();
+            // Retour visible (1er nov.) : sans lui, le bouton semblait ne rien faire.
+            try { if (verriereState.grappeId) verriereRafraichirEtats(); } catch (_) {}
+            try { v2RefreshIfOpen(); rafraichirPastilleExplorium(); } catch (_) {}
+            showToast('🃏 ' + ajoutees + ' carte(s) ajoutée(s) · ' + allCards.length + ' au total');
         }
 
 
@@ -35332,48 +35360,47 @@
             return api;
         })();
 
-        // Bouton « Envoyer mon journal » (Paramètres). Le testeur choisit son canal
-        // dans le menu de partage du téléphone ; sans ce menu, le fichier est téléchargé.
+        // Bouton « Envoyer mon journal GPS » (Paramètres, David 1er nov.) : un clic,
+        // le journal part directement au point de collecte (onglet « gps » du Sheet,
+        // découpé en morceaux, cf. journal_endpoint.gs). Plus de téléchargement
+        // ni de menu de partage ; le code d'accès sert d'identifiant.
+        // mode no-cors : la réponse n'est pas lisible ; seule une panne réseau se voit.
+        let _geoEnvoiEnCours = false;
         async function geoEnvoyerJournal() {
-            if (!GeoEngine.journalSize()) {
+            if (_geoEnvoiEnCours) return;
+            const points = GeoEngine.journalSize();
+            if (!points) {
                 showToast(T("📍 Journal vide : aucun point GPS enregistré pour l'instant."));
                 return;
             }
-            let id = null;
-            try { id = localStorage.getItem('geoTesteur'); } catch (e) {}
-            if (!id) {
-                const saisie = prompt(T('Ton prénom ou ton code testeur (il figurera dans le nom du fichier) :'), '');
-                if (saisie === null) return;
-                id = saisie.trim().replace(/[^A-Za-z0-9_-]+/g, '_').slice(0, 24) || 'anonyme';
-                try { localStorage.setItem('geoTesteur', id); } catch (e) {}
+            if (!JOURNAL_ENDPOINT) { showToast(T('📍 Envoi impossible : aucun point de collecte.')); return; }
+            const a = _acces || _accesLire() || {};
+            const version = ((document.getElementById('hudVersion') || {}).textContent || '').trim();
+            const exp = GeoEngine.getJournalExport(a.code || 'sans_code', version);
+            const btn = document.getElementById('geoJournalBtn');
+            const libelle = btn ? btn.textContent : '';
+            _geoEnvoiEnCours = true;
+            if (btn) { btn.disabled = true; btn.textContent = T('Envoi…'); }
+            try {
+                await fetch(JOURNAL_ENDPOINT, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        kind: 'gps', session_id: journalSessionId(), code: a.code || '', team: !!a.team,
+                        plateforme: _jrnPlateforme(), navigateur: _jrnNavigateur(), app_version: version,
+                        points, nom: exp.nom, journal: exp.json
+                    })
+                });
+                journalEvenement('gps_journal_envoye', { points });
+                showToast(T('📍 Journal GPS envoyé. Merci !'));
+            } catch (e) {
+                console.warn('[geo] envoi du journal GPS en échec', e);
+                showToast(T('📍 Envoi impossible : vérifie ta connexion, puis réessaie.'));
+            } finally {
+                _geoEnvoiEnCours = false;
+                if (btn) { btn.disabled = false; btn.textContent = libelle; }
             }
-            const version = (document.getElementById('hudVersion') || {}).textContent || '';
-            const exp = GeoEngine.getJournalExport(id, version);
-            // Le JSON n'est pas partageable partout (liste de types restreinte sur
-            // Android) : on retente en texte brut, le contenu reste du JSON.
-            const candidats = [
-                new File([exp.json], exp.nom + '.json', { type: 'application/json' }),
-                new File([exp.json], exp.nom + '.txt',  { type: 'text/plain' })
-            ];
-            const partageable = navigator.canShare && candidats.find(f => navigator.canShare({ files: [f] }));
-            if (partageable) {
-                try {
-                    await navigator.share({ files: [partageable], title: partageable.name });
-                    return;
-                } catch (e) {
-                    if (e && e.name === 'AbortError') return;   // partage annulé par le testeur
-                    console.warn('[geo] partage impossible, téléchargement à la place', e);
-                }
-            }
-            const url = URL.createObjectURL(candidats[0]);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = candidats[0].name;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 10000);
-            showToast(T('📍 Journal téléchargé : joins-le à un mail.'));
         }
 
         // ==================== GPS ====================
@@ -38468,7 +38495,7 @@
                 quete: {
                     titre: 'Les voix imprimées',
                     // media : contenu lu dans le lecteur (lot 3 du brief).
-                    //   texteValide : false → animation « Récit à venir » ; passer à true
+                    //   texteValide : false → animation « Récit en construction » ; passer à true
                     //   et renseigner ecrans suffit à activer un média.
                     //   ecrans : { a: pictogramme, b: intitulé de temps, d: ancrage, t: texte }.
                     //   Dans t, {{cardId|mots}} souligne une carte QUAND ELLE AGIT dans la
@@ -38533,50 +38560,45 @@
                                 ],
                             },
                         },
+                        // Médias 3 à 7 : EN CHANTIER (David, 1er nov.). Narration non retenue :
+                        // pas de quête, pas de texte. La case émerge selon l'étage atteint et les
+                        // cartes du joueur (échafaudage : une des cartes trouvée ; forge : toutes,
+                        // aux niveaux exigés), et s'ouvre sur « Récit en construction ». Pour activer un
+                        // média : retirer chantier, lui rendre indice, objectifGeo et media.
                         {
                             id: 'vdl_m3',
-                            titre: 'Le premier jour d\'un apprenti',
-                            indice: 'Un garçon de quatorze ans entre dans le plus grand atelier de la ville. Cherche l\'atelier de Gryphe, rue Mercière.',
+                            titre: "Le premier jour d'un apprenti",   // jamais affiché tant que le média est en chantier
+                            chantier: true,
                             prerequis: [{ cardId: 'card_gryphe', minLevel: 1 }, { cardId: 'card_presse_gutenberg', minLevel: 2 }],
-                            objectifGeo: { lat: 45.7616, lng: 4.8330, rayon: 80, nom: 'Rue Mercière (Gryphe)' },
                             rewardCases: ['vdl_m3'],
-                            media: { texteValide: false, ecrans: [], sources: [] },
                         },
                         {
                             id: 'vdl_m4',
-                            titre: 'Le correcteur qui est parti monter le sien',
-                            indice: 'Un correcteur a quitté l\'atelier où il relisait les autres pour ouvrir le sien. Cherche son enseigne, rue Mercière.',
+                            titre: "Le correcteur qui est parti monter le sien",   // jamais affiché tant que le média est en chantier
+                            chantier: true,
                             prerequis: [{ cardId: 'card_dolet', minLevel: 1 }, { cardId: 'card_presse_gutenberg', minLevel: 2 }],
-                            objectifGeo: { lat: 45.7640, lng: 4.8327, rayon: 80, nom: 'Rue Mercière (Dolet)' },
                             rewardCases: ['vdl_m4'],
-                            media: { texteValide: false, ecrans: [], sources: [] },
                         },
                         {
                             id: 'vdl_m5',
-                            titre: 'Le matin où personne n\'est venu',
-                            indice: 'Un matin d\'avril, toutes les presses de la ville se sont tues. Retourne là où les compagnons travaillaient, rue Mercière.',
+                            titre: "Le matin où personne n'est venu",   // jamais affiché tant que le média est en chantier
+                            chantier: true,
                             prerequis: [{ cardId: 'card_presse_gutenberg', minLevel: 3 }, { cardId: 'card_gryphe', minLevel: 2 }],
-                            objectifGeo: { lat: 45.7632, lng: 4.8328, rayon: 80, nom: 'Rue Mercière' },
                             rewardCases: ['vdl_m5'],
-                            media: { texteValide: false, ecrans: [], sources: [] },
                         },
                         {
                             id: 'vdl_m6',
-                            titre: 'Une cliente apporte un manuscrit',
-                            indice: 'Une Lyonnaise a fait imprimer ses vers sous son nom. Trouve la rue qui porte son surnom.',
+                            titre: "Une cliente apporte un manuscrit",   // jamais affiché tant que le média est en chantier
+                            chantier: true,
                             prerequis: [{ cardId: 'card_louise_labe', minLevel: 2 }, { cardId: 'card_dolet', minLevel: 2 }],
-                            objectifGeo: { lat: 45.7584, lng: 4.8357, rayon: 80, nom: 'Rue Bellecordière' },
                             rewardCases: ['vdl_m6'],
-                            media: { texteValide: false, ecrans: [], sources: [] },
                         },
                         {
                             id: 'vdl_m7',
-                            titre: 'La nuit où ça s\'est éteint de l\'autre côté',
-                            indice: 'Une nuit de 1562, le cloître de l\'autre rive a été forcé. Retourne à la cathédrale Saint-Jean.',
+                            titre: "La nuit où ça s'est éteint de l'autre côté",   // jamais affiché tant que le média est en chantier
+                            chantier: true,
                             prerequis: [{ cardId: 'card_palais_st_jean', minLevel: 3 }, { cardId: 'card13', minLevel: 2 }],
-                            objectifGeo: { lat: 45.7606, lng: 4.8268, rayon: 80, nom: 'Cathédrale Saint-Jean' },
                             rewardCases: ['vdl_m7'],
-                            media: { texteValide: false, ecrans: [], sources: [] },
                         },
                     ]
                 }
@@ -38631,7 +38653,26 @@
             return n <= 0 || verriereEtageOuvert(grappeId, n);
         }
 
+        // Titre d'un média (sa « première de couverture ») : caché tant que sa
+        // quête n'est pas validée (David, 1er nov.) ; on lit « Média n » à la place.
+        // Ne vaut que pour les grappes à planche déclarée (verriere) : les quêtes
+        // du tutoriel gardent leur nom.
+        function etapeTitreVisible(etape) {
+            if (!etape) return '';
+            for (const [gid, g] of Object.entries(GRAPPE_QUESTS)) {
+                const idx = ((g.quete || {}).etapes || []).indexOf(etape);
+                if (idx < 0) continue;
+                if (!g.verriere || (grappeQuestState[gid] || {})[etape.id] === 'completed') return T(etape.titre || '');
+                const cas = (etape.rewardCases || [])[0];
+                const pan = (g.verriere.panneaux || []).find(p => p.caseId === cas);
+                return TF('Média %1', (pan && pan.n) || idx + 1);
+            }
+            return T(etape.titre || '');
+        }
+
         function _getEtapeStatus(grappeId, etape) {
+            // Média en chantier (David, 1er nov.) : jamais de quête, jamais obtenu.
+            if (etape && etape.chantier) return 'locked';
             if (!grappeQuestState[grappeId]) grappeQuestState[grappeId] = {};
             const stored = grappeQuestState[grappeId][etape.id];
             if (stored === 'completed') return 'completed';
@@ -38688,6 +38729,10 @@
             opts = opts || {};
             const cible = ((GRAPPE_QUESTS[grappeId] || {}).quete || {}).etapes || [];
             if (!_etapeEtageOuvert(grappeId, cible.find(e => e.id === etapeId))) return;   // lot 4.2
+            // Une étape déjà obtenue ne repasse jamais « en cours » (rappel tardif d'un
+            // dialogue de la Voix, par exemple) ; une étape en chantier n'a pas de quête.
+            if ((grappeQuestState[grappeId] || {})[etapeId] === 'completed') return;
+            if ((cible.find(e => e.id === etapeId) || {}).chantier) return;
             const aUnPin = !!(cible.find(e => e.id === etapeId) || {}).objectifGeo;
             // David, 24/10 : les autres quêtes en cours ne sont plus mises de côté.
             // Elles restent toutes au journal ; seule la suivie a son pin et la boussole.
@@ -39334,7 +39379,7 @@
                 if (horsZone) el.classList.add('qj-quest--hors-zone');
                 el.innerHTML = `
                     <div class="qj-quest-grappe">${grappeId !== 'tutoriel' ? _QJ_ICO_EXPLORIUM : ''}${grappe.title}${selectedBadge}</div>
-                    <div class="qj-quest-title">${etape.titre}</div>
+                    <div class="qj-quest-title">${etapeTitreVisible(etape)}</div>
                     <div class="qj-quest-indice">${etape.indice}</div>
                     <div class="qj-quest-place">📍 ${T(etape.objectifGeo?.nom || 'Lieu à découvrir')}${horsZone}</div>
                     <div class="qj-quest-action"></div>
@@ -39859,14 +39904,14 @@
                 if (isPlanning) {
                     el.innerHTML = `
                         <div class="quest-pin-marker"></div>
-                        <div class="quest-pin-label">${etape.titre}</div>
+                        <div class="quest-pin-label">${etapeTitreVisible(etape)}</div>
                     `;
                 } else {
                     // Mode zoom : juste l'épingle, sans label (pour ne pas encombrer)
                     el.innerHTML = `<div class="quest-pin-marker"></div>`;
                 }
                 el.addEventListener('click', () => {
-                    showToast(TF('📍 %1 — %2', T(etape.objectifGeo.nom), T(etape.titre)));
+                    showToast(TF('📍 %1 — %2', T(etape.objectifGeo.nom), etapeTitreVisible(etape)));
                 });
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([etape.objectifGeo.lng, etape.objectifGeo.lat])
@@ -39950,7 +39995,7 @@
             const nameEl = document.getElementById('nearbyQuestName');
             const descEl = document.getElementById('nearbyQuestDesc');
             const btn = document.getElementById('nearbyQuestBtn');
-            if (nameEl) nameEl.textContent = '✦ ' + T(etape.titre || 'Quête');
+            if (nameEl) nameEl.textContent = '✦ ' + (etapeTitreVisible(etape) || T('Quête'));
             if (descEl) descEl.textContent = etape.objectifGeo?.nom || 'Tu es à l\'endroit recherché';
             // Étape jamais acceptée : le bouton fait accepter ET valider d'un geste.
             if (btn) btn.textContent = (status === 'available')
@@ -40007,7 +40052,7 @@
             compass.style.display = 'flex';
             compass.style.setProperty('--hqc-color', nearest.grappe.color);
 
-            document.getElementById('hqcTitle').textContent = nearest.etape.titre;
+            document.getElementById('hqcTitle').textContent = etapeTitreVisible(nearest.etape);
 
             let distStr;
             if (nearest.dist < 1000) {
@@ -40124,7 +40169,7 @@
                 head.className = 'gq-etape-head';
                 const title = document.createElement('div');
                 title.className = 'gq-etape-title';
-                title.textContent = (idx + 1) + '. ' + etape.titre;
+                title.textContent = (idx + 1) + '. ' + etapeTitreVisible(etape);
                 if (_nouveau) {
                     const badge = document.createElement('span');
                     badge.className = 'gq-etape-nouveau';
@@ -42295,6 +42340,8 @@
         // Option A (24/10) : une étape dont le média est encore dans l'ombre ne
         // compte pas, même si un de ses prérequis a monté : rien ne la montrerait.
         function v2EtapeANouveau(gid, etape) {
+            // Un chantier n'est pas une récompense : il n'allume aucune pastille (1er nov.).
+            if (etape && etape.chantier) return false;
             // Étage fermé non plus (24/10) : son volet ne montre rien. Le nouveau est
             // gardé, il s'allume quand l'étage s'ouvre.
             if (!_etapeEtageOuvert(gid, etape)) return false;
@@ -42378,6 +42425,10 @@
         }
 
         function v2GetEtapeStatusV2(grappeId, etapeWithMergedPrereqs) {
+            // Média en chantier : il émerge (une carte trouvée) mais ne délivre aucune quête.
+            if (etapeWithMergedPrereqs.etape.chantier) {
+                return etapeWithMergedPrereqs.mergedPrereqs.some(req => v2IsOwned(req.cardId)) ? 'partial' : 'locked';
+            }
             // S'inspire de _getEtapeStatus mais utilise les prérequis fusionnés
             if (typeof grappeQuestState !== 'undefined' && grappeQuestState[grappeId]) {
                 const stored = grappeQuestState[grappeId][etapeWithMergedPrereqs.etape.id];
@@ -44399,6 +44450,13 @@
               <path d="M140 108 h120 M140 130 h120 M140 152 h80"/>
               <path d="M196 186 h64" stroke="${VR_OR}"/>
               <circle cx="156" cy="192" r="16" stroke="${VR_OR}"/>`,
+            // Chantier (1er nov.) : échafaudage, et l'enclume mémorielle de la forge.
+            echafaudage: `<path d="M60 250 h280" opacity=".5"/><path d="M112 250 V72 M288 250 V72"/>
+              <path d="M98 112 H302 M98 182 H302"/><path d="M112 112 L288 182 M288 112 L112 182" opacity=".5"/>
+              <path d="M200 182 L288 250 M200 182 L112 250" opacity=".35"/>
+              <path d="M232 112 v-24 h24 v24" opacity=".6"/>`,
+            enclume: `<path d="M138 150 H258 L294 162 L258 176 H138 Z"/><path d="M138 150 L118 162 L138 176"/>
+              <path d="M170 176 L158 218 H238 L226 176"/><path d="M142 218 H254"/>`,
             cloitre: `<path d="M60 240 h280"/><path d="M90 240 v-110 M160 240 v-110 M230 240 v-110 M300 240 v-110"/>
               <path d="M90 130 q35 -40 70 0 q35 -40 70 0 q35 -40 70 0"/>
               <path d="M60 110 h280" opacity=".5"/>`,
@@ -44464,13 +44522,30 @@
 
         function _verriereCaseObtenue(grappeId, caseId) {
             const t = _verriereEtapeDeCase(grappeId, caseId);
-            return !!(t && grappeQuestState[grappeId] && grappeQuestState[grappeId][t.etape.id] === 'completed');
+            return !!(t && !t.etape.chantier && grappeQuestState[grappeId] && grappeQuestState[grappeId][t.etape.id] === 'completed');
         }
 
-        // Étage entièrement obtenu ?
+        // Stade d'une case en chantier (David, 1er nov.) : 'forge' quand toutes ses
+        // cartes sont trouvées aux niveaux exigés, 'echafaudage' dès qu'une de ses
+        // cartes est trouvée (niveau indifférent), 'vide' sinon. null hors chantier.
+        function _vrStadeChantier(grappeId, caseId) {
+            const t = _verriereEtapeDeCase(grappeId, caseId);
+            if (!t || !t.etape.chantier) return null;
+            const req = t.etape.prerequis || [];
+            const a = r => collectedCards.includes(r.cardId);
+            if (req.length && req.every(r => a(r) && ((cardLevels[r.cardId] || {}).level || 0) >= r.minLevel)) return 'forge';
+            return req.some(a) ? 'echafaudage' : 'vide';
+        }
+
+        // Étage achevé ? Toutes ses cases obtenues ; une case en chantier compte
+        // quand elle a atteint la forge (sinon les étages du haut resteraient
+        // fermés pour toujours).
         function verriereEtageAcheve(grappeId, idx) {
             const e = verriereEtages(grappeId)[idx];
-            return !!(e && e.every(c => _verriereCaseObtenue(grappeId, c)));
+            // Un étage pas encore atteint n'est jamais achevé : sans ça, des chantiers à
+            // la forge ouvraient l'étage du dessus alors que le leur était encore fermé.
+            if (idx > 0 && !verriereEtageAcheve(grappeId, idx - 1)) return false;
+            return !!(e && e.every(c => _verriereCaseObtenue(grappeId, c) || _vrStadeChantier(grappeId, c) === 'forge'));
         }
 
         // Verrou d'étage : ne dépend QUE de l'étage précédent.
@@ -44482,6 +44557,10 @@
         function verriereEtatBrut(grappeId, caseId) {
             const t = _verriereEtapeDeCase(grappeId, caseId);
             if (!t) return 'inconnu';
+            if (t.etape.chantier) {
+                const st = _vrStadeChantier(grappeId, caseId);
+                return st === 'vide' ? 'inconnu' : st;
+            }
             const st = _getEtapeStatus(grappeId, t.etape);
             if (st === 'completed') return 'obtenu';
             if (st === 'active')    return 'encours';
@@ -44581,6 +44660,11 @@
             halo.appendChild(_vrEl('stop', { offset: '0%', 'stop-color': '#5a3ca0', 'stop-opacity': '.22' }));
             halo.appendChild(_vrEl('stop', { offset: '100%', 'stop-color': '#5a3ca0', 'stop-opacity': '0' }));
             decor.appendChild(halo);
+            // Rayures du bandeau de chantier (cases en construction)
+            const ray = _vrEl('pattern', { id: 'vrRayures', width: 14, height: 14, patternUnits: 'userSpaceOnUse',
+                patternTransform: 'rotate(45)' });
+            ray.appendChild(_vrEl('rect', { width: 7, height: 14, fill: VR_OR, opacity: '.75' }));
+            decor.appendChild(ray);
             decor.appendChild(_vrEl('rect', { x: X - W, y: Y - H, width: W * 3, height: H * 3, fill: '#08070a' }));
             decor.appendChild(_vrEl('rect', { x: X, y: Y, width: W, height: H, fill: 'url(#vrHalo)' }));
         }
@@ -44662,7 +44746,11 @@
                     return e;
                 };
                 const coul = p.coul || VERRIERE_COULEURS[i % VERRIERE_COULEURS.length];
-                const motif = p.pic || VERRIERE_PICS[i % VERRIERE_PICS.length];
+                // Case en chantier : jamais son pictogramme réel (il en dirait trop sur
+                // un récit pas encore écrit), un échafaudage à la place.
+                const enChantier = !!((_verriereEtapeDeCase(grappeId, p.caseId) || {}).etape || {}).chantier;
+                if (enChantier) g.classList.add('chantier');
+                const motif = enChantier ? 'echafaudage' : (p.pic || VERRIERE_PICS[i % VERRIERE_PICS.length]);
                 // Brief « ville du livre » (1er nov.) : l'état se lit sans texte.
                 // Obtenue : fond à la teinte du média, pictogramme net, titre lisible.
                 // Non obtenue : fond très sombre, pictogramme à 20 %, titre estompé.
@@ -44688,6 +44776,28 @@
                     pic.appendChild(_vrPic(motif, x, y, w, h, VR_PAPIER_TRAIT, 6));
                 }
                 g.appendChild(pic);
+                if (enChantier) {
+                    // Forge : l'enclume dorée par-dessus l'échafaudage, et l'étiquette.
+                    const s = Math.min(w / 400, (h - 34) / 300) * 0.92;
+                    const enc = _vrEl('g', { class: 'enclume', transform: `translate(${x + w / 2 - 200 * s} ${y + (h - 30) / 2 - 150 * s + 2}) scale(${s})` });
+                    const encT = _vrEl('g', { fill: 'none', stroke: VR_OR, 'stroke-width': 8, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+                    encT.innerHTML = VR_PICTOS.enclume;
+                    enc.appendChild(encT);
+                    g.appendChild(enc);
+                    // Bandeau de chantier, visible dès le départ et à tous les stades
+                    // (David, 1er nov.) : le joueur sait d'emblée que ce pan du récit
+                    // est en travaux, il ne le découvre pas à la place d'une récompense.
+                    const bande = _vrEl('g', { class: 'bande' });
+                    const rb = _vrEl('rect', { x: x + 1, y: y + 1, width: w - 2, height: 20, fill: 'url(#vrRayures)' });
+                    bande.appendChild(rb);
+                    const lw = 132;
+                    bande.appendChild(_vrEl('rect', { x: x + w / 2 - lw / 2, y: y + 3, width: lw, height: 16, rx: 2, fill: '#0c0b10' }));
+                    const lab = _vrEl('text', { class: 'chant', x: x + w / 2, y: y + 15, 'text-anchor': 'middle', fill: VR_OR,
+                        'font-family': 'Courier New, monospace', 'font-size': 10, 'letter-spacing': 2 });
+                    lab.textContent = T('EN CONSTRUCTION');
+                    bande.appendChild(lab);
+                    g.appendChild(bande);
+                }
 
                 // Titre en pied de case : « n. titre », tronqué à la largeur.
                 const etTitre = _verriereEtapeDeCase(grappeId, p.caseId);
@@ -44697,7 +44807,11 @@
                 if (titre.length > maxCar) titre = titre.slice(0, maxCar - 1).trimEnd() + '…';
                 const ti = _vrEl('text', { class: 'ti', x: x + 10, y: y + h - 12, fill: VR_PAPIER_TRAIT,
                     'font-family': 'Courier New, monospace', 'font-size': 13 });
-                ti.textContent = (p.n || i + 1) + '. ' + titre;
+                // Titre visible seulement une fois le média obtenu (David, 1er nov.) :
+                // avant, la case ne porte que son numéro.
+                ti.setAttribute('data-n', p.n || i + 1);
+                ti.setAttribute('data-titre', titre);
+                _vrTitreCase(ti, etats[i]);
                 g.appendChild(ti);
 
                 // Signet : quête suivie
@@ -44721,6 +44835,10 @@
             });
         }
 
+        function _vrTitreCase(ti, etat) {
+            ti.textContent = ti.getAttribute('data-n') + '.' + (etat === 'obtenu' ? ' ' + ti.getAttribute('data-titre') : '');
+        }
+
         // Rafraîchit les états SANS reconstruire le SVG : c'est tout l'intérêt du
         // jeu d'opacités piloté par data-s.
         function verriereRafraichirEtats() {
@@ -44730,6 +44848,8 @@
             document.querySelectorAll('#verrierePanneaux .case').forEach(g => {
                 const i = parseInt(g.getAttribute('data-i'), 10);
                 g.setAttribute('data-s', verriereState.etats[i]);
+                const ti = g.querySelector('.ti');
+                if (ti) _vrTitreCase(ti, verriereState.etats[i]);
             });
             _verrierePeindreSeves();
             _verriereMajCompteur();
@@ -44752,6 +44872,7 @@
             const obtenus = verriereState.etats.filter(e => e === 'obtenu').length;
             const el = document.getElementById('verriereCompteur');
             // Doit afficher zéro sans broncher : une planche vide est un état normal.
+            // Toujours sur 7, chantiers compris (David, 1er nov.).
             if (el) el.textContent = obtenus + ' / ' + verriereState.etats.length;
         }
 
@@ -44781,6 +44902,7 @@
             document.getElementById('verriereTitle').textContent =
                 (grappe.quete && grappe.quete.titre) || grappe.title;
 
+            if (vrLecteurOuvert()) vrLecteurFermer();
             _verriereConstruire();
             _verriereMajCompteur();
             _verriereMajNouveautes();
@@ -44816,6 +44938,7 @@
         }
 
         function fermerVerriere() {
+            if (vrLecteurOuvert()) vrLecteurFermer();
             const screen = document.getElementById('verriereScreen');
             if (screen) screen.classList.remove('show');
             _showNearbyConsoles('verriere');
@@ -44981,9 +45104,362 @@
             });
         }
 
+        // ── Lecteur de média (brief « ville du livre », lot 3) ─────
+        // Une case obtenue s'ouvre sur son média : quatre écrans (pictogramme,
+        // numéro, ancrage, intitulé de temps, texte), la ligne de prérequis,
+        // pastilles, flèches, glissé. Sans texte validé : « Récit en construction ».
+        // Pas de panneau de sources (David, 1er nov.).
+        let _vrLect = { i: null, e: 0 };
+
+        function _vrLectEtape(i) {
+            const pan = verriereState.geo && verriereState.geo.panneaux[i];
+            const t = pan && _verriereEtapeDeCase(verriereState.grappeId, pan.caseId);
+            return t ? { pan, etape: t.etape } : null;
+        }
+
+        // Texte d'écran : HTML échappé, puis {{cardId|mots}} souligné (carte qui
+        // agit dans la scène). Aucune détection automatique des noms.
+        function _vrLectTexte(t) {
+            const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return esc(T(t || '')).replace(/\{\{([\w-]+)\|([^}]+)\}\}/g, (m, id, mots) => '<span class="k">' + mots + '</span>');
+        }
+
+        function _vrLectPrerequis(etape) {
+            const ok = req => collectedCards.includes(req.cardId)
+                && ((cardLevels[req.cardId] || {}).level || 0) >= req.minLevel;
+            return T('Prérequis') + ' · ' + (etape.prerequis || []).map(req => {
+                const c = getCardById(req.cardId);
+                const nom = T((c && c.name) || req.cardId);
+                const atteint = ok(req);
+                return '<span class="' + (atteint ? '' : 'ko') + '">' + (atteint ? '●' : '○') + ' <b>' + nom + '</b> '
+                    + TF('niv. %1', req.minLevel) + '</span>';
+            }).join('  ·  ');
+        }
+
+        // ── « Récit en construction » : l'enclume mémorielle (brief, lot 4) ──
+        // Porté de planche_recit_a_venir.html : bonshommes au trait qui battent une
+        // enclume, poussière violette à l'impact et au pied du billot (jamais du
+        // bord de l'écran). Une frappe toutes les deux secondes environ, levée sur
+        // les trois quarts du cycle. La trajectoire part de la tête de marteau
+        // voulue ; le bras en est déduit (le marteau touche réellement l'enclume).
+        // Toujours deux forgerons (David, 1er nov.) ; à l'échafaudage, ils frappent
+        // plus lentement et soulèvent moins de poussière qu'à la forge.
+        // Fluidité : tout avance au temps réel écoulé (dt), et non d'un pas fixe
+        // par image ; une image sautée ne ralentit ni ne saccade plus le geste.
+        // Arrêt garanti : drapeau testé en tête de boucle, cancelAnimationFrame,
+        // aucune minuterie ; la boucle s'éteint aussi si le lecteur n'est plus ouvert.
+        const _vrF = { raf: 0, actif: false, t: 0, avant: 0, W: 0, H: 0, dpr: 1, forgerons: [], part: [], ondes: [], calme: false };
+        const _VRF_PAPIER = 'rgba(244,236,219,', _VRF_VIOLET = 'rgba(167,139,250,', _VRF_CLAIR = 'rgba(221,214,254,';
+
+        // calme : true à l'échafaudage (frappes plus lentes, moins de poussière).
+        function _vrForgeDemarrer(calme) {
+            _vrForgeArreter();
+            Object.assign(_vrF, { actif: true, t: 0, avant: 0, W: 0, H: 0, part: [], ondes: [], calme: !!calme });
+            _vrF.forgerons = [-1, 1].map((k, i) => ({
+                k, ph: i * 0.5 + Math.random() * 0.18,          // les deux coups alternent
+                sp: (calme ? 0.36 : 0.46) + Math.random() * 0.05,   // ~ une frappe toutes les deux secondes
+                pose: false, taille: 0.95 + Math.random() * 0.1,
+            }));
+            _vrF.raf = requestAnimationFrame(_vrForgeBoucle);
+        }
+
+        function _vrForgeArreter() {
+            _vrF.actif = false;
+            if (_vrF.raf) cancelAnimationFrame(_vrF.raf);
+            _vrF.raf = 0; _vrF.part = []; _vrF.ondes = [];
+        }
+
+        function _vrForgeTaille(cv) {
+            const r = cv.parentElement.getBoundingClientRect();
+            if (r.width < 2 || r.height < 2) return false;
+            if (Math.abs(r.width - _vrF.W) < 1 && Math.abs(r.height - _vrF.H) < 1) return true;
+            _vrF.dpr = Math.min(window.devicePixelRatio || 1, 2);
+            _vrF.W = r.width; _vrF.H = r.height;
+            cv.width = _vrF.W * _vrF.dpr; cv.height = _vrF.H * _vrF.dpr;
+            return true;
+        }
+
+        function _vrForgeCorps(ctx, x, y, s, vers) {
+            ctx.save(); ctx.translate(x, y); ctx.scale(vers, 1);
+            ctx.strokeStyle = _VRF_PAPIER + '0.88)'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.lineWidth = s * 0.052;
+            ctx.beginPath(); ctx.arc(0, -s * 0.8, s * 0.1, 0, 6.2832); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, -s * 0.7); ctx.lineTo(0, -s * 0.32); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, -s * 0.32); ctx.lineTo(-s * 0.18, 0);
+            ctx.moveTo(0, -s * 0.32); ctx.lineTo(s * 0.16, 0);
+            ctx.stroke(); ctx.restore();
+        }
+
+        // Bras et marteau, depuis la position voulue de la tête de marteau.
+        function _vrForgeBras(ctx, sx, sy, hx, hy, s) {
+            const dx = sx - hx, dy = sy - hy, d = Math.hypot(dx, dy) || 1;
+            const mx = hx + dx / d * s * 0.3, my = hy + dy / d * s * 0.3;   // la main, sur le manche
+            ctx.strokeStyle = _VRF_PAPIER + '0.88)'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.lineWidth = s * 0.052;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy); ctx.lineTo(mx, my);
+            ctx.moveTo(sx - (sx - hx) * 0.06, sy + s * 0.03); ctx.lineTo(mx, my);
+            ctx.stroke();
+            ctx.lineWidth = s * 0.045;
+            ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(hx, hy); ctx.stroke();
+            const px = -dy / d, py = dx / d;   // tête de marteau, perpendiculaire au manche
+            ctx.lineWidth = s * 0.13;
+            ctx.beginPath();
+            ctx.moveTo(hx - px * s * 0.085, hy - py * s * 0.085);
+            ctx.lineTo(hx + px * s * 0.085, hy + py * s * 0.085);
+            ctx.stroke();
+        }
+
+        function _vrForgeEnclume(ctx, cx, cy, s) {
+            ctx.strokeStyle = _VRF_PAPIER + '0.92)'; ctx.lineWidth = s * 0.03;
+            ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(cx - s * 0.52, cy);
+            ctx.lineTo(cx + s * 0.42, cy);
+            ctx.bezierCurveTo(cx + s * 0.64, cy + s * 0.012, cx + s * 0.78, cy + s * 0.05, cx + s * 0.9, cy + s * 0.07);
+            ctx.bezierCurveTo(cx + s * 0.74, cy + s * 0.12, cx + s * 0.6, cy + s * 0.15, cx + s * 0.42, cy + s * 0.16);
+            ctx.lineTo(cx - s * 0.52, cy + s * 0.16);
+            ctx.lineTo(cx - s * 0.66, cy + s * 0.08);
+            ctx.closePath(); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(cx - s * 0.3, cy + s * 0.16);
+            ctx.bezierCurveTo(cx - s * 0.2, cy + s * 0.3, cx - s * 0.2, cy + s * 0.34, cx - s * 0.3, cy + s * 0.46);
+            ctx.lineTo(cx - s * 0.44, cy + s * 0.52);
+            ctx.lineTo(cx + s * 0.44, cy + s * 0.52);
+            ctx.lineTo(cx + s * 0.3, cy + s * 0.46);
+            ctx.bezierCurveTo(cx + s * 0.2, cy + s * 0.34, cx + s * 0.2, cy + s * 0.3, cx + s * 0.3, cy + s * 0.16);
+            ctx.stroke();
+            ctx.globalAlpha = .55;   // billot
+            ctx.beginPath();
+            ctx.moveTo(cx - s * 0.4, cy + s * 0.52); ctx.lineTo(cx - s * 0.34, cy + s * 0.86);
+            ctx.lineTo(cx + s * 0.34, cy + s * 0.86); ctx.lineTo(cx + s * 0.4, cy + s * 0.52);
+            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cx - s * 0.46, cy + s * 0.86); ctx.lineTo(cx + s * 0.46, cy + s * 0.86); ctx.stroke();
+            ctx.globalAlpha = .4;   // trous carré et rond de la table
+            ctx.beginPath(); ctx.rect(cx - s * 0.3, cy - s * 0.035, s * 0.07, s * 0.03); ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(cx - s * 0.14, cy - s * 0.018, s * 0.03, s * 0.012, 0, 0, 6.2832); ctx.stroke();
+            ctx.globalAlpha = 1;
+        }
+
+        function _vrForgeArc(ax, ay, bx, by, cx, cy, u) {
+            const v = 1 - u;
+            return [v * v * ax + 2 * v * u * bx + u * u * cx, v * v * ay + 2 * v * u * by + u * u * cy];
+        }
+
+        function _vrForgeFrapper(x, y) {
+            const n = 18 + Math.round(Math.random() * 10);
+            for (let i = 0; i < n; i++) {
+                const a = -Math.PI * 0.06 - Math.random() * Math.PI * 0.88, v = 0.6 + Math.random() * 2.1;
+                _vrF.part.push({ x, y, vx: Math.cos(a) * v * (Math.random() < .5 ? -1 : 1) * 1.5, vy: Math.sin(a) * v,
+                    r: 1 + Math.random() * 2.2, vie: 1, decr: 0.005 + Math.random() * 0.008, clair: Math.random() < 0.28 });
+            }
+            _vrF.ondes.push({ x, y, r: 4, vie: 1 });
+        }
+
+        function _vrForgeBoucle(maintenant) {
+            // Drapeau en tête de boucle : écran fermé, rien n'est plus demandé.
+            if (!_vrF.actif || !vrLecteurOuvert()) { _vrF.actif = false; _vrF.raf = 0; return; }
+            const cv = document.getElementById('vrForgeCanvas');
+            if (!cv || !_vrForgeTaille(cv)) { _vrF.raf = requestAnimationFrame(_vrForgeBoucle); return; }
+            const ctx = cv.getContext('2d'), W = _vrF.W, H = _vrF.H;
+            // Temps réel écoulé, borné (onglet repris après une pause : pas de saut).
+            const dt = _vrF.avant ? Math.min(0.05, Math.max(0, (maintenant - _vrF.avant) / 1000)) : 1 / 60;
+            _vrF.avant = maintenant;
+            const k = dt * 60;   // 1 à 60 images/s : les réglages d'origine restent valables
+            _vrF.t += dt;
+            ctx.setTransform(_vrF.dpr, 0, 0, _vrF.dpr, 0, 0);
+            ctx.clearRect(0, 0, W, H);
+            const g = ctx.createRadialGradient(W / 2, H * 0.56, 0, W / 2, H * 0.56, Math.max(W, H) * 0.62);
+            g.addColorStop(0, 'rgba(90,60,160,0.20)'); g.addColorStop(1, 'rgba(90,60,160,0)');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+            const s = Math.min(W * 0.3, H * 0.32), cx = W / 2, cy = H * 0.56;
+
+            _vrF.ondes.forEach(o => {
+                o.r += 2.2 * k; o.vie -= 0.028 * k;
+                ctx.strokeStyle = _VRF_VIOLET + (o.vie * 0.38).toFixed(3) + ')'; ctx.lineWidth = 1.6;
+                ctx.beginPath(); ctx.ellipse(o.x, o.y, o.r, o.r * 0.3, 0, 0, 6.2832); ctx.stroke();
+            });
+            _vrF.ondes = _vrF.ondes.filter(o => o.vie > 0);
+            _vrForgeEnclume(ctx, cx, cy, s);
+
+            _vrF.forgerons.forEach(f => {
+                const cycle = (_vrF.t * f.sp + f.ph) % 1;
+                const vers = f.k < 0 ? 1 : -1, ps = s * f.taille * 0.92;
+                const bx = cx + f.k * s * 0.72, by = cy + s * 0.52;        // pieds
+                const sx = bx + vers * ps * 0.06, sy = by - ps * 0.62;      // épaule
+                const ix = cx + f.k * s * 0.22, iy = cy - s * 0.015;        // impact, sur la table
+                const rx = sx - vers * ps * 0.26, ry = sy - ps * 0.72;      // marteau levé
+                const kx = sx + vers * ps * 0.34, ky = sy - ps * 0.5;       // contrôle de l'arc
+                let u, hx, hy;
+                if (cycle < 0.70) { u = cycle / 0.70; u = 1 - Math.pow(1 - u, 2.2); [hx, hy] = _vrForgeArc(ix, iy, kx, ky, rx, ry, u); }
+                else if (cycle < 0.86) { u = (cycle - 0.70) / 0.16; u = u * u; [hx, hy] = _vrForgeArc(rx, ry, kx, ky, ix, iy, u); }
+                else { hx = ix; hy = iy; }
+                _vrForgeCorps(ctx, bx, by, ps, vers);
+                _vrForgeBras(ctx, sx, sy, hx, hy, ps);
+                if (cycle >= 0.86 && !f.pose) { f.pose = true; _vrForgeFrapper(ix, iy); }
+                if (cycle < 0.70) f.pose = false;
+            });
+
+            _vrF.part.forEach(p => {
+                p.x += p.vx * k; p.y += p.vy * k; p.vy += 0.012 * k;
+                p.vx *= Math.pow(0.985, k); p.vy *= Math.pow(0.988, k); p.vie -= p.decr * k;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (0.4 + p.vie * 0.7), 0, 6.2832);
+                ctx.fillStyle = (p.clair ? _VRF_CLAIR : _VRF_VIOLET) + (Math.max(0, p.vie) * 0.72).toFixed(3) + ')';
+                ctx.fill();
+            });
+            _vrF.part = _vrF.part.filter(p => p.vie > 0 && p.y < H + 20);
+            // Poussière soulevée au pied du billot, plus faible à l'échafaudage.
+            if (Math.random() < (_vrF.calme ? 0.05 : 0.10) * k) {
+                const cote = Math.random() < .5 ? -1 : 1;
+                _vrF.part.push({ x: cx + cote * (s * 0.12 + Math.random() * s * 0.62), y: cy + s * 0.84 + Math.random() * s * 0.06,
+                    vx: (Math.random() - .5) * .18, vy: -0.16 - Math.random() * 0.22,
+                    r: 0.7 + Math.random() * 1.1, vie: 1, decr: 0.0055, clair: Math.random() < 0.18 });
+            }
+            _vrF.raf = requestAnimationFrame(_vrForgeBoucle);
+        }
+
+        // stade : 'echafaudage' | 'forge' pour une case en chantier.
+        function vrLecteurOuvrir(i, stade) {
+            const x = _vrLectEtape(i);
+            if (!x) return;
+            _vrLect = { i, e: 0 };
+            const lect = document.getElementById('vrLecteur');
+            const media = x.etape.media || {};
+            const lisible = !x.etape.chantier && media.texteValide && Array.isArray(media.ecrans) && media.ecrans.length;
+            lect.classList.toggle('avenir', !lisible);
+            document.getElementById('verriereEyebrow').textContent = TF('Média %1', x.pan.n || i + 1);
+            document.getElementById('verriereTitle').textContent = x.etape.chantier ? T('En construction') : T(x.etape.titre);
+            lect.classList.add('on');
+            lect.setAttribute('aria-hidden', 'false');
+            if (lisible) _vrLecteurRendre();
+            else {
+                document.getElementById('verriereCompteur').textContent = '';
+                _vrForgeDemarrer(stade === 'echafaudage');
+            }
+        }
+
+        function vrLecteurOuvert() {
+            const l = document.getElementById('vrLecteur');
+            return !!(l && l.classList.contains('on'));
+        }
+
+        function vrLecteurFermer() {
+            const lect = document.getElementById('vrLecteur');
+            if (!lect) return;
+            lect.classList.remove('on');
+            lect.setAttribute('aria-hidden', 'true');
+            _vrForgeArreter();
+            _vrLect.i = null;
+            const grappe = GRAPPE_QUESTS[verriereState.grappeId];
+            if (grappe) {
+                document.getElementById('verriereEyebrow').textContent = TF('Médias · %1', T(grappe.title).toUpperCase());
+                document.getElementById('verriereTitle').textContent = (grappe.quete && grappe.quete.titre) || grappe.title;
+            }
+            _verriereMajCompteur();
+        }
+
+        function vrLecteurAller(d) {
+            const x = _vrLectEtape(_vrLect.i);
+            const n = x && x.etape.media && x.etape.media.ecrans ? x.etape.media.ecrans.length : 0;
+            const e = _vrLect.e + d;
+            if (!n || e < 0 || e >= n) return;
+            _vrLect.e = e;
+            _vrLecteurRendre();
+        }
+
+        function _vrLecteurRendre() {
+            const x = _vrLectEtape(_vrLect.i);
+            if (!x) return;
+            const media = x.etape.media, ecrans = media.ecrans, e = _vrLect.e, s = ecrans[e];
+            const n = x.pan.n || _vrLect.i + 1;
+            document.getElementById('verriereCompteur').textContent = (e + 1) + ' / ' + ecrans.length;
+            document.getElementById('vrLectNum').textContent = n + ' · ' + (e + 1);
+            document.getElementById('vrLectDate').textContent = T(s.d || '');
+            document.getElementById('vrLectBeat').textContent = T(s.b || '');
+            const teinte = x.pan.coul || '#3a3650';
+            document.getElementById('vrLectArt').innerHTML =
+                '<rect width="400" height="300" fill="#10101c"/>'
+                + '<rect width="400" height="300" fill="' + teinte + '" opacity=".22"/>'
+                + '<g fill="none" stroke="' + VR_PAPIER_TRAIT + '" stroke-width="2.6" stroke-linecap="round"'
+                + ' stroke-linejoin="round" opacity=".84">' + (VR_PICTOS[s.a] || '') + '</g>';
+            const corps = document.getElementById('vrLectCorps');
+            corps.classList.remove('on');
+            clearTimeout(_vrLecteurRendre._t);
+            _vrLecteurRendre._t = setTimeout(() => { corps.innerHTML = _vrLectTexte(s.t); corps.classList.add('on'); }, 130);
+            document.getElementById('vrLectPre').innerHTML = _vrLectPrerequis(x.etape);
+            const dots = document.getElementById('vrLectDots');
+            dots.innerHTML = '';
+            ecrans.forEach((_, k) => {
+                const b = document.createElement('button');
+                b.className = 'vr-lect-dot' + (k === e ? ' on' : '');
+                b.setAttribute('aria-label', TF('Écran %1', k + 1));
+                b.onclick = () => { _vrLect.e = k; _vrLecteurRendre(); };
+                dots.appendChild(b);
+            });
+            document.getElementById('vrLectPrev').disabled = e === 0;
+            document.getElementById('vrLectNext').disabled = e === ecrans.length - 1;
+        }
+
+        // Flèche de l'en-tête : referme d'abord le lecteur, puis la planche.
+        function verriereRetour() {
+            if (vrLecteurOuvert()) { vrLecteurFermer(); return; }
+            fermerVerriere();
+        }
+
+        // Sorties de secours (brief 3.6) : Échap, et glissé depuis le bord gauche.
+        // Glissé horizontal sur l'image : écran suivant / précédent.
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Escape' || !vrLecteurOuvert()) return;
+            vrLecteurFermer();
+            e.stopPropagation();
+        }, true);
+        (function _vrLecteurGestes() {
+            const brancher = () => {
+                const lect = document.getElementById('vrLecteur');
+                if (!lect) return;
+                let bord = null, x0 = null;
+                lect.addEventListener('touchstart', ev => {
+                    const t = ev.touches[0], r = lect.getBoundingClientRect();
+                    bord = (t.clientX - r.left) < 40 ? t.clientX : null;
+                    x0 = ev.target.closest && ev.target.closest('.vr-lect-scene') ? t.clientX : null;
+                }, { passive: true });
+                lect.addEventListener('touchend', ev => {
+                    const x = ev.changedTouches[0].clientX;
+                    if (bord !== null && x - bord > 60) { bord = x0 = null; vrLecteurFermer(); return; }
+                    if (x0 !== null && Math.abs(x - x0) > 45) vrLecteurAller(x < x0 ? 1 : -1);
+                    bord = x0 = null;
+                });
+            };
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', brancher);
+            else brancher();
+        })();
+
         function verriereTapPanneau(i) {
             const pan = verriereState.geo.panneaux[i];
             if (!pan) return;
+            // Chantier lancé (échafaudage, forge) : « Récit en construction », animé selon le stade.
+            // Ouvrir un média obtenu éteint sa pastille « nouveau », comme son volet
+            // (1er nov.). Les cases fermées ne marquent rien : le volet s'en charge.
+            const tVu = _verriereEtapeDeCase(verriereState.grappeId, pan.caseId);
+            if (tVu && verriereState.etats[i] === 'obtenu') { try { _gqChapitreVu(verriereState.grappeId, tVu.etape); _verriereMajNouveautes(); } catch (_) {} }
+            const etatCase = verriereState.etats[i];
+            if (etatCase === 'echafaudage' || etatCase === 'forge') {
+                _verriereFermerVolet();
+                verriereState.panneauOuvert = null;
+                vrLecteurOuvrir(i, etatCase);
+                return;
+            }
+            // Case obtenue : son média s'ouvre directement dans le lecteur.
+            if (verriereState.etats[i] === 'obtenu') {
+                const t = _verriereEtapeDeCase(verriereState.grappeId, pan.caseId);
+                if (t && t.etape.media) {
+                    _verriereFermerVolet();
+                    verriereState.panneauOuvert = null;
+                    vrLecteurOuvrir(i);
+                    return;
+                }
+            }
             verriereState.panneauOuvert = i;
             const [x, y, w, h] = pan.box;
             // Boîte du panneau plus une marge fixe de 34, comme le prototype.
@@ -45143,7 +45619,7 @@
             const bdCase = ((GRAPPE_QUESTS[grappeId].bd || {}).cases || []).find(c => c.id === pan.caseId);
             const lieu = etape && etape.objectifGeo ? etape.objectifGeo.nom : null;
             const corps = document.getElementById('verriereVoletCorps');
-            const titre = (bdCase && bdCase.title) || (etape && etape.titre) || '—';
+            const titre = etape ? etapeTitreVisible(etape) : (bdCase && bdCase.title) || '—';
             const acteurs = etape ? _vrListeActeurs(etape) : '';
             let html = '';
 
@@ -45155,14 +45631,14 @@
 
             } else if (etat === 'encours') {
                 html = '<div class="vr-volet-etat">' + T('Quête en cours') + '</div>'
-                    + '<div class="vr-volet-titre">' + T((etape && etape.titre) || titre) + '</div>'
+                    + '<div class="vr-volet-titre">' + (etape ? etapeTitreVisible(etape) : T(titre)) + '</div>'
                     + (lieu ? '<div class="vr-volet-ancrage">📍 ' + T(lieu) + '</div>' : '')
                     + '<div class="vr-volet-note">' + T((etape && etape.indice) || '') + '</div>'
                     + '<button class="vr-volet-btn" onclick="verriereVoirSurCarte(' + i + ')">' + T('Voir sur la carte') + '</button>';
 
             } else if (etat === 'pret') {
                 html = '<div class="vr-volet-etat">' + T('Encré · quête disponible') + '</div>'
-                    + '<div class="vr-volet-titre">' + T((etape && etape.titre) || titre) + '</div>'
+                    + '<div class="vr-volet-titre">' + (etape ? etapeTitreVisible(etape) : T(titre)) + '</div>'
                     + (lieu ? '<div class="vr-volet-ancrage">📍 ' + T(lieu) + '</div>' : '')
                     + '<div class="vr-volet-note">' + T((etape && etape.indice) || '') + '</div>'
                     + '<div class="vr-volet-soustitre">' + T('Les voix réunies') + '</div>'
@@ -45181,12 +45657,22 @@
                 const n = _verriereEtageDeCase(grappeId, pan.caseId);
                 const prec = verriereEtages(grappeId)[n - 1] || [];
                 const reste = prec.filter(c => !_verriereCaseObtenue(grappeId, c)).length;
-                html = '<div class="vr-volet-etat">' + TF('Étage %1 · fermé', n + 1) + '</div>'
+                // Étage du dessous en chantier : il doit arriver à la forge (1er nov.).
+                const dessousChantier = prec.some(c => _vrStadeChantier(grappeId, c) !== null);
+                html = '<div class="vr-volet-etat">' + (etape && etape.chantier ? T('En construction') + ' · ' : '') + TF('Étage %1 · fermé', n + 1) + '</div>'
                     + '<div class="vr-volet-titre">' + T('Case hors d\'atteinte') + '</div>'
-                    + '<div class="vr-volet-note">' + (reste > 1
+                    + '<div class="vr-volet-note">' + (dessousChantier
+                        ? T('Ce pan du récit n\'est pas encore atteint. Il apparaîtra quand le chantier de l\'étage précédent sera à la forge : toutes ses cartes trouvées, aux niveaux voulus.')
+                        : reste > 1
                         ? TF('Cet étage ne s\'ouvrira qu\'une fois l\'étage précédent achevé. Il y reste %1 cases à mettre en couleur.', reste)
                         : T('Cet étage ne s\'ouvrira qu\'une fois l\'étage précédent achevé. Il y reste une case à mettre en couleur.'))
                     + '</div>';
+
+            } else if (etape && etape.chantier) {
+                // Chantier pas encore lancé : on dit comment le lancer, sans rien dévoiler.
+                html = '<div class="vr-volet-etat">' + T('En construction') + '</div>'
+                    + '<div class="vr-volet-titre">' + T(titre) + '</div>'
+                    + '<div class="vr-volet-note">' + T('Ce pan du récit est encore en construction. Trouve l\'une de ses cartes pour lancer le chantier.') + '</div>';
 
             } else {
                 // Case blanche — jamais une impasse muette : on nomme ses voix.
