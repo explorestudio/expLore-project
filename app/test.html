@@ -9086,21 +9086,61 @@
             background: #08070a; opacity: 0; pointer-events: none; transition: opacity .35s ease; }
         .vr-lecteur.on { opacity: 1; pointer-events: auto; }
         .verriere-screen:has(.vr-lecteur.on) .verriere-hint { opacity: 0; }
-        .vr-lect-scene { position: relative; flex: 1 1 auto; min-height: 0; margin: 6px 16px 0; border-radius: 4px;
-            overflow: hidden; box-shadow: 0 8px 28px rgba(0,0,0,.55), 0 0 0 1px rgba(167,139,250,.12); }
+        /* Hauteur fixe d'un écran à l'autre (David, 2 nov.) : format de la scène (4:3),
+           plafonné pour les petits écrans ; elle ne dépend plus de la longueur du texte. */
+        .vr-lect-scene { position: relative; flex: 0 0 auto; aspect-ratio: 4 / 3; max-height: 34svh; margin: 6px 16px 0; border-radius: 4px;
+            overflow: hidden; box-shadow: 0 8px 28px rgba(0,0,0,.55), 0 0 0 1px rgba(167,139,250,.12); background: #0b0a12; }
+        /* Téléphone court : un peu plus de place pour le texte le plus long (média 2, écran 5) */
+        @media (max-height: 680px) { .vr-lect-scene { max-height: 30svh; } }
+        /* meet, jamais slice : la scène entière tient dans le cadre, centrée (brief 2.3) */
         .vr-lect-scene svg { position: absolute; inset: 0; width: 100%; height: 100%; }
         .vr-lect-num { position: absolute; top: 12px; left: 12px; z-index: 2; background: rgba(8,7,10,.85);
             font: 700 10px/1.4 'Helvetica Neue', Arial, sans-serif; letter-spacing: .1em; padding: 3px 8px;
             border-radius: 2px; border: 1px solid rgba(244,236,219,.22); }
         .vr-lect-date { position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 2; opacity: .9;
             font: 10px 'Helvetica Neue', Arial, sans-serif; letter-spacing: .18em; text-transform: uppercase; color: #d9a441; }
-        .vr-lect-texte { flex: 0 0 auto; padding: 13px 18px 4px; min-height: 122px; }
+        /* Le texte prend l'espace restant : pastilles et flèches restent à la même place.
+           Défilement interne seulement en dernier recours (très petit écran). */
+        .vr-lect-texte { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 13px 18px 4px; }
         .vr-lect-beat { font: 9px 'Courier New', monospace; letter-spacing: .16em; text-transform: uppercase;
             color: rgba(244,236,219,.4); margin-bottom: 5px; }
         .vr-lect-corps { font-size: 15px; line-height: 1.55; opacity: 0; transition: opacity .45s ease; }
         .vr-lect-corps.on { opacity: .96; }
         /* Carte qui agit dans la scène : trait doré fin (marqueur {{cardId|mots}}) */
-        .vr-lect-corps .k { border-bottom: 1px solid rgba(217,164,65,.75); padding-bottom: 1px; }
+        .vr-lect-corps .k { border-bottom: 1px solid rgba(217,164,65,.8); padding-bottom: 1px; color: #d9a441; }
+        /* Scènes animées des médias du socle (reprises de diapositives_socle.html,
+           noms préfixés « vrs », classes .a / .t limitées au lecteur) */
+        @keyframes vrsApparait{from{opacity:0}to{opacity:1}}
+        @keyframes vrsTrace{to{stroke-dashoffset:0}}
+        @keyframes vrsBalayage{0%{transform:translateX(-180px)}100%{transform:translateX(420px)}}
+        @keyframes vrsCopie{0%,100%{transform:translate(0,0)}
+          25%{transform:translate(16px,0)}50%{transform:translate(0,6px)}75%{transform:translate(16px,6px)}}
+        @keyframes vrsSable{to{transform:scaleY(0)}}
+        @keyframes vrsSableBas{to{transform:scaleY(1)}}
+        @keyframes vrsMonte{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @keyframes vrsSceau{0%,70%{transform:translateY(-26px) scale(1.3);opacity:0}
+          80%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
+        @keyframes vrsLueur{0%,100%{opacity:.12}50%{opacity:.4}}
+        @keyframes vrsLevier{0%,45%{transform:rotate(0deg)}60%{transform:rotate(26deg)}
+          75%{transform:rotate(26deg)}90%,100%{transform:rotate(0deg)}}
+        @keyframes vrsPlatine{0%,45%{transform:translateY(0)}60%,75%{transform:translateY(13px)}
+          90%,100%{transform:translateY(0)}}
+        @keyframes vrsFlotte{0%{transform:translateX(-40px)}100%{transform:translateX(440px)}}
+        @keyframes vrsOnde{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+        @keyframes vrsFeuille{0%{transform:translate(0,0) rotate(0deg);opacity:0}
+          15%{opacity:1}100%{transform:translate(96px,74px) rotate(8deg);opacity:1}}
+        @keyframes vrsDepose{0%,20%{transform:translateY(0);opacity:0}
+          30%{opacity:1}100%{transform:translateY(64px);opacity:0}}
+        @keyframes vrsLivraison{0%,8%{transform:translate(0,0);opacity:0}
+          16%{opacity:1}70%{transform:translate(96px,52px);opacity:1}
+          82%,100%{transform:translate(96px,52px);opacity:0}}
+        @keyframes vrsRemise{0%,10%{transform:translate(0,0);opacity:1}
+          55%{transform:translate(92px,-8px);opacity:1}70%,100%{transform:translate(92px,-8px);opacity:0}}
+        @keyframes vrsFlamme{0%,100%{transform:scale(1,1)}50%{transform:scale(.82,1.15)}}
+        @keyframes vrsPoussiere{0%{transform:translateY(0);opacity:0}
+          20%{opacity:.6}100%{transform:translateY(-54px);opacity:0}}
+        #vrLectArt .a{opacity:0;animation:vrsApparait .6s ease forwards}
+        #vrLectArt .t{stroke-dasharray:300;stroke-dashoffset:300;animation:vrsTrace 1.6s ease forwards}
         .vr-lect-pre { flex: 0 0 auto; padding: 2px 18px 2px; font: 10.5px/1.6 'Helvetica Neue', Arial, sans-serif;
             letter-spacing: .03em; color: rgba(244,236,219,.55); }
         .vr-lect-pre b { font-weight: 400; color: #d9a441; }
@@ -10344,7 +10384,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.77</div>
+            <div class="hud-version" id="hudVersion">v1.9.78</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10543,6 +10583,9 @@
                     <button onclick="testPlaceAllLumens()" class="test-action-btn">🕯️ Tout éclairer (lumens)</button>
                     <button onclick="testQueueGrappeLumens()" class="test-action-btn">✨ Éclairer hidden points (grappe)</button>
                     <button onclick="testOuvrirVerriere()" class="test-action-btn">📖 Ouvrir la planche</button>
+                    <button onclick="testOuvrirMedia('vdl_m1')" class="test-action-btn">🎞️ Média 1</button>
+                    <button onclick="testOuvrirMedia('vdl_m2')" class="test-action-btn">🎞️ Média 2</button>
+                    <button onclick="testToutesLesScenes()" class="test-action-btn">🎞️ Toutes les scènes</button>
                     <button onclick="testDebloquerPanneau()" class="test-action-btn">📖 Débloquer un média</button>
                     <button onclick="testPlancheComplete()" class="test-action-btn">📖 Planche complète</button>
                     <button onclick="testVerriereVierge()" class="test-action-btn">📖 Remettre à zéro</button>
@@ -12364,7 +12407,7 @@
                          sous l'en-tête, dont la flèche reste toujours atteignable. -->
                     <div class="vr-lecteur" id="vrLecteur" aria-hidden="true">
                         <div class="vr-lect-scene" id="vrLectScene">
-                            <svg id="vrLectArt" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice"></svg>
+                            <svg id="vrLectArt" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet"></svg>
                             <div class="vr-lect-num" id="vrLectNum"></div>
                             <div class="vr-lect-date" id="vrLectDate"></div>
                         </div>
@@ -12873,6 +12916,38 @@
             "Ce pan du récit n'est pas encore atteint. Il apparaîtra quand le chantier de l'étage précédent sera à la forge : toutes ses cartes trouvées, aux niveaux voulus.": "This part of the story is not reached yet. It will appear once the work on the floor below reaches the forge: all its cards found, at the required levels.",
             "niv. %1": "lvl %1",
             "Écran %1": "Screen %1",
+            // Médias 1 et 2 de la grappe « ville du livre » (brief « médias du socle », 2 nov.)
+            "Les livres avant les imprimeurs": "Books before the printers",
+            "Le marchand et la presse": "The merchant and the press",
+            "AUJOURD'HUI": "TODAY",
+            "couverture": "cover",
+            "Lyon, avant les imprimeurs": "Lyon, before the printers",
+            "À Lyon, certains livres ont plus de mille ans.": "In Lyon, some books are more than a thousand years old.",
+            "le geste": "the gesture",
+            "Un pupitre, une plume": "A writing desk, a quill",
+            "Il copie. Une page, puis la suivante, pendant trois ou quatre mois pour un seul ouvrage. Quand le texte est long, on découpe le volume en cahiers et on se répartit le travail à plusieurs : c'est la seule façon d'aller plus vite.": "He copies. One page, then the next, for three or four months for a single work. When the text is long, the volume is split into quires and the work is shared among several scribes: it is the only way to go faster.",
+            "pour qui il copie": "who he copies for",
+            "798-860, à la cathédrale": "798-860, at the cathedral",
+            "Ce qu'il copie ne lui appartiendra pas. Les plus beaux volumes de la ville sont rangés dans le cloître de {{card13|Saint-Jean}}, où {{card_palais_st_jean|la bibliothèque du chapitre}} s'est constituée siècle après siècle. En 798, un évêque nommé Leidrade, qui a été bibliothécaire de Charlemagne, fait venir à Lyon les livres qu'il possède, en donne à sa cathédrale et ouvre une école. Au milieu du IXe siècle, les travaux récents estiment le fonds à environ six cents manuscrits.": "What he copies will never belong to him. The finest volumes in the city are kept in the cloister of {{card13|Saint-Jean}}, where {{card_palais_st_jean|the chapter library}} was built up century after century. In 798, a bishop named Leidrade, who had been Charlemagne's librarian, brings the books he owns to Lyon, gives some to his cathedral and opens a school. By the middle of the 9th century, recent studies put the collection at about six hundred manuscripts.",
+            "l'écrit sort du cloître": "writing leaves the cloister",
+            "XIIIe-XVe siècle": "13th-15th century",
+            "Pendant ce temps, écrire cesse d'être réservé aux clercs. Entre 1180 et 1330, la quantité de documents produits explose : registres de notaires, livres de comptes, actes d'administration. Les historiens appellent ça le tournant pragmatique. Dans une ville de marchands, l'écrit devient un outil de travail quotidien. Mais multiplier un livre, lui, demande toujours un copiste et trois mois.": "Meanwhile, writing stops being reserved for clerics. Between 1180 and 1330, the number of documents produced explodes: notaries' registers, account books, administrative deeds. Historians call this the pragmatic turn. In a city of merchants, the written word becomes an everyday working tool. But making more copies of a book still takes a scribe and three months.",
+            "ce qui reste": "what remains",
+            "Années 1470, puis aujourd'hui": "The 1470s, then today",
+            "Quand les premiers imprimeurs s'installent dans les années 1470, ils ne découvrent pas une ville sans livres. Ils arrivent dans une cité qui en produit et en conserve depuis six siècles. Plus d'une centaine de ces manuscrits existent encore, et une partie se trouve à la Bibliothèque municipale.": "When the first printers settle in Lyon in the 1470s, they do not find a city without books. They arrive in a city that has been producing and keeping them for six centuries. More than a hundred of these manuscripts still exist, and some of them are held at the Bibliothèque municipale, Lyon's public library.",
+            "Lyon, années 1470": "Lyon, the 1470s",
+            "Lyon n'a pas d'université. Celui qui lance l'imprimerie ici est un marchand.": "Lyon has no university. The man who brings printing here is a merchant.",
+            "qui paie": "who pays",
+            "Un carrefour de commerce": "A crossroads of trade",
+            "À la fin du XVe siècle, Lyon est un carrefour commercial majeur, et ses foires rassemblent des négociants venus de toute l'Europe. Barthélemy Buyer appartient à ce milieu, et il revient d'études à la Sorbonne, où l'on vient d'installer la première presse de France. Il a de quoi acheter le matériel, payer les ouvriers, financer le papier et organiser la vente.": "At the end of the 15th century, Lyon is a major trading crossroads, and its fairs bring together merchants from all over Europe. Barthélemy Buyer belongs to this world, and he is back from studying at the Sorbonne, where the first printing press in France has just been set up. He has the means to buy the equipment, pay the workers, pay for the paper and organize the sales.",
+            "qui fabrique": "who makes it",
+            "Deux métiers, un atelier": "Two trades, one workshop",
+            "Pour la technique, il fait venir Guillaume Le Roy, un typographe de la région de Liège. Celui-ci place les lettres une par une, à l'envers, puis abaisse {{card_presse_gutenberg|la presse}}. Il est maître dans son métier, Buyer est marchand dans le sien : l'un imprime, l'autre paie, choisit les titres et vend. Sur les pages, on lira la formule : « à la requête de Barthélemy Buyer ».": "For the technical side, he brings in Guillaume Le Roy, a typographer from the Liège region. Le Roy sets the letters one by one, backwards, then lowers {{card_presse_gutenberg|the press}}. He is a master of his trade, Buyer a merchant in his: one prints, the other pays, chooses the titles and sells. On the pages, readers will find the formula “à la requête de Barthélemy Buyer” (at the request of Barthélemy Buyer).",
+            "ce que ça déclenche": "what it sets off",
+            "Début des années 1470": "The early 1470s",
+            "Une fois les lettres rangées dans la forme, on peut tirer la même page autant de fois qu'on veut. Le travail passe de mois de copie au temps d'assembler le texte une seule fois. Reste à savoir quoi imprimer. Les premiers livres sortis de l'atelier sont en français, ce qui est singulier pour l'époque : à la capitale, on imprime pour une clientèle savante, qui lit en latin. Buyer, lui, vise plus large.": "Once the letters are locked in the forme, the same page can be printed as many times as you like. The work shrinks from months of copying to the time it takes to assemble the text once. What remains is deciding what to print. The first books to come out of the workshop are in French, which is unusual for the time: in the capital, printers work for a learned readership that reads Latin. Buyer aims wider.",
+            "Quelques décennies plus tard": "A few decades later",
+            "Un premier livre lyonnais à porter une date sort de son atelier, le 17 septembre 1473 : le Compendium breve. C'est à lui qu'on a longtemps fait remonter l'imprimerie lyonnaise. En quelques décennies, Lyon devient un des grands centres de l'imprimerie européenne. Pas seulement grâce aux presses : grâce à leur rencontre avec des capitaux et des réseaux de commerce. Pendant ce temps, dans le cloître, {{card_palais_st_jean|la bibliothèque du chapitre}} continue de s'enrichir par legs, exemplaire après exemplaire.": "A first Lyon book bearing a date comes out of his workshop on September 17, 1473: the Compendium breve. For a long time, it was seen as the start of printing in Lyon. Within a few decades, Lyon becomes one of the great centers of European printing. Not only thanks to its presses: thanks to their meeting with capital and trade networks. Meanwhile, in the cloister, {{card_palais_st_jean|the chapter library}} keeps growing through bequests, copy after copy.",
             "Récit en construction": "Story under construction",
             "Cette partie du récit est encore en construction.": "This part of the story is still being built.",
             "✓ Obtenu": "✓ Obtained",
@@ -25886,6 +25961,37 @@
             ouvrirVerriere(TEST_VERRIERE_GRAPPE);
         }
 
+        // Brief « médias du socle », lot 5 : ouvre un média directement (la planche
+        // s'ouvre dessous, le lecteur y vit), sans avoir à l'obtenir.
+        function testOuvrirMedia(caseId, ecran) {
+            closeTestPanel();
+            ouvrirVerriere(TEST_VERRIERE_GRAPPE);
+            const i = verriereState.geo.panneaux.findIndex(p => p.caseId === caseId);
+            if (i < 0) { showToast('🎞️ Média introuvable : ' + caseId); return; }
+            vrLecteurOuvrir(i);
+            if (ecran) { _vrLect.e = ecran; _vrLecteurRendre(); }
+        }
+        // Les dix scènes à la suite, une toutes les trois secondes. S'arrête à la fin,
+        // ou dès que le lecteur se ferme (vrLecteurFermer → _testScenesArreter).
+        let _testScenesTimer = 0;
+        function _testScenesArreter() { clearTimeout(_testScenesTimer); _testScenesTimer = 0; }
+        function testToutesLesScenes() {
+            const suite = [];
+            ['vdl_m1', 'vdl_m2'].forEach(c => { for (let e = 0; e < 5; e++) suite.push([c, e]); });
+            let k = 0;
+            const pas = () => {
+                if (k > 0 && !vrLecteurOuvert()) return;      // fermé à la main : on arrête
+                if (k >= suite.length) { showToast('🎞️ Dix scènes passées'); return; }
+                const [c, e] = suite[k];
+                const i = verriereState.geo ? verriereState.geo.panneaux.findIndex(p => p.caseId === c) : -1;
+                if (k === 0 || _vrLect.i !== i) testOuvrirMedia(c, e);
+                else { _vrLect.e = e; _vrLecteurRendre(); }
+                k++;
+                _testScenesTimer = setTimeout(pas, 3000);
+            };
+            pas();
+        }
+
         // Accorde le média suivant, dans l'ordre (les médias en chantier ne
         // s'obtiennent pas : seuls les médias 1 et 2 peuvent l'être).
         function _testAccorderMedia(gid, etape) {
@@ -38533,8 +38639,8 @@
                 bd: {
                     totalCases: 7,
                     cases: [
-                        { id: 'vdl_m1', title: 'Avant qu\'il y ait des ateliers', text: 'Dans cette ville, faire un livre est un travail d\'homme seul.' },
-                        { id: 'vdl_m2', title: 'On monte une machine dans une maison', text: 'La première presse lyonnaise est montée chez un particulier.' },
+                        { id: 'vdl_m1', title: 'Les livres avant les imprimeurs', text: 'Dans cette ville, faire un livre est un travail d\'homme seul.' },
+                        { id: 'vdl_m2', title: 'Le marchand et la presse', text: 'La première presse lyonnaise est montée chez un particulier.' },
                         { id: 'vdl_m3', title: 'Le premier jour d\'un apprenti', text: '' },
                         { id: 'vdl_m4', title: 'Le correcteur qui est parti monter le sien', text: '' },
                         { id: 'vdl_m5', title: 'Le matin où personne n\'est venu', text: '' },
@@ -38547,14 +38653,18 @@
                     // media : contenu lu dans le lecteur (lot 3 du brief).
                     //   texteValide : false → animation « Récit en construction » ; passer à true
                     //   et renseigner ecrans suffit à activer un média.
-                    //   ecrans : { a: pictogramme, b: intitulé de temps, d: ancrage, t: texte }.
-                    //   Dans t, {{cardId|mots}} souligne une carte QUAND ELLE AGIT dans la
-                    //   scène (marqueur explicite, jamais de détection automatique).
+                    //   ecrans : { s: scène animée (VR_SCENES), b: intitulé de temps, d: ancrage, t: texte }.
+                    //   Dans t, {{cardId|mots}} souligne une carte, à sa PREMIÈRE occurrence
+                    //   dans le média seulement (marqueur explicite, jamais de détection automatique).
+                    //   audio : null pour l'instant ; servira à caler les animations sur la
+                    //   narration et à les arrêter à la fin (brief « médias du socle », 4.2).
+                    //   Pas de sources dans le lecteur (David, 1er et 2 nov.) : elles vivent
+                    //   dans MEDIAS_socle_illustre.docx.
                     // Indices : PROVISOIRES (textes non définitifs, cf. brief).
                     etapes: [
                         {
                             id: 'vdl_m1',
-                            titre: 'Avant qu\'il y ait des ateliers',
+                            titre: 'Les livres avant les imprimeurs',
                             indice: 'Avant les ateliers, les beaux livres de la ville dormaient de l\'autre côté de la Saône. Cherche du côté de Saint-Jean.',
                             prerequis: [{ cardId: 'card_palais_st_jean', minLevel: 0 }, { cardId: 'card13', minLevel: 0 }],
                             objectifGeo: { lat: 45.7628, lng: 4.8266, rayon: 80, nom: 'Vieux-Lyon (Saint-Jean)' },
@@ -38562,28 +38672,24 @@
                             voix: true,   // quête donnée par la Voix mémorielle (David, 23/10)
                             media: {
                                 texteValide: true,
+                                audio: null,
                                 ecrans: [
-                                    { a: 'copiste',  b: 'couverture', d: 'Lyon, milieu du XVe siècle',
-                                      t: 'Dans cette ville, faire un livre est un travail d\'homme seul.' },
-                                    { a: 'copiste',  b: 'le geste', d: 'Un pupitre, une plume',
-                                      t: 'Il copie. Une page, puis la suivante, pendant trois ou quatre mois pour un seul ouvrage. Quand le texte est long, on découpe le volume en cahiers et on se répartit le travail à plusieurs : c\'est la seule façon d\'aller plus vite.' },
-                                    { a: 'supports', b: 'la matière', d: 'Peau ou papier',
-                                      t: 'Devant lui, du parchemin, fait de peaux. Il existe du papier, quatre fois moins cher dès le siècle précédent, treize fois moins cher maintenant, mais il n\'a pas encore pris toute la place.' },
-                                    { a: 'armoire',  b: 'où ça finit', d: 'De l\'autre côté de la Saône',
-                                      t: 'Ce qu\'il copie ne lui appartiendra pas. Les plus beaux volumes de la ville sont rangés dans le cloître de Saint-Jean, où la {{card_palais_st_jean|bibliothèque du chapitre}} s\'est constituée pendant des siècles par les legs de ses chanoines.' },
-                                ],
-                                sources: [
-                                    'Trois à quatre mois pour un manuscrit d\'importance moyenne : dossier sur le livre et l\'enseignement au Moyen Âge.',
-                                    'Division en cahiers répartis entre plusieurs copistes : Université de Liège ; dossier du Scriptorial.',
-                                    'Papier quatre fois moins cher au XIVe siècle, treize fois moins au XVe : Université Montpellier 3.',
-                                    'Manuscrits, objets de luxe réservés à la noblesse et au clergé : Université de Liège.',
-                                    'Bibliothèque capitulaire constituée par legs : revue Chrétiens et sociétés.',
+                                    { s: 'vitrine',    b: 'couverture', d: 'Lyon, avant les imprimeurs',
+                                      t: "À Lyon, certains livres ont plus de mille ans." },
+                                    { s: 'copiste',    b: 'le geste', d: 'Un pupitre, une plume',
+                                      t: "Il copie. Une page, puis la suivante, pendant trois ou quatre mois pour un seul ouvrage. Quand le texte est long, on découpe le volume en cahiers et on se répartit le travail à plusieurs : c'est la seule façon d'aller plus vite." },
+                                    { s: 'cloitre',    b: 'pour qui il copie', d: '798-860, à la cathédrale',
+                                      t: "Ce qu'il copie ne lui appartiendra pas. Les plus beaux volumes de la ville sont rangés dans le cloître de {{card13|Saint-Jean}}, où {{card_palais_st_jean|la bibliothèque du chapitre}} s'est constituée siècle après siècle. En 798, un évêque nommé Leidrade, qui a été bibliothécaire de Charlemagne, fait venir à Lyon les livres qu'il possède, en donne à sa cathédrale et ouvre une école. Au milieu du IXe siècle, les travaux récents estiment le fonds à environ six cents manuscrits." },
+                                    { s: 'documents',  b: "l'écrit sort du cloître", d: 'XIIIe-XVe siècle',
+                                      t: "Pendant ce temps, écrire cesse d'être réservé aux clercs. Entre 1180 et 1330, la quantité de documents produits explose : registres de notaires, livres de comptes, actes d'administration. Les historiens appellent ça le tournant pragmatique. Dans une ville de marchands, l'écrit devient un outil de travail quotidien. Mais multiplier un livre, lui, demande toujours un copiste et trois mois." },
+                                    { s: 'rayonnages', b: 'ce qui reste', d: "Années 1470, puis aujourd'hui",
+                                      t: "Quand les premiers imprimeurs s'installent dans les années 1470, ils ne découvrent pas une ville sans livres. Ils arrivent dans une cité qui en produit et en conserve depuis six siècles. Plus d'une centaine de ces manuscrits existent encore, et une partie se trouve à la Bibliothèque municipale." },
                                 ],
                             },
                         },
                         {
                             id: 'vdl_m2',
-                            titre: 'On monte une machine dans une maison',
+                            titre: 'Le marchand et la presse',
                             indice: 'La première presse de la ville a tourné dans une maison, près des quais de Saône. Retourne rue Mercière.',
                             prerequis: [{ cardId: 'card_presse_gutenberg', minLevel: 0 }, { cardId: 'card_palais_st_jean', minLevel: 0 }],
                             objectifGeo: { lat: 45.7632, lng: 4.8328, rayon: 80, nom: 'Rue Mercière' },
@@ -38591,22 +38697,18 @@
                             voix: true,
                             media: {
                                 texteValide: true,
+                                audio: null,
                                 ecrans: [
-                                    { a: 'maison',   b: 'couverture', d: 'Quai de Saône, 1472',
-                                      t: 'La première {{card_presse_gutenberg|presse}} lyonnaise est montée chez un particulier.' },
-                                    { a: 'presse',   b: 'qui paie', d: 'Un marchand, pas un savant',
-                                      t: 'Barthélemy Buyer est d\'une famille du consulat. Il a vu fonctionner une presse pendant ses études à Paris. Il fournit le matériel, choisit les titres, et fait venir de Liège un typographe, Guillaume Le Roy, pour la faire tourner.' },
-                                    { a: 'colophon', b: 'la première feuille', d: '17 septembre 1473',
-                                      t: 'Le premier livre daté imprimé à Lyon sort de cette maison. Buyer vend aussi du papier et du matériel d\'imprimerie : c\'est un commerce, et son nom est le plus ancien nom d\'éditeur relevé sur un livre imprimé en France.' },
-                                    { a: 'rue',      b: 'ce que ça déclenche', d: '1480, puis 1500',
-                                      t: 'Ce qui demandait trois mois à un copiste prend désormais quelques jours par exemplaire. Neuf villes françaises impriment en 1480, quarante en 1500. À la fin du siècle, Lyon compte une cinquantaine d\'imprimeurs et sort un tiers des éditions du royaume.' },
-                                ],
-                                sources: [
-                                    'Buyer, famille consulaire, études à Paris, presse vue en fonctionnement : support des Archives de Lyon.',
-                                    'Presse installée dans sa maison sur le quai de Saône, matériel fourni, titres choisis, vente de papeterie et de matériel typographique, plus ancien nom d\'éditeur en France : Presses universitaires de Lyon.',
-                                    'Guillaume Le Roy, typographe venu de Liège : notice Connaître la Wallonie.',
-                                    'Premier livre daté le 17 septembre 1473 ; neuf villes en 1480, quarante en 1500 : BM Lyon, exposition Impressions premières.',
-                                    'Une cinquantaine d\'imprimeurs et un tiers des éditions françaises : Histoire de l\'imprimerie à Lyon.',
+                                    { s: 'presseFenetre', b: 'couverture', d: 'Lyon, années 1470',
+                                      t: "Lyon n'a pas d'université. Celui qui lance l'imprimerie ici est un marchand." },
+                                    { s: 'quai',     b: 'qui paie', d: 'Un carrefour de commerce',
+                                      t: "À la fin du XVe siècle, Lyon est un carrefour commercial majeur, et ses foires rassemblent des négociants venus de toute l'Europe. Barthélemy Buyer appartient à ce milieu, et il revient d'études à la Sorbonne, où l'on vient d'installer la première presse de France. Il a de quoi acheter le matériel, payer les ouvriers, financer le papier et organiser la vente." },
+                                    { s: 'atelier',  b: 'qui fabrique', d: 'Deux métiers, un atelier',
+                                      t: "Pour la technique, il fait venir Guillaume Le Roy, un typographe de la région de Liège. Celui-ci place les lettres une par une, à l'envers, puis abaisse {{card_presse_gutenberg|la presse}}. Il est maître dans son métier, Buyer est marchand dans le sien : l'un imprime, l'autre paie, choisit les titres et vend. Sur les pages, on lira la formule : « à la requête de Barthélemy Buyer »." },
+                                    { s: 'pile',     b: 'ce que ça déclenche', d: 'Début des années 1470',
+                                      t: "Une fois les lettres rangées dans la forme, on peut tirer la même page autant de fois qu'on veut. Le travail passe de mois de copie au temps d'assembler le texte une seule fois. Reste à savoir quoi imprimer. Les premiers livres sortis de l'atelier sont en français, ce qui est singulier pour l'époque : à la capitale, on imprime pour une clientèle savante, qui lit en latin. Buyer, lui, vise plus large." },
+                                    { s: 'routes',   b: 'ce qui reste', d: 'Quelques décennies plus tard',
+                                      t: "Un premier livre lyonnais à porter une date sort de son atelier, le 17 septembre 1473 : le Compendium breve. C'est à lui qu'on a longtemps fait remonter l'imprimerie lyonnaise. En quelques décennies, Lyon devient un des grands centres de l'imprimerie européenne. Pas seulement grâce aux presses : grâce à leur rencontre avec des capitaux et des réseaux de commerce. Pendant ce temps, dans le cloître, {{card_palais_st_jean|la bibliothèque du chapitre}} continue de s'enrichir par legs, exemplaire après exemplaire." },
                                 ],
                             },
                         },
@@ -45154,6 +45256,589 @@
             });
         }
 
+        // ── Scènes animées des médias du socle (brief « médias du socle », lot 2) ──
+        // Reprises de diapositives_socle.html sans les redessiner. Tout est dessiné en
+        // code (aucune image, aucune police externe) ; animations en @keyframes CSS
+        // (préfixe vrs, cf. CSS du lecteur) et deux familles d'animateMotion (routes).
+        // Écarts avec le prototype : identifiants de dégradés préfixés « vrs- » (ils sont
+        // globaux au document), noms d'animations préfixés « vrs », couleur papier
+        // renommée PAP (T est la fonction de traduction), « AUJOURD'HUI » traduit.
+        // Chaque appel renvoie un SVG neuf : le régénérer relance les animations.
+        const VR_SCENES = (function () {
+        const PAP='#f4ecdb';
+        const g=(c,w)=>`fill="none" stroke="${c||PAP}" stroke-width="${w||2.4}" stroke-linecap="round" stroke-linejoin="round"`;
+
+        /* ══════════════════════════════════════════════════════════════
+           LES DIX SCÈNES, ANIMÉES
+           Tout est dessiné et animé en SVG, sans aucune ressource externe.
+           ══════════════════════════════════════════════════════════════ */
+        const DEFS=`<defs>
+         <linearGradient id="vrs-ciel" x1="0" y1="0" x2="0" y2="1">
+           <stop offset="0" stop-color="#171527"/><stop offset="1" stop-color="#0b0a12"/></linearGradient>
+         <radialGradient id="vrs-halo" cx="50%" cy="50%" r="50%">
+           <stop offset="0" stop-color="#ffcf7a" stop-opacity=".30"/>
+           <stop offset="1" stop-color="#ffcf7a" stop-opacity="0"/></radialGradient>
+         <radialGradient id="vrs-haloV" cx="50%" cy="50%" r="50%">
+           <stop offset="0" stop-color="#a78bfa" stop-opacity=".26"/>
+           <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/></radialGradient>
+         <linearGradient id="vrs-verre" x1="0" y1="0" x2="1" y2="1">
+           <stop offset="0" stop-color="#ffffff" stop-opacity=".10"/>
+           <stop offset=".45" stop-color="#ffffff" stop-opacity="0"/>
+           <stop offset=".55" stop-color="#ffffff" stop-opacity=".06"/>
+           <stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
+         <linearGradient id="vrs-bal" x1="0" x2="1">
+           <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+           <stop offset=".5" stop-color="#fff" stop-opacity=".14"/>
+           <stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+         <linearGradient id="vrs-rayon" x1="0" y1="0" x2="0" y2="1">
+           <stop offset="0" stop-color="#ffd79a" stop-opacity=".22"/>
+           <stop offset="1" stop-color="#ffd79a" stop-opacity="0"/></linearGradient>
+         <linearGradient id="vrs-parch" x1="0" y1="0" x2="0" y2="1">
+           <stop offset="0" stop-color="#f3e8cd"/><stop offset="1" stop-color="#d9c79d"/></linearGradient>
+         <linearGradient id="vrs-jour" x1="0" y1="0" x2="0" y2="1">
+           <stop offset="0" stop-color="#cfc0a0"/><stop offset="1" stop-color="#9c8a6c"/></linearGradient>
+         <linearGradient id="vrs-pierre" x1="0" y1="0" x2="0" y2="1">
+           <stop offset="0" stop-color="#d8cbac"/><stop offset="1" stop-color="#b3a384"/></linearGradient>
+         <linearGradient id="vrs-eauJ" x1="0" y1="0" x2="0" y2="1">
+           <stop offset="0" stop-color="#8fa2b8"/><stop offset="1" stop-color="#6b7f98"/></linearGradient>
+         <linearGradient id="vrs-eau" x1="0" y1="0" x2="0" y2="1">
+           <stop offset="0" stop-color="#2d3c5e"/><stop offset="1" stop-color="#1a2338"/></linearGradient>
+        </defs>`;
+
+        const FOND = `<rect width="400" height="300" fill="url(#vrs-ciel)"/>`;
+        const JOUR = `<rect width="400" height="300" fill="url(#vrs-jour)"/>`;
+        const SOMBRE='#161425', BOIS='#5a3f28', BOIS2='#3f2c1c', PARCH='#efe3c6',
+              ENCRE='#17141f', OR2='#d9a441', VI2='#a78bfa';
+
+        /* poussière qui monte, posée sur une zone */
+        const motes=(x,w,n,base)=>Array.from({length:n},(_,i)=>
+         `<circle cx="${x+Math.round((i*37)%w)}" cy="${base}" r="${1+(i%3)*.6}" fill="${VI2}"
+           opacity=".0" style="animation:vrsPoussiere ${5+(i%4)}s ease-out ${(i*.8)%5}s infinite"/>`).join('');
+
+        const SCENES={
+
+        /* ════════ RÉCIT 1 ════════ */
+
+        /* Couverture — vitrine, lumière rasante, écriture qui apparaît */
+        vitrine:()=>`${DEFS}${FOND}
+         <ellipse cx="200" cy="150" rx="190" ry="130" fill="url(#vrs-halo)"/>
+         <!-- socle -->
+         <path d="M56 252 L344 252 L318 272 L82 272 Z" fill="${SOMBRE}"/>
+         <path d="M56 252 L344 252" stroke="${OR2}" stroke-width="1.2" opacity=".35"/>
+         <!-- livre ouvert -->
+         <path d="M200 206 C 160 190, 118 190, 92 198 L92 146 C 118 136, 162 136, 200 152 Z"
+           fill="url(#vrs-parch)"/>
+         <path d="M200 206 C 240 190, 282 190, 308 198 L308 146 C 282 136, 238 136, 200 152 Z"
+           fill="url(#vrs-parch)"/>
+         <path d="M200 152 L200 206" stroke="#c4ae82" stroke-width="2"/>
+         <path d="M92 198 C 118 190, 160 190, 200 206 C 240 190, 282 190, 308 198
+                  L308 206 C 282 198, 240 198, 200 214 C 160 198, 118 198, 92 206 Z" fill="#bfa87c"/>
+         <!-- texte qui apparaît -->
+         ${[0,1,2,3,4,5].map(i=>`<g class="a" style="animation-delay:${.5+i*.2}s" opacity="0">
+           <rect x="${106+i}" y="${150+i*9}" width="${74-i*4}" height="2.4" rx="1.2" fill="${ENCRE}" opacity=".55"/>
+           <rect x="${214+i}" y="${150+i*9}" width="${74-i*3}" height="2.4" rx="1.2" fill="${ENCRE}" opacity=".55"/>
+         </g>`).join('')}
+         <!-- lettrine -->
+         <rect class="a" style="animation-delay:.3s" x="104" y="146" width="12" height="14" fill="${OR2}" opacity=".85"/>
+         <!-- vitre -->
+         <rect x="52" y="52" width="296" height="200" rx="2" fill="url(#vrs-verre)"/>
+         <rect x="52" y="52" width="296" height="200" rx="2" fill="none"
+           stroke="${PARCH}" stroke-width="1.6" opacity=".30"/>
+         <rect x="-130" y="44" width="110" height="216" fill="url(#vrs-bal)" transform="skewX(-14)"
+           style="animation:vrsBalayage 6s ease-in-out infinite"/>
+         ${motes(70,260,7,250)}`,
+
+        /* Le geste — le copiste, la bougie, le sablier */
+        copiste:()=>`${DEFS}${FOND}
+         <ellipse cx="170" cy="180" rx="160" ry="115" fill="url(#vrs-halo)"/>
+         <path d="M0 262 H400 V300 H0 Z" fill="#0a0910"/>
+         <!-- tabouret -->
+         <rect x="218" y="206" width="52" height="9" rx="2" fill="#4a3a24"/>
+         <path d="M226 215 L220 262 M262 215 L268 262" stroke="#4a3a24" stroke-width="7" stroke-linecap="round"/>
+         <!-- le copiste, assis de profil, penché vers son pupitre -->
+         <g fill="#2b2436">
+           <path d="M232 210 C 212 208, 200 206, 196 202 L198 190 C 212 190, 230 194, 240 198 Z"/>
+           <path d="M196 202 L204 250 L190 254 L186 206 Z"/>
+           <path d="M186 252 L216 256 L214 262 L182 262 Z"/>
+           <path d="M240 200 C 236 178, 226 158, 214 146 L236 136 C 250 156, 258 182, 256 204 Z"/>
+         </g>
+         <circle cx="206" cy="128" r="15" fill="#3a3148"/>
+         <path d="M191 130 C 188 110, 206 102, 220 108 C 230 112, 232 128, 226 136
+                  C 216 142, 198 142, 191 130 Z" fill="#241e2e"/>
+         <!-- pupitre incliné -->
+         <path d="M86 216 L168 158 L180 172 L98 230 Z" fill="#6f5133"/>
+         <path d="M86 216 L98 230 L96 236 L84 222 Z" fill="#4a3a24"/>
+         <rect x="118" y="208" width="18" height="52" fill="#4a3a24"/>
+         <ellipse cx="127" cy="260" rx="30" ry="7" fill="#3f2c1c"/>
+         <!-- la feuille, et les lignes qui se remplissent -->
+         <path d="M98 208 L164 162 L174 174 L108 220 Z" fill="url(#vrs-parch)"/>
+         ${[0,1,2,3,4,5].map(i=>`<rect class="a" style="animation-delay:${.6+i*.4}s" opacity="0"
+           x="${108+i*2}" y="${176+i*7}" width="${50-i*3}" height="2" rx="1" fill="${ENCRE}"
+           transform="rotate(-35 133 190)"/>`).join('')}
+         <!-- bras et plume, qui avancent ligne à ligne -->
+         <g style="animation:vrsCopie 3.4s steps(1,end) infinite">
+           <path d="M222 148 L160 186" stroke="#3a3148" stroke-width="11" stroke-linecap="round"/>
+           <path d="M160 186 L146 160" stroke="${PARCH}" stroke-width="2.6" stroke-linecap="round" opacity=".92"/>
+           <path d="M146 160 C 142 148, 146 138, 152 132" stroke="${PARCH}" stroke-width="2"
+             fill="none" opacity=".7"/>
+         </g>
+         <!-- bougie -->
+         <rect x="298" y="206" width="11" height="34" rx="2" fill="${PARCH}" opacity=".8"/>
+         <ellipse cx="303" cy="240" rx="14" ry="4" fill="#3f2c1c"/>
+         <path d="M303 206 C 297 198, 299 190, 303 186 C 307 190, 309 198, 303 206 Z" fill="${OR2}"
+           style="transform-origin:303px 206px;animation:vrsFlamme 1.6s ease-in-out infinite"/>
+         <circle cx="303" cy="196" r="28" fill="url(#vrs-halo)"/>
+         <!-- sablier -->
+         <g stroke="${OR2}" stroke-width="2" fill="none" opacity=".75">
+           <path d="M26 118 h40 M26 222 h40"/>
+           <path d="M30 118 C 32 152, 46 164, 46 170 C 46 176, 32 190, 30 222"/>
+           <path d="M62 118 C 60 152, 46 164, 46 170 C 46 176, 60 190, 62 222"/>
+         </g>
+         <path d="M32 122 H60 L46 164 Z" fill="${OR2}" opacity=".5"
+           style="transform-origin:46px 122px;animation:vrsSable 7s linear infinite"/>
+         <path d="M34 218 H58 L46 184 Z" fill="${OR2}" opacity=".5"
+           style="transform-origin:46px 218px;transform:scaleY(0);animation:vrsSableBas 7s linear infinite"/>
+         <rect x="45.2" y="166" width="1.6" height="48" fill="${OR2}" opacity=".45"/>`,
+
+        /* Pour qui il copie — le cloître au premier plan, les volumes qui s'empilent */
+        cloitre:()=>`${DEFS}${JOUR}
+         <!-- salle claire, voûtée -->
+         <path d="M0 300 V96 C 0 40, 400 40, 400 96 V300 Z" fill="url(#vrs-pierre)"/>
+         <path d="M30 300 V110 C 30 70, 170 70, 170 110 V300 Z" fill="#c0b191"/>
+         <path d="M230 300 V110 C 230 70, 370 70, 370 110 V300 Z" fill="#c0b191"/>
+         <rect x="0" y="252" width="400" height="48" fill="#8a7a5e"/>
+         <!-- l'armoire du chapitre, ouverte -->
+         <rect x="236" y="92" width="148" height="160" fill="#4a2f1e"/>
+         <rect x="236" y="92" width="148" height="160" fill="none" stroke="#2f1d12" stroke-width="5"/>
+         <path d="M236 142 H384 M236 192 H384" stroke="#2f1d12" stroke-width="4"/>
+         <!-- la porte ouverte, et sa serrure -->
+         <path d="M236 92 L196 76 L196 268 L236 252 Z" fill="#5a3b24"/>
+         <circle cx="212" cy="176" r="7" fill="${OR2}"/>
+         <path d="M212 183 v12" stroke="${OR2}" stroke-width="3"/>
+         <!-- les volumes qui s'y rangent, un par un -->
+         ${[0,1,2,3,4,5,6,7,8].map(i=>{
+           const r=Math.floor(i/3), c=i%3;
+           return `<rect class="a" style="animation-delay:${1.4+i*.3}s" opacity="0"
+             x="${248+c*44}" y="${132+r*50}" width="40" height="9" rx="1.5"
+             fill="${['#7a4a30','#8a6a44','#6b5436','#5d4b6b'][i%4]}"/>`;
+         }).join('')}
+         <!-- le copiste apporte le volume achevé -->
+         <g fill="#3a2f44">
+           <circle cx="74" cy="110" r="17"/>
+           <path d="M74 128 C 44 138, 34 198, 38 262 L116 262 C 120 198, 104 138, 74 128 Z"/>
+         </g>
+         <path d="M100 152 L156 170" stroke="#3a2f44" stroke-width="13" stroke-linecap="round"/>
+         <!-- le volume, qui passe de ses mains à l'armoire -->
+         <g style="animation:vrsRemise 5.2s ease-in-out infinite">
+           <rect x="150" y="158" width="46" height="13" rx="2" fill="#8a4c3a"/>
+           <rect x="150" y="158" width="7" height="13" fill="#5e2f22"/>
+         </g>
+         <!-- rai de lumière -->
+         <path d="M150 40 L214 40 L262 252 L156 252 Z" fill="#fff6dd" opacity=".12"/>
+         ${motes(140,150,6,250)}`,
+
+        /* L'écrit sort du cloître — trois documents, le sceau qui tombe */
+        documents:()=>`${DEFS}${FOND}
+         <ellipse cx="200" cy="170" rx="185" ry="120" fill="url(#vrs-halo)"/>
+         <path d="M0 240 H400 V300 H0 Z" fill="#241a12"/>
+         <path d="M0 240 H400" stroke="${BOIS}" stroke-width="3"/>
+
+         <!-- 1. REGISTRE DE NOTAIRE : volume épais debout, nerfs et fermoir, plume et encrier -->
+         <g class="a" style="animation-delay:.2s" opacity="0">
+           <path d="M30 240 L96 240 L96 104 L30 104 Z" fill="#6b3a2c"/>
+           <path d="M30 104 L96 104 L104 96 L38 96 Z" fill="#8a4c3a"/>
+           <path d="M96 240 L104 232 L104 96 L96 104 Z" fill="#4e2a20"/>
+           <g fill="#3a1f18">
+             <rect x="30" y="128" width="66" height="7"/><rect x="30" y="166" width="66" height="7"/>
+             <rect x="30" y="204" width="66" height="7"/>
+           </g>
+           <rect x="86" y="150" width="22" height="10" rx="2" fill="${OR2}" opacity=".85"/>
+           <!-- encrier et plume -->
+           <path d="M108 240 L132 240 L130 220 L110 220 Z" fill="#2a2235"/>
+           <ellipse cx="120" cy="220" rx="10" ry="4" fill="#15121d"/>
+           <path d="M120 218 C 126 196, 136 176, 146 162" stroke="${PARCH}" stroke-width="2.6"
+             fill="none" stroke-linecap="round" opacity=".9"/>
+         </g>
+
+         <!-- 2. LIVRE DE COMPTES : double page en colonnes, chiffres alignés, monnaie -->
+         <g class="a" style="animation-delay:1.1s" opacity="0">
+           <path d="M150 234 C 176 220, 200 220, 212 226 L212 128 C 200 122, 176 122, 150 136 Z"
+             fill="url(#vrs-parch)"/>
+           <path d="M274 234 C 248 220, 224 220, 212 226 L212 128 C 224 122, 248 122, 274 136 Z"
+             fill="url(#vrs-parch)"/>
+           <path d="M212 128 V226" stroke="#bda67c" stroke-width="2"/>
+           <g stroke="#9c8a63" stroke-width="1.2">
+             <path d="M186 132 V224 M198 130 V225 M226 130 V225 M238 132 V224"/>
+           </g>
+           ${[0,1,2,3,4,5].map(i=>`
+             <rect x="${158+i}" y="${148+i*13}" width="22" height="2" rx="1" fill="${ENCRE}" opacity=".5"/>
+             <rect x="${188}" y="${148+i*13}" width="8" height="2" rx="1" fill="${ENCRE}" opacity=".6"/>
+             <rect x="${228}" y="${148+i*13}" width="8" height="2" rx="1" fill="${ENCRE}" opacity=".6"/>
+             <rect x="${242+i}" y="${148+i*13}" width="22" height="2" rx="1" fill="${ENCRE}" opacity=".5"/>`).join('')}
+           <g fill="${OR2}" opacity=".9">
+             <ellipse cx="156" cy="246" rx="9" ry="3.4"/><ellipse cx="166" cy="242" rx="9" ry="3.4"/>
+             <ellipse cx="150" cy="238" rx="9" ry="3.4"/>
+           </g>
+         </g>
+
+         <!-- 3. ACTE SCELLÉ : rouleau déroulé, cordon et sceau de cire -->
+         <g class="a" style="animation-delay:2s" opacity="0">
+           <path d="M288 120 L380 112 L384 216 L292 226 Z" fill="url(#vrs-parch)"/>
+           <path d="M284 112 C 296 106, 300 122, 288 128 Z" fill="#d6c197"/>
+           <path d="M282 108 L380 100 L382 114 L284 122 Z" fill="#d6c197"/>
+           ${[0,1,2,3,4].map(i=>`<rect x="${298}" y="${136+i*16}" width="${72-i*7}" height="2.2"
+             rx="1" fill="${ENCRE}" opacity=".5" transform="rotate(-5 298 140)"/>`).join('')}
+           <path d="M322 224 C 322 242, 328 254, 334 262" stroke="#bda67c" stroke-width="2.6" fill="none"/>
+           <g style="animation:vrsSceau 4.2s ease-out 2.6s infinite">
+             <ellipse cx="336" cy="266" rx="17" ry="15" fill="#7a2f2f"/>
+             <ellipse cx="336" cy="266" rx="17" ry="15" fill="none" stroke="#a04545" stroke-width="2"/>
+             <path d="M336 257 V275 M327 266 H345" stroke="#5a1f1f" stroke-width="2.6"/>
+           </g>
+         </g>
+         ${motes(60,280,6,238)}`,
+
+        /* Ce qui reste — deux rayonnages, l'ancien et le moderne */
+        rayonnages:()=>`${DEFS}${JOUR}
+         <rect width="400" height="300" fill="#b9ab8c"/>
+         <rect x="0" y="236" width="400" height="64" fill="#8a7a5e"/>
+         <!-- trois volets : IXe siècle, XVe siècle, aujourd'hui -->
+         <g>
+           <!-- IXe : le cloître -->
+           <rect x="14" y="40" width="114" height="196" fill="#cbbb99"/>
+           <path d="M30 236 V104 C 30 74, 112 74, 112 104 V236 Z" fill="#a8977a"/>
+           <rect x="44" y="152" width="84" height="8" fill="#5a3f28" transform="translate(-10,0)"/>
+           <rect x="46" y="138" width="60" height="12" rx="2" fill="#8a4c3a"/>
+           <rect x="46" y="138" width="9" height="12" fill="#5e2f22"/>
+           <text x="71" y="224" text-anchor="middle" fill="#3a3024" font-family="Courier New, monospace"
+             font-size="13" letter-spacing="1">IXᵉ</text>
+         </g>
+         <g>
+           <!-- XVe : la rue, l'atelier -->
+           <rect x="142" y="40" width="114" height="196" fill="#cbbb99"/>
+           <path d="M156 236 V112 L199 86 L242 112 V236 Z" fill="#a8977a"/>
+           <rect x="176" y="156" width="46" height="46" fill="#5a3f28"/>
+           <rect x="172" y="146" width="54" height="10" rx="2" fill="#6f5133"/>
+           <rect x="184" y="132" width="60" height="12" rx="2" fill="#8a4c3a"
+             transform="rotate(-6 214 138)"/>
+           <rect x="184" y="132" width="9" height="12" fill="#5e2f22" transform="rotate(-6 214 138)"/>
+           <text x="199" y="224" text-anchor="middle" fill="#3a3024" font-family="Courier New, monospace"
+             font-size="13" letter-spacing="1">XVᵉ</text>
+         </g>
+         <g>
+           <!-- aujourd'hui : la vitrine -->
+           <rect x="270" y="40" width="116" height="196" fill="#cbbb99"/>
+           <rect x="286" y="88" width="84" height="116" fill="#20202f"/>
+           <rect x="286" y="88" width="84" height="116" fill="none" stroke="#6b7088" stroke-width="2"/>
+           <path d="M300 182 L356 182 L350 154 L306 154 Z" fill="#2a2b3d"/>
+           <rect x="304" y="140" width="48" height="12" rx="2" fill="#8a4c3a"/>
+           <rect x="304" y="140" width="8" height="12" fill="#5e2f22"/>
+           <rect x="286" y="88" width="84" height="116" fill="url(#vrs-verre)"/>
+           <rect x="306" y="210" width="44" height="10" rx="2" fill="#efe9da"/>
+           <text x="328" y="234" text-anchor="middle" fill="#3a3024" font-family="Courier New, monospace"
+             font-size="11" letter-spacing="1">${T("AUJOURD'HUI")}</text>
+         </g>
+         <!-- le volume qui traverse les trois volets -->
+         ${[0,1].map(i=>`<path class="t" style="animation-delay:${.8+i*1.2}s"
+           d="M${118+i*128} 144 C ${140+i*128} 128, ${160+i*128} 128, ${180+i*128} 140"
+           stroke="${OR2}" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".85"/>`).join('')}
+         ${[0,1].map(i=>`<path d="M${170+i*128} 132 l10 8 l-10 8" stroke="${OR2}" stroke-width="2.4"
+           fill="none" class="a" style="animation-delay:${2+i*1.2}s" opacity="0"/>`).join('')}`,
+
+        /* ════════ RÉCIT 2 ════════ */
+
+        /* Couverture — la presse dans une pièce, la fenêtre sur la rivière */
+        presseFenetre:()=>`${DEFS}${FOND}
+         <rect x="0" y="0" width="400" height="268" fill="#1a1726"/>
+         <!-- fenêtre sur la rivière -->
+         <rect x="262" y="40" width="112" height="96" rx="2" fill="url(#vrs-eau)"/>
+         <path d="M262 40 H374 V136 H262 Z" fill="none" stroke="#6b5436" stroke-width="4"/>
+         <path d="M318 40 V136 M262 88 H374" stroke="#6b5436" stroke-width="3"/>
+         <path d="M266 112 q14 -5 28 0 q14 5 28 0 q14 -5 28 0" stroke="${VI2}" stroke-width="2"
+           fill="none" opacity=".4" style="animation:vrsOnde 5s ease-in-out infinite"/>
+         <path d="M264 124 q14 -5 28 0 q14 5 28 0 q14 -5 28 0" stroke="${VI2}" stroke-width="2"
+           fill="none" opacity=".3" style="animation:vrsOnde 5s ease-in-out .8s infinite"/>
+         <path d="M266 136 L370 136 L336 268 L212 268 Z" fill="url(#vrs-rayon)" opacity=".55"/>
+         <path d="M0 268 H400 V300 H0 Z" fill="#0d0b14"/>
+
+         <!-- la presse, dans la maison, à droite -->
+         <g opacity=".92">
+           <rect x="246" y="118" width="12" height="150" fill="${BOIS}"/>
+           <rect x="340" y="118" width="12" height="150" fill="${BOIS}"/>
+           <rect x="238" y="110" width="122" height="13" rx="2" fill="#6f5133"/>
+           <rect x="242" y="256" width="114" height="12" rx="2" fill="#6f5133"/>
+           <rect x="262" y="214" width="76" height="34" rx="2" fill="#241a12"/>
+           <rect x="272" y="222" width="56" height="20" rx="1.5" fill="url(#vrs-parch)"/>
+         </g>
+         <g style="transform-origin:300px 142px;animation:vrsLevier 6s ease-in-out infinite">
+           <rect x="296" y="137" width="76" height="8" rx="4" fill="${OR2}"/>
+           <circle cx="376" cy="141" r="8" fill="${OR2}"/>
+         </g>
+         <g style="animation:vrsPlatine 6s ease-in-out infinite">
+           <rect x="254" y="178" width="92" height="17" rx="2" fill="#3a2f44"/>
+           <rect x="254" y="178" width="92" height="5" rx="2" fill="#4b3e58"/>
+         </g>
+
+         <!-- le marchand, au premier plan : bourse, registre, coffre -->
+         <circle cx="110" cy="120" r="80" fill="url(#vrs-halo)"/>
+         <g fill="#241e30">
+           <path d="M106 118 C 72 128, 60 192, 64 268 L150 268 C 154 192, 140 128, 106 118 Z"/>
+         </g>
+         <!-- col de fourrure -->
+         <path d="M78 126 C 86 142, 126 142, 134 126 C 126 118, 86 118, 78 126 Z" fill="#6b5436"/>
+         <!-- visage, dégagé -->
+         <circle cx="106" cy="98" r="18" fill="#c99b74"/>
+         <!-- chaperon -->
+         <path d="M86 92 C 86 72, 126 72, 126 92 C 126 96, 120 98, 106 98 C 92 98, 86 96, 86 92 Z"
+           fill="#4a3f5e"/>
+         <path d="M126 86 C 140 84, 146 96, 136 104 C 130 98, 128 92, 126 86 Z" fill="#4a3f5e"/>
+         <!-- registre sous le bras -->
+         <g transform="rotate(-8 60 186)">
+           <rect x="38" y="164" width="44" height="54" rx="2" fill="#6b3a2c"/>
+           <rect x="38" y="164" width="9" height="54" fill="#4e2a20"/>
+           <rect x="52" y="178" width="22" height="2.4" rx="1" fill="${PARCH}" opacity=".7"/>
+           <rect x="52" y="188" width="22" height="2.4" rx="1" fill="${PARCH}" opacity=".7"/>
+         </g>
+         <!-- bourse à la ceinture -->
+         <path d="M140 170 C 132 170, 128 180, 132 190 C 138 198, 152 198, 158 190
+                  C 162 180, 158 170, 150 170 Z" fill="#6b5436"/>
+         <path d="M134 170 h22" stroke="${OR2}" stroke-width="2.4"/>
+         <!-- coffre et monnaie -->
+         <path d="M24 268 L96 268 L96 230 L24 230 Z" fill="#3f2c1c"/>
+         <path d="M24 230 C 24 212, 96 212, 96 230 Z" fill="#5a3f28"/>
+         <rect x="52" y="236" width="16" height="12" rx="2" fill="${OR2}" opacity=".8"/>
+         <g fill="${OR2}" opacity=".85">
+           <ellipse cx="172" cy="264" rx="9" ry="3.4"/><ellipse cx="184" cy="260" rx="9" ry="3.4"/>
+           <ellipse cx="166" cy="256" rx="9" ry="3.4"/>
+         </g>
+         ${motes(200,160,6,266)}`,
+
+        /* Qui paie — le quai, les ballots, la barque qui passe */
+        quai:()=>`${DEFS}${JOUR}
+         <rect x="0" y="0" width="400" height="156" fill="#b9ab8c"/>
+         <rect x="0" y="70" width="400" height="86" fill="url(#vrs-eauJ)"/>
+         <path d="M0 112 q24 -5 48 0 q24 5 48 0 q24 -5 48 0 q24 5 48 0 q24 -5 48 0 q24 5 48 0 q24 -5 48 0 q24 5 48 0"
+           stroke="#e8f0ff" stroke-width="2" fill="none" opacity=".35"
+           style="animation:vrsOnde 6s ease-in-out infinite"/>
+         <!-- une barque chargée traverse -->
+         <g style="animation:vrsFlotte 20s linear infinite">
+           <path d="M-62 128 L10 128 L0 146 L-52 146 Z" fill="#5a3f28"/>
+           <path d="M-34 128 V88 L4 124 Z" fill="${PARCH}" opacity=".85"/>
+           <rect x="-37" y="84" width="5" height="46" fill="#3f2c1c"/>
+           <rect x="-44" y="118" width="16" height="10" rx="2" fill="#7a5c38"/>
+         </g>
+         <!-- quai -->
+         <path d="M0 156 H400 V300 H0 Z" fill="#a08f70"/>
+         <path d="M0 156 H400 V166 H0 Z" fill="#8a7a5e"/>
+
+         <!-- marchandises : ballots cordés, tonneaux, caisses, sacs -->
+         <g>
+           <path d="M196 254 L262 254 L256 198 L202 198 Z" fill="#6b5436"/>
+           <path d="M202 216 H256 M202 234 H256" stroke="#3f2c1c" stroke-width="4"/>
+           <path d="M229 198 V254" stroke="#3f2c1c" stroke-width="4"/>
+           <path d="M268 250 L318 250 L314 206 L272 206 Z" fill="#7a5c38"/>
+           <path d="M272 224 H314 M293 206 V250" stroke="#4a3a24" stroke-width="3.5"/>
+           <ellipse cx="348" cy="208" rx="22" ry="7" fill="#5a3f28"/>
+           <path d="M326 208 V246 q22 11 44 0 V208" fill="#6b4a2e"/>
+           <path d="M326 222 q22 9 44 0 M326 236 q22 9 44 0" stroke="#3f2c1c" stroke-width="3" fill="none"/>
+           <path d="M34 262 C 34 236, 48 222, 62 222 C 76 222, 90 236, 90 262 Z" fill="#8a6a44"/>
+           <path d="M50 224 q12 -8 24 0" stroke="#4a3a24" stroke-width="3" fill="none"/>
+         </g>
+
+         <!-- la foule de marchands -->
+         <g fill="#3a2f44">
+           <!-- porteur, sac sur l'épaule -->
+           <circle cx="118" cy="190" r="12"/>
+           <path d="M118 202 C 102 210, 98 240, 100 272 L138 272 C 140 240, 134 208, 118 202 Z"/>
+           <path d="M104 206 L84 194 L92 182 L112 194 Z"/>
+           <path d="M70 188 C 70 172, 100 172, 100 188 C 100 198, 70 198, 70 188 Z"/>
+           <!-- deux marchands qui discutent -->
+           <circle cx="162" cy="186" r="11"/>
+           <path d="M162 197 C 148 204, 144 240, 146 272 L180 272 C 182 240, 176 204, 162 197 Z"/>
+           <path d="M150 174 h24 l-4 -8 h-16 Z"/>
+           <circle cx="192" cy="182" r="11"/>
+           <path d="M192 193 C 178 200, 176 240, 178 272 L208 272 C 210 240, 206 200, 192 193 Z"/>
+           <path d="M180 206 L162 214 L166 222 L184 216 Z"/>
+           <!-- marchand au registre -->
+           <circle cx="256" cy="178" r="11"/>
+           <path d="M256 189 C 242 196, 240 236, 242 272 L272 272 C 274 236, 270 196, 256 189 Z"/>
+           <!-- silhouette lointaine -->
+           <circle cx="312" cy="176" r="9" opacity=".7"/>
+           <path d="M312 185 C 300 192, 298 226, 300 254 L326 254 C 328 226, 324 192, 312 185 Z" opacity=".7"/>
+         </g>
+         <g>
+           <rect x="238" y="194" width="24" height="30" rx="2" fill="url(#vrs-parch)" transform="rotate(-10 250 208)"/>
+         </g>
+         <!-- caisses au premier plan -->
+         <path d="M0 300 L0 240 L58 250 L58 300 Z" fill="#6b5436"/>
+         <path d="M344 300 L400 300 L400 232 L338 244 Z" fill="#6b5436"/>
+         ${motes(90,220,6,268)}`,
+
+        /* Qui fabrique — les deux hommes, les lettres placées une par une */
+        atelier:()=>`${DEFS}${JOUR}
+         <rect x="0" y="0" width="400" height="252" fill="#bfae8e"/>
+         <rect x="0" y="252" width="400" height="48" fill="#8a7a5e"/>
+         <!-- la presse, au centre, en retrait -->
+         <g opacity=".75">
+           <rect x="178" y="72" width="11" height="180" fill="#6b4a2e"/>
+           <rect x="222" y="72" width="11" height="180" fill="#6b4a2e"/>
+           <rect x="172" y="64" width="67" height="11" rx="2" fill="#8a6a44"/>
+           <rect x="176" y="240" width="59" height="11" rx="2" fill="#8a6a44"/>
+           <rect x="188" y="206" width="36" height="24" rx="2" fill="#5a3f28"/>
+         </g>
+         <g opacity=".75" style="transform-origin:206px 94px;animation:vrsLevier 5.4s ease-in-out infinite">
+           <rect x="203" y="90" width="44" height="7" rx="3.5" fill="${OR2}"/>
+           <circle cx="251" cy="93" r="6" fill="${OR2}"/>
+         </g>
+         <g opacity=".75" style="animation:vrsPlatine 5.4s ease-in-out infinite">
+           <rect x="184" y="150" width="44" height="13" rx="2" fill="#4b3e58"/>
+         </g>
+
+         <!-- ══ À GAUCHE : LE TYPOGRAPHE ══ -->
+         <!-- la casse, bien lisible, avec ses cassetins -->
+         <path d="M8 196 L150 184 L150 206 L8 218 Z" fill="#6b4a2e"/>
+         <path d="M12 194 L146 183 L146 192 L12 203 Z" fill="#4a3a24"/>
+         <g fill="#2f2118">
+           ${[0,1,2,3,4,5,6].map(c=>`<rect x="${16+c*19}" y="${187+c*-0.9}" width="15" height="6"/>
+              <rect x="${16+c*19}" y="${195+c*-0.9}" width="15" height="6"/>`).join('')}
+         </g>
+         <path d="M18 218 L28 264 M138 206 L148 264" stroke="#4a3a24" stroke-width="8" stroke-linecap="round"/>
+         <!-- le typographe, debout, visage dégagé -->
+         <g fill="#3a2f44">
+           <path d="M66 116 C 38 126, 30 176, 34 206 L104 198 C 106 168, 94 126, 66 116 Z"/>
+         </g>
+         <circle cx="66" cy="94" r="17" fill="#c99b74"/>
+         <path d="M48 90 C 48 72, 84 72, 84 90 C 84 94, 76 96, 66 96 C 56 96, 48 94, 48 90 Z" fill="#2f2740"/>
+         <path d="M92 132 L128 158" stroke="#3a2f44" stroke-width="13" stroke-linecap="round"/>
+         <!-- le composteur, et les lettres qui s'y rangent une par une -->
+         <g transform="rotate(-8 134 160)">
+           <rect x="108" y="152" width="58" height="16" rx="2" fill="#8a6a44"/>
+           <rect x="108" y="152" width="58" height="4" rx="2" fill="#6b4a2e"/>
+           ${[0,1,2,3,4,5,6].map(i=>`<rect class="a" style="animation-delay:${.5+i*.36}s" opacity="0"
+             x="${113+i*7}" y="156" width="5" height="10" fill="${ENCRE}"/>`).join('')}
+         </g>
+
+         <!-- ══ À DROITE : LE MARCHAND ══ -->
+         <path d="M276 258 L400 258 L400 202 L276 210 Z" fill="#6b4a2e"/>
+         <path d="M276 210 L400 202 L400 209 L276 217 Z" fill="#8a6a44"/>
+         <g fill="#2a2338">
+           <path d="M340 122 C 312 132, 302 180, 306 214 L380 210 C 382 176, 368 132, 340 122 Z"/>
+         </g>
+         <circle cx="340" cy="100" r="16" fill="#c99b74"/>
+         <path d="M322 96 C 322 78, 358 78, 358 96 C 358 100, 350 102, 340 102 C 330 102, 322 100, 322 96 Z"
+           fill="#4a3f5e"/>
+         <path d="M318 150 L292 182" stroke="#2a2338" stroke-width="12" stroke-linecap="round"/>
+         <!-- son registre ouvert -->
+         <g transform="rotate(-6 322 204)">
+           <path d="M286 212 L358 206 L356 182 L288 188 Z" fill="url(#vrs-parch)"/>
+           <path d="M322 185 V209" stroke="#bda67c" stroke-width="1.6"/>
+           ${[0,1,2].map(i=>`<rect x="${292}" y="${191+i*6}" width="22" height="1.8" rx="1"
+             fill="${ENCRE}" opacity=".55"/><rect x="${328}" y="${190+i*6}" width="18" height="1.8" rx="1"
+             fill="${ENCRE}" opacity=".55"/>`).join('')}
+         </g>
+         <!-- les volumes prêts à vendre -->
+         ${[0,1,2,3].map(i=>`<rect x="${366-i*2}" y="${228-i*11}" width="28" height="10" rx="1.5"
+           fill="${['#7a4a30','#8a6a44','#6b5436','#5d4b6b'][i%4]}"/>`).join('')}
+         <g fill="${OR2}">
+           <ellipse cx="296" cy="236" rx="8" ry="3"/><ellipse cx="306" cy="232" rx="8" ry="3"/>
+         </g>`,
+
+        /* Ce que ça déclenche — la pile qui monte, une feuille qui tombe */
+        pile:()=>`${DEFS}${JOUR}
+         <rect x="0" y="0" width="400" height="256" fill="#bfae8e"/>
+         <rect x="0" y="256" width="400" height="44" fill="#8a7a5e"/>
+
+         <!-- à gauche : la presse, et la pile qui monte feuille après feuille -->
+         <g>
+           <rect x="22" y="56" width="11" height="196" fill="#6b4a2e"/>
+           <rect x="110" y="56" width="11" height="196" fill="#6b4a2e"/>
+           <rect x="14" y="48" width="115" height="12" rx="2" fill="#8a6a44"/>
+           <rect x="18" y="240" width="107" height="12" rx="2" fill="#8a6a44"/>
+         </g>
+         <g style="transform-origin:66px 80px;animation:vrsLevier 4.4s ease-in-out infinite">
+           <rect x="62" y="76" width="66" height="8" rx="4" fill="${OR2}"/>
+           <circle cx="132" cy="80" r="7" fill="${OR2}"/>
+         </g>
+         <g style="animation:vrsPlatine 4.4s ease-in-out infinite">
+           <rect x="30" y="144" width="86" height="16" rx="2" fill="#4b3e58"/>
+         </g>
+         <!-- la pile, qui monte -->
+         ${[0,1,2,3,4,5,6,7,8].map(i=>`<rect class="a" style="animation-delay:${.6+i*.34}s" opacity="0"
+           x="${36+(i%2)*4}" y="${234-i*10}" width="82" height="9" rx="1.5" fill="url(#vrs-parch)"/>`).join('')}
+         <!-- une feuille qui descend de la presse sur la pile -->
+         <g style="animation:vrsDepose 4.4s ease-in 1s infinite">
+           <rect x="34" y="166" width="82" height="9" rx="1.5" fill="url(#vrs-parch)"/>
+         </g>
+
+         <!-- à droite : l'étal et la foule -->
+         <path d="M176 230 L392 230 L388 248 L180 248 Z" fill="#8a6a44"/>
+         <path d="M188 248 L192 282 M374 248 L370 282" stroke="#6b4a2e" stroke-width="8"/>
+         ${[0,1,2,3,4,5,6,7].map(i=>{
+           const col=i%4, r=Math.floor(i/4);
+           return `<rect class="a" style="animation-delay:${1+i*.28}s" opacity="0"
+             x="${200+col*46}" y="${216-r*12}" width="36" height="11" rx="1.5"
+             fill="${['#7a4a30','#8a6a44','#6b5436','#5d4b6b'][i%4]}"/>`;
+         }).join('')}
+         <g fill="#3a2f44">
+           <circle cx="212" cy="178" r="11"/>
+           <path d="M212 189 C 198 196, 194 236, 196 258 L230 258 C 232 236, 226 196, 212 189 Z"/>
+           <path d="M224 202 L240 216 L234 224 L218 212 Z"/>
+           <circle cx="258" cy="170" r="10"/>
+           <path d="M258 180 C 246 188, 242 232, 244 258 L274 258 C 276 232, 270 188, 258 180 Z"/>
+           <circle cx="302" cy="176" r="11"/>
+           <path d="M302 187 C 288 194, 286 234, 288 258 L320 258 C 322 234, 316 194, 302 187 Z"/>
+           <path d="M312 200 L328 214 L322 222 L306 210 Z"/>
+           <circle cx="344" cy="168" r="10"/>
+           <path d="M344 178 C 332 186, 330 232, 332 258 L360 258 C 362 232, 358 186, 344 178 Z"/>
+           <circle cx="236" cy="214" r="7"/>
+           <path d="M236 221 C 228 226, 226 246, 228 258 L246 258 C 248 246, 244 226, 236 221 Z"/>
+         </g>
+         <!-- un exemplaire passe de la pile à l'étal -->
+         <g style="animation:vrsLivraison 5s ease-in-out 2s infinite">
+           <rect x="120" y="150" width="34" height="11" rx="1.5" fill="#7a4a30"/>
+         </g>`,
+
+        /* Ce qui reste — Lyon et les routes qui se tracent */
+        routes:()=>`${DEFS}${FOND}
+         <ellipse cx="190" cy="150" rx="180" ry="130" fill="url(#vrs-halo)"/>
+         <!-- masse de terres -->
+         <path d="M48 212 C 36 168, 72 142, 118 134 C 150 128, 168 104, 200 96
+                  C 240 86, 276 102, 312 92 C 342 84, 364 96, 372 120
+                  C 384 158, 360 196, 318 214 C 274 232, 236 220, 196 228
+                  C 150 238, 86 250, 48 212 Z" fill="#1d1a2c"/>
+         <path d="M48 212 C 36 168, 72 142, 118 134 C 150 128, 168 104, 200 96
+                  C 240 86, 276 102, 312 92 C 342 84, 364 96, 372 120
+                  C 384 158, 360 196, 318 214 C 274 232, 236 220, 196 228
+                  C 150 238, 86 250, 48 212 Z" fill="none" stroke="#3b3550" stroke-width="2"/>
+         <!-- rivières -->
+         <path d="M178 96 C 170 128, 182 156, 174 200" stroke="#2d3c5e" stroke-width="3" fill="none" opacity=".8"/>
+         <path d="M214 92 C 206 126, 196 150, 186 198" stroke="#2d3c5e" stroke-width="3" fill="none" opacity=".8"/>
+         <!-- routes -->
+         ${[
+           'M186 160 C 150 134, 118 118, 74 108',
+           'M186 160 C 228 132, 280 118, 328 104',
+           'M186 160 C 216 192, 262 214, 316 222',
+           'M186 160 C 150 188, 114 208, 70 220',
+           'M186 160 C 196 122, 204 96, 210 68'
+         ].map((d,i)=>`<path class="t" style="animation-delay:${.5+i*.45}s" d="${d}"
+           stroke="${OR2}" stroke-width="2.2" fill="none" opacity=".8" stroke-linecap="round"/>`).join('')}
+         <!-- livres qui filent sur les routes (écart : invisibles avant leur départ ;
+              dans le prototype, ils attendaient dans le coin haut gauche, visibles) -->
+         ${[0,1,2,3,4].map(i=>`<rect x="-4" y="-3" width="9" height="6" rx="1" fill="${PARCH}" opacity="0">
+           <set attributeName="opacity" to=".9" begin="${1.4+i*.5}s"/>
+           <animateMotion dur="${5+i*.7}s" begin="${1.4+i*.5}s" repeatCount="indefinite" rotate="auto"
+             path="${['M186 160 C 150 134, 118 118, 74 108','M186 160 C 228 132, 280 118, 328 104',
+                     'M186 160 C 216 192, 262 214, 316 222','M186 160 C 150 188, 114 208, 70 220',
+                     'M186 160 C 196 122, 204 96, 210 68'][i]}"/></rect>`).join('')}
+         <!-- Lyon -->
+         <circle cx="186" cy="160" r="22" fill="url(#vrs-halo)"/>
+         <circle cx="186" cy="160" r="7" fill="${OR2}"/>
+         <circle cx="186" cy="160" r="15" fill="none" stroke="${OR2}" stroke-width="1.6" opacity=".5"
+           style="animation:vrsLueur 3.4s ease-in-out infinite"/>
+         ${motes(70,260,7,268)}`
+        };
+        return SCENES;
+        })();
+
         // ── Lecteur de média (brief « ville du livre », lot 3) ─────
         // Une case obtenue s'ouvre sur son média : quatre écrans (pictogramme,
         // numéro, ancrage, intitulé de temps, texte), la ligne de prérequis,
@@ -45384,6 +46069,7 @@
             lect.setAttribute('aria-hidden', 'false');
             if (lisible) _vrLecteurRendre();
             else {
+                document.getElementById('vrLectArt').innerHTML = '';   // pas de scène qui tourne sous le chantier
                 document.getElementById('verriereCompteur').textContent = '';
                 _vrForgeDemarrer(stade === 'echafaudage');
             }
@@ -45400,6 +46086,10 @@
             lect.classList.remove('on');
             lect.setAttribute('aria-hidden', 'true');
             _vrForgeArreter();
+            // Scène animée vidée : aucune animation ne tourne en arrière-plan (brief 2.6).
+            const art = document.getElementById('vrLectArt');
+            if (art) art.innerHTML = '';
+            _testScenesArreter();
             _vrLect.i = null;
             const grappe = GRAPPE_QUESTS[verriereState.grappeId];
             if (grappe) {
@@ -45427,12 +46117,18 @@
             document.getElementById('vrLectNum').textContent = n + ' · ' + (e + 1);
             document.getElementById('vrLectDate').textContent = T(s.d || '');
             document.getElementById('vrLectBeat').textContent = T(s.b || '');
+            // Scène animée régénérée à chaque écran : les animations repartent de zéro
+            // (brief « médias du socle », 2.5). setCurrentTime(0) remet aussi à zéro
+            // l'horloge SMIL du SVG, sans quoi les animateMotion (routes) partiraient
+            // en cours de route. Média sans scène : pictogramme au trait, comme avant.
+            const art = document.getElementById('vrLectArt');
             const teinte = x.pan.coul || '#3a3650';
-            document.getElementById('vrLectArt').innerHTML =
+            art.innerHTML = VR_SCENES[s.s] ? VR_SCENES[s.s]() :
                 '<rect width="400" height="300" fill="#10101c"/>'
                 + '<rect width="400" height="300" fill="' + teinte + '" opacity=".22"/>'
                 + '<g fill="none" stroke="' + VR_PAPIER_TRAIT + '" stroke-width="2.6" stroke-linecap="round"'
                 + ' stroke-linejoin="round" opacity=".84">' + (VR_PICTOS[s.a] || '') + '</g>';
+            try { art.setCurrentTime(0); } catch (_) {}
             const corps = document.getElementById('vrLectCorps');
             corps.classList.remove('on');
             clearTimeout(_vrLecteurRendre._t);
