@@ -168,6 +168,9 @@
         }
 
         .hud-avatar-btn:active { transform: scale(0.93); }
+        /* Tête du personnage joueur (construireAvatar recadré), à la place du 🧙 */
+        .hud-avatar-btn { padding: 0; overflow: hidden; }
+        .hud-avatar-btn .avatar-tete { width: 100%; height: 100%; display: block; pointer-events: none; }
 
         /* Dropdown menu */
         .avatar-menu {
@@ -9109,6 +9112,8 @@
             color: rgba(244,236,219,.4); margin-bottom: 5px; }
         .vr-lect-corps { font-size: 15px; line-height: 1.55; opacity: 0; transition: opacity .45s ease; }
         .vr-lect-corps.on { opacity: .96; }
+        .vr-lect-corps p { margin: 0 0 .75em; }
+        .vr-lect-corps p:last-child { margin-bottom: 0; }
         /* Carte qui agit dans la scène : trait doré fin (marqueur {{cardId|mots}}) */
         .vr-lect-corps .k { border-bottom: 1px solid rgba(217,164,65,.8); padding-bottom: 1px; color: #d9a441; }
         /* Scènes animées des médias du socle (reprises de diapositives_socle.html,
@@ -10293,7 +10298,7 @@
             <div style="display:flex;align-items:flex-start;gap:8px;">
                 <div class="hud-avatar-wrap">
                     <button class="hud-avatar-btn" onclick="toggleAvatarMenu()" id="avatarBtn">
-                        <span class="avatar-emoji">🧙</span>
+                        <svg id="avatarTeteSvg" class="avatar-tete" viewBox="4 -1 28 28" aria-hidden="true"></svg>
                     </button>
                     <span class="hub-notif-dot bp-notif-dot" id="bpNotifDot" style="display:none;"></span>
 
@@ -10387,7 +10392,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.80</div>
+            <div class="hud-version" id="hudVersion">v1.9.81</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10568,6 +10573,15 @@
             <div style="padding:16px; border-bottom:1px solid rgba(255,255,255,0.08);">
                 <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Actions</div>
                 <div style="display:flex;flex-direction:column;gap:8px;">
+                    <button onclick="testToggleJoystick()" class="test-action-btn" id="btnTestJoystick">🕹️ Activer le joystick</button>
+                    <!-- Code admin demandé hors session admin (cf. testToggleJoystick) -->
+                    <div id="joystickCode" style="display:none;gap:8px;align-items:center;">
+                        <input type="text" id="joystickCodeInput" placeholder="Code admin" autocomplete="off" autocapitalize="characters" spellcheck="false"
+                               onkeydown="if (event.key === 'Enter') validerCodeJoystick()"
+                               style="flex:1;min-width:0;padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(0,0,0,0.3);color:#f3f4f6;font-size:14px;">
+                        <button type="button" onclick="validerCodeJoystick()" class="test-action-btn" style="width:auto;flex:0 0 auto;">Valider</button>
+                    </div>
+                    <div id="joystickCodeMsg" style="font-size:12px;color:#f87171;"></div>
                     <button onclick="testSaisirCode()" class="test-action-btn">🔑 Saisir mon code (fin de session)</button>
                     <button onclick="testReculerT0(30)" class="test-action-btn">⏱️ Reculer t0 de 30 min</button>
                     <button onclick="testJouerSceneFinale()" class="test-action-btn">🎬 Jouer la scène finale</button>
@@ -10643,7 +10657,7 @@
         </div>
 
         <!-- Joystick -->
-        <div class="joystick-container" style="pointer-events:none;">
+        <div class="joystick-container" style="pointer-events:none;display:none;">
             <div class="joystick-base" id="joystickBase" style="pointer-events:all;">
                 <div class="joystick-stick" id="joystickStick"></div>
             </div>
@@ -12053,6 +12067,15 @@
       <rect x="-40" y="-91" width="80" height="12" rx="3" fill="rgba(15,10,30,0.82)" stroke="#38BDF8" stroke-width="0.8"/>
       <text x="0" y="-82.3" text-anchor="middle" font-size="8" font-weight="700" fill="#f3e9d2" font-family="inherit"></text>
     </g>
+    <!-- « ! » : Ricardo a quelque chose à dire (section 19, cf. _hubMajAlerteRicardo) -->
+    <g id="hubRicardoAlerte" style="display:none;pointer-events:none">
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur="1.4s" repeatCount="indefinite"/>
+        <!-- « ! » vert, libre (sans pastille) ; liseré sombre pour rester lisible sur le mur -->
+        <rect x="-2.6" y="-116" width="5.2" height="13" rx="2.6" fill="#34D399" stroke="#0b2e22" stroke-width="1.2"/>
+        <circle cx="0" cy="-97.6" r="2.7" fill="#34D399" stroke="#0b2e22" stroke-width="1.2"/>
+      </g>
+    </g>
     <!-- Zone de tap (≥ 44 px à l'écran) -->
     <rect x="-25" y="-94" width="50" height="99" fill="rgba(0,0,0,0)" pointer-events="all"/>
   </g>
@@ -12925,32 +12948,32 @@
             "AUJOURD'HUI": "TODAY",
             "couverture": "cover",
             "Lyon, avant les imprimeurs": "Lyon, before the printers",
-            "À Lyon, certains livres ont plus de mille ans.": "In Lyon, some books are more than a thousand years old.",
+            "À Lyon, certains livres ont traversé plus de 15 siècles d’histoire. Au cœur de la bibliothèque municipale de la Part-Dieu sont conservés deux manuscrits exceptionnels. Ils témoignent d’une époque où les livres étaient entièrement copiés à la main.\n\nLe premier est un psautier incomplet, il s’agit d’un recueil de psaumes bibliques, copié aux alentours de la fin du 5ème siècle.\n\nLe second a été copié en Italie à la même période, il s’agit d’une version latine d’un commentaire théologique rédigé par Origène au 3ème siècle sur l’Épître aux Romains. Il a rejoint Lyon probablement au 9ème siècle.\n\nSi ces deux manuscrits sont parvenus jusqu’à nous, c’est grâce au travail patient des copistes, mais aussi à celui de générations de lettrés, de moines et de bibliothécaires qui ont contribué à leur conservation et à leur transmission.": "In Lyon, some books have come through more than 15 centuries of history. At the heart of the Part-Dieu municipal library, two exceptional manuscripts are kept. They bear witness to a time when books were copied entirely by hand.\n\nThe first is an incomplete psalter, a collection of biblical psalms, copied around the end of the 5th century.\n\nThe second was copied in Italy in the same period. It is a Latin version of a theological commentary written by Origen in the 3rd century on the Epistle to the Romans. It probably reached Lyon in the 9th century.\n\nIf these two manuscripts have come down to us, it is thanks to the patient work of copyists, but also to generations of scholars, monks and librarians who helped preserve them and pass them on.",
             "le geste": "the gesture",
             "Un pupitre, une plume": "A writing desk, a quill",
-            "Il copie. Une page, puis la suivante, pendant trois ou quatre mois pour un seul ouvrage. Quand le texte est long, on découpe le volume en cahiers et on se répartit le travail à plusieurs : c'est la seule façon d'aller plus vite.": "He copies. One page, then the next, for three or four months for a single work. When the text is long, the volume is split into quires and the work is shared among several scribes: it is the only way to go faster.",
-            "pour qui il copie": "who he copies for",
+            "Tout commence par un texte. Un auteur l’écrit, ou le dicte à une personne chargée de le transcrire. Puis, au fil des générations, d’autres mains se chargent de le reproduire. C’est ainsi que sont nés nos deux manuscrits.\n\nImaginons un copiste au travail. Éclairé par la lumière du jour, il est assis devant un pupitre incliné, sur lequel repose une feuille de parchemin, une peau d’animal minutieusement préparée. À ses côtés, un manuscrit plus ancien lui sert de modèle.\n\nAvant de commencer, il faut préparer les pages, tracer des repères et organiser le texte. Puis le copiste se met au travail, une ligne après l’autre, une page puis la suivante. C’est une tâche minutieuse, qui demande une attention constante pour éviter les erreurs, les repérer et parfois les corriger.\n\nCopier un livre peut prendre des semaines, parfois des mois. Dans certains ateliers, plusieurs copistes peuvent se partager le travail en se répartissant différentes parties d’un même ouvrage. Elles sont ensuite réunies pour former un seul et même livre.": "It all begins with a text. An author writes it, or dictates it to someone tasked with transcribing it. Then, over the generations, other hands take on reproducing it. That is how our two manuscripts came to be.\n\nLet’s imagine a copyist at work. Lit by daylight, he sits at a sloping desk, on which lies a sheet of parchment, an animal skin carefully prepared. Beside him, an older manuscript serves as his model.\n\nBefore starting, the pages must be prepared, guide marks drawn and the text laid out. Then the copyist gets to work, one line after another, one page then the next. It is painstaking work, which demands constant attention to avoid mistakes, spot them and sometimes correct them.\n\nCopying a book can take weeks, sometimes months. In some workshops, several copyists can share the work by dividing up different parts of the same book. These are then brought together to form one single book.",
+            "conserver et transmettre": "keeping and passing on",
             "798-860, à la cathédrale": "798-860, at the cathedral",
-            "Ce qu'il copie ne lui appartiendra pas. Les plus beaux volumes de la ville sont rangés dans le cloître de {{card13|Saint-Jean}}, où {{card_palais_st_jean|la bibliothèque du chapitre}} s'est constituée siècle après siècle. En 798, un évêque nommé Leidrade, qui a été bibliothécaire de Charlemagne, fait venir à Lyon les livres qu'il possède, en donne à sa cathédrale et ouvre une école. Au milieu du IXe siècle, les travaux récents estiment le fonds à environ six cents manuscrits.": "What he copies will never belong to him. The finest volumes in the city are kept in the cloister of {{card13|Saint-Jean}}, where {{card_palais_st_jean|the chapter library}} was built up century after century. In 798, a bishop named Leidrade, who had been Charlemagne's librarian, brings the books he owns to Lyon, gives some to his cathedral and opens a school. By the middle of the 9th century, recent studies put the collection at about six hundred manuscripts.",
-            "l'écrit sort du cloître": "writing leaves the cloister",
-            "XIIIe-XVe siècle": "13th-15th century",
-            "Pendant ce temps, écrire cesse d'être réservé aux clercs. Entre 1180 et 1330, la quantité de documents produits explose : registres de notaires, livres de comptes, actes d'administration. Les historiens appellent ça le tournant pragmatique. Dans une ville de marchands, l'écrit devient un outil de travail quotidien. Mais multiplier un livre, lui, demande toujours un copiste et trois mois.": "Meanwhile, writing stops being reserved for clerics. Between 1180 and 1330, the number of documents produced explodes: notaries' registers, account books, administrative deeds. Historians call this the pragmatic turn. In a city of merchants, the written word becomes an everyday working tool. But making more copies of a book still takes a scribe and three months.",
+            "Une fois relié, l’ouvrage est prêt à rejoindre une collection. Il pourra y être conservé, consulté et transmis de génération en génération.\n\nVoyons la scène : le livre achevé arrive dans une bibliothèque médiévale. Un homme ouvre une armoire de bois et le dépose avec soin parmi les autres manuscrits.\n\nAu Moyen Âge, les livres sont rares et chers. On les rassemble, on les protège et on les transmet.\n\nÀ Lyon, dans le quartier de l’actuelle {{card13|cathédrale Saint-Jean}}, {{card_palais_st_jean|une importante bibliothèque}} se développe au fil des siècles.\n\nEn 798, un homme contribue à son essor : Leidrade. Proche de Charlemagne, il devient évêque de Lyon et enrichit la collection avec de nouveaux manuscrits, notamment des livres provenant de sa propre bibliothèque.\n\nQuelques décennies plus tard, au 9ème siècle, un autre homme joue un rôle essentiel : Florus de Lyon. Diacre, érudit et grand connaisseur des textes, il contribue à faire vivre cette bibliothèque. Il étudie les manuscrits, les annote, compare les textes et en corrige certaines erreurs. Sur le manuscrit d’Origène présenté au début de notre histoire, on retrouve encore les marques laissées par Florus au cours de son travail.\n\nAu fil du temps, la collection s’agrandit. À son apogée, la bibliothèque lyonnaise aurait compté plus de 600 manuscrits. Lyon compte alors parmi les grands centres intellectuels de l’Occident carolingien.": "Once bound, the book is ready to join a collection. There it can be kept, consulted and handed down from generation to generation.\n\nLet’s picture the scene: the finished book arrives in a medieval library. A man opens a wooden cupboard and carefully places it among the other manuscripts.\n\nIn the Middle Ages, books are rare and expensive. They are gathered, protected and passed on.\n\nIn Lyon, in the area of today’s {{card13|Saint-Jean cathedral}}, {{card_palais_st_jean|a major library}} grows over the centuries.\n\nIn 798, one man contributes to its rise: Leidrade. Close to Charlemagne, he becomes bishop of Lyon and enriches the collection with new manuscripts, notably books from his own library.\n\nA few decades later, in the 9th century, another man plays an essential role: Florus de Lyon. A deacon, a scholar and a great connoisseur of texts, he helps keep this library alive. He studies the manuscripts, annotates them, compares the texts and corrects some of their errors. On the Origen manuscript presented at the start of our story, the marks Florus left during his work can still be seen.\n\nOver time, the collection grows. At its height, the Lyon library is said to have held more than 600 manuscripts. Lyon is then among the great intellectual centers of the Carolingian West.",
+            "l'écrit change d'échelle": "writing changes scale",
+            "XIIe-XVe siècle": "12th-15th century",
+            "Pendant des siècles, les livres restent rares et sont copiés principalement dans les milieux religieux. Puis, à partir des 12ème et 13ème siècles, l’écrit prend une place de plus en plus importante dans la société. Son usage se développe bien au-delà des bibliothèques et des milieux religieux.\n\nEn effet, le développement des villes et du commerce favorise la multiplication des documents pratiques.\n\nRegardons une table de travail de cette époque. On y trouve un registre de notaire relié de cuir, un livre de comptes où s’alignent les chiffres et un acte officiel déroulé sur la table. Ces trois documents racontent un monde en pleine transformation.\n\nLes marchands utilisent davantage l’écriture pour tenir leurs comptes. Les notaires enregistrent des contrats. L’Église, les administrations et les particuliers conservent des documents pour défendre leurs biens et leurs droits.\n\nDans la justice, où la parole, les témoignages et les serments restent essentiels, les documents écrits occupent une place grandissante. Ils permettent de faire reconnaître des droits et de produire des preuves.\n\nProgressivement, l’écrit devient indispensable à de nombreuses activités. Il sert à transmettre les connaissances, à conserver la mémoire, à organiser la société et à défendre ses droits.\n\nMalgré cette multiplication des écrits, une chose demeure : en Europe occidentale, pour obtenir un nouvel exemplaire d’un livre, il faut encore en recopier le texte à la main.\n\nLigne après ligne.\nPage après page.": "For centuries, books remain rare and are copied mainly in religious circles. Then, from the 12th and 13th centuries, writing takes an ever larger place in society. Its use spreads far beyond libraries and religious circles.\n\nIndeed, the growth of towns and trade encourages the multiplication of practical documents.\n\nLet’s look at a work table from that time. On it lie a leather-bound notary’s register, an account book lined with figures and an official deed unrolled across the table. These three documents tell of a world in full transformation.\n\nMerchants rely more and more on writing to keep their accounts. Notaries record contracts. The Church, administrations and private individuals keep documents to defend their property and their rights.\n\nIn justice, where speech, testimony and oaths remain essential, written documents take on a growing place. They make it possible to have rights recognized and to produce evidence.\n\nGradually, writing becomes indispensable to many activities. It serves to pass on knowledge, to preserve memory, to organize society and to defend one’s rights.\n\nDespite this multiplication of writings, one thing remains: in Western Europe, to obtain a new copy of a book, its text still has to be copied out by hand.\n\nLine after line.\nPage after page.",
             "ce qui reste": "what remains",
             "Années 1470, puis aujourd'hui": "The 1470s, then today",
-            "Quand les premiers imprimeurs s'installent dans les années 1470, ils ne découvrent pas une ville sans livres. Ils arrivent dans une cité qui en produit et en conserve depuis six siècles. Plus d'une centaine de ces manuscrits existent encore, et une partie se trouve à la Bibliothèque municipale.": "When the first printers settle in Lyon in the 1470s, they do not find a city without books. They arrive in a city that has been producing and keeping them for six centuries. More than a hundred of these manuscripts still exist, and some of them are held at the Bibliothèque municipale, Lyon's public library.",
+            "Le commentaire d’Origène a traversé près de 18 siècles d’histoire.\n\nTout commence au 3ème siècle, lorsqu’Origène rédige son commentaire sur l’Épître aux Romains, en grec.\n\nAu début du 5ème siècle, Rufin d’Aquilée le traduit et l’adapte en latin. Quelques décennies plus tard, un copiste reproduit cette traduction.\n\nAu 9ème siècle, Florus de Lyon l’étudie et l’annote, laissant sur ses pages des marques encore visibles aujourd’hui.\n\nÀ la fin du 15ème siècle, le commentaire d’Origène connaît une nouvelle étape de son histoire : il est désormais reproduit grâce à l’imprimerie.\n\nÀ la même époque, à Lyon, dans les années 1470, lorsque les premiers imprimeurs s’y installent, ils sont dans une ville où les manuscrits sont copiés, étudiés et conservés depuis des siècles.\n\nAujourd’hui, le manuscrit annoté par Florus est toujours conservé à la Bibliothèque municipale de Lyon.\n\nDu texte grec aux copies latines, du manuscrit au livre imprimé, le commentaire d’Origène témoigne ainsi d’une histoire faite de traductions, de lectures et de transmissions.": "Origen’s commentary has come through nearly 18 centuries of history.\n\nIt all begins in the 3rd century, when Origen writes his commentary on the Epistle to the Romans, in Greek.\n\nAt the beginning of the 5th century, Rufinus of Aquileia translates it and adapts it into Latin. A few decades later, a copyist reproduces this translation.\n\nIn the 9th century, Florus de Lyon studies and annotates it, leaving marks on its pages that can still be seen today.\n\nAt the end of the 15th century, Origen’s commentary enters a new stage of its history: it is now reproduced by printing.\n\nIn the same period, in Lyon, in the 1470s, when the first printers settle there, they find themselves in a city where manuscripts have been copied, studied and kept for centuries.\n\nToday, the manuscript annotated by Florus is still kept at the Bibliothèque municipale de Lyon.\n\nFrom the Greek text to the Latin copies, from manuscript to printed book, Origen’s commentary thus bears witness to a history made of translations, readings and transmissions.",
             "Lyon, années 1470": "Lyon, the 1470s",
-            "Lyon n'a pas d'université. Celui qui lance l'imprimerie ici est un marchand.": "Lyon has no university. The man who brings printing here is a merchant.",
-            "qui paie": "who pays",
+            "À Lyon, dans les années 1470, une nouvelle manière de fabriquer les livres fait son apparition.\n\nImaginons une pièce où se côtoient deux univers. D'un côté, un marchand, son registre de comptes sous le bras, une bourse à la ceinture. De l'autre, {{card_presse_gutenberg|une imposante presse en bois}}, capable d'imprimer des textes sur des feuilles de papier.\n\nÀ cette époque, Lyon ne possède pas d'université. Mais elle réunit plusieurs conditions favorables au développement de l'imprimerie : des marchands, des capitaux, des milieux lettrés et des routes commerciales.\n\nPourtant, une presse ne suffit pas à faire naître une industrie du livre. Il faut de l'argent, des savoir-faire, des textes à publier… et des acheteurs.\n\nÀ l'origine de cette aventure, on trouve notamment un marchand lyonnais : Barthélemy Buyer.": "In Lyon, in the 1470s, a new way of making books appears.\n\nLet's imagine a room where two worlds meet. On one side, a merchant, his account book under his arm, a purse at his belt. On the other, {{card_presse_gutenberg|an imposing wooden press}}, able to print texts on sheets of paper.\n\nAt the time, Lyon has no university. But it brings together several conditions favorable to the growth of printing: merchants, capital, learned circles and trade routes.\n\nYet a press alone is not enough to give birth to a book industry. It takes money, know-how, texts to publish… and buyers.\n\nAt the origin of this venture, we find in particular a Lyon merchant: Barthélemy Buyer.",
+            "qui finance": "who funds it",
             "Un carrefour de commerce": "A crossroads of trade",
-            "À la fin du XVe siècle, Lyon est un carrefour commercial majeur, et ses foires rassemblent des négociants venus de toute l'Europe. Barthélemy Buyer appartient à ce milieu, et il revient d'études à la Sorbonne, où l'on vient d'installer la première presse de France. Il a de quoi acheter le matériel, payer les ouvriers, financer le papier et organiser la vente.": "At the end of the 15th century, Lyon is a major trading crossroads, and its fairs bring together merchants from all over Europe. Barthélemy Buyer belongs to this world, and he is back from studying at the Sorbonne, where the first printing press in France has just been set up. He has the means to buy the equipment, pay the workers, pay for the paper and organize the sales.",
+            "Pour comprendre pourquoi l'imprimerie s'installe à Lyon, rendons-nous sur les quais de la Saône. Des porteurs déplacent des marchandises. Des négociants discutent près de caisses et de tonneaux. Sur la rivière, des bateaux transportent leurs cargaisons.\n\nAu XVe siècle, Lyon est un carrefour commercial en plein essor. Située au confluent du Rhône et de la Saône, elle est reliée à de grandes voies de circulation. Ses foires attirent des marchands venus de plusieurs régions d'Europe. On y échange des marchandises, mais aussi de l'argent et des informations. Ces réseaux pourront également favoriser la circulation des livres.\n\nBarthélemy Buyer appartient à une famille aisée de la ville. Il dispose des ressources nécessaires pour soutenir une activité encore nouvelle. Car ouvrir un atelier d'imprimerie représente un pari financier. Il faut acquérir du matériel, des caractères métalliques, acheter du papier et rémunérer des ouvriers. Tout cela doit être payé avant même que les livres soient vendus. Si les exemplaires imprimés ne trouvent pas d'acheteurs, les pertes peuvent être importantes.\n\nBuyer ne contribue donc pas simplement à l'installation d'une machine. Il participe à une entreprise dont la réussite dépend de la vente des livres.\n\nMais pour fabriquer ces livres, il lui faut encore une compétence essentielle : savoir imprimer.": "To understand why printing settles in Lyon, let's head to the quays of the Saône. Porters move goods. Traders talk near crates and barrels. On the river, boats carry their cargo.\n\nIn the 15th century, Lyon is a booming commercial crossroads. Lying at the confluence of the Rhône and the Saône, it is linked to major routes. Its fairs draw merchants from several regions of Europe. Goods change hands there, but so do money and news. These networks will also help books circulate.\n\nBarthélemy Buyer belongs to a wealthy family of the city. He has the resources needed to back an activity that is still new. For opening a printing workshop is a financial gamble. Equipment and metal type must be acquired, paper bought and workers paid. All of this has to be paid for before a single book is sold. If the printed copies find no buyers, the losses can be heavy.\n\nSo Buyer does not simply help set up a machine. He takes part in a venture whose success depends on selling books.\n\nBut to make these books, he still needs one essential skill: knowing how to print.",
             "qui fabrique": "who makes it",
             "Deux métiers, un atelier": "Two trades, one workshop",
-            "Pour la technique, il fait venir Guillaume Le Roy, un typographe de la région de Liège. Celui-ci place les lettres une par une, à l'envers, puis abaisse {{card_presse_gutenberg|la presse}}. Il est maître dans son métier, Buyer est marchand dans le sien : l'un imprime, l'autre paie, choisit les titres et vend. Sur les pages, on lira la formule : « à la requête de Barthélemy Buyer ».": "For the technical side, he brings in Guillaume Le Roy, a typographer from the Liège region. Le Roy sets the letters one by one, backwards, then lowers {{card_presse_gutenberg|the press}}. He is a master of his trade, Buyer a merchant in his: one prints, the other pays, chooses the titles and sells. On the pages, readers will find the formula “à la requête de Barthélemy Buyer” (at the request of Barthélemy Buyer).",
-            "ce que ça déclenche": "what it sets off",
+            "Entrons maintenant dans un atelier d'imprimerie. À gauche, un homme assemble des lettres métalliques, une à une, dans un instrument appelé composteur. Au centre, un autre ouvrier actionne une presse en bois. À droite, des feuilles fraîchement imprimées sont disposées en attendant les étapes suivantes de leur fabrication.\n\nPour développer cette activité, Barthélemy Buyer travaille avec Guillaume Le Roy, un imprimeur originaire de Liège. L'atelier est installé dans la maison même de Buyer. Le Roy apporte son savoir-faire : composer les textes, encrer les caractères et imprimer les feuilles. Buyer apporte les moyens financiers et prend également part à l'entreprise éditoriale.\n\nMais fabriquer un livre ne se résume pas à actionner une presse. Il faut aussi choisir un texte, parfois le traduire, le corriger ou l'adapter. Buyer s'appuie ainsi sur des hommes instruits, notamment des religieux. En 1476, le dominicain Jean Batallier participe à la révision de la traduction française de la *Légende dorée*, un recueil de vies de saints.\n\nL'imprimerie réunit donc des compétences différentes : marchands, imprimeurs, ouvriers et lettrés. Elle transforme autant la fabrication des livres que l'organisation du travail.\n\nCette collaboration laisse des traces. À la fin du *Compendium breve*, un texte appelé colophon indique que le livre a été imprimé par Guillaume Le Roy, à la demande et aux frais de Barthélemy Buyer. Quelques lignes qui nous permettent, plus de cinq siècles après, de retrouver les acteurs de cette entreprise.": "Let's now step into a printing workshop. On the left, a man assembles metal letters, one by one, in a tool called a composing stick. In the center, another worker operates a wooden press. On the right, freshly printed sheets are laid out, waiting for the next stages of their making.\n\nTo develop this activity, Barthélemy Buyer works with Guillaume Le Roy, a printer from Liège. The workshop is set up in Buyer's own house. Le Roy brings his know-how: setting the texts, inking the type and printing the sheets. Buyer brings the money and also takes part in the publishing venture.\n\nBut making a book is not just a matter of working a press. A text must also be chosen, sometimes translated, corrected or adapted. Buyer therefore relies on educated men, notably clerics. In 1476, the Dominican Jean Batallier helps revise the French translation of the *Légende dorée* (the Golden Legend), a collection of lives of saints.\n\nPrinting thus brings together different skills: merchants, printers, workers and scholars. It transforms the making of books as much as the organization of work.\n\nThis collaboration leaves traces. At the end of the *Compendium breve*, a text called a colophon states that the book was printed by Guillaume Le Roy, at the request and expense of Barthélemy Buyer. A few lines that let us, more than five centuries later, find the people behind this venture.",
+            "ce que cela change": "what it changes",
             "Début des années 1470": "The early 1470s",
-            "Une fois les lettres rangées dans la forme, on peut tirer la même page autant de fois qu'on veut. Le travail passe de mois de copie au temps d'assembler le texte une seule fois. Reste à savoir quoi imprimer. Les premiers livres sortis de l'atelier sont en français, ce qui est singulier pour l'époque : à la capitale, on imprime pour une clientèle savante, qui lit en latin. Buyer, lui, vise plus large.": "Once the letters are locked in the forme, the same page can be printed as many times as you like. The work shrinks from months of copying to the time it takes to assemble the text once. What remains is deciding what to print. The first books to come out of the workshop are in French, which is unusual for the time: in the capital, printers work for a learned readership that reads Latin. Buyer aims wider.",
+            "Observons maintenant la presse au travail. Une feuille vient d'être imprimée. Puis une deuxième, une troisième. La pile grandit peu à peu.\n\nLa fabrication a changé. Les caractères doivent toujours être assemblés, les pages préparées et la presse actionnée à la main. Mais une fois les caractères disposés dans une forme d'impression, on peut tirer de nombreuses feuilles identiques, sans recopier chaque texte. Les caractères sont ensuite démontés et réutilisés.\n\nC'est un changement considérable. Pourtant, la main n'a pas disparu. Beaucoup de livres imprimés sont encore complétés à la plume, avec des initiales peintes ou des titres tracés en rouge. Les premiers imprimés conservent ainsi une apparence familière aux lecteurs habitués aux manuscrits.\n\nMais produire davantage ne suffit pas. Encore faut-il savoir quoi imprimer, et pour qui.\n\nÀ Paris, les premiers ateliers travaillent notamment pour les milieux universitaires et publient des ouvrages savants en latin. Lyon, qui ne possède pas d'université, s'adresse aussi à d'autres lecteurs : marchands, bourgeois, religieux et amateurs de récits. Les imprimeurs lyonnais accordent très tôt une place importante aux textes en français, sans abandonner le latin.\n\nDès les années 1470, Buyer et Le Roy publient notamment des adaptations de textes bibliques en français. En 1476 paraît la *Légende dorée*. Puis, en 1479, le *Compendieux Livre du Miroir historial*, un ouvrage consacré à l'histoire biblique.\n\nCes livres répondent à des goûts et à des usages déjà présents dans la société. L'imprimerie ne crée donc pas soudainement le besoin de lire. Elle permet de fabriquer davantage d'exemplaires et de les faire circuler plus largement. Mais les livres restent coûteux. Tous les habitants ne peuvent pas se les offrir.\n\nElle ouvre de nouvelles possibilités pour les produire, les vendre et les transmettre.": "Now let's watch the press at work. A sheet has just been printed. Then a second, a third. The pile slowly grows.\n\nThe making has changed. The type still has to be assembled, the pages prepared and the press worked by hand. But once the type is locked into a printing forme, many identical sheets can be pulled without copying each text again. The type is then taken apart and reused.\n\nIt is a considerable change. And yet the hand has not disappeared. Many printed books are still finished with the pen, with painted initials or titles drawn in red. The first printed books thus keep a look familiar to readers used to manuscripts.\n\nBut producing more is not enough. You still have to know what to print, and for whom.\n\nIn Paris, the first workshops work mainly for university circles and publish learned works in Latin. Lyon, which has no university, also turns to other readers: merchants, townspeople, clerics and lovers of stories. Very early on, Lyon printers give an important place to texts in French, without abandoning Latin.\n\nFrom the 1470s, Buyer and Le Roy publish, among other things, adaptations of biblical texts in French. In 1476 the *Légende dorée* comes out. Then, in 1479, the *Compendieux Livre du Miroir historial*, a work devoted to biblical history.\n\nThese books answer tastes and habits already present in society. So printing does not suddenly create the need to read. It makes it possible to produce more copies and to circulate them more widely. But books remain expensive. Not everyone can afford them.\n\nIt opens new possibilities for producing, selling and passing them on.",
             "Quelques décennies plus tard": "A few decades later",
-            "Un premier livre lyonnais à porter une date sort de son atelier, le 17 septembre 1473 : le Compendium breve. C'est à lui qu'on a longtemps fait remonter l'imprimerie lyonnaise. En quelques décennies, Lyon devient un des grands centres de l'imprimerie européenne. Pas seulement grâce aux presses : grâce à leur rencontre avec des capitaux et des réseaux de commerce. Pendant ce temps, dans le cloître, {{card_palais_st_jean|la bibliothèque du chapitre}} continue de s'enrichir par legs, exemplaire après exemplaire.": "A first Lyon book bearing a date comes out of his workshop on September 17, 1473: the Compendium breve. For a long time, it was seen as the start of printing in Lyon. Within a few decades, Lyon becomes one of the great centers of European printing. Not only thanks to its presses: thanks to their meeting with capital and trade networks. Meanwhile, in the cloister, {{card_palais_st_jean|the chapter library}} keeps growing through bequests, copy after copy.",
+            "Le 17 septembre 1473, un livre sort de l'atelier de Guillaume Le Roy, pour Barthélemy Buyer : le *Compendium breve*, un recueil de textes latins comprenant notamment des écrits attribués au futur pape Innocent III.\n\nC'est le plus ancien livre imprimé à Lyon dont on connaisse la date avec certitude. Pendant longtemps, il a même été considéré comme le tout premier livre lyonnais. Mais les recherches récentes ont montré que plusieurs éditions non datées l'avaient probablement précédé. Le *Compendium breve* reste donc un témoin essentiel des débuts de l'imprimerie à Lyon, sans en marquer nécessairement le premier jour.\n\nRevenons maintenant à Lyon, au centre des routes commerciales. Sur une carte, des chemins partent de la ville dans plusieurs directions. Ils évoquent les réseaux par lesquels les livres peuvent rejoindre les foires, passer de marchand en marchand et atteindre des lecteurs dans d'autres villes.\n\nEn quelques décennies, les ateliers se multiplient. Imprimeurs, libraires et autres professionnels du livre font progressivement de Lyon l'un des grands centres européens de l'imprimerie. Cette réussite ne tient pas à la seule présence des presses. Elle repose sur la rencontre d'une technique, de savoir-faire, de capitaux, de choix éditoriaux et de réseaux commerciaux.\n\nPendant ce temps, les manuscrits ne disparaissent pas. Dans {{card_palais_st_jean|la bibliothèque du chapitre}} de Saint-Jean, des livres copiés depuis des siècles témoignent d'une histoire bien plus ancienne de l'écrit. Manuscrits et imprimés continuent longtemps de coexister.\n\nÀ Lyon, le livre imprimé ne remplace donc pas brusquement le livre manuscrit. Il prend place dans une histoire déjà ancienne, celle des textes que l'on copie, que l'on lit et que l'on transmet. Mais désormais, leur fabrication et leur circulation changent d'échelle.\n\nEt derrière chaque livre imprimé, il y a bien plus qu'une machine : des hommes, des savoir-faire, des décisions et des échanges.": "On September 17, 1473, a book comes out of Guillaume Le Roy's workshop, for Barthélemy Buyer: the *Compendium breve*, a collection of Latin texts including writings attributed to the future Pope Innocent III.\n\nIt is the oldest book printed in Lyon whose date is known for certain. For a long time, it was even considered the very first Lyon book. But recent research has shown that several undated editions probably came before it. The *Compendium breve* thus remains an essential witness to the beginnings of printing in Lyon, without necessarily marking its first day.\n\nLet's now return to Lyon, at the heart of the trade routes. On a map, roads leave the city in several directions. They evoke the networks through which books can reach the fairs, pass from merchant to merchant and find readers in other cities.\n\nWithin a few decades, workshops multiply. Printers, booksellers and other book professionals gradually make Lyon one of the great European centers of printing. This success does not rest on the presses alone. It rests on the meeting of a technique, know-how, capital, publishing choices and trade networks.\n\nMeanwhile, manuscripts do not disappear. In {{card_palais_st_jean|the chapter library}} of Saint-Jean, books copied over the centuries bear witness to a much older history of writing. Manuscripts and printed books go on coexisting for a long time.\n\nIn Lyon, then, the printed book does not abruptly replace the manuscript. It takes its place in an already ancient history, that of texts that are copied, read and passed on. But from now on, their making and their circulation change scale.\n\nAnd behind every printed book, there is much more than a machine: people, know-how, decisions and exchanges.",
             "Récit en construction": "Story under construction",
             "Cette partie du récit est encore en construction.": "This part of the story is still being built.",
             "✓ Obtenu": "✓ Obtained",
@@ -19025,7 +19048,7 @@
                 const dist = getDistance(playerPos.lat, playerPos.lng, _obSpawnLat, _obSpawnLng);
                 const nearbyDiv = document.getElementById('nearbyPOI');
                 const isShown = nearbyDiv && !nearbyDiv.classList.contains('hidden');
-                if (dist <= COLLECTION_RADIUS) {
+                if (_aPortee(dist, COLLECTION_RADIUS)) {
                     if (!isShown) _obShowTutorialNearby();
                 } else if (isShown) {
                     nearbyDiv.classList.add('hidden');
@@ -21592,7 +21615,14 @@
         const _TUTO_HTML_S15_QG = "Assez parlé, c'est toi qui as trouvé toutes les " + vnMot('nebuleuse', 'nébuleuses') + " de toute façon ! Il faut que je te présente à ma personne préférée. Direction le " + vnMot('qg', 'QG') + " !";
         const _TUTO_HTML_S18_RETOUR = 'Ah, te revoilà. Tu étais dans l’' + vnMot('explorium', 'Explorium') + ' c’est ça ?';
         const _TUTO_HTML_S18_RETOUR3 = 'Enfin, j’ai pu apprendre qu’avec l’expérience, “UNE GRANDE EXPERIENCE”, on pouvait atteindre l’' + vnMot('explorium', 'Explorium') + ' sans…';
-        const _TUTO_HTML_S18_SALLE = 'Il y a une salle, à droite du hall du ' + vnMot('qg', 'QG') + ', je ne sais pas si tu as remarqué.';
+        const _TUTO_HTML_S18_RICARDO = 'Le Professeur Ricardo doit absolument entendre ça. Il est dans la salle à droite du hall du ' + vnMot('qg', 'QG') + '.';
+        // Section 19 (David, 03/11) : Ricardo constate que le joueur entre dans
+        // l'Explorium sans fauteuil ni objet du guéridon (jamais nommé), ce qui
+        // justifie l'entrée libre, puis donne « (Re)faire ses preuves ».
+        const _TUTO_HTML_S19_SANS_RIEN = 'Clara m’a tout raconté. Enfin, ce qu’elle en a compris. Tu es entré dans l’' + vnMot('explorium', 'Explorium') + '… sans rien ?';
+        const _TUTO_HTML_S19_LIBRE = 'Soit. Tu n’as pas besoin de fauteuil. Entre dans l’' + vnMot('explorium', 'Explorium') + ' quand tu veux, d’où tu veux.';
+        const _TUTO_HTML_S19_RECIT = 'Ce que tu as entrevu, c’est le début d’un récit : <i>Lyon, ville du livre au XVIᵉ siècle</i>. Il est éparpillé dans les ' + vnMot('nebuleuse', 'nébuleuses') + ' du quartier.';
+        const _TUTO_HTML_S19_POUSSIERE = 'Cristallise-les, puis rends à leurs cartes leurs souvenirs avec la ' + vnMot('poussiere', 'poussière mémorielle', true) + '. Le récit se recomposera.';
 
         // Le joueur : « Toi », puis son pseudo (section 15).
         function _tutoToi() { return { speaker: nomJoueur(), line: '…' }; }
@@ -21665,8 +21695,23 @@
                 { speaker: 'Clara', air: 'questionné', html: _TUTO_HTML_S18_VDL },
                 { speaker: 'Clara', air: 'choqué', line: 'Peu importe ! Ce que je veux dire c’est qu’il est préférable que tu puisses te projeter depuis un endroit sûr pour ne pas finir dans les pommes n’importe où !' },
                 { speaker: 'Clara', air: 'choqué', line: 'Imagine si je n’avais pas été là.' },
-                { speaker: 'Clara', air: 'enjoué', html: _TUTO_HTML_S18_SALLE },
-                { speaker: 'Clara', air: 'enjoué', line: 'En tout cas, ne me refais plus ça, j’ai eu peur ! Allez, maintenant tu sais ce qu’on cherche en priorité, reprenons notre route.' },
+                { speaker: 'Clara', air: 'enjoué', html: _TUTO_HTML_S18_RICARDO },
+                { speaker: 'Clara', air: 'doigt levé', line: 'Et ne me refais plus jamais ça, j’ai eu peur !' },
+            ];
+        }
+        function _tutoLignesS19() {
+            const r = HUB_NPCS.scientifique.nom;
+            return [
+                { speaker: r, html: _TUTO_HTML_S19_SANS_RIEN },
+                _tutoToi(),
+                { speaker: r, line: 'Ces fauteuils, et ce qui est posé sur le guéridon : tout ça sert à entrer en transe. Ici, on s’y entraîne des mois avant d’y arriver une seule fois.' },
+                { speaker: r, line: 'Tu l’as fait en pleine rue, sans fauteuil et sans rien. Du premier coup.' },
+                { speaker: r, line: '… Je n’avais encore jamais vu ça.' },
+                { speaker: r, html: _TUTO_HTML_S19_LIBRE },
+                { speaker: r, line: 'Mais choisis ton moment. Arrête-toi, mets-toi à l’écart. Là-bas, ton corps reste dans la rue, sans toi.' },
+                { speaker: r, html: _TUTO_HTML_S19_RECIT },
+                { speaker: r, html: _TUTO_HTML_S19_POUSSIERE },
+                { speaker: r, line: 'Et montre-moi que ce n’était pas un coup de chance.' },
             ];
         }
 
@@ -21685,8 +21730,10 @@
             preuves: { titre: 'Faire ses preuves', texte: 'Cristalliser 3 nébuleuses', max: 3 },
             // 19/10 : plus « Finaliser » la grappe, mais en rassembler les cartes.
             vdl:     { titre: '(Re)faire ses preuves', texteHtml: 'Rassembler les cartes de <i>Lyon, ville du livre au XVIᵉ siècle</i>', grappe: 'ville_du_livre' },
+            // Section 18 → 19 (David, 03/11) : Clara envoie le joueur chez Ricardo.
+            ricardo: { titre: 'Rencontrer le Professeur Ricardo', texte: 'Le rejoindre dans la salle de l’Explorium, au QG', max: 1 },
         };
-        const _TUTO_QUETES_ORDRE = ['vdl', 'preuves'];   // la plus récente en tête
+        const _TUTO_QUETES_ORDRE = ['vdl', 'ricardo', 'preuves'];   // la plus récente en tête
 
         // Cartes possédées (hors éléments du monde de l'Explorium V2, qui
         // entrent aussi dans collectedCards).
@@ -21712,6 +21759,7 @@
                     .filter(c => !vues.has(c.id) && vues.add(c.id) && (c.collections || []).includes(TUTO_QUETES.vdl.grappe));
                 return { n: cartes.filter(c => collectedCards.includes(c.id)).length, max: cartes.length };
             }
+            if (id === 'ricardo') return { n: 0, max: 1 };
             return { n: 0, max: 0 };
         }
         function _tutoQuetesNb(enCours) {
@@ -22096,13 +22144,53 @@
             _tutoDire('s18', 'map', _tutoLignesS18(), () => {
                 // 19/10 : le bouton Explorium éclot au retour sur la mappe, une fois
                 // la synthèse dite ; le tutoriel se clôt ensuite (_obDone révèle tout).
+                // Le bouton Explorium attend la sortie du QG, après Ricardo (section 19).
+                _tutoEtat.s18 = 'fini';
+                _tutoQueteDemarrer('ricardo');
+                try { updateQuestJournalBadge(); } catch (e) {}
+                _tutoAtteindre(19);
+                _tutoPulser('#btnStudio');
+                _tutoQgNotif();
+            });
+        }
+
+        // ── Section 19 (David, 03/11) ──────────────────────────────────────
+        // Le bouton du QG pulse, puis la flèche de droite jusqu'à la salle de
+        // l'Explorium (zone 2), où un « ! » flotte au-dessus de Ricardo. Lui
+        // parler lance la scène (hubTalkTo → _tutoScene19) : « (Re)faire ses
+        // preuves » est donnée. À la sortie du QG, le bouton Explorium éclot
+        // dans la barre, puis le tutoriel se clôt.
+        // _tutoEtat.s19 : (rien) → 'parle' (scène dite) → 'fini'.
+        let _tuto19Bouton = false;
+        function _tutoSection19() {
+            const e = _tutoEtat;
+            if (e.s19 === 'parle') {
+                if (_tutoQgOuvert() || _tuto19Bouton) return;
+                _tuto19Bouton = true;
                 uiReveler('explorium_btn', { apres: () => {
-                    _tutoEtat.s18 = 'fini';
-                    _tutoQueteDemarrer('vdl');
-                    try { updateQuestJournalBadge(); } catch (e) {}
+                    e.s19 = 'fini';
+                    _tutoSauver();
                     _tutoTerminer();
                 } });
+                return;
+            }
+            if (!_tutoQgOuvert()) { _tutoPulser('#btnStudio'); return; }
+            if (_studioZone !== 2) { _tutoPulser('#studioNavRight'); return; }
+            _tutoPulsesFin();
+        }
+        // Appelée quand le joueur parle à Ricardo ; true si la scène est prise en charge.
+        function _tutoScene19() {
+            if (!_tutoActif() || _tutoSection !== 19 || _tutoEtat.s19) return false;
+            _tutoPulsesFin();
+            _tutoDire('s19', 'any', _tutoLignesS19(), () => {
+                _tutoEtat.s19 = 'parle';
+                _tutoQueteAccomplir('ricardo');
+                _tutoQueteDemarrer('vdl');
+                _tutoSauver();
+                try { updateQuestJournalBadge(); } catch (e) {}
+                _hubMajAlerteRicardo();
             });
+            return true;
         }
 
         // Fin du tutoriel (ce que faisait _obGuideOutro) : le terrain reste
@@ -22186,6 +22274,7 @@
                 return;
             }
             if (s === 18 && ecran === 'map') _tutoSection18();
+            if (s === 19) _tutoSection19();
         }
 
         // ── Clara, PNJ sur la mappe (à partir de la section 12) ─────────────
@@ -22517,12 +22606,24 @@
             [_TUTO_HTML_S18_VDL]: 'Did you manage to see “<i>Lyon, City of Books in the 16th century</i>” or was it something else?',
             "Peu importe ! Ce que je veux dire c’est qu’il est préférable que tu puisses te projeter depuis un endroit sûr pour ne pas finir dans les pommes n’importe où !": "Never mind! What I mean is that it’s better for you to project yourself from a safe place so you don’t pass out just anywhere!",
             "Imagine si je n’avais pas été là.": "Imagine if I hadn’t been there.",
-            [_TUTO_HTML_S18_SALLE]: 'There’s a room, to the right of the ' + vnMot('qg', 'HQ') + ' hall, I don’t know if you noticed.',
-            "En tout cas, ne me refais plus ça, j’ai eu peur ! Allez, maintenant tu sais ce qu’on cherche en priorité, reprenons notre route.": "Anyway, don’t ever do that to me again, I got scared! Come on, now you know what we’re looking for first, let’s get back on our way.",
+            [_TUTO_HTML_S18_RICARDO]: 'Professor Ricardo absolutely has to hear this. He’s in the room to the right of the ' + vnMot('qg', 'HQ') + ' hall.',
+            "Et ne me refais plus jamais ça, j’ai eu peur !": "And don’t ever do that to me again, I got scared!",
+            // Section 19 : Ricardo
+            [_TUTO_HTML_S19_SANS_RIEN]: 'Clara told me everything. Well, what she understood of it. You got into the ' + vnMot('explorium', 'Explorium') + '… with nothing?',
+            "Ces fauteuils, et ce qui est posé sur le guéridon : tout ça sert à entrer en transe. Ici, on s’y entraîne des mois avant d’y arriver une seule fois.": "These armchairs, and what’s sitting on the side table: all of it is there to help you go into a trance. Here, people train for months before managing it even once.",
+            "Tu l’as fait en pleine rue, sans fauteuil et sans rien. Du premier coup.": "You did it in the middle of the street, with no armchair, with nothing. On the first try.",
+            "… Je n’avais encore jamais vu ça.": "… I had never seen that before.",
+            [_TUTO_HTML_S19_LIBRE]: 'Very well. You don’t need an armchair. Enter the ' + vnMot('explorium', 'Explorium') + ' whenever you like, from wherever you like.',
+            "Mais choisis ton moment. Arrête-toi, mets-toi à l’écart. Là-bas, ton corps reste dans la rue, sans toi.": "But choose your moment. Stop, step aside. While you’re in there, your body stays in the street, without you.",
+            [_TUTO_HTML_S19_RECIT]: 'What you glimpsed is the beginning of a story: <i>Lyon, City of Books in the 16th century</i>. It’s scattered across the ' + vnMot('nebuleuse', 'nebulae') + ' of the neighbourhood.',
+            [_TUTO_HTML_S19_POUSSIERE]: 'Crystallise them, then give their cards back their memories with ' + vnMot('poussiere', 'memorial dust', true) + '. The story will piece itself back together.',
+            "Et montre-moi que ce n’était pas un coup de chance.": "And show me it wasn’t a stroke of luck.",
             // Quêtes du tutoriel
             "Faire ses preuves": "Prove yourself",
             "Cristalliser 3 nébuleuses": "Crystallise 3 nebulae",
             "(Re)faire ses preuves": "Prove yourself (again)",
+            "Rencontrer le Professeur Ricardo": "Meet Professor Ricardo",
+            "Le rejoindre dans la salle de l’Explorium, au QG": "Join him in the Explorium room, at HQ",
             [TUTO_QUETES.vdl.texteHtml]: 'Gather the cards of <i>Lyon, City of Books in the 16th century</i>',
             // Console du pseudo (« Valider » est déjà dans la table)
             "Ton pseudo": "Your username",
@@ -22867,10 +22968,16 @@
         const isMobileDevice = window.matchMedia('(max-width: 768px)').matches ||
             /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        const COLLECTION_RADIUS = 50;
+        const COLLECTION_RADIUS = 60;   // 50 → 60 m (David, 03/11) : collecte plus facile
         // Rayon propre à un POI (poi.radius) : 65 m rue Mercière et au Vieux-Lyon,
-        // où les façades hautes font dériver le GPS de 20 à 30 m. 50 m ailleurs.
+        // où les façades hautes font dériver le GPS de 20 à 30 m. 60 m ailleurs.
         function _poiRadius(poi) { return (poi && poi.radius) || COLLECTION_RADIUS; }
+        // Portée de l'avatar (David, 03/11) : le joueur a son propre cercle
+        // d'interaction ; un point s'active dès que les deux cercles se touchent,
+        // c.-à-d. à rayon du point + PORTEE_AVATAR. Vaut pour tout ce qui se
+        // collecte ou s'ouvre sur la mappe (POI, ressources, panoramas, panneaux, échoppes).
+        const PORTEE_AVATAR = 15;
+        function _aPortee(d, rayon) { return d <= rayon + PORTEE_AVATAR; }
         // Un POI masqué (parcours pas encore ouvert) ou désactivé ne se collecte pas :
         // sans ce filtre, la console proposait de ramasser un marqueur invisible.
         function _poiActif(poi) {
@@ -22894,7 +23001,8 @@
             // Zone pas évaluée depuis 3 s : on repart de zéro (pas de présence fantôme).
             if (!z || now - z.vu > 3000) z = _zones[cle] = { dedans: false, depuis: 0, vu: now };
             z.vu = now;
-            const dedans = d <= (z.dedans ? rayon * C.CAPTURE_EXIT_FACTOR : rayon);
+            const portee = rayon + PORTEE_AVATAR;
+            const dedans = d <= (z.dedans ? portee * C.CAPTURE_EXIT_FACTOR : portee);
             if (dedans !== z.dedans) {
                 z.dedans = dedans;
                 z.depuis = now;
@@ -24861,7 +24969,7 @@
                 inner.addEventListener('mouseenter', () => { inner.style.transform = 'translate(-50%,-50%) scale(1.12)'; });
                 inner.addEventListener('mouseleave', () => { inner.style.transform = 'translate(-50%,-50%) scale(1)'; });
                 inner.addEventListener('click', () => {
-                    const inRange = getDistance(playerPos.lat, playerPos.lng, poi.lat, poi.lng) <= _poiRadius(poi);
+                    const inRange = _aPortee(getDistance(playerPos.lat, playerPos.lng, poi.lat, poi.lng), _poiRadius(poi));
                     if (inRange) {
                         // Ouvre la console de collecte
                         currentNearbyPOI = poi;
@@ -25448,6 +25556,8 @@
             if (carte) carte.innerHTML = construireAvatar(tenueAvatar, 'carte');
             const qg = document.getElementById('studioPlayerAvatar');
             if (qg) qg.innerHTML = construireAvatar(tenueAvatar, 'studio');
+            const tete = document.getElementById('avatarTeteSvg');   // bouton du menu avatar
+            if (tete) tete.innerHTML = construireAvatar(tenueAvatar, 'carte');
         }
 
         setTimeout(rafraichirAvatars, 0);   // avatar du QG (celui de la carte naît dans createMap)
@@ -25585,7 +25695,8 @@
             _geoCamT = now;
             const hdg = GeoEngine.getHeading();
             let b = map.getBearing();
-            const cibleCap = _mapViewMode === 'close' ? (hdg == null ? b : hdg) : 0;
+            // Vue d'ensemble : la carte garde sa rotation (David, 03/11) ; seul le cône suit le cap.
+            const cibleCap = _mapViewMode === 'close' ? (hdg == null ? b : hdg) : b;
             const ecartCap = ((cibleCap - b + 540) % 360) - 180;
             // Hystérésis : on ne se met à tourner qu'au-delà de la bande morte, et on
             // tourne jusqu'à être calé à 2° près ; entre les deux, la caméra ne bouge pas.
@@ -25649,7 +25760,7 @@
             const ll = GeoEngine.getDisplay();
             if (!map || !ll) return;
             const duree = GeoEngine.CONFIG.CAMERA_RECENTER_MS;
-            const bearing = _mapViewMode === 'close' ? (GeoEngine.getHeading() ?? map.getBearing()) : 0;
+            const bearing = _mapViewMode === 'close' ? (GeoEngine.getHeading() ?? map.getBearing()) : map.getBearing();
             _viewTransition = true;
             if (_viewTransitionTimer) clearTimeout(_viewTransitionTimer);
             _viewTransitionTimer = setTimeout(() => { _viewTransitionTimer = null; _viewTransition = false; }, duree + 20);
@@ -25732,6 +25843,7 @@
             }
 
             e.preventDefault();
+            _capJoystick = { ArrowUp: 0, ArrowRight: 90, ArrowDown: 180, ArrowLeft: 270 }[e.key];
             playerPos = { lat: newLat, lng: newLng };
             if (playerMarker && map) {
                 updatePlayerOnMap();
@@ -26299,6 +26411,7 @@
             scroll:           '#F59E0B',
             loot:             '#EC4899',
             carnet_resource:  '#FCD34D',   // fournitures : jaune
+            lieu:             '#FFFBF0',   // panoramas, panneaux, échoppes (tirets, cf. _capDraw)
         };
 
         let _capResizeBound = false;
@@ -26371,6 +26484,68 @@
             SCROLL_POINTS.forEach(s => { if (vScroll.has(s.id) && !collectedScrolls.includes(s.id)) add(s.lng, s.lat, SCROLL_RADIUS, 'scroll'); });
             LOOT_POINTS.forEach(l => { if (vLoot.has(l.id) && !collectedLoots.includes(l.id)) add(l.lng, l.lat, SCROLL_RADIUS, 'loot'); });
             CARNET_RESOURCE_POINTS.forEach(pt => { if (vCarnet.has(pt.id) && !collectedCarnetResources.includes(pt.id)) add(pt.lng, pt.lat, CARNET_RESOURCE_RADIUS, 'carnet_resource'); });
+            // Lieux à visiter — panoramas, panneaux d'info, échoppes (David, 03/11) :
+            // un seul style, contour en tirets sans remplissage, distinct des zones
+            // de collecte. Rayons = ceux de leur détection (échoppe : 30 m, cf. BAZAR_RADIUS).
+            const vInfo = _capVisibleIds(typeof infoMarkers    !== 'undefined' ? infoMarkers    : [], 'info');
+            const vPan  = _capVisibleIds(typeof panneauMarkers !== 'undefined' ? panneauMarkers : [], 'pan');
+            const vBaz  = _capVisibleIds(typeof bazarMarkers   !== 'undefined' ? bazarMarkers   : [], 'bazar');
+            INFO_POINTS.forEach(i => { if (vInfo.has(i.id) && !horsZoneDuJour(i.lat, i.lng)) add(i.lng, i.lat, INFO_RADIUS, 'lieu'); });
+            PANNEAU_POINTS.forEach(pn => { if (vPan.has(pn.id) && !horsZoneDuJour(pn.lat, pn.lng)) add(pn.lng, pn.lat, PANNEAU_RADIUS, 'lieu'); });
+            BAZAR_POINTS.forEach(b => { if (vBaz.has(b.id) && (b.id === 'bazar_tuto' || !horsZoneDuJour(b.lat, b.lng))) add(b.lng, b.lat, 30, 'lieu'); });
+        }
+
+        // Cap affiché par le cône de l'avatar (degrés, 0 = nord) : celui du
+        // téléphone en GPS (boussole à l'arrêt, cap GPS en marche), sinon le
+        // dernier sens de déplacement au joystick ou au clavier. null = pas de cône.
+        let _capJoystick = null;
+        function _capCone() {
+            if (gpsActive) return GeoEngine.getHeading();
+            return _capJoystick;
+        }
+
+        // Avatar : cône d'orientation + cercle de portée (PORTEE_AVATAR), dessinés
+        // sous le personnage (son marqueur est au-dessus du captureCanvas).
+        // Le cône reste visible en vue d'ensemble ; le cercle suit l'opacité des zones.
+        function _capDessinerJoueur(opaciteZones) {
+            if (!playerMarker || !map) return;
+            const ll = playerMarker.getLngLat();
+            const c = map.project(ll);
+            const cx = c.x, cy = c.y + 12;   // aux pieds (ombre de l'avatar), pas au centre du marqueur
+            const k = Math.max(0.2, Math.cos(map.getPitch() * Math.PI / 180));   // aplatissement au sol
+            const ctx = _capCtx;
+            const cap = _capCone();
+            if (cap != null && isFinite(cap)) {
+                const a = (cap - map.getBearing()) * Math.PI / 180, demi = 28 * Math.PI / 180, L = 78;
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.beginPath(); ctx.moveTo(0, 0);
+                for (let i = 0; i <= 12; i++) {
+                    const t = a - demi + (2 * demi) * i / 12;
+                    ctx.lineTo(Math.sin(t) * L, -Math.cos(t) * L * k);
+                }
+                ctx.closePath();
+                const g = ctx.createRadialGradient(0, 0, 0, 0, 0, L);
+                g.addColorStop(0, 'rgba(252,211,77,0.85)');
+                g.addColorStop(1, 'rgba(252,211,77,0.10)');
+                ctx.fillStyle = g; ctx.globalAlpha = 1; ctx.fill();
+                ctx.restore();
+            }
+            if (opaciteZones > 0) {
+                const e = map.project([ll.lng + PORTEE_AVATAR / (111320 * Math.cos(ll.lat * Math.PI / 180)), ll.lat]);
+                const rx = Math.hypot(e.x - c.x, e.y - c.y);
+                if (rx >= 12) {
+                    ctx.save();
+                    ctx.translate(cx, cy);
+                    ctx.lineCap = 'round';
+                    ctx.setLineDash([0.1, 7]);   // pointillés ronds : propres à l'avatar
+                    ctx.beginPath(); ctx.ellipse(0, 0, rx, rx * k, 0, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(40,30,10,0.45)'; ctx.lineWidth = 5; ctx.globalAlpha = opaciteZones; ctx.stroke();
+                    ctx.beginPath(); ctx.ellipse(0, 0, rx, rx * k, 0, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#FDE68A'; ctx.lineWidth = 3; ctx.stroke();
+                    ctx.restore();
+                }
+            }
         }
 
         function _capDraw() {
@@ -26380,7 +26555,7 @@
             // Masquer les zones au zoom large pour eviter les overlaps visuels
             const currentZoom = map.getZoom();
             const zoneOpacity = Math.max(0, Math.min(1, (currentZoom - 15.5) / 0.8));
-            if (zoneOpacity <= 0) { _capAnim = requestAnimationFrame(_capDraw); return; }
+            if (zoneOpacity <= 0) { _capDessinerJoueur(0); _capAnim = requestAnimationFrame(_capDraw); return; }
             // Isométrie réelle : le rapport hauteur/largeur d'un cercle au sol
             // dépend de l'inclinaison de la caméra. Un ratio fixe (0,38)
             // désaccordait les zones du captureCanvas des polygones dessinés par
@@ -26401,7 +26576,7 @@
             const _ryRef = Math.abs(_cNorth.y - _cCenter.y);
             const RATIO_Y = (_rxRef > 0.5 && isFinite(_ryRef)) ? Math.max(0.12, Math.min(1, _ryRef / _rxRef)) : 0.38;
             // Seuils min par type : evite que la zone depasse l icone au zoom large
-            const MIN_RX = { poi_local:32, poi_thematic:32, poi_cooldown:32, dust:20, orb:20, echo:28, scroll:18, loot:18, carnet_resource:18 };
+            const MIN_RX = { poi_local:32, poi_thematic:32, poi_cooldown:32, dust:20, orb:20, echo:28, scroll:18, loot:18, carnet_resource:18, lieu:20 };
             // Opacite remplissage par type
             const FILL_ALPHA = { poi_local:0.10, poi_thematic:0.10, poi_cooldown:0.08, dust:0.13, orb:0.13, echo:0.10, scroll:0.10, loot:0.10, carnet_resource:0.11 };
             // Vue ensemble : la CSS (body.planning-mode) cache les marqueurs de
@@ -26419,6 +26594,17 @@
                 const fillAlpha = FILL_ALPHA[z.type] || 0.10;
                 _capCtx.save();
                 _capCtx.translate(c.x, c.y);
+                if (z.type === 'lieu') {
+                    // Lieu à visiter : tirets clairs doublés d'un liseré sombre (lisibles
+                    // sur le fond clair de la mappe comme de nuit), pas de remplissage.
+                    _capCtx.setLineDash([8, 6]);
+                    _capCtx.beginPath(); _capCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+                    _capCtx.strokeStyle = 'rgba(30,27,46,0.40)'; _capCtx.lineWidth = 4; _capCtx.globalAlpha = zoneOpacity; _capCtx.stroke();
+                    _capCtx.beginPath(); _capCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+                    _capCtx.strokeStyle = '#FFFBF0'; _capCtx.lineWidth = 2; _capCtx.stroke();
+                    _capCtx.restore();
+                    return;
+                }
                 // Ombre au sol sous l icone (petit disque aplati centre)
                 const sr = Math.min(rx * 0.22, 14);
                 _capCtx.beginPath(); _capCtx.ellipse(0, 0, sr, sr * RATIO_Y, 0, 0, Math.PI * 2);
@@ -26431,6 +26617,7 @@
                 _capCtx.strokeStyle = z.color; _capCtx.lineWidth = 1.2; _capCtx.globalAlpha = 0.80 * zoneOpacity; _capCtx.stroke();
                 _capCtx.restore();
             });
+            _capDessinerJoueur(zoneOpacity);
             _capAnim = requestAnimationFrame(_capDraw);
         }
 
@@ -26603,6 +26790,8 @@
                 const dt = Math.min(now - last, 100);
                 last = now;
                 if (gpsActive) return;
+                // Carte nord en haut au joystick : sens écran = sens au sol.
+                if (joystickDirection.x || joystickDirection.y) _capJoystick = Math.atan2(joystickDirection.x, joystickDirection.y) * 180 / Math.PI;
                 const speed = MOVE_SPEED * _walkSpeed * (dt / 50);
                 playerPos = {
                     lat: playerPos.lat + joystickDirection.y * speed,
@@ -29011,9 +29200,10 @@
             uiArreterPulse('#viewToggleBtn');
             const v   = MAP_VIEW[_mapViewMode];
             const btn = document.getElementById('viewToggleBtn');
-            // Cap de carte : nord en haut en vue d'ensemble ; en vue proche, celui du
-            // joueur si le GPS le fournit. Le décalage « tiers bas » suit ce cap.
-            const capVue = _mapViewMode === 'close' && gpsActive ? (GeoEngine.getHeading() ?? 0) : 0;
+            // Cap de carte : en vue proche, celui du joueur si le GPS le fournit ; en vue
+            // d'ensemble, la rotation en cours est gardée (David, 03/11 : le dézoom ne
+            // tourne plus la carte). Le décalage « tiers bas » suit ce cap.
+            let capVue = _mapViewMode === 'close' ? (gpsActive ? (GeoEngine.getHeading() ?? 0) : 0) : map.getBearing();
             const centreVue = _geoCentreCamera(playerPos, capVue);
             if (_mapViewMode === 'close' && _geoSuiviCoupe) {
                 _geoSuiviCoupe = false;
@@ -29038,6 +29228,7 @@
                 const cam = map.cameraForBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
                     { padding: { top: 130, bottom: 170, left: 30, right: 30 }, bearing: 0 });
                 if (cam && cam.center) cadrage = { center: cam.center, zoom: cam.zoom };
+                capVue = 0;   // exception validée : le premier dézoom du tutoriel cadre le périmètre nord en haut
             }
             // Le joystick et le GPS recentraient la caméra pendant le vol, ce qui
             // coupait l'animation net à chaque pas. Ils s'effacent le temps du trajet.
@@ -34230,7 +34421,7 @@
                 _hubSay('scientifique', "Ne touche pas à ça ! … Enfin. Il aide à se concentrer, à lâcher prise. Les novices en ont tous besoin, au début."),
             ],
             sphereApresClara: [
-                _hubSay('scientifique', "Toi, il paraît que tu t'en es passé. Clara n'en revient toujours pas. Moi non plus, à vrai dire."),
+                _hubSay('scientifique', "Toujours pas besoin de ça ? Les autres vont finir par être jaloux."),
             ],
             scientifique: [
                 // David, 20/10 : « Tu te demandes où tu es ?… » et « Celle-ci, on l'a stabilisée… » retirées.
@@ -34264,6 +34455,7 @@
                 vnShow([lignes[i]]);
                 return;
             }
+            if (id === 'scientifique' && _tutoScene19()) return;
             if (id !== 'aurele') { _hubSayNext(id); return; }
             if (_hubExploriumOpened)   _hubSayNext('aureleApres');
             else if (_hubExploriumKey) vnShow(HUB_LINES.aureleCle);
@@ -34288,7 +34480,17 @@
         }
 
         // Plaques de nom : texte tiré de HUB_NPCS, cadre ajusté au texte.
+        // « ! » au-dessus de Ricardo tant que la quête « Rencontrer le Professeur
+        // Ricardo » est en cours (section 19).
+        function _hubMajAlerteRicardo() {
+            const el = document.getElementById('hubRicardoAlerte');
+            if (!el) return;
+            let actif = false;
+            try { const q = _tutoQuetes().ricardo; actif = !_obDone && !!q && q.etat === 'active'; } catch (e) {}
+            el.style.display = actif ? '' : 'none';
+        }
         function _hubInitNpcs() {
+            _hubMajAlerteRicardo();
             document.querySelectorAll('[data-hub-npc]').forEach(g => {
                 const npc   = HUB_NPCS[g.dataset.hubNpc];
                 const txt   = g.querySelector('.hub-npc-plate text');
@@ -34386,7 +34588,7 @@
         }
         function hubSphereTap() {
             if (_hubVnOpen() || _hubOpening) return;
-            const claraEnAParle = typeof _tutoEtat === 'object' && _tutoEtat && _tutoEtat.s18 === 'fini';
+            const claraEnAParle = typeof _tutoEtat === 'object' && _tutoEtat && !!_tutoEtat.s19;   // après la scène de Ricardo (section 19)
             vnShow(claraEnAParle ? HUB_LINES.sphere.concat(HUB_LINES.sphereApresClara) : HUB_LINES.sphere);
         }
 
@@ -35566,11 +35768,47 @@
 
         let _gpsEstablished = false;
 
-        // Affiche/masque le joystick selon l'état GPS : invisible dès que le GPS
-        // réel pilote le personnage, visible sinon.
+        // Joystick (David, 03/11) : caché par défaut, GPS ou non. Il n'apparaît
+        // que si on l'active à la main dans le menu test (testToggleJoystick),
+        // ce qui est refusé tant que la géolocalisation est active ; un fix GPS
+        // ultérieur le masque.
+        let _joystickDebloque = false;
         function _updateJoystickVisibility() {
             const jc = document.querySelector('.joystick-container');
-            if (jc) jc.style.display = gpsActive ? 'none' : '';
+            if (jc) jc.style.display = (_joystickDebloque && !gpsActive) ? '' : 'none';
+        }
+        // Hors session admin (code équipe saisi à l'entrée), l'activation demande
+        // le code admin, une fois par session (David, 03/11).
+        let _joystickCodeOk = false;
+        function testToggleJoystick() {
+            const btn = document.getElementById('btnTestJoystick');
+            if (!_joystickDebloque && gpsActive) {
+                showToast('🕹️ Joystick refusé : la géolocalisation est active');
+                return;
+            }
+            if (!_joystickDebloque && !(_acces && _acces.team) && !_joystickCodeOk) {
+                const zone = document.getElementById('joystickCode');
+                const input = document.getElementById('joystickCodeInput');
+                zone.style.display = 'flex';
+                input.value = '';
+                document.getElementById('joystickCodeMsg').textContent = '';
+                setTimeout(() => { try { input.focus(); } catch (e) {} }, 50);
+                return;
+            }
+            _joystickDebloque = !_joystickDebloque;
+            _updateJoystickVisibility();
+            if (btn) btn.textContent = _joystickDebloque ? '🕹️ Désactiver le joystick' : '🕹️ Activer le joystick';
+            showToast(_joystickDebloque ? '🕹️ Joystick activé' : '🕹️ Joystick désactivé');
+        }
+        function validerCodeJoystick() {
+            const input = document.getElementById('joystickCodeInput');
+            if (_accesNormaliser(input.value) !== TEST_CODE_EQUIPE) {
+                document.getElementById('joystickCodeMsg').textContent = 'Code incorrect.';
+                return;
+            }
+            _joystickCodeOk = true;
+            document.getElementById('joystickCode').style.display = 'none';
+            testToggleJoystick();
         }
 
         // Traite un point GPS, tel que GeoEngine le sort (getFiltered()).
@@ -36646,7 +36884,7 @@
 
                 el.addEventListener('click', () => {
                     const dist = getDistance(playerPos.lat, playerPos.lng, pan.lat, pan.lng);
-                    if (dist > PANNEAU_RADIUS) {
+                    if (!_aPortee(dist, PANNEAU_RADIUS)) {
                         showToast(TF('Approche-toi de %1', T(pan.title)));
                         return;
                     }
@@ -36684,7 +36922,7 @@
             const nearbyDiv = document.getElementById('nearbyPanneau');
             panneauMarkers.forEach(({ inner, pan }) => {
                 const dist = getDistance(playerPos.lat, playerPos.lng, pan.lat, pan.lng);
-                const inZone = dist <= PANNEAU_RADIUS && !horsZoneDuJour(pan.lat, pan.lng)
+                const inZone = _aPortee(dist, PANNEAU_RADIUS) && !horsZoneDuJour(pan.lat, pan.lng)
                     && _marqueurAffiche(panneauMarkers, 'pan', pan.id);   // cf. checkNearbyPOI
                 const halo = inner.querySelector('.interact-halo');
                 const prompt = inner.querySelector('.tap-prompt');
@@ -36936,7 +37174,7 @@
 
                 el.addEventListener('click', () => {
                     const dist = getDistance(playerPos.lat, playerPos.lng, bazar.lat, bazar.lng);
-                    if (dist > BAZAR_RADIUS) { showToast(TF('🛖 %1 — trop loin', T(bazar.name))); return; }
+                    if (!_aPortee(dist, BAZAR_RADIUS)) { showToast(TF('🛖 %1 — trop loin', T(bazar.name))); return; }
                     currentNearbyBazar = bazar;
                     openBazarScreen(bazar);
                 });
@@ -36964,7 +37202,7 @@
                     // Hors du périmètre du test : marqueur masqué, échoppe non proposée.
                     if (bazar.id !== 'bazar_tuto' && horsZoneDuJour(bazar.lat, bazar.lng)) return;
                     const dist = getDistance(playerPos.lat, playerPos.lng, bazar.lat, bazar.lng);
-                    if (dist <= BAZAR_RADIUS && dist < nearestDist) {
+                    if (_aPortee(dist, BAZAR_RADIUS) && dist < nearestDist) {
                         nearest = bazar;
                         nearestDist = dist;
                     }
@@ -36972,7 +37210,7 @@
                 // Mettre à jour halos + prompts des bazars
                 bazarMarkers.forEach(({ inner, bazar }) => {
                     const d = getDistance(playerPos.lat, playerPos.lng, bazar.lat, bazar.lng);
-                    const inZone = d <= BAZAR_RADIUS;
+                    const inZone = _aPortee(d, BAZAR_RADIUS);
                     const halo = inner.querySelector('.interact-halo');
                     const prompt = inner.querySelector('.tap-prompt');
                     if (inZone) {
@@ -37134,7 +37372,7 @@
 
                 el.addEventListener('click', () => {
                     const dist = getDistance(playerPos.lat, playerPos.lng, info.lat, info.lng);
-                    if (dist > INFO_RADIUS) {
+                    if (!_aPortee(dist, INFO_RADIUS)) {
                         showInfoTooFarToast(info.title);
                         return;
                     }
@@ -38678,15 +38916,15 @@
                                 audio: null,
                                 ecrans: [
                                     { s: 'vitrine',    b: 'couverture', d: 'Lyon, avant les imprimeurs',
-                                      t: "À Lyon, certains livres ont plus de mille ans." },
+                                      t: "À Lyon, certains livres ont traversé plus de 15 siècles d’histoire. Au cœur de la bibliothèque municipale de la Part-Dieu sont conservés deux manuscrits exceptionnels. Ils témoignent d’une époque où les livres étaient entièrement copiés à la main.\n\nLe premier est un psautier incomplet, il s’agit d’un recueil de psaumes bibliques, copié aux alentours de la fin du 5ème siècle.\n\nLe second a été copié en Italie à la même période, il s’agit d’une version latine d’un commentaire théologique rédigé par Origène au 3ème siècle sur l’Épître aux Romains. Il a rejoint Lyon probablement au 9ème siècle.\n\nSi ces deux manuscrits sont parvenus jusqu’à nous, c’est grâce au travail patient des copistes, mais aussi à celui de générations de lettrés, de moines et de bibliothécaires qui ont contribué à leur conservation et à leur transmission." },
                                     { s: 'copiste',    b: 'le geste', d: 'Un pupitre, une plume',
-                                      t: "Il copie. Une page, puis la suivante, pendant trois ou quatre mois pour un seul ouvrage. Quand le texte est long, on découpe le volume en cahiers et on se répartit le travail à plusieurs : c'est la seule façon d'aller plus vite." },
-                                    { s: 'cloitre',    b: 'pour qui il copie', d: '798-860, à la cathédrale',
-                                      t: "Ce qu'il copie ne lui appartiendra pas. Les plus beaux volumes de la ville sont rangés dans le cloître de {{card13|Saint-Jean}}, où {{card_palais_st_jean|la bibliothèque du chapitre}} s'est constituée siècle après siècle. En 798, un évêque nommé Leidrade, qui a été bibliothécaire de Charlemagne, fait venir à Lyon les livres qu'il possède, en donne à sa cathédrale et ouvre une école. Au milieu du IXe siècle, les travaux récents estiment le fonds à environ six cents manuscrits." },
-                                    { s: 'documents',  b: "l'écrit sort du cloître", d: 'XIIIe-XVe siècle',
-                                      t: "Pendant ce temps, écrire cesse d'être réservé aux clercs. Entre 1180 et 1330, la quantité de documents produits explose : registres de notaires, livres de comptes, actes d'administration. Les historiens appellent ça le tournant pragmatique. Dans une ville de marchands, l'écrit devient un outil de travail quotidien. Mais multiplier un livre, lui, demande toujours un copiste et trois mois." },
+                                      t: "Tout commence par un texte. Un auteur l’écrit, ou le dicte à une personne chargée de le transcrire. Puis, au fil des générations, d’autres mains se chargent de le reproduire. C’est ainsi que sont nés nos deux manuscrits.\n\nImaginons un copiste au travail. Éclairé par la lumière du jour, il est assis devant un pupitre incliné, sur lequel repose une feuille de parchemin, une peau d’animal minutieusement préparée. À ses côtés, un manuscrit plus ancien lui sert de modèle.\n\nAvant de commencer, il faut préparer les pages, tracer des repères et organiser le texte. Puis le copiste se met au travail, une ligne après l’autre, une page puis la suivante. C’est une tâche minutieuse, qui demande une attention constante pour éviter les erreurs, les repérer et parfois les corriger.\n\nCopier un livre peut prendre des semaines, parfois des mois. Dans certains ateliers, plusieurs copistes peuvent se partager le travail en se répartissant différentes parties d’un même ouvrage. Elles sont ensuite réunies pour former un seul et même livre." },
+                                    { s: 'cloitre',    b: 'conserver et transmettre', d: '798-860, à la cathédrale',
+                                      t: "Une fois relié, l’ouvrage est prêt à rejoindre une collection. Il pourra y être conservé, consulté et transmis de génération en génération.\n\nVoyons la scène : le livre achevé arrive dans une bibliothèque médiévale. Un homme ouvre une armoire de bois et le dépose avec soin parmi les autres manuscrits.\n\nAu Moyen Âge, les livres sont rares et chers. On les rassemble, on les protège et on les transmet.\n\nÀ Lyon, dans le quartier de l’actuelle {{card13|cathédrale Saint-Jean}}, {{card_palais_st_jean|une importante bibliothèque}} se développe au fil des siècles.\n\nEn 798, un homme contribue à son essor : Leidrade. Proche de Charlemagne, il devient évêque de Lyon et enrichit la collection avec de nouveaux manuscrits, notamment des livres provenant de sa propre bibliothèque.\n\nQuelques décennies plus tard, au 9ème siècle, un autre homme joue un rôle essentiel : Florus de Lyon. Diacre, érudit et grand connaisseur des textes, il contribue à faire vivre cette bibliothèque. Il étudie les manuscrits, les annote, compare les textes et en corrige certaines erreurs. Sur le manuscrit d’Origène présenté au début de notre histoire, on retrouve encore les marques laissées par Florus au cours de son travail.\n\nAu fil du temps, la collection s’agrandit. À son apogée, la bibliothèque lyonnaise aurait compté plus de 600 manuscrits. Lyon compte alors parmi les grands centres intellectuels de l’Occident carolingien." },
+                                    { s: 'documents',  b: "l'écrit change d'échelle", d: 'XIIe-XVe siècle',
+                                      t: "Pendant des siècles, les livres restent rares et sont copiés principalement dans les milieux religieux. Puis, à partir des 12ème et 13ème siècles, l’écrit prend une place de plus en plus importante dans la société. Son usage se développe bien au-delà des bibliothèques et des milieux religieux.\n\nEn effet, le développement des villes et du commerce favorise la multiplication des documents pratiques.\n\nRegardons une table de travail de cette époque. On y trouve un registre de notaire relié de cuir, un livre de comptes où s’alignent les chiffres et un acte officiel déroulé sur la table. Ces trois documents racontent un monde en pleine transformation.\n\nLes marchands utilisent davantage l’écriture pour tenir leurs comptes. Les notaires enregistrent des contrats. L’Église, les administrations et les particuliers conservent des documents pour défendre leurs biens et leurs droits.\n\nDans la justice, où la parole, les témoignages et les serments restent essentiels, les documents écrits occupent une place grandissante. Ils permettent de faire reconnaître des droits et de produire des preuves.\n\nProgressivement, l’écrit devient indispensable à de nombreuses activités. Il sert à transmettre les connaissances, à conserver la mémoire, à organiser la société et à défendre ses droits.\n\nMalgré cette multiplication des écrits, une chose demeure : en Europe occidentale, pour obtenir un nouvel exemplaire d’un livre, il faut encore en recopier le texte à la main.\n\nLigne après ligne.\nPage après page." },
                                     { s: 'rayonnages', b: 'ce qui reste', d: "Années 1470, puis aujourd'hui",
-                                      t: "Quand les premiers imprimeurs s'installent dans les années 1470, ils ne découvrent pas une ville sans livres. Ils arrivent dans une cité qui en produit et en conserve depuis six siècles. Plus d'une centaine de ces manuscrits existent encore, et une partie se trouve à la Bibliothèque municipale." },
+                                      t: "Le commentaire d’Origène a traversé près de 18 siècles d’histoire.\n\nTout commence au 3ème siècle, lorsqu’Origène rédige son commentaire sur l’Épître aux Romains, en grec.\n\nAu début du 5ème siècle, Rufin d’Aquilée le traduit et l’adapte en latin. Quelques décennies plus tard, un copiste reproduit cette traduction.\n\nAu 9ème siècle, Florus de Lyon l’étudie et l’annote, laissant sur ses pages des marques encore visibles aujourd’hui.\n\nÀ la fin du 15ème siècle, le commentaire d’Origène connaît une nouvelle étape de son histoire : il est désormais reproduit grâce à l’imprimerie.\n\nÀ la même époque, à Lyon, dans les années 1470, lorsque les premiers imprimeurs s’y installent, ils sont dans une ville où les manuscrits sont copiés, étudiés et conservés depuis des siècles.\n\nAujourd’hui, le manuscrit annoté par Florus est toujours conservé à la Bibliothèque municipale de Lyon.\n\nDu texte grec aux copies latines, du manuscrit au livre imprimé, le commentaire d’Origène témoigne ainsi d’une histoire faite de traductions, de lectures et de transmissions." },
                                 ],
                             },
                         },
@@ -38703,15 +38941,15 @@
                                 audio: null,
                                 ecrans: [
                                     { s: 'presseFenetre', b: 'couverture', d: 'Lyon, années 1470',
-                                      t: "Lyon n'a pas d'université. Celui qui lance l'imprimerie ici est un marchand." },
-                                    { s: 'quai',     b: 'qui paie', d: 'Un carrefour de commerce',
-                                      t: "À la fin du XVe siècle, Lyon est un carrefour commercial majeur, et ses foires rassemblent des négociants venus de toute l'Europe. Barthélemy Buyer appartient à ce milieu, et il revient d'études à la Sorbonne, où l'on vient d'installer la première presse de France. Il a de quoi acheter le matériel, payer les ouvriers, financer le papier et organiser la vente." },
+                                      t: "À Lyon, dans les années 1470, une nouvelle manière de fabriquer les livres fait son apparition.\n\nImaginons une pièce où se côtoient deux univers. D'un côté, un marchand, son registre de comptes sous le bras, une bourse à la ceinture. De l'autre, {{card_presse_gutenberg|une imposante presse en bois}}, capable d'imprimer des textes sur des feuilles de papier.\n\nÀ cette époque, Lyon ne possède pas d'université. Mais elle réunit plusieurs conditions favorables au développement de l'imprimerie : des marchands, des capitaux, des milieux lettrés et des routes commerciales.\n\nPourtant, une presse ne suffit pas à faire naître une industrie du livre. Il faut de l'argent, des savoir-faire, des textes à publier… et des acheteurs.\n\nÀ l'origine de cette aventure, on trouve notamment un marchand lyonnais : Barthélemy Buyer." },
+                                    { s: 'quai',     b: 'qui finance', d: 'Un carrefour de commerce',
+                                      t: "Pour comprendre pourquoi l'imprimerie s'installe à Lyon, rendons-nous sur les quais de la Saône. Des porteurs déplacent des marchandises. Des négociants discutent près de caisses et de tonneaux. Sur la rivière, des bateaux transportent leurs cargaisons.\n\nAu XVe siècle, Lyon est un carrefour commercial en plein essor. Située au confluent du Rhône et de la Saône, elle est reliée à de grandes voies de circulation. Ses foires attirent des marchands venus de plusieurs régions d'Europe. On y échange des marchandises, mais aussi de l'argent et des informations. Ces réseaux pourront également favoriser la circulation des livres.\n\nBarthélemy Buyer appartient à une famille aisée de la ville. Il dispose des ressources nécessaires pour soutenir une activité encore nouvelle. Car ouvrir un atelier d'imprimerie représente un pari financier. Il faut acquérir du matériel, des caractères métalliques, acheter du papier et rémunérer des ouvriers. Tout cela doit être payé avant même que les livres soient vendus. Si les exemplaires imprimés ne trouvent pas d'acheteurs, les pertes peuvent être importantes.\n\nBuyer ne contribue donc pas simplement à l'installation d'une machine. Il participe à une entreprise dont la réussite dépend de la vente des livres.\n\nMais pour fabriquer ces livres, il lui faut encore une compétence essentielle : savoir imprimer." },
                                     { s: 'atelier',  b: 'qui fabrique', d: 'Deux métiers, un atelier',
-                                      t: "Pour la technique, il fait venir Guillaume Le Roy, un typographe de la région de Liège. Celui-ci place les lettres une par une, à l'envers, puis abaisse {{card_presse_gutenberg|la presse}}. Il est maître dans son métier, Buyer est marchand dans le sien : l'un imprime, l'autre paie, choisit les titres et vend. Sur les pages, on lira la formule : « à la requête de Barthélemy Buyer »." },
-                                    { s: 'pile',     b: 'ce que ça déclenche', d: 'Début des années 1470',
-                                      t: "Une fois les lettres rangées dans la forme, on peut tirer la même page autant de fois qu'on veut. Le travail passe de mois de copie au temps d'assembler le texte une seule fois. Reste à savoir quoi imprimer. Les premiers livres sortis de l'atelier sont en français, ce qui est singulier pour l'époque : à la capitale, on imprime pour une clientèle savante, qui lit en latin. Buyer, lui, vise plus large." },
+                                      t: "Entrons maintenant dans un atelier d'imprimerie. À gauche, un homme assemble des lettres métalliques, une à une, dans un instrument appelé composteur. Au centre, un autre ouvrier actionne une presse en bois. À droite, des feuilles fraîchement imprimées sont disposées en attendant les étapes suivantes de leur fabrication.\n\nPour développer cette activité, Barthélemy Buyer travaille avec Guillaume Le Roy, un imprimeur originaire de Liège. L'atelier est installé dans la maison même de Buyer. Le Roy apporte son savoir-faire : composer les textes, encrer les caractères et imprimer les feuilles. Buyer apporte les moyens financiers et prend également part à l'entreprise éditoriale.\n\nMais fabriquer un livre ne se résume pas à actionner une presse. Il faut aussi choisir un texte, parfois le traduire, le corriger ou l'adapter. Buyer s'appuie ainsi sur des hommes instruits, notamment des religieux. En 1476, le dominicain Jean Batallier participe à la révision de la traduction française de la *Légende dorée*, un recueil de vies de saints.\n\nL'imprimerie réunit donc des compétences différentes : marchands, imprimeurs, ouvriers et lettrés. Elle transforme autant la fabrication des livres que l'organisation du travail.\n\nCette collaboration laisse des traces. À la fin du *Compendium breve*, un texte appelé colophon indique que le livre a été imprimé par Guillaume Le Roy, à la demande et aux frais de Barthélemy Buyer. Quelques lignes qui nous permettent, plus de cinq siècles après, de retrouver les acteurs de cette entreprise." },
+                                    { s: 'pile',     b: 'ce que cela change', d: 'Début des années 1470',
+                                      t: "Observons maintenant la presse au travail. Une feuille vient d'être imprimée. Puis une deuxième, une troisième. La pile grandit peu à peu.\n\nLa fabrication a changé. Les caractères doivent toujours être assemblés, les pages préparées et la presse actionnée à la main. Mais une fois les caractères disposés dans une forme d'impression, on peut tirer de nombreuses feuilles identiques, sans recopier chaque texte. Les caractères sont ensuite démontés et réutilisés.\n\nC'est un changement considérable. Pourtant, la main n'a pas disparu. Beaucoup de livres imprimés sont encore complétés à la plume, avec des initiales peintes ou des titres tracés en rouge. Les premiers imprimés conservent ainsi une apparence familière aux lecteurs habitués aux manuscrits.\n\nMais produire davantage ne suffit pas. Encore faut-il savoir quoi imprimer, et pour qui.\n\nÀ Paris, les premiers ateliers travaillent notamment pour les milieux universitaires et publient des ouvrages savants en latin. Lyon, qui ne possède pas d'université, s'adresse aussi à d'autres lecteurs : marchands, bourgeois, religieux et amateurs de récits. Les imprimeurs lyonnais accordent très tôt une place importante aux textes en français, sans abandonner le latin.\n\nDès les années 1470, Buyer et Le Roy publient notamment des adaptations de textes bibliques en français. En 1476 paraît la *Légende dorée*. Puis, en 1479, le *Compendieux Livre du Miroir historial*, un ouvrage consacré à l'histoire biblique.\n\nCes livres répondent à des goûts et à des usages déjà présents dans la société. L'imprimerie ne crée donc pas soudainement le besoin de lire. Elle permet de fabriquer davantage d'exemplaires et de les faire circuler plus largement. Mais les livres restent coûteux. Tous les habitants ne peuvent pas se les offrir.\n\nElle ouvre de nouvelles possibilités pour les produire, les vendre et les transmettre." },
                                     { s: 'routes',   b: 'ce qui reste', d: 'Quelques décennies plus tard',
-                                      t: "Un premier livre lyonnais à porter une date sort de son atelier, le 17 septembre 1473 : le Compendium breve. C'est à lui qu'on a longtemps fait remonter l'imprimerie lyonnaise. En quelques décennies, Lyon devient un des grands centres de l'imprimerie européenne. Pas seulement grâce aux presses : grâce à leur rencontre avec des capitaux et des réseaux de commerce. Pendant ce temps, dans le cloître, {{card_palais_st_jean|la bibliothèque du chapitre}} continue de s'enrichir par legs, exemplaire après exemplaire." },
+                                      t: "Le 17 septembre 1473, un livre sort de l'atelier de Guillaume Le Roy, pour Barthélemy Buyer : le *Compendium breve*, un recueil de textes latins comprenant notamment des écrits attribués au futur pape Innocent III.\n\nC'est le plus ancien livre imprimé à Lyon dont on connaisse la date avec certitude. Pendant longtemps, il a même été considéré comme le tout premier livre lyonnais. Mais les recherches récentes ont montré que plusieurs éditions non datées l'avaient probablement précédé. Le *Compendium breve* reste donc un témoin essentiel des débuts de l'imprimerie à Lyon, sans en marquer nécessairement le premier jour.\n\nRevenons maintenant à Lyon, au centre des routes commerciales. Sur une carte, des chemins partent de la ville dans plusieurs directions. Ils évoquent les réseaux par lesquels les livres peuvent rejoindre les foires, passer de marchand en marchand et atteindre des lecteurs dans d'autres villes.\n\nEn quelques décennies, les ateliers se multiplient. Imprimeurs, libraires et autres professionnels du livre font progressivement de Lyon l'un des grands centres européens de l'imprimerie. Cette réussite ne tient pas à la seule présence des presses. Elle repose sur la rencontre d'une technique, de savoir-faire, de capitaux, de choix éditoriaux et de réseaux commerciaux.\n\nPendant ce temps, les manuscrits ne disparaissent pas. Dans {{card_palais_st_jean|la bibliothèque du chapitre}} de Saint-Jean, des livres copiés depuis des siècles témoignent d'une histoire bien plus ancienne de l'écrit. Manuscrits et imprimés continuent longtemps de coexister.\n\nÀ Lyon, le livre imprimé ne remplace donc pas brusquement le livre manuscrit. Il prend place dans une histoire déjà ancienne, celle des textes que l'on copie, que l'on lit et que l'on transmet. Mais désormais, leur fabrication et leur circulation changent d'échelle.\n\nEt derrière chaque livre imprimé, il y a bien plus qu'une machine : des hommes, des savoir-faire, des décisions et des échanges." },
                                 ],
                             },
                         },
@@ -44525,7 +44763,7 @@
             "Ces fauteuils, c'est moi qui les entretiens. On y part plus loin que n'importe quelle porte, sans bouger d'un pouce.": "I look after these armchairs. They take you further than any door, without moving an inch.",
             [_HUB_HTML.fauteuil]: "These armchairs aren't for visitors. First you have to learn to focus… You're still a Novice. It'll come.",
             "Ne touche pas à ça ! … Enfin. Il aide à se concentrer, à lâcher prise. Les novices en ont tous besoin, au début.": "Don't touch that! … Well. It helps you focus, to let go. Every novice needs it at first.",
-            "Toi, il paraît que tu t'en es passé. Clara n'en revient toujours pas. Moi non plus, à vrai dire.": "You, apparently, managed without it. Clara still can't get over it. Neither can I, to be honest.",
+            "Toujours pas besoin de ça ? Les autres vont finir par être jaloux.": "Still don't need that? The others are going to get jealous.",
             [_HUB_HTML.dormeur]: "Shh… Don't wake them. They're in the " + vnMot('explorium', 'Explorium') + ", they'll come back on their own.",
             [_HUB_HTML.porte]: "Behind this door, the " + vnMot('explorium', 'Explorium') + ". Every memory ever extracted, put back where it came from.",
             [_HUB_HTML.dedans]: "Wondering where you are? Inside a " + vnMot('nebuleuse', 'nebula') + ". The whole of " + vnMot('qg', 'HQ') + " exists only in there.",
@@ -45351,10 +45589,16 @@
            style="animation:vrsBalayage 6s ease-in-out infinite"/>
          ${motes(70,260,7,250)}`,
 
-        /* Le geste — le copiste, la bougie, le sablier */
-        copiste:()=>`${DEFS}${FOND}
+        /* Le geste — le copiste, la fenêtre, le sablier. On copiait de jour, à la
+           lumière naturelle, pas à la bougie (David, 03/11). */
+        copiste:()=>`${DEFS}${JOUR}
          <ellipse cx="170" cy="180" rx="160" ry="115" fill="url(#vrs-halo)"/>
-         <path d="M0 262 H400 V300 H0 Z" fill="#0a0910"/>
+         <path d="M0 262 H400 V300 H0 Z" fill="#8a7a5e"/>
+         <!-- fenêtre en plein cintre, derrière le copiste -->
+         <path d="M290 172 V96 C 290 66, 348 66, 348 96 V172 Z" fill="#7d6d52"/>
+         <path d="M297 166 V98 C 297 76, 341 76, 341 98 V166 Z" fill="#fbf3dc"/>
+         <path d="M319 78 V166 M297 122 H341" stroke="#7d6d52" stroke-width="3"/>
+         <rect x="284" y="168" width="70" height="7" rx="1.5" fill="#6b5c44"/>
          <!-- tabouret -->
          <rect x="218" y="206" width="52" height="9" rx="2" fill="#4a3a24"/>
          <path d="M226 215 L220 262 M262 215 L268 262" stroke="#4a3a24" stroke-width="7" stroke-linecap="round"/>
@@ -45385,12 +45629,8 @@
            <path d="M146 160 C 142 148, 146 138, 152 132" stroke="${PARCH}" stroke-width="2"
              fill="none" opacity=".7"/>
          </g>
-         <!-- bougie -->
-         <rect x="298" y="206" width="11" height="34" rx="2" fill="${PARCH}" opacity=".8"/>
-         <ellipse cx="303" cy="240" rx="14" ry="4" fill="#3f2c1c"/>
-         <path d="M303 206 C 297 198, 299 190, 303 186 C 307 190, 309 198, 303 206 Z" fill="${OR2}"
-           style="transform-origin:303px 206px;animation:vrsFlamme 1.6s ease-in-out infinite"/>
-         <circle cx="303" cy="196" r="28" fill="url(#vrs-halo)"/>
+         <!-- le jour qui entre par la fenêtre et tombe sur la page -->
+         <path d="M297 100 L341 100 L178 236 L90 224 Z" fill="#fff6dc" opacity=".22"/>
          <!-- sablier -->
          <g stroke="${OR2}" stroke-width="2" fill="none" opacity=".75">
            <path d="M26 118 h40 M26 222 h40"/>
@@ -45857,9 +46097,13 @@
 
         // Texte d'écran : HTML échappé, puis {{cardId|mots}} souligné (carte qui
         // agit dans la scène). Aucune détection automatique des noms.
+        // Ligne vide = nouveau paragraphe ; *titre d'ouvrage* = italique (03/11).
         function _vrLectTexte(t) {
             const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return esc(T(t || '')).replace(/\{\{([\w-]+)\|([^}]+)\}\}/g, (m, id, mots) => '<span class="k">' + mots + '</span>');
+            const html = esc(T(t || ''))
+                .replace(/\{\{([\w-]+)\|([^}]+)\}\}/g, (m, id, mots) => '<span class="k">' + mots + '</span>')
+                .replace(/\*([^*\n]+)\*/g, '<i>$1</i>');
+            return html.split(/\n{2,}/).map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
         }
 
         function _vrLectPrerequis(etape) {
