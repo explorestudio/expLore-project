@@ -9100,6 +9100,11 @@
         .vr-lect-num { position: absolute; top: 12px; left: 12px; z-index: 2; background: rgba(8,7,10,.85);
             font: 700 10px/1.4 'Helvetica Neue', Arial, sans-serif; letter-spacing: .1em; padding: 3px 8px;
             border-radius: 2px; border: 1px solid rgba(244,236,219,.22); }
+        .vr-lect-son { position: absolute; top: 9px; right: 12px; z-index: 2; width: 30px; height: 30px; padding: 0;
+            border-radius: 50%; border: 1px solid rgba(244,236,219,.35); background: rgba(8,7,10,.85);
+            color: #f4ecdb; font-size: 12px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .vr-lect-son[hidden] { display: none; }
+        .vr-lect-son.joue { border-color: rgba(217,164,65,.8); color: #d9a441; }
         .vr-lect-date { position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 2; opacity: .9;
             font: 10px 'Helvetica Neue', Arial, sans-serif; letter-spacing: .18em; text-transform: uppercase; color: #d9a441; }
         /* Le texte prend l'espace restant : pastilles et flèches restent à la même place.
@@ -9113,6 +9118,9 @@
         .vr-lect-corps { font-size: 15px; line-height: 1.55; opacity: 0; transition: opacity .45s ease; }
         .vr-lect-corps.on { opacity: .96; }
         .vr-lect-corps p { margin: 0 0 .75em; }
+        /* Écriture progressive (_vrLectEcrire) : lettre masquée tant qu'elle n'est pas « lue » */
+        .vr-lect-corps .vr-c { visibility: hidden; }
+        .vr-lect-corps .vr-c.v { visibility: visible; }
         .vr-lect-corps p:last-child { margin-bottom: 0; }
         /* Carte qui agit dans la scène : trait doré fin (marqueur {{cardId|mots}}) */
         .vr-lect-corps .k { border-bottom: 1px solid rgba(217,164,65,.8); padding-bottom: 1px; color: #d9a441; }
@@ -10392,7 +10400,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.81</div>
+            <div class="hud-version" id="hudVersion">v1.9.82</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -12435,6 +12443,10 @@
                         <div class="vr-lect-scene" id="vrLectScene">
                             <svg id="vrLectArt" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet"></svg>
                             <div class="vr-lect-num" id="vrLectNum"></div>
+                            <!-- Narration de l'écran (champ audio de l'écran) : lecture automatique,
+                                 bouton lecture/pause visible seulement quand l'écran en a une. -->
+                            <audio id="vrLectAudio" preload="none"></audio>
+                            <button class="vr-lect-son" id="vrLectSon" onclick="vrLectSonBasculer()" aria-label="Lecture / pause de la narration" hidden></button>
                             <div class="vr-lect-date" id="vrLectDate"></div>
                         </div>
                         <div class="vr-lect-texte">
@@ -12948,19 +12960,19 @@
             "AUJOURD'HUI": "TODAY",
             "couverture": "cover",
             "Lyon, avant les imprimeurs": "Lyon, before the printers",
-            "À Lyon, certains livres ont traversé plus de 15 siècles d’histoire. Au cœur de la bibliothèque municipale de la Part-Dieu sont conservés deux manuscrits exceptionnels. Ils témoignent d’une époque où les livres étaient entièrement copiés à la main.\n\nLe premier est un psautier incomplet, il s’agit d’un recueil de psaumes bibliques, copié aux alentours de la fin du 5ème siècle.\n\nLe second a été copié en Italie à la même période, il s’agit d’une version latine d’un commentaire théologique rédigé par Origène au 3ème siècle sur l’Épître aux Romains. Il a rejoint Lyon probablement au 9ème siècle.\n\nSi ces deux manuscrits sont parvenus jusqu’à nous, c’est grâce au travail patient des copistes, mais aussi à celui de générations de lettrés, de moines et de bibliothécaires qui ont contribué à leur conservation et à leur transmission.": "In Lyon, some books have come through more than 15 centuries of history. At the heart of the Part-Dieu municipal library, two exceptional manuscripts are kept. They bear witness to a time when books were copied entirely by hand.\n\nThe first is an incomplete psalter, a collection of biblical psalms, copied around the end of the 5th century.\n\nThe second was copied in Italy in the same period. It is a Latin version of a theological commentary written by Origen in the 3rd century on the Epistle to the Romans. It probably reached Lyon in the 9th century.\n\nIf these two manuscripts have come down to us, it is thanks to the patient work of copyists, but also to generations of scholars, monks and librarians who helped preserve them and pass them on.",
+            "À Lyon, certains livres ont traversé plus de 15 siècles d’histoire. Au cœur de la bibliothèque municipale de la Part-Dieu sont conservés deux manuscrits exceptionnels.\n\nLe premier est un psautier incomplet, il s’agit d’un recueil de psaumes bibliques, copié aux alentours de la fin du Vème siècle.\n\nLe second a été copié en Italie à la même période, il s’agit d’une version latine d’un commentaire théologique rédigé par Origène au IIIème siècle sur l’Épître aux Romains. Il a rejoint Lyon probablement au IXème siècle.\n\nSi ces deux manuscrits sont parvenus jusqu’à nous, c’est grâce au travail patient des copistes, mais aussi à celui de générations de lettrés, de moines et de bibliothécaires qui ont contribué à leur conservation et à leur transmission.": "In Lyon, some books have come through more than 15 centuries of history. At the heart of the Part-Dieu municipal library, two exceptional manuscripts are kept.\n\nThe first is an incomplete psalter, a collection of biblical psalms, copied around the end of the 5th century.\n\nThe second was copied in Italy in the same period. It is a Latin version of a theological commentary written by Origen in the 3rd century on the Epistle to the Romans. It probably reached Lyon in the 9th century.\n\nIf these two manuscripts have come down to us, it is thanks to the patient work of copyists, but also to generations of scholars, monks and librarians who helped preserve them and pass them on.",
             "le geste": "the gesture",
             "Un pupitre, une plume": "A writing desk, a quill",
             "Tout commence par un texte. Un auteur l’écrit, ou le dicte à une personne chargée de le transcrire. Puis, au fil des générations, d’autres mains se chargent de le reproduire. C’est ainsi que sont nés nos deux manuscrits.\n\nImaginons un copiste au travail. Éclairé par la lumière du jour, il est assis devant un pupitre incliné, sur lequel repose une feuille de parchemin, une peau d’animal minutieusement préparée. À ses côtés, un manuscrit plus ancien lui sert de modèle.\n\nAvant de commencer, il faut préparer les pages, tracer des repères et organiser le texte. Puis le copiste se met au travail, une ligne après l’autre, une page puis la suivante. C’est une tâche minutieuse, qui demande une attention constante pour éviter les erreurs, les repérer et parfois les corriger.\n\nCopier un livre peut prendre des semaines, parfois des mois. Dans certains ateliers, plusieurs copistes peuvent se partager le travail en se répartissant différentes parties d’un même ouvrage. Elles sont ensuite réunies pour former un seul et même livre.": "It all begins with a text. An author writes it, or dictates it to someone tasked with transcribing it. Then, over the generations, other hands take on reproducing it. That is how our two manuscripts came to be.\n\nLet’s imagine a copyist at work. Lit by daylight, he sits at a sloping desk, on which lies a sheet of parchment, an animal skin carefully prepared. Beside him, an older manuscript serves as his model.\n\nBefore starting, the pages must be prepared, guide marks drawn and the text laid out. Then the copyist gets to work, one line after another, one page then the next. It is painstaking work, which demands constant attention to avoid mistakes, spot them and sometimes correct them.\n\nCopying a book can take weeks, sometimes months. In some workshops, several copyists can share the work by dividing up different parts of the same book. These are then brought together to form one single book.",
             "conserver et transmettre": "keeping and passing on",
             "798-860, à la cathédrale": "798-860, at the cathedral",
-            "Une fois relié, l’ouvrage est prêt à rejoindre une collection. Il pourra y être conservé, consulté et transmis de génération en génération.\n\nVoyons la scène : le livre achevé arrive dans une bibliothèque médiévale. Un homme ouvre une armoire de bois et le dépose avec soin parmi les autres manuscrits.\n\nAu Moyen Âge, les livres sont rares et chers. On les rassemble, on les protège et on les transmet.\n\nÀ Lyon, dans le quartier de l’actuelle {{card13|cathédrale Saint-Jean}}, {{card_palais_st_jean|une importante bibliothèque}} se développe au fil des siècles.\n\nEn 798, un homme contribue à son essor : Leidrade. Proche de Charlemagne, il devient évêque de Lyon et enrichit la collection avec de nouveaux manuscrits, notamment des livres provenant de sa propre bibliothèque.\n\nQuelques décennies plus tard, au 9ème siècle, un autre homme joue un rôle essentiel : Florus de Lyon. Diacre, érudit et grand connaisseur des textes, il contribue à faire vivre cette bibliothèque. Il étudie les manuscrits, les annote, compare les textes et en corrige certaines erreurs. Sur le manuscrit d’Origène présenté au début de notre histoire, on retrouve encore les marques laissées par Florus au cours de son travail.\n\nAu fil du temps, la collection s’agrandit. À son apogée, la bibliothèque lyonnaise aurait compté plus de 600 manuscrits. Lyon compte alors parmi les grands centres intellectuels de l’Occident carolingien.": "Once bound, the book is ready to join a collection. There it can be kept, consulted and handed down from generation to generation.\n\nLet’s picture the scene: the finished book arrives in a medieval library. A man opens a wooden cupboard and carefully places it among the other manuscripts.\n\nIn the Middle Ages, books are rare and expensive. They are gathered, protected and passed on.\n\nIn Lyon, in the area of today’s {{card13|Saint-Jean cathedral}}, {{card_palais_st_jean|a major library}} grows over the centuries.\n\nIn 798, one man contributes to its rise: Leidrade. Close to Charlemagne, he becomes bishop of Lyon and enriches the collection with new manuscripts, notably books from his own library.\n\nA few decades later, in the 9th century, another man plays an essential role: Florus de Lyon. A deacon, a scholar and a great connoisseur of texts, he helps keep this library alive. He studies the manuscripts, annotates them, compares the texts and corrects some of their errors. On the Origen manuscript presented at the start of our story, the marks Florus left during his work can still be seen.\n\nOver time, the collection grows. At its height, the Lyon library is said to have held more than 600 manuscripts. Lyon is then among the great intellectual centers of the Carolingian West.",
+            "Une fois relié, l’ouvrage est prêt à rejoindre une collection. Il pourra y être conservé, consulté et transmis de génération en génération.\n\nVoyons la scène : le livre achevé arrive dans une bibliothèque médiévale. Un homme ouvre une armoire de bois et le dépose avec soin parmi les autres manuscrits.\n\nAu Moyen Âge, les livres sont rares et chers. On les rassemble, on les protège et on les transmet.\n\nÀ Lyon, dans le quartier de l’actuelle {{card13|cathédrale Saint-Jean}}, {{card_palais_st_jean|une importante bibliothèque}} se développe au fil des siècles.\n\nEn 798, un homme contribue à son essor : Leidrade. Proche de Charlemagne, il devient évêque de Lyon et enrichit la collection avec de nouveaux manuscrits, notamment des livres provenant de sa propre bibliothèque.\n\nQuelques décennies plus tard, au IXème siècle, un autre homme joue un rôle essentiel : Florus de Lyon. Diacre, érudit et grand connaisseur des textes, il contribue à faire vivre cette bibliothèque. Il étudie les manuscrits, les annote, compare les textes et en corrige certaines erreurs. Sur le manuscrit d’Origène présenté au début de notre histoire, on retrouve encore les marques laissées par Florus au cours de son travail.\n\nAu fil du temps, la collection s’agrandit. À son apogée, la bibliothèque lyonnaise aurait compté plus de 600 manuscrits. Lyon compte alors parmi les grands centres intellectuels de l’Occident carolingien.": "Once bound, the book is ready to join a collection. There it can be kept, consulted and handed down from generation to generation.\n\nLet’s picture the scene: the finished book arrives in a medieval library. A man opens a wooden cupboard and carefully places it among the other manuscripts.\n\nIn the Middle Ages, books are rare and expensive. They are gathered, protected and passed on.\n\nIn Lyon, in the area of today’s {{card13|Saint-Jean cathedral}}, {{card_palais_st_jean|a major library}} grows over the centuries.\n\nIn 798, one man contributes to its rise: Leidrade. Close to Charlemagne, he becomes bishop of Lyon and enriches the collection with new manuscripts, notably books from his own library.\n\nA few decades later, in the 9th century, another man plays an essential role: Florus de Lyon. A deacon, a scholar and a great connoisseur of texts, he helps keep this library alive. He studies the manuscripts, annotates them, compares the texts and corrects some of their errors. On the Origen manuscript presented at the start of our story, the marks Florus left during his work can still be seen.\n\nOver time, the collection grows. At its height, the Lyon library is said to have held more than 600 manuscripts. Lyon is then among the great intellectual centers of the Carolingian West.",
             "l'écrit change d'échelle": "writing changes scale",
             "XIIe-XVe siècle": "12th-15th century",
-            "Pendant des siècles, les livres restent rares et sont copiés principalement dans les milieux religieux. Puis, à partir des 12ème et 13ème siècles, l’écrit prend une place de plus en plus importante dans la société. Son usage se développe bien au-delà des bibliothèques et des milieux religieux.\n\nEn effet, le développement des villes et du commerce favorise la multiplication des documents pratiques.\n\nRegardons une table de travail de cette époque. On y trouve un registre de notaire relié de cuir, un livre de comptes où s’alignent les chiffres et un acte officiel déroulé sur la table. Ces trois documents racontent un monde en pleine transformation.\n\nLes marchands utilisent davantage l’écriture pour tenir leurs comptes. Les notaires enregistrent des contrats. L’Église, les administrations et les particuliers conservent des documents pour défendre leurs biens et leurs droits.\n\nDans la justice, où la parole, les témoignages et les serments restent essentiels, les documents écrits occupent une place grandissante. Ils permettent de faire reconnaître des droits et de produire des preuves.\n\nProgressivement, l’écrit devient indispensable à de nombreuses activités. Il sert à transmettre les connaissances, à conserver la mémoire, à organiser la société et à défendre ses droits.\n\nMalgré cette multiplication des écrits, une chose demeure : en Europe occidentale, pour obtenir un nouvel exemplaire d’un livre, il faut encore en recopier le texte à la main.\n\nLigne après ligne.\nPage après page.": "For centuries, books remain rare and are copied mainly in religious circles. Then, from the 12th and 13th centuries, writing takes an ever larger place in society. Its use spreads far beyond libraries and religious circles.\n\nIndeed, the growth of towns and trade encourages the multiplication of practical documents.\n\nLet’s look at a work table from that time. On it lie a leather-bound notary’s register, an account book lined with figures and an official deed unrolled across the table. These three documents tell of a world in full transformation.\n\nMerchants rely more and more on writing to keep their accounts. Notaries record contracts. The Church, administrations and private individuals keep documents to defend their property and their rights.\n\nIn justice, where speech, testimony and oaths remain essential, written documents take on a growing place. They make it possible to have rights recognized and to produce evidence.\n\nGradually, writing becomes indispensable to many activities. It serves to pass on knowledge, to preserve memory, to organize society and to defend one’s rights.\n\nDespite this multiplication of writings, one thing remains: in Western Europe, to obtain a new copy of a book, its text still has to be copied out by hand.\n\nLine after line.\nPage after page.",
+            "Pendant des siècles, les livres restent rares et sont copiés principalement dans les milieux religieux. Puis, à partir des XIIème et XIIIème siècles, l’écrit prend une place de plus en plus importante dans la société. Son usage se développe bien au-delà des bibliothèques et des milieux religieux.\n\nEn effet, le développement des villes et du commerce favorise la multiplication des documents pratiques.\n\nRegardons une table de travail de cette époque. On y trouve un registre de notaire relié de cuir, un livre de comptes où s’alignent les chiffres et un acte officiel déroulé sur la table. Ces trois documents racontent un monde en pleine transformation.\n\nLes marchands utilisent davantage l’écriture pour tenir leurs comptes. Les notaires enregistrent des contrats. L’Église, les administrations et les particuliers conservent des documents pour défendre leurs biens et leurs droits.\n\nDans la justice, où la parole, les témoignages et les serments restent essentiels, les documents écrits occupent une place grandissante. Ils permettent de faire reconnaître des droits et de produire des preuves.\n\nProgressivement, l’écrit devient indispensable à de nombreuses activités. Il sert à transmettre les connaissances, à conserver la mémoire, à organiser la société et à défendre ses droits.\n\nMalgré cette multiplication des écrits, une chose demeure : en Europe occidentale, pour obtenir un nouvel exemplaire d’un livre, il faut encore en recopier le texte à la main.\n\nLigne après ligne.\nPage après page.": "For centuries, books remain rare and are copied mainly in religious circles. Then, from the 12th and 13th centuries, writing takes an ever larger place in society. Its use spreads far beyond libraries and religious circles.\n\nIndeed, the growth of towns and trade encourages the multiplication of practical documents.\n\nLet’s look at a work table from that time. On it lie a leather-bound notary’s register, an account book lined with figures and an official deed unrolled across the table. These three documents tell of a world in full transformation.\n\nMerchants rely more and more on writing to keep their accounts. Notaries record contracts. The Church, administrations and private individuals keep documents to defend their property and their rights.\n\nIn justice, where speech, testimony and oaths remain essential, written documents take on a growing place. They make it possible to have rights recognized and to produce evidence.\n\nGradually, writing becomes indispensable to many activities. It serves to pass on knowledge, to preserve memory, to organize society and to defend one’s rights.\n\nDespite this multiplication of writings, one thing remains: in Western Europe, to obtain a new copy of a book, its text still has to be copied out by hand.\n\nLine after line.\nPage after page.",
             "ce qui reste": "what remains",
             "Années 1470, puis aujourd'hui": "The 1470s, then today",
-            "Le commentaire d’Origène a traversé près de 18 siècles d’histoire.\n\nTout commence au 3ème siècle, lorsqu’Origène rédige son commentaire sur l’Épître aux Romains, en grec.\n\nAu début du 5ème siècle, Rufin d’Aquilée le traduit et l’adapte en latin. Quelques décennies plus tard, un copiste reproduit cette traduction.\n\nAu 9ème siècle, Florus de Lyon l’étudie et l’annote, laissant sur ses pages des marques encore visibles aujourd’hui.\n\nÀ la fin du 15ème siècle, le commentaire d’Origène connaît une nouvelle étape de son histoire : il est désormais reproduit grâce à l’imprimerie.\n\nÀ la même époque, à Lyon, dans les années 1470, lorsque les premiers imprimeurs s’y installent, ils sont dans une ville où les manuscrits sont copiés, étudiés et conservés depuis des siècles.\n\nAujourd’hui, le manuscrit annoté par Florus est toujours conservé à la Bibliothèque municipale de Lyon.\n\nDu texte grec aux copies latines, du manuscrit au livre imprimé, le commentaire d’Origène témoigne ainsi d’une histoire faite de traductions, de lectures et de transmissions.": "Origen’s commentary has come through nearly 18 centuries of history.\n\nIt all begins in the 3rd century, when Origen writes his commentary on the Epistle to the Romans, in Greek.\n\nAt the beginning of the 5th century, Rufinus of Aquileia translates it and adapts it into Latin. A few decades later, a copyist reproduces this translation.\n\nIn the 9th century, Florus de Lyon studies and annotates it, leaving marks on its pages that can still be seen today.\n\nAt the end of the 15th century, Origen’s commentary enters a new stage of its history: it is now reproduced by printing.\n\nIn the same period, in Lyon, in the 1470s, when the first printers settle there, they find themselves in a city where manuscripts have been copied, studied and kept for centuries.\n\nToday, the manuscript annotated by Florus is still kept at the Bibliothèque municipale de Lyon.\n\nFrom the Greek text to the Latin copies, from manuscript to printed book, Origen’s commentary thus bears witness to a history made of translations, readings and transmissions.",
+            "Le commentaire d’Origène a traversé près de 18 siècles d’histoire.\n\nTout commence au IIIème siècle, lorsqu’Origène rédige son commentaire sur l’Épître aux Romains, en grec.\n\nAu début du Vème siècle, Rufin d’Aquilée le traduit et l’adapte en latin. Quelques décennies plus tard, un copiste reproduit cette traduction.\n\nAu IXème siècle, Florus de Lyon l’étudie et l’annote, laissant sur ses pages des marques encore visibles aujourd’hui.\n\nÀ la fin du XVème siècle, le commentaire d’Origène connaît une nouvelle étape de son histoire : il est désormais reproduit grâce à l’imprimerie.\n\nÀ la même époque, à Lyon, dans les années 1470, lorsque les premiers imprimeurs s’y installent, ils sont dans une ville où les manuscrits sont copiés, étudiés et conservés depuis des siècles.\n\nAujourd’hui, le manuscrit annoté par Florus est toujours conservé à la Bibliothèque municipale de Lyon.\n\nDu texte grec aux copies latines, du manuscrit au livre imprimé, le commentaire d’Origène témoigne ainsi d’une histoire faite de traductions, de lectures et de transmissions.": "Origen’s commentary has come through nearly 18 centuries of history.\n\nIt all begins in the 3rd century, when Origen writes his commentary on the Epistle to the Romans, in Greek.\n\nAt the beginning of the 5th century, Rufinus of Aquileia translates it and adapts it into Latin. A few decades later, a copyist reproduces this translation.\n\nIn the 9th century, Florus de Lyon studies and annotates it, leaving marks on its pages that can still be seen today.\n\nAt the end of the 15th century, Origen’s commentary enters a new stage of its history: it is now reproduced by printing.\n\nIn the same period, in Lyon, in the 1470s, when the first printers settle there, they find themselves in a city where manuscripts have been copied, studied and kept for centuries.\n\nToday, the manuscript annotated by Florus is still kept at the Bibliothèque municipale de Lyon.\n\nFrom the Greek text to the Latin copies, from manuscript to printed book, Origen’s commentary thus bears witness to a history made of translations, readings and transmissions.",
             "Lyon, années 1470": "Lyon, the 1470s",
             "À Lyon, dans les années 1470, une nouvelle manière de fabriquer les livres fait son apparition.\n\nImaginons une pièce où se côtoient deux univers. D'un côté, un marchand, son registre de comptes sous le bras, une bourse à la ceinture. De l'autre, {{card_presse_gutenberg|une imposante presse en bois}}, capable d'imprimer des textes sur des feuilles de papier.\n\nÀ cette époque, Lyon ne possède pas d'université. Mais elle réunit plusieurs conditions favorables au développement de l'imprimerie : des marchands, des capitaux, des milieux lettrés et des routes commerciales.\n\nPourtant, une presse ne suffit pas à faire naître une industrie du livre. Il faut de l'argent, des savoir-faire, des textes à publier… et des acheteurs.\n\nÀ l'origine de cette aventure, on trouve notamment un marchand lyonnais : Barthélemy Buyer.": "In Lyon, in the 1470s, a new way of making books appears.\n\nLet's imagine a room where two worlds meet. On one side, a merchant, his account book under his arm, a purse at his belt. On the other, {{card_presse_gutenberg|an imposing wooden press}}, able to print texts on sheets of paper.\n\nAt the time, Lyon has no university. But it brings together several conditions favorable to the growth of printing: merchants, capital, learned circles and trade routes.\n\nYet a press alone is not enough to give birth to a book industry. It takes money, know-how, texts to publish… and buyers.\n\nAt the origin of this venture, we find in particular a Lyon merchant: Barthélemy Buyer.",
             "qui finance": "who funds it",
@@ -32128,7 +32140,7 @@
             // capture sur document. Sans entrée audio, ce hook ne fait rien.
             function _setupDucking() {
                 function isJournalAudio(el) {
-                    return el && el.tagName === 'AUDIO' && el.closest && el.closest('.jsb-audio');
+                    return el && el.tagName === 'AUDIO' && el.closest && el.closest('.jsb-audio, .vr-lecteur');
                 }
                 document.addEventListener('play', function (e) {
                     if (!isJournalAudio(e.target)) return;
@@ -38894,7 +38906,9 @@
                     // media : contenu lu dans le lecteur (lot 3 du brief).
                     //   texteValide : false → animation « Récit en construction » ; passer à true
                     //   et renseigner ecrans suffit à activer un média.
-                    //   ecrans : { s: scène animée (VR_SCENES), b: intitulé de temps, d: ancrage, t: texte }.
+                    //   ecrans : { s: scène animée (VR_SCENES), b: intitulé de temps, d: ancrage, t: texte,
+                    //              audio?: narration de l'écran, lue à l'affichage (03/11),
+                    //              audioFin?: seconde où la voix se tait si le fichier finit par un blanc }.
                     //   Dans t, {{cardId|mots}} souligne une carte, à sa PREMIÈRE occurrence
                     //   dans le média seulement (marqueur explicite, jamais de détection automatique).
                     //   audio : null pour l'instant ; servira à caler les animations sur la
@@ -38915,16 +38929,16 @@
                                 texteValide: true,
                                 audio: null,
                                 ecrans: [
-                                    { s: 'vitrine',    b: 'couverture', d: 'Lyon, avant les imprimeurs',
-                                      t: "À Lyon, certains livres ont traversé plus de 15 siècles d’histoire. Au cœur de la bibliothèque municipale de la Part-Dieu sont conservés deux manuscrits exceptionnels. Ils témoignent d’une époque où les livres étaient entièrement copiés à la main.\n\nLe premier est un psautier incomplet, il s’agit d’un recueil de psaumes bibliques, copié aux alentours de la fin du 5ème siècle.\n\nLe second a été copié en Italie à la même période, il s’agit d’une version latine d’un commentaire théologique rédigé par Origène au 3ème siècle sur l’Épître aux Romains. Il a rejoint Lyon probablement au 9ème siècle.\n\nSi ces deux manuscrits sont parvenus jusqu’à nous, c’est grâce au travail patient des copistes, mais aussi à celui de générations de lettrés, de moines et de bibliothécaires qui ont contribué à leur conservation et à leur transmission." },
+                                    { s: 'vitrine',    b: 'couverture', d: 'Lyon, avant les imprimeurs', audio: './assets/audio/Introduction.mp3', audioFin: 54,
+                                      t: "À Lyon, certains livres ont traversé plus de 15 siècles d’histoire. Au cœur de la bibliothèque municipale de la Part-Dieu sont conservés deux manuscrits exceptionnels.\n\nLe premier est un psautier incomplet, il s’agit d’un recueil de psaumes bibliques, copié aux alentours de la fin du Vème siècle.\n\nLe second a été copié en Italie à la même période, il s’agit d’une version latine d’un commentaire théologique rédigé par Origène au IIIème siècle sur l’Épître aux Romains. Il a rejoint Lyon probablement au IXème siècle.\n\nSi ces deux manuscrits sont parvenus jusqu’à nous, c’est grâce au travail patient des copistes, mais aussi à celui de générations de lettrés, de moines et de bibliothécaires qui ont contribué à leur conservation et à leur transmission." },
                                     { s: 'copiste',    b: 'le geste', d: 'Un pupitre, une plume',
                                       t: "Tout commence par un texte. Un auteur l’écrit, ou le dicte à une personne chargée de le transcrire. Puis, au fil des générations, d’autres mains se chargent de le reproduire. C’est ainsi que sont nés nos deux manuscrits.\n\nImaginons un copiste au travail. Éclairé par la lumière du jour, il est assis devant un pupitre incliné, sur lequel repose une feuille de parchemin, une peau d’animal minutieusement préparée. À ses côtés, un manuscrit plus ancien lui sert de modèle.\n\nAvant de commencer, il faut préparer les pages, tracer des repères et organiser le texte. Puis le copiste se met au travail, une ligne après l’autre, une page puis la suivante. C’est une tâche minutieuse, qui demande une attention constante pour éviter les erreurs, les repérer et parfois les corriger.\n\nCopier un livre peut prendre des semaines, parfois des mois. Dans certains ateliers, plusieurs copistes peuvent se partager le travail en se répartissant différentes parties d’un même ouvrage. Elles sont ensuite réunies pour former un seul et même livre." },
                                     { s: 'cloitre',    b: 'conserver et transmettre', d: '798-860, à la cathédrale',
-                                      t: "Une fois relié, l’ouvrage est prêt à rejoindre une collection. Il pourra y être conservé, consulté et transmis de génération en génération.\n\nVoyons la scène : le livre achevé arrive dans une bibliothèque médiévale. Un homme ouvre une armoire de bois et le dépose avec soin parmi les autres manuscrits.\n\nAu Moyen Âge, les livres sont rares et chers. On les rassemble, on les protège et on les transmet.\n\nÀ Lyon, dans le quartier de l’actuelle {{card13|cathédrale Saint-Jean}}, {{card_palais_st_jean|une importante bibliothèque}} se développe au fil des siècles.\n\nEn 798, un homme contribue à son essor : Leidrade. Proche de Charlemagne, il devient évêque de Lyon et enrichit la collection avec de nouveaux manuscrits, notamment des livres provenant de sa propre bibliothèque.\n\nQuelques décennies plus tard, au 9ème siècle, un autre homme joue un rôle essentiel : Florus de Lyon. Diacre, érudit et grand connaisseur des textes, il contribue à faire vivre cette bibliothèque. Il étudie les manuscrits, les annote, compare les textes et en corrige certaines erreurs. Sur le manuscrit d’Origène présenté au début de notre histoire, on retrouve encore les marques laissées par Florus au cours de son travail.\n\nAu fil du temps, la collection s’agrandit. À son apogée, la bibliothèque lyonnaise aurait compté plus de 600 manuscrits. Lyon compte alors parmi les grands centres intellectuels de l’Occident carolingien." },
+                                      t: "Une fois relié, l’ouvrage est prêt à rejoindre une collection. Il pourra y être conservé, consulté et transmis de génération en génération.\n\nVoyons la scène : le livre achevé arrive dans une bibliothèque médiévale. Un homme ouvre une armoire de bois et le dépose avec soin parmi les autres manuscrits.\n\nAu Moyen Âge, les livres sont rares et chers. On les rassemble, on les protège et on les transmet.\n\nÀ Lyon, dans le quartier de l’actuelle {{card13|cathédrale Saint-Jean}}, {{card_palais_st_jean|une importante bibliothèque}} se développe au fil des siècles.\n\nEn 798, un homme contribue à son essor : Leidrade. Proche de Charlemagne, il devient évêque de Lyon et enrichit la collection avec de nouveaux manuscrits, notamment des livres provenant de sa propre bibliothèque.\n\nQuelques décennies plus tard, au IXème siècle, un autre homme joue un rôle essentiel : Florus de Lyon. Diacre, érudit et grand connaisseur des textes, il contribue à faire vivre cette bibliothèque. Il étudie les manuscrits, les annote, compare les textes et en corrige certaines erreurs. Sur le manuscrit d’Origène présenté au début de notre histoire, on retrouve encore les marques laissées par Florus au cours de son travail.\n\nAu fil du temps, la collection s’agrandit. À son apogée, la bibliothèque lyonnaise aurait compté plus de 600 manuscrits. Lyon compte alors parmi les grands centres intellectuels de l’Occident carolingien." },
                                     { s: 'documents',  b: "l'écrit change d'échelle", d: 'XIIe-XVe siècle',
-                                      t: "Pendant des siècles, les livres restent rares et sont copiés principalement dans les milieux religieux. Puis, à partir des 12ème et 13ème siècles, l’écrit prend une place de plus en plus importante dans la société. Son usage se développe bien au-delà des bibliothèques et des milieux religieux.\n\nEn effet, le développement des villes et du commerce favorise la multiplication des documents pratiques.\n\nRegardons une table de travail de cette époque. On y trouve un registre de notaire relié de cuir, un livre de comptes où s’alignent les chiffres et un acte officiel déroulé sur la table. Ces trois documents racontent un monde en pleine transformation.\n\nLes marchands utilisent davantage l’écriture pour tenir leurs comptes. Les notaires enregistrent des contrats. L’Église, les administrations et les particuliers conservent des documents pour défendre leurs biens et leurs droits.\n\nDans la justice, où la parole, les témoignages et les serments restent essentiels, les documents écrits occupent une place grandissante. Ils permettent de faire reconnaître des droits et de produire des preuves.\n\nProgressivement, l’écrit devient indispensable à de nombreuses activités. Il sert à transmettre les connaissances, à conserver la mémoire, à organiser la société et à défendre ses droits.\n\nMalgré cette multiplication des écrits, une chose demeure : en Europe occidentale, pour obtenir un nouvel exemplaire d’un livre, il faut encore en recopier le texte à la main.\n\nLigne après ligne.\nPage après page." },
+                                      t: "Pendant des siècles, les livres restent rares et sont copiés principalement dans les milieux religieux. Puis, à partir des XIIème et XIIIème siècles, l’écrit prend une place de plus en plus importante dans la société. Son usage se développe bien au-delà des bibliothèques et des milieux religieux.\n\nEn effet, le développement des villes et du commerce favorise la multiplication des documents pratiques.\n\nRegardons une table de travail de cette époque. On y trouve un registre de notaire relié de cuir, un livre de comptes où s’alignent les chiffres et un acte officiel déroulé sur la table. Ces trois documents racontent un monde en pleine transformation.\n\nLes marchands utilisent davantage l’écriture pour tenir leurs comptes. Les notaires enregistrent des contrats. L’Église, les administrations et les particuliers conservent des documents pour défendre leurs biens et leurs droits.\n\nDans la justice, où la parole, les témoignages et les serments restent essentiels, les documents écrits occupent une place grandissante. Ils permettent de faire reconnaître des droits et de produire des preuves.\n\nProgressivement, l’écrit devient indispensable à de nombreuses activités. Il sert à transmettre les connaissances, à conserver la mémoire, à organiser la société et à défendre ses droits.\n\nMalgré cette multiplication des écrits, une chose demeure : en Europe occidentale, pour obtenir un nouvel exemplaire d’un livre, il faut encore en recopier le texte à la main.\n\nLigne après ligne.\nPage après page." },
                                     { s: 'rayonnages', b: 'ce qui reste', d: "Années 1470, puis aujourd'hui",
-                                      t: "Le commentaire d’Origène a traversé près de 18 siècles d’histoire.\n\nTout commence au 3ème siècle, lorsqu’Origène rédige son commentaire sur l’Épître aux Romains, en grec.\n\nAu début du 5ème siècle, Rufin d’Aquilée le traduit et l’adapte en latin. Quelques décennies plus tard, un copiste reproduit cette traduction.\n\nAu 9ème siècle, Florus de Lyon l’étudie et l’annote, laissant sur ses pages des marques encore visibles aujourd’hui.\n\nÀ la fin du 15ème siècle, le commentaire d’Origène connaît une nouvelle étape de son histoire : il est désormais reproduit grâce à l’imprimerie.\n\nÀ la même époque, à Lyon, dans les années 1470, lorsque les premiers imprimeurs s’y installent, ils sont dans une ville où les manuscrits sont copiés, étudiés et conservés depuis des siècles.\n\nAujourd’hui, le manuscrit annoté par Florus est toujours conservé à la Bibliothèque municipale de Lyon.\n\nDu texte grec aux copies latines, du manuscrit au livre imprimé, le commentaire d’Origène témoigne ainsi d’une histoire faite de traductions, de lectures et de transmissions." },
+                                      t: "Le commentaire d’Origène a traversé près de 18 siècles d’histoire.\n\nTout commence au IIIème siècle, lorsqu’Origène rédige son commentaire sur l’Épître aux Romains, en grec.\n\nAu début du Vème siècle, Rufin d’Aquilée le traduit et l’adapte en latin. Quelques décennies plus tard, un copiste reproduit cette traduction.\n\nAu IXème siècle, Florus de Lyon l’étudie et l’annote, laissant sur ses pages des marques encore visibles aujourd’hui.\n\nÀ la fin du XVème siècle, le commentaire d’Origène connaît une nouvelle étape de son histoire : il est désormais reproduit grâce à l’imprimerie.\n\nÀ la même époque, à Lyon, dans les années 1470, lorsque les premiers imprimeurs s’y installent, ils sont dans une ville où les manuscrits sont copiés, étudiés et conservés depuis des siècles.\n\nAujourd’hui, le manuscrit annoté par Florus est toujours conservé à la Bibliothèque municipale de Lyon.\n\nDu texte grec aux copies latines, du manuscrit au livre imprimé, le commentaire d’Origène témoigne ainsi d’une histoire faite de traductions, de lectures et de transmissions." },
                                 ],
                             },
                         },
@@ -46332,6 +46346,8 @@
             if (!lect) return;
             lect.classList.remove('on');
             lect.setAttribute('aria-hidden', 'true');
+            _vrLectAudio(null);
+            _vrLectEcrireArreter();
             _vrForgeArreter();
             // Scène animée vidée : aucune animation ne tourne en arrière-plan (brief 2.6).
             const art = document.getElementById('vrLectArt');
@@ -46344,6 +46360,133 @@
                 document.getElementById('verriereTitle').textContent = (grappe.quete && grappe.quete.titre) || grappe.title;
             }
             _verriereMajCompteur();
+        }
+
+        // Narration d'un écran (champ audio, chemin du fichier) : elle part du début à
+        // chaque affichage de l'écran et s'arrête quand on change d'écran ou qu'on
+        // ferme le lecteur. La musique de fond baisse pendant ce temps (BgMusic,
+        // _setupDucking). Sans audio : bouton masqué.
+        // fin (champ audioFin de l'écran, en secondes) : moment où la voix se tait
+        // quand le fichier finit par un blanc. La narration s'arrête là, et le texte
+        // finit de s'écrire à ce moment (cf. _vrLectEcrire).
+        function _vrLectAudio(src, fin) {
+            const a = document.getElementById('vrLectAudio'), b = document.getElementById('vrLectSon');
+            if (!a || !b) return;
+            a.pause();
+            a._vrFin = (src && fin > 0) ? fin : null;
+            if (!src) { b.hidden = true; return; }
+            if (a.dataset.src !== src) { a.src = src; a.dataset.src = src; }
+            try { a.currentTime = 0; } catch (e) {}
+            b.hidden = false;
+            if (!a._vrBranche) {
+                a._vrBranche = true;
+                const maj = () => { b.classList.toggle('joue', !a.paused); b.textContent = a.paused ? '▶' : '❚❚'; };
+                ['play', 'pause', 'ended'].forEach(ev => a.addEventListener(ev, maj));
+                a.addEventListener('timeupdate', () => { if (a._vrFin && !a.paused && a.currentTime >= a._vrFin) a.pause(); });
+            }
+            b.textContent = '▶'; b.classList.remove('joue');
+            a.play().catch(() => {});   // lecture refusée (autoplay) : le bouton ▶ reste
+        }
+        // Écriture progressive du texte d'un écran, lettre par lettre, comme les
+        // parchemins (David, 03/11), avec une micro-pause à chaque fin de phrase.
+        // Avec narration : la part écrite suit la position
+        // de lecture de l'audio (fin calée sur ~97 % de sa durée) et s'arrête quand on
+        // le met en pause. Sans narration, ou si l'audio n'a pas démarré au bout de
+        // 1,5 s (lecture automatique refusée) : rythme fixe. Un toucher sur le texte
+        // l'affiche en entier ; le cadre suit l'écriture tant que le joueur ne fait
+        // pas défiler lui-même.
+        const VR_ECRIT_MS_CAR = 18;       // sans narration
+        const VR_ECRIT_FIN_AUDIO = 0.97;  // part de l'audio où le texte est fini
+        const VR_ECRIT_PAUSE_PHRASE = 14; // micro-pause après . ! ? … (en « lettres »)
+        const VR_ECRIT_PAUSE_PARA = 22;   // après une fin de paragraphe
+        let _vrEcrit = null;
+        function _vrLectEcrireArreter() {
+            if (_vrEcrit) { cancelAnimationFrame(_vrEcrit.raf); _vrEcrit = null; }
+        }
+        function _vrLectEcrire(corps, cadre, src) {
+            _vrLectEcrireArreter();
+            if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            // Chaque caractère du texte devient un span masqué (la mise en page est
+            // déjà la bonne : le texte ne « saute » pas en s'écrivant).
+            const spans = [];
+            const marcher = n => {
+                if (n.nodeType === 3) {
+                    const f = document.createDocumentFragment();
+                    for (const c of n.nodeValue) {
+                        const sp = document.createElement('span');
+                        sp.className = 'vr-c'; sp.textContent = c;
+                        f.appendChild(sp); spans.push(sp);
+                    }
+                    n.parentNode.replaceChild(f, n);
+                } else Array.from(n.childNodes).forEach(marcher);
+            };
+            Array.from(corps.childNodes).forEach(marcher);
+            if (!spans.length) return;
+            // Poids cumulés : cumul[i] = poids écoulé quand la lettre i est écrite.
+            const cumul = new Array(spans.length);
+            let tot = 0;
+            spans.forEach((sp, i) => {
+                tot += 1;
+                cumul[i] = tot;
+                const c = sp.textContent, suiv = spans[i + 1];
+                if (/[.!?…]/.test(c) && (!suiv || /\s/.test(suiv.textContent) || suiv.parentNode !== sp.parentNode)) {
+                    tot += (!suiv || suiv.parentNode !== sp.parentNode) ? VR_ECRIT_PAUSE_PARA : VR_ECRIT_PAUSE_PHRASE;
+                }
+            });
+            const lettres = w => {   // poids → nombre de lettres écrites
+                if (w >= tot) return spans.length;
+                let lo = 0, hi = spans.length;
+                while (lo < hi) { const m = (lo + hi) >> 1; if (cumul[m] <= w) lo = m + 1; else hi = m; }
+                return lo;
+            };
+            const a = document.getElementById('vrLectAudio');
+            const e = _vrEcrit = { spans, montre: 0, t0: performance.now(), mode: src ? 'attente' : 'minuterie', tMin: performance.now(), raf: 0 };
+            const toutMontrer = () => { e.cible = spans.length; };
+            corps.onclick = toutMontrer;
+            if (!cadre._vrToucheBranche) {
+                cadre._vrToucheBranche = true;
+                ['touchstart', 'wheel', 'mousedown'].forEach(ev => cadre.addEventListener(ev, () => { cadre._vrToucheT = Date.now(); }, { passive: true }));
+            }
+            const boucle = now => {
+                if (_vrEcrit !== e) return;
+                let cible = e.cible || 0;
+                const audioOk = src && a && a.dataset.src === src && isFinite(a.duration) && a.duration > 0;
+                if (audioOk && !a.paused) {
+                    // Fin du texte : quand la voix se tait (audioFin), sinon vers la fin du fichier.
+                    const pos = lettres(tot * a.currentTime / (a._vrFin || a.duration * VR_ECRIT_FIN_AUDIO));
+                    // Narration lancée après le rythme fixe (▶ touché tard) : le texte se recale sur la voix.
+                    if (e.mode === 'minuterie' && !e.cible) {
+                        const k = Math.min(e.montre, Math.floor(pos));
+                        for (let i = k; i < e.montre; i++) spans[i].classList.remove('v');
+                        e.montre = k;
+                    }
+                    e.mode = 'audio'; cible = Math.max(cible, pos);
+                }
+                else if (audioOk && (a.ended || (a._vrFin && a.currentTime >= a._vrFin))) cible = spans.length;
+                else if (e.mode === 'attente' && now - e.t0 > 1500) { e.mode = 'minuterie'; e.tMin = now; }
+                if (e.mode === 'minuterie') cible = Math.max(cible, lettres((now - e.tMin) / VR_ECRIT_MS_CAR));
+                const jusqua = Math.min(spans.length, Math.floor(cible));
+                if (jusqua > e.montre) {
+                    for (let i = e.montre; i < jusqua; i++) spans[i].classList.add('v');
+                    e.montre = jusqua;
+                    // Le cadre suit la dernière lettre écrite (pas pendant un défilement du joueur).
+                    if (!(cadre._vrToucheT && Date.now() - cadre._vrToucheT < 2500)) {
+                        const r = spans[jusqua - 1].getBoundingClientRect(), rc = cadre.getBoundingClientRect();
+                        if (r.bottom > rc.bottom - 24) cadre.scrollTop += r.bottom - rc.bottom + 48;
+                    }
+                }
+                if (e.montre >= spans.length) { corps.onclick = null; _vrEcrit = null; return; }
+                e.raf = requestAnimationFrame(boucle);
+            };
+            e.raf = requestAnimationFrame(boucle);
+        }
+        function vrLectSonBasculer() {
+            const a = document.getElementById('vrLectAudio');
+            if (!a || !a.dataset.src) return;
+            if (a.paused) {
+                if (a.ended || (a._vrFin && a.currentTime >= a._vrFin - 0.1)) a.currentTime = 0;   // fin de la voix : on réécoute du début
+                a.play().catch(() => {});
+            } else a.pause();
         }
 
         function vrLecteurAller(d) {
@@ -46360,6 +46503,7 @@
             if (!x) return;
             const media = x.etape.media, ecrans = media.ecrans, e = _vrLect.e, s = ecrans[e];
             const n = x.pan.n || _vrLect.i + 1;
+            _vrLectAudio(s.audio, s.audioFin);
             document.getElementById('verriereCompteur').textContent = (e + 1) + ' / ' + ecrans.length;
             document.getElementById('vrLectNum').textContent = n + ' · ' + (e + 1);
             document.getElementById('vrLectDate').textContent = T(s.d || '');
@@ -46388,7 +46532,8 @@
                     cadre.scrollTop + cadre.clientHeight < cadre.scrollHeight - 4);
                 cadre.addEventListener('scroll', cadre._vrSuite, { passive: true });
             }
-            _vrLecteurRendre._t = setTimeout(() => { corps.innerHTML = _vrLectTexte(s.t); corps.classList.add('on'); cadre._vrSuite(); }, 130);
+            _vrLectEcrireArreter();
+            _vrLecteurRendre._t = setTimeout(() => { corps.innerHTML = _vrLectTexte(s.t); corps.classList.add('on'); _vrLectEcrire(corps, cadre, s.audio); cadre._vrSuite(); }, 130);
             document.getElementById('vrLectPre').innerHTML = _vrLectPrerequis(x.etape);
             const dots = document.getElementById('vrLectDots');
             dots.innerHTML = '';
