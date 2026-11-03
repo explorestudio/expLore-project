@@ -9101,7 +9101,10 @@
             font: 10px 'Helvetica Neue', Arial, sans-serif; letter-spacing: .18em; text-transform: uppercase; color: #d9a441; }
         /* Le texte prend l'espace restant : pastilles et flèches restent à la même place.
            Défilement interne seulement en dernier recours (très petit écran). */
-        .vr-lect-texte { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 13px 18px 4px; }
+        .vr-lect-texte { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 13px 18px 4px; overscroll-behavior: contain; }
+        /* Texte plus long que son cadre : fondu en bas tant qu'il reste à lire */
+        .vr-lect-texte.suite { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent);
+            mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent); }
         .vr-lect-beat { font: 9px 'Courier New', monospace; letter-spacing: .16em; text-transform: uppercase;
             color: rgba(244,236,219,.4); margin-bottom: 5px; }
         .vr-lect-corps { font-size: 15px; line-height: 1.55; opacity: 0; transition: opacity .45s ease; }
@@ -10384,7 +10387,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.78</div>
+            <div class="hud-version" id="hudVersion">v1.9.80</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -13319,7 +13322,7 @@
             // Samir
             "J'aime traîner sur les berges parfois. J'espère que je t'y croiserai.": "I like hanging around the riverbanks sometimes. I hope I'll run into you there.",
             "Les parcs, les jardins, les quais. La ville a une mémoire verte, et on la collecte trop peu.": "Parks, gardens, embankments. The city has a green memory, and we collect too little of it.",
-            "Odile veut tout mettre en tiroirs. Moi je dis qu'un arbre ne tient pas dans un tiroir.": "Odile wants everything in drawers. I say a tree doesn't fit in a drawer.",
+            "Mélanie veut tout mettre en tiroirs. Moi je dis qu'un arbre ne tient pas dans un tiroir.": "Mélanie wants everything in drawers. I say a tree doesn't fit in a drawer.",
             // Aurèle
             "On n'entre pas sans la clé. Le règlement, je ne l'ai pas écrit.": "Nobody goes in without the key. I didn't write the rules.",
             "Comment il marche ? Il tourne. C'est tout ce qu'on a besoin de savoir, ici.": "How does it work? It runs. That's all we need to know around here.",
@@ -22692,7 +22695,7 @@
         // expression pour l'instant) : même gabarit que Clara, donc `full`.
         const _VN_PNJ_DIR = './assets/visual%20novel/';
         const HUB_NPCS = {
-            odile:  { nom: 'Odile',  role: 'archiviste',  couleur: '#8B5CF6',   // Histoire
+            odile:  { nom: 'Mélanie', role: 'archiviste',  couleur: '#8B5CF6',   // Histoire
                       vn: { img: _VN_PNJ_DIR + 'Odile/Odile.png', full: true,
                             color: '#a78bfa', bg: 'rgba(139,92,246,0.15)', border: 'rgba(139,92,246,0.5)' } },
             samir:  { nom: 'Samir',  role: 'naturaliste', couleur: '#10B981',   // Nature
@@ -34197,7 +34200,7 @@
             samir: [
                 _hubSay('samir', "J'aime traîner sur les berges parfois. J'espère que je t'y croiserai."),
                 _hubSay('samir', "Les parcs, les jardins, les quais. La ville a une mémoire verte, et on la collecte trop peu."),
-                _hubSay('samir', "Odile veut tout mettre en tiroirs. Moi je dis qu'un arbre ne tient pas dans un tiroir."),
+                _hubSay('samir', "Mélanie veut tout mettre en tiroirs. Moi je dis qu'un arbre ne tient pas dans un tiroir."),
             ],
             aureleSansCle: [
                 // [AJOUT] 20/10, à valider par David : la porte a disparu, les fauteuils la remplacent.
@@ -46132,7 +46135,16 @@
             const corps = document.getElementById('vrLectCorps');
             corps.classList.remove('on');
             clearTimeout(_vrLecteurRendre._t);
-            _vrLecteurRendre._t = setTimeout(() => { corps.innerHTML = _vrLectTexte(s.t); corps.classList.add('on'); }, 130);
+            // Texte trop long : il défile sous la scène, qui garde sa hauteur. Chaque écran
+            // repart du début ; le fondu (.suite) signale qu'il reste à lire.
+            const cadre = corps.parentElement;
+            cadre.scrollTop = 0;
+            if (!cadre._vrSuite) {
+                cadre._vrSuite = () => cadre.classList.toggle('suite',
+                    cadre.scrollTop + cadre.clientHeight < cadre.scrollHeight - 4);
+                cadre.addEventListener('scroll', cadre._vrSuite, { passive: true });
+            }
+            _vrLecteurRendre._t = setTimeout(() => { corps.innerHTML = _vrLectTexte(s.t); corps.classList.add('on'); cadre._vrSuite(); }, 130);
             document.getElementById('vrLectPre').innerHTML = _vrLectPrerequis(x.etape);
             const dots = document.getElementById('vrLectDots');
             dots.innerHTML = '';
