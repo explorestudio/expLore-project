@@ -4211,6 +4211,13 @@
             float: right;
         }
         .jsb-float-photo.left { float: left; margin: 2px 12px 8px 0; }
+        /* Dessin détouré posé à même la page (imageDetoure) : sans tirage autour */
+        .jsb-photo.detoure {
+            background: none; border: 0; box-shadow: none; padding: 0; transform: none;
+            --jsb-pad-l: 0px; --jsb-pad-t: 0px; --jsb-pad-x: 0px; --jsb-pad-y: 0px;
+            filter: drop-shadow(0 2px 2px rgba(60,35,10,0.16));
+        }
+        .jsb-photo.detoure img { display: block; width: 100%; height: auto; }
         .jsb-postit {
             position: relative;
             clear: both;
@@ -4227,6 +4234,47 @@
         .jsb-postit .jsb-pin {
             position: absolute; top: -7px; left: 50%; margin-left: -8px;
         }
+
+        /* ── Gabarit `id_card` : carte d'identité ancienne, timbre dentelé ── */
+        .jsb-id {
+            transform: rotate(var(--jsb-rot, -0.4deg));
+            margin: 4px 4px 10px; padding: 10px 12px 12px;
+            background: linear-gradient(160deg, #eef0e4 0%, #dde2d0 100%);
+            border: 1px solid rgba(70,82,58,0.38); border-radius: 6px;
+            box-shadow: 0 3px 9px rgba(60,35,10,0.22), inset 0 0 0 3px rgba(255,255,255,0.35);
+            font-family: var(--jsb-serif); color: var(--jsb-ink);
+        }
+        .jsb-id-head {
+            font: 700 10px/1.3 'Helvetica Neue', Arial, sans-serif; letter-spacing: .18em;
+            text-transform: uppercase; color: #4a5a42;
+            border-bottom: 1px solid rgba(74,90,66,.35); padding-bottom: 6px; margin-bottom: 10px;
+        }
+        .jsb-id-main { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+        /* Timbre : bord dentelé (trous ronds) autour d'un panneau papier */
+        .jsb-id-stamp {
+            flex: 0 0 78px; height: 96px; padding: 5px; box-sizing: border-box;
+            background: radial-gradient(circle, transparent 2.4px, #fbf6ea 2.9px) -4px -4px / 8px 8px;
+            filter: drop-shadow(0 1px 2px rgba(40,30,10,0.3));
+        }
+        .jsb-id-stamp img { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .jsb-id-stamp span {
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            width: 100%; height: 100%; box-sizing: border-box; padding: 4px;
+            background: #fbf6ea; border: 1px dashed rgba(107,82,56,0.5);
+            font-family: var(--jsb-hand); font-size: 11px; line-height: 1.2; color: var(--jsb-ink-soft);
+        }
+        .jsb-id-name { font-size: 18px; font-weight: 600; letter-spacing: .3px; }
+        .jsb-id-alias { font-family: var(--jsb-hand); font-size: 14px; color: var(--jsb-ink-soft); margin-top: 3px; }
+        .jsb-id-fields {
+            display: grid; grid-template-columns: auto 1fr; gap: 6px 10px;
+            margin: 0; font-size: 13px; line-height: 1.35;
+        }
+        .jsb-id-fields dt {
+            font: 700 9px/1.75 'Helvetica Neue', Arial, sans-serif; letter-spacing: .12em;
+            text-transform: uppercase; color: #4a5a42;
+        }
+        .jsb-id-fields dd { margin: 0; }
+        .jsb-id-fields .jsb-id-libre { grid-column: 1 / -1; }
 
         /* ── Gabarit `illustration_list` ── */
         .jsb-illus-row {
@@ -9123,7 +9171,8 @@
         .vr-lect-corps .vr-c.v { visibility: visible; }
         .vr-lect-corps p:last-child { margin-bottom: 0; }
         /* Carte qui agit dans la scène : trait doré fin (marqueur {{cardId|mots}}) */
-        .vr-lect-corps .k { border-bottom: 1px solid rgba(217,164,65,.8); padding-bottom: 1px; color: #d9a441; }
+        /* David, 03/11 : plus de soulignement ni de jaune — le texte reste neutre */
+        .vr-lect-corps .k { border-bottom: 0; padding-bottom: 0; color: inherit; }
         /* Scènes animées des médias du socle (reprises de diapositives_socle.html,
            noms préfixés « vrs », classes .a / .t limitées au lecteur) */
         @keyframes vrsApparait{from{opacity:0}to{opacity:1}}
@@ -10400,7 +10449,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.82</div>
+            <div class="hud-version" id="hudVersion">v1.9.83</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -12446,6 +12495,7 @@
                             <!-- Narration de l'écran (champ audio de l'écran) : lecture automatique,
                                  bouton lecture/pause visible seulement quand l'écran en a une. -->
                             <audio id="vrLectAudio" preload="none"></audio>
+                            <audio id="vrLectAmbiance" preload="none" loop></audio>
                             <button class="vr-lect-son" id="vrLectSon" onclick="vrLectSonBasculer()" aria-label="Lecture / pause de la narration" hidden></button>
                             <div class="vr-lect-date" id="vrLectDate"></div>
                         </div>
@@ -12963,7 +13013,7 @@
             "À Lyon, certains livres ont traversé plus de 15 siècles d’histoire. Au cœur de la bibliothèque municipale de la Part-Dieu sont conservés deux manuscrits exceptionnels.\n\nLe premier est un psautier incomplet, il s’agit d’un recueil de psaumes bibliques, copié aux alentours de la fin du Vème siècle.\n\nLe second a été copié en Italie à la même période, il s’agit d’une version latine d’un commentaire théologique rédigé par Origène au IIIème siècle sur l’Épître aux Romains. Il a rejoint Lyon probablement au IXème siècle.\n\nSi ces deux manuscrits sont parvenus jusqu’à nous, c’est grâce au travail patient des copistes, mais aussi à celui de générations de lettrés, de moines et de bibliothécaires qui ont contribué à leur conservation et à leur transmission.": "In Lyon, some books have come through more than 15 centuries of history. At the heart of the Part-Dieu municipal library, two exceptional manuscripts are kept.\n\nThe first is an incomplete psalter, a collection of biblical psalms, copied around the end of the 5th century.\n\nThe second was copied in Italy in the same period. It is a Latin version of a theological commentary written by Origen in the 3rd century on the Epistle to the Romans. It probably reached Lyon in the 9th century.\n\nIf these two manuscripts have come down to us, it is thanks to the patient work of copyists, but also to generations of scholars, monks and librarians who helped preserve them and pass them on.",
             "le geste": "the gesture",
             "Un pupitre, une plume": "A writing desk, a quill",
-            "Tout commence par un texte. Un auteur l’écrit, ou le dicte à une personne chargée de le transcrire. Puis, au fil des générations, d’autres mains se chargent de le reproduire. C’est ainsi que sont nés nos deux manuscrits.\n\nImaginons un copiste au travail. Éclairé par la lumière du jour, il est assis devant un pupitre incliné, sur lequel repose une feuille de parchemin, une peau d’animal minutieusement préparée. À ses côtés, un manuscrit plus ancien lui sert de modèle.\n\nAvant de commencer, il faut préparer les pages, tracer des repères et organiser le texte. Puis le copiste se met au travail, une ligne après l’autre, une page puis la suivante. C’est une tâche minutieuse, qui demande une attention constante pour éviter les erreurs, les repérer et parfois les corriger.\n\nCopier un livre peut prendre des semaines, parfois des mois. Dans certains ateliers, plusieurs copistes peuvent se partager le travail en se répartissant différentes parties d’un même ouvrage. Elles sont ensuite réunies pour former un seul et même livre.": "It all begins with a text. An author writes it, or dictates it to someone tasked with transcribing it. Then, over the generations, other hands take on reproducing it. That is how our two manuscripts came to be.\n\nLet’s imagine a copyist at work. Lit by daylight, he sits at a sloping desk, on which lies a sheet of parchment, an animal skin carefully prepared. Beside him, an older manuscript serves as his model.\n\nBefore starting, the pages must be prepared, guide marks drawn and the text laid out. Then the copyist gets to work, one line after another, one page then the next. It is painstaking work, which demands constant attention to avoid mistakes, spot them and sometimes correct them.\n\nCopying a book can take weeks, sometimes months. In some workshops, several copyists can share the work by dividing up different parts of the same book. These are then brought together to form one single book.",
+            "Tout commence par un texte. Un auteur l’écrit, ou le dicte à une personne chargée de le transcrire. Puis, au fil des générations, d’autres mains se chargent de le reproduire. C’est ainsi que sont nés nos deux manuscrits.\n\nImaginons un copiste au travail. Éclairé par la lumière du jour, il est assis devant un pupitre incliné, sur lequel repose une feuille de parchemin. À ses côtés, un manuscrit plus ancien lui sert de modèle.\n\nAvant de commencer, il faut préparer les pages, tracer des repères et organiser le texte. Puis le copiste se met au travail, une ligne après l’autre, une page puis la suivante. C’est une tâche minutieuse, qui demande une attention constante pour éviter les erreurs, les repérer et parfois les corriger.\n\nCopier un livre peut prendre des semaines, parfois des mois. Dans certains ateliers, plusieurs copistes peuvent se partager le travail en se répartissant différentes parties d’un même ouvrage. Elles sont ensuite réunies pour former un seul et même livre.": "It all begins with a text. An author writes it, or dictates it to someone tasked with transcribing it. Then, over the generations, other hands take on reproducing it. That is how our two manuscripts came to be.\n\nLet’s imagine a copyist at work. Lit by daylight, he sits at a sloping desk, on which lies a sheet of parchment. Beside him, an older manuscript serves as his model.\n\nBefore starting, the pages must be prepared, guide marks drawn and the text laid out. Then the copyist gets to work, one line after another, one page then the next. It is painstaking work, which demands constant attention to avoid mistakes, spot them and sometimes correct them.\n\nCopying a book can take weeks, sometimes months. In some workshops, several copyists can share the work by dividing up different parts of the same book. These are then brought together to form one single book.",
             "conserver et transmettre": "keeping and passing on",
             "798-860, à la cathédrale": "798-860, at the cathedral",
             "Une fois relié, l’ouvrage est prêt à rejoindre une collection. Il pourra y être conservé, consulté et transmis de génération en génération.\n\nVoyons la scène : le livre achevé arrive dans une bibliothèque médiévale. Un homme ouvre une armoire de bois et le dépose avec soin parmi les autres manuscrits.\n\nAu Moyen Âge, les livres sont rares et chers. On les rassemble, on les protège et on les transmet.\n\nÀ Lyon, dans le quartier de l’actuelle {{card13|cathédrale Saint-Jean}}, {{card_palais_st_jean|une importante bibliothèque}} se développe au fil des siècles.\n\nEn 798, un homme contribue à son essor : Leidrade. Proche de Charlemagne, il devient évêque de Lyon et enrichit la collection avec de nouveaux manuscrits, notamment des livres provenant de sa propre bibliothèque.\n\nQuelques décennies plus tard, au IXème siècle, un autre homme joue un rôle essentiel : Florus de Lyon. Diacre, érudit et grand connaisseur des textes, il contribue à faire vivre cette bibliothèque. Il étudie les manuscrits, les annote, compare les textes et en corrige certaines erreurs. Sur le manuscrit d’Origène présenté au début de notre histoire, on retrouve encore les marques laissées par Florus au cours de son travail.\n\nAu fil du temps, la collection s’agrandit. À son apogée, la bibliothèque lyonnaise aurait compté plus de 600 manuscrits. Lyon compte alors parmi les grands centres intellectuels de l’Occident carolingien.": "Once bound, the book is ready to join a collection. There it can be kept, consulted and handed down from generation to generation.\n\nLet’s picture the scene: the finished book arrives in a medieval library. A man opens a wooden cupboard and carefully places it among the other manuscripts.\n\nIn the Middle Ages, books are rare and expensive. They are gathered, protected and passed on.\n\nIn Lyon, in the area of today’s {{card13|Saint-Jean cathedral}}, {{card_palais_st_jean|a major library}} grows over the centuries.\n\nIn 798, one man contributes to its rise: Leidrade. Close to Charlemagne, he becomes bishop of Lyon and enriches the collection with new manuscripts, notably books from his own library.\n\nA few decades later, in the 9th century, another man plays an essential role: Florus de Lyon. A deacon, a scholar and a great connoisseur of texts, he helps keep this library alive. He studies the manuscripts, annotates them, compares the texts and corrects some of their errors. On the Origen manuscript presented at the start of our story, the marks Florus left during his work can still be seen.\n\nOver time, the collection grows. At its height, the Lyon library is said to have held more than 600 manuscripts. Lyon is then among the great intellectual centers of the Carolingian West.",
@@ -13703,6 +13753,14 @@
             "Le sultan du Maroc demande à Ibn Battuta de dicter ses souvenirs. Le Rihla est rédigé trente ans après le début des voyages — la mémoire, la légende et la réalité s'y mêlent librement. C'est peut-être la définition du récit de voyage : une vérité filtrée par le temps.": "The Sultan of Morocco asks Ibn Battuta to dictate his recollections. The Rihla is written thirty years after the journeys began — memory, legend and reality mingle freely in it. That may be the very definition of travel writing: a truth filtered by time.",
             "[Illustration : carte des voyages d'Ibn Battuta]": "[Illustration: map of Ibn Battuta's travels]",
             // ── Louise Labe ──
+            // Chapitre I provisoire (03/11) : carte d'identité et anecdote du nom.
+            "Naissance : Entre 1516 et 1524, à Lyon.\nPère : Pierre Charly, dit Labé, cordier lyonnais.\nMère : Étiennette Roybet, famille de marchands ou notables lyonnais.\nMariage : Ennemond Perrin, maître cordier (vers 1545).\nDécès : février 1566, à Parcieux, en Dombes.": "Birth: Between 1516 and 1524, in Lyon.\nFather: Pierre Charly, known as Labé, a Lyon ropemaker.\nMother: Étiennette Roybet, from a family of Lyon merchants or notables.\nMarriage: Ennemond Perrin, master ropemaker (around 1545).\nDeath: February 1566, in Parcieux, in the Dombes.",
+            "Simple ouvrier cordier à la base, le père de Louise a vécu une ascension sociale en restant illettré toute sa vie. Il a adopté un nom qui n'était pas le sien en épousant la veuve de Jacques Humbert, surnommé Labé. Ce pseudonyme avait valeur de marque et pour jouir des affaires il a fait le choix de cette stratégie commerciale !": "A simple ropemaker's worker to begin with, Louise's father climbed the social ladder while remaining illiterate all his life. He took a name that was not his own when he married the widow of Jacques Humbert, nicknamed Labé. That alias worked like a brand, and to make the most of the business he chose this commercial strategy!",
+            "Pourquoi Labé ?": "Why Labé?",
+            "Carte d'identité": "Identity card",
+            "Timbre à venir": "Stamp to come",
+            "dite la Belle Cordière": "known as la Belle Cordière",
+            "Le métier de cordier": "The ropemaker's trade",
             "On a dit qu'une femme ne pouvait écrire ainsi — que je n'existais pas. J'ai publié sous mon nom, en 1555. Ça a suffi à me faire exister.": "They said no woman could write like this — that I did not exist. I published under my own name, in 1555. That was enough to make me exist.",
             "Fille d'un cordier lyonnais, Louise Labé publie cette année-là un recueil de sonnets sur le désir amoureux, sous son propre nom. Le geste est presque unique pour une femme de son temps.": "The daughter of a Lyon ropemaker, Louise Labé publishes that year a collection of sonnets on desire, under her own name. The gesture is almost without precedent for a woman of her time.",
             "[Photo d'époque : édition originale, 1555]": "[Period photo: original edition, 1555]",
@@ -15557,7 +15615,7 @@
                 type: 'thématique',
                 description: 'L\'imprimerie lyonnaise du XVIe siècle : maîtres, martyrs et voix nouvelles',
                 cards: [
-                    { id: 'card_louise_labe', cardKind: 'local', collections: ["ville_du_livre"], name: 'Louise Labé', type: 'Personnage', poiId: 'bellecordiere', rarity: 'rare', supertype: 'arts',
+                    { id: 'card_louise_labe', cardKind: 'local', collections: ["ville_du_livre"], name: 'Louise Labé', type: 'Personnage', poiId: 'bellecordiere', rarity: 'common', supertype: 'arts',
                       art: './assets/Cards/Louise_Labe/Louise_Labe1.jpg',
                       clueIcon: '🪶',
                       incipit: 'On a dit qu\'une femme ne pouvait écrire ainsi — que je n\'existais pas. Mes vers, eux, n\'ont jamais douté.' },
@@ -23442,12 +23500,21 @@
 
             // ── GRAPPE "LYON, VILLE DU LIVRE" ──
 
-            // ── LOUISE LABÉ (Rare, Arts) ──
+            // ── LOUISE LABÉ (Commune, Arts — passée de Rare à Commune le 03/11) ──
             card_louise_labe: [
+                // ─ Arc I (niveau 0) — « La Belle Cordière » : chapitre PROVISOIRE (David, 03/11),
+                //   d'après le document « Louise Labé ». Deux pages : la carte d'identité
+                //   (gabarit id_card : une rubrique « Libellé : valeur » par ligne) et
+                //   l'anecdote du nom, avec le dessin du cordier. L'ancienne page « Lyon,
+                //   1555 » (le recueil) relève de l'arc II « Un seul livre », à écrire.
                 { text: "On a dit qu'une femme ne pouvait écrire ainsi — que je n'existais pas. J'ai publié sous mon nom, en 1555. Ça a suffi à me faire exister.", heart: true, level: 0,
-                  entry: { date: "Lyon, 1555", text: "Fille d'un cordier lyonnais, Louise Labé publie cette année-là un recueil de sonnets sur le désir amoureux, sous son propre nom. Le geste est presque unique pour une femme de son temps.", photo: "[Photo d'époque : édition originale, 1555]", audio: null }
-                },
-                { text: "Rue Bellecordière, la corderie n'existe plus. Mais le nom, lui, a survécu — accroché à moi plutôt qu'à mon père.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                  entry: { date: "Arc I · La Belle Cordière", _type: 'text',
+                    text: "Naissance : Entre 1516 et 1524, à Lyon.\nPère : Pierre Charly, dit Labé, cordier lyonnais.\nMère : Étiennette Roybet, famille de marchands ou notables lyonnais.\nMariage : Ennemond Perrin, maître cordier (vers 1545).\nDécès : février 1566, à Parcieux, en Dombes.",
+                    photo: null, audio: null } },
+                { text: "Rue Bellecordière, la corderie n'existe plus. Mais le nom, lui, a survécu — accroché à moi plutôt qu'à mon père.", heart: true, level: 0,
+                  entry: { date: "Arc I · La Belle Cordière", _type: 'visual',
+                    text: "Simple ouvrier cordier à la base, le père de Louise a vécu une ascension sociale en restant illettré toute sa vie. Il a adopté un nom qui n'était pas le sien en épousant la veuve de Jacques Humbert, surnommé Labé. Ce pseudonyme avait valeur de marque et pour jouir des affaires il a fait le choix de cette stratégie commerciale !",
+                    photo: 'placeholder_visual', audio: null } },
                 { text: "Mes poèmes ne sont pas restés dans un tiroir. Quelqu'un, près de la Saône, a accepté de les imprimer. Reste à savoir qui.", heart: true, level: 1,
                   entry: { date: "Lyon, quartier des libraires", text: "Le recueil de 1555 est imprimé dans le quartier lyonnais des libraires, alors en plein essor éditorial. Le nom précis de l'atelier reste à préciser dans ce carnet.", photo: null, audio: null }
                 },
@@ -23959,6 +24026,10 @@
                             if (e._available === undefined) { e._available = true; e._revealed = true; }
                         });
                     });
+                    // Migration (03/11) : Louise Labé, passée de rare à commune avec un
+                    // chapitre I réécrit. Les entrées créées avant gardaient l'ancien texte
+                    // et une 3e page par chapitre (copie de la précédente).
+                    try { _carnetResync('card_louise_labe', 2); } catch (e) {}
                 }
                 if (d.bagInv)               Object.assign(bagInv, d.bagInv);
                 if (d.collectedOrbs)         collectedOrbs        = d.collectedOrbs;
@@ -26516,9 +26587,8 @@
             return _capJoystick;
         }
 
-        // Avatar : cône d'orientation + cercle de portée (PORTEE_AVATAR), dessinés
-        // sous le personnage (son marqueur est au-dessus du captureCanvas).
-        // Le cône reste visible en vue d'ensemble ; le cercle suit l'opacité des zones.
+        // Avatar : cône d'orientation, dessiné sous le personnage (son marqueur est
+        // au-dessus du captureCanvas). Il reste visible en vue d'ensemble.
         function _capDessinerJoueur(opaciteZones) {
             if (!playerMarker || !map) return;
             const ll = playerMarker.getLngLat();
@@ -26543,21 +26613,8 @@
                 ctx.fillStyle = g; ctx.globalAlpha = 1; ctx.fill();
                 ctx.restore();
             }
-            if (opaciteZones > 0) {
-                const e = map.project([ll.lng + PORTEE_AVATAR / (111320 * Math.cos(ll.lat * Math.PI / 180)), ll.lat]);
-                const rx = Math.hypot(e.x - c.x, e.y - c.y);
-                if (rx >= 12) {
-                    ctx.save();
-                    ctx.translate(cx, cy);
-                    ctx.lineCap = 'round';
-                    ctx.setLineDash([0.1, 7]);   // pointillés ronds : propres à l'avatar
-                    ctx.beginPath(); ctx.ellipse(0, 0, rx, rx * k, 0, 0, Math.PI * 2);
-                    ctx.strokeStyle = 'rgba(40,30,10,0.45)'; ctx.lineWidth = 5; ctx.globalAlpha = opaciteZones; ctx.stroke();
-                    ctx.beginPath(); ctx.ellipse(0, 0, rx, rx * k, 0, 0, Math.PI * 2);
-                    ctx.strokeStyle = '#FDE68A'; ctx.lineWidth = 3; ctx.stroke();
-                    ctx.restore();
-                }
-            }
+            // Cercle de portée de l'avatar retiré de la mappe (David, 03/11) : la portée
+            // (PORTEE_AVATAR) agit toujours, elle n'est simplement plus dessinée.
         }
 
         function _capDraw() {
@@ -30898,6 +30955,24 @@
             }, delay);
         }
 
+        // Remet les entrées sauvegardées d'une carte en accord avec CARD_DIALOGUES :
+        // retire les paliers au-delà de `parNiveau` (rareté abaissée) et recopie le
+        // texte actuel de chaque page encore décrite. Les états (révélée, nouvelle…)
+        // sont conservés. Identifiant d'entrée : <carte>_<niveau>_<palier>.
+        function _carnetResync(cardId, parNiveau) {
+            const liste = cardJournalEntries[cardId];
+            if (!liste) return;
+            cardJournalEntries[cardId] = liste.filter(e => {
+                const m = /_(\d)_(\d+)$/.exec(e.id || '');
+                if (!m) return true;
+                const niv = +m[1], pal = +m[2];
+                if (pal >= parNiveau) return false;
+                const hl = getHeartLines(cardId, niv)[pal];
+                if (hl && hl.entry) Object.assign(e, hl.entry, { _type: hl.entry._type || e._type });
+                return true;
+            });
+        }
+
         function unlockJournalEntry(cardId, level, entry) {
             if (!cardJournalEntries[cardId]) cardJournalEntries[cardId] = [];
             const alreadyAdded = cardJournalEntries[cardId].some(e => e.id === entry.id);
@@ -32030,6 +32105,7 @@
 
             // Volume cible du moment : atténué si une entrée du carnet joue.
             function _target() {
+                if (suspendu) return 0;
                 return ducked ? volume * DUCK_RATIO : volume;
             }
 
@@ -32055,6 +32131,7 @@
             function start() {
                 if (!audioEl || !enabled) return;
                 _demarre = true;
+                if (suspendu) return;
                 audioEl.muted = false;
                 audioEl.volume = _target();
                 audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
@@ -32095,7 +32172,7 @@
                 if (enabled) {
                     // Reprise déjà atténuée si une entrée du carnet joue
                     audioEl.volume = _target();
-                    audioEl.play().catch(function () {});
+                    if (!suspendu) audioEl.play().catch(function () {});
                     pendingStart = false;
                 } else {
                     if (fadeTimer) { clearInterval(fadeTimer); fadeTimer = null; }
@@ -32114,7 +32191,7 @@
             function _visibility() {
                 if (!enabled) return;
                 if (document.hidden) audioEl.pause();
-                else if (!pendingStart) audioEl.play().catch(function () {});
+                else if (!pendingStart && !suspendu) audioEl.play().catch(function () {});
             }
 
             function _fadeTo(target, ms) {
@@ -32140,7 +32217,7 @@
             // capture sur document. Sans entrée audio, ce hook ne fait rien.
             function _setupDucking() {
                 function isJournalAudio(el) {
-                    return el && el.tagName === 'AUDIO' && el.closest && el.closest('.jsb-audio, .vr-lecteur');
+                    return el && el.tagName === 'AUDIO' && el.id !== 'vrLectAmbiance' && el.closest && el.closest('.jsb-audio, .vr-lecteur');
                 }
                 document.addEventListener('play', function (e) {
                     if (!isJournalAudio(e.target)) return;
@@ -32156,8 +32233,29 @@
                 });
             }
 
+            // Grappe (planche des médias) : la musique du jeu se tait en fondu, les
+            // médias ont leur propre ambiance ; elle reprend à la sortie (David, 03/11).
+            let suspendu = false;
+            function suspendre(on) {
+                on = !!on;
+                if (on === suspendu) return;
+                suspendu = on;
+                if (!audioEl || !enabled) return;
+                if (on) {
+                    _fadeTo(0, FADE_DOWN);
+                    setTimeout(function () { if (suspendu) audioEl.pause(); }, FADE_DOWN + 60);
+                } else {
+                    audioEl.volume = 0;
+                    audioEl.play().then(function () { pendingStart = false; }).catch(function () {});
+                    _fadeTo(_target(), FADE_UP);
+                }
+            }
+
             return { init: init, toggle: toggle, start: start,
-                     setVolume: setVolume, syncSettings: syncSettings };
+                     setVolume: setVolume, syncSettings: syncSettings,
+                     suspendre: suspendre,
+                     isEnabled: function () { return enabled; },
+                     volume: function () { return volume; } };
         })();
 
         // ══════════════════════════════════════════════════════════════
@@ -32503,6 +32601,43 @@
                           ouest: { icon: '🗂️', text: 'Point de gestion' } },
                     ],
                     decorations: ['tape_top'],
+                },
+            ],
+
+            // ══════════════════════════════════════════════════════════
+            // LOUISE LABÉ — chapitre I provisoire « La Belle Cordière »
+            // (David, 03/11). Le texte vit dans CARD_DIALOGUES.card_louise_labe.
+            // Assets : ./assets/Cards/Louise_Labe/
+            // ══════════════════════════════════════════════════════════
+            card_louise_labe: [
+                {
+                    // Carte d'identité. Le timbre accueillera la photo une fois
+                    // l'autorisation obtenue : renseigner `stamp` (chemin de l'image).
+                    // D'ici là, emplacement « Timbre à venir ».
+                    level: 0, index: 0,
+                    template: 'id_card',
+                    idHeader: "Carte d'identité",
+                    idName: 'Louise Labé',
+                    idAlias: 'dite la Belle Cordière',
+                    stamp: null,
+                    decorations: ['tape_corner', 'corner_fold'],
+                },
+                {
+                    // Anecdote, avec le petit dessin du métier de cordier, détouré
+                    // (WebP transparent) et posé à même la page. La visionneuse garde
+                    // la version sur fond papier (JPEG), lisible sur son fond sombre.
+                    level: 0, index: 1,
+                    template: 'image_anecdote_postit',
+                    title: 'Pourquoi Labé ?',
+                    image: './assets/Cards/Louise_Labe/anecdote_cordier.webp',
+                    imageDetoure: true,
+                    decorations: ['tape_top', 'nebula_edge'],
+                    dossier: {
+                        title: 'Le métier de cordier',
+                        photos: [
+                            { src: './assets/Cards/Louise_Labe/anecdote_cordier.jpg', caption: 'Le métier de cordier' },
+                        ],
+                    },
                 },
             ],
         };
@@ -33028,7 +33163,15 @@
             const key = _jsbRegisterDossier(entry, ctx);
             const side = entry.imageSide === 'left' ? ' left' : '';
             let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
-            if (entry.image) {
+            if (entry.image && entry.imageDetoure) {
+                // Dessin détouré (fond transparent) posé à même la page : ni cadre, ni
+                // pile, ni bascule. Un tap l'agrandit dans la visionneuse (David, 03/11).
+                h += _jsbFrame(entry.image, {
+                    cls: 'jsb-float-photo detoure' + side,
+                    openKey: key,
+                    openIndex: 0,
+                });
+            } else if (entry.image) {
                 h += _jsbFrame(entry.image, {
                     cls: 'jsb-float-photo' + side,
                     rot: ((uid * 53) % 25 - 12) / 5,    // −2.4° à +2.4°
@@ -33039,6 +33182,33 @@
             if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
             h += _jsbPostit(entry);
             return h + '<div style="clear:both;"></div></div>';
+        }
+
+        // ── Gabarit 8 : carte d'identité (David, 03/11) ──
+        // Le corps « Libellé : valeur », une rubrique par ligne, devient les champs
+        // de la carte. `stamp` : image du timbre ; absente → « Timbre à venir ».
+        // Le corps est traduit ENTIER avant d'être découpé (cf. _jsbPara).
+        function _jsbIdCard(entry, ctx) {
+            const uid = ++_jsbUid;
+            let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
+            const lignes = String(T(String(entry.body || ''))).split(/\n+/).map(l => l.trim()).filter(Boolean);
+            h += '<div class="jsb-id" style="--jsb-rot:' + (((uid * 31) % 13 - 6) / 10) + 'deg;">';
+            h += '<div class="jsb-id-head">' + _jsbEsc(T(entry.idHeader || "Carte d'identité")) + '</div>';
+            h += '<div class="jsb-id-main"><div class="jsb-id-stamp">'
+               + (entry.stamp
+                    ? '<img src="' + encodeURI(entry.stamp) + '" alt="" draggable="false">'
+                    : '<span>' + _jsbEsc(T('Timbre à venir')) + '</span>')
+               + '</div><div class="jsb-id-who">';
+            if (entry.idName)  h += '<div class="jsb-id-name">' + _jsbEsc(entry.idName) + '</div>';
+            if (entry.idAlias) h += '<div class="jsb-id-alias">' + _jsbEsc(T(entry.idAlias)) + '</div>';
+            h += '</div></div><dl class="jsb-id-fields">';
+            lignes.forEach(function (l) {
+                const m = /^([^:]{1,30}?)\s*:\s*(.+)$/.exec(l);
+                h += m ? '<dt>' + _jsbEsc(m[1]) + '</dt><dd>' + _jsbEsc(m[2]) + '</dd>'
+                       : '<dd class="jsb-id-libre">' + _jsbEsc(l) + '</dd>';
+            });
+            h += '</dl></div>';
+            return h + '</div>';
         }
 
         // ── Gabarit 3 : illustration + liste « À observer » ──
@@ -33335,6 +33505,7 @@
             audio_entry:           _jsbAudioEntry,
             links_screen:          _jsbLinksScreen,
             timeline_page:         _jsbTimeline,
+            id_card:               _jsbIdCard,
         };
 
         // ══════════════════════════════════════════════════════════════
@@ -38908,7 +39079,13 @@
                     //   et renseigner ecrans suffit à activer un média.
                     //   ecrans : { s: scène animée (VR_SCENES), b: intitulé de temps, d: ancrage, t: texte,
                     //              audio?: narration de l'écran, lue à l'affichage (03/11),
-                    //              audioFin?: seconde où la voix se tait si le fichier finit par un blanc }.
+                    //              audioFin?: seconde où la voix se tait quand le fichier finit par
+                    //                         un blanc (mesurée sur le fichier) : la narration s'arrête là
+                    //                         et le texte finit de s'écrire à ce moment ;
+                    //              audioVoix?: variante, passages parlés [[début, fin], …] (seule la
+                    //                          fin du dernier sert) }.
+                    //   ambiance (niveau du média) : musique de fond du média, sous la voix,
+                    //   tant que le lecteur est ouvert (cf. _vrAmbiance).
                     //   Dans t, {{cardId|mots}} souligne une carte, à sa PREMIÈRE occurrence
                     //   dans le média seulement (marqueur explicite, jamais de détection automatique).
                     //   audio : null pour l'instant ; servira à caler les animations sur la
@@ -38928,16 +39105,18 @@
                             media: {
                                 texteValide: true,
                                 audio: null,
+                                // Musique d'ambiance du média, sous la voix (David, 03/11)
+                                ambiance: './assets/audio/Ville_du_livre_M1/Ambiance-M1.mp3',
                                 ecrans: [
-                                    { s: 'vitrine',    b: 'couverture', d: 'Lyon, avant les imprimeurs', audio: './assets/audio/Introduction.mp3', audioFin: 54,
+                                    { s: 'vitrine',    b: 'couverture', d: 'Lyon, avant les imprimeurs', audio: './assets/audio/Ville_du_livre_M1/Introduction-M1.mp3', audioFin: 53.4,
                                       t: "À Lyon, certains livres ont traversé plus de 15 siècles d’histoire. Au cœur de la bibliothèque municipale de la Part-Dieu sont conservés deux manuscrits exceptionnels.\n\nLe premier est un psautier incomplet, il s’agit d’un recueil de psaumes bibliques, copié aux alentours de la fin du Vème siècle.\n\nLe second a été copié en Italie à la même période, il s’agit d’une version latine d’un commentaire théologique rédigé par Origène au IIIème siècle sur l’Épître aux Romains. Il a rejoint Lyon probablement au IXème siècle.\n\nSi ces deux manuscrits sont parvenus jusqu’à nous, c’est grâce au travail patient des copistes, mais aussi à celui de générations de lettrés, de moines et de bibliothécaires qui ont contribué à leur conservation et à leur transmission." },
-                                    { s: 'copiste',    b: 'le geste', d: 'Un pupitre, une plume',
-                                      t: "Tout commence par un texte. Un auteur l’écrit, ou le dicte à une personne chargée de le transcrire. Puis, au fil des générations, d’autres mains se chargent de le reproduire. C’est ainsi que sont nés nos deux manuscrits.\n\nImaginons un copiste au travail. Éclairé par la lumière du jour, il est assis devant un pupitre incliné, sur lequel repose une feuille de parchemin, une peau d’animal minutieusement préparée. À ses côtés, un manuscrit plus ancien lui sert de modèle.\n\nAvant de commencer, il faut préparer les pages, tracer des repères et organiser le texte. Puis le copiste se met au travail, une ligne après l’autre, une page puis la suivante. C’est une tâche minutieuse, qui demande une attention constante pour éviter les erreurs, les repérer et parfois les corriger.\n\nCopier un livre peut prendre des semaines, parfois des mois. Dans certains ateliers, plusieurs copistes peuvent se partager le travail en se répartissant différentes parties d’un même ouvrage. Elles sont ensuite réunies pour former un seul et même livre." },
-                                    { s: 'cloitre',    b: 'conserver et transmettre', d: '798-860, à la cathédrale',
+                                    { s: 'copiste',    b: 'le geste', d: 'Un pupitre, une plume', audio: './assets/audio/Ville_du_livre_M1/Diapo1-M1.mp3', audioFin: 73.05,
+                                      t: "Tout commence par un texte. Un auteur l’écrit, ou le dicte à une personne chargée de le transcrire. Puis, au fil des générations, d’autres mains se chargent de le reproduire. C’est ainsi que sont nés nos deux manuscrits.\n\nImaginons un copiste au travail. Éclairé par la lumière du jour, il est assis devant un pupitre incliné, sur lequel repose une feuille de parchemin. À ses côtés, un manuscrit plus ancien lui sert de modèle.\n\nAvant de commencer, il faut préparer les pages, tracer des repères et organiser le texte. Puis le copiste se met au travail, une ligne après l’autre, une page puis la suivante. C’est une tâche minutieuse, qui demande une attention constante pour éviter les erreurs, les repérer et parfois les corriger.\n\nCopier un livre peut prendre des semaines, parfois des mois. Dans certains ateliers, plusieurs copistes peuvent se partager le travail en se répartissant différentes parties d’un même ouvrage. Elles sont ensuite réunies pour former un seul et même livre." },
+                                    { s: 'cloitre',    b: 'conserver et transmettre', d: '798-860, à la cathédrale', audio: './assets/audio/Ville_du_livre_M1/Diapo2-M1.mp3', audioFin: 101.9,
                                       t: "Une fois relié, l’ouvrage est prêt à rejoindre une collection. Il pourra y être conservé, consulté et transmis de génération en génération.\n\nVoyons la scène : le livre achevé arrive dans une bibliothèque médiévale. Un homme ouvre une armoire de bois et le dépose avec soin parmi les autres manuscrits.\n\nAu Moyen Âge, les livres sont rares et chers. On les rassemble, on les protège et on les transmet.\n\nÀ Lyon, dans le quartier de l’actuelle {{card13|cathédrale Saint-Jean}}, {{card_palais_st_jean|une importante bibliothèque}} se développe au fil des siècles.\n\nEn 798, un homme contribue à son essor : Leidrade. Proche de Charlemagne, il devient évêque de Lyon et enrichit la collection avec de nouveaux manuscrits, notamment des livres provenant de sa propre bibliothèque.\n\nQuelques décennies plus tard, au IXème siècle, un autre homme joue un rôle essentiel : Florus de Lyon. Diacre, érudit et grand connaisseur des textes, il contribue à faire vivre cette bibliothèque. Il étudie les manuscrits, les annote, compare les textes et en corrige certaines erreurs. Sur le manuscrit d’Origène présenté au début de notre histoire, on retrouve encore les marques laissées par Florus au cours de son travail.\n\nAu fil du temps, la collection s’agrandit. À son apogée, la bibliothèque lyonnaise aurait compté plus de 600 manuscrits. Lyon compte alors parmi les grands centres intellectuels de l’Occident carolingien." },
-                                    { s: 'documents',  b: "l'écrit change d'échelle", d: 'XIIe-XVe siècle',
+                                    { s: 'documents',  b: "l'écrit change d'échelle", d: 'XIIe-XVe siècle', audio: './assets/audio/Ville_du_livre_M1/Diapo3-M1.mp3', audioFin: 103.5,
                                       t: "Pendant des siècles, les livres restent rares et sont copiés principalement dans les milieux religieux. Puis, à partir des XIIème et XIIIème siècles, l’écrit prend une place de plus en plus importante dans la société. Son usage se développe bien au-delà des bibliothèques et des milieux religieux.\n\nEn effet, le développement des villes et du commerce favorise la multiplication des documents pratiques.\n\nRegardons une table de travail de cette époque. On y trouve un registre de notaire relié de cuir, un livre de comptes où s’alignent les chiffres et un acte officiel déroulé sur la table. Ces trois documents racontent un monde en pleine transformation.\n\nLes marchands utilisent davantage l’écriture pour tenir leurs comptes. Les notaires enregistrent des contrats. L’Église, les administrations et les particuliers conservent des documents pour défendre leurs biens et leurs droits.\n\nDans la justice, où la parole, les témoignages et les serments restent essentiels, les documents écrits occupent une place grandissante. Ils permettent de faire reconnaître des droits et de produire des preuves.\n\nProgressivement, l’écrit devient indispensable à de nombreuses activités. Il sert à transmettre les connaissances, à conserver la mémoire, à organiser la société et à défendre ses droits.\n\nMalgré cette multiplication des écrits, une chose demeure : en Europe occidentale, pour obtenir un nouvel exemplaire d’un livre, il faut encore en recopier le texte à la main.\n\nLigne après ligne.\nPage après page." },
-                                    { s: 'rayonnages', b: 'ce qui reste', d: "Années 1470, puis aujourd'hui",
+                                    { s: 'rayonnages', b: 'ce qui reste', d: "Années 1470, puis aujourd'hui", audio: './assets/audio/Ville_du_livre_M1/Diapo4-M1.mp3', audioFin: 66.65,
                                       t: "Le commentaire d’Origène a traversé près de 18 siècles d’histoire.\n\nTout commence au IIIème siècle, lorsqu’Origène rédige son commentaire sur l’Épître aux Romains, en grec.\n\nAu début du Vème siècle, Rufin d’Aquilée le traduit et l’adapte en latin. Quelques décennies plus tard, un copiste reproduit cette traduction.\n\nAu IXème siècle, Florus de Lyon l’étudie et l’annote, laissant sur ses pages des marques encore visibles aujourd’hui.\n\nÀ la fin du XVème siècle, le commentaire d’Origène connaît une nouvelle étape de son histoire : il est désormais reproduit grâce à l’imprimerie.\n\nÀ la même époque, à Lyon, dans les années 1470, lorsque les premiers imprimeurs s’y installent, ils sont dans une ville où les manuscrits sont copiés, étudiés et conservés depuis des siècles.\n\nAujourd’hui, le manuscrit annoté par Florus est toujours conservé à la Bibliothèque municipale de Lyon.\n\nDu texte grec aux copies latines, du manuscrit au livre imprimé, le commentaire d’Origène témoigne ainsi d’une histoire faite de traductions, de lectures et de transmissions." },
                                 ],
                             },
@@ -45317,6 +45496,7 @@
             _verriereFermerVolet();
             screen.classList.add('show');
             _verriereDustDemarrer();
+            if (typeof BgMusic !== 'undefined' && BgMusic.suspendre) BgMusic.suspendre(true);
 
             // Allumage des panneaux obtenus depuis la dernière visite, puis extinction
             // de la pastille. Le média reste consultable au tap, jamais imposé.
@@ -45349,6 +45529,7 @@
             const screen = document.getElementById('verriereScreen');
             if (screen) screen.classList.remove('show');
             _showNearbyConsoles('verriere');
+            if (typeof BgMusic !== 'undefined' && BgMusic.suspendre) BgMusic.suspendre(false);
             _verriereDustArreter();
             _verriereFermerVolet();
             _verriereArreterAnim();
@@ -46328,6 +46509,7 @@
             document.getElementById('verriereTitle').textContent = x.etape.chantier ? T('En construction') : T(x.etape.titre);
             lect.classList.add('on');
             lect.setAttribute('aria-hidden', 'false');
+            _vrAmbiance(lisible ? media.ambiance : null);
             if (lisible) _vrLecteurRendre();
             else {
                 document.getElementById('vrLectArt').innerHTML = '';   // pas de scène qui tourne sous le chantier
@@ -46346,6 +46528,7 @@
             if (!lect) return;
             lect.classList.remove('on');
             lect.setAttribute('aria-hidden', 'true');
+            _vrAmbiance(null);
             _vrLectAudio(null);
             _vrLectEcrireArreter();
             _vrForgeArreter();
@@ -46369,11 +46552,13 @@
         // fin (champ audioFin de l'écran, en secondes) : moment où la voix se tait
         // quand le fichier finit par un blanc. La narration s'arrête là, et le texte
         // finit de s'écrire à ce moment (cf. _vrLectEcrire).
-        function _vrLectAudio(src, fin) {
+        function _vrLectAudio(src, fin, voix) {
             const a = document.getElementById('vrLectAudio'), b = document.getElementById('vrLectSon');
             if (!a || !b) return;
             a.pause();
-            a._vrFin = (src && fin > 0) ? fin : null;
+            a._vrVoix = (src && Array.isArray(voix) && voix.length) ? voix : null;
+            // Fin de la voix : dernier passage parlé (+ un souffle), sinon audioFin.
+            a._vrFin = !src ? null : a._vrVoix ? a._vrVoix[a._vrVoix.length - 1][1] + 0.4 : (fin > 0 ? fin : null);
             if (!src) { b.hidden = true; return; }
             if (a.dataset.src !== src) { a.src = src; a.dataset.src = src; }
             try { a.currentTime = 0; } catch (e) {}
@@ -46388,10 +46573,10 @@
             a.play().catch(() => {});   // lecture refusée (autoplay) : le bouton ▶ reste
         }
         // Écriture progressive du texte d'un écran, lettre par lettre, comme les
-        // parchemins (David, 03/11), avec une micro-pause à chaque fin de phrase.
-        // Avec narration : la part écrite suit la position
-        // de lecture de l'audio (fin calée sur ~97 % de sa durée) et s'arrête quand on
-        // le met en pause. Sans narration, ou si l'audio n'a pas démarré au bout de
+        // parchemins (David, 03/11), avec une micro-pause après chaque fin de phrase.
+        // Avec narration : la part écrite suit la position de lecture de l'audio,
+        // régulièrement, jusqu'à la fin de la voix, et s'arrête quand on le met en
+        // pause. Sans narration, ou si l'audio n'a pas démarré au bout de
         // 1,5 s (lecture automatique refusée) : rythme fixe. Un toucher sur le texte
         // l'affiche en entier ; le cadre suit l'écriture tant que le joueur ne fait
         // pas défiler lui-même.
@@ -46452,7 +46637,11 @@
                 let cible = e.cible || 0;
                 const audioOk = src && a && a.dataset.src === src && isFinite(a.duration) && a.duration > 0;
                 if (audioOk && !a.paused) {
-                    // Fin du texte : quand la voix se tait (audioFin), sinon vers la fin du fichier.
+                    // Défilement régulier, au prorata du temps, jusqu'à la fin de la voix
+                    // (audioFin), sinon vers la fin du fichier ; les micro-pauses de fin de
+                    // phrase sont réparties dans ce temps (poids cumulés), la fin reste calée.
+                    // David, 03/11 : caler le texte sur les silences mesurés de la voix le
+                    // rendait saccadé — ne pas y revenir.
                     const pos = lettres(tot * a.currentTime / (a._vrFin || a.duration * VR_ECRIT_FIN_AUDIO));
                     // Narration lancée après le rythme fixe (▶ touché tard) : le texte se recale sur la voix.
                     if (e.mode === 'minuterie' && !e.cible) {
@@ -46469,21 +46658,76 @@
                 if (jusqua > e.montre) {
                     for (let i = e.montre; i < jusqua; i++) spans[i].classList.add('v');
                     e.montre = jusqua;
-                    // Le cadre suit la dernière lettre écrite (pas pendant un défilement du joueur).
-                    if (!(cadre._vrToucheT && Date.now() - cadre._vrToucheT < 2500)) {
-                        const r = spans[jusqua - 1].getBoundingClientRect(), rc = cadre.getBoundingClientRect();
-                        if (r.bottom > rc.bottom - 24) cadre.scrollTop += r.bottom - rc.bottom + 48;
-                    }
+                }
+                // Le cadre suit la dernière lettre écrite en glissant, à chaque image : il
+                // la garde à hauteur de lecture (≈ 70 % du cadre) au lieu de remonter
+                // d'un coup quand elle touche le bas (sauts visibles sur les longs textes,
+                // David, 03/11). Pas pendant un défilement du joueur.
+                if (e.montre > 0 && !(cadre._vrToucheT && Date.now() - cadre._vrToucheT < 2500)) {
+                    const r = spans[e.montre - 1].getBoundingClientRect(), rc = cadre.getBoundingClientRect();
+                    const ecart = r.bottom - (rc.top + rc.height * 0.7);
+                    if (ecart > 0.5) cadre.scrollTop += Math.max(0.5, ecart * 0.08);
                 }
                 if (e.montre >= spans.length) { corps.onclick = null; _vrEcrit = null; return; }
                 e.raf = requestAnimationFrame(boucle);
             };
             e.raf = requestAnimationFrame(boucle);
         }
+        // Ambiance d'un média (champ ambiance) : en boucle, en fond, tant que le
+        // lecteur est ouvert sur ce média. Très discrète sous la voix (25 % du
+        // volume de musique réglé, David 03/11 : la lecture doit ressortir), à
+        // 60 % entre deux narrations. Respecte le
+        // réglage « musique » du joueur. Fondus d'entrée et de sortie.
+        // NB : sur iPhone, Safari ignore le volume d'un élément audio — l'ambiance
+        // y joue à son niveau d'export.
+        const VR_AMB_SOUS_VOIX = 0.25;   // part du volume musique sous la voix
+        const VR_AMB_SEULE = 0.6;        // entre deux narrations
+        let _vrAmbFondu = null;
+        function _vrAmbianceVolume() {
+            const a = document.getElementById('vrLectAmbiance'), v = document.getElementById('vrLectAudio');
+            if (!a || !a.dataset.src) return 0;
+            const base = (typeof BgMusic !== 'undefined' && BgMusic.volume) ? BgMusic.volume() : 0.35;
+            // Sous la voix, l'ambiance (chant) reste loin derrière : la lecture doit ressortir.
+            return (v && !v.paused) ? base * VR_AMB_SOUS_VOIX : base * VR_AMB_SEULE;
+        }
+        function _vrAmbianceFondu(cible, ms, fin) {
+            const a = document.getElementById('vrLectAmbiance');
+            if (!a) return;
+            clearInterval(_vrAmbFondu);
+            const de = a.volume, n = 20; let k = 0;
+            _vrAmbFondu = setInterval(() => {
+                k++; a.volume = Math.max(0, Math.min(1, de + (cible - de) * k / n));
+                if (k >= n) { clearInterval(_vrAmbFondu); _vrAmbFondu = null; if (fin) fin(); }
+            }, ms / n);
+        }
+        function _vrAmbiance(src) {
+            const a = document.getElementById('vrLectAmbiance');
+            if (!a) return;
+            const actif = src && !(typeof BgMusic !== 'undefined' && BgMusic.isEnabled && !BgMusic.isEnabled());
+            if (!actif) {
+                if (!a.paused) _vrAmbianceFondu(0, 500, () => a.pause());
+                delete a.dataset.src;
+                return;
+            }
+            if (!a._vrBranche) {
+                a._vrBranche = true;
+                // La voix part ou s'arrête : l'ambiance baisse ou remonte.
+                const v = document.getElementById('vrLectAudio');
+                ['play', 'pause', 'ended'].forEach(ev => v.addEventListener(ev, () => {
+                    if (a.dataset.src && !a.paused) _vrAmbianceFondu(_vrAmbianceVolume(), 600);
+                }));
+            }
+            if (a.dataset.src === src && !a.paused) return;
+            if (a.dataset.src !== src) { a.src = src; a.dataset.src = src; }
+            a.volume = 0;
+            a.play().then(() => _vrAmbianceFondu(_vrAmbianceVolume(), 1200)).catch(() => {});
+        }
         function vrLectSonBasculer() {
             const a = document.getElementById('vrLectAudio');
             if (!a || !a.dataset.src) return;
             if (a.paused) {
+                const amb = document.getElementById('vrLectAmbiance');
+                if (amb && amb.dataset.src && amb.paused) { const src = amb.dataset.src; delete amb.dataset.src; _vrAmbiance(src); }
                 if (a.ended || (a._vrFin && a.currentTime >= a._vrFin - 0.1)) a.currentTime = 0;   // fin de la voix : on réécoute du début
                 a.play().catch(() => {});
             } else a.pause();
@@ -46503,7 +46747,7 @@
             if (!x) return;
             const media = x.etape.media, ecrans = media.ecrans, e = _vrLect.e, s = ecrans[e];
             const n = x.pan.n || _vrLect.i + 1;
-            _vrLectAudio(s.audio, s.audioFin);
+            _vrLectAudio(s.audio, s.audioFin, s.audioVoix);
             document.getElementById('verriereCompteur').textContent = (e + 1) + ' / ' + ecrans.length;
             document.getElementById('vrLectNum').textContent = n + ' · ' + (e + 1);
             document.getElementById('vrLectDate').textContent = T(s.d || '');
