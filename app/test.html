@@ -10524,7 +10524,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.88</div>
+            <div class="hud-version" id="hudVersion">v1.9.89</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -15759,7 +15759,7 @@
                       clueIcon: '🍃',
                       incipit: 'Je suis une plante qui a survécu à son époque en devenant papier.' },
                     { id: 'tc_imprimerie', cardKind: 'thematic', collections: ["memoire_formes", "passeurs", "esprit_lumieres"], seasons: ['s1','s2'], memorielEligible: true,
-                      name: "L'Imprimerie", type: 'Objet/Concept', rarity: 'rare', supertype: 'histoire',
+                      name: "L'Imprimerie", type: 'Objet', rarity: 'rare', supertype: 'histoire',
                       clueIcon: '📜',
                       incipit: 'Avant moi, un livre coûtait la vie d\'un moine. Après moi, il coûta quelques deniers.' },
                     { id: 'tc_masque', cardKind: 'thematic', collections: ["arts_scene", "memoire_formes"], seasons: ['s1','s2'], memorielEligible: true,
@@ -15767,7 +15767,7 @@
                       clueIcon: '🎭',
                       incipit: 'Je cache un visage pour en révéler cent autres.' },
                     { id: 'tc_commedia', cardKind: 'thematic', collections: ["arts_scene", "memoire_formes"], seasons: ['s1','s2'], memorielEligible: true,
-                      name: "La Commedia dell'arte", type: 'Concept', rarity: 'rare', supertype: 'arts',
+                      name: "La Commedia dell'arte", type: 'Objet', rarity: 'rare', supertype: 'arts',
                       clueIcon: '🃏',
                       incipit: 'Je suis née dans les rues d\'Italie. J\'ai engendré Guignol à Lyon, Punch à Londres.' },
                     { id: 'tc_moliere', cardKind: 'thematic', collections: ["arts_scene"], seasons: ['s1','s2'], memorielEligible: false,
@@ -15775,15 +15775,15 @@
                       clueIcon: '🎪',
                       incipit: 'Je joue les médecins malgré eux. Et parfois je meurs pour de vrai.' },
                     { id: 'tc_academie', cardKind: 'thematic', collections: ["esprit_lumieres", "pouvoir_lieux"], seasons: ['s1','s2'], memorielEligible: true,
-                      name: "L'Académie des Sciences", type: 'Institution', rarity: 'rare', supertype: 'science',
+                      name: "L'Académie des Sciences", type: 'Lieu', rarity: 'rare', supertype: 'science',
                       clueIcon: '🏛️',
                       incipit: 'Nous avons décidé que la Terre était plate. Puis ronde. Puis aplatie aux pôles. La vérité se corrige.' },
                     { id: 'tc_cabinet', cardKind: 'thematic', collections: ["le_vivant", "pouvoir_lieux"], seasons: ['s1','s2'], memorielEligible: true,
-                      name: 'Le Cabinet de Curiosités', type: 'Lieu/Concept', rarity: 'rare', supertype: 'histoire',
+                      name: 'Le Cabinet de Curiosités', type: 'Lieu', rarity: 'rare', supertype: 'histoire',
                       clueIcon: '🗄️',
                       incipit: 'Je contenais une corne de licorne, un crocodile empaillé et la mâchoire d\'un géant. Tout était vrai.' },
                     { id: 'tc_bibliotheque', cardKind: 'thematic', collections: ["pouvoir_lieux", "passeurs"], seasons: ['s1','s2'], memorielEligible: true,
-                      name: 'La Bibliothèque', type: 'Lieu/Concept', rarity: 'rare', supertype: 'histoire',
+                      name: 'La Bibliothèque', type: 'Lieu', rarity: 'rare', supertype: 'histoire',
                       clueIcon: '📚',
                       incipit: 'On m\'a brûlée plusieurs fois. Je reviens toujours.' },
                     { id: 'tc_gutenberg', cardKind: 'thematic', collections: ["passeurs", "memoire_formes"], seasons: ['s1','s2'], memorielEligible: true,
@@ -15798,20 +15798,16 @@
                     // ── Cartes thématiques ajoutées pour le test 1 (§2.2) — placeholders. ──
                     //  incipit à rédiger éditorialement. collections = collection de rattachement.
                     { id: 'tc_rhone', cardKind: 'thematic', collections: ["le_vivant"], seasons: ['s1','s2'], memorielEligible: true,
-                      name: 'Le Rhône', type: 'Lieu/Concept', rarity: 'rare', supertype: 'nature',
+                      name: 'Le Rhône', type: 'Lieu', rarity: 'rare', supertype: 'nature',
                       clueIcon: '🌊',
                       incipit: '[à définir]' },
                     { id: 'tc_saone', cardKind: 'thematic', collections: ["le_vivant"], seasons: ['s1','s2'], memorielEligible: true,
-                      name: 'La Saône', type: 'Lieu/Concept', rarity: 'rare', supertype: 'nature',
+                      name: 'La Saône', type: 'Lieu', rarity: 'rare', supertype: 'nature',
                       clueIcon: '🌊',
                       incipit: '[à définir]' },
                     { id: 'tc_ver_a_soie', cardKind: 'thematic', collections: ["le_vivant"], seasons: ['s1','s2'], memorielEligible: true,
                       name: 'Le ver à soie', type: 'Personnage', rarity: 'common', supertype: 'nature',
                       clueIcon: '🐛',
-                      incipit: '[à définir]' },
-                    { id: 'tc_guignol', cardKind: 'thematic', collections: ["arts_scene"], seasons: ['s1','s2'], memorielEligible: true,
-                      name: 'Guignol', type: 'Personnage', rarity: 'rare', supertype: 'arts',
-                      clueIcon: '🎭',
                       incipit: '[à définir]' },
                     { id: 'tc_celestins', cardKind: 'thematic', collections: ["arts_scene"], seasons: ['s1','s2'], memorielEligible: true,
                       name: 'Théâtre des Célestins', type: 'Lieu', rarity: 'rare', supertype: 'arts',
@@ -16161,7 +16157,7 @@
 
             { id: 'vieux_lyon',       name: 'Vieux-Lyon',                lat: 45.7640, lng: 4.8270,
             localCardId: 'card4', radius: 65,    // Vieux-Lyon : dérive GPS
-            thematicPool: ['tc_masque','tc_commedia','tc_gutenberg','tc_imprimerie','tc_saone','tc_ver_a_soie','tc_guignol'] },
+            thematicPool: ['tc_masque','tc_commedia','tc_gutenberg','tc_imprimerie','tc_saone','tc_ver_a_soie'] },
 
             { id: 'parc_tete_or',     name: 'Parc de la Tête d\'Or',    lat: 45.7775, lng: 4.85448,
             localCardId: 'card16',
@@ -16201,7 +16197,7 @@
 
             { id: 'croix_rousse',     name: 'Plateau de la Croix-Rousse',lat: 45.7726, lng: 4.8274,
             localCardId: 'card24',
-            thematicPool: ['tc_imprimerie','tc_gutenberg','tc_masque','tc_commedia','tc_ver_a_soie','tc_guignol','tc_jacquard'] },
+            thematicPool: ['tc_imprimerie','tc_gutenberg','tc_masque','tc_commedia','tc_ver_a_soie','tc_jacquard'] },
 
             // A9 (David, 19/10) : le musée donne sa propre carte. La Fontaine Bartholdi
             // (card10) est rattachée à la place des Terreaux, où elle se trouve.
@@ -23754,9 +23750,9 @@
 
         // Tire une carte depuis le pool d'un POI (exclut les cartes déjà possédées)
         // A8 (David, 19/10) : cartes thématiques encore vides (ni image ni carnet,
-        // incipit « [à définir] ») — jamais tirées. tc_guignol doublait aussi la
-        // carte locale « Guignol » au même POI.
-        const TC_NON_TIRABLES = ['tc_rhone', 'tc_saone', 'tc_ver_a_soie', 'tc_guignol', 'tc_celestins', 'tc_jacquard'];
+        // incipit « [à définir] ») — jamais tirées. (tc_guignol, doublon de la carte
+        // locale « Guignol », a été supprimée le 04/11.)
+        const TC_NON_TIRABLES = ['tc_rhone', 'tc_saone', 'tc_ver_a_soie', 'tc_celestins', 'tc_jacquard'];
         function drawThematicCard(poi) {
             const pool = (poi.thematicPool || []).filter(id => !collectedCards.includes(id) && !TC_NON_TIRABLES.includes(id));
             if (pool.length === 0) return null; // pool épuisé
@@ -24101,6 +24097,12 @@
                 const d = JSON.parse(raw);
                 console.log('[expLore] Sauvegarde chargée — _obDone:', d._obDone, 'cartes:', (d.collectedCards||[]).length, 'poussière:', d.memorialDust);
                 if (d.collectedCards)        collectedCards      = d.collectedCards.filter(id => id !== 'v2_traboule');   // Traboule retirée (18/10)
+                // Guignol en un seul exemplaire (04/11) : la carte thématique tc_guignol
+                // n'existe plus ; qui la possédait garde le Guignol local (card4).
+                if (collectedCards.includes('tc_guignol')) {
+                    collectedCards = collectedCards.filter(id => id !== 'tc_guignol');
+                    if (!collectedCards.includes('card4')) collectedCards.push('card4');
+                }
                 cardAcquisDates = (d.cardAcquisDates && typeof d.cardAcquisDates === 'object') ? d.cardAcquisDates : {};
                 collectedCards.forEach(id => { if (!(id in cardAcquisDates)) cardAcquisDates[id] = 0; });
                 qjQuetesVues = Array.isArray(d.qjQuetesVues) ? d.qjQuetesVues : null;
