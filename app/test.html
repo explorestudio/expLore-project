@@ -4297,6 +4297,44 @@
             font-family: var(--jsb-hand); font-size: 12.5px; line-height: 1.3; color: var(--jsb-ink-soft);
         }
         @media (prefers-reduced-motion: reduce) { .jsb-bdd-case { transition: none; } }
+        /* ── Carnet en construction (David, 04/11) : feuillet volant posé après la
+           première entrée des cartes dont le carnet n'est pas encore écrit. Une
+           plume trace trois lignes, qui s'effacent, puis tout recommence (7 s). ── */
+        .jsb-chantier {
+            position: relative; width: 82%; margin: 4px auto 22px; padding: 14px 12px 12px;
+            background: #f4e8d0; border: 1.5px dashed rgba(107,82,56,0.45); border-radius: 3px;
+            box-shadow: 0 2px 8px rgba(60,35,10,0.18); transform: rotate(-0.8deg); text-align: center;
+            color: #6b5238; font-family: 'Segoe Script', 'Bradley Hand', 'Snell Roundhand', 'Comic Sans MS', cursive;
+        }
+        .jsb-chantier svg { display: block; width: 150px; height: 64px; margin: 0 auto 6px; overflow: visible; }
+        .jsb-chantier-ligne { fill: none; stroke: #6b5238; stroke-width: 2.2; stroke-linecap: round; opacity: .75; }
+        .jsb-chantier-l1 { stroke-dasharray: 100; animation: jsbChL1 7s linear infinite; }
+        .jsb-chantier-l2 { stroke-dasharray: 100; animation: jsbChL2 7s linear infinite; }
+        .jsb-chantier-l3 { stroke-dasharray: 100; animation: jsbChL3 7s linear infinite; }
+        .jsb-chantier-plume { animation: jsbChPlume 7s linear infinite; }
+        .jsb-chantier-titre { font-size: 14px; line-height: 1.3; color: #2c1e0f; }
+        .jsb-chantier-sous  { margin-top: 3px; font-family: Georgia, serif; font-style: italic; font-size: 11px; opacity: .8; }
+        .jsb-chantier-points span { animation: jsbChPoint 1.4s ease-in-out infinite; }
+        .jsb-chantier-points span:nth-child(2) { animation-delay: .2s; }
+        .jsb-chantier-points span:nth-child(3) { animation-delay: .4s; }
+        @keyframes jsbChL1 { 0% { stroke-dashoffset: 100; opacity: .75; } 24%, 88% { stroke-dashoffset: 0; opacity: .75; } 96%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+        @keyframes jsbChL2 { 0%, 28% { stroke-dashoffset: 100; opacity: .75; } 54%, 88% { stroke-dashoffset: 0; opacity: .75; } 96%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+        @keyframes jsbChL3 { 0%, 58% { stroke-dashoffset: 100; opacity: .75; } 76%, 88% { stroke-dashoffset: 0; opacity: .75; } 96%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+        @keyframes jsbChPlume {
+            0%   { transform: translate(12px, 14px); }
+            24%  { transform: translate(112px, 14px); }
+            28%  { transform: translate(12px, 30px); }
+            54%  { transform: translate(128px, 30px); }
+            58%  { transform: translate(12px, 46px); }
+            76%  { transform: translate(82px, 46px); }
+            88%  { transform: translate(96px, 30px); }
+            100% { transform: translate(12px, 14px); }
+        }
+        @keyframes jsbChPoint { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) {
+            .jsb-chantier-l1, .jsb-chantier-l2, .jsb-chantier-l3, .jsb-chantier-plume, .jsb-chantier-points span { animation: none; }
+            .jsb-chantier-ligne { stroke-dashoffset: 0; }
+        }
         /* Note du joueur-scribe : même main et même vert que les citations du carnet,
            mais sans guillemets — ce n'est pas la carte qui parle. */
         .jsb-note {
@@ -10524,7 +10562,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.90</div>
+            <div class="hud-version" id="hudVersion">v1.9.91</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -13746,6 +13784,8 @@
             "Tous les savoirs révélés": "All knowledge revealed",
             "Associe des échos pour révéler des savoirs": "Combine echoes to reveal knowledge",
             "Aucune pellicule": "No film",
+            "Entrées du carnet en construction": "Journal entries under construction",
+            "Les prochaines pages de cette carte s'écrivent encore.": "This card's next pages are still being written.",
             "Aucune cassette": "No tape",
             "Aucune encre": "No ink",
             // Pluriels : la chaîne entière porte le nombre (cf. hooks T() au rendu).
@@ -31787,6 +31827,36 @@
 
         let animatingN2CardId = null;
 
+        // ── Carnets en construction (David, 04/11) ──
+        // Cartes accessibles dans test.html (nébuleuses du périmètre de test et
+        // leurs cartes thématiques) dont le carnet n'est pas encore écrit : leur
+        // première entrée est un texte provisoire. Juste après, un feuillet animé
+        // annonce que les autres entrées sont en construction. Retirer une carte
+        // de la liste dès que son carnet est configuré.
+        const CARNETS_EN_CONSTRUCTION = [
+            'card6', 'card1', 'card4', 'card13', 'card20', 'card_gryphe', 'card_palais_st_jean',
+            'tc_moliere', 'tc_masque', 'tc_commedia', 'tc_imprimerie', 'tc_gutenberg',
+            'tc_microscope', 'tc_academie', 'tc_bibliotheque', 'tc_cabinet',
+        ];
+        function _jsbChantierHtml() {
+            return '<div class="jsb-chantier" aria-live="off">'
+                 +   '<svg viewBox="0 0 150 64" aria-hidden="true">'
+                 +     '<path class="jsb-chantier-ligne jsb-chantier-l1" pathLength="100" d="M12 14 H112"/>'
+                 +     '<path class="jsb-chantier-ligne jsb-chantier-l2" pathLength="100" d="M12 30 H128"/>'
+                 +     '<path class="jsb-chantier-ligne jsb-chantier-l3" pathLength="100" d="M12 46 H82"/>'
+                 +     '<g class="jsb-chantier-plume">'
+                 +       '<g transform="rotate(18)">'
+                 +         '<path d="M0 0 L3 -6 C8 -22 16 -34 26 -42 C22 -30 16 -18 6 -6 Z" fill="#a3402a" opacity=".9"/>'
+                 +         '<path d="M0 0 L22 -38" stroke="#2c1e0f" stroke-width="0.9" fill="none"/>'
+                 +       '</g>'
+                 +     '</g>'
+                 +   '</svg>'
+                 +   '<div class="jsb-chantier-titre">' + T('Entrées du carnet en construction')
+                 +     '<span class="jsb-chantier-points"><span>.</span><span>.</span><span>.</span></span></div>'
+                 +   '<div class="jsb-chantier-sous">' + T('Les prochaines pages de cette carte s\'écrivent encore.') + '</div>'
+                 + '</div>';
+        }
+
         function renderJournalBio(animateLevel, skipColorLevel) {
             if (!selectedCard) return;
             const cardId = selectedCard.id;
@@ -31894,7 +31964,10 @@
                        +   (arcTitle ? '<span class="journal-level-arc">' + _jsbEsc(arcTitle) + '</span>' : '')
                        + '</div>';
 
+                // Carnet en construction : feuillet animé juste après la 1re entrée.
+                const chantier = lvl === 0 && CARNETS_EN_CONSTRUCTION.includes(cardId);
                 lvlEntries.forEach(function(entry, i) {
+                    if (chantier && i === 1) html2 += _jsbChantierHtml();
                     const isNew  = !isClosed && !!entry._isNew;
                     const delay  = isNew ? 'animation-delay:' + (i * 0.12) + 's;' : '';
                     const lay  = LAYOUTS[globalIdx % LAYOUTS.length];
@@ -32057,6 +32130,7 @@
                     html2 += '</div>';
                     globalIdx++;
                 });
+                if (chantier && lvlEntries.length === 1) html2 += _jsbChantierHtml();
 
                 // Chapitre scellé — cachet de cire
                 if (isClosed) {
