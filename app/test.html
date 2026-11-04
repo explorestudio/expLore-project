@@ -4276,6 +4276,27 @@
         }
         .jsb-portrait { width: 48%; margin: 14px auto 2px; text-align: center; }
         .jsb-portrait--page { width: 72%; margin: 4px auto 6px; }
+        /* ── Gabarit `bd_cases` : BD qui défile, cases rangées en vignettes ── */
+        .jsb-bdd { position: relative; width: 100%; aspect-ratio: 1 / 1.18; margin: 2px 0 4px; }
+        .jsb-bdd-case {
+            position: absolute; left: 5%; top: 0; width: 90%; aspect-ratio: 1;
+            background: #fff; border: 1px solid rgba(120,70,30,0.25);
+            box-shadow: 0 3px 10px rgba(60,35,10,0.26); cursor: zoom-in;
+            transform-origin: 0 0; opacity: 0; transform: scale(0.97);
+            transition: transform .85s cubic-bezier(.4,.0,.2,1), opacity .45s ease, box-shadow .85s ease;
+            pointer-events: none;
+        }
+        .jsb-bdd-case.actif { opacity: 1; transform: none; pointer-events: auto; }
+        .jsb-bdd-case.range {
+            opacity: 1; pointer-events: auto; box-shadow: 0 2px 4px rgba(60,35,10,0.3);
+            transform: translate(var(--dx), var(--dy)) scale(0.2222) rotate(var(--r));
+        }
+        .jsb-bdd-case.efface { opacity: 0; }
+        .jsb-bdd-trad {
+            min-height: 1.3em; margin: 0 8px 8px; text-align: center;
+            font-family: var(--jsb-hand); font-size: 12.5px; line-height: 1.3; color: var(--jsb-ink-soft);
+        }
+        @media (prefers-reduced-motion: reduce) { .jsb-bdd-case { transition: none; } }
         /* Note du joueur-scribe : même main et même vert que les citations du carnet,
            mais sans guillemets — ce n'est pas la carte qui parle. */
         .jsb-note {
@@ -10503,7 +10524,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.85</div>
+            <div class="hud-version" id="hudVersion">v1.9.86</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -13820,6 +13841,18 @@
             "Encres grasses adaptées": "Suitable oil-based inks",
             "Johannes Gutenberg, XVème siècle — père de l'imprimerie typographique": "Johannes Gutenberg, 15th century — father of typographic printing",
             "Trois procédés réunis": "Three processes combined",
+            // ── Étienne Dolet, chapitre I (04/11) ──
+            "Arc I · Un homme exilé à Lyon": "Arc I · A man exiled in Lyon",
+            "Un homme exilé à Lyon": "A man exiled in Lyon",
+            "Un premier livre lyonnais": "A first Lyon book",
+            "À Toulouse, Dolet étudie le droit.": "In Toulouse, Dolet studies law.",
+            "Ses discours dénoncent les autorités toulousaines, la superstition et l'intolérance.": "His speeches denounce the Toulouse authorities, superstition and intolerance.",
+            "Ses prises de positions le mènent en prison quelques jours.": "His stances land him in prison for a few days.",
+            "En 1534, il fuit Toulouse avant d'en être officiellement banni.": "In 1534, he flees Toulouse before being officially banished.",
+            "Il arrive à Lyon le 1er août 1534. Quelques semaines plus tard, son premier livre sort des presses.\n\nCe livre contient les deux discours de Toulouse. Les mêmes que ceux qui lui ont valu la prison, puis le bannissement. Ils occupent les soixante-quatorze premières pages.\n\nLe volume ne s’ouvre pas sur son nom, mais sur la lettre d’un proche, qui écrit avoir dérobé ces discours à leur auteur et les faire imprimer sans l’avoir consulté.": "He arrives in Lyon on 1 August 1534. A few weeks later, his first book comes off the presses.\n\nThis book contains the two Toulouse speeches. The very ones that earned him prison, then banishment. They fill the first seventy-four pages.\n\nThe volume does not open with his name, but with a letter from someone close to him, who writes that he stole these speeches from their author and is having them printed without consulting him.",
+            "Orationes duae in Tholosam (« Deux discours contre Toulouse »), Étienne Dolet — Lyon, 1534": "Orationes duae in Tholosam (“Two speeches against Toulouse”), Étienne Dolet — Lyon, 1534",
+            "À Toulouse, j'ai parlé trop fort. J'en suis reparti avant qu'on ne me chasse.": "In Toulouse, I spoke too loudly. I left before they could drive me out.",
+            "À Lyon, mes discours de Toulouse sont devenus un livre. Un ami s'en est chargé — c'est du moins ce qu'il écrit.": "In Lyon, my Toulouse speeches became a book. A friend saw to it — or so he writes.",
             "Aucun portrait de lui n'a été fait de son vivant. Ce visage-là, on l'a imaginé bien après.": "No portrait of him was made in his lifetime. This face was imagined long afterwards.",
             "Celui qui m'a assemblée venait de Mayence. Il n'a rien inventé seul : il a su réunir.": "The man who put me together came from Mainz. He invented nothing on his own: he knew how to bring things together.",
             "Carte d'identité": "Identity card",
@@ -15686,7 +15719,7 @@
                       art: './assets/Cards/Sebastien_Gryphe/Sebastien_Gryphe1.jpg',
                       clueIcon: '🦅',
                       incipit: 'J\'ai donné à la France ses lettres penchées et à Lyon ses plus beaux livres. Le reste n\'est que poussière d\'encre.' },
-                    { id: 'card_dolet', cardKind: 'local', collections: ["ville_du_livre"], name: 'Étienne Dolet', type: 'Personnage', poiId: 'dolet', rarity: 'rare', supertype: 'societe', supertype2: 'histoire',
+                    { id: 'card_dolet', cardKind: 'local', collections: ["ville_du_livre"], name: 'Étienne Dolet', type: 'Personnage', poiId: 'dolet', rarity: 'common', supertype: 'societe', supertype2: 'histoire',
                       art: './assets/Cards/Etienne_Dolet/Etienne_dolet1.jpg',
                       clueIcon: '🪓',
                       incipit: 'Trois mots de trop dans une traduction, et l\'on m\'a déclaré hérétique. Vivre libre, c\'était vivre.' },
@@ -23606,11 +23639,20 @@
                 { text: "On m'a dit maître. Je préfère artisan — un caractère mal taillé, et c'est toute la page qui perd sa tenue.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
             ],
 
-            // ── ÉTIENNE DOLET (Rare, Société/Histoire) ──
+            // ── ÉTIENNE DOLET (Commune, Société/Histoire — passé de Rare à Commune le 04/11) ──
             card_dolet: [
-                { text: "Trois mots de trop dans une traduction, et l'on m'a déclaré hérétique. Vivre libre, c'était vivre.", heart: true, level: 0,
-                  entry: { date: "Paris, 1546", text: "Imprimeur, humaniste et poète, Étienne Dolet tient un atelier rue Mercière à l'enseigne de la Doloire. Il est brûlé à Paris, condamné pour une phrase jugée hérétique sur l'immortalité de l'âme.", photo: null, audio: null }
-                },
+                // ─ Arc I (niveau 0) — « Un homme exilé à Lyon » (David, 04/11) ─
+                //   Page 1 (encre) : les quatre cases de BD (Toulouse → l'exil), gabarit bd_cases.
+                //   Page 2 (pellicule) : son premier livre, imprimé à Lyon en 1534.
+                //   Les deux répliques sont des PROPOSITIONS à valider.
+                { text: "À Toulouse, j'ai parlé trop fort. J'en suis reparti avant qu'on ne me chasse.", heart: true, level: 0,
+                  entry: { date: "Arc I · Un homme exilé à Lyon", _type: 'text',
+                    text: '',
+                    photo: null, audio: null } },
+                { text: "À Lyon, mes discours de Toulouse sont devenus un livre. Un ami s'en est chargé — c'est du moins ce qu'il écrit.", heart: true, level: 0,
+                  entry: { date: "Arc I · Un homme exilé à Lyon", _type: 'visual',
+                    text: "Il arrive à Lyon le 1er août 1534. Quelques semaines plus tard, son premier livre sort des presses.\n\nCe livre contient les deux discours de Toulouse. Les mêmes que ceux qui lui ont valu la prison, puis le bannissement. Ils occupent les soixante-quatorze premières pages.\n\nLe volume ne s’ouvre pas sur son nom, mais sur la lettre d’un proche, qui écrit avoir dérobé ces discours à leur auteur et les faire imprimer sans l’avoir consulté.",
+                    photo: 'placeholder_visual', audio: null } },
                 { text: "Ma devise tenait en trois mots : vivre libre, c'est vivre. Je ne l'ai pas reniée.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
                 { text: "J'avais appris le métier chez un maître réputé, avant d'ouvrir ma propre boutique à l'enseigne d'une hache.", heart: true, level: 1,
                   entry: { date: "Rue Mercière", text: "Avant de s'installer à son compte, Dolet aurait fréquenté les ateliers des grands maîtres imprimeurs de la rue Mercière. Son propre atelier prend pour enseigne une doloire — une hache de tonnelier.", photo: null, audio: null }
@@ -23620,6 +23662,7 @@
                   entry: { date: "Lyon / Paris, 1546", text: "Le procès Dolet illustre la double nature du XVIe siècle lyonnais : capitale de l'imprimerie et terrain de surveillance du pouvoir. Diffuser des idées, à cette époque, pouvait coûter la vie.", photo: null, audio: null }
                 },
                 { text: "On a brûlé mes livres avec moi, place Maubert. Le feu ne distingue pas l'homme du papier.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
+                { text: "Trois mots de trop dans une traduction, et l'on m'a déclaré hérétique. Vivre libre, c'était vivre.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
             ],
 
             // ── LA PRESSE DE GUTENBERG (Commune, Science/Société) ──
@@ -24104,6 +24147,8 @@
                     try { _carnetResync('card_louise_labe', 2); } catch (e) {}
                     // Idem pour la presse : chapitre I réécrit le 04/11.
                     try { _carnetResync('card_presse_gutenberg', 2); } catch (e) {}
+                    // Étienne Dolet : passé en commune, chapitre I réécrit le 04/11.
+                    try { _carnetResync('card_dolet', 2); } catch (e) {}
                 }
                 if (d.bagInv)               Object.assign(bagInv, d.bagInv);
                 if (d.collectedOrbs)         collectedOrbs        = d.collectedOrbs;
@@ -32056,6 +32101,7 @@
             notebook.innerHTML = html2;
             _jsbInitAudio(notebook);   // lecteurs audio des entrées scrapbook
             _jsbAnimerBulles(notebook); // bulles qui éclosent (gabarit presse_bulles)
+            _jsbBdDefiler(notebook);    // BD qui défile (gabarit bd_cases)
         }
 
         function switchTab(tabName, e) {
@@ -32763,6 +32809,48 @@
                     },
                 },
             ],
+
+            // ══════════════════════════════════════════════════════════
+            // ÉTIENNE DOLET — chapitre I « Un homme exilé à Lyon » (David, 04/11).
+            // Texte dans CARD_DIALOGUES.card_dolet. Assets : ./assets/Cards/Etienne_Dolet/
+            // ══════════════════════════════════════════════════════════
+            card_dolet: [
+                {
+                    // Les quatre cases de BD, qui défilent une à une et se rangent en vignettes. Le texte est dessiné dans
+                    // les cases (en français) : `legendes` le redonne pour la visionneuse,
+                    // les lecteurs d'écran et la traduction (affichée sous chaque case hors FR).
+                    level: 0, index: 0,
+                    template: 'bd_cases',
+                    cases: [
+                        { src: './assets/Cards/Etienne_Dolet/dolet_a1_bd1.jpg', legende: "À Toulouse, Dolet étudie le droit." },
+                        { src: './assets/Cards/Etienne_Dolet/dolet_a1_bd2.jpg', legende: "Ses discours dénoncent les autorités toulousaines, la superstition et l'intolérance." },
+                        { src: './assets/Cards/Etienne_Dolet/dolet_a1_bd3.jpg', legende: "Ses prises de positions le mènent en prison quelques jours." },
+                        { src: './assets/Cards/Etienne_Dolet/dolet_a1_bd4.jpg', legende: "En 1534, il fuit Toulouse avant d'en être officiellement banni." },
+                    ],
+                    decorations: ['tape_top', 'corner_fold'],
+                    dossier: {
+                        title: 'Un homme exilé à Lyon',
+                        photos: [
+                            { src: './assets/Cards/Etienne_Dolet/dolet_a1_bd1.jpg', caption: "À Toulouse, Dolet étudie le droit." },
+                            { src: './assets/Cards/Etienne_Dolet/dolet_a1_bd2.jpg', caption: "Ses discours dénoncent les autorités toulousaines, la superstition et l'intolérance." },
+                            { src: './assets/Cards/Etienne_Dolet/dolet_a1_bd3.jpg', caption: "Ses prises de positions le mènent en prison quelques jours." },
+                            { src: './assets/Cards/Etienne_Dolet/dolet_a1_bd4.jpg', caption: "En 1534, il fuit Toulouse avant d'en être officiellement banni." },
+                        ],
+                    },
+                },
+                {
+                    // Son premier livre : la page de titre, légendée, puis le texte.
+                    // David, 04/11 : la photo dont il dispose n'est pas libre de droits →
+                    // emplacement « Image à venir » (imageAVenir). Quand une image libre
+                    // arrive : renseigner `image` (et un dossier pour l'agrandir).
+                    level: 0, index: 1,
+                    template: 'image_citation',
+                    title: 'Un premier livre lyonnais',
+                    imageAVenir: true,
+                    imageCaption: "Orationes duae in Tholosam (« Deux discours contre Toulouse »), Étienne Dolet — Lyon, 1534",
+                    decorations: ['tape_corner', 'nebula_edge'],
+                },
+            ],
         };
 
         let _jsbUid = 0;
@@ -33206,6 +33294,11 @@
             }
             // Pas de clé `image` → entrée texte-seul : aucun emplacement photo.
             // Chemin renseigné mais fichier absent → repli « Image à venir ».
+            // `imageAVenir` sans `image` → l'emplacement « Image à venir » d'emblée,
+            // sans requête (image en attente de droits, David 04/11).
+            if (!entry.image && entry.imageAVenir) {
+                h += _jsbFrame(null, { rot: ((uid * 37) % 21 - 10) / 10 });
+            }
             if (entry.image) {
                 h += _jsbFrame(entry.image, {
                     rot: ((uid * 37) % 21 - 10) / 10,   // −1.0° à +1.0°, stable par entrée
@@ -33346,6 +33439,76 @@
             }
             return h + '</div>';
         }
+        // ── Gabarit 11 : BD qui défile (David, 04/11) ──
+        // Une seule case à la fois, en grand. Après le temps de lecture, elle rétrécit
+        // et se range en vignette sous la scène pendant que la suivante apparaît ; la
+        // planche se reconstitue ainsi en dessous, puis s'efface et tout recommence.
+        // Démarre quand la page est visible, se met en pause sinon (_jsbBdDefiler).
+        // Tap sur la case en cours ou sur une vignette → visionneuse à cette case.
+        // Géométrie (en fraction de la largeur L) : scène 0,90 L à 0,05 L du bord ;
+        // vignette i de 0,20 L, à 0,04 + 0,24 i du bord, posée 0,04 L sous la scène.
+        // Les décalages sont exprimés en % de la case elle-même (0,90 L).
+        const JSB_BD_LECTURE_MS = 4500;   // temps passé sur chaque case
+        function _jsbBdCases(entry, ctx) {
+            const uid = ++_jsbUid;
+            const key = _jsbRegisterDossier(entry, ctx);
+            const fr = (typeof CURRENT_LANG === 'undefined') || CURRENT_LANG === 'fr';
+            const cases = entry.cases || [];
+            let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
+            h += '<div class="jsb-bdd" data-legendes="' + _jsbEsc(JSON.stringify(fr ? [] : cases.map(c => T(c.legende || '')))) + '">';
+            cases.forEach(function (c, i) {
+                const dx = ((0.04 + 0.24 * i - 0.05) / 0.9 * 100).toFixed(2);
+                const dy = (0.94 / 0.9 * 100).toFixed(2);
+                const r  = [-4, 3, -2, 4][i % 4];
+                h += '<img class="jsb-bdd-case" src="' + _jsbEsc(c.src) + '" alt="' + _jsbEsc(T(c.legende || '')) + '" draggable="false"'
+                   +   ' style="--dx:' + dx + '%;--dy:' + dy + '%;--r:' + r + 'deg;z-index:' + (10 - i) + ';"'
+                   +   (key ? ' onclick="openJsbDossier(&#39;' + key + '&#39;,' + i + ')"' : '') + '>';
+            });
+            h += '</div>';
+            if (!fr) h += '<div class="jsb-bdd-trad"></div>';
+            if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
+            return h + '</div>';
+        }
+        // Moteur du défilement : une boucle par planche, pausée hors de l'écran.
+        function _jsbBdDefiler(root) {
+            const blocs = (root || document).querySelectorAll('.jsb-bdd:not([data-pret])');
+            blocs.forEach(function (bloc) {
+                bloc.setAttribute('data-pret', '1');
+                const cases = Array.from(bloc.querySelectorAll('.jsb-bdd-case'));
+                const trad = bloc.parentElement.querySelector('.jsb-bdd-trad');
+                let legendes = [];
+                try { legendes = JSON.parse(bloc.getAttribute('data-legendes') || '[]'); } catch (e) {}
+                const st = { i: -1, t: null, actif: false };
+                const ecrire = i => { if (trad) trad.textContent = legendes[i] || ''; };
+                const suite = (fn, ms) => { clearTimeout(st.t); st.t = setTimeout(() => { if (!bloc.isConnected) return; fn(); }, ms); };
+                function etape() {
+                    if (st.i >= 0) { cases[st.i].classList.remove('actif'); cases[st.i].classList.add('range'); }
+                    st.i++;
+                    if (st.i < cases.length) {
+                        const c = cases[st.i];
+                        setTimeout(() => { c.classList.add('actif'); ecrire(st.i); }, st.i ? 380 : 0);
+                        suite(etape, JSB_BD_LECTURE_MS);
+                    } else {
+                        ecrire(-1);
+                        suite(recommencer, 3200);   // la planche reste visible, rangée en dessous
+                    }
+                }
+                function recommencer() {
+                    cases.forEach(c => c.classList.add('efface'));
+                    suite(() => { cases.forEach(c => c.classList.remove('range', 'actif', 'efface')); st.i = -1; suite(etape, 450); }, 650);
+                }
+                const lancer = () => { if (st.actif) return; st.actif = true; if (st.i < 0) etape(); else suite(etape, 2000); };
+                const pause  = () => { st.actif = false; clearTimeout(st.t); };
+                if (!('IntersectionObserver' in window)) { lancer(); return; }
+                const io = new IntersectionObserver(en => {
+                    if (!bloc.isConnected) { io.disconnect(); pause(); return; }
+                    en.forEach(e => e.isIntersecting ? lancer() : pause());
+                }, { threshold: 0.4 });
+                io.observe(bloc);
+            });
+        }
+
+
         // ── Gabarit 10 : portrait détouré pleine page (David, 04/11) ──
         // Le portrait (PNG transparent) posé sur la page, sa légende dessous, puis
         // le corps s'il y en a un. Tap → visionneuse.
@@ -33698,6 +33861,7 @@
             id_card:               _jsbIdCard,
             presse_bulles:         _jsbPresseBulles,
             portrait_detoure:      _jsbPortraitDetoure,
+            bd_cases:              _jsbBdCases,
         };
 
         // ══════════════════════════════════════════════════════════════
