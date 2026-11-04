@@ -7,7 +7,7 @@
    À INCRÉMENTER à chaque mise à jour des assets
    (sinon les utilisateurs garderont les anciennes images en cache) */
 
-const CACHE_VERSION = 'v135';
+const CACHE_VERSION = 'v136';
 const CACHE_NAME = `explore-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -15,17 +15,17 @@ const PRECACHE_URLS = [
   './index.html',
   './manifest.json',
   // Icônes UI principales
-  './assets/spiral.png',
-  './assets/Powder.png',
-  './assets/parchemin.png',
-  './assets/LootIcon.png',
-  './assets/BazarIcon.png',
-  './assets/PanoramaIcon.png',
-  './assets/PanelInfoIcon.png',
+  './assets/Icons/Spiral.png',
+  './assets/Icons/Powder.png',
+  './assets/Icons/parchemin.png',
+  './assets/Icons/LootIcon.png',
+  './assets/Icons/BazarIcon.png',
+  './assets/Icons/PanoramaIcon.png',
+  './assets/Icons/PanelInfoIcon.png',
   // Icônes ressources carnet (ajoutées en v3)
-  './assets/Icon Cassette.png',
-  './assets/Icon Pellicule.png',
-  './assets/Icon Encre.png',
+  './assets/Icons/Icon Cassette.png',
+  './assets/Icons/Icon Pellicule.png',
+  './assets/Icons/Icon Encre.png',
   // Illustrations
   './assets/Cards/Clef_de_la_ville/Clef_de_la_ville1.jpg'
 ];

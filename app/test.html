@@ -4067,8 +4067,8 @@
            Quelques pages seulement en portent une — c'est un frisson, pas un
            fond d'écran. Trois passes du même tracé (large et pâle, moyenne,
            fine et nette) tiennent lieu de flou : un filtre SVG coûterait cher
-           au scroll sur mobile. La teinte vient du supertype de la carte,
-           posée sur le carnet en variable au moment du rendu. */
+           au scroll sur mobile. Teinte : le violet de la poussière mémorielle,
+           pour toutes les cartes (David, 04/11), posée sur le carnet au rendu. */
         .jsb-nebula {
             z-index: 0;
             color: var(--jsb-nebula, #8B5CF6);
@@ -4233,6 +4233,60 @@
         }
         .jsb-postit .jsb-pin {
             position: absolute; top: -7px; left: 50%; margin-left: -8px;
+        }
+
+        /* ── Gabarit `presse_bulles` : objet détouré, bulles qui éclosent ── */
+        .jsb-bulles { position: relative; width: 94%; margin: 2px auto 16px; }
+        .jsb-bulles-objet {
+            position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+            filter: drop-shadow(0 3px 3px rgba(60,35,10,0.18));
+        }
+        .jsb-bulles-traits { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+        .jsb-bulles-traits line { stroke: rgba(44,30,15,0.6); stroke-width: 1.3; stroke-dasharray: 4 3; opacity: 0; }
+        .jsb-bulle-cible {
+            position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%;
+            background: #a3402a; box-shadow: 0 0 0 2px rgba(251,246,234,0.9); opacity: 0;
+        }
+        .jsb-bulle {
+            position: absolute; width: 27%; aspect-ratio: 1; padding: 0; border: 0; background: none;
+            transform: translate(-50%, -50%) scale(0); opacity: 0; cursor: zoom-in;
+        }
+        .jsb-bulle-img {
+            display: block; width: 100%; height: 100%; border-radius: 50%;
+            background: #fbf6ea center 38% / 150% auto no-repeat;
+            border: 3px solid #fbf6ea;
+            box-shadow: 0 3px 9px rgba(60,35,10,0.32), 0 0 0 1px rgba(160,120,50,0.35);
+        }
+        .jsb-bulle-lbl {
+            position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+            width: 150%; margin-top: 4px; text-align: center;
+            font-family: var(--jsb-hand); font-size: 11px; line-height: 1.15; color: var(--jsb-ink);
+            text-shadow: 0 0 3px #f4e8d0, 0 0 3px #f4e8d0, 0 0 2px #f4e8d0;   /* lisible sur le bois de la presse */
+        }
+        .jsb-bulles.joue line, .jsb-bulles.joue .jsb-bulle-cible { animation: jsbBulleFondu .45s ease-out var(--d) forwards; }
+        .jsb-bulles.joue .jsb-bulle { animation: jsbBullePop .6s cubic-bezier(.34,1.56,.64,1) calc(var(--d) + .25s) forwards; }
+        .jsb-bulles.joue .jsb-bulle-img { animation: jsbBulleFlotte 4.2s ease-in-out calc(var(--d) + .9s) infinite; }
+        @keyframes jsbBulleFondu { to { opacity: 1; } }
+        @keyframes jsbBullePop { to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+        @keyframes jsbBulleFlotte { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        @media (prefers-reduced-motion: reduce) {
+            .jsb-bulles line, .jsb-bulles .jsb-bulle-cible { opacity: 1; animation: none !important; }
+            .jsb-bulles .jsb-bulle { opacity: 1; transform: translate(-50%, -50%) scale(1); animation: none !important; }
+            .jsb-bulles .jsb-bulle-img { animation: none !important; }
+        }
+        .jsb-portrait { width: 48%; margin: 14px auto 2px; text-align: center; }
+        .jsb-portrait--page { width: 72%; margin: 4px auto 6px; }
+        /* Note du joueur-scribe : même main et même vert que les citations du carnet,
+           mais sans guillemets — ce n'est pas la carte qui parle. */
+        .jsb-note {
+            font-family: var(--jsb-hand); font-size: 15px; line-height: 1.45;
+            color: var(--jsb-accent);
+            margin: 10px 18px 2px 30px;
+            transform: rotate(-1.2deg);
+        }
+        .jsb-portrait img { display: block; width: 100%; cursor: zoom-in; filter: drop-shadow(0 2px 3px rgba(60,35,10,0.25)); }
+        .jsb-portrait figcaption {
+            margin-top: 6px; font-family: var(--jsb-hand); font-size: 12.5px; line-height: 1.3; color: var(--jsb-ink-soft);
         }
 
         /* ── Gabarit `id_card` : carte d'identité ancienne, timbre dentelé ── */
@@ -5527,7 +5581,7 @@
         }
         /* Quand le PNG est chargé, on l'applique sur le span et on masque le texte emoji */
         .card-carnet-btn.has-png .card-carnet-icon {
-            background-image: url('./assets/Carnet.png');
+            background-image: url('./assets/Cards/Carnet.png');
             color: transparent;
             text-shadow: none;
         }
@@ -9990,7 +10044,7 @@
             position: absolute; inset: 0; z-index: 3; pointer-events: none;
             box-sizing: border-box; border-style: solid; border-color: transparent;
             border-width: calc(202 * var(--s)) calc(232 * var(--s)) calc(249 * var(--s)) calc(225 * var(--s));
-            border-image-source: url('./assets/Cadre_carte.png');
+            border-image-source: url('./assets/Cards/Cadre_carte.png');
             border-image-slice: 202 232 249 225 fill;
             border-image-width: 1;
             border-image-repeat: stretch;
@@ -10187,7 +10241,7 @@
             position: absolute; z-index: 4; pointer-events: none;
             left: calc((480 - var(--ox, 0)) * var(--s)); bottom: calc((122 - var(--ob, 0)) * var(--s));
             width: calc(160 * var(--s)); height: calc(126 * var(--s));
-            background: url('./assets/Cadre_carte.png') no-repeat
+            background: url('./assets/Cards/Cadre_carte.png') no-repeat
                 calc(-320 * var(--s)) calc(-1154 * var(--s)) / calc(1122 * var(--s)) calc(1402 * var(--s));
             -webkit-mask: linear-gradient(90deg, transparent 0, #000 calc(16 * var(--s)), #000 calc(100% - 16 * var(--s)), transparent 100%);
                     mask: linear-gradient(90deg, transparent 0, #000 calc(16 * var(--s)), #000 calc(100% - 16 * var(--s)), transparent 100%);
@@ -10449,11 +10503,11 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.83</div>
+            <div class="hud-version" id="hudVersion">v1.9.84</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
-                <img src="./assets/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
+                <img src="./assets/Icons/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
                 <span id="dustCounter">0</span>
             </div>
 
@@ -10732,7 +10786,7 @@
                 <div class="nearby-poi-header">
                     <div>
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                            <div class="nearby-poi-name"><img src="./assets/nebuleuse.png" alt="" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> <span id="poiName"></span></div>
+                            <div class="nearby-poi-name"><img src="./assets/Icons/nebuleuse.png" alt="" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> <span id="poiName"></span></div>
                             <span id="poiThematicBadge" style="display:none;font-size:10px;font-weight:700;
                                 background:linear-gradient(135deg,#F59E0B,#D97706);color:white;
                                 padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">⋆ Thématique</span>
@@ -10757,7 +10811,7 @@
                 <!-- Icône à gauche du texte : l'image de l'échoppe, pas l'emoji 🛖
                      (absent de certaines polices Android → carré vide). -->
                 <div class="nearby-poi-header" style="display:flex;align-items:center;gap:10px;">
-                    <img src="./assets/BazarIcon.png?v=2" alt="" draggable="false"
+                    <img src="./assets/Icons/BazarIcon.png?v=2" alt="" draggable="false"
                          style="width:32px;height:32px;object-fit:contain;flex-shrink:0;pointer-events:none;">
                     <div>
                         <div class="nearby-poi-name" style="color:#92400E;"><span id="bazarName"></span></div>
@@ -10783,7 +10837,7 @@
             <div id="nearbyDust" class="nearby-poi console-poi console-collectable console--poussiere hidden" style="background: #F3E8FF; border-color: #A855F7;">
                 <div class="nearby-poi-header">
                     <div>
-                        <div class="nearby-poi-name" style="color: #7C3AED;"><img src="./assets/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> Poussière</div>
+                        <div class="nearby-poi-name" style="color: #7C3AED;"><img src="./assets/Icons/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> Poussière</div>
                         <div class="nearby-poi-distance" style="color: #9333EA;">À portée de collecte</div>
                     </div>
                 </div>
@@ -10922,7 +10976,7 @@
             <!-- Cadre de la carte (Cadre_carte.png) : la carte loge dans son ouverture.
                  Sans l'image, repli sur une bordure (classe sans-cadre). -->
             <div class="ritual-cadre" id="ritualCadre">
-            <img class="ritual-cadre-img" src="./assets/Cadre_carte.png" alt="" draggable="false"
+            <img class="ritual-cadre-img" src="./assets/Cards/Cadre_carte.png" alt="" draggable="false"
                  onerror="this.style.display='none'; this.parentNode.classList.add('sans-cadre')">
             <!-- Lot 4 : le cadre est dessiné par border-image (fenêtre au ratio
                  CARD_VISUAL_RATIO) ; l'<img> ci-dessus ne sert plus qu'à détecter
@@ -11074,7 +11128,7 @@
                         <div class="card-frame" onclick="event.stopPropagation()" style="position:relative;">
                             <!-- Cadre_carte.png en border-image (découpe partagée avec Carte obtenue) ;
                                  l'<img> ne sert qu'à détecter l'absence du PNG (repli sans-cadre). -->
-                            <img class="ritual-cadre-img" src="./assets/Cadre_carte.png" alt="" draggable="false"
+                            <img class="ritual-cadre-img" src="./assets/Cards/Cadre_carte.png" alt="" draggable="false"
                                  onerror="this.parentNode.classList.add('sans-cadre')">
                             <div class="ritual-cadre-bord" aria-hidden="true"></div>
                             <div class="card-type-pin" id="cardTypePin" role="img" aria-label="Type de carte"></div>
@@ -11138,7 +11192,7 @@
                                         <div class="card-level-actions">
                                             <div class="card-level-reserves">
                                                 <div class="card-level-reserve card-level-reserve--poussiere">
-                                                    <img src="./assets/Powder.png" alt="poussière" style="width:13px;height:13px;object-fit:contain;pointer-events:none;" draggable="false">
+                                                    <img src="./assets/Icons/Powder.png" alt="poussière" style="width:13px;height:13px;object-fit:contain;pointer-events:none;" draggable="false">
                                                     <span id="cardDetailDustCounter">0</span>
                                                 </div>
                                                 <div class="card-level-reserve card-level-reserve--orbe">
@@ -11448,7 +11502,7 @@
                     <span class="studio-card-name" id="studioCardName"></span>
                 </div>
                 <div class="studio-dust-display">
-                    <img src="./assets/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
+                    <img src="./assets/Icons/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
                     <span id="studioDustCounter">0</span>
                 </div>
             </div>
@@ -13757,6 +13811,17 @@
             "Naissance : Entre 1516 et 1524, à Lyon.\nPère : Pierre Charly, dit Labé, cordier lyonnais.\nMère : Étiennette Roybet, famille de marchands ou notables lyonnais.\nMariage : Ennemond Perrin, maître cordier (vers 1545).\nDécès : février 1566, à Parcieux, en Dombes.": "Birth: Between 1516 and 1524, in Lyon.\nFather: Pierre Charly, known as Labé, a Lyon ropemaker.\nMother: Étiennette Roybet, from a family of Lyon merchants or notables.\nMarriage: Ennemond Perrin, master ropemaker (around 1545).\nDeath: February 1566, in Parcieux, in the Dombes.",
             "Simple ouvrier cordier à la base, le père de Louise a vécu une ascension sociale en restant illettré toute sa vie. Il a adopté un nom qui n'était pas le sien en épousant la veuve de Jacques Humbert, surnommé Labé. Ce pseudonyme avait valeur de marque et pour jouir des affaires il a fait le choix de cette stratégie commerciale !": "A simple ropemaker's worker to begin with, Louise's father climbed the social ladder while remaining illiterate all his life. He took a name that was not his own when he married the widow of Jacques Humbert, nicknamed Labé. That alias worked like a brand, and to make the most of the business he chose this commercial strategy!",
             "Pourquoi Labé ?": "Why Labé?",
+            // ── Presse de Gutenberg, chapitre I (04/11) ──
+            "Ce n'est pas une invention mais le génie d'associer différents procédés qui a permis à Gutenberg de présenter à l'Europe une technique d'impression innovante et efficace qui bouleversera à jamais la diffusion des livres au XVème siècle. Il est à noter qu'au début elle était faite totalement de bois sauf où l'on posait l'encre.": "It was not an invention but the genius of combining different processes that allowed Gutenberg to give Europe an innovative and efficient printing technique, one that would forever transform the spread of books in the 15th century. Note that at first it was made entirely of wood, except where the ink was applied.",
+            "Arc I · La force d'une invention": "Arc I · The power of an invention",
+            "La force d'une invention": "The power of an invention",
+            "Pression constante de la presse à vis": "Constant pressure from the screw press",
+            "Caractères mobiles et réutilisables": "Movable, reusable type",
+            "Encres grasses adaptées": "Suitable oil-based inks",
+            "Johannes Gutenberg, XVème siècle — père de l'imprimerie typographique": "Johannes Gutenberg, 15th century — father of typographic printing",
+            "Trois procédés réunis": "Three processes combined",
+            "Aucun portrait de lui n'a été fait de son vivant. Ce visage-là, on l'a imaginé bien après.": "No portrait of him was made in his lifetime. This face was imagined long afterwards.",
+            "Celui qui m'a assemblée venait de Mayence. Il n'a rien inventé seul : il a su réunir.": "The man who put me together came from Mainz. He invented nothing on his own: he knew how to bring things together.",
             "Carte d'identité": "Identity card",
             "Timbre à venir": "Stamp to come",
             "dite la Belle Cordière": "known as la Belle Cordière",
@@ -13795,11 +13860,10 @@
             "On imprimait beaucoup à Lyon. On y surveillait tout autant.": "There was a great deal of printing in Lyon. There was just as much watching.",
             "Le procès Dolet illustre la double nature du XVIe siècle lyonnais : capitale de l'imprimerie et terrain de surveillance du pouvoir. Diffuser des idées, à cette époque, pouvait coûter la vie.": "The Dolet trial illustrates the double nature of 16th-century Lyon: capital of printing, and proving ground for the surveillance of power. Spreading ideas, in that era, could cost you your life.",
             "On a brûlé mes livres avec moi, place Maubert. Le feu ne distingue pas l'homme du papier.": "They burned my books along with me, on place Maubert. Fire does not tell a man from paper.",
-            // ── La presse a la Doloire ──
+            // ── La presse de Gutenberg ──
             "Bois et fer, vis et cadre. Rien de plus. Mais assez pour multiplier une page en quelques centaines d'exemplaires par jour.": "Wood and iron, screw and frame. Nothing more. But enough to multiply a page into a few hundred copies a day.",
             "Rue Mercière, XVIe siècle": "Rue Mercière, 16th century",
             "Presse à bras typique du quartier Mercière, où l'on en comptait par centaines au XVIe siècle. Un objet en apparence simple, moteur d'une industrie entière.": "A hand press typical of the Mercière quarter, where they numbered in the hundreds in the 16th century. An object simple in appearance, the engine of an entire industry.",
-            "On m'a rangée à l'enseigne d'une hache. Une doloire, pour trancher le bois — pas pour trancher les têtes, malgré ce qui est arrivé ensuite.": "They filed me under the sign of an axe. A doloire, for splitting wood — not for splitting heads, despite what came afterwards.",
             "Je ne travaille jamais seule. Il faut des mains pour composer, corriger, tirer chaque feuille — des compagnons, nombreux dans ce quartier, plus organisés qu'on ne le croit.": "I never work alone. Hands are needed to set, to correct, to pull each sheet — journeymen, plentiful in this quarter, better organized than people think.",
             "Quartier Mercière": "Mercière quarter",
             "Autour de chaque presse gravite une équipe de compagnons imprimeurs, organisés en confréries parfois clandestines. Leur histoire reste à découvrir ailleurs dans ce carnet.": "Around each press orbits a team of journeymen printers, organized into brotherhoods that were sometimes clandestine. Their story is still to be found elsewhere in this journal.",
@@ -14491,7 +14555,6 @@
             "Depuis Bellecour, l'histoire du livre se joue juste à côté. Trouve l'atelier où l'on tirait les feuilles une à une.": "From Bellecour, the story of the book plays out right next door. Find the workshop where sheets were pulled one by one.",
             "Un maître humaniste a formé les meilleurs imprimeurs de la ville. Cherche du côté de Saint-Jean.": "A humanist master trained the best printers in the city. Look toward Saint-Jean.",
             "Une femme a publié ses vers sous son nom, tout près de Bellecour. Trouve la rue qui porte son nom.": "A woman published her verses under her own name, very close to Bellecour. Find the street that bears her name.",
-            "Une presse ne travaille jamais seule. Retourne du côté des ateliers de la Doloire, là où les compagnons s'organisaient.": "A press never works alone. Go back to the Doloire workshops, where the journeymen organized.",
             "Un imprimeur est allé plus loin que les autres. Cherche l'enseigne d'une hache, rue Mercière.": "One printer went further than the others. Look for the sign of an axe, on rue Mercière.",
             "Une bibliothèque a brûlé, et ce n'est pas celle qu'on croit. Retourne à la cathédrale Saint-Jean.": "A library burned, and not the one you think. Go back to Saint-Jean cathedral.",
             "Juste à côté de la cathédrale, un ancien palais a gardé ce que le feu a épargné.": "Right beside the cathedral, a former palace kept what the fire spared.",
@@ -16046,7 +16109,9 @@
               localCardId: 'card_gryphe', thematicPool: [], gated: 'ville_du_livre', radius: 65 },
             { id: 'dolet',           name: 'Rue Mercière (Dolet)',      lat: 45.7640, lng: 4.8325,
               localCardId: 'card_dolet', thematicPool: [], gated: 'ville_du_livre', radius: 65 },
-            { id: 'presse_doloire',  name: 'Vieux-Lyon (la Doloire)',   lat: 45.7640, lng: 4.8275,
+            // Presse de Gutenberg, 13 rue de la Poulaillerie (fiche « La presse », David 04/11).
+            // Identifiant historique gardé (sauvegardes) : ce n'est PAS la presse de la Doloire.
+            { id: 'presse_doloire',  name: 'Rue de la Poulaillerie (presse de Gutenberg)', lat: 45.76424, lng: 4.83468,
               localCardId: 'card_presse_gutenberg', thematicPool: [], gated: 'ville_du_livre', radius: 65 },
             { id: 'palais_st_jean',  name: 'Palais Saint-Jean',         lat: 45.7599, lng: 4.8280,
               localCardId: 'card_palais_st_jean', thematicPool: [], gated: 'ville_du_livre', radius: 65 },
@@ -16773,9 +16838,9 @@
         const CARNET_RESOURCE_RADIUS = 25;
         // Types possibles ; à chaque collecte on tire au sort
         const CARNET_RESOURCE_TYPES = [
-            { key: 'pellicules', label: 'pellicule', emoji: '🎞️', image: './assets/Icon Pellicule.png', color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
-            { key: 'cassettes',  label: 'cassette',  emoji: '📼', image: './assets/Icon Cassette.png',  color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
-            { key: 'encre',      label: 'encre',     emoji: '🖋️', image: './assets/Icon Encre.png',     color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
+            { key: 'pellicules', label: 'pellicule', emoji: '🎞️', image: './assets/Icons/Icon Pellicule.png', color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
+            { key: 'cassettes',  label: 'cassette',  emoji: '📼', image: './assets/Icons/Icon Cassette.png',  color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
+            { key: 'encre',      label: 'encre',     emoji: '🖋️', image: './assets/Icons/Icon Encre.png',     color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
         ];
         // Mémorise les ressources collectées (pour respawn ou pas)
         let collectedCarnetResources = []; // ids déjà collectées
@@ -17660,7 +17725,7 @@
             let arrives = 0, revele = false;
             for (let i = 0; i < NB; i++) {
                 const g = document.createElement('img');
-                g.src = './assets/Powder.png';
+                g.src = './assets/Icons/Powder.png';
                 g.alt = '';
                 g.className = 'ui-grain-poussiere';
                 document.body.appendChild(g);
@@ -19078,7 +19143,7 @@
                 // Minuscule : c'est la casse suivie par git. Windows ne fait pas
                 // la différence, GitHub Pages si : une majuscule ici passe en
                 // local et donne un 404 en production.
-                'background-image:url(./assets/nebuleuse.png)',
+                'background-image:url(./assets/Icons/nebuleuse.png)',
                 'background-size:contain',
                 'background-repeat:no-repeat',
                 'background-position:center',
@@ -19412,7 +19477,7 @@
             inner.style.cssText = 'position:absolute;transform:translate(-50%,-62%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
             const icon = document.createElement('div');
             icon.style.cssText = 'flex-shrink:0;';
-            icon.innerHTML = '<img src="./assets/Powder.png?v=1" style="width:38px;height:38px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
+            icon.innerHTML = '<img src="./assets/Icons/Powder.png?v=1" style="width:38px;height:38px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
             inner.appendChild(_buildPoiVisual('dust_dusttuto', {
                 top:    'rgba(192,132,252,0.9)',
                 mid:    'rgba(168,85,247,0.55)',
@@ -19615,12 +19680,12 @@
         // « carte » (le jeu entier : partout, souvent au sens de la mappe) ni pour
         // « feuille de route » (emoji encore à choisir, cf. TODO de la section 11).
         const VN_MOTS_CLES = {
-            poussiere: { icone: './assets/Powder.png',             couleur: '#C084FC' },
-            echoppe:   { icone: './assets/BazarIcon.png?v=2',      couleur: '#FB923C' },
-            nebuleuse: { icone: './assets/nebuleuse.png',          couleur: '#B98CE8' },
-            panorama:  { icone: './assets/PanoramaIcon.png?v=2',   couleur: '#5FC9E8' },
-            info:      { icone: './assets/PanelInfoIcon.png?v=2',  couleur: '#7BD88F' },
-            parchemin: { icone: './assets/parchemin.png',          couleur: '#EBCC7E' },
+            poussiere: { icone: './assets/Icons/Powder.png',             couleur: '#C084FC' },
+            echoppe:   { icone: './assets/Icons/BazarIcon.png?v=2',      couleur: '#FB923C' },
+            nebuleuse: { icone: './assets/Icons/nebuleuse.png',          couleur: '#B98CE8' },
+            panorama:  { icone: './assets/Icons/PanoramaIcon.png?v=2',   couleur: '#5FC9E8' },
+            info:      { icone: './assets/Icons/PanelInfoIcon.png?v=2',  couleur: '#7BD88F' },
+            parchemin: { icone: './assets/Icons/parchemin.png',          couleur: '#EBCC7E' },
             carnet:    { emoji: '📖', couleur: '#F2DDB5' },   // papier du carnet
             encre:     { emoji: '🖋️', couleur: '#FCD34D' },   // fournitures : jaune (David, 19/10)
             pellicule: { emoji: '🎞️', couleur: '#FCD34D' },
@@ -21190,7 +21255,7 @@
         // partagent les 300 de l'ancien point unique (dust_tuto).
         const TUTO_POUSSIERE_POINT = 150;
         // Icône de la poussière (section 5 : remplace le cœur 💜 de la fiche carte)
-        const _CARTE_ICONE_POUSSIERE = '<img class="card-dust-ico" src="./assets/Powder.png" alt="" draggable="false">';
+        const _CARTE_ICONE_POUSSIERE = '<img class="card-dust-ico" src="./assets/Icons/Powder.png" alt="" draggable="false">';
         // « L'autre carte » de la section 4 : retirée (lot 2.1, 16/10) avec
         // _tutoChoisirAutreCarte. _tutoAutrePoiId reste lu par la sauvegarde.
         let _tutoSection    = 0;     // dernière section atteinte (sauvegardé)
@@ -23557,12 +23622,19 @@
                 { text: "On a brûlé mes livres avec moi, place Maubert. Le feu ne distingue pas l'homme du papier.", heart: false, level: 2, minLevel: 2, minRevealed: 0 },
             ],
 
-            // ── LA PRESSE DE LA DOLOIRE (Commune, Science/Société) ──
+            // ── LA PRESSE DE GUTENBERG (Commune, Science/Société) ──
             card_presse_gutenberg: [
+                // ─ Arc I (niveau 0) — « La force d'une invention » (David, 04/11, fiche « La presse ») ─
+                //   Deux pages : la presse et ses trois procédés en bulles (encre), puis le portrait
+                //   de Gutenberg (pellicule). La réplique de la page 2 est une PROPOSITION à valider.
                 { text: "Bois et fer, vis et cadre. Rien de plus. Mais assez pour multiplier une page en quelques centaines d'exemplaires par jour.", heart: true, level: 0,
-                  entry: { date: "Rue Mercière, XVIe siècle", text: "Presse à bras typique du quartier Mercière, où l'on en comptait par centaines au XVIe siècle. Un objet en apparence simple, moteur d'une industrie entière.", photo: null, audio: null }
-                },
-                { text: "On m'a rangée à l'enseigne d'une hache. Une doloire, pour trancher le bois — pas pour trancher les têtes, malgré ce qui est arrivé ensuite.", heart: false, level: 0, minLevel: 0, minRevealed: 0 },
+                  entry: { date: "Arc I · La force d'une invention", _type: 'text',
+                    text: "Ce n'est pas une invention mais le génie d'associer différents procédés qui a permis à Gutenberg de présenter à l'Europe une technique d'impression innovante et efficace qui bouleversera à jamais la diffusion des livres au XVème siècle. Il est à noter qu'au début elle était faite totalement de bois sauf où l'on posait l'encre.",
+                    photo: null, audio: null } },
+                { text: "Celui qui m'a assemblée venait de Mayence. Il n'a rien inventé seul : il a su réunir.", heart: true, level: 0,
+                  entry: { date: "Arc I · La force d'une invention", _type: 'visual',
+                    text: '',
+                    photo: 'placeholder_visual', audio: null } },
                 { text: "Je ne travaille jamais seule. Il faut des mains pour composer, corriger, tirer chaque feuille — des compagnons, nombreux dans ce quartier, plus organisés qu'on ne le croit.", heart: true, level: 1,
                   entry: { date: "Quartier Mercière", text: "Autour de chaque presse gravite une équipe de compagnons imprimeurs, organisés en confréries parfois clandestines. Leur histoire reste à découvrir ailleurs dans ce carnet.", photo: null, audio: null }
                 },
@@ -24030,6 +24102,8 @@
                     // chapitre I réécrit. Les entrées créées avant gardaient l'ancien texte
                     // et une 3e page par chapitre (copie de la précédente).
                     try { _carnetResync('card_louise_labe', 2); } catch (e) {}
+                    // Idem pour la presse : chapitre I réécrit le 04/11.
+                    try { _carnetResync('card_presse_gutenberg', 2); } catch (e) {}
                 }
                 if (d.bagInv)               Object.assign(bagInv, d.bagInv);
                 if (d.collectedOrbs)         collectedOrbs        = d.collectedOrbs;
@@ -25034,7 +25108,7 @@
                 const _collected = collectedCards.includes(poi.localCardId);
                 const _pid2 = 'card_' + poi.id.replace(/[^a-z0-9]/gi,'');
                 const _img = document.createElement('img');
-                _img.src = './assets/nebuleuse.png';
+                _img.src = './assets/Icons/nebuleuse.png';
                 _img.draggable = false;
 
                 _img.style.opacity = _collected ? '0.5' : '1';
@@ -25099,7 +25173,7 @@
                 // Icône cristal SVG
                 const _dustIcon = document.createElement('div');
                 _dustIcon.style.cssText = 'flex-shrink:0;';
-                _dustIcon.innerHTML = '<img src="./assets/Powder.png?v=1" style="width:38px;height:38px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
+                _dustIcon.innerHTML = '<img src="./assets/Icons/Powder.png?v=1" style="width:38px;height:38px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
                 const _dPid = 'dust_' + dust.id.replace(/[^a-z0-9]/gi,'');
                 const _dustWrap = _buildPoiVisual(_dPid, {
                     top:    'rgba(192,132,252,0.9)',
@@ -25260,7 +25334,7 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _sIcon = document.createElement('div');
                 _sIcon.style.cssText = 'flex-shrink:0;';
-                _sIcon.innerHTML = '<img src="./assets/parchemin.png" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 5px rgba(180,83,9,0.5));" draggable="false"/>';
+                _sIcon.innerHTML = '<img src="./assets/Icons/parchemin.png" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 5px rgba(180,83,9,0.5));" draggable="false"/>';
                 const _sPid = 'scroll_' + scroll.id.replace(/[^a-z0-9]/gi,'');
                 const _sWrap = _buildPoiVisual(_sPid, {
                     top:    'rgba(251,191,36,0.9)',
@@ -25298,7 +25372,7 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _lIcon = document.createElement('div');
                 _lIcon.style.cssText = 'flex-shrink:0;';
-                _lIcon.innerHTML = '<img src="./assets/LootIcon.png" style="width:40px;height:40px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 6px rgba(180,60,0,0.6));" draggable="false"/>';
+                _lIcon.innerHTML = '<img src="./assets/Icons/LootIcon.png" style="width:40px;height:40px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 6px rgba(180,60,0,0.6));" draggable="false"/>';
                 const _lPid = 'loot_' + loot.id.replace(/[^a-z0-9]/gi,'');
                 const _lWrap = _buildPoiVisual(_lPid, {
                     top:    'rgba(249,168,212,0.9)',
@@ -27537,13 +27611,13 @@
             _capUpdate();
         }
 
-        // Icône poussière mémorielle — PNG centralisé (./assets/Powder.png)
+        // Icône poussière mémorielle — PNG centralisé (./assets/Icons/Powder.png)
         function dustIconHtml(size) {
             const s = size || 22;
-            return `<img src="./assets/Powder.png" alt="poussière" style="width:${s}px;height:${s}px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">`;
+            return `<img src="./assets/Icons/Powder.png" alt="poussière" style="width:${s}px;height:${s}px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">`;
         }
         // Variante "halo" pour les écrans de récompense (avec drop-shadow violet)
-        const DUST_SVG_ICON = `<img src="./assets/Powder.png" alt="poussière" style="width:64px;height:64px;object-fit:contain;display:inline-block;filter:drop-shadow(0 0 10px rgba(168,85,247,0.8));pointer-events:none;" draggable="false">`;
+        const DUST_SVG_ICON = `<img src="./assets/Icons/Powder.png" alt="poussière" style="width:64px;height:64px;object-fit:contain;display:inline-block;filter:drop-shadow(0 0 10px rgba(168,85,247,0.8));pointer-events:none;" draggable="false">`;
 
         // Table de loot — pondérée
         const LOOT_TABLE = [
@@ -30460,7 +30534,7 @@
                     if (btn) btn.classList.add('has-png');
                 };
                 img.onerror = function() { /* silencieux : on garde l'emoji */ };
-                img.src = './assets/Carnet.png';
+                img.src = './assets/Cards/Carnet.png';
             } catch(e) { /* fallback emoji par défaut, rien à faire */ }
         })();
 
@@ -31676,10 +31750,9 @@
 
             const LEVEL_LABELS = ['Chapitre I', 'Chapitre II', 'Chapitre III'];
 
-            // Teinte des nébuleuses de page : celle du supertype de la carte.
-            // Posée une fois sur le carnet, les pages en héritent.
-            const _stInfo = SUPERTYPES[selectedCard.supertype] || {};
-            notebook.style.setProperty('--jsb-nebula', _stInfo.color || '#8B5CF6');
+            // Teinte des nébuleuses de page : toujours le violet de la poussière
+            // mémorielle, quel que soit le supertype de la carte (David, 04/11).
+            notebook.style.setProperty('--jsb-nebula', '#8B5CF6');
 
             if (entries.length === 0) {
                 notebook.innerHTML = '<div class="journal-quote">Offre de la poussière à cette carte pour qu\'elle te raconte son histoire...</div>';
@@ -31982,6 +32055,7 @@
 
             notebook.innerHTML = html2;
             _jsbInitAudio(notebook);   // lecteurs audio des entrées scrapbook
+            _jsbAnimerBulles(notebook); // bulles qui éclosent (gabarit presse_bulles)
         }
 
         function switchTab(tabName, e) {
@@ -32640,6 +32714,55 @@
                     },
                 },
             ],
+
+            // ══════════════════════════════════════════════════════════
+            // PRESSE DE GUTENBERG — chapitre I « La force d'une invention »
+            // (David, 04/11). Texte dans CARD_DIALOGUES.card_presse_gutenberg.
+            // Assets : ./assets/Cards/Presse_Gutenberg/ (presse_a1_*)
+            // ══════════════════════════════════════════════════════════
+            card_presse_gutenberg: [
+                {
+                    // La presse détourée ; ses trois procédés éclosent en bulles l'une
+                    // après l'autre, chacune reliée à la partie de la presse concernée.
+                    // x/y : centre de la bulle ; vx/vy : point visé — en % de l'image
+                    // (1108 × 1420). Puis le texte. Gutenberg a sa propre page (index 1).
+                    level: 0, index: 0,
+                    template: 'presse_bulles',
+                    image: './assets/Cards/Presse_Gutenberg/presse_a1_presse.png',
+                    imageRatio: 1108 / 1420,
+                    bulles: [
+                        { src: './assets/Cards/Presse_Gutenberg/presse_a1_pression.jpg',   label: "Pression constante de la presse à vis", x: 15, y: 17, vx: 61, vy: 37 },
+                        { src: './assets/Cards/Presse_Gutenberg/presse_a1_caracteres.jpg', label: "Caractères mobiles et réutilisables", x: 15, y: 74, vx: 46, vy: 54 },
+                        { src: './assets/Cards/Presse_Gutenberg/presse_a1_encre.jpg',      label: "Encres grasses adaptées", x: 86, y: 72, vx: 52, vy: 55 },
+                    ],
+                    decorations: ['tape_top', 'nebula_corner'],
+                    // Visionneuse : les trois procédés (index ouverts par les bulles).
+                    dossier: {
+                        title: 'Trois procédés réunis',
+                        photos: [
+                            { src: './assets/Cards/Presse_Gutenberg/presse_a1_pression.jpg',   caption: "Pression constante de la presse à vis" },
+                            { src: './assets/Cards/Presse_Gutenberg/presse_a1_caracteres.jpg', caption: "Caractères mobiles et réutilisables" },
+                            { src: './assets/Cards/Presse_Gutenberg/presse_a1_encre.jpg',      caption: "Encres grasses adaptées" },
+                        ],
+                    },
+                },
+                {
+                    // Page 2 : Gutenberg, portrait détouré posé sur la page, avec sa légende.
+                    level: 0, index: 1,
+                    template: 'portrait_detoure',
+                    title: 'Johannes Gutenberg',
+                    portrait: './assets/Cards/Presse_Gutenberg/presse_a1_gutenberg.png',
+                    portraitCaption: "Johannes Gutenberg, XVème siècle — père de l'imprimerie typographique",
+                    // Note du joueur-scribe, à la main, en vert, SANS guillemets (les
+                    // guillemets sont réservés aux citations des cartes) — David, 04/11.
+                    note: "Aucun portrait de lui n'a été fait de son vivant. Ce visage-là, on l'a imaginé bien après.",
+                    decorations: ['tape_corner', 'nebula_edge'],
+                    dossier: {
+                        title: 'Johannes Gutenberg',
+                        photos: [ { src: './assets/Cards/Presse_Gutenberg/presse_a1_gutenberg.png', caption: "Johannes Gutenberg, XVème siècle — père de l'imprimerie typographique" } ],
+                    },
+                },
+            ],
         };
 
         let _jsbUid = 0;
@@ -33013,9 +33136,9 @@
         // porte déjà sur la mappe — pellicule, cassette, encre.
         // ══════════════════════════════════════════════════════════════
         const JRN_TYPE_ICONS = {
-            visual: { src: './assets/Icon Pellicule.png', label: 'Entrée visuelle · révélée par une pellicule' },
-            audio:  { src: './assets/Icon Cassette.png',  label: 'Entrée audio · révélée par une cassette' },
-            text:   { src: './assets/Icon Encre.png',     label: 'Entrée textuelle · révélée par de l\'encre' },
+            visual: { src: './assets/Icons/Icon Pellicule.png', label: 'Entrée visuelle · révélée par une pellicule' },
+            audio:  { src: './assets/Icons/Icon Cassette.png',  label: 'Entrée audio · révélée par une cassette' },
+            text:   { src: './assets/Icons/Icon Encre.png',     label: 'Entrée textuelle · révélée par de l\'encre' },
         };
 
         // Cassette dessinée en SVG : le PNG est une illustration figée, ses
@@ -33182,6 +33305,73 @@
             if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
             h += _jsbPostit(entry);
             return h + '<div style="clear:both;"></div></div>';
+        }
+
+        // ── Gabarit 9 : objet détouré + bulles qui éclosent (David, 04/11) ──
+        // L'objet (PNG transparent) est posé à même la page ; chaque bulle (photo
+        // ronde + légende manuscrite) éclot à son tour, reliée par un trait au point
+        // visé sur l'objet. L'animation part quand la page arrive à l'écran
+        // (_jsbAnimerBulles). Un tap sur une bulle ou sur le portrait ouvre la
+        // visionneuse du dossier à la bonne vue. Corps et portrait suivent.
+        function _jsbPresseBulles(entry, ctx) {
+            const uid = ++_jsbUid;
+            const key = _jsbRegisterDossier(entry, ctx);
+            const ouvrir = i => key ? ' onclick="openJsbDossier(&#39;' + key + '&#39;,' + i + ')"' : '';
+            let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
+            const bulles = entry.bulles || [];
+            h += '<div class="jsb-bulles" style="aspect-ratio:' + (entry.imageRatio || 0.78) + ';">';
+            h += '<img class="jsb-bulles-objet" src="' + _jsbEsc(entry.image) + '" alt="" draggable="false">';
+            h += '<svg class="jsb-bulles-traits" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">';
+            bulles.forEach(function (b, i) {
+                h += '<line x1="' + b.x + '" y1="' + b.y + '" x2="' + b.vx + '" y2="' + b.vy + '" '
+                   + 'vector-effect="non-scaling-stroke" style="--d:' + (0.5 + i * 0.9) + 's"/>';
+            });
+            h += '</svg>';
+            bulles.forEach(function (b, i) {
+                const d = (0.5 + i * 0.9) + 's';
+                h += '<span class="jsb-bulle-cible" style="left:' + b.vx + '%;top:' + b.vy + '%;--d:' + d + '"></span>';
+                h += '<button type="button" class="jsb-bulle" style="left:' + b.x + '%;top:' + b.y + '%;--d:' + d + '"'
+                   + ' aria-label="' + _jsbEsc(T(b.label)) + '"' + ouvrir(i) + '>'
+                   +   '<span class="jsb-bulle-img" style="background-image:url(&quot;' + encodeURI(b.src) + '&quot;)"></span>'
+                   +   '<span class="jsb-bulle-lbl">' + _jsbEsc(T(b.label)) + '</span>'
+                   + '</button>';
+            });
+            h += '</div>';
+            if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
+            if (entry.portrait) {
+                h += '<figure class="jsb-portrait">'
+                   +   '<img src="' + _jsbEsc(entry.portrait) + '" alt="" draggable="false"' + ouvrir(bulles.length) + '>'
+                   +   (entry.portraitCaption ? '<figcaption>' + _jsbEsc(T(entry.portraitCaption)) + '</figcaption>' : '')
+                   + '</figure>';
+            }
+            return h + '</div>';
+        }
+        // ── Gabarit 10 : portrait détouré pleine page (David, 04/11) ──
+        // Le portrait (PNG transparent) posé sur la page, sa légende dessous, puis
+        // le corps s'il y en a un. Tap → visionneuse.
+        function _jsbPortraitDetoure(entry, ctx) {
+            const uid = ++_jsbUid;
+            const key = _jsbRegisterDossier(entry, ctx);
+            let h = _jsbOpen(entry, uid) + _jsbHead(entry, ctx);
+            h += '<figure class="jsb-portrait jsb-portrait--page">'
+               +   '<img src="' + _jsbEsc(entry.portrait) + '" alt="" draggable="false"'
+               +     (key ? ' onclick="openJsbDossier(&#39;' + key + '&#39;,0)"' : '') + '>'
+               +   (entry.portraitCaption ? '<figcaption>' + _jsbEsc(T(entry.portraitCaption)) + '</figcaption>' : '')
+               + '</figure>';
+            if (entry.body) h += '<div class="jsb-body">' + _jsbPara(entry.body) + '</div>';
+            if (entry.note) h += '<div class="jsb-note">' + _jsbEsc(T(entry.note)) + '</div>';
+            return h + '</div>';
+        }
+
+        // Lance l'éclosion des bulles quand leur page devient visible (une fois par rendu).
+        function _jsbAnimerBulles(root) {
+            const blocs = (root || document).querySelectorAll('.jsb-bulles:not(.joue)');
+            if (!blocs.length) return;
+            if (!('IntersectionObserver' in window)) { blocs.forEach(b => b.classList.add('joue')); return; }
+            const io = new IntersectionObserver(entrees => {
+                entrees.forEach(en => { if (en.isIntersecting) { en.target.classList.add('joue'); io.unobserve(en.target); } });
+            }, { threshold: 0.35 });
+            blocs.forEach(b => io.observe(b));
         }
 
         // ── Gabarit 8 : carte d'identité (David, 03/11) ──
@@ -33506,6 +33696,8 @@
             links_screen:          _jsbLinksScreen,
             timeline_page:         _jsbTimeline,
             id_card:               _jsbIdCard,
+            presse_bulles:         _jsbPresseBulles,
+            portrait_detoure:      _jsbPortraitDetoure,
         };
 
         // ══════════════════════════════════════════════════════════════
@@ -36151,7 +36343,7 @@
         // 31/10 : l'icône de la poudre remplace le cœur 💜 sur les récompenses de
         // poussière (paliers, succès, coffre de panneau). Taille relative à la
         // pastille qui l'accueille.
-        const ICONE_POUSSIERE = '<img class="ico-poussiere" src="./assets/Powder.png" alt="" draggable="false">';
+        const ICONE_POUSSIERE = '<img class="ico-poussiere" src="./assets/Icons/Powder.png" alt="" draggable="false">';
         const BATTLEPASS_NODES = [
             { palier:1,  icon:'📷', name:'Appareil photo', type:'Objet unique',       xpRequired:0,    milestone:true,
               rewardFn: () => { giveCamera(); } },
@@ -37050,7 +37242,7 @@
                 // Icône stèle avec léger balancement
                 const span = document.createElement('div');
                 span.style.cssText = 'display:flex;align-items:center;justify-content:center;';
-                span.innerHTML = '<img src="./assets/PanelInfoIcon.png?v=2" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5));" draggable="false"/>';
+                span.innerHTML = '<img src="./assets/Icons/PanelInfoIcon.png?v=2" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5));" draggable="false"/>';
                 inner.appendChild(span);
 
                 // Plus de halo au sol ni d'anneau de progression autour du panneau
@@ -37339,7 +37531,7 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-90%);display:flex;flex-direction:column;align-items:center;cursor:pointer;pointer-events:auto;';
                 inner.innerHTML = `
                     <div class="tap-prompt">TAP ›</div>
-                    <img src="./assets/BazarIcon.png?v=2"
+                    <img src="./assets/Icons/BazarIcon.png?v=2"
                         style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.4));pointer-events:none;"
                         draggable="false"/>
                     <div class="interact-halo" style="
@@ -37537,7 +37729,7 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-90%);display:flex;flex-direction:column;align-items:center;cursor:pointer;pointer-events:auto;';
                 inner.innerHTML = `
                     <div class="tap-prompt">TAP ›</div>
-                    <img src="./assets/PanoramaIcon.png?v=2"
+                    <img src="./assets/Icons/PanoramaIcon.png?v=2"
                         style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.4));pointer-events:none;"
                         draggable="false"/>
                     <div class="interact-halo" style="
@@ -39133,15 +39325,15 @@
                                 texteValide: true,
                                 audio: null,
                                 ecrans: [
-                                    { s: 'presseFenetre', b: 'couverture', d: 'Lyon, années 1470',
+                                    { s: 'presseFenetre', b: 'couverture', d: 'Lyon, années 1470', audio: './assets/audio/Ville_du_livre_M2/Introduction-M2.mp3', audioFin: 46.25,
                                       t: "À Lyon, dans les années 1470, une nouvelle manière de fabriquer les livres fait son apparition.\n\nImaginons une pièce où se côtoient deux univers. D'un côté, un marchand, son registre de comptes sous le bras, une bourse à la ceinture. De l'autre, {{card_presse_gutenberg|une imposante presse en bois}}, capable d'imprimer des textes sur des feuilles de papier.\n\nÀ cette époque, Lyon ne possède pas d'université. Mais elle réunit plusieurs conditions favorables au développement de l'imprimerie : des marchands, des capitaux, des milieux lettrés et des routes commerciales.\n\nPourtant, une presse ne suffit pas à faire naître une industrie du livre. Il faut de l'argent, des savoir-faire, des textes à publier… et des acheteurs.\n\nÀ l'origine de cette aventure, on trouve notamment un marchand lyonnais : Barthélemy Buyer." },
-                                    { s: 'quai',     b: 'qui finance', d: 'Un carrefour de commerce',
+                                    { s: 'quai',     b: 'qui finance', d: 'Un carrefour de commerce', audio: './assets/audio/Ville_du_livre_M2/Diapo1-M2.mp3', audioFin: 86.15,
                                       t: "Pour comprendre pourquoi l'imprimerie s'installe à Lyon, rendons-nous sur les quais de la Saône. Des porteurs déplacent des marchandises. Des négociants discutent près de caisses et de tonneaux. Sur la rivière, des bateaux transportent leurs cargaisons.\n\nAu XVe siècle, Lyon est un carrefour commercial en plein essor. Située au confluent du Rhône et de la Saône, elle est reliée à de grandes voies de circulation. Ses foires attirent des marchands venus de plusieurs régions d'Europe. On y échange des marchandises, mais aussi de l'argent et des informations. Ces réseaux pourront également favoriser la circulation des livres.\n\nBarthélemy Buyer appartient à une famille aisée de la ville. Il dispose des ressources nécessaires pour soutenir une activité encore nouvelle. Car ouvrir un atelier d'imprimerie représente un pari financier. Il faut acquérir du matériel, des caractères métalliques, acheter du papier et rémunérer des ouvriers. Tout cela doit être payé avant même que les livres soient vendus. Si les exemplaires imprimés ne trouvent pas d'acheteurs, les pertes peuvent être importantes.\n\nBuyer ne contribue donc pas simplement à l'installation d'une machine. Il participe à une entreprise dont la réussite dépend de la vente des livres.\n\nMais pour fabriquer ces livres, il lui faut encore une compétence essentielle : savoir imprimer." },
-                                    { s: 'atelier',  b: 'qui fabrique', d: 'Deux métiers, un atelier',
+                                    { s: 'atelier',  b: 'qui fabrique', d: 'Deux métiers, un atelier', audio: './assets/audio/Ville_du_livre_M2/Diapo2-M2.mp3', audioFin: 82.45,
                                       t: "Entrons maintenant dans un atelier d'imprimerie. À gauche, un homme assemble des lettres métalliques, une à une, dans un instrument appelé composteur. Au centre, un autre ouvrier actionne une presse en bois. À droite, des feuilles fraîchement imprimées sont disposées en attendant les étapes suivantes de leur fabrication.\n\nPour développer cette activité, Barthélemy Buyer travaille avec Guillaume Le Roy, un imprimeur originaire de Liège. L'atelier est installé dans la maison même de Buyer. Le Roy apporte son savoir-faire : composer les textes, encrer les caractères et imprimer les feuilles. Buyer apporte les moyens financiers et prend également part à l'entreprise éditoriale.\n\nMais fabriquer un livre ne se résume pas à actionner une presse. Il faut aussi choisir un texte, parfois le traduire, le corriger ou l'adapter. Buyer s'appuie ainsi sur des hommes instruits, notamment des religieux. En 1476, le dominicain Jean Batallier participe à la révision de la traduction française de la *Légende dorée*, un recueil de vies de saints.\n\nL'imprimerie réunit donc des compétences différentes : marchands, imprimeurs, ouvriers et lettrés. Elle transforme autant la fabrication des livres que l'organisation du travail.\n\nCette collaboration laisse des traces. À la fin du *Compendium breve*, un texte appelé colophon indique que le livre a été imprimé par Guillaume Le Roy, à la demande et aux frais de Barthélemy Buyer. Quelques lignes qui nous permettent, plus de cinq siècles après, de retrouver les acteurs de cette entreprise." },
-                                    { s: 'pile',     b: 'ce que cela change', d: 'Début des années 1470',
+                                    { s: 'pile',     b: 'ce que cela change', d: 'Début des années 1470', audio: './assets/audio/Ville_du_livre_M2/Diapo3-M2.mp3', audioFin: 81.55,
                                       t: "Observons maintenant la presse au travail. Une feuille vient d'être imprimée. Puis une deuxième, une troisième. La pile grandit peu à peu.\n\nLa fabrication a changé. Les caractères doivent toujours être assemblés, les pages préparées et la presse actionnée à la main. Mais une fois les caractères disposés dans une forme d'impression, on peut tirer de nombreuses feuilles identiques, sans recopier chaque texte. Les caractères sont ensuite démontés et réutilisés.\n\nC'est un changement considérable. Pourtant, la main n'a pas disparu. Beaucoup de livres imprimés sont encore complétés à la plume, avec des initiales peintes ou des titres tracés en rouge. Les premiers imprimés conservent ainsi une apparence familière aux lecteurs habitués aux manuscrits.\n\nMais produire davantage ne suffit pas. Encore faut-il savoir quoi imprimer, et pour qui.\n\nÀ Paris, les premiers ateliers travaillent notamment pour les milieux universitaires et publient des ouvrages savants en latin. Lyon, qui ne possède pas d'université, s'adresse aussi à d'autres lecteurs : marchands, bourgeois, religieux et amateurs de récits. Les imprimeurs lyonnais accordent très tôt une place importante aux textes en français, sans abandonner le latin.\n\nDès les années 1470, Buyer et Le Roy publient notamment des adaptations de textes bibliques en français. En 1476 paraît la *Légende dorée*. Puis, en 1479, le *Compendieux Livre du Miroir historial*, un ouvrage consacré à l'histoire biblique.\n\nCes livres répondent à des goûts et à des usages déjà présents dans la société. L'imprimerie ne crée donc pas soudainement le besoin de lire. Elle permet de fabriquer davantage d'exemplaires et de les faire circuler plus largement. Mais les livres restent coûteux. Tous les habitants ne peuvent pas se les offrir.\n\nElle ouvre de nouvelles possibilités pour les produire, les vendre et les transmettre." },
-                                    { s: 'routes',   b: 'ce qui reste', d: 'Quelques décennies plus tard',
+                                    { s: 'routes',   b: 'ce qui reste', d: 'Quelques décennies plus tard', audio: './assets/audio/Ville_du_livre_M2/Diapo4-M2.mp3', audioFin: 73.75,
                                       t: "Le 17 septembre 1473, un livre sort de l'atelier de Guillaume Le Roy, pour Barthélemy Buyer : le *Compendium breve*, un recueil de textes latins comprenant notamment des écrits attribués au futur pape Innocent III.\n\nC'est le plus ancien livre imprimé à Lyon dont on connaisse la date avec certitude. Pendant longtemps, il a même été considéré comme le tout premier livre lyonnais. Mais les recherches récentes ont montré que plusieurs éditions non datées l'avaient probablement précédé. Le *Compendium breve* reste donc un témoin essentiel des débuts de l'imprimerie à Lyon, sans en marquer nécessairement le premier jour.\n\nRevenons maintenant à Lyon, au centre des routes commerciales. Sur une carte, des chemins partent de la ville dans plusieurs directions. Ils évoquent les réseaux par lesquels les livres peuvent rejoindre les foires, passer de marchand en marchand et atteindre des lecteurs dans d'autres villes.\n\nEn quelques décennies, les ateliers se multiplient. Imprimeurs, libraires et autres professionnels du livre font progressivement de Lyon l'un des grands centres européens de l'imprimerie. Cette réussite ne tient pas à la seule présence des presses. Elle repose sur la rencontre d'une technique, de savoir-faire, de capitaux, de choix éditoriaux et de réseaux commerciaux.\n\nPendant ce temps, les manuscrits ne disparaissent pas. Dans {{card_palais_st_jean|la bibliothèque du chapitre}} de Saint-Jean, des livres copiés depuis des siècles témoignent d'une histoire bien plus ancienne de l'écrit. Manuscrits et imprimés continuent longtemps de coexister.\n\nÀ Lyon, le livre imprimé ne remplace donc pas brusquement le livre manuscrit. Il prend place dans une histoire déjà ancienne, celle des textes que l'on copie, que l'on lit et que l'on transmet. Mais désormais, leur fabrication et leur circulation changent d'échelle.\n\nEt derrière chaque livre imprimé, il y a bien plus qu'une machine : des hommes, des savoir-faire, des décisions et des échanges." },
                                 ],
                             },
@@ -42689,7 +42881,7 @@
             // envoyait la caméra sur une carte qui n'éclosait jamais.
             card_louise_labe:     { x: 0.62, y: 0.52 },  // Louise Labé (nord de la Presqu'île)
             card_dolet:           { x: 0.34, y: 0.58 },  // Rue Mercière
-            card_presse_gutenberg:  { x: 0.16, y: 0.48 },  // Vieux-Lyon (la Doloire)
+            card_presse_gutenberg:  { x: 0.46, y: 0.54 },  // Rue de la Poulaillerie (presse de Gutenberg)
             card_gryphe:          { x: 0.30, y: 0.63 },  // Rue Mercière (Gryphe)
             card13:               { x: 0.09, y: 0.50 },  // Cathédrale Saint-Jean
             card_palais_st_jean:  { x: 0.05, y: 0.58 },  // Palais Saint-Jean
@@ -44426,7 +44618,7 @@
         // Locutrice du visual novel de l'arrivée.
         // TODO : nom affiché à confirmer — le document de dialogues ne le donne pas.
         VN_SPEAKERS['Voix mémorielle'] = {
-            img: './assets/voix_memorielle.png', full: true,
+            img: './assets/visual%20novel/Voix_memorielle/voix_memorielle.png', full: true,
             color: '#c4b5fd', bg: 'rgba(124,58,237,0.18)', border: 'rgba(167,139,250,0.55)',
         };
 

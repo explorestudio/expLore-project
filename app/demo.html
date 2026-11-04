@@ -5376,7 +5376,7 @@
         }
         /* Quand le PNG est chargé, on l'applique sur le span et on masque le texte emoji */
         .card-carnet-btn.has-png .card-carnet-icon {
-            background-image: url('./assets/Carnet.png');
+            background-image: url('./assets/Cards/Carnet.png');
             color: transparent;
             text-shadow: none;
         }
@@ -9632,7 +9632,7 @@
             position: absolute; inset: 0; z-index: 3; pointer-events: none;
             box-sizing: border-box; border-style: solid; border-color: transparent;
             border-width: calc(202 * var(--s)) calc(232 * var(--s)) calc(249 * var(--s)) calc(225 * var(--s));
-            border-image-source: url('./assets/Cadre_carte.png');
+            border-image-source: url('./assets/Cards/Cadre_carte.png');
             border-image-slice: 202 232 249 225 fill;
             border-image-width: 1;
             border-image-repeat: stretch;
@@ -9826,7 +9826,7 @@
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
-                <img src="./assets/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
+                <img src="./assets/Icons/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
                 <span id="dustCounter">0</span>
             </div>
 
@@ -10096,7 +10096,7 @@
                 <div class="nearby-poi-header">
                     <div>
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                            <div class="nearby-poi-name"><img src="./assets/nebuleuse.png" alt="" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> <span id="poiName"></span></div>
+                            <div class="nearby-poi-name"><img src="./assets/Icons/nebuleuse.png" alt="" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> <span id="poiName"></span></div>
                             <span id="poiThematicBadge" style="display:none;font-size:10px;font-weight:700;
                                 background:linear-gradient(135deg,#F59E0B,#D97706);color:white;
                                 padding:2px 7px;border-radius:10px;letter-spacing:0.5px;">⋆ Thématique</span>
@@ -10121,7 +10121,7 @@
                 <!-- Icône à gauche du texte : l'image de l'échoppe, pas l'emoji 🛖
                      (absent de certaines polices Android → carré vide). -->
                 <div class="nearby-poi-header" style="display:flex;align-items:center;gap:10px;">
-                    <img src="./assets/BazarIcon.png?v=2" alt="" draggable="false"
+                    <img src="./assets/Icons/BazarIcon.png?v=2" alt="" draggable="false"
                          style="width:32px;height:32px;object-fit:contain;flex-shrink:0;pointer-events:none;">
                     <div>
                         <div class="nearby-poi-name" style="color:#92400E;"><span id="bazarName"></span></div>
@@ -10147,7 +10147,7 @@
             <div id="nearbyDust" class="nearby-poi console-poi console-collectable console--poussiere hidden" style="background: #F3E8FF; border-color: #A855F7;">
                 <div class="nearby-poi-header">
                     <div>
-                        <div class="nearby-poi-name" style="color: #7C3AED;"><img src="./assets/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> Poussière</div>
+                        <div class="nearby-poi-name" style="color: #7C3AED;"><img src="./assets/Icons/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false"> Poussière</div>
                         <div class="nearby-poi-distance" style="color: #9333EA;">À portée de collecte</div>
                     </div>
                 </div>
@@ -10286,7 +10286,7 @@
             <!-- Cadre de la carte (Cadre_carte.png) : la carte loge dans son ouverture.
                  Sans l'image, repli sur une bordure (classe sans-cadre). -->
             <div class="ritual-cadre" id="ritualCadre">
-            <img class="ritual-cadre-img" src="./assets/Cadre_carte.png" alt="" draggable="false"
+            <img class="ritual-cadre-img" src="./assets/Cards/Cadre_carte.png" alt="" draggable="false"
                  onerror="this.style.display='none'; this.parentNode.classList.add('sans-cadre')">
             <!-- Lot 4 : le cadre est dessiné par border-image (fenêtre au ratio
                  CARD_VISUAL_RATIO) ; l'<img> ci-dessus ne sert plus qu'à détecter
@@ -10476,7 +10476,7 @@
                                         <div class="card-level-actions">
                                             <div class="card-level-reserves">
                                                 <div class="card-level-reserve card-level-reserve--poussiere">
-                                                    <img src="./assets/Powder.png" alt="poussière" style="width:13px;height:13px;object-fit:contain;pointer-events:none;" draggable="false">
+                                                    <img src="./assets/Icons/Powder.png" alt="poussière" style="width:13px;height:13px;object-fit:contain;pointer-events:none;" draggable="false">
                                                     <span id="cardDetailDustCounter">0</span>
                                                 </div>
                                                 <div class="card-level-reserve card-level-reserve--orbe">
@@ -10784,7 +10784,7 @@
                     <span class="studio-card-name" id="studioCardName"></span>
                 </div>
                 <div class="studio-dust-display">
-                    <img src="./assets/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
+                    <img src="./assets/Icons/Powder.png" alt="poussière" style="width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">
                     <span id="studioDustCounter">0</span>
                 </div>
             </div>
@@ -15913,9 +15913,9 @@
         const CARNET_RESOURCE_RADIUS = 25;
         // Types possibles ; à chaque collecte on tire au sort
         const CARNET_RESOURCE_TYPES = [
-            { key: 'pellicules', label: 'pellicule', emoji: '🎞️', image: './assets/Icon Pellicule.png', color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
-            { key: 'cassettes',  label: 'cassette',  emoji: '📼', image: './assets/Icon Cassette.png',  color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
-            { key: 'encre',      label: 'encre',     emoji: '🖋️', image: './assets/Icon Encre.png',     color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
+            { key: 'pellicules', label: 'pellicule', emoji: '🎞️', image: './assets/Icons/Icon Pellicule.png', color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
+            { key: 'cassettes',  label: 'cassette',  emoji: '📼', image: './assets/Icons/Icon Cassette.png',  color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
+            { key: 'encre',      label: 'encre',     emoji: '🖋️', image: './assets/Icons/Icon Encre.png',     color: { top: 'rgba(252,211,77,0.95)', mid: 'rgba(217,119,6,0.55)', bot: 'rgba(180,83,9,0.85)', glow: 'rgba(252,211,77,0.8)', disk: 'rgba(254,243,199,0.7)', stroke: 'rgba(255,237,170,0.9)' } },
         ];
         // Mémorise les ressources collectées (pour respawn ou pas)
         let collectedCarnetResources = []; // ids déjà collectées
@@ -16786,7 +16786,7 @@
             let arrives = 0, revele = false;
             for (let i = 0; i < NB; i++) {
                 const g = document.createElement('img');
-                g.src = './assets/Powder.png';
+                g.src = './assets/Icons/Powder.png';
                 g.alt = '';
                 g.className = 'ui-grain-poussiere';
                 document.body.appendChild(g);
@@ -18204,7 +18204,7 @@
                 // Minuscule : c'est la casse suivie par git. Windows ne fait pas
                 // la différence, GitHub Pages si : une majuscule ici passe en
                 // local et donne un 404 en production.
-                'background-image:url(./assets/nebuleuse.png)',
+                'background-image:url(./assets/Icons/nebuleuse.png)',
                 'background-size:contain',
                 'background-repeat:no-repeat',
                 'background-position:center',
@@ -18538,7 +18538,7 @@
             inner.style.cssText = 'position:absolute;transform:translate(-50%,-62%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
             const icon = document.createElement('div');
             icon.style.cssText = 'flex-shrink:0;';
-            icon.innerHTML = '<img src="./assets/Powder.png?v=1" style="width:38px;height:38px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
+            icon.innerHTML = '<img src="./assets/Icons/Powder.png?v=1" style="width:38px;height:38px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
             inner.appendChild(_buildPoiVisual('dust_dusttuto', {
                 top:    'rgba(192,132,252,0.9)',
                 mid:    'rgba(168,85,247,0.55)',
@@ -18741,12 +18741,12 @@
         // « carte » (le jeu entier : partout, souvent au sens de la mappe) ni pour
         // « feuille de route » (emoji encore à choisir, cf. TODO de la section 11).
         const VN_MOTS_CLES = {
-            poussiere: { icone: './assets/Powder.png',             couleur: '#C084FC' },
-            echoppe:   { icone: './assets/BazarIcon.png?v=2',      couleur: '#FB923C' },
-            nebuleuse: { icone: './assets/nebuleuse.png',          couleur: '#B98CE8' },
-            panorama:  { icone: './assets/PanoramaIcon.png?v=2',   couleur: '#5FC9E8' },
-            info:      { icone: './assets/PanelInfoIcon.png?v=2',  couleur: '#7BD88F' },
-            parchemin: { icone: './assets/parchemin.png',          couleur: '#EBCC7E' },
+            poussiere: { icone: './assets/Icons/Powder.png',             couleur: '#C084FC' },
+            echoppe:   { icone: './assets/Icons/BazarIcon.png?v=2',      couleur: '#FB923C' },
+            nebuleuse: { icone: './assets/Icons/nebuleuse.png',          couleur: '#B98CE8' },
+            panorama:  { icone: './assets/Icons/PanoramaIcon.png?v=2',   couleur: '#5FC9E8' },
+            info:      { icone: './assets/Icons/PanelInfoIcon.png?v=2',  couleur: '#7BD88F' },
+            parchemin: { icone: './assets/Icons/parchemin.png',          couleur: '#EBCC7E' },
             carnet:    { emoji: '📖', couleur: '#F2DDB5' },   // papier du carnet
             encre:     { emoji: '🖋️', couleur: '#FCD34D' },   // fournitures : jaune (David, 19/10)
             pellicule: { emoji: '🎞️', couleur: '#FCD34D' },
@@ -20289,7 +20289,7 @@
         // partagent les 300 de l'ancien point unique (dust_tuto).
         const TUTO_POUSSIERE_POINT = 150;
         // Icône de la poussière (section 5 : remplace le cœur 💜 de la fiche carte)
-        const _CARTE_ICONE_POUSSIERE = '<img class="card-dust-ico" src="./assets/Powder.png" alt="" draggable="false">';
+        const _CARTE_ICONE_POUSSIERE = '<img class="card-dust-ico" src="./assets/Icons/Powder.png" alt="" draggable="false">';
         // « L'autre carte » de la section 4 : retirée (lot 2.1, 16/10) avec
         // _tutoChoisirAutreCarte. _tutoAutrePoiId reste lu par la sauvegarde.
         let _tutoSection    = 0;     // dernière section atteinte (sauvegardé)
@@ -24104,7 +24104,7 @@
                 const _collected = collectedCards.includes(poi.localCardId);
                 const _pid2 = 'card_' + poi.id.replace(/[^a-z0-9]/gi,'');
                 const _img = document.createElement('img');
-                _img.src = './assets/nebuleuse.png';
+                _img.src = './assets/Icons/nebuleuse.png';
                 _img.draggable = false;
 
                 _img.style.opacity = _collected ? '0.5' : '1';
@@ -24169,7 +24169,7 @@
                 // Icône cristal SVG
                 const _dustIcon = document.createElement('div');
                 _dustIcon.style.cssText = 'flex-shrink:0;';
-                _dustIcon.innerHTML = '<img src="./assets/Powder.png?v=1" style="width:38px;height:38px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
+                _dustIcon.innerHTML = '<img src="./assets/Icons/Powder.png?v=1" style="width:38px;height:38px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(120,40,220,0.5));" draggable="false"/>';
                 const _dPid = 'dust_' + dust.id.replace(/[^a-z0-9]/gi,'');
                 const _dustWrap = _buildPoiVisual(_dPid, {
                     top:    'rgba(192,132,252,0.9)',
@@ -24330,7 +24330,7 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _sIcon = document.createElement('div');
                 _sIcon.style.cssText = 'flex-shrink:0;';
-                _sIcon.innerHTML = '<img src="./assets/parchemin.png" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 5px rgba(180,83,9,0.5));" draggable="false"/>';
+                _sIcon.innerHTML = '<img src="./assets/Icons/parchemin.png" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 5px rgba(180,83,9,0.5));" draggable="false"/>';
                 const _sPid = 'scroll_' + scroll.id.replace(/[^a-z0-9]/gi,'');
                 const _sWrap = _buildPoiVisual(_sPid, {
                     top:    'rgba(251,191,36,0.9)',
@@ -24368,7 +24368,7 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-50%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _lIcon = document.createElement('div');
                 _lIcon.style.cssText = 'flex-shrink:0;';
-                _lIcon.innerHTML = '<img src="./assets/LootIcon.png" style="width:40px;height:40px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 6px rgba(180,60,0,0.6));" draggable="false"/>';
+                _lIcon.innerHTML = '<img src="./assets/Icons/LootIcon.png" style="width:40px;height:40px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 6px rgba(180,60,0,0.6));" draggable="false"/>';
                 const _lPid = 'loot_' + loot.id.replace(/[^a-z0-9]/gi,'');
                 const _lWrap = _buildPoiVisual(_lPid, {
                     top:    'rgba(249,168,212,0.9)',
@@ -26553,13 +26553,13 @@
             _capUpdate();
         }
 
-        // Icône poussière mémorielle — PNG centralisé (./assets/Powder.png)
+        // Icône poussière mémorielle — PNG centralisé (./assets/Icons/Powder.png)
         function dustIconHtml(size) {
             const s = size || 22;
-            return `<img src="./assets/Powder.png" alt="poussière" style="width:${s}px;height:${s}px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">`;
+            return `<img src="./assets/Icons/Powder.png" alt="poussière" style="width:${s}px;height:${s}px;object-fit:contain;display:inline-block;vertical-align:middle;pointer-events:none;" draggable="false">`;
         }
         // Variante "halo" pour les écrans de récompense (avec drop-shadow violet)
-        const DUST_SVG_ICON = `<img src="./assets/Powder.png" alt="poussière" style="width:64px;height:64px;object-fit:contain;display:inline-block;filter:drop-shadow(0 0 10px rgba(168,85,247,0.8));pointer-events:none;" draggable="false">`;
+        const DUST_SVG_ICON = `<img src="./assets/Icons/Powder.png" alt="poussière" style="width:64px;height:64px;object-fit:contain;display:inline-block;filter:drop-shadow(0 0 10px rgba(168,85,247,0.8));pointer-events:none;" draggable="false">`;
 
         // Table de loot — pondérée
         const LOOT_TABLE = [
@@ -29391,7 +29391,7 @@
                     if (btn) btn.classList.add('has-png');
                 };
                 img.onerror = function() { /* silencieux : on garde l'emoji */ };
-                img.src = './assets/Carnet.png';
+                img.src = './assets/Cards/Carnet.png';
             } catch(e) { /* fallback emoji par défaut, rien à faire */ }
         })();
 
@@ -31760,9 +31760,9 @@
         // porte déjà sur la mappe — pellicule, cassette, encre.
         // ══════════════════════════════════════════════════════════════
         const JRN_TYPE_ICONS = {
-            visual: { src: './assets/Icon Pellicule.png', label: 'Entrée visuelle · révélée par une pellicule' },
-            audio:  { src: './assets/Icon Cassette.png',  label: 'Entrée audio · révélée par une cassette' },
-            text:   { src: './assets/Icon Encre.png',     label: 'Entrée textuelle · révélée par de l\'encre' },
+            visual: { src: './assets/Icons/Icon Pellicule.png', label: 'Entrée visuelle · révélée par une pellicule' },
+            audio:  { src: './assets/Icons/Icon Cassette.png',  label: 'Entrée audio · révélée par une cassette' },
+            text:   { src: './assets/Icons/Icon Encre.png',     label: 'Entrée textuelle · révélée par de l\'encre' },
         };
 
         // Cassette dessinée en SVG : le PNG est une illustration figée, ses
@@ -35676,7 +35676,7 @@
                 // Icône stèle avec léger balancement
                 const span = document.createElement('div');
                 span.style.cssText = 'display:flex;align-items:center;justify-content:center;';
-                span.innerHTML = '<img src="./assets/PanelInfoIcon.png?v=2" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5));" draggable="false"/>';
+                span.innerHTML = '<img src="./assets/Icons/PanelInfoIcon.png?v=2" style="width:48px;height:48px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5));" draggable="false"/>';
                 inner.appendChild(span);
 
                 // Plus de halo au sol ni d'anneau de progression autour du panneau
@@ -35965,7 +35965,7 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-90%);display:flex;flex-direction:column;align-items:center;cursor:pointer;pointer-events:auto;';
                 inner.innerHTML = `
                     <div class="tap-prompt">TAP ›</div>
-                    <img src="./assets/BazarIcon.png?v=2"
+                    <img src="./assets/Icons/BazarIcon.png?v=2"
                         style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.4));pointer-events:none;"
                         draggable="false"/>
                     <div class="interact-halo" style="
@@ -36136,7 +36136,7 @@
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-90%);display:flex;flex-direction:column;align-items:center;cursor:pointer;pointer-events:auto;';
                 inner.innerHTML = `
                     <div class="tap-prompt">TAP ›</div>
-                    <img src="./assets/PanoramaIcon.png?v=2"
+                    <img src="./assets/Icons/PanoramaIcon.png?v=2"
                         style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.4));pointer-events:none;"
                         draggable="false"/>
                     <div class="interact-halo" style="
@@ -42820,7 +42820,7 @@
         // Locutrice du visual novel de l'arrivée.
         // TODO : nom affiché à confirmer — le document de dialogues ne le donne pas.
         VN_SPEAKERS['Voix mémorielle'] = {
-            img: './assets/voix_memorielle.png', full: true,
+            img: './assets/visual%20novel/Voix_memorielle/voix_memorielle.png', full: true,
             color: '#c4b5fd', bg: 'rgba(124,58,237,0.18)', border: 'rgba(167,139,250,0.55)',
         };
 
