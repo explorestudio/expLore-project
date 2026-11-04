@@ -10524,7 +10524,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.89</div>
+            <div class="hud-version" id="hudVersion">v1.9.90</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -45709,7 +45709,21 @@
                 g.appendChild(gCoul);
 
                 const pic = _vrEl('g', { class: 'pic' });
-                if (VR_PICTOS[motif]) {
+                // Couverture (David, 04/11) : un média écrit montre la scène illustrée de
+                // son premier écran (sa « couverture »), en pleine case, au lieu d'un
+                // pictogramme au trait trop petit pour dire ce qu'il raconte. Bandeau
+                // sombre en pied pour le titre. Les états (opacité de .pic) s'appliquent.
+                const etCouv = enChantier ? null : _verriereEtapeDeCase(grappeId, p.caseId);
+                const ecran0 = etCouv && etCouv.etape.media && etCouv.etape.media.texteValide
+                    && (etCouv.etape.media.ecrans || [])[0];
+                const sceneCouv = ecran0 && VR_SCENES[ecran0.s];
+                if (sceneCouv) {
+                    const sv = _vrEl('svg', { class: 'couv', x, y, width: w, height: h,
+                        viewBox: '0 0 400 300', preserveAspectRatio: 'xMidYMid slice' });
+                    sv.innerHTML = sceneCouv();
+                    pic.appendChild(sv);
+                    pic.appendChild(_vrEl('rect', { x, y: y + h - 27, width: w, height: 27, fill: 'rgba(10,8,14,.74)' }));
+                } else if (VR_PICTOS[motif]) {
                     // Cadre 400 × 300 réduit dans la case, remonté pour laisser le titre.
                     const s = Math.min(w / 400, (h - 34) / 300) * 0.92;
                     const tr = _vrEl('g', { transform: `translate(${x + w / 2 - 200 * s} ${y + (h - 30) / 2 - 150 * s + 2}) scale(${s})` });
