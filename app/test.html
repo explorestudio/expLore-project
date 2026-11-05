@@ -10562,7 +10562,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.91</div>
+            <div class="hud-version" id="hudVersion">v1.9.92</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10743,15 +10743,7 @@
             <div style="padding:16px; border-bottom:1px solid rgba(255,255,255,0.08);">
                 <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Actions</div>
                 <div style="display:flex;flex-direction:column;gap:8px;">
-                    <button onclick="testToggleJoystick()" class="test-action-btn" id="btnTestJoystick">🕹️ Activer le joystick</button>
-                    <!-- Code admin demandé hors session admin (cf. testToggleJoystick) -->
-                    <div id="joystickCode" style="display:none;gap:8px;align-items:center;">
-                        <input type="text" id="joystickCodeInput" placeholder="Code admin" autocomplete="off" autocapitalize="characters" spellcheck="false"
-                               onkeydown="if (event.key === 'Enter') validerCodeJoystick()"
-                               style="flex:1;min-width:0;padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:rgba(0,0,0,0.3);color:#f3f4f6;font-size:14px;">
-                        <button type="button" onclick="validerCodeJoystick()" class="test-action-btn" style="width:auto;flex:0 0 auto;">Valider</button>
-                    </div>
-                    <div id="joystickCodeMsg" style="font-size:12px;color:#f87171;"></div>
+                    <button onclick="testToggleJoystickTransparent()" class="test-action-btn" id="btnTestJoystick">🕹️ Rendre le joystick transparent</button>
                     <button onclick="testSaisirCode()" class="test-action-btn">🔑 Saisir mon code (fin de session)</button>
                     <button onclick="testReculerT0(30)" class="test-action-btn">⏱️ Reculer t0 de 30 min</button>
                     <button onclick="testJouerSceneFinale()" class="test-action-btn">🎬 Jouer la scène finale</button>
@@ -24515,6 +24507,10 @@
                 initJoystick();
                 if (isMobileDevice && 'geolocation' in navigator) {
                     setTimeout(startGPS, 500);
+                } else {
+                    // Pas de GPS lancé (ordinateur, API absente) : joystick.
+                    _geoDesactivee = true;
+                    _updateJoystickVisibility();
                 }
             }, 1500);
         });
@@ -36383,47 +36379,25 @@
 
         let _gpsEstablished = false;
 
-        // Joystick (David, 03/11) : caché par défaut, GPS ou non. Il n'apparaît
-        // que si on l'active à la main dans le menu test (testToggleJoystick),
-        // ce qui est refusé tant que la géolocalisation est active ; un fix GPS
-        // ultérieur le masque.
-        let _joystickDebloque = false;
+        // Joystick (David, 05/11) : affiché quand la géolocalisation est désactivée
+        // (autorisation refusée, API absente, ou GPS non lancé : ordinateur), caché
+        // dès qu'un fix GPS arrive. Tant que le GPS est simplement en attente de
+        // son premier point, il reste caché.
+        let _geoDesactivee = false;
         function _updateJoystickVisibility() {
             const jc = document.querySelector('.joystick-container');
-            if (jc) jc.style.display = (_joystickDebloque && !gpsActive) ? '' : 'none';
+            if (jc) jc.style.display = (_geoDesactivee && !gpsActive) ? '' : 'none';
         }
-        // Hors session admin (code équipe saisi à l'entrée), l'activation demande
-        // le code admin, une fois par session (David, 03/11).
-        let _joystickCodeOk = false;
-        function testToggleJoystick() {
+        // Menu test : le joystick peut être rendu transparent (invisible mais
+        // toujours manipulable), par ex. pour des captures d'écran.
+        let _joystickTransparent = false;
+        function testToggleJoystickTransparent() {
+            _joystickTransparent = !_joystickTransparent;
+            const jc = document.querySelector('.joystick-container');
+            if (jc) jc.style.opacity = _joystickTransparent ? '0' : '';
             const btn = document.getElementById('btnTestJoystick');
-            if (!_joystickDebloque && gpsActive) {
-                showToast('🕹️ Joystick refusé : la géolocalisation est active');
-                return;
-            }
-            if (!_joystickDebloque && !(_acces && _acces.team) && !_joystickCodeOk) {
-                const zone = document.getElementById('joystickCode');
-                const input = document.getElementById('joystickCodeInput');
-                zone.style.display = 'flex';
-                input.value = '';
-                document.getElementById('joystickCodeMsg').textContent = '';
-                setTimeout(() => { try { input.focus(); } catch (e) {} }, 50);
-                return;
-            }
-            _joystickDebloque = !_joystickDebloque;
-            _updateJoystickVisibility();
-            if (btn) btn.textContent = _joystickDebloque ? '🕹️ Désactiver le joystick' : '🕹️ Activer le joystick';
-            showToast(_joystickDebloque ? '🕹️ Joystick activé' : '🕹️ Joystick désactivé');
-        }
-        function validerCodeJoystick() {
-            const input = document.getElementById('joystickCodeInput');
-            if (_accesNormaliser(input.value) !== TEST_CODE_EQUIPE) {
-                document.getElementById('joystickCodeMsg').textContent = 'Code incorrect.';
-                return;
-            }
-            _joystickCodeOk = true;
-            document.getElementById('joystickCode').style.display = 'none';
-            testToggleJoystick();
+            if (btn) btn.textContent = _joystickTransparent ? '🕹️ Rendre le joystick visible' : '🕹️ Rendre le joystick transparent';
+            showToast(_joystickTransparent ? '🕹️ Joystick transparent' : '🕹️ Joystick visible');
         }
 
         // Traite un point GPS, tel que GeoEngine le sort (getFiltered()).
@@ -36478,6 +36452,7 @@
             // — fréquents en TWA/intérieur — et ne doivent pas désactiver le GPS.
             if (error.code === error.PERMISSION_DENIED) {
                 gpsActive = false;
+                _geoDesactivee = true;
                 _updateJoystickVisibility();
             }
         }
@@ -36543,7 +36518,7 @@
                 }, true);
                 GeoEngine.on('statechange', s => _geoBandeau(s.to));
             }
-            GeoEngine.start();
+            if (GeoEngine.start() === false) { _geoDesactivee = true; _updateJoystickVisibility(); }
         }
 
         // Diagnostic GPS : le panneau vit désormais dans GeoEngine (?debug=1,
