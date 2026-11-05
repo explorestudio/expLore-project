@@ -34,8 +34,81 @@ const HEADER = ['recu_le', 'session_id', 'code', 'team', 't0', 'evenement_t', 'm
                 'section', 'carte', 'detail', 'plateforme', 'navigateur', 'app_version'];
 const DETAIL_MAX = 500;
 
-function doGet() {
+function doGet(e) {
+  const p = (e && e.parameter) || {};
+  if (p.action === 'check') return verifierCode_(p);
   return ContentService.createTextOutput('ok');
+}
+
+// ── Codes d'accès pilotés depuis le Sheet (brief sessions et codes, lot B) ──
+// Onglet "codes" : code, etat (libre | utilise | desactive), session_id, t0, note.
+// L'équipe ouvre ou ferme un code en changeant etat à la main : repasser un code
+// à "libre" le réactive. Onglet créé vide (en-tête seul) s'il n'existe pas.
+//
+// Appel en JSONP (une balise <script> côté app, le fetch bute sur le cross-origin) :
+//   GET /exec?action=check&code=XXX&session=YYY&callback=nom
+// Réponse : nom({ ok: true })  ou  nom({ ok: false, raison: 'utilise' | 'desactive' | 'inconnu' | 'occupe' })
+// Code accepté : etat passe à "utilise", session_id et t0 sont notés.
+// Les codes équipe et invité ne sont jamais vérifiés ici (l'app ne les envoie pas).
+const CODES_SHEET = 'codes';
+const CODES_HEADER = ['code', 'etat', 'session_id', 't0', 'note'];
+
+function verifierCode_(p) {
+  const cb = String(p.callback || '');
+  if (!/^[A-Za-z_$][\w$]{0,63}$/.test(cb)) return respond_('error:callback');
+  const code = normaliser_(p.code);
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+  } catch (err) {
+    return jsonp_(cb, { ok: false, raison: 'occupe' });
+  }
+  try {
+    const sheet = codesSheet_();
+    const cols = colonnes_(sheet);
+    const n = sheet.getLastRow() - 1;
+    if (!code || n < 1 || cols.code === undefined || cols.etat === undefined) {
+      return jsonp_(cb, { ok: false, raison: 'inconnu' });
+    }
+    const valeurs = sheet.getRange(2, 1, n, sheet.getLastColumn()).getValues();
+    for (let i = 0; i < n; i++) {
+      if (normaliser_(valeurs[i][cols.code]) !== code) continue;
+      // Accents et casse tolérés : « Utilisé », « désactivé ».
+      const etat = String(valeurs[i][cols.etat] || '').trim().toLowerCase()
+        .normalize('NFD').replace(/[̀-ͯ]/g, '');
+      if (etat !== 'libre') return jsonp_(cb, { ok: false, raison: etat === 'desactive' ? 'desactive' : 'utilise' });
+      const ligne = i + 2;
+      sheet.getRange(ligne, cols.etat + 1).setValue('utilise');
+      if (cols.session_id !== undefined) sheet.getRange(ligne, cols.session_id + 1).setValue(String(p.session || ''));
+      if (cols.t0 !== undefined) sheet.getRange(ligne, cols.t0 + 1).setValue(new Date());
+      return jsonp_(cb, { ok: true });
+    }
+    return jsonp_(cb, { ok: false, raison: 'inconnu' });
+  } catch (err) {
+    return jsonp_(cb, { ok: false, raison: 'occupe' });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function codesSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(CODES_SHEET);
+  if (!sheet) sheet = ss.insertSheet(CODES_SHEET);
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, CODES_HEADER.length).setValues([CODES_HEADER]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function normaliser_(s) {
+  return String(s || '').toUpperCase().replace(/\s+/g, '');
+}
+
+function jsonp_(cb, obj) {
+  return ContentService.createTextOutput(cb + '(' + JSON.stringify(obj) + ');')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
 function doPost(e) {

@@ -10562,7 +10562,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.92</div>
+            <div class="hud-version" id="hudVersion">v1.9.93</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10746,6 +10746,8 @@
                     <button onclick="testToggleJoystickTransparent()" class="test-action-btn" id="btnTestJoystick">🕹️ Rendre le joystick transparent</button>
                     <button onclick="testSaisirCode()" class="test-action-btn">🔑 Saisir mon code (fin de session)</button>
                     <button onclick="testReculerT0(30)" class="test-action-btn">⏱️ Reculer t0 de 30 min</button>
+                    <button onclick="testReculerT0(179)" class="test-action-btn">⏱️ Reculer t0 de 2 h 59</button>
+                    <button onclick="testOublierCodesConsommes()" class="test-action-btn">🔑 Réactiver les codes expirés (cet appareil)</button>
                     <button onclick="testJouerSceneFinale()" class="test-action-btn">🎬 Jouer la scène finale</button>
                     <button onclick="closeTestPanel(); testExporterJournal()" class="test-action-btn">🧾 Exporter le journal utilisateur</button>
                     <button onclick="journalEnvoyer().then(ok => showToast(ok ? '🧾 Journal envoyé' : '🧾 Rien envoyé (pas de point de collecte, file vide ou réseau)'))" class="test-action-btn">🧾 Envoyer le journal maintenant</button>
@@ -12770,14 +12772,15 @@
 
                 <!-- Journal GPS du test terrain : le testeur l'envoie lui-même, d'un clic
                      (cf. geoEnvoyerJournal). Le texte dit ce qui part, et ce qui part seul. -->
-                <div class="settings-row">
+                <!-- Masqués pour le code invité (classe collecte-test, cf. _accesAppliquerInvite). -->
+                <div class="settings-row collecte-test">
                     <div class="settings-row-label"><span>📍</span> Journal GPS</div>
                     <div class="settings-seg">
                         <button type="button" id="geoJournalBtn" onclick="geoEnvoyerJournal()">Envoyer mon journal</button>
                     </div>
                 </div>
-                <p class="settings-note">Pendant le test, ton téléphone garde le tracé de ton parcours (positions et heures). Il ne nous parvient que si tu appuies sur ce bouton : il nous aide à régler la détection des lieux.</p>
-                <p class="settings-note">Le journal de jeu (écrans ouverts, cartes trouvées, quêtes) nous est envoyé automatiquement, avec ton code d'accès. Il ne contient jamais ta position.</p>
+                <p class="settings-note collecte-test">Pendant le test, ton téléphone garde le tracé de ton parcours (positions et heures). Il ne nous parvient que si tu appuies sur ce bouton : il nous aide à régler la détection des lieux.</p>
+                <p class="settings-note collecte-test">Le journal de jeu (écrans ouverts, cartes trouvées, quêtes) nous est envoyé automatiquement, avec ton code d'accès. Il ne contient jamais ta position.</p>
 
                 <!-- Mode test : le menu avatar est caché au début du tutoriel
                      (cf. uiReveler) ; sans cette ligne, plus d'accès au panneau test.
@@ -12934,6 +12937,12 @@
             'MTNU958', 'MVWF2XY', 'NFDR2G7', 'NT3Y27R', 'PBDGV4Y', 'QV2SZ8W', 'TJR36FJ', 'TTFR5T9', 'U226UG9', 'UR8VYE4',
             'VNQBN2F', 'X3M7XE8', 'X6S9H8X', 'XEBJ2WV', 'XS3QRCM', 'Y5SJUXQ', 'Z2UY9Y8', 'ZPCTG4Q', 'ZPMP27U', 'ZTHR2K4'
         ];
+        // Code invité (brief sessions et codes, lot D) : accès au jeu sans aucune
+        // collecte, réutilisable, jamais vérifié au serveur. Hors de TEST_CODES.
+        const GUEST_CODE = 'TEST123';
+        // Lot B : vérification des codes au Google Sheet (onglet « codes »).
+        // À passer à true seulement après un essai sur le terrain.
+        const CODES_SERVEUR_ACTIF = false;
         // URL /exec du déploiement Apps Script (voir journal_endpoint.gs).
         // Vide : le journal fonctionne en local uniquement, sans erreur.
         const JOURNAL_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzZ5-lVgLq4Q_lToes1Zq7KlSSsCKDuGjeX8dZbWYMC-8RerPooTmDGN1fAXauBDpC6/exec';
@@ -13199,6 +13208,15 @@
             "Ce n'est pas le code saisi au départ.": "This is not the code you entered at the start.",
             "Ta session est déjà close.": "Your session is already closed.",
             "Session terminée. Merci !": "Session over. Thank you!",
+            "Ta session de test est terminée. Merci d'avoir exploré avec nous !": "Your test session is over. Thank you for exploring with us!",
+            "Vérification du code…": "Checking the code…",
+            "Le serveur ne répond pas. Vérifie ta connexion, puis réessaie.": "The server is not responding. Check your connection, then try again.",
+            "Ce code a déjà servi. Demande à l'équipe de le réactiver.": "This code has already been used. Ask the team to reactivate it.",
+            "Ce code est désactivé. Adresse-toi à l'équipe.": "This code is disabled. Please contact the team.",
+            "Terminer ta session de test ?\nTes données de jeu ne nous seront plus envoyées, et la session ne pourra pas reprendre.": "End your test session?\nYour game data will no longer be sent to us, and the session cannot be resumed.",
+            "Terminer ma session": "End my session",
+            "Session terminée ✓": "Session over ✓",
+            "Quand tu as fini de jouer, termine ta session : nous saurons que ton parcours est complet.": "When you are done playing, end your session: we will know your journey is complete.",
             // Scène finale du test Bellecour (section 24)
             "Canelle et David": "Canelle and David",
             "Chers testeurs, votre session touche à sa fin. Sa fin ? Non, pas vraiment, mais pour l’instant, nous vous attendons à l’adresse communiquée sur votre feuille de route !<br>En chemin ou juste après, vous pourrez nous donner vos retours !": "Dear testers, your session is coming to an end. Its end? No, not really, but for now, we are waiting for you at the address given on your route sheet!<br>On the way or right after, you can give us your feedback!",
@@ -15243,16 +15261,44 @@
         // +1 h la scène finale (sauf code équipe), +2 h l'arrêt du journal.
         // Vérifiées au lancement, toutes les 30 s et au retour au premier plan :
         // elles tiennent même si l'app a été fermée entre-temps.
+        //
+        // Expiration (brief sessions et codes, lot A) : 3 h après t0, la session
+        // expire (dernier envoi du journal, accès fermé, retour à l'écran de saisie)
+        // et le code rejoint la liste des codes consommés de l'appareil.
+        // LIMITE ASSUMÉE : tout cela vit dans le navigateur. Vider le stockage du
+        // site suffit à repartir. Le lot A protège contre la réutilisation
+        // ordinaire, pas contre quelqu'un qui cherche à contourner ; le contrôle
+        // réel passe par le Sheet (lot B, CODES_SERVEUR_ACTIF).
+        // Code équipe : ni expiration ni consommation. Code invité (GUEST_CODE) :
+        // ni expiration, ni consommation, ni t0, ni journal, ni scène finale.
         const ACCES_KEY             = 'explore_acces';
+        const ACCES_CONSOMMES_KEY   = 'explore_codes_consommes';
         const ACCES_FINALE_MS       = 60 * 60 * 1000;
         const ACCES_FIN_JOURNAL_MS  = 2 * 60 * 60 * 1000;
-        let _acces = null;          // { code, t0, team, sessionClosed, tEnd, finaleDeclenchee }
+        const ACCES_EXPIRATION_MS   = 3 * 60 * 60 * 1000;
+        const ACCES_MSG_EXPIREE     = "Ta session de test est terminée. Merci d'avoir exploré avec nous !";
+        let _acces = null;          // { code, t0, team, invite, sessionClosed, tEnd, finaleDeclenchee, expire }
         let _accesMode = 'entree';  // 'entree' (premier lancement) ou 'cloture' (menu test)
         let _accesSuite = null;
         let _accesVeille = null;
 
         function _accesNormaliser(s) { return String(s || '').toUpperCase().replace(/\s+/g, ''); }
-        function codeAccesEstValide(code) { return TEST_CODES.includes(_accesNormaliser(code)); }
+        function codeAccesEstValide(code) {
+            const c = _accesNormaliser(code);
+            return c === GUEST_CODE || TEST_CODES.includes(c);
+        }
+        function accesEstInvite() { const a = _acces || _accesLire(); return !!(a && a.invite); }
+        // Codes des sessions expirées sur cet appareil (lot A).
+        function _accesConsommes() {
+            try { const l = JSON.parse(localStorage.getItem(ACCES_CONSOMMES_KEY) || '[]'); return Array.isArray(l) ? l : []; }
+            catch (e) { return []; }
+        }
+        function _accesConsommer(code) {
+            const l = _accesConsommes();
+            if (!code || l.includes(code)) return;
+            l.push(code);
+            try { localStorage.setItem(ACCES_CONSOMMES_KEY, JSON.stringify(l)); } catch (e) {}
+        }
         function _accesLire() {
             try { const raw = localStorage.getItem(ACCES_KEY); _acces = raw ? JSON.parse(raw) : null; }
             catch (e) { _acces = null; }
@@ -15269,16 +15315,21 @@
         // Appelé à la place de _initAppAfterLang : code déjà saisi → partie, sinon écran.
         function _accesPuisDemarrer() {
             _accesLire();
-            const demarrer = () => { _initAppAfterLang(); _accesDemarrerVeille(); };
-            if (_acces && _acces.code) { demarrer(); return; }
-            _accesOuvrir('entree', demarrer);
+            const demarrer = () => { _accesAppliquerInvite(); _initAppAfterLang(); _accesDemarrerVeille(); };
+            const actif = !!(_acces && _acces.code && !_acces.expire);
+            // Session expirée pendant que l'app était fermée : écran de saisie d'emblée.
+            if (actif && _accesDureeDepassee()) { _accesExpirer(demarrer); return; }
+            if (actif) { demarrer(); return; }
+            _accesOuvrir(_acces && _acces.expire ? 'expiree' : 'entree', demarrer);
         }
 
+        // 'expiree' se comporte comme 'entree', avec le message de fin de session.
         function _accesOuvrir(mode, suite) {
             _accesMode  = mode;
             _accesSuite = suite || null;
             document.getElementById('codeAccesSub').textContent = mode === 'cloture'
                 ? T('Pour terminer ta session, saisis à nouveau ton code.')
+                : mode === 'expiree' ? T(ACCES_MSG_EXPIREE)
                 : T('Saisis le code de ta feuille de route.');
             document.getElementById('codeAccesAnnuler').style.display = mode === 'cloture' ? '' : 'none';
             const input = document.getElementById('codeAccesInput');
@@ -15299,38 +15350,153 @@
             document.getElementById('codeAccesMsg').textContent = T(message);
         }
 
+        let _accesVerifEnCours = false;
         function codeAccesValider() {
+            if (_accesVerifEnCours) return;
             const code = _accesNormaliser(document.getElementById('codeAccesInput').value);
-            if (!codeAccesEstValide(code)) { _accesRefus('Code inconnu.'); return; }
+            if (!codeAccesEstValide(code)) {
+                if (_accesMode !== 'cloture') _accesJournal('code_refuse', { raison: 'inconnu' });
+                _accesRefus('Code inconnu.');
+                return;
+            }
             _accesLire();
 
-            if (_accesMode === 'entree') {
-                if (!_acces) _acces = {};
-                const premiere = !_acces.t0;
-                // Nouvelle session (première saisie, ou saisie après une session close) :
-                // nouvel identifiant. Une simple réouverture de l'app le conserve.
-                if (premiere || _acces.sessionClosed || !journalSessionId()) _jrnNouvelleSession();
-                _acces.code = code;
-                if (premiere) _acces.t0 = Date.now();
-                _acces.team = (code === TEST_CODE_EQUIPE);
-                _accesEcrire();
-                if (premiere) _accesJournal('code_entered', { team: _acces.team });
-                codeAccesFermer();
-                const suite = _accesSuite; _accesSuite = null;
-                if (suite) suite();
+            if (_accesMode !== 'cloture') {
+                if (code === GUEST_CODE) { _accesEntrerInvite(); return; }
+                const team = (code === TEST_CODE_EQUIPE);
+                if (!team && _accesConsommes().includes(code)) {
+                    _accesJournal('code_refuse', { raison: 'expire_appareil' });
+                    _accesRefus(ACCES_MSG_EXPIREE);
+                    return;
+                }
+                // Lot B : le Sheet tranche, à la saisie seulement. Le code équipe passe toujours.
+                const sid = _jrnIdAleatoire();
+                if (CODES_SERVEUR_ACTIF && JOURNAL_ENDPOINT && !team) {
+                    _accesVerifierServeur(code, sid, ok => { if (ok) _accesEntrer(code, sid); });
+                    return;
+                }
+                _accesEntrer(code, sid);
                 return;
             }
 
             // Clôture : seul le code de la première saisie est accepté.
             if (!_acces || code !== _acces.code) { _accesRefus("Ce n'est pas le code saisi au départ."); return; }
             if (_acces.sessionClosed) { _accesRefus('Ta session est déjà close.'); return; }
+            _accesCloturer();
+            codeAccesFermer();
+        }
+
+        // Nouvelle session : premier lancement, ou saisie après une session expirée.
+        function _accesEntrer(code, sid) {
+            // Reste du journal de la session précédente : envoyé sous son propre code
+            // avant de basculer, puis le journal repart pour la nouvelle session.
+            if (_acces && _acces.code) _jrnRepartir();
+            _jrnNouvelleSession(sid);
+            _acces = { code, t0: Date.now(), team: (code === TEST_CODE_EQUIPE) };
+            _accesEcrire();
+            _accesJournal('code_entered', { team: _acces.team });
+            _accesTerminerSaisie();
+        }
+
+        // Lot D : aucune collecte. La file existante est vidée sans envoi (elle ne
+        // contient que ce qui précède la saisie), et rien ne s'y ajoutera.
+        function _accesEntrerInvite() {
+            if (_acces && _acces.code && !_acces.invite) _jrnRepartir();
+            _acces = { code: GUEST_CODE, invite: true };
+            _accesEcrire();
+            _jrnQueue = [];
+            _jrnPersister();
+            try { localStorage.removeItem(JOURNAL_SENT_KEY); } catch (e) {}
+            _accesAppliquerInvite();
+            _accesTerminerSaisie();
+        }
+
+        function _accesTerminerSaisie() {
+            codeAccesFermer();
+            const suite = _accesSuite; _accesSuite = null;
+            if (suite) suite();
+        }
+
+        // Invité : le bouton d'envoi du journal GPS et les notes sur la collecte
+        // disparaissent des Paramètres (classe collecte-test).
+        function _accesAppliquerInvite() {
+            const invite = accesEstInvite();
+            document.querySelectorAll('.collecte-test').forEach(el => { el.style.display = invite ? 'none' : ''; });
+        }
+
+        // Clôture (seconde saisie du code au menu test, ou « Terminer ma session »).
+        function _accesCloturer() {
             _acces.sessionClosed = true;
             _acces.tEnd = Date.now();
             _accesEcrire();
             _accesJournal('code_closed', { duree_min: Math.round((_acces.tEnd - _acces.t0) / 60000) });
             if (typeof journalArreter === 'function') journalArreter('session_close');
-            codeAccesFermer();
             showToast(T('Session terminée. Merci !'));
+        }
+
+        // Lot C : depuis le journal des quêtes, après la scène finale.
+        function accesTerminerSession() {
+            _accesLire();
+            if (!_acces || !_acces.code || _acces.invite || _acces.sessionClosed) return;
+            if (!confirm(T("Terminer ta session de test ?\nTes données de jeu ne nous seront plus envoyées, et la session ne pourra pas reprendre."))) return;
+            _accesCloturer();
+            if (typeof renderQuestJournal === 'function') renderQuestJournal();
+        }
+
+        // ── Lot A : expiration ──
+        function _accesDureeDepassee() {
+            return !!(_acces && _acces.t0 && !_acces.team && !_acces.invite && !_acces.expire
+                && Date.now() - _acces.t0 >= ACCES_EXPIRATION_MS);
+        }
+        // Dernier envoi, code consommé, accès fermé. L'enregistrement garde code et
+        // t0 (marqué expire) : ce qui reste en file part encore sous ce code.
+        function _accesExpirer(suite) {
+            journalEvenement('session_expiree', { duree_min: Math.round((Date.now() - _acces.t0) / 60000) }, true);
+            if (typeof journalArreter === 'function') journalArreter('3h');
+            journalEnvoyer();
+            _accesConsommer(_acces.code);
+            _acces.expire = true;
+            _accesEcrire();
+            _accesOuvrir('expiree', suite);
+        }
+
+        // ── Lot B : vérification au Sheet, en JSONP ──
+        // Un fetch vers Apps Script bute sur le cross-origin : une balise <script>
+        // charge `nom({...})`. Délai 5 s. Sans réponse : refus (volontairement strict,
+        // l'équipe est sur place pour débloquer). Une réponse arrivée après le délai
+        // est ignorée, mais le Sheet a pu marquer le code « utilise » : à rouvrir.
+        const ACCES_REFUS_SERVEUR = {
+            utilise:   "Ce code a déjà servi. Demande à l'équipe de le réactiver.",
+            desactive: "Ce code est désactivé. Adresse-toi à l'équipe.",
+            inconnu:   'Code inconnu.',
+        };
+        function _accesVerifierServeur(code, sid, suite) {
+            _accesVerifEnCours = true;
+            const msg = document.getElementById('codeAccesMsg');
+            document.getElementById('codeAccesInput').classList.remove('erreur');
+            msg.textContent = T('Vérification du code…');
+            const nom = '_accesCb' + Date.now();
+            const s = document.createElement('script');
+            let fini = false;
+            const finir = rep => {
+                if (fini) return;
+                fini = true;
+                clearTimeout(minuteur);
+                window[nom] = function () {};   // réponse tardive : avalée sans erreur
+                s.remove();
+                _accesVerifEnCours = false;
+                if (rep && rep.ok) { msg.textContent = ''; suite(true); return; }
+                const raison = rep ? String(rep.raison || 'inconnu') : 'reseau';
+                _accesJournal('code_refuse', { raison });
+                _accesRefus(ACCES_REFUS_SERVEUR[raison] || 'Le serveur ne répond pas. Vérifie ta connexion, puis réessaie.');
+                suite(false);
+            };
+            const minuteur = setTimeout(() => finir(null), 5000);
+            window[nom] = rep => finir(rep || null);
+            s.onerror = () => finir(null);
+            s.src = JOURNAL_ENDPOINT + '?action=check&code=' + encodeURIComponent(code)
+                + '&session=' + encodeURIComponent(sid) + '&callback=' + nom;
+            document.head.appendChild(s);
         }
 
         function _accesDemarrerVeille() {
@@ -15343,12 +15509,13 @@
         }
 
         function _accesVerifierEcheances() {
-            if (!_acces || !_acces.t0) return;
+            if (!_acces || !_acces.t0 || _acces.invite || _acces.expire) return;
+            if (_accesDureeDepassee()) { _accesExpirer(null); return; }
             const ecoule = Date.now() - _acces.t0;
             if (ecoule >= ACCES_FIN_JOURNAL_MS && typeof journalArreter === 'function') journalArreter('2h');
             // Scène finale (lot 3I) : elle répond false tant qu'elle ne peut pas
             // se jouer (dialogue ouvert, carte pas prête) ; on retente au tour suivant.
-            if (!_acces.team && !_acces.sessionClosed && !_acces.finaleDeclenchee
+            if (!_acces.team && !_acces.invite && !_acces.sessionClosed && !_acces.finaleDeclenchee
                 && ecoule >= ACCES_FINALE_MS && typeof declencherSceneFinaleTest === 'function') {
                 if (declencherSceneFinaleTest()) {
                     _acces.finaleDeclenchee = true;
@@ -15371,6 +15538,12 @@
             _accesVerifierEcheances();
             const ecoule = Math.round((Date.now() - _acces.t0) / 60000);
             showToast('⏱️ t0 il y a ' + ecoule + ' min' + (_acces.team ? ' (code équipe)' : ''));
+        }
+        // Réactivation locale : oublie les codes expirés sur cet appareil.
+        function testOublierCodesConsommes() {
+            const n = _accesConsommes().length;
+            try { localStorage.removeItem(ACCES_CONSOMMES_KEY); } catch (e) {}
+            showToast('🔑 ' + n + ' code(s) réactivé(s) sur cet appareil');
         }
 
         // ==================== JOURNAL UTILISATEUR (test Bellecour) ====================
@@ -15415,8 +15588,10 @@
         // Nom employé par les ajouts de la branche « expressions de Clara ».
         function journalLog(type, data) { journalEvenement(type, data); }
 
-        function journalEvenement(type, data) {
-            if (_jrnStopped) return;
+        // force : écrit même après l'arrêt (session_expiree, postérieure à l'arrêt des 2 h).
+        // Invité : jamais rien en file, pas même avec force.
+        function journalEvenement(type, data, force) {
+            if ((_jrnStopped && !force) || accesEstInvite()) return;
             _jrnQueue.push({ t: new Date().toISOString(), type: String(type), data: _jrnTronquer(data || {}) });
             if (_jrnQueue.length > JOURNAL_MAX) _jrnQueue.splice(0, _jrnQueue.length - JOURNAL_MAX);
             _jrnPersister();
@@ -15430,7 +15605,23 @@
         function journalSessionId() {
             try { return localStorage.getItem(JOURNAL_SESSION_KEY) || ''; } catch (e) { return ''; }
         }
-        function _jrnNouvelleSession() {
+        // L'identifiant est tiré avant la vérification du code (lot B, il part au
+        // Sheet) et n'est enregistré qu'une fois le code accepté.
+        function _jrnNouvelleSession(id) {
+            id = id || _jrnIdAleatoire();
+            try { localStorage.setItem(JOURNAL_SESSION_KEY, id); } catch (e) {}
+            return id;
+        }
+        // Nouvelle session sur un appareil déjà servi : le reste de la file part
+        // (balise) sous l'ancien code, puis file vidée et journal relancé.
+        function _jrnRepartir() {
+            if (_jrnQueue.length) _jrnBalise();
+            _jrnQueue = [];
+            _jrnPersister();
+            _jrnStopped = false;
+            try { localStorage.removeItem(JOURNAL_STOP_KEY); } catch (e) {}
+        }
+        function _jrnIdAleatoire() {
             const abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
             let id = '';
             try {
@@ -15440,7 +15631,6 @@
             } catch (e) {
                 for (let i = 0; i < 8; i++) id += abc[Math.floor(Math.random() * abc.length)];
             }
-            try { localStorage.setItem(JOURNAL_SESSION_KEY, id); } catch (e) {}
             return id;
         }
         // Plateforme et navigateur, en clair et sans le user agent complet.
@@ -15477,7 +15667,7 @@
         }
         function _jrnPret() {
             const a = _acces || _accesLire();
-            return !!(JOURNAL_ENDPOINT && a && a.code && _jrnQueue.length);
+            return !!(JOURNAL_ENDPOINT && a && a.code && !a.invite && _jrnQueue.length);
         }
         // Retire de la file le lot parti (des événements ont pu s'ajouter derrière).
         function _jrnLotParti(lot) {
@@ -36339,7 +36529,7 @@
         // mode no-cors : la réponse n'est pas lisible ; seule une panne réseau se voit.
         let _geoEnvoiEnCours = false;
         async function geoEnvoyerJournal() {
-            if (_geoEnvoiEnCours) return;
+            if (_geoEnvoiEnCours || accesEstInvite()) return;   // invité : rien ne part (lot D)
             const points = GeoEngine.journalSize();
             if (!points) {
                 showToast(T("📍 Journal vide : aucun point GPS enregistré pour l'instant."));
@@ -40796,6 +40986,31 @@
                 } else actions.remove();
                 body.insertBefore(el, premier);
             });
+            // Lot C : clôture par le joueur lui-même (sous les deux quêtes).
+            const a = _acces || _accesLire();
+            if (!a || !a.code || a.invite) return;
+            const fin = document.createElement('div');
+            fin.className = 'qj-quest qj-quest--finale';
+            fin.style.setProperty('--qj-color', FINALE_COULEUR);
+            if (a.sessionClosed) fin.style.opacity = '0.72';
+            fin.innerHTML = `
+                <div class="qj-quest-grappe">${T(FINALE_LOCUTEUR)}</div>
+                <div class="qj-quest-title"></div>
+                <div class="qj-quest-indice"></div>
+                <div class="qj-quest-action"></div>
+            `;
+            fin.querySelector('.qj-quest-title').textContent = T(a.sessionClosed ? 'Session terminée ✓' : 'Terminer ma session');
+            fin.querySelector('.qj-quest-indice').textContent = T('Quand tu as fini de jouer, termine ta session : nous saurons que ton parcours est complet.');
+            const zone = fin.querySelector('.qj-quest-action');
+            if (a.sessionClosed) zone.remove();
+            else {
+                const btn = document.createElement('button');
+                btn.className = 'qj-quest-btn';
+                btn.textContent = T('Terminer ma session');
+                btn.onclick = (e) => { e.stopPropagation(); accesTerminerSession(); };
+                zone.appendChild(btn);
+            }
+            body.insertBefore(fin, premier);
         }
 
         // Rechargement : PNJ remis à leur place (la scène, elle, ne se rejoue pas).
