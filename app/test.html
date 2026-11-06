@@ -10562,7 +10562,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.94</div>
+            <div class="hud-version" id="hudVersion">v1.9.95</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -13219,13 +13219,13 @@
             "Quand tu as fini de jouer, termine ta session : nous saurons que ton parcours est complet.": "When you are done playing, end your session: we will know your journey is complete.",
             // Scène finale du test Bellecour (section 24)
             "Canelle et David": "Canelle and David",
-            "Chers testeurs, votre session touche à sa fin. Sa fin ? Non, pas vraiment, mais pour l’instant, nous vous attendons à l’adresse communiquée sur votre feuille de route !<br>En chemin ou juste après, vous pourrez nous donner vos retours !": "Dear testers, your session is coming to an end. Its end? No, not really, but for now, we are waiting for you at the address given on your route sheet!<br>On the way or right after, you can give us your feedback!",
+            "Chers testeurs, votre session touche à sa fin. Sa fin ? Non, pas vraiment, mais pour l’instant, nous vous attendons à l’adresse communiquée sur votre feuille de route papier !<br>En chemin ou juste après, vous pourrez nous donner vos retours !": "Dear testers, your session is coming to an end. Its end? No, not really, but for now, we are waiting for you at the address given on your paper route sheet!<br>On the way or right after, you can give us your feedback!",
             "Eeeeet on vous attend avec impatience pour l’after, pour rigoler et discuter tous ensemble ! À très vite ! (Les premiers arrivés ont un p’tit badge)": "Aaaaand we can't wait to see you at the after-party, to laugh and chat all together! See you very soon! (The first to arrive get a little badge)",
             "Remplir le Google Form": "Fill in the Google Form",
             "Se rendre à l’after": "Go to the after-party",
             "Aide les développeurs d’ExpLore à faire de ton expérience une pierre à l’édifice de ce jeu !": "Help the ExpLore developers turn your experience into a building block of this game!",
             "Viens partager un bon moment avec nous, hâte de vraiment pouvoir te rencontrer.": "Come and share a good time with us, we can't wait to really meet you.",
-            "📍 Adresse communiquée sur ta feuille de route": "📍 Address given on your route sheet",
+            "📍 Adresse communiquée sur ta feuille de route papier": "📍 Address given on your paper route sheet",
             "Ouvrir le formulaire": "Open the form",
             "Rouvrir le formulaire": "Reopen the form",
             "📜 Deux nouvelles quêtes dans ton journal": "📜 Two new quests in your log",
@@ -40739,7 +40739,7 @@
         const FINALE_COULEUR  = '#2dd4bf';
         // Répliques recopiées du PDF (le saut de ligne de la première est rendu par <br>).
         const FINALE_REPLIQUES = [
-            { speaker: FINALE_LOCUTEUR, html: 'Chers testeurs, votre session touche à sa fin. Sa fin ? Non, pas vraiment, mais pour l’instant, nous vous attendons à l’adresse communiquée sur votre feuille de route !<br>En chemin ou juste après, vous pourrez nous donner vos retours !' },
+            { speaker: FINALE_LOCUTEUR, html: 'Chers testeurs, votre session touche à sa fin. Sa fin ? Non, pas vraiment, mais pour l’instant, nous vous attendons à l’adresse communiquée sur votre feuille de route papier !<br>En chemin ou juste après, vous pourrez nous donner vos retours !' },
             { speaker: FINALE_LOCUTEUR, line: 'Eeeeet on vous attend avec impatience pour l’after, pour rigoler et discuter tous ensemble ! À très vite ! (Les premiers arrivés ont un p’tit badge)' },
         ];
         const FINALE_QUETES = [
@@ -40974,7 +40974,7 @@
                 el.querySelector('.qj-quest-title').textContent = T(q.titre) + (etat === 'completed' ? ' ✓' : '');
                 el.querySelector('.qj-quest-indice').textContent = T(q.ambiance);
                 const lieu = el.querySelector('.qj-quest-place');
-                if (q.id === 'after') lieu.textContent = T('📍 Adresse communiquée sur ta feuille de route');
+                if (q.id === 'after') lieu.textContent = T('📍 Adresse communiquée sur ta feuille de route papier');
                 else lieu.remove();
                 const actions = el.querySelector('.qj-quest-action');
                 if (q.id === 'posttest_form') {
