@@ -547,6 +547,48 @@
             color: #fff;
         }
 
+        /* Questionnaire de fin dans le jeu (Google Form intégré), au-dessus du journal */
+        .form-fin-panel {
+            position: fixed; inset: 0; z-index: 660;
+            background: rgba(8,5,18,0.72); backdrop-filter: blur(3px);
+            display: none; align-items: center; justify-content: center;
+            padding: max(14px, env(safe-area-inset-top)) 12px max(14px, env(safe-area-inset-bottom));
+        }
+        .form-fin-panel.show { display: flex; }
+        .form-fin-card {
+            width: 100%; max-width: 520px; height: 100%; max-height: 860px;
+            display: flex; flex-direction: column; overflow: hidden;
+            background: linear-gradient(180deg, #1a1030 0%, #0f0a1e 100%);
+            border: 1px solid rgba(217,164,65,0.35); border-radius: 16px;
+            box-shadow: 0 18px 48px rgba(0,0,0,0.55);
+        }
+        .form-fin-head {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 12px 10px 14px;
+            border-bottom: 1px solid rgba(217,164,65,0.22);
+        }
+        .form-fin-portrait {
+            width: 52px; height: 39px; flex: none; border-radius: 10px;
+            background: #000 center / cover no-repeat;
+            border: 1.5px solid #d9a441;
+        }
+        .form-fin-titres { flex: 1; min-width: 0; }
+        .form-fin-qui { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: #d9a441; text-transform: uppercase; }
+        .form-fin-titre { font-family: Georgia, serif; font-size: 16px; color: #f1e7d0; margin-top: 2px; }
+        .form-fin-close {
+            width: 34px; height: 34px; flex: none; border-radius: 50%;
+            border: 1px solid rgba(232,223,200,0.2); background: rgba(232,223,200,0.06);
+            color: #f1e7d0; font-size: 15px; cursor: pointer;
+        }
+        .form-fin-corps { flex: 1; position: relative; background: #f1e7d0; }
+        .form-fin-corps iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+        .form-fin-attente {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            font-size: 13px; color: #4a3a1f; font-style: italic;
+        }
+        .form-fin-pied { padding: 9px 12px; text-align: center; border-top: 1px solid rgba(217,164,65,0.22); }
+        .form-fin-pied a { font-size: 12px; color: #e9c98a; text-decoration: none; }
+
         .hud-version {
             position: absolute;
             top: 12px;
@@ -10562,7 +10604,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.95</div>
+            <div class="hud-version" id="hudVersion">v1.9.96</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10601,6 +10643,24 @@
                         <div class="qj-subtitle" id="qjSubtitle">Tes objectifs en cours</div>
                     </div>
                     <div class="qj-body" id="qjBody"></div>
+                </div>
+            </div>
+
+            <!-- Questionnaire de fin dans le jeu (quête « Remplir le Google Form ») -->
+            <div class="form-fin-panel" id="formFinPanel">
+                <div class="form-fin-card">
+                    <div class="form-fin-head">
+                        <div class="form-fin-portrait" id="formFinPortrait"></div>
+                        <div class="form-fin-titres">
+                            <div class="form-fin-qui">Canelle et David</div>
+                            <div class="form-fin-titre">Tes retours sur l'aventure</div>
+                        </div>
+                        <button class="form-fin-close" onclick="fermerFormulaireFin()" aria-label="Fermer">✕</button>
+                    </div>
+                    <div class="form-fin-corps" id="formFinCorps">
+                        <div class="form-fin-attente">Chargement du questionnaire…</div>
+                    </div>
+                    <div class="form-fin-pied"><a id="formFinLien" target="_blank" rel="noopener">Ouvrir dans le navigateur ↗</a></div>
                 </div>
             </div>
 
@@ -12946,7 +13006,7 @@
         // URL /exec du déploiement Apps Script (voir journal_endpoint.gs).
         // Vide : le journal fonctionne en local uniquement, sans erreur.
         const JOURNAL_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzZ5-lVgLq4Q_lToes1Zq7KlSSsCKDuGjeX8dZbWYMC-8RerPooTmDGN1fAXauBDpC6/exec';
-        const POSTTEST_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdx04XLix_mq8s4NXQCkZfsBF0LHTMIVaQLG7kXTu8_9EesAg/viewform';
+        const POSTTEST_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSf16e4QCzgFiV7_Rj7h8BhDmojbHP_CIzMslAaLSzvEvjTZ7A/viewform';
 
         // Table FR → EN. La clé est la chaîne française EXACTE (après trim).
         const I18N_EN = {
@@ -13223,6 +13283,10 @@
             "Eeeeet on vous attend avec impatience pour l’after, pour rigoler et discuter tous ensemble ! À très vite ! (Les premiers arrivés ont un p’tit badge)": "Aaaaand we can't wait to see you at the after-party, to laugh and chat all together! See you very soon! (The first to arrive get a little badge)",
             "Remplir le Google Form": "Fill in the Google Form",
             "Se rendre à l’after": "Go to the after-party",
+            "Tes retours sur l'aventure": "Your feedback on the adventure",
+            "Chargement du questionnaire…": "Loading the questionnaire…",
+            "Ouvrir dans le navigateur ↗": "Open in the browser ↗",
+            "Questionnaire de fin": "Final questionnaire",
             "Aide les développeurs d’ExpLore à faire de ton expérience une pierre à l’édifice de ce jeu !": "Help the ExpLore developers turn your experience into a building block of this game!",
             "Viens partager un bon moment avec nous, hâte de vraiment pouvoir te rencontrer.": "Come and share a good time with us, we can't wait to really meet you.",
             "📍 Adresse communiquée sur ta feuille de route papier": "📍 Address given on your paper route sheet",
@@ -40937,10 +41001,23 @@
             showToast(T('📜 Deux nouvelles quêtes dans ton journal'), 3200);
         }
 
-        // Quête Google Form : ouvre le formulaire post-test, puis la marque accomplie.
+        // Quête Google Form : ouvre le formulaire post-test dans un panneau du jeu,
+        // puis la marque accomplie. Le formulaire compte 13 sections : chaque
+        // « Suivant » recharge le cadre, l'envoi réel n'est donc pas détectable.
+        // Le cadre n'est chargé qu'une fois : fermer puis rouvrir garde les réponses.
         function _finaleOuvrirFormulaire() {
-            let w = null;
-            try { w = window.open(POSTTEST_FORM_URL, '_blank', 'noopener'); } catch (e) {}
+            const corps = document.getElementById('formFinCorps');
+            if (!corps.querySelector('iframe')) {
+                const f = document.createElement('iframe');
+                f.title = T('Questionnaire de fin');
+                f.onload = () => { const att = corps.querySelector('.form-fin-attente'); if (att) att.remove(); };
+                f.src = POSTTEST_FORM_URL + '?embedded=true';
+                corps.appendChild(f);
+            }
+            document.getElementById('formFinLien').href = POSTTEST_FORM_URL;
+            document.getElementById('formFinPortrait').style.backgroundImage = 'url("' + FINALE_PNJ_IMG + '")';
+            _hideAllNearbyConsoles('formulaire_fin');
+            document.getElementById('formFinPanel').classList.add('show');
             if (_finale && _finale.quetes && _finale.quetes.posttest_form !== 'completed') {
                 _finale.quetes.posttest_form = 'completed';
                 _finaleEcrire();
@@ -40948,7 +41025,10 @@
                 updateQuestJournalBadge();
             }
             renderQuestJournal();
-            return w;
+        }
+        function fermerFormulaireFin() {
+            document.getElementById('formFinPanel').classList.remove('show');
+            _showNearbyConsoles('formulaire_fin');
         }
 
         // Ajoute les quêtes de la scène finale en tête du journal (appelée par renderQuestJournal).
