@@ -13,6 +13,16 @@
 // Mise en service initiale : Extensions → Apps Script, coller ce fichier dans Code.gs,
 // Déployer → Application web, exécuter en tant que Moi, accès Tout le monde.
 //
+// Sessions d'équipe à part
+// ------------------------
+// Une session envoyée avec le code équipe (team = oui) ne va PAS dans les onglets de
+// test : elle est rangée dans "journal_dev" et "gps_dev", créés au premier envoi.
+// Les onglets "journal" et "gps" ne contiennent donc que des sessions de testeurs,
+// sans filtre à poser ni ligne à supprimer. Règle de travail qui va avec : toujours
+// utiliser le code équipe pour les essais depuis un ordinateur ou un téléphone perso.
+// Les deux onglets de travail ont exactement les mêmes colonnes que les onglets de
+// test : les mêmes outils de lecture fonctionnent sur les uns comme sur les autres.
+//
 // En-tête et anciennes lignes
 // ---------------------------
 // Les colonnes sont repérées par leur NOM dans la ligne 1, jamais par leur position.
@@ -30,6 +40,7 @@
 // colonnes vides.
 
 const SHEET_NAME = 'journal';
+const SHEET_NAME_DEV = 'journal_dev';
 const HEADER = ['recu_le', 'session_id', 'code', 'team', 't0', 'evenement_t', 'minute', 'type',
                 'section', 'carte', 'detail', 'plateforme', 'navigateur', 'app_version'];
 const DETAIL_MAX = 500;
@@ -128,7 +139,8 @@ function doPost(e) {
     const events = Array.isArray(body.events) ? body.events : [];
     if (events.length === 0) return respond_('empty');
 
-    const sheet = getSheet_();
+    // Sessions d'équipe rangées à part, pour garder les onglets de test propres.
+    const sheet = getSheet_(body.team ? SHEET_NAME_DEV : SHEET_NAME);
     const cols = colonnes_(sheet);           // nom → index (0-based)
     const largeur = sheet.getLastColumn();
     const now = new Date();
@@ -183,7 +195,9 @@ function doPost(e) {
 // GPS_MORCEAU caractères, une ligne par morceau, numérotés « n / total ». Pour
 // retrouver le fichier : recoller la colonne contenu des lignes d'un même
 // session_id + nom, dans l'ordre des morceaux.
+// Une session d'équipe part dans "gps_dev" au lieu de "gps".
 const GPS_SHEET = 'gps';
+const GPS_SHEET_DEV = 'gps_dev';
 const GPS_MORCEAU = 45000;
 const GPS_HEADER = ['recu_le', 'code', 'session_id', 'team', 'points', 'plateforme',
                     'navigateur', 'app_version', 'nom', 'morceau', 'nb_morceaux', 'contenu'];
@@ -192,8 +206,9 @@ function gps_(body) {
   const journal = typeof body.journal === 'string' ? body.journal : '';
   if (!journal) return respond_('empty');
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(GPS_SHEET);
-  if (!sheet) sheet = ss.insertSheet(GPS_SHEET);
+  const nom = body.team ? GPS_SHEET_DEV : GPS_SHEET;
+  let sheet = ss.getSheetByName(nom);
+  if (!sheet) sheet = ss.insertSheet(nom);
   if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, GPS_HEADER.length).setValues([GPS_HEADER]);
     sheet.setFrozenRows(1);
@@ -216,10 +231,13 @@ function gps_(body) {
   return respond_('ok:gps:' + total);
 }
 
-function getSheet_() {
+// Onglet d'écriture, créé au besoin, en-tête posé ou complété.
+// nom : 'journal' pour les testeurs, 'journal_dev' pour les sessions d'équipe.
+function getSheet_(nom) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(SHEET_NAME);
-  if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
+  const cible = nom || SHEET_NAME;
+  let sheet = ss.getSheetByName(cible);
+  if (!sheet) sheet = ss.insertSheet(cible);
 
   if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, HEADER.length).setValues([HEADER]);

@@ -10562,7 +10562,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.93</div>
+            <div class="hud-version" id="hudVersion">v1.9.94</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -12941,8 +12941,8 @@
         // collecte, réutilisable, jamais vérifié au serveur. Hors de TEST_CODES.
         const GUEST_CODE = 'TEST123';
         // Lot B : vérification des codes au Google Sheet (onglet « codes »).
-        // À passer à true seulement après un essai sur le terrain.
-        const CODES_SERVEUR_ACTIF = false;
+        // Activée le 06/11 avant le test terrain : le script déployé doit avoir l'action check.
+        const CODES_SERVEUR_ACTIF = true;
         // URL /exec du déploiement Apps Script (voir journal_endpoint.gs).
         // Vide : le journal fonctionne en local uniquement, sans erreur.
         const JOURNAL_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzZ5-lVgLq4Q_lToes1Zq7KlSSsCKDuGjeX8dZbWYMC-8RerPooTmDGN1fAXauBDpC6/exec';
@@ -15462,7 +15462,7 @@
 
         // ── Lot B : vérification au Sheet, en JSONP ──
         // Un fetch vers Apps Script bute sur le cross-origin : une balise <script>
-        // charge `nom({...})`. Délai 5 s. Sans réponse : refus (volontairement strict,
+        // charge `nom({...})`. Délai 10 s (réveil d'Apps Script). Sans réponse : refus (volontairement strict,
         // l'équipe est sur place pour débloquer). Une réponse arrivée après le délai
         // est ignorée, mais le Sheet a pu marquer le code « utilise » : à rouvrir.
         const ACCES_REFUS_SERVEUR = {
@@ -15491,7 +15491,7 @@
                 _accesRefus(ACCES_REFUS_SERVEUR[raison] || 'Le serveur ne répond pas. Vérifie ta connexion, puis réessaie.');
                 suite(false);
             };
-            const minuteur = setTimeout(() => finir(null), 5000);
+            const minuteur = setTimeout(() => finir(null), 10000);
             window[nom] = rep => finir(rep || null);
             s.onerror = () => finir(null);
             s.src = JOURNAL_ENDPOINT + '?action=check&code=' + encodeURIComponent(code)
