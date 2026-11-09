@@ -221,6 +221,33 @@ body {
   color: var(--text-faint);
 }
 
+/* Dates des sessions : grille 2 × 2 sous l'inscription */
+.sessions {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+.sessions li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  border: 1px solid rgba(201,145,58,0.28);
+  border-radius: 2px;
+  background: rgba(var(--violet),0.10);
+}
+.s-jour {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+.s-heure { font-size: 15px; color: var(--text-dim); }
+
 /* Avertissement temporaire sous la session (même style que sur index.html) */
 .warn {
   margin-top: 12px;
@@ -351,13 +378,20 @@ body {
 
     <!-- SESSION DE TEST : affiché jusqu'à la date data-fin (incluse), puis remplacé automatiquement par le bloc « hors session ».
          Nouvelle session : changer le lien du formulaire, le texte et la date data-fin.
+         Dates : une case <li> par session dans la liste .sessions (jour abrégé + horaire).
          Fin de session : remettre la démo en bouton jaune en tête (le bloc « hors session » est en bas). -->
-    <div id="test-session" data-fin="2026-11-06">
+    <div id="test-session" data-fin="2026-11-22">
       <a class="act" href="https://docs.google.com/forms/d/e/1FAIpQLScS5u3_C0sXMenpSuy9Pzp22pjF51Cw-qdzUU7putWiKPNcRg/viewform" target="_blank" rel="noopener" aria-label="S'inscrire à la session de test terrain, nouvel onglet">
         <span class="btn btn-primary">Inscris-toi au test terrain</span>
       </a>
       <p class="hint"><span class="live">Session en cours</span> Tu es à Lyon ? Viens explorer la vraie carte, dehors.</p>
-      <p class="hint">Mercredi 4 novembre, 14h-16h, ou vendredi 6 novembre, 16h-18h. Parvis de la cathédrale Saint-Jean. 10 places par session.</p>
+      <ul class="sessions" aria-label="Dates des sessions">
+        <li><span class="s-jour">Dim. 15 nov.</span><span class="s-heure">14h – 16h</span></li>
+        <li><span class="s-jour">Mer. 18 nov.</span><span class="s-heure">16h – 18h</span></li>
+        <li><span class="s-jour">Ven. 20 nov.</span><span class="s-heure">16h – 18h</span></li>
+        <li><span class="s-jour">Dim. 22 nov.</span><span class="s-heure">14h – 16h</span></li>
+      </ul>
+      <p class="hint">Parvis de la cathédrale Saint-Jean · 10 places par session</p>
     </div>
 
     <div>
