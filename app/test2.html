@@ -25244,6 +25244,9 @@
                 ...Object.keys(SUPERTYPES).flatMap(st => [st, _hachure(st)]), _hachure('histoire')];
             if (map.getLayer('batiments-3d')) {
                 _creerHachures();
+                // Deux niveaux de lecture seulement (David, 11/11) : non supertypé
+                // (gris) / supertypé (hachuré). Les lieux du jeu sont hachurés aussi.
+                map.setPaintProperty('batiments-lieux-3d', 'fill-extrusion-pattern', _motif('supertype'));
                 ZONES_SUPERTYPES.forEach(z => map.addLayer({
                     id: z.id, type: 'fill', source: 'openmaptiles', 'source-layer': z.couche,
                     filter: ['in', ['get', 'class'], ['literal', Object.keys(z.classes)]],
