@@ -5135,7 +5135,7 @@
         .echo-orb:hover { transform: scale(1.1); }
         .echo-orb.dragging { opacity: 0.5; cursor: grabbing; }
 
-        .supertype-histoire { background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); }
+        .supertype-histoire { background: linear-gradient(135deg, #B91C1C 0%, #7F1D1D 100%); }
         .supertype-nature { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
         .supertype-science { background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); }
         .supertype-arts { background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%); }
@@ -17070,7 +17070,7 @@
         ];
 
         const SUPERTYPES = {
-            histoire: { name: 'Histoire', color: '#8B5CF6', symbol: '📜' },
+            histoire: { name: 'Histoire', color: '#B91C1C', symbol: '📜' },
             nature:   { name: 'Nature',   color: '#10B981', symbol: '🌿' },
             science:  { name: 'Science',  color: '#3B82F6', symbol: '⚗️'  },
             arts:     { name: 'Arts',     color: '#EC4899', symbol: '🎨' },
@@ -25069,7 +25069,7 @@
                         'fill-extrusion-color': ['match', ['get', 'supertype'],
                             ...Object.entries(SUPERTYPES).flatMap(([cle, s]) => [cle, s.color]),
                             BATIMENTS_COULEUR],
-                        'fill-extrusion-opacity': 0.95,
+                        'fill-extrusion-opacity': 1,
                         'fill-extrusion-height': ['get', 'h'],
                         'fill-extrusion-base': ['get', 'base']
                     }
@@ -25094,17 +25094,34 @@
             };
             // Extrusion(s) colorée(s) : une teinte = un bloc ; deux teintes = base
             // dans la première (55 %), haut dans la seconde (double supertype).
+            // Décalage de 0,4 m des murs de la copie : posés exactement sur ceux du
+            // bâtiment d'origine, ils se disputaient la profondeur (rayures qui
+            // bougent pendant le déplacement). Contour extérieur poussé vers
+            // l'extérieur, cours intérieures resserrées, depuis leur centre.
+            const _gonfler = (anneau, m) => {
+                const n = anneau.length - 1;
+                const cx = anneau.slice(0, n).reduce((s, p) => s + p[0], 0) / n;
+                const cy = anneau.slice(0, n).reduce((s, p) => s + p[1], 0) / n;
+                const kx = Math.cos(cy * Math.PI / 180) * 111320, ky = 111320;
+                return anneau.map(([x, y]) => {
+                    const dx = (x - cx) * kx, dy = (y - cy) * ky, d = Math.hypot(dx, dy) || 1;
+                    const f = Math.max(0, (d + m) / d);
+                    return [cx + dx * f / kx, cy + dy * f / ky];
+                });
+            };
             const _extrusions = (bat, sts, cle) => {
                 const base = bat.props.render_min_height || 0;
                 const h = (bat.props.render_height || 10) + 1;
-                const geometry = { type: 'Polygon', coordinates: bat.partie };
+                const geometry = { type: 'Polygon',
+                    coordinates: bat.partie.map((a, i) => _gonfler(a, i === 0 ? 0.4 : -0.4)) };
+                const emp = bat.partie[0][0].join(',');   // empreinte d'origine (avant décalage)
                 const tous = sts.join(',');   // pour la bannière au clic
                 if (sts.length < 2) return [{ type: 'Feature', geometry,
-                    properties: { cle, supertype: sts[0], sts: tous, base, h } }];
+                    properties: { cle, emp, supertype: sts[0], sts: tous, base, h } }];
                 const milieu = base + (h - base) * 0.55;
                 return [
-                    { type: 'Feature', geometry, properties: { cle, supertype: sts[0], sts: tous, base, h: milieu } },
-                    { type: 'Feature', geometry, properties: { cle, supertype: sts[1], sts: tous, base: milieu, h } }
+                    { type: 'Feature', geometry, properties: { cle, emp, supertype: sts[0], sts: tous, base, h: milieu } },
+                    { type: 'Feature', geometry, properties: { cle, emp, supertype: sts[1], sts: tous, base: milieu, h } }
                 ];
             };
             // Rattachement par le nom : les points du jeu sont posés dans la rue ;
@@ -25180,10 +25197,12 @@
                 // protected_area écarté : à Lyon, c'est le « Site historique de Lyon »
                 // (périmètre UNESCO) qui couvre tout le centre.
                 { id: 'st-sol-espaces', couche: 'park', classes: { nature_reserve: 'nature', historic: 'histoire' } },
-                { id: 'st-sol-usage', couche: 'landuse', classes: {
-                    zoo: 'nature', university: 'science', college: 'science', hospital: 'science',
-                    school: 'societe', stadium: 'societe', cemetery: 'histoire' } }
+                // Teinte au sol réservée aux espaces ouverts (David, 11/11) ; les zones
+                // bâties (écoles, universités…) colorent leurs bâtiments, cf. ZONES_BATIES.
+                { id: 'st-sol-usage', couche: 'landuse', classes: { zoo: 'nature', cemetery: 'histoire' } }
             ];
+            const ZONES_BATIES = { university: 'science', college: 'science', hospital: 'science',
+                school: 'societe', stadium: 'societe' };
             // Points d'intérêt OSM → supertype(s). Clé = subclass, sinon class.
             // Musées : arts + histoire. Librairies (library/books) retirées (David,
             // 11/11) : trop nombreuses, une boutique colorait tout l'immeuble.
@@ -25228,7 +25247,7 @@
                         'fill-extrusion-color': ['match', ['get', 'supertype'],
                             ...Object.entries(SUPERTYPES).flatMap(([cle, s]) => [cle, s.color]),
                             BATIMENTS_COULEUR],
-                        'fill-extrusion-opacity': 0.95,
+                        'fill-extrusion-opacity': 1,
                         'fill-extrusion-height': ['get', 'h'],
                         'fill-extrusion-base': ['get', 'base']
                     }
@@ -25259,8 +25278,11 @@
                 let nouveau = false;
                 // Un bâtiment déjà pris par un lieu du jeu garde la couleur du lieu.
                 Object.values(_batLieux).filter(Boolean).forEach(fs =>
-                    _batVilleEmprises.add(fs[0].geometry.coordinates[0][0].join(',')));
-                map.querySourceFeatures('openmaptiles', { sourceLayer: 'poi' }).forEach(f => {
+                    _batVilleEmprises.add(fs[0].properties.emp));
+                // Filtre côté MapLibre : sans lui, ~17 000 points relus toutes les 1,5 s.
+                map.querySourceFeatures('openmaptiles', { sourceLayer: 'poi',
+                    filter: ['any', ['==', ['get', 'class'], 'place_of_worship'],
+                        ['in', ['get', 'subclass'], ['literal', Object.keys(POI_SUPERTYPES)]]] }).forEach(f => {
                     const sts = _stPoi(f.properties);
                     if (!sts || f.geometry.type !== 'Point') return;
                     const [lng, lat] = f.geometry.coordinates;
@@ -25274,18 +25296,57 @@
                     _batVille[cle] = bat ? _extrusions(bat, sts, cle) : null;
                     if (bat) { _batVilleEmprises.add(emprise); nouveau = true; }
                 });
+                if (colorerBatimentsZones()) nouveau = true;
                 // Un bâtiment de la ville rattaché ensuite à un lieu du jeu est retiré
                 // de batiments-ville (sinon deux extrusions identiques se superposent).
                 const empLieux = new Set(Object.values(_batLieux).filter(Boolean)
-                    .map(fs => fs[0].geometry.coordinates[0][0].join(',')));
+                    .map(fs => fs[0].properties.emp));
                 if (nouveau || empLieux.size !== _nbEmpLieux) {
                     _nbEmpLieux = empLieux.size;
                     map.getSource('batiments-ville').setData({ type: 'FeatureCollection',
                         features: Object.values(_batVille).filter(Boolean).flat()
-                            .filter(f => !empLieux.has(f.geometry.coordinates[0][0].join(','))) });
+                            .filter(f => !empLieux.has(f.properties.emp)) });
                 }
             };
             let _nbEmpLieux = 0;
+
+            // Bâtiments des zones bâties (ZONES_BATIES) : chaque bâtiment affiché
+            // dont le centre tombe dans une zone école, université, hôpital ou stade
+            // prend la couleur de la zone. Recalcul seulement quand la vue a changé.
+            let _vueZones = '';
+            const colorerBatimentsZones = () => {
+                const c = map.getCenter();
+                const vue = c.lng.toFixed(3) + ',' + c.lat.toFixed(3) + ',' + map.getZoom().toFixed(0);   // ~100 m : calcul coûteux (50 ms sur ordinateur)
+                if (vue === _vueZones) return false;
+                _vueZones = vue;
+                const zones = map.querySourceFeatures('openmaptiles', { sourceLayer: 'landuse',
+                    filter: ['in', ['get', 'class'], ['literal', Object.keys(ZONES_BATIES)]] })
+                    .map(z => {
+                        const pts = (z.geometry.type === 'Polygon' ? [z.geometry.coordinates] : z.geometry.coordinates).flat(2);
+                        const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+                        return { z, st: ZONES_BATIES[z.properties.class],
+                            b: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)] };
+                    });
+                if (!zones.length) return false;
+                let nouveau = false;
+                map.queryRenderedFeatures({ layers: ['batiments-3d'] }).forEach(f => {
+                    const parties = f.geometry.type === 'Polygon' ? [f.geometry.coordinates]
+                        : f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : [];
+                    parties.forEach(partie => {
+                        const emp = partie[0][0].join(',');
+                        if (_batVilleEmprises.has(emp)) return;
+                        const a = partie[0], n = a.length - 1 || 1;
+                        const x = a.reduce((s, p) => s + p[0], 0) / (n + 1), y = a.reduce((s, p) => s + p[1], 0) / (n + 1);
+                        const zone = zones.find(o => x >= o.b[0] && x <= o.b[2] && y >= o.b[1] && y <= o.b[3]
+                            && _partieContenant(o.z.geometry, x, y));
+                        if (!zone) return;
+                        _batVilleEmprises.add(emp);
+                        _batVille['zone|' + emp] = _extrusions({ partie, props: f.properties }, [zone.st], 'zone|' + emp);
+                        nouveau = true;
+                    });
+                });
+                return nouveau;
+            };
 
             // Bannière au clic sur un bâtiment supertypé : « Supertype : … »
             if (map.getLayer('batiments-3d')) map.on('click', e => {
