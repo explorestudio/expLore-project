@@ -10604,7 +10604,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.96</div>
+            <div class="hud-version" id="hudVersion">v1.9.97</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -12842,6 +12842,16 @@
                 <p class="settings-note collecte-test">Pendant le test, ton téléphone garde le tracé de ton parcours (positions et heures). Il ne nous parvient que si tu appuies sur ce bouton : il nous aide à régler la détection des lieux.</p>
                 <p class="settings-note collecte-test">Le journal de jeu (écrans ouverts, cartes trouvées, quêtes) nous est envoyé automatiquement, avec ton code d'accès. Il ne contient jamais ta position.</p>
 
+                <!-- Clôture de la session par le testeur (ex-quête du journal, 15/11).
+                     Affichée seulement avec un code d'accès, cf. syncSettingsPanel. -->
+                <div class="settings-row collecte-test" id="settingsSessionRow">
+                    <div class="settings-row-label"><span>🏁</span> Session</div>
+                    <div class="settings-seg">
+                        <button type="button" id="settingsSessionBtn" onclick="accesTerminerSession()">Terminer ma session</button>
+                    </div>
+                </div>
+                <p class="settings-note collecte-test" id="settingsSessionNote">Quand tu as fini de jouer, termine ta session : nous saurons que ton parcours est complet.</p>
+
                 <!-- Mode test : le menu avatar est caché au début du tutoriel
                      (cf. uiReveler) ; sans cette ligne, plus d'accès au panneau test.
                      Hors code équipe, le code équipe est demandé (David, 19/10). -->
@@ -13289,7 +13299,8 @@
             "Questionnaire de fin": "Final questionnaire",
             "Aide les développeurs d’ExpLore à faire de ton expérience une pierre à l’édifice de ce jeu !": "Help the ExpLore developers turn your experience into a building block of this game!",
             "Viens partager un bon moment avec nous, hâte de vraiment pouvoir te rencontrer.": "Come and share a good time with us, we can't wait to really meet you.",
-            "📍 Adresse communiquée sur ta feuille de route papier": "📍 Address given on your paper route sheet",
+            "Parvis de la cathédrale Saint-Jean, place Saint-Jean": "Parvis de la cathédrale Saint-Jean, place Saint-Jean",
+            "Session": "Session",
             "Ouvrir le formulaire": "Open the form",
             "Rouvrir le formulaire": "Reopen the form",
             "📜 Deux nouvelles quêtes dans ton journal": "📜 Two new quests in your log",
@@ -15498,13 +15509,13 @@
             showToast(T('Session terminée. Merci !'));
         }
 
-        // Lot C : depuis le journal des quêtes, après la scène finale.
+        // Lot C : depuis les Paramètres (avant le 15/11 : quête du journal).
         function accesTerminerSession() {
             _accesLire();
             if (!_acces || !_acces.code || _acces.invite || _acces.sessionClosed) return;
             if (!confirm(T("Terminer ta session de test ?\nTes données de jeu ne nous seront plus envoyées, et la session ne pourra pas reprendre."))) return;
             _accesCloturer();
-            if (typeof renderQuestJournal === 'function') renderQuestJournal();
+            if (typeof syncSettingsPanel === 'function') syncSettingsPanel();
         }
 
         // ── Lot A : expiration ──
@@ -28421,6 +28432,18 @@
             const sw = document.getElementById('setZonesSwitch');
             if (sw) sw.classList.toggle('on', _zonesLayerVisible);
             if (typeof BgMusic !== 'undefined' && BgMusic.syncSettings) BgMusic.syncSettings();
+            // Session : sans code (ou invité), rien à clôturer ; close, le bouton s'éteint.
+            const a = (typeof _accesLire === 'function') ? (_acces || _accesLire()) : null;
+            const avecCode = !!(a && a.code && !a.invite);
+            ['settingsSessionRow', 'settingsSessionNote'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = avecCode ? '' : 'none';
+            });
+            const sb = document.getElementById('settingsSessionBtn');
+            if (sb && avecCode) {
+                sb.disabled = !!a.sessionClosed;
+                sb.textContent = T(a.sessionClosed ? 'Session terminée ✓' : 'Terminer ma session');
+            }
         }
         // Choisir la langue déjà active ne doit rien faire : toggleLanguage
         // recharge la page.
@@ -40609,7 +40632,8 @@
             // Plus de sélection automatique : « ne plus suivre » est respecté.
             const activeList = list.filter(q => q.status === 'active');
             const currentSelected = window._selectedQuestKey;
-            if (currentSelected && !activeList.some(q => (q.grappeId + ':' + q.etape.id) === currentSelected)) {
+            if (currentSelected && !(typeof _finaleCibleSuivie === 'function' && _finaleCibleSuivie())
+                && !activeList.some(q => (q.grappeId + ':' + q.etape.id) === currentSelected)) {
                 window._selectedQuestKey = null;
                 updateQuestMarkers();
                 try { updateQuestCompass(); } catch (e) {}
@@ -40810,8 +40834,18 @@
             { id: 'posttest_form', titre: 'Remplir le Google Form',
               ambiance: 'Aide les développeurs d’ExpLore à faire de ton expérience une pierre à l’édifice de ce jeu !' },
             { id: 'after', titre: 'Se rendre à l’after',
-              ambiance: 'Viens partager un bon moment avec nous, hâte de vraiment pouvoir te rencontrer.' },
+              ambiance: 'Viens partager un bon moment avec nous, hâte de vraiment pouvoir te rencontrer.',
+              // Point de rendez-vous (15/11) : parvis, devant la façade ouest.
+              objectifGeo: { lat: 45.7607, lng: 4.8265, nom: 'Parvis de la cathédrale Saint-Jean, place Saint-Jean' } },
         ];
+        // Quête « after » suivie : pin sur la mappe et boussole, comme une étape de grappe.
+        const FINALE_CLE_SUIVIE = 'finale:after';
+        function _finaleCibleSuivie() {
+            if (window._selectedQuestKey !== FINALE_CLE_SUIVIE) return null;
+            if (!_finale || !_finale.quetes || _finale.quetes.after !== 'active') return null;
+            const q = FINALE_QUETES.find(x => x.id === 'after');
+            return { grappeId: 'finale', grappe: { color: FINALE_COULEUR }, etape: q, titre: T(q.titre) };
+        }
         // Locuteur : buste rond tiré du visuel commun, posé seulement s'il se charge
         // (sinon locuteur sobre, sans buste — cf. _finaleVisuel).
         VN_SPEAKERS[FINALE_LOCUTEUR] = { color: '#5eead4', bg: 'rgba(45,212,191,0.15)', border: 'rgba(45,212,191,0.5)' };
@@ -40995,6 +41029,10 @@
                 if (typeof journalLog === 'function') journalLog('quest_started', { quete_finale: q.id });
             });
             _finaleEcrire();
+            // L'after est suivie d'office : pin au parvis Saint-Jean et boussole.
+            window._selectedQuestKey = FINALE_CLE_SUIVIE;
+            saveProgress();
+            try { updateQuestMarkers(); updateQuestCompass(); } catch (e) {}
             _finaleMarqueurs.forEach(m => uiArreterPulse(m.getElement().querySelector('.finale-pnj-corps')));
             if (typeof uiEstRevele === 'function' && !uiEstRevele('journal_quetes')) uiReveler('journal_quetes', { pulse: true });
             updateQuestJournalBadge();
@@ -41054,7 +41092,7 @@
                 el.querySelector('.qj-quest-title').textContent = T(q.titre) + (etat === 'completed' ? ' ✓' : '');
                 el.querySelector('.qj-quest-indice').textContent = T(q.ambiance);
                 const lieu = el.querySelector('.qj-quest-place');
-                if (q.id === 'after') lieu.textContent = T('📍 Adresse communiquée sur ta feuille de route papier');
+                if (q.objectifGeo) lieu.textContent = '📍 ' + T(q.objectifGeo.nom);
                 else lieu.remove();
                 const actions = el.querySelector('.qj-quest-action');
                 if (q.id === 'posttest_form') {
@@ -41063,34 +41101,24 @@
                     btn.textContent = T(etat === 'completed' ? 'Rouvrir le formulaire' : 'Ouvrir le formulaire');
                     btn.onclick = (e) => { e.stopPropagation(); _finaleOuvrirFormulaire(); };
                     actions.appendChild(btn);
+                } else if (q.objectifGeo && etat === 'active') {
+                    // Suivre / Ne plus suivre, comme les quêtes de grappe.
+                    const suivie = window._selectedQuestKey === FINALE_CLE_SUIVIE;
+                    const btn = document.createElement('button');
+                    btn.className = 'qj-quest-btn';
+                    btn.textContent = T(suivie ? 'Ne plus suivre' : '▸ Suivre');
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        window._selectedQuestKey = suivie ? null : FINALE_CLE_SUIVIE;
+                        saveProgress();
+                        updateQuestMarkers();
+                        updateQuestCompass();
+                        renderQuestJournal();
+                    };
+                    actions.appendChild(btn);
                 } else actions.remove();
                 body.insertBefore(el, premier);
             });
-            // Lot C : clôture par le joueur lui-même (sous les deux quêtes).
-            const a = _acces || _accesLire();
-            if (!a || !a.code || a.invite) return;
-            const fin = document.createElement('div');
-            fin.className = 'qj-quest qj-quest--finale';
-            fin.style.setProperty('--qj-color', FINALE_COULEUR);
-            if (a.sessionClosed) fin.style.opacity = '0.72';
-            fin.innerHTML = `
-                <div class="qj-quest-grappe">${T(FINALE_LOCUTEUR)}</div>
-                <div class="qj-quest-title"></div>
-                <div class="qj-quest-indice"></div>
-                <div class="qj-quest-action"></div>
-            `;
-            fin.querySelector('.qj-quest-title').textContent = T(a.sessionClosed ? 'Session terminée ✓' : 'Terminer ma session');
-            fin.querySelector('.qj-quest-indice').textContent = T('Quand tu as fini de jouer, termine ta session : nous saurons que ton parcours est complet.');
-            const zone = fin.querySelector('.qj-quest-action');
-            if (a.sessionClosed) zone.remove();
-            else {
-                const btn = document.createElement('button');
-                btn.className = 'qj-quest-btn';
-                btn.textContent = T('Terminer ma session');
-                btn.onclick = (e) => { e.stopPropagation(); accesTerminerSession(); };
-                zone.appendChild(btn);
-            }
-            body.insertBefore(fin, premier);
         }
 
         // Rechargement : PNJ remis à leur place (la scène, elle, ne se rejoue pas).
@@ -41181,6 +41209,8 @@
                     }
                 });
             });
+            const _cibleFinale = (typeof _finaleCibleSuivie === 'function') ? _finaleCibleSuivie() : null;
+            if (_cibleFinale) list.push(_cibleFinale);
 
             // Créer une épingle pour chaque
             list.forEach(({ grappeId, grappe, etape }) => {
@@ -41194,14 +41224,14 @@
                 if (isPlanning) {
                     el.innerHTML = `
                         <div class="quest-pin-marker"></div>
-                        <div class="quest-pin-label">${etapeTitreVisible(etape)}</div>
+                        <div class="quest-pin-label">${grappeId === 'finale' ? T(etape.titre) : etapeTitreVisible(etape)}</div>
                     `;
                 } else {
                     // Mode zoom : juste l'épingle, sans label (pour ne pas encombrer)
                     el.innerHTML = `<div class="quest-pin-marker"></div>`;
                 }
                 el.addEventListener('click', () => {
-                    showToast(TF('📍 %1 — %2', T(etape.objectifGeo.nom), etapeTitreVisible(etape)));
+                    showToast(TF('📍 %1 — %2', T(etape.objectifGeo.nom), grappeId === 'finale' ? T(etape.titre) : etapeTitreVisible(etape)));
                 });
                 const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
                     .setLngLat([etape.objectifGeo.lng, etape.objectifGeo.lat])
@@ -41337,12 +41367,17 @@
 
             // Plus de repli sur la quête active la plus proche : la boussole ne
             // guide que vers la quête suivie (« ne plus suivre » l'éteint).
+            // Quête « after » de la scène finale (parvis Saint-Jean).
+            if (!target && typeof _finaleCibleSuivie === 'function') {
+                const f = _finaleCibleSuivie();
+                if (f) target = Object.assign(f, { dist: getDistance(playerPos.lat, playerPos.lng, f.etape.objectifGeo.lat, f.etape.objectifGeo.lng) });
+            }
             const nearest = target;
             if (!nearest) { compass.style.display = 'none'; return; }
             compass.style.display = 'flex';
             compass.style.setProperty('--hqc-color', nearest.grappe.color);
 
-            document.getElementById('hqcTitle').textContent = etapeTitreVisible(nearest.etape);
+            document.getElementById('hqcTitle').textContent = nearest.titre || etapeTitreVisible(nearest.etape);
 
             let distStr;
             if (nearest.dist < 1000) {
