@@ -7433,7 +7433,15 @@
         .ritual-btn:active { opacity: 0.7; }
 
         /* ── Phase 3 : Gravure canvas ── */
-        #ritualEngrave { justify-content: center; padding-bottom: 0; background: rgba(8,6,15,1); }
+        /* test2 (16/11) : la mappe (après la plongée) reste visible derrière, assombrie
+           et floutée ; l'écran arrive en fondu. */
+        #ritualEngrave { justify-content: center; padding-bottom: 0; background: rgba(8,6,15,0.62);
+            -webkit-backdrop-filter: blur(4px) saturate(0.7); backdrop-filter: blur(4px) saturate(0.7);
+            opacity: 0; transition: opacity 0.45s ease; }
+        #ritualEngrave.show { opacity: 1; }
+        /* Pendant la plongée et la cristallisation, l'interface s'efface (comme
+           pendant une capture dans Pokémon GO) : seule la mappe reste derrière. */
+        body.en-plongee .map-hud, body.en-plongee .joystick-container { opacity: 0 !important; transition: opacity 0.35s; pointer-events: none !important; }
         #ritualCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
 
         /* Instruction panel — visible avant le hold */
@@ -18091,6 +18099,10 @@
             if (_ritualEngraveAnimId) { cancelAnimationFrame(_ritualEngraveAnimId); _ritualEngraveAnimId = null; }
 
             const COUNT = 1100, ARMS = 2, TURNS = 1.15;
+            // test2 (16/11) : la nébuleuse est un disque vu de biais, posé dans le
+            // monde (même inclinaison que la caméra après la plongée), et non plus
+            // une spirale vue de dessus. INCL = aplatissement vertical du disque.
+            const INCL = 0.42;
             const DECAY = 0.17, GAIN = 0.52, HOLD_WIN = 0.55, COH0 = 0.12;
             const TAU = 6.2832;
             const rnd = (a, b) => a + Math.random() * (b - a);
@@ -18112,7 +18124,7 @@
                 canvas.width = Math.round(W * dpr);
                 canvas.height = Math.round(H * dpr);
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-                cx = W / 2; cy = H * 0.47;
+                cx = W / 2; cy = H * 0.5;   // centre de l'écran : là où la plongée amène la nébuleuse
                 R = Math.min(W, H) * 0.34;
                 const rMin = R * 0.07;
                 P = new Array(COUNT);
@@ -18189,7 +18201,7 @@
                 if (!fini) {
                     if (tenue) {
                         tenueMs += dt * 1000;
-                        const d = Math.hypot(px - cx, py - cy);
+                        const d = Math.hypot(px - cx, (py - cy) / INCL);   // distance dans le plan du disque
                         const portee = 1 - smooth(R * 0.35, R * 1.5, d) * 0.72;
                         cohesion += GAIN * portee * dt;
                     } else {
@@ -18204,11 +18216,11 @@
                 pattern += dt * 0.11;
                 shear   += dt * (1 - cohesion) * 0.95;
 
+                // test2 : fond transparent (la mappe assombrie se voit derrière, cf.
+                // #ritualEngrave) ; étoiles adoucies.
                 ctx.clearRect(0, 0, W, H);
-                ctx.fillStyle = '#07050d';
-                ctx.fillRect(0, 0, W, H);
                 for (const s of stars) {
-                    ctx.fillStyle = 'rgba(214,205,255,' + (s.a * (0.6 + 0.4 * Math.sin(now * 0.001 + s.ph))).toFixed(3) + ')';
+                    ctx.fillStyle = 'rgba(214,205,255,' + (s.a * 0.5 * (0.6 + 0.4 * Math.sin(now * 0.001 + s.ph))).toFixed(3) + ')';
                     ctx.fillRect(s.x, s.y, s.s, s.s);
                 }
 
@@ -18219,7 +18231,10 @@
                 hg.addColorStop(0.42, 'rgba(139,92,246,'  + (0.05 + cohesion * 0.07).toFixed(3) + ')');
                 hg.addColorStop(1,    'rgba(139,92,246,0)');
                 ctx.fillStyle = hg;
+                // Halo couché dans le plan du disque
+                ctx.save(); ctx.translate(cx, cy); ctx.scale(1, INCL); ctx.translate(-cx, -cy);
                 ctx.beginPath(); ctx.arc(cx, cy, hr, 0, TAU); ctx.fill();
+                ctx.restore();
 
                 const disp = 1 - cohesion;
                 for (const p of P) {
@@ -18232,7 +18247,7 @@
                     const r  = lerp(rD, p.r, cohesion);
                     p.lx = p.x; p.ly = p.y;
                     p.x = cx + Math.cos(th) * r;
-                    p.y = cy + Math.sin(th) * r * 0.9;
+                    p.y = cy + Math.sin(th) * r * INCL;
                     const a = p.bright * (0.42 + cohesion * 0.5);
                     if (disp > 0.45 && p.esc > 0.72 && p.t > 0.45) {
                         ctx.strokeStyle = 'rgba(167,139,250,' + (a * 0.34).toFixed(3) + ')';
@@ -18271,10 +18286,11 @@
                 const gr = R * 1.25;
                 ctx.lineWidth = 3;
                 ctx.strokeStyle = 'rgba(167,139,250,0.16)';
-                ctx.beginPath(); ctx.arc(cx, cy, gr, 0, TAU); ctx.stroke();
+                // test2 : jauge couchée au sol, autour du disque (ellipse)
+                ctx.beginPath(); ctx.ellipse(cx, cy, gr, gr * INCL, 0, 0, TAU); ctx.stroke();
                 ctx.strokeStyle = cohesion > 0.55 ? 'rgba(253,230,138,0.78)' : 'rgba(196,181,253,0.6)';
                 ctx.lineCap = 'round';
-                ctx.beginPath(); ctx.arc(cx, cy, gr, -1.5708, -1.5708 + TAU * cohesion); ctx.stroke();
+                ctx.beginPath(); ctx.ellipse(cx, cy, gr, gr * INCL, 0, -1.5708, -1.5708 + TAU * cohesion); ctx.stroke();
                 ctx.lineCap = 'butt';
 
                 if (flash > 0.01) {
@@ -20487,7 +20503,9 @@
         // de positionnement, que l'échelle déplacerait.
         let _obPulseEl = null;
         function _obRingPlace(el) {
-            const cible = (el.closest('.maplibregl-marker') && el.firstElementChild) || el;
+            let cible = (el.closest('.maplibregl-marker') && el.firstElementChild) || el;
+            // Enveloppe de perspective (16/11) : le visuel est son premier enfant.
+            if (cible.classList.contains('prof-env') && cible.firstElementChild) cible = cible.firstElementChild;
             if (_obPulseEl === cible && cible.classList.contains('ob-guide-pulse')) return;
             _obPulseClear();
             // Les grandes cibles (vignette, image de la carte) pulsent plus discrètement.
@@ -25032,6 +25050,165 @@
                 }, { passive: false });
             })();
 
+            // ── Perspective et lisibilité des marqueurs (test2, 16/11) ──
+            // 1. Taille selon la profondeur : un marqueur au loin rapetisse comme le
+            //    sol sous lui (rapport des pixels par mètre, perpendiculairement à la
+            //    vue, entre son point et celui du joueur). Recalculé quand la caméra
+            //    bouge seulement.
+            // 2. Ombre au sol, écrasée par l'inclinaison (--sol-y = cos du pitch).
+            // 3. À portée : onde dorée au sol, éclat, flottement. Hors de portée :
+            //    calme (animations en pause) et un peu atténué. Les cercles au sol
+            //    suivent (forts à portée, très légers sinon).
+            // 4. Onde qui part des pieds du joueur.
+            // Animations en transform/opacity seulement (compositeur) : la mappe
+            // n'est jamais redessinée pour elles.
+            (function _profondeur() {
+                const st = document.createElement('style');
+                st.textContent =
+                    '.prof-env{position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;transition:opacity .4s;}'
+                  + '.prof-ombre,.prof-anneau{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;z-index:-1;}'
+                  + '.prof-ombre::before{content:"";position:absolute;left:-24px;top:-24px;width:48px;height:48px;border-radius:50%;'
+                  +   'background:radial-gradient(closest-side,rgba(24,16,48,.34),rgba(24,16,48,0));transform:scaleY(var(--sol-y,.4));}'
+                  + '.prof-anneau{display:none;}'
+                  + '.prof-anneau::before,.prof-anneau::after{content:"";position:absolute;left:-40px;top:-40px;width:80px;height:80px;'
+                  +   'border-radius:50%;border:2px solid rgba(255,226,140,.95);box-shadow:0 0 12px rgba(255,214,110,.75);'
+                  +   'opacity:0;animation:profOnde 1.8s ease-out infinite;}'
+                  + '.prof-anneau::after{animation-delay:.9s;}'
+                  + '@keyframes profOnde{0%{transform:scaleY(var(--sol-y,.4)) scale(.3);opacity:.95}100%{transform:scaleY(var(--sol-y,.4)) scale(1.1);opacity:0}}'
+                  + '.maplibregl-marker.a-portee .prof-anneau{display:block;}'
+                  + '.maplibregl-marker.a-portee .prof-env>:first-child{filter:drop-shadow(0 0 7px rgba(255,222,130,.9)) brightness(1.1);}'
+                  + '.maplibregl-marker.hors-portee .prof-env{opacity:.82;}'
+                  + '.maplibregl-marker.hors-portee .prof-env *{animation-play-state:paused !important;}'
+                  + '.joueur-onde{position:absolute;left:50%;top:100%;width:0;height:0;pointer-events:none;z-index:-1;}'
+                  + '.joueur-onde::before,.joueur-onde::after{content:"";position:absolute;'
+                  +   'left:calc(var(--onde-r,60px) * -1);top:calc(var(--onde-r,60px) * -1);'
+                  +   'width:calc(var(--onde-r,60px) * 2);height:calc(var(--onde-r,60px) * 2);border-radius:50%;'
+                  +   'border:2px solid rgba(167,139,250,.8);opacity:0;animation:joueurOnde 3.2s ease-out infinite;}'
+                  + '.joueur-onde::after{animation-delay:1.6s;}'
+                  + '@keyframes joueurOnde{0%{transform:scaleY(var(--sol-y,.4)) scale(.12);opacity:.85}100%{transform:scaleY(var(--sol-y,.4)) scale(1);opacity:0}}';
+                document.head.appendChild(st);
+
+                const conteneur = map.getContainer();
+                // Types de marqueurs : liste, objet porteur des coordonnées, rayon, source des cercles.
+                const TYPES = () => [
+                    [typeof poiMarkers !== 'undefined' ? poiMarkers : [], m => m.poi, m => _poiRadius(m.poi), 'poi-circles'],
+                    [typeof dustMarkers !== 'undefined' ? dustMarkers : [], m => m.dust, () => DUST_RADIUS, 'dust-circles'],
+                    [typeof echoMarkers !== 'undefined' ? echoMarkers : [], m => m.echo, () => ECHO_RADIUS, 'echo-circles'],
+                    [typeof orbMarkers !== 'undefined' ? orbMarkers : [], m => m.orb, () => ORB_RADIUS, 'orb-circles'],
+                    [typeof scrollMarkers !== 'undefined' ? scrollMarkers : [], m => m.scroll, () => SCROLL_RADIUS, 'scroll-circles'],
+                    [typeof lootMarkers !== 'undefined' ? lootMarkers : [], m => m.loot, () => SCROLL_RADIUS, 'loot-circles'],
+                    [typeof carnetResourceMarkers !== 'undefined' ? carnetResourceMarkers : [], m => m.pt, () => CARNET_RESOURCE_RADIUS, 'carnet-resource-circles'],
+                    [typeof infoMarkers !== 'undefined' ? infoMarkers : [], m => m.info, () => INFO_RADIUS, null],
+                    [typeof bazarMarkers !== 'undefined' ? bazarMarkers : [], m => m.bazar, () => 30, null],
+                    [typeof panneauMarkers !== 'undefined' ? panneauMarkers : [], m => m.pan, () => PANNEAU_RADIUS, null],
+                ];
+                // Enveloppe posée au point du sol (le marqueur fait 0 × 0) : le visuel
+                // reste son premier enfant, l'ombre et l'onde passent dessous.
+                const envelopper = el => {
+                    let e = el.firstElementChild;
+                    if (e && e.classList.contains('prof-env')) return e;
+                    e = document.createElement('div');
+                    e.className = 'prof-env';
+                    while (el.firstChild) e.appendChild(el.firstChild);
+                    ['prof-ombre', 'prof-anneau'].forEach(c => { const d = document.createElement('div'); d.className = c; e.appendChild(d); });
+                    el.appendChild(e);
+                    return e;
+                };
+                // Pixels par mètre au sol, perpendiculairement à la vue (sans raccourci de profondeur).
+                const pxParMetre = (lng, lat) => {
+                    const az = (map.getBearing() + 90) * Math.PI / 180;
+                    const a = map.project([lng, lat]);
+                    const b = map.project([lng + 10 * Math.sin(az) / (111320 * Math.cos(lat * Math.PI / 180)),
+                                           lat + 10 * Math.cos(az) / 111320]);
+                    return Math.hypot(b.x - a.x, b.y - a.y) / 10;
+                };
+                const joueur = () => (gpsActive && GeoEngine.getDisplay()) || playerPos;
+
+                let attente = false;
+                const majProfondeur = () => {
+                    attente = false;
+                    if (!map || !playerPos) return;
+                    const pitch = map.getPitch();
+                    conteneur.style.setProperty('--sol-y', Math.max(0.2, Math.cos(pitch * Math.PI / 180)).toFixed(3));
+                    const j = joueur();
+                    const ref = pxParMetre(j.lng, j.lat) || 1;
+                    // Onde du joueur : 30 m de rayon, la portée des ressources.
+                    const av = document.getElementById('playerAvatar');
+                    if (av) {
+                        if (!av.querySelector('.joueur-onde')) { const o = document.createElement('div'); o.className = 'joueur-onde'; av.appendChild(o); }
+                        av.style.setProperty('--onde-r', Math.round(Math.min(160, 30 * ref)) + 'px');
+                    }
+                    for (const [liste, obj] of TYPES()) {
+                        for (const m of liste) {
+                            if (!m || !m.el || m.el.style.display === 'none') continue;
+                            const o = obj(m);
+                            if (!o || o.lat == null) continue;
+                            const env = envelopper(m.el);
+                            const s = pitch < 5 ? 1 : Math.max(0.35, Math.min(1.25, pxParMetre(o.lng, o.lat) / ref));
+                            const val = s.toFixed(2);
+                            if (env.style.scale !== val) env.style.scale = val;
+                        }
+                    }
+                };
+                const demander = () => { if (!attente) { attente = true; requestAnimationFrame(majProfondeur); } };
+                map.on('move', demander);
+                map.on('load', demander);
+
+                // Portée : toutes les secondes (le joueur bouge sans que la caméra bouge).
+                const etatsCercles = {};
+                const majPortee = () => {
+                    if (!map || !playerPos) return;
+                    for (const [liste, obj, rayon, source] of TYPES()) {
+                        for (const m of liste) {
+                            if (!m || !m.el) continue;
+                            const o = obj(m);
+                            if (!o || o.lat == null) continue;
+                            const ok = m.el.style.display !== 'none'
+                                && _aPortee(getDistance(playerPos.lat, playerPos.lng, o.lat, o.lng), rayon(m));
+                            envelopper(m.el);
+                            m.el.classList.toggle('a-portee', ok);
+                            m.el.classList.toggle('hors-portee', !ok);
+                            if (source && o.id != null && map.getSource(source)) {
+                                const cle = source + '|' + o.id;
+                                if (etatsCercles[cle] !== ok) {
+                                    etatsCercles[cle] = ok;
+                                    try { map.setFeatureState({ source, id: o.id }, { portee: ok }); } catch (e) {}
+                                }
+                            }
+                        }
+                    }
+                };
+                setInterval(majPortee, 1000);
+
+                // Cercles au sol : la valeur posée par le jeu (couleurs jour/nuit
+                // comprises, cf. _applyCaptureLayers) devient celle « à portée » ;
+                // hors de portée, elle tombe au quart, et le trait s'affine.
+                const CERCLES = ['poi-capture-circles', 'dust-capture-circles', 'echo-capture-circles', 'orb-circles',
+                                 'scroll-circles', 'loot-circles', 'carnet-resource-circles'];
+                const base = {};
+                const cerclesPortee = () => {
+                    const enPortee = ['boolean', ['feature-state', 'portee'], false];
+                    const regler = (id, prop, facteur, horsMin) => {
+                        if (!map.getLayer(id)) return;
+                        const v = map.getPaintProperty(id, prop);
+                        if (typeof v === 'number') base[id + prop] = v;
+                        const b = base[id + prop];
+                        if (typeof b !== 'number') return;
+                        map.setPaintProperty(id, prop, ['case', enPortee, b, horsMin != null ? Math.min(b, horsMin) : b * facteur]);
+                    };
+                    CERCLES.forEach(id => {
+                        regler(id, 'fill-opacity', 0.25);
+                        regler(id + '-stroke', 'line-opacity', 0.3);
+                        regler(id + '-stroke', 'line-width', 1, 1);
+                    });
+                };
+                if (typeof _applyCaptureLayers === 'function') {
+                    const _appliquerAvant = _applyCaptureLayers;
+                    _applyCaptureLayers = function (k) { _appliquerAvant(k); try { cerclesPortee(); } catch (e) {} };
+                }
+                map.on('load', () => { try { cerclesPortee(); } catch (e) {} majPortee(); });
+            })();
+
             // ---- Player marker (HTML element) ----
             const playerEl = document.createElement('div');
             playerEl.id = 'playerAvatar';
@@ -25693,7 +25870,7 @@
                 }
             });
 
-            map.addSource('poi-circles', {
+            map.addSource('poi-circles', { promoteId: 'id',   // état « à portée » par feature (16/11)
                 type: 'geojson',
                 data: { type: 'FeatureCollection', features: [] }
             });
@@ -25755,7 +25932,7 @@
             });
 
             // Dust circles (30m)
-            map.addSource('dust-circles', {
+            map.addSource('dust-circles', { promoteId: 'id',   // état « à portée » par feature (16/11)
                 type: 'geojson',
                 data: {
                     type: 'FeatureCollection',
@@ -25782,7 +25959,7 @@
             });
 
             // Echo circles (30m) — ellipses
-            map.addSource('echo-circles', {
+            map.addSource('echo-circles', { promoteId: 'id',   // état « à portée » par feature (16/11)
                 type: 'geojson',
                 data: {
                     type: 'FeatureCollection',
@@ -25809,7 +25986,7 @@
             });
 
             // Orb circles (30m)
-            map.addSource('orb-circles', {
+            map.addSource('orb-circles', { promoteId: 'id',   // état « à portée » par feature (16/11)
                     type: 'geojson',
                     data: { type: 'FeatureCollection', features: ORB_POINTS.map(o => ({ type: 'Feature', properties: { id: o.id, lng: o.lng, lat: o.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(o.lng, o.lat, 30, ISOMETRIC_TILT)] } })) }
                 });
@@ -25828,7 +26005,7 @@
                     paint: { 'line-color': '#67E8F9', 'line-opacity': 0.75, 'line-width': 2 }
                 });
 
-                map.addSource('scroll-circles', {
+                map.addSource('scroll-circles', { promoteId: 'id',   // état « à portée » par feature (16/11)
                     type: 'geojson',
                     data: { type: 'FeatureCollection', features: SCROLL_POINTS.map(s => ({ type: 'Feature', properties: { id: s.id, lng: s.lng, lat: s.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(s.lng, s.lat, 20, ISOMETRIC_TILT)] } })) }
                 });
@@ -25848,7 +26025,7 @@
                 });
 
                 // Loot circles (~20m)
-                map.addSource('loot-circles', {
+                map.addSource('loot-circles', { promoteId: 'id',   // état « à portée » par feature (16/11)
                     type: 'geojson',
                     data: { type: 'FeatureCollection', features: LOOT_POINTS.map(l => ({ type: 'Feature', properties: { id: l.id, lng: l.lng, lat: l.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(l.lng, l.lat, 20, ISOMETRIC_TILT)] } })) }
                 });
@@ -25912,7 +26089,7 @@
                 });
 
                 // Carnet resource circles (cassettes/pellicules/encre) — rayon CARNET_RESOURCE_RADIUS (25m)
-                map.addSource('carnet-resource-circles', {
+                map.addSource('carnet-resource-circles', { promoteId: 'id',   // état « à portée » par feature (16/11)
                     type: 'geojson',
                     data: { type: 'FeatureCollection', features: CARNET_RESOURCE_POINTS.map(pt => ({ type: 'Feature', properties: { id: pt.id, lng: pt.lng, lat: pt.lat }, geometry: { type: 'Polygon', coordinates: [_geoEllipse(pt.lng, pt.lat, CARNET_RESOURCE_RADIUS, ISOMETRIC_TILT)] } })) }
                 });
@@ -29209,7 +29386,72 @@
         let _ritualHoldProgress = 0;
         const RITUAL_HOLD_DURATION = 2800;
 
-        function openCollectRitual(card) {
+        // ── Plongée vers la nébuleuse (test2, 16/11, façon Pokémon GO) ──
+        // Au lieu de changer d'écran sans transition : la caméra se rapproche et se
+        // couche vers la nébuleuse (0,9 s) pendant que son visuel grossit vers le
+        // centre ; l'écran de cristallisation arrive en fondu par-dessus la mappe,
+        // qui reste visible derrière. À la fermeture, la caméra revient au joueur.
+        // Pas de plongée pour la carte du tutoriel (son enchaînement est minuté)
+        // ni en vue d'ensemble.
+        let _plongee = null;   // { zoom, bearing } à retrouver au retour
+        function _plongerVers(card, suite) {
+            if (!map || !card || card.id === 'ob_tutorial_card' || _mapViewMode !== 'close' || _viewTransition) return false;
+            // Carte thématique : pas de lien direct au POI, c'est celui de la console.
+            const poi = POIS.find(p => p.localCardId === card.id) || POIS.find(p => p.id === card.poiId)
+                || (typeof currentNearbyThematic !== 'undefined' && currentNearbyThematic) || null;
+            if (!poi) return false;
+            _hideAllNearbyConsoles('rituel');
+            _plongee = { zoom: map.getZoom(), bearing: map.getBearing() };
+            _viewTransition = true;
+            document.body.classList.add('en-plongee');
+            // Le marqueur vient d'être masqué par la collecte : on anime une copie
+            // de son visuel, de sa place à l'écran jusqu'au centre.
+            const m = (typeof poiMarkers !== 'undefined') && poiMarkers.find(x => x.poi && x.poi.id === poi.id);
+            const r = map.getContainer().getBoundingClientRect();
+            const pt = map.project([poi.lng, poi.lat]);
+            let copie = null;
+            if (m && m.inner) {
+                copie = document.createElement('div');
+                copie.style.cssText = 'position:fixed;width:0;height:0;z-index:299;pointer-events:none;'
+                    + 'left:' + (r.left + pt.x) + 'px;top:' + (r.top + pt.y) + 'px;'
+                    + 'transition:left .9s cubic-bezier(.5,0,.3,1),top .9s cubic-bezier(.5,0,.3,1),scale .9s ease-in,opacity .35s ease .6s;';
+                copie.appendChild(m.inner.cloneNode(true));
+                document.body.appendChild(copie);
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    copie.style.left = (window.innerWidth / 2) + 'px';
+                    copie.style.top = (window.innerHeight / 2) + 'px';
+                    copie.style.scale = '3.4';
+                    copie.style.opacity = '0';
+                }));
+            }
+            // Voile : rien ne se déclenche pendant le vol.
+            const voile = document.createElement('div');
+            voile.style.cssText = 'position:fixed;inset:0;z-index:2147483000;touch-action:none;';
+            document.body.appendChild(voile);
+            map.easeTo({
+                center: [poi.lng, poi.lat], zoom: Math.min(20.6, map.getZoom() + 2.2), pitch: 75,
+                bearing: map.getBearing(), padding: { top: 0, bottom: 0, left: 0, right: 0 },
+                duration: 900, easing: t => t * t * (3 - 2 * t)
+            });
+            setTimeout(() => { voile.remove(); suite(); }, 650);
+            setTimeout(() => { if (copie) copie.remove(); }, 1300);
+            return true;
+        }
+        function _plongeeRetour() {
+            if (!_plongee || !map) { _plongee = null; return; }
+            const p = _plongee;
+            _plongee = null;
+            const ll = (gpsActive && GeoEngine.getDisplay()) || playerPos;
+            _camZoomProche = p.zoom;
+            map.easeTo({
+                center: [ll.lng, ll.lat], zoom: p.zoom, pitch: _camPitch(p.zoom), bearing: p.bearing,
+                padding: _camPadding('close'), duration: 800, easing: t => t * t * (3 - 2 * t)
+            });
+            setTimeout(() => { _viewTransition = false; document.body.classList.remove('en-plongee'); }, 820);
+        }
+
+        function openCollectRitual(card, opts) {
+            if (!(opts && opts.apresPlongee) && _plongerVers(card, () => openCollectRitual(card, { apresPlongee: true }))) return;
             _hideAllNearbyConsoles('rituel');
             _ritualCard = card;
             _ritualHoldProgress = 0;
@@ -29380,6 +29622,7 @@
         }
 
         function ritualClose() {
+            _plongeeRetour();   // test2 (16/11) : la caméra revient au joueur
             _showNearbyConsoles('rituel');
             const card = _ritualCard;
             _ritualCard = null;
