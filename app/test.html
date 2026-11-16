@@ -10604,7 +10604,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.97</div>
+            <div class="hud-version" id="hudVersion">v1.9.98</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -15746,24 +15746,54 @@
         }
         // Retire de la file le lot parti (des événements ont pu s'ajouter derrière).
         function _jrnLotParti(lot) {
-            _jrnQueue.splice(0, lot.length);
+            // Par identité et non « les N premiers » : deux envois peuvent se croiser
+            // (arrière-plan pendant un envoi en vol) ; on ne retire que ce lot-ci.
+            const partis = new Set(lot);
+            _jrnQueue = _jrnQueue.filter(ev => !partis.has(ev));
             _jrnPersister();
             try { localStorage.setItem(JOURNAL_SENT_KEY, JSON.stringify(lot)); } catch (e) {}
         }
 
         function journalEnvoyer(finalEnvoi) {
             if (!_jrnPret() || (_jrnEnvoi && !finalEnvoi)) return Promise.resolve(false);
-            const lot = _jrnQueue.slice();
-            _jrnEnvoi = true;
-            return fetch(JOURNAL_ENDPOINT, {
+            // Playtest 15/11 : en no-cors, la réponse était illisible et le lot était
+            // retiré de la file même quand le script le refusait (« error:busy » quand
+            // plusieurs téléphones envoient ensemble) : données perdues. Désormais la
+            // réponse est lue (le script autorise CORS) et seul « ok »/« empty » vide
+            // la file. Lots de 250 au plus ; le reste suit aussitôt.
+            const lot = _jrnQueue.slice(0, 250);
+            const corps = _jrnCorps(lot);
+            const opts = {
                 method: 'POST',
-                mode: 'no-cors',
-                keepalive: lot.length < 300,   // keepalive plafonne le corps à 64 Ko
+                keepalive: corps.length < 60000,   // keepalive plafonne le corps à 64 Ko
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: _jrnCorps(lot)
-            }).then(() => { _jrnLotParti(lot); return true; })
-              .catch(e => { console.warn('[journal] envoi en échec, nouvel essai au prochain tour', e); return false; })
-              .finally(() => { _jrnEnvoi = false; });
+                body: corps
+            };
+            _jrnEnvoi = true;
+            return fetch(JOURNAL_ENDPOINT, opts)
+                .then(r => r.text())
+                .then(rep => {
+                    if (/^(ok|empty)/.test(rep)) { _jrnLotParti(lot); return 'ok'; }
+                    console.warn('[journal] lot refusé par le script, nouvel essai bientôt :', String(rep).slice(0, 120));
+                    return 'refus';
+                }, () => {
+                    // Réponse illisible (réseau, CORS bloqué) : repli sur l'envoi aveugle
+                    // d'avant. Réseau coupé : il échoue aussi, la file reste intacte.
+                    return fetch(JOURNAL_ENDPOINT, Object.assign({}, opts, { mode: 'no-cors' }))
+                        .then(() => { _jrnLotParti(lot); return 'aveugle'; });
+                })
+                .then(res => {
+                    _jrnEnvoi = false;
+                    // Script occupé : nouvel essai dans 20 à 40 s (décalé d'un téléphone à l'autre).
+                    if (res === 'refus') setTimeout(() => journalEnvoyer(), 20000 + Math.random() * 20000);
+                    else if (_jrnQueue.length) setTimeout(() => journalEnvoyer(), 1500);
+                    return res !== 'refus';
+                })
+                .catch(e => {
+                    _jrnEnvoi = false;
+                    console.warn('[journal] envoi en échec, nouvel essai au prochain tour', e);
+                    return false;
+                });
         }
 
         // Envoi de secours : la page passe en arrière-plan ou se ferme.
@@ -15791,10 +15821,13 @@
         // Après l'arrêt : plus aucun événement, mais la file se vide (réessai 30 s).
         setInterval(() => { if (_jrnStopped && _jrnQueue.length) journalEnvoyer(); }, 30 * 1000);
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden) { journalEvenement('app_hide'); _jrnBalise(); }
+            // Arrière-plan : envoi keepalive dont la réponse est lue (la balise ne
+            // dit pas si le script a accepté). Si la page meurt avant la réponse, le
+            // lot reste en file et repart à la réouverture (doublon possible, pas de perte).
+            if (document.hidden) { journalEvenement('app_hide'); journalEnvoyer(true); }
             else journalEvenement('app_show');
         });
-        window.addEventListener('pagehide', _jrnBalise);
+        window.addEventListener('pagehide', () => journalEnvoyer(true));
 
         // Erreurs JavaScript : message et pile tronqués.
         window.addEventListener('error', e => {
@@ -18195,19 +18228,24 @@
                 if (ecran.style.display === 'none') { _ritualEngraveAnimId = null; return; }
                 if (!last) last = now;
                 const dt = Math.min((now - last) / 1000, 0.05);
+                // Playtest 15/11 : plafonnée à 0,05 s par image, la stabilisation
+                // ralentissait avec la fluidité (téléphone chaud, économie d'énergie :
+                // à 8 images/s, trois fois plus longue). Elle suit le temps réel,
+                // avec un plafond large pour les retours d'arrière-plan.
+                const dtReel = Math.min((now - last) / 1000, 0.25);
                 last = now;
 
                 if (!fini) {
                     if (tenue) {
-                        tenueMs += dt * 1000;
+                        tenueMs += dtReel * 1000;
                         const d = Math.hypot(px - cx, py - cy);
                         const portee = 1 - smooth(R * 0.35, R * 1.5, d) * 0.72;
-                        cohesion += GAIN * portee * dt;
+                        cohesion += GAIN * portee * dtReel;
                     } else {
-                        cohesion -= DECAY * dt;
+                        cohesion -= DECAY * dtReel;
                     }
                     cohesion = clamp01(cohesion);
-                    if (cohesion >= 0.999) { plein += dt; if (plein >= HOLD_WIN) cristalliser(); }
+                    if (cohesion >= 0.999) { plein += dtReel; if (plein >= HOLD_WIN) cristalliser(); }
                     else plein = 0;
                 }
                 majEtat();
@@ -24226,6 +24264,7 @@
         // se déclenchent pendant le rechargement avec des variables réinitialisées
         let _appReady = false;
         let _resetting = false;   // true pendant un reset : bloque toute sauvegarde
+        let _derniereSauvegarde = null;   // dernier texte écrit (cf. saveProgress)
 
         // Déclaré ici, et non plus près des variables GPS : saveProgress s'en sert
         // dès sa première ligne et doit pouvoir le lire sans risque de zone morte.
@@ -24382,7 +24421,12 @@
                     // météo, humeur, note, photoId). Les images sont dans IndexedDB.
                     museumCollection: museumCollection.map(m => Object.assign({}, m, { photoData: null })),
                 };
-                localStorage.setItem('lyon_cards_progress', JSON.stringify(_saveData));
+                // Batterie (16/11) : appelée toutes les 3 s, la sauvegarde ne réécrit
+                // le stockage (et la console) que si quelque chose a changé.
+                const _saveTexte = JSON.stringify(_saveData);
+                if (_saveTexte === _derniereSauvegarde) return;
+                localStorage.setItem('lyon_cards_progress', _saveTexte);
+                _derniereSauvegarde = _saveTexte;
                 console.log('[expLore] Sauvegarde écrite — poussière:', _saveData.memorialDust, 'cartes:', (_saveData.collectedCards||[]).length, '_obDone:', _saveData._obDone);
             } catch(e) { console.error('[expLore] Erreur saveProgress:', e); }
         }
@@ -24394,6 +24438,8 @@
                 const d = JSON.parse(raw);
                 console.log('[expLore] Sauvegarde chargée — _obDone:', d._obDone, 'cartes:', (d.collectedCards||[]).length, 'poussière:', d.memorialDust);
                 if (d.collectedCards)        collectedCards      = d.collectedCards.filter(id => id !== 'v2_traboule');   // Traboule retirée (18/10)
+                // Doublons (playtest du 15/11 : cathédrale collectée deux fois) : un seul exemplaire.
+                collectedCards = [...new Set(collectedCards)];
                 // Guignol en un seul exemplaire (04/11) : la carte thématique tc_guignol
                 // n'existe plus ; qui la possédait garde le Guignol local (card4).
                 if (collectedCards.includes('tc_guignol')) {
@@ -24867,6 +24913,7 @@
             createMap();
         }
 
+        const STYLE_URL = 'https://tiles.openfreemap.org/styles/bright';
         const STYLE_REPLI = { version: 8, sources: {}, layers: [
             { id: 'fond-repli', type: 'background', paint: { 'background-color': '#efe9dc' } },
         ] };
@@ -24877,7 +24924,7 @@
 
             map = new maplibregl.Map({
                 container: 'map',
-                style: 'https://tiles.openfreemap.org/styles/bright',
+                style: STYLE_URL,
                 transformRequest: (url, resourceType) => {
                     // Ensure HTTPS for all tile requests (GitHub Pages requires it)
                     if (url.startsWith('http://')) {
@@ -24909,7 +24956,38 @@
                 if (_styleRecu || _styleRepli) return;
                 _styleRepli = true;
                 console.warn('[expLore] style de carte indisponible (' + raison + ') → fond uni');
+                journalEvenement('carte_style_repli', { raison, en_ligne: navigator.onLine !== false });
                 map.setStyle(STYLE_REPLI);
+                // Playtest 15/11 : le fond uni restait toute la session. On retente
+                // le vrai style toutes les 30 s et au retour du réseau.
+                _styleReessai = setInterval(_retenterStyle, 30000);
+                window.addEventListener('online', _retenterStyle);
+            };
+            let _styleReessai = null, _styleRetabli = false, _styleEssaiEnCours = false;
+            const _retenterStyle = () => {
+                if (!_styleRepli || _styleRetabli || _styleEssaiEnCours) return;
+                _styleEssaiEnCours = true;
+                fetch(STYLE_URL, { cache: 'no-store' })
+                    .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+                    .then(style => {
+                        if (_styleRetabli) return;
+                        _styleRetabli = true;
+                        clearInterval(_styleReessai);
+                        window.removeEventListener('online', _retenterStyle);
+                        // Les calques et sources ajoutés par le jeu (zones, périmètre,
+                        // quêtes, halo GPS…) passent par-dessus le vrai fond.
+                        map.setStyle(style, { diff: false, transformStyle: (prec, suiv) => {
+                            if (!prec) return suiv;
+                            const sources = Object.assign({}, suiv.sources);
+                            Object.keys(prec.sources || {}).forEach(k => { if (!sources[k]) sources[k] = prec.sources[k]; });
+                            const jeu = (prec.layers || []).filter(l => l.id !== 'fond-repli');
+                            return Object.assign({}, suiv, { sources, layers: suiv.layers.concat(jeu) });
+                        } });
+                        console.log('[expLore] style de carte rétabli');
+                        journalEvenement('carte_style_retabli', {});
+                    })
+                    .catch(() => {})
+                    .finally(() => { _styleEssaiEnCours = false; });
             };
             map.on('error', e => {
                 if (!_styleRecu && e && e.error && /style|Failed to fetch|NetworkError/i.test(String(e.error.message || e.error))) {
@@ -26217,6 +26295,10 @@
             let k = 0;
             if (d > C.CAMERA_DEADZONE_PX) k = 1 - C.CAMERA_DEADZONE_PX / d;                 // en laisse
             else if (GeoEngine.getState() === 'still' && d > 1) k = 1 - Math.exp(-dt / 600); // recalage à l'arrêt
+            // Batterie (16/11) : jumpTo force un rendu complet de la mappe, même sans
+            // changement. Appelé à chaque image, il la redessinait 60 fois par seconde
+            // en continu. On ne bouge la caméra que si le déplacement se voit.
+            if (d * k < 0.5 && Math.abs(b - map.getBearing()) < 0.05) return;
             map.jumpTo({
                 center: [actuel.lng + (cible[0] - actuel.lng) * k, actuel.lat + (cible[1] - actuel.lat) * k],
                 bearing: b
@@ -26226,8 +26308,12 @@
         function _geoTick(now) {
             const ll = gpsActive ? GeoEngine.getDisplay() : null;
             if (!playerMarker || !map || !ll) { _geoRAF = null; return; }
-            _dispLat = ll.lat; _dispLng = ll.lng;
-            playerMarker.setLngLat([_dispLng, _dispLat]);
+            // Avatar repositionné seulement s'il a bougé (≈ 1 cm) : setLngLat
+            // réécrit son style à chaque appel.
+            if (Math.abs(ll.lat - _dispLat) > 1e-7 || Math.abs(ll.lng - _dispLng) > 1e-7) {
+                _dispLat = ll.lat; _dispLng = ll.lng;
+                playerMarker.setLngLat([_dispLng, _dispLat]);
+            }
             _geoHalo(ll);
             // Animation de marche (la même que celle du joystick) tant que le joueur avance.
             const f = GeoEngine.getFiltered(), etat = GeoEngine.getState();
@@ -29619,6 +29705,11 @@
 
         // ── Collecte directe (sans quête, ou après quête complète) ──
         function collectCardDirect(card) {
+            // Déjà collectée (double déclenchement) : rien ne se rejoue.
+            if (collectedCards.includes(card.id)) {
+                journalEvenement('collecte_doublon_evitee', { card: card.id });
+                return;
+            }
             const poi = POIS.find(p => p.localCardId === card.id) ||
                         POIS.find(p => p.id === card.poiId);
             collectedCards.push(card.id);
