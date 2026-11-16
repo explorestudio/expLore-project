@@ -24875,16 +24875,49 @@
                 },
                 // Même cadrage que le suivi (joueur décalé vers le bas de l'écran) :
                 // sans le décalage nord, le premier pas faisait sauter la caméra.
-                center: [playerPos.lng, playerPos.lat + CAM_NORTH_OFFSET],
-                zoom: 17,
-                pitch: ISOMETRIC_TILT,
+                // Caméra façon Pokémon GO (16/11) : centre = joueur, décalé à
+                // l'écran par le padding posé juste après la création.
+                center: [playerPos.lng, playerPos.lat],
+                zoom: CAM_ZOOM_DEFAUT,
+                pitch: _camPitch(CAM_ZOOM_DEFAUT),
                 bearing: ISOMETRIC_HEADING,
                 attributionControl: false,
-                maxPitch: 60,
+                maxPitch: 75,
                 maxZoom: 22
             });
 
             map.addControl(new maplibregl.AttributionControl({ compact: true }));
+            map.setPadding(_camPadding());
+            map.on('resize', () => { if (!_viewTransition) map.setPadding(_camPadding()); });
+
+            // Ciel et brume à l'horizon (16/11, façon Pokémon GO). MapLibre 4.4 n'a
+            // pas encore setSky (version 5) : au-delà de la carte, le canvas est
+            // transparent, le ciel est donc un dégradé CSS derrière lui. La brume est
+            // une bande posée sur la limite de la carte (MapLibre s'arrête à 85 % de
+            // l'horizon, cf. transform.getHorizon), au-dessus du canvas et sous les
+            // marqueurs proches.
+            map.getContainer().style.background = 'linear-gradient(to bottom, #7ec8ef 0%, #bfe1f3 25%, #e6f1f7 45%)';
+            const _brume = document.createElement('div');
+            _brume.style.cssText = 'position:absolute;left:0;right:0;top:0;pointer-events:none;z-index:1;display:none;';
+            map.getCanvasContainer().appendChild(_brume);
+            let _brumeY = null;
+            const _majBrume = () => {
+                let y = -1;
+                if (map.getPitch() > 45 && typeof map.transform.getHorizon === 'function') {
+                    const pad = map.getPadding(), H = map.getCanvas().clientHeight;
+                    y = Math.round((pad.top + H - pad.bottom) / 2 - map.transform.getHorizon() / 0.85);
+                }
+                if (y === _brumeY) return;
+                _brumeY = y;
+                if (y < 0) { _brume.style.display = 'none'; return; }
+                _brume.style.display = '';
+                _brume.style.height = (y + 80) + 'px';
+                _brume.style.background = 'linear-gradient(to bottom, rgba(230,241,247,0) 0px, rgba(233,239,242,0.95) '
+                    + y + 'px, rgba(233,239,242,0) ' + (y + 80) + 'px)';
+            };
+            map.on('move', _majBrume);
+            map.on('resize', _majBrume);
+            map.once('load', _majBrume);
 
             // ── Repli hors ligne du style de carte (test 2) ──
             // Tout le jeu s'initialise dans map.on('load') (sauvegarde comprise), et
@@ -26300,7 +26333,7 @@
 
         // Décalage caméra vers le nord pour placer le joueur dans le tiers bas de l'écran
         // ~0.0012° ≈ 130m — ajustable selon le pitch
-        const CAM_NORTH_OFFSET = 0.0008;   // valeur au zoom 17, mise à l'échelle des autres zooms
+        // (CAM_NORTH_OFFSET retiré le 16/11 : remplacé par le padding, cf. _camPadding)
 
         // ── Caméra façon Pokémon GO (test2, 16/11) ──
         // Vue proche : toujours centrée sur le joueur (pas de pan). Le zoom se règle
@@ -26308,19 +26341,24 @@
         // de près on regarde vers l'horizon, en s'éloignant la vue se redresse.
         // La rotation est manuelle (deux doigts, ou un doigt qui tourne autour du
         // joueur) : la mappe ne suit plus le cap du téléphone, seul le cône le fait.
-        const CAM_ZOOM_MIN = 15.3, CAM_ZOOM_MAX = 18.5, CAM_ZOOM_DEFAUT = 17;
-        function _camPitch(z) { return Math.max(35, Math.min(60, 50 + (z - 17) * 8)); }
+        // Réglage n° 2 (16/11, comparaison avec Pokémon GO) : caméra plus couchée
+        // (horizon visible, ciel et brume), départ plus proche. Au plus loin 55°,
+        // au départ 68°, au plus près 72°.
+        const CAM_ZOOM_MIN = 15.8, CAM_ZOOM_MAX = 19.2, CAM_ZOOM_DEFAUT = 18;
+        function _camPitch(z) {
+            const p = z <= 18 ? 55 + (z - 15.8) / 2.2 * 13 : 68 + (z - 18) / 1.2 * 4;
+            return Math.max(55, Math.min(72, p));
+        }
         let _camZoomProche = CAM_ZOOM_DEFAUT;   // zoom retrouvé au retour de la vue d'ensemble
-        // L'inclinaison change la place du joueur à l'écran : correction du décalage
-        // mesurée au navigateur (16/11) pour qu'il reste à la même hauteur à tous les zooms.
-        const CAM_CORRECTION = [[15.3, 0.841], [16, 0.894], [16.5, 0.942], [17, 1], [17.5, 1.073], [18, 1.163], [18.5, 1.215]];
-        function _camCorrection(z) {
-            const T = CAM_CORRECTION;
-            if (z <= T[0][0]) return T[0][1];
-            for (let i = 1; i < T.length; i++) {
-                if (z <= T[i][0]) return T[i - 1][1] + (T[i][1] - T[i - 1][1]) * (z - T[i - 1][0]) / (T[i][0] - T[i - 1][0]);
-            }
-            return T[T.length - 1][1];
+        // Place du joueur : vue proche, ses pieds à 69 % de la hauteur de l'écran.
+        // Obtenue par le padding MapLibre (le centre de la caméra EST le joueur) :
+        // exacte à tout zoom, toute inclinaison et toute taille d'écran, là où un
+        // décalage en degrés devait être recalé à chaque réglage.
+        const CAM_JOUEUR_Y = 0.69;
+        function _camPadding(mode) {
+            const H = (map && map.getCanvas().clientHeight) || window.innerHeight;
+            const haut = (mode || _mapViewMode) === 'close' ? Math.round(H * (2 * CAM_JOUEUR_Y - 1)) : 0;
+            return { top: haut, bottom: 0, left: 0, right: 0 };
         }
         function _camAppliquer(z, b) {
             z = Math.max(CAM_ZOOM_MIN, Math.min(CAM_ZOOM_MAX, z));
@@ -26725,8 +26763,9 @@
                 try {
                     map.addSource('geo-halo', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
                     map.addLayer({ id: 'geo-halo', type: 'circle', source: 'geo-halo', paint: {
-                        'circle-color': '#4F46E5', 'circle-opacity': 0.12,
-                        'circle-stroke-color': '#4F46E5', 'circle-stroke-opacity': 0.35, 'circle-stroke-width': 1,
+                        // Discret (16/11) : Pokémon GO n'affiche pas la précision GPS.
+                        'circle-color': '#4F46E5', 'circle-opacity': 0.04,
+                        'circle-stroke-color': '#4F46E5', 'circle-stroke-opacity': 0.14, 'circle-stroke-width': 1,
                         'circle-pitch-alignment': 'map', 'circle-radius': 0
                     } });
                 } catch (e) { return; }   // style pas encore prêt : nouvel essai à l'image suivante
@@ -26756,12 +26795,11 @@
         let _geoMarche = false;        // animation de marche de l'avatar en cours
 
         // Centre de caméra qui place le joueur au bon endroit pour ce cap de carte.
-        // zoom : celui visé (bascule de vue) ; par défaut, le zoom courant. Le décalage
-        // est en degrés : il double à chaque cran de dézoom pour garder la même place à l'écran.
+        // 16/11 : le décalage vers le bas de l'écran vient du padding (cf. _camPadding) ;
+        // le centre de la caméra est désormais le joueur lui-même. Signature gardée
+        // (cap, zoom) pour les appels existants.
         function _geoCentreCamera(ll, bearing, zoom) {
-            const z = zoom == null ? map.getZoom() : zoom;
-            const off = _mapViewMode === 'close' ? CAM_NORTH_OFFSET * Math.pow(2, 17 - z) * _camCorrection(z) : 0, r = bearing * Math.PI / 180;
-            return [ll.lng + off * Math.sin(r) / Math.cos(ll.lat * Math.PI / 180), ll.lat + off * Math.cos(r)];
+            return [ll.lng, ll.lat];
         }
 
         function _geoCamera(ll, now) {
@@ -30316,6 +30354,7 @@
                 bearing: capVue,
                 pitch:   pitchVue,
                 zoom:    cadrage.zoom,
+                padding: _camPadding(_mapViewMode),   // joueur bas en vue proche, centré en vue d'ensemble
                 duration: DUREE_BASCULE,
                 easing: t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t
             });
@@ -35441,7 +35480,13 @@
         function updateAvatarScale() {
             if (!map) return;
             const z = map.getZoom();
-            const scale = Math.pow(2, z - 17);
+            // Vue proche (16/11, façon Pokémon GO) : l'avatar garde presque sa taille
+            // en zoomant (il grandit un peu de près) ; ×2 au zoom de départ (≈ 1/9 de
+            // l'écran, mesuré sur une capture de Pokémon GO : ≈ 1/7, mais leur avatar est élancé).
+            // Vue d'ensemble : il suit la carte, comme avant (×2 au zoom 18 : raccord).
+            const scale = (typeof _mapViewMode !== 'undefined' && _mapViewMode === 'close')
+                ? 2 * Math.pow(2, (z - CAM_ZOOM_DEFAUT) * 0.25)
+                : Math.pow(2, z - 17);
             const clamped = Math.max(0.3, Math.min(4, scale));
             // Scaler le SVG interne directement — pas le div conteneur
             const svg = document.querySelector('#playerAvatar svg');
