@@ -25197,8 +25197,8 @@
                         map.setPaintProperty(id, prop, ['case', enPortee, b, horsMin != null ? Math.min(b, horsMin) : b * facteur]);
                     };
                     CERCLES.forEach(id => {
-                        regler(id, 'fill-opacity', 0.25);
-                        regler(id + '-stroke', 'line-opacity', 0.3);
+                        regler(id, 'fill-opacity', 0);           // hors de portée : rien (16/11)
+                        regler(id + '-stroke', 'line-opacity', 0);
                         regler(id + '-stroke', 'line-width', 1, 1);
                     });
                 };
@@ -27122,20 +27122,17 @@
                 document.getElementById('cardPopup').classList.contains('show') ||
                 document.getElementById('cardDetailView').classList.contains('show')) return;
 
-            let newLat = playerPos.lat;
-            let newLng = playerPos.lng;
-
-            switch (e.key) {
-                case 'ArrowUp':    newLat += MOVE_SPEED; break;
-                case 'ArrowDown':  newLat -= MOVE_SPEED; break;
-                case 'ArrowLeft':  newLng -= MOVE_SPEED; break;
-                case 'ArrowRight': newLng += MOVE_SPEED; break;
-                default: return;
-            }
+            // Flèches relatives à l'écran, comme le joystick (16/11) : la carte peut
+            // être tournée, « haut » = cap de la caméra.
+            const rel = { ArrowUp: 0, ArrowRight: 90, ArrowDown: 180, ArrowLeft: 270 }[e.key];
+            if (rel == null) return;
+            const cap = ((map ? map.getBearing() : 0) + rel + 360) % 360;
+            const r = cap * Math.PI / 180;
 
             e.preventDefault();
-            _capJoystick = { ArrowUp: 0, ArrowRight: 90, ArrowDown: 180, ArrowLeft: 270 }[e.key];
-            playerPos = { lat: newLat, lng: newLng };
+            _capJoystick = cap;
+            playerPos = { lat: playerPos.lat + Math.cos(r) * MOVE_SPEED,
+                          lng: playerPos.lng + Math.sin(r) * MOVE_SPEED / Math.cos(playerPos.lat * Math.PI / 180) };
             if (playerMarker && map) {
                 updatePlayerOnMap();
             }
@@ -27862,6 +27859,11 @@
             const _plan = document.body.classList.contains('planning-mode');
             _capZones.forEach(z => {
                 if (_plan && !z.type.startsWith('poi_')) return;
+                // Façon Pokémon GO (16/11) : en vue proche, seules les zones à portée
+                // du joueur sont dessinées ; les autres se chevauchaient partout
+                // (lieux à 60-65 m, ressources à 20-30 m). L'onde sous l'avatar et
+                // l'état des marqueurs disent le reste.
+                if (!_plan && playerPos && !_aPortee(getDistance(playerPos.lat, playerPos.lng, z.lat, z.lng), z.r)) return;
                 const c = map.project([z.lng, z.lat]);
                 const e = map.project(_sol(z.lng, z.lat, z.r, _brg + Math.PI / 2));
                 const rx = Math.hypot(e.x - c.x, e.y - c.y);
@@ -28067,12 +28069,19 @@
                 const dt = Math.min(now - last, 100);
                 last = now;
                 if (gpsActive) return;
-                // Carte nord en haut au joystick : sens écran = sens au sol.
-                if (joystickDirection.x || joystickDirection.y) _capJoystick = Math.atan2(joystickDirection.x, joystickDirection.y) * 180 / Math.PI;
+                // Rotation manuelle (16/11) : la carte n'est plus toujours nord en haut.
+                // Le joystick est relatif à l'écran : « haut » = cap de la caméra,
+                // « droite » = cap + 90°. (Avant : nord en haut fixe, d'où un sens
+                // inversé dès que la carte était retournée.)
+                const _norme = Math.hypot(joystickDirection.x, joystickDirection.y);
+                const _angSol = map ? (map.getBearing() * Math.PI / 180 + Math.atan2(joystickDirection.x, joystickDirection.y)) : Math.atan2(joystickDirection.x, joystickDirection.y);
+                if (_norme) _capJoystick = ((_angSol * 180 / Math.PI) % 360 + 360) % 360;
                 const speed = MOVE_SPEED * _walkSpeed * (dt / 50);
                 playerPos = {
-                    lat: playerPos.lat + joystickDirection.y * speed,
-                    lng: playerPos.lng + joystickDirection.x * speed
+                    lat: playerPos.lat + Math.cos(_angSol) * _norme * speed,
+                    // Un degré de longitude est plus court (× cos lat) : sans correction,
+                    // les diagonales déviaient et l'est-ouest allait 30 % moins vite.
+                    lng: playerPos.lng + Math.sin(_angSol) * _norme * speed / Math.cos(playerPos.lat * Math.PI / 180)
                 };
                 if (playerMarker && map) {
                     updatePlayerOnMap();
