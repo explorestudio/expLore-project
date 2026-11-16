@@ -7433,12 +7433,17 @@
         .ritual-btn:active { opacity: 0.7; }
 
         /* ── Phase 3 : Gravure canvas ── */
-        /* test2 (16/11) : la mappe (après la plongée) reste visible derrière, assombrie
-           et floutée ; l'écran arrive en fondu. */
-        #ritualEngrave { justify-content: center; padding-bottom: 0; background: rgba(8,6,15,0.62);
-            -webkit-backdrop-filter: blur(4px) saturate(0.7); backdrop-filter: blur(4px) saturate(0.7);
-            opacity: 0; transition: opacity 0.45s ease; }
-        #ritualEngrave.show { opacity: 1; }
+        #ritualEngrave { justify-content: center; padding-bottom: 0; background: rgba(8,6,15,1); }
+        /* test2 (16/11) : bascule d'écran façon Pokémon GO. Après la plongée de la
+           caméra vers l'horizon, l'écran de cristallisation arrive couché au sol
+           (charnière en bas) et se redresse face au joueur ; il se rabat à la sortie. */
+        #ritualEngrave.bascule {
+            transform-origin: 50% 100%;
+            transform: perspective(900px) rotateX(78deg);
+            opacity: 0;
+            transition: transform 0.65s cubic-bezier(0.2, 0.75, 0.25, 1), opacity 0.3s ease;
+        }
+        #ritualEngrave.bascule.show { transform: perspective(900px) rotateX(0deg); opacity: 1; }
         /* Pendant la plongée et la cristallisation, l'interface s'efface (comme
            pendant une capture dans Pokémon GO) : seule la mappe reste derrière. */
         body.en-plongee .map-hud, body.en-plongee .joystick-container { opacity: 0 !important; transition: opacity 0.35s; pointer-events: none !important; }
@@ -18099,10 +18104,6 @@
             if (_ritualEngraveAnimId) { cancelAnimationFrame(_ritualEngraveAnimId); _ritualEngraveAnimId = null; }
 
             const COUNT = 1100, ARMS = 2, TURNS = 1.15;
-            // test2 (16/11) : la nébuleuse est un disque vu de biais, posé dans le
-            // monde (même inclinaison que la caméra après la plongée), et non plus
-            // une spirale vue de dessus. INCL = aplatissement vertical du disque.
-            const INCL = 0.42;
             const DECAY = 0.17, GAIN = 0.52, HOLD_WIN = 0.55, COH0 = 0.12;
             const TAU = 6.2832;
             const rnd = (a, b) => a + Math.random() * (b - a);
@@ -18124,7 +18125,7 @@
                 canvas.width = Math.round(W * dpr);
                 canvas.height = Math.round(H * dpr);
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-                cx = W / 2; cy = H * 0.5;   // centre de l'écran : là où la plongée amène la nébuleuse
+                cx = W / 2; cy = H * 0.47;
                 R = Math.min(W, H) * 0.34;
                 const rMin = R * 0.07;
                 P = new Array(COUNT);
@@ -18201,7 +18202,7 @@
                 if (!fini) {
                     if (tenue) {
                         tenueMs += dt * 1000;
-                        const d = Math.hypot(px - cx, (py - cy) / INCL);   // distance dans le plan du disque
+                        const d = Math.hypot(px - cx, py - cy);
                         const portee = 1 - smooth(R * 0.35, R * 1.5, d) * 0.72;
                         cohesion += GAIN * portee * dt;
                     } else {
@@ -18216,11 +18217,11 @@
                 pattern += dt * 0.11;
                 shear   += dt * (1 - cohesion) * 0.95;
 
-                // test2 : fond transparent (la mappe assombrie se voit derrière, cf.
-                // #ritualEngrave) ; étoiles adoucies.
                 ctx.clearRect(0, 0, W, H);
+                ctx.fillStyle = '#07050d';
+                ctx.fillRect(0, 0, W, H);
                 for (const s of stars) {
-                    ctx.fillStyle = 'rgba(214,205,255,' + (s.a * 0.5 * (0.6 + 0.4 * Math.sin(now * 0.001 + s.ph))).toFixed(3) + ')';
+                    ctx.fillStyle = 'rgba(214,205,255,' + (s.a * (0.6 + 0.4 * Math.sin(now * 0.001 + s.ph))).toFixed(3) + ')';
                     ctx.fillRect(s.x, s.y, s.s, s.s);
                 }
 
@@ -18231,10 +18232,7 @@
                 hg.addColorStop(0.42, 'rgba(139,92,246,'  + (0.05 + cohesion * 0.07).toFixed(3) + ')');
                 hg.addColorStop(1,    'rgba(139,92,246,0)');
                 ctx.fillStyle = hg;
-                // Halo couché dans le plan du disque
-                ctx.save(); ctx.translate(cx, cy); ctx.scale(1, INCL); ctx.translate(-cx, -cy);
                 ctx.beginPath(); ctx.arc(cx, cy, hr, 0, TAU); ctx.fill();
-                ctx.restore();
 
                 const disp = 1 - cohesion;
                 for (const p of P) {
@@ -18247,7 +18245,7 @@
                     const r  = lerp(rD, p.r, cohesion);
                     p.lx = p.x; p.ly = p.y;
                     p.x = cx + Math.cos(th) * r;
-                    p.y = cy + Math.sin(th) * r * INCL;
+                    p.y = cy + Math.sin(th) * r * 0.9;
                     const a = p.bright * (0.42 + cohesion * 0.5);
                     if (disp > 0.45 && p.esc > 0.72 && p.t > 0.45) {
                         ctx.strokeStyle = 'rgba(167,139,250,' + (a * 0.34).toFixed(3) + ')';
@@ -18286,11 +18284,10 @@
                 const gr = R * 1.25;
                 ctx.lineWidth = 3;
                 ctx.strokeStyle = 'rgba(167,139,250,0.16)';
-                // test2 : jauge couchée au sol, autour du disque (ellipse)
-                ctx.beginPath(); ctx.ellipse(cx, cy, gr, gr * INCL, 0, 0, TAU); ctx.stroke();
+                ctx.beginPath(); ctx.arc(cx, cy, gr, 0, TAU); ctx.stroke();
                 ctx.strokeStyle = cohesion > 0.55 ? 'rgba(253,230,138,0.78)' : 'rgba(196,181,253,0.6)';
                 ctx.lineCap = 'round';
-                ctx.beginPath(); ctx.ellipse(cx, cy, gr, gr * INCL, 0, -1.5708, -1.5708 + TAU * cohesion); ctx.stroke();
+                ctx.beginPath(); ctx.arc(cx, cy, gr, -1.5708, -1.5708 + TAU * cohesion); ctx.stroke();
                 ctx.lineCap = 'butt';
 
                 if (flash > 0.01) {
@@ -29397,9 +29394,10 @@
 
         // ── Plongée vers la nébuleuse (test2, 16/11, façon Pokémon GO) ──
         // Au lieu de changer d'écran sans transition : la caméra se rapproche et se
-        // couche vers la nébuleuse (0,9 s) pendant que son visuel grossit vers le
-        // centre ; l'écran de cristallisation arrive en fondu par-dessus la mappe,
-        // qui reste visible derrière. À la fermeture, la caméra revient au joueur.
+        // couche jusqu'à l'horizon vers la nébuleuse (0,9 s) pendant que son visuel
+        // grossit vers le centre ; l'écran de cristallisation (vu de face) se redresse
+        // alors depuis le bas, comme une bascule. À la fermeture, il se rabat et la
+        // caméra revient au joueur.
         // Pas de plongée pour la carte du tutoriel (son enchaînement est minuté)
         // ni en vue d'ensemble.
         let _plongee = null;   // { zoom, bearing } à retrouver au retour
@@ -29428,7 +29426,7 @@
                 document.body.appendChild(copie);
                 requestAnimationFrame(() => requestAnimationFrame(() => {
                     copie.style.left = (window.innerWidth / 2) + 'px';
-                    copie.style.top = (window.innerHeight / 2) + 'px';
+                    copie.style.top = (window.innerHeight * 0.47) + 'px';   // centre de la nébuleuse à l'écran
                     copie.style.scale = '3.4';
                     copie.style.opacity = '0';
                 }));
@@ -29437,12 +29435,20 @@
             const voile = document.createElement('div');
             voile.style.cssText = 'position:fixed;inset:0;z-index:2147483000;touch-action:none;';
             document.body.appendChild(voile);
+            // Bascule (David, 16/11) : la caméra se couche jusqu'à l'horizon (85°, au-delà
+            // du plafond de jeu de 75°, rétabli au retour) ; puis l'écran de
+            // cristallisation se redresse depuis le bas (#ritualEngrave.bascule).
+            map.setMaxPitch(85);
             map.easeTo({
-                center: [poi.lng, poi.lat], zoom: Math.min(20.6, map.getZoom() + 2.2), pitch: 75,
+                center: [poi.lng, poi.lat], zoom: Math.min(20.6, map.getZoom() + 1.8), pitch: 85,
                 bearing: map.getBearing(), padding: { top: 0, bottom: 0, left: 0, right: 0 },
                 duration: 900, easing: t => t * t * (3 - 2 * t)
             });
-            setTimeout(() => { voile.remove(); suite(); }, 650);
+            setTimeout(() => {
+                voile.remove();
+                document.getElementById('ritualEngrave').classList.add('bascule');
+                suite();
+            }, 600);
             setTimeout(() => { if (copie) copie.remove(); }, 1300);
             return true;
         }
@@ -29456,7 +29462,12 @@
                 center: [ll.lng, ll.lat], zoom: p.zoom, pitch: _camPitch(p.zoom), bearing: p.bearing,
                 padding: _camPadding('close'), duration: 800, easing: t => t * t * (3 - 2 * t)
             });
-            setTimeout(() => { _viewTransition = false; document.body.classList.remove('en-plongee'); }, 820);
+            setTimeout(() => {
+                _viewTransition = false;
+                document.body.classList.remove('en-plongee');
+                document.getElementById('ritualEngrave').classList.remove('bascule');
+                try { map.setMaxPitch(75); } catch (e) {}
+            }, 820);
         }
 
         function openCollectRitual(card, opts) {
