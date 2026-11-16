@@ -24934,6 +24934,71 @@
             ['touchstart', 'mousedown'].forEach(t => map.getCanvasContainer().addEventListener(t, _doigt(true), { passive: true }));
             ['touchend', 'touchcancel', 'mouseup'].forEach(t => window.addEventListener(t, _doigt(false), { passive: true }));
 
+            // ── Gestes caméra façon Pokémon GO (test2, 16/11) ──
+            // Vue proche seulement (la vue d'ensemble garde les gestes MapLibre) :
+            // deux doigts = pincer pour zoomer + tourner ; un doigt qui glisse fait
+            // tourner la mappe autour du joueur ; molette = zoom (ordinateur).
+            // Jamais de pan : _camAppliquer recentre toujours sur le joueur.
+            (function _camGestes() {
+                const cont = map.getCanvasContainer();
+                cont.style.touchAction = 'none';
+                const doigts = new Map();
+                let g = null, finGeste = 0;
+                const permis = () => _mapViewMode === 'close' && !_viewTransition && !_cameraMoving;
+                const pt = e => { const r = cont.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+                const joueurEcran = () => map.project(_dispLat != null ? [_dispLng, _dispLat] : [playerPos.lng, playerPos.lat]);
+                // (Re)prise du geste à chaque doigt posé ou levé : pas de saut.
+                const ancrer = () => {
+                    const p = [...doigts.values()], b0 = map.getBearing(), z0 = map.getZoom();
+                    if (p.length >= 2) {
+                        g = { deux: true, actif: true, b0, z0,
+                              d0: Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y) || 1,
+                              a0: Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x) };
+                    } else if (p.length === 1) {
+                        const j = joueurEcran();
+                        g = { deux: false, actif: false, b0, z0, x0: p[0].x, y0: p[0].y,
+                              a0: Math.atan2(p[0].y - j.y, p[0].x - j.x) };
+                    } else g = null;
+                };
+                cont.addEventListener('pointerdown', e => {
+                    if (!permis()) return;
+                    doigts.set(e.pointerId, pt(e));
+                    ancrer();
+                });
+                cont.addEventListener('pointermove', e => {
+                    if (!g || !doigts.has(e.pointerId) || !permis()) return;
+                    doigts.set(e.pointerId, pt(e));
+                    const p = [...doigts.values()];
+                    let z = g.z0, b = g.b0;
+                    if (g.deux && p.length >= 2) {
+                        z = g.z0 + Math.log2(Math.hypot(p[1].x - p[0].x, p[1].y - p[0].y) / g.d0);
+                        b = g.b0 - (Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x) - g.a0) * 180 / Math.PI;
+                    } else if (!g.deux) {
+                        if (!g.actif && Math.hypot(p[0].x - g.x0, p[0].y - g.y0) < 12) return;   // simple tap
+                        g.actif = true;
+                        const j = joueurEcran();
+                        b = g.b0 - (Math.atan2(p[0].y - j.y, p[0].x - j.x) - g.a0) * 180 / Math.PI;
+                    } else return;
+                    _camAppliquer(z, b);
+                });
+                const lever = e => {
+                    if (!doigts.delete(e.pointerId)) return;
+                    if (g && g.actif) finGeste = Date.now();
+                    ancrer();
+                };
+                ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => cont.addEventListener(t, lever));
+                // Un glissement qui a tourné la mappe ne doit pas ouvrir le marqueur
+                // sous le doigt au moment où on le lève.
+                cont.addEventListener('click', e => {
+                    if (Date.now() - finGeste < 350) { e.stopPropagation(); e.preventDefault(); }
+                }, true);
+                cont.addEventListener('wheel', e => {
+                    if (!permis()) return;
+                    e.preventDefault();
+                    _camAppliquer(map.getZoom() - e.deltaY * 0.0025, map.getBearing());
+                }, { passive: false });
+            })();
+
             // ---- Player marker (HTML element) ----
             const playerEl = document.createElement('div');
             playerEl.id = 'playerAvatar';
@@ -25023,10 +25088,11 @@
                     paint: {
                         'fill-extrusion-color': BATIMENTS_COULEUR,
                         'fill-extrusion-opacity': 0.85,
-                        'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'],
-                            15, 0, 15.5, ['coalesce', ['get', 'render_height'], 10]],
-                        'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'],
-                            15, 0, 15.5, ['coalesce', ['get', 'render_min_height'], 0]]
+                        // À plat (David, 16/11) : plus d'extrusion. Couches gardées (hachures,
+                        // supertypes, tap) ; hauteurs de quelques cm, étagées ville < lieux
+                        // pour que les trois couches ne se chevauchent pas en scintillant.
+                        'fill-extrusion-height': 0.1,
+                        'fill-extrusion-base': 0
                     }
                 }, premiereEtiquette);
                 ['building', 'building-top'].forEach(id => {
@@ -25070,8 +25136,8 @@
                             ...Object.entries(SUPERTYPES).flatMap(([cle, s]) => [cle, s.color]),
                             BATIMENTS_COULEUR],
                         'fill-extrusion-opacity': 1,
-                        'fill-extrusion-height': ['get', 'h'],
-                        'fill-extrusion-base': ['get', 'base']
+                        'fill-extrusion-height': 0.5,   // à plat (16/11)
+                        'fill-extrusion-base': 0
                     }
                 }, premiereEtiquette);   // juste au-dessus de batiments-3d
             }
@@ -25274,8 +25340,8 @@
                     paint: {
                         'fill-extrusion-pattern': _motif('supertype'),   // hachuré (ville)
                         'fill-extrusion-opacity': 1,
-                        'fill-extrusion-height': ['get', 'h'],
-                        'fill-extrusion-base': ['get', 'base']
+                        'fill-extrusion-height': 0.3,   // à plat (16/11)
+                        'fill-extrusion-base': 0
                     }
                 }, 'batiments-lieux-3d');
                 // Vue dézoomée (< 15) : les bâtiments 3D disparaissent, chaque point
@@ -26234,7 +26300,34 @@
 
         // Décalage caméra vers le nord pour placer le joueur dans le tiers bas de l'écran
         // ~0.0012° ≈ 130m — ajustable selon le pitch
-        const CAM_NORTH_OFFSET = 0.0008;
+        const CAM_NORTH_OFFSET = 0.0008;   // valeur au zoom 17, mise à l'échelle des autres zooms
+
+        // ── Caméra façon Pokémon GO (test2, 16/11) ──
+        // Vue proche : toujours centrée sur le joueur (pas de pan). Le zoom se règle
+        // au pincement entre CAM_ZOOM_MIN et CAM_ZOOM_MAX, et l'inclinaison le suit :
+        // de près on regarde vers l'horizon, en s'éloignant la vue se redresse.
+        // La rotation est manuelle (deux doigts, ou un doigt qui tourne autour du
+        // joueur) : la mappe ne suit plus le cap du téléphone, seul le cône le fait.
+        const CAM_ZOOM_MIN = 15.3, CAM_ZOOM_MAX = 18.5, CAM_ZOOM_DEFAUT = 17;
+        function _camPitch(z) { return Math.max(35, Math.min(60, 50 + (z - 17) * 8)); }
+        let _camZoomProche = CAM_ZOOM_DEFAUT;   // zoom retrouvé au retour de la vue d'ensemble
+        // L'inclinaison change la place du joueur à l'écran : correction du décalage
+        // mesurée au navigateur (16/11) pour qu'il reste à la même hauteur à tous les zooms.
+        const CAM_CORRECTION = [[15.3, 0.841], [16, 0.894], [16.5, 0.942], [17, 1], [17.5, 1.073], [18, 1.163], [18.5, 1.215]];
+        function _camCorrection(z) {
+            const T = CAM_CORRECTION;
+            if (z <= T[0][0]) return T[0][1];
+            for (let i = 1; i < T.length; i++) {
+                if (z <= T[i][0]) return T[i - 1][1] + (T[i][1] - T[i - 1][1]) * (z - T[i - 1][0]) / (T[i][0] - T[i - 1][0]);
+            }
+            return T[T.length - 1][1];
+        }
+        function _camAppliquer(z, b) {
+            z = Math.max(CAM_ZOOM_MIN, Math.min(CAM_ZOOM_MAX, z));
+            const ll = (gpsActive && GeoEngine.getDisplay()) || playerPos;
+            _camZoomProche = z;
+            map.jumpTo({ zoom: z, pitch: _camPitch(z), bearing: b, center: _geoCentreCamera(ll, b, z) });
+        }
 
         let _cameraMoving = false;
         // Bascule de vue (longue-vue) en cours : tant qu'elle vole, personne ne
@@ -26663,8 +26756,11 @@
         let _geoMarche = false;        // animation de marche de l'avatar en cours
 
         // Centre de caméra qui place le joueur au bon endroit pour ce cap de carte.
-        function _geoCentreCamera(ll, bearing) {
-            const off = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0, r = bearing * Math.PI / 180;
+        // zoom : celui visé (bascule de vue) ; par défaut, le zoom courant. Le décalage
+        // est en degrés : il double à chaque cran de dézoom pour garder la même place à l'écran.
+        function _geoCentreCamera(ll, bearing, zoom) {
+            const z = zoom == null ? map.getZoom() : zoom;
+            const off = _mapViewMode === 'close' ? CAM_NORTH_OFFSET * Math.pow(2, 17 - z) * _camCorrection(z) : 0, r = bearing * Math.PI / 180;
             return [ll.lng + off * Math.sin(r) / Math.cos(ll.lat * Math.PI / 180), ll.lat + off * Math.cos(r)];
         }
 
@@ -26672,10 +26768,10 @@
             const C = GeoEngine.CONFIG;
             const dt = _geoCamT ? Math.min(now - _geoCamT, 1000) : 1000;
             _geoCamT = now;
-            const hdg = GeoEngine.getHeading();
             let b = map.getBearing();
-            // Vue d'ensemble : la carte garde sa rotation (David, 03/11) ; seul le cône suit le cap.
-            const cibleCap = _mapViewMode === 'close' ? (hdg == null ? b : hdg) : b;
+            // Rotation manuelle façon Pokémon GO (16/11) : la carte garde la rotation
+            // choisie au doigt, dans les deux vues ; seul le cône suit le cap.
+            const cibleCap = b;
             const ecartCap = ((cibleCap - b + 540) % 360) - 180;
             // Hystérésis : on ne se met à tourner qu'au-delà de la bande morte, et on
             // tourne jusqu'à être calé à 2° près ; entre les deux, la caméra ne bouge pas.
@@ -26691,6 +26787,8 @@
             let k = 0;
             if (d > C.CAMERA_DEADZONE_PX) k = 1 - C.CAMERA_DEADZONE_PX / d;                 // en laisse
             else if (GeoEngine.getState() === 'still' && d > 1) k = 1 - Math.exp(-dt / 600); // recalage à l'arrêt
+            // Batterie (16/11, repris de test.html) : pas de rendu si rien ne bouge.
+            if (d * k < 0.5 && Math.abs(b - map.getBearing()) < 0.05) return;
             map.jumpTo({
                 center: [actuel.lng + (cible[0] - actuel.lng) * k, actuel.lat + (cible[1] - actuel.lat) * k],
                 bearing: b
@@ -26739,7 +26837,7 @@
             const ll = GeoEngine.getDisplay();
             if (!map || !ll) return;
             const duree = GeoEngine.CONFIG.CAMERA_RECENTER_MS;
-            const bearing = _mapViewMode === 'close' ? (GeoEngine.getHeading() ?? map.getBearing()) : map.getBearing();
+            const bearing = map.getBearing();   // rotation manuelle gardée (16/11)
             _viewTransition = true;
             if (_viewTransitionTimer) clearTimeout(_viewTransitionTimer);
             _viewTransitionTimer = setTimeout(() => { _viewTransitionTimer = null; _viewTransition = false; }, duree + 20);
@@ -26764,12 +26862,12 @@
             // lui sautait à chaque tick — d'où le tremblement. Même principe que
             // _geoTick côté GPS : on pose, on n'anime pas. Le lissage vient de la
             // fréquence d'appel (rAF, cf. startJoystickMovement).
-            const currentPitch = _mapViewMode === 'far' ? MAP_VIEW.far.pitch : ISOMETRIC_TILT;
-            const offset = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
+            // Zoom, inclinaison et rotation choisis au doigt sont gardés (16/11).
+            const currentPitch = _mapViewMode === 'far' ? MAP_VIEW.far.pitch : _camPitch(map.getZoom());
             map.easeTo({
-                center:  [playerPos.lng, playerPos.lat + offset],
+                center:  _geoCentreCamera(playerPos, map.getBearing()),
                 pitch:   currentPitch,
-                bearing: ISOMETRIC_HEADING,
+                bearing: map.getBearing(),
                 duration: 0,
                 easing: t => t
             });
@@ -26784,9 +26882,8 @@
                 _dispLat = playerPos.lat;
                 _dispLng = playerPos.lng;
                 playerMarker.setLngLat([playerPos.lng, playerPos.lat]);
-                const offset0 = _mapViewMode === 'close' ? CAM_NORTH_OFFSET : 0;
-                const pitch0 = _mapViewMode === 'far' ? MAP_VIEW.far.pitch : ISOMETRIC_TILT;
-                map.easeTo({ center: [playerPos.lng, playerPos.lat + offset0], pitch: pitch0, bearing: ISOMETRIC_HEADING, duration: 120, easing: t => t });
+                const pitch0 = _mapViewMode === 'far' ? MAP_VIEW.far.pitch : _camPitch(map.getZoom());
+                map.easeTo({ center: _geoCentreCamera(playerPos, map.getBearing()), pitch: pitch0, bearing: map.getBearing(), duration: 120, easing: t => t });
             }
             _geoStartLoop();
         }
@@ -30159,6 +30256,7 @@
         }
 
         function toggleMapView() {
+            if (_mapViewMode === 'close') _camZoomProche = map.getZoom();   // retrouvé au retour
             _mapViewMode = _mapViewMode === 'close' ? 'far' : 'close';
             // La longue-vue a servi : plus de pulsation pour réclamer le retour,
             // se déplacer ramène aussi la vue proche.
@@ -30168,8 +30266,12 @@
             // Cap de carte : en vue proche, celui du joueur si le GPS le fournit ; en vue
             // d'ensemble, la rotation en cours est gardée (David, 03/11 : le dézoom ne
             // tourne plus la carte). Le décalage « tiers bas » suit ce cap.
-            let capVue = _mapViewMode === 'close' ? (gpsActive ? (GeoEngine.getHeading() ?? 0) : 0) : map.getBearing();
-            const centreVue = _geoCentreCamera(playerPos, capVue);
+            // 16/11 : rotation manuelle gardée dans les deux sens ; la vue proche
+            // retrouve le zoom (et l'inclinaison qui va avec) laissé au doigt.
+            let capVue = map.getBearing();
+            const zoomVue  = _mapViewMode === 'close' ? _camZoomProche : v.zoom;
+            const pitchVue = _mapViewMode === 'close' ? _camPitch(zoomVue) : v.pitch;
+            const centreVue = _geoCentreCamera(playerPos, capVue, zoomVue);
             if (_mapViewMode === 'close' && _geoSuiviCoupe) {
                 _geoSuiviCoupe = false;
                 const btnR = document.getElementById('geoRecentrerBtn');
@@ -30181,7 +30283,7 @@
             // (David, 24/10) ; seul le rezoom reste rapide.
             const premierDezoom = _mapViewMode === 'far' && _tutoActif() && !_tutoEtat.s14 && !_tutoEtat.dezoomLent;
             const DUREE_BASCULE = _mapViewMode === 'far' ? DUREE_PREMIER_DEZOOM : 600;
-            let cadrage = { center: centreVue, zoom: v.zoom };
+            let cadrage = { center: centreVue, zoom: zoomVue };
             if (premierDezoom) {
                 _tutoEtat.dezoomLent = true;
                 _tutoDezoomPret = Date.now() + DUREE_PREMIER_DEZOOM + DELAI_CLARA_DEZOOM;
@@ -30212,7 +30314,7 @@
             map.easeTo({
                 center:  cadrage.center,
                 bearing: capVue,
-                pitch:   v.pitch,
+                pitch:   pitchVue,
                 zoom:    cadrage.zoom,
                 duration: DUREE_BASCULE,
                 easing: t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t
