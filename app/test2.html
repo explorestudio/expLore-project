@@ -24517,6 +24517,7 @@
                     // à chaque visite et la pastille ne s'éteint jamais.
                     verriereVues,
                     verriereEclatVu,
+                    memoireRendue,       // bâtiments éveillables : poussière versée par lieu
                     collectedCarnetResources,
                     _carnetResourceTypeMap,
                     cardEnergy,
@@ -24557,6 +24558,7 @@
                 if (d.collectedEchoes)       collectedEchoes     = d.collectedEchoes;
                 if (d.collectedDustPoints)   collectedDustPoints = d.collectedDustPoints;
                 if (d.memorialDust != null)  memorialDust        = d.memorialDust;
+                if (d.memoireRendue)         memoireRendue       = d.memoireRendue;
                 if (d.cardLevels)            cardLevels          = d.cardLevels;
                 if (d.cardSkins)             cardSkins           = d.cardSkins;
                 if (d.playerXP != null)      playerXP            = d.playerXP;
@@ -24734,6 +24736,9 @@
         // le joueur tombe donc en panne sèche au même instant que la carte, et doit
         // sortir ramasser de quoi finir (cf. _obSpawnTutorialResources).
         let memorialDust = 180;
+        // Bâtiments éveillables (test2, 17/11) : clé de LIEUX_EVEILLABLES →
+        // poussière versée, cumulée. Indépendant des cartes.
+        let memoireRendue = {};
         let collectedEchoes = [];
         let placedEchoes = {}; // kept for compat
         let cardJournals = {}; // { cardId: { slot1: supertype, slot2: ..., slot3: ... } }
@@ -25651,6 +25656,39 @@
             ];
             const ZONES_BATIES = { university: 'science', college: 'science', hospital: 'science',
                 school: 'societe', stadium: 'societe' };
+            // Bâtiments éveillables (test2, 17/11) : indépendants des cartes et des POI.
+            // hauteur = hauteur cible en mètres ; cout = poussière pour l'atteindre.
+            // Point = intérieur du bâtiment sur OSM (l'emprise est cherchée dessous).
+            // Hôtel-Dieu au lieu de l'Hôtel de Ville : à 400 m de Bellecour (David, 17/11).
+            const LIEUX_EVEILLABLES = {
+                fourviere:  { nom: 'Basilique de Fourvière', lng: 4.8226, lat: 45.7623, hauteur: 48, cout: 500 },
+                saint_jean: { nom: 'Cathédrale Saint-Jean',  lng: 4.8273, lat: 45.7608, hauteur: 32, cout: 400 },
+                hotel_dieu: { nom: 'Grand Hôtel-Dieu',        lng: 4.8366, lat: 45.7593, hauteur: 32, cout: 300 }
+            };
+            const EVEIL_CRANS = 10;   // nombre de versements pour atteindre la hauteur
+            window.LIEUX_EVEILLABLES = LIEUX_EVEILLABLES;
+            // Maquettes (phase 6) : un lieu-phare en plusieurs volumes, chacun à sa
+            // hauteur ; elle remplace l'emprise OSM et chaque partie monte en
+            // proportion (h et base × poussière versée / coût). Fourvière : parties
+            // OSM du bâtiment (building:part, relevées le 17/11), hauteurs OSM sauf
+            // les quatre tours, portées à 48 m (hauteur documentée, OSM : 38-40).
+            // contour = premier élément, sert d'emprise (tap, portée).
+            const _pts = s => [s.trim().split(/\s+/).map(q => q.split(',').map(Number))];
+            const MAQUETTES = {
+                fourviere: [
+                    { nom: 'contour', h: 25, coords: _pts(`4.822081,45.762493 4.822129,45.762490 4.822156,45.762463 4.822156,45.762441 4.822204,45.762437 4.822204,45.762422 4.822333,45.762411 4.822338,45.762430 4.822403,45.762422 4.822397,45.762404 4.822531,45.762396 4.822531,45.762411 4.822596,45.762407 4.822590,45.762389 4.822724,45.762381 4.822724,45.762396 4.822783,45.762392 4.822783,45.762415 4.822821,45.762434 4.822864,45.762430 4.822896,45.762407 4.822885,45.762366 4.822923,45.762370 4.822923,45.762377 4.822939,45.762377 4.822939,45.762366 4.823003,45.762347 4.823014,45.762351 4.823025,45.762344 4.823020,45.762340 4.823057,45.762295 4.823079,45.762295 4.823084,45.762288 4.823057,45.762284 4.823046,45.762231 4.823068,45.762224 4.823068,45.762213 4.823041,45.762216 4.822998,45.762183 4.823003,45.762175
+                        4.822982,45.762168 4.822977,45.762175 4.822907,45.762164 4.822907,45.762160 4.822891,45.762160 4.822891,45.762168 4.822859,45.762175 4.822848,45.762130 4.822810,45.762108 4.822762,45.762112 4.822741,45.762142 4.822746,45.762168 4.822692,45.762172 4.822692,45.762190 4.822564,45.762198 4.822558,45.762183 4.822515,45.762187 4.822499,45.762160 4.822446,45.762130 4.822392,45.762138 4.822370,45.762149 4.822349,45.762168 4.822344,45.762198 4.822301,45.762201 4.822306,45.762220 4.822172,45.762231 4.822172,45.762213 4.822113,45.762216 4.822108,45.762194 4.822075,45.762175 4.822032,45.762175 4.822000,45.762201 4.822011,45.762235 4.822043,45.762250 4.822075,45.762419 4.822043,45.762441 4.822049,45.762475 4.822081,45.762493`) },
+                    { nom: 'nef', h: 30, coords: _pts('4.822129,45.762415 4.822800,45.762374 4.822767,45.762187 4.822102,45.762246 4.822129,45.762415') },
+                    { nom: 'abside', h: 25, coords: _pts('4.822832,45.762194 4.822789,45.762258 4.822794,45.762303 4.822810,45.762329 4.822837,45.762344 4.822864,45.762355 4.822928,45.762359 4.822987,45.762332 4.823014,45.762288 4.823003,45.762231 4.822960,45.762205 4.822901,45.762190 4.822832,45.762194') },
+                    { nom: 'pignon', h: 32, base: 20, coords: _pts('4.822075,45.762419 4.822129,45.762415 4.822102,45.762246 4.822043,45.762250 4.822075,45.762419') },
+                    { nom: 'tour nord-ouest', h: 48, coords: _pts('4.822129,45.762415 4.822075,45.762419 4.822043,45.762441 4.822049,45.762475 4.822081,45.762493 4.822129,45.762490 4.822156,45.762463 4.822156,45.762441 4.822129,45.762415') },
+                    { nom: 'tour sud-ouest', h: 48, coords: _pts('4.822102,45.762246 4.822113,45.762216 4.822108,45.762194 4.822075,45.762175 4.822032,45.762175 4.822000,45.762201 4.822011,45.762235 4.822043,45.762250 4.822102,45.762246') },
+                    { nom: 'tour nord-est', h: 48, coords: _pts('4.822885,45.762366 4.822864,45.762355 4.822810,45.762355 4.822778,45.762374 4.822783,45.762415 4.822821,45.762434 4.822864,45.762430 4.822896,45.762407 4.822885,45.762366') },
+                    { nom: 'tour sud-est', h: 48, coords: _pts('4.822746,45.762168 4.822746,45.762179 4.822778,45.762194 4.822826,45.762190 4.822859,45.762175 4.822848,45.762130 4.822810,45.762108 4.822762,45.762112 4.822741,45.762142 4.822746,45.762168') },
+                    // Clocher de l'ancienne chapelle (la Vierge dorée), au sud de la nef.
+                    { nom: 'clocher', h: 30, coords: _pts('4.822365,45.762056 4.822397,45.762071 4.822435,45.762067 4.822462,45.762048 4.822456,45.762018 4.822429,45.761999 4.822387,45.762003 4.822360,45.762022 4.822365,45.762056') }
+                ]
+            };
             // Points d'intérêt OSM → supertype(s). Clé = subclass, sinon class.
             // Musées : arts + histoire. Librairies (books) retirées (David, 11/11) :
             // trop nombreuses, une boutique colorait tout l'immeuble. Les
@@ -25760,6 +25798,178 @@
                     }
                 }, (map.getStyle().layers.find(l => l.type === 'symbol') || {}).id);
             }
+
+            // ── Bâtiments éveillés (test2, éveil des bâtiments, 17/11) ──
+            // La seule couche en volume du fichier. Un bâtiment à zéro poussière
+            // n'y entre pas : il reste plat, dessiné par les couches existantes.
+            // Insérée au-dessus de toutes les couches de bâtiments (sous les
+            // étiquettes) : une couche à plat dessinée après le volume le
+            // recouvrirait, MapLibre ne les trie pas par profondeur.
+            const _eveilEmprises = {};   // clé → anneaux du bâtiment, ou null (aucun au point)
+            // Lieu à maquette : emprise = son contour, connue d'emblée (pas de recherche).
+            Object.keys(MAQUETTES).forEach(cle => { if (LIEUX_EVEILLABLES[cle]) _eveilEmprises[cle] = MAQUETTES[cle][0].coords; });
+            const _hAffichee = {};       // clé → hauteur dessinée (animation, phase 4)
+            const _hauteurEveil = cle => {
+                const l = LIEUX_EVEILLABLES[cle];
+                const p = Math.min(1, (memoireRendue[cle] || 0) / l.cout);
+                return l.hauteur * p;
+            };
+            const reconstruireSourceEveil = () => {
+                if (!map.getSource('lieux-eveilles')) return;
+                const volumes = [], pastilles = [];
+                Object.entries(LIEUX_EVEILLABLES).forEach(([cle, l]) => {
+                    const partie = _eveilEmprises[cle];
+                    if (!partie) return;
+                    const h = cle in _hAffichee ? _hAffichee[cle] : _hauteurEveil(cle);
+                    const maq = MAQUETTES[cle];
+                    if (h > 0 && maq) {
+                        const k = h / l.hauteur;   // toutes les parties montent ensemble
+                        maq.forEach(m => volumes.push({ type: 'Feature', geometry: { type: 'Polygon', coordinates: m.coords },
+                            properties: { cle, nom: l.nom, h: m.h * k, base: (m.base || 0) * k } }));
+                    } else if (h > 0) volumes.push({ type: 'Feature', geometry: { type: 'Polygon', coordinates: partie },
+                        properties: { cle, nom: l.nom, h, base: 0 } });
+                    // Signal « éveillable » tant que rien n'a été versé.
+                    if (!(memoireRendue[cle] > 0)) pastilles.push({ type: 'Feature',
+                        geometry: { type: 'Point', coordinates: [l.lng, l.lat] }, properties: { cle } });
+                });
+                map.getSource('lieux-eveilles').setData({ type: 'FeatureCollection', features: volumes });
+                map.getSource('lieux-eveilles-signal').setData({ type: 'FeatureCollection', features: pastilles });
+            };
+            // Emprise cherchée comme pour les lieux : point à l'écran, tuiles
+            // chargées (appelée par le passage des 1,5 s). Pas de polygone de repli.
+            const chercherEmprisesEveil = () => {
+                if (!map.getLayer('lieux-eveilles-3d') || map.getZoom() < 15) return;
+                let nouveau = false;
+                Object.entries(LIEUX_EVEILLABLES).forEach(([cle, l]) => {
+                    if (cle in _eveilEmprises) return;
+                    const pt = _aLEcran(l.lng, l.lat);
+                    if (!pt) return;
+                    const bat = _batimentAuPoint(pt, l.lng, l.lat);
+                    _eveilEmprises[cle] = bat ? bat.partie : null;
+                    if (bat) nouveau = true;
+                    else console.warn('[expLore] éveil : aucun bâtiment au point de « ' + l.nom + ' » (' + cle + ')');
+                });
+                if (nouveau) reconstruireSourceEveil();
+            };
+            if (map.getLayer('batiments-3d')) {
+                const _tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+                const premiereEtiquette = (map.getStyle().layers.find(l => l.type === 'symbol') || {}).id;
+                map.addSource('lieux-eveilles', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+                map.addSource('lieux-eveilles-signal', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+                map.addLayer({
+                    id: 'lieux-eveilles-3d', type: 'fill-extrusion', source: 'lieux-eveilles', minzoom: 15,
+                    paint: {
+                        'fill-extrusion-color': _tok('--poudre-700') || '#3d1a8a',
+                        'fill-extrusion-height': ['get', 'h'],
+                        'fill-extrusion-base': ['coalesce', ['get', 'base'], 0],   // pignon de Fourvière (maquette)
+                        'fill-extrusion-opacity': 1,
+                        'fill-extrusion-vertical-gradient': true
+                    }
+                }, premiereEtiquette);
+                // Pastille au sol, 20 px, tant que le bâtiment n'a rien reçu.
+                map.addLayer({
+                    id: 'lieux-eveilles-signal', type: 'circle', source: 'lieux-eveilles-signal', minzoom: 15,
+                    paint: {
+                        'circle-color': _tok('--poudre-500') || '#6338c9',
+                        'circle-radius': 10,
+                        'circle-stroke-color': '#FFFFFF',
+                        'circle-stroke-width': 2
+                        // Face à l'écran (défaut) : couchée au sol (pitch-alignment
+                        // map), elle s'écrasait à 9 px de haut et se perdait dans les hachures.
+                    }
+                }, premiereEtiquette);
+                window._test2Eveil = { emprises: _eveilEmprises, reconstruire: reconstruireSourceEveil };
+                reconstruireSourceEveil();   // maquettes : posées sans attendre la recherche
+            }
+            // Clé éveillable dont l'emprise contient le point au sol (tap sur la
+            // version plate du bâtiment), sinon null.
+            const _eveilAuPoint = ll => Object.keys(LIEUX_EVEILLABLES).find(cle => {
+                const p = _eveilEmprises[cle];
+                return p && _dansAnneau(ll.lng, ll.lat, p[0]) && !p.slice(1).some(t => _dansAnneau(ll.lng, ll.lat, t));
+            }) || null;
+            const _eveilCran = cle => Math.ceil(LIEUX_EVEILLABLES[cle].cout / EVEIL_CRANS);
+            let _eveilIgnorerPortee = false;   // outil de démo (?debug=1)
+
+            // Montée d'un cran (phase 4). Un nouveau versement en cours d'animation
+            // repart de la hauteur dessinée vers la nouvelle cible : jamais de
+            // bâtiment laissé à mi-hauteur.
+            const DUREE_CRAN = 650;   // ms
+            const _ease = p => 1 - Math.pow(1 - p, 3);   // easeOutCubic, un bâtiment se pose
+            const _eveilAnims = {};   // clé → jeton de l'animation en cours
+            const _eveilReduit = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+            const _terminerEveils = () => {
+                Object.keys(_eveilAnims).forEach(cle => { delete _eveilAnims[cle]; delete _hAffichee[cle]; });
+                reconstruireSourceEveil();
+            };
+            function animerEveil(cle, hDepart) {
+                if (_eveilReduit() || document.hidden) { delete _hAffichee[cle]; reconstruireSourceEveil(); return; }
+                const jeton = {};
+                _eveilAnims[cle] = jeton;
+                const hCible = _hauteurEveil(cle);
+                const t0 = performance.now();
+                const pas = () => {
+                    if (_eveilAnims[cle] !== jeton) return;   // remplacée ou terminée
+                    const p = Math.min(1, (performance.now() - t0) / DUREE_CRAN);
+                    _hAffichee[cle] = hDepart + (hCible - hDepart) * _ease(p);
+                    if (p >= 1) { delete _hAffichee[cle]; delete _eveilAnims[cle]; }
+                    reconstruireSourceEveil();
+                    if (p < 1) requestAnimationFrame(pas);
+                };
+                requestAnimationFrame(pas);
+            }
+            // Arrière-plan : on termine tout de suite à la hauteur cible.
+            document.addEventListener('visibilitychange', () => { if (Object.keys(_eveilAnims).length) _terminerEveils(); });
+
+            // Poudre : quelques grains du compteur vers le pied du bâtiment. Même
+            // grain et même trajectoire que animerGainPoussiere (.ui-grain-poussiere),
+            // en sens inverse et sans crédit.
+            const _grainsVersEveil = cle => {
+                if (_eveilReduit() || !Element.prototype.animate) return;
+                const l = LIEUX_EVEILLABLES[cle];
+                const c = map.getCanvas().getBoundingClientRect();
+                const pt = map.project([l.lng, l.lat]);
+                const tx = c.left + pt.x, ty = c.top + pt.y;
+                let ox = window.innerWidth - 52, oy = 34;
+                const pastille = document.querySelector('.hud-dust');
+                if (pastille) { const r = pastille.getBoundingClientRect(); if (r.width) { ox = r.left + 22; oy = r.top + r.height / 2; } }
+                const pos = (x, y, s) => 'translate(' + (x - 10) + 'px,' + (y - 10) + 'px) scale(' + s + ')';
+                for (let i = 0; i < 8; i++) {
+                    const g = document.createElement('img');
+                    g.src = './assets/Icons/Powder.png';
+                    g.alt = '';
+                    g.className = 'ui-grain-poussiere';
+                    document.body.appendChild(g);
+                    const mx = (ox + tx) / 2 + (Math.random() - 0.5) * 140, my = Math.min(oy, ty) + Math.abs(oy - ty) * 0.3 - Math.random() * 50;
+                    const a = g.animate([
+                        { transform: pos(ox, oy, 0.45), opacity: 0 },
+                        { transform: pos(mx, my, 1), opacity: 1, offset: 0.45 },
+                        { transform: pos(tx + (Math.random() - 0.5) * 30, ty - Math.random() * 30, 0.4), opacity: 0.2 }
+                    ], { duration: 650 + Math.random() * 250, delay: i * 35, easing: 'ease-in-out', fill: 'forwards' });
+                    a.onfinish = () => g.remove();
+                    a.oncancel = () => g.remove();
+                }
+            };
+
+            // Versement d'un cran (phase 3) : motif de la dépense des cartes (l. ~32768).
+            // Renvoie le motif du refus, ou null si versé.
+            const verserMemoire = cle => {
+                const l = LIEUX_EVEILLABLES[cle];
+                const deja = memoireRendue[cle] || 0;
+                if (deja >= l.cout) return 'max';
+                const cran = Math.min(_eveilCran(cle), l.cout - deja);
+                if (memorialDust < cran) return 'poussiere';
+                const hAvant = cle in _hAffichee ? _hAffichee[cle] : _hauteurEveil(cle);
+                memorialDust -= cran;
+                memoireRendue[cle] = Math.min(l.cout, deja + cran);
+                document.getElementById('dustCounter').textContent = memorialDust;
+                const _cd = document.getElementById('cardDetailDustCounter');
+                if (_cd) _cd.textContent = memorialDust;
+                journalEvenement('memoire_rendue', { lieu: cle, quantite: cran });
+                saveProgress();
+                _grainsVersEveil(cle);
+                animerEveil(cle, hAvant);
+                return null;
+            };
             const colorerBatimentsVille = () => {
                 if (!map.getLayer('batiments-3d') || map.getZoom() < 15) return;
                 let nouveau = false;
@@ -25867,14 +26077,20 @@
             };
             let _panneauTap = null;
             const _fermerPanneauTap = () => { if (_panneauTap) { _panneauTap.remove(); _panneauTap = null; } };
-            const _ouvrirPanneauTap = f => {
+            // cleEveil : clé de LIEUX_EVEILLABLES si le bâtiment est éveillable
+            // (bloc jauge + bouton sous les informations existantes).
+            const _ouvrirPanneauTap = (f, cleEveil) => {
                 _fermerPanneauTap();
                 const p = f.properties;
-                const sts = String(p.sts || p.supertype).split(',').filter(s => SUPERTYPES[s]);
+                const sts = String(p.sts || p.supertype || '').split(',').filter(s => SUPERTYPES[s]);
                 const cat = CATEGORIES_FR[p.cat] || '';
-                const titre = p.nom || (p.zone ? (cat || 'Zone') : (cat || 'Lieu sans nom'));
-                const d = Math.round(_distanceAuBatiment(f.geometry, playerPos.lng, playerPos.lat));
-                const aPortee = d <= PORTEE_TAP_M;
+                const eveil = cleEveil ? LIEUX_EVEILLABLES[cleEveil] : null;
+                const titre = eveil ? eveil.nom : (p.nom || (p.zone ? (cat || 'Zone') : (cat || 'Lieu sans nom')));
+                // Éveillable : distance à l'emprise du registre (la feature touchée
+                // peut être la copie gonflée, ou un morceau de tuile).
+                const geomDist = eveil ? { type: 'Polygon', coordinates: _eveilEmprises[cleEveil] } : f.geometry;
+                const d = Math.round(_distanceAuBatiment(geomDist, playerPos.lng, playerPos.lat));
+                const aPortee = d <= PORTEE_TAP_M || _eveilIgnorerPortee;
                 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
                 const el = document.createElement('div');
                 el.id = 'test2PanneauTap';
@@ -25895,12 +26111,57 @@
                     + (aPortee ? '● À portée' + (d ? ' (' + d + ' m)' : ' (tu y es)') : '○ Trop loin (' + d + ' m) — approche-toi à moins de ' + PORTEE_TAP_M + ' m')
                     + '</div>';
                 el.querySelector('button').addEventListener('click', _fermerPanneauTap);
+                if (eveil) {
+                    // Bloc d'éveil : jauge (poussière versée / coût) et bouton de versement.
+                    const verse = memoireRendue[cleEveil] || 0;
+                    const pct = Math.round(Math.min(1, verse / eveil.cout) * 100);
+                    const cran = Math.min(_eveilCran(cleEveil), eveil.cout - verse);
+                    const plein = verse >= eveil.cout;
+                    const motif = plein ? ''
+                        : !aPortee ? 'Approche-toi à moins de ' + PORTEE_TAP_M + ' m pour verser.'
+                        : memorialDust < cran ? 'Poussière insuffisante : ' + memorialDust + ' / ' + cran + ' ✦.'
+                        : '';
+                    const bloc = document.createElement('div');
+                    bloc.style.cssText = 'margin-top:10px;padding-top:10px;border-top:1px solid rgba(212,175,55,0.3);';
+                    bloc.innerHTML =
+                        '<div style="display:flex;justify-content:space-between;font-size:12px;"><span>Mémoire rendue</span><span>' + pct + ' %</span></div>'
+                        + '<div style="height:8px;border-radius:4px;background:rgba(255,255,255,0.12);margin:5px 0 9px;overflow:hidden;">'
+                        + '<div style="height:100%;width:' + pct + '%;background:var(--poudre-500);border-radius:4px;transition:width .4s;"></div></div>'
+                        + '<button type="button" style="width:100%;border:0;border-radius:10px;padding:9px 10px;font:700 13px system-ui,sans-serif;'
+                        + 'background:var(--poudre-500);color:#fff;cursor:pointer;">'
+                        + (plein ? 'Mémoire entièrement rendue' : 'Rendre de la mémoire (' + cran + ' ✦)') + '</button>'
+                        + (motif ? '<div style="margin-top:6px;font-size:12px;color:#C9BFA4;">' + esc(motif) + '</div>' : '');
+                    const btn = bloc.querySelector('button');
+                    if (plein || motif) {
+                        btn.disabled = true;
+                        btn.style.opacity = plein ? '0.75' : '0.45';
+                        btn.style.cursor = 'default';
+                    }
+                    btn.addEventListener('click', () => {
+                        if (!aPortee) return;
+                        verserMemoire(cleEveil);
+                        _ouvrirPanneauTap(f, cleEveil);   // jauge, coût et motif à jour
+                    });
+                    el.appendChild(bloc);
+                }
                 map.getContainer().parentElement.appendChild(el);
                 _panneauTap = el;
             };
             if (map.getLayer('batiments-3d')) map.on('click', e => {
+                // Bâtiment éveillé (volume) d'abord : il prime sur sa version plate.
+                const v = map.queryRenderedFeatures(e.point, { layers: ['lieux-eveilles-3d'] })[0];
                 const f = map.queryRenderedFeatures(e.point, { layers: ['batiments-lieux-3d', 'batiments-ville-3d'] })[0];
-                if (f) _ouvrirPanneauTap(f); else _fermerPanneauTap();
+                const cleEveil = v ? v.properties.cle : _eveilAuPoint(e.lngLat);
+                if (v) {
+                    // Même bâtiment en version plate (lieu ou ville) : garde les
+                    // supertypes et la carte dans le panneau. Sinon, le volume seul.
+                    const l = LIEUX_EVEILLABLES[cleEveil];
+                    const plate = [...Object.values(_batLieux), ...Object.values(_batVille)]
+                        .find(fs => fs && _dansAnneau(l.lng, l.lat, fs[0].geometry.coordinates[0]));
+                    _ouvrirPanneauTap(plate ? plate[0] : v, cleEveil);
+                }
+                else if (cleEveil) _ouvrirPanneauTap(f || { properties: {}, geometry: null }, cleEveil);
+                else if (f) _ouvrirPanneauTap(f); else _fermerPanneauTap();
             });
 
             // ── Interrupteurs de comparaison (test2, lot 3) ──
@@ -25936,6 +26197,27 @@
                     ligne.append(cb, document.createTextNode(it.label));
                     corps.appendChild(ligne);
                 });
+                // Outils de démo de l'éveil des bâtiments (?debug=1 seulement).
+                const _outil = (label, action) => {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.textContent = label;
+                    b.style.cssText = 'display:block;width:100%;margin-top:6px;border:1px solid rgba(212,175,55,0.55);border-radius:8px;'
+                        + 'background:none;color:inherit;font:inherit;padding:5px 8px;cursor:pointer;text-align:left;';
+                    b.addEventListener('click', () => action(b));
+                    corps.appendChild(b);
+                };
+                _outil('+500 ✦', () => addTestDust(500));
+                _outil('Ignorer la portée : non', b => {
+                    _eveilIgnorerPortee = !_eveilIgnorerPortee;
+                    b.textContent = 'Ignorer la portée : ' + (_eveilIgnorerPortee ? 'oui' : 'non');
+                });
+                _outil('Réinitialiser les éveils', () => {
+                    memoireRendue = {};
+                    _terminerEveils();
+                    saveProgress();
+                    _fermerPanneauTap();
+                });
                 tete.addEventListener('click', () => { corps.style.display = corps.style.display === 'none' ? 'block' : 'none'; });
                 panneau.append(tete, corps);
                 map.getContainer().parentElement.appendChild(panneau);
@@ -25950,6 +26232,7 @@
                 if (map.getLayoutProperty('batiments-3d', 'visibility') === 'none') return;
                 try { colorerBatimentsLieux(); } catch (e) { console.warn('[expLore] bâtiments-lieux', e); }
                 try { colorerBatimentsVille(); } catch (e) { console.warn('[expLore] bâtiments-ville', e); }
+                try { chercherEmprisesEveil(); } catch (e) { console.warn('[expLore] éveil', e); }
             }, 1500);
 
             // Pas de filtre CSS — le style parle seul
