@@ -1277,6 +1277,13 @@
             background: rgba(251,191,36,0.15);
             border-radius: 3px; padding: 1px 3px;
         }
+        /* Pastilles de supertype, coin bas gauche (17/11) ; le bas de la
+           vignette leur est réservé pour ne pas chevaucher le nom. */
+        .alb-card.alb-collected { padding-bottom: 22px; }
+        .alb-st {
+            position: absolute; left: 4px; bottom: 4px;
+            display: flex; gap: var(--space-1); pointer-events: none;
+        }
         /* ── Onglet Collections ── */
         .alb-coll-grid {
             display: grid;
@@ -23693,7 +23700,7 @@
         const RARITY_CONFIG = {
             common:    { 
                 name: 'Commune',
-                color: 'var(--rarete-commune)',
+                color: '#10B981',   // vert (David, 17/11 : retour aux couleurs d'origine, pas aux tokens --rarete-*)
                 shape: 'triangle', 
                 exp: { 0: 160, 1: 320, 2: 480 },
                 increment: 20,
@@ -23705,7 +23712,7 @@
             },
             rare:      { 
                 name: 'Rare',
-                color: 'var(--rarete-rare)',
+                color: '#3B82F6',   // bleu
                 shape: 'pentagon', 
                 exp: { 0: 250, 1: 520, 2: 800 },
                 increment: 20,
@@ -23717,7 +23724,7 @@
             },
             legendary: {
                 name: 'Légendaire',
-                color: 'var(--rarete-legendaire)',
+                color: '#F97316',   // orange
                 shape: 'hexagon',  
                 exp: { 0: 400, 1: 820, 2: 1200 },
                 increment: 25,
@@ -25216,6 +25223,11 @@
                   +   'width:calc(var(--onde-r,60px) * 2);height:calc(var(--onde-r,60px) * 2);border-radius:50%;'
                   +   'border:2px solid rgba(167,139,250,.8);opacity:0;animation:joueurOnde 3.2s ease-out infinite;}'
                   + '.joueur-onde::after{animation-delay:1.6s;}'
+                  // Ombre au sol sous les pieds de l'avatar (17/11) : sa largeur suit
+                  // l'avatar, sa hauteur est écrasée par l'inclinaison comme celle des marqueurs.
+                  + '.joueur-ombre{position:absolute;left:50%;top:100%;width:90%;aspect-ratio:1;pointer-events:none;z-index:-1;'
+                  +   'border-radius:50%;background:radial-gradient(closest-side,rgba(24,16,48,.42),rgba(24,16,48,0));'
+                  +   'transform:translate(-50%,-50%) scaleY(var(--sol-y,.4));}'
                   + '@keyframes joueurOnde{0%{transform:scaleY(var(--sol-y,.4)) scale(.12);opacity:.85}100%{transform:scaleY(var(--sol-y,.4)) scale(1);opacity:0}}';
                 document.head.appendChild(st);
 
@@ -25267,6 +25279,7 @@
                     const av = document.getElementById('playerAvatar');
                     if (av) {
                         if (!av.querySelector('.joueur-onde')) { const o = document.createElement('div'); o.className = 'joueur-onde'; av.appendChild(o); }
+                        if (!av.querySelector('.joueur-ombre')) { const o = document.createElement('div'); o.className = 'joueur-ombre'; av.appendChild(o); }
                         av.style.setProperty('--onde-r', Math.round(Math.min(160, 30 * ref)) + 'px');
                     }
                     for (const [liste, obj] of TYPES()) {
@@ -25424,8 +25437,8 @@
                 if (!map.getSource('openmaptiles') || map.getLayer('batiments-3d')) return;
                 const premiereEtiquette = (map.getStyle().layers.find(l => l.type === 'symbol') || {}).id;
                 map.addLayer({
-                    // Couche fill (charte, lot 6.3, 17/11) : vue quasi zénithale, bâtiments
-                    // à plat. Les trois couches (ville, ville supertypée, lieux) sont
+                    // Couche fill (charte, lot 6.3, 17/11) : bâtiments à plat.
+                    // Les trois couches (ville, ville supertypée, lieux) sont
                     // empilées par leur ordre d'insertion, sans hauteur d'extrusion :
                     // plus de scintillement possible. Les id en « -3d » sont gardés
                     // (clic, interrupteurs, recherche des bâtiments).
@@ -26345,6 +26358,7 @@
             }); // end map.on('load')
 
             map.on('zoom', updateAvatarScale);
+            updateAvatarScale();   // taille juste dès le départ (avant : seulement au premier zoom, d'où un saut)
 
             POIS.forEach(poi => {
                 const el = document.createElement('div');
@@ -26675,16 +26689,15 @@
         // de près on regarde vers l'horizon, en s'éloignant la vue se redresse.
         // La rotation est manuelle (deux doigts, ou un doigt qui tourne autour du
         // joueur) : la mappe ne suit plus le cap du téléphone, seul le cône le fait.
-        // Réglage n° 3 (charte, lot 6.3, 17/11) : vue quasi zénithale. À 55-72° la
-        // hachure des supertypes était écrasée (31 à 57 % de sa hauteur) au point de
-        // virer à l'aplat ; bâtiments à plat, donc rien à gagner à coucher la vue.
-        // Au plus loin 25°, au plus près 35°, linéaire. Plus d'horizon ni de brume
-        // (la brume ne s'affiche qu'au-delà de 45°).
+        // Réglage n° 2 (16/11, comparaison avec Pokémon GO) : caméra plus couchée
+        // (horizon visible, ciel et brume), départ plus proche. Au plus loin 55°,
+        // au départ 68°, au plus près 72°. Rétabli le 17/11 (David) après un essai
+        // à 25-35° (lot 6.3 de la charte) : la vue couchée est préférée, au prix
+        // d'une hachure des supertypes plus serrée au loin.
         const CAM_ZOOM_MIN = 15.8, CAM_ZOOM_MAX = 19.2, CAM_ZOOM_DEFAUT = 18;
-        const CAM_PITCH_MIN = 25, CAM_PITCH_MAX = 35;
         function _camPitch(z) {
-            const t = (z - CAM_ZOOM_MIN) / (CAM_ZOOM_MAX - CAM_ZOOM_MIN);
-            return Math.max(CAM_PITCH_MIN, Math.min(CAM_PITCH_MAX, CAM_PITCH_MIN + t * (CAM_PITCH_MAX - CAM_PITCH_MIN)));
+            const p = z <= 18 ? 55 + (z - 15.8) / 2.2 * 13 : 68 + (z - 18) / 1.2 * 4;
+            return Math.max(55, Math.min(72, p));
         }
         let _camZoomProche = CAM_ZOOM_DEFAUT;   // zoom retrouvé au retour de la vue d'ensemble
         // Place du joueur : vue proche, ses pieds à 69 % de la hauteur de l'écran.
@@ -31165,16 +31178,21 @@
         }
 
         function _albCardThumb(card, showNew) {
-            const sym = supertypePastille(card.supertype, 36) || '🎴';
             const lvl = (_cdState(card.id)?.level) || 1;
             const img = card.image
                 ? `<img src="${card.image}" style="width:36px;height:36px;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">`
-                : `<span style="font-size:18px;">${sym}</span>`;
+                : `<span style="font-size:18px;">🎴</span>`;
+            // Supertype(s) en pastille dans le coin bas gauche (David, 17/11),
+            // deux au plus ; l'image de la carte reste au centre.
+            const sts = [card.supertype, card.supertype2].filter(s => s && SUPERTYPES[s]).slice(0, 2);
+            const pastilles = sts.length
+                ? `<span class="alb-st">${sts.map(s => supertypePastille(s, 16)).join('')}</span>` : '';
             return `<div class="alb-card alb-collected" onclick="_albOpenCard('${card.id}')">
                 ${showNew ? '<span class="alb-new-badge">NEW</span>' : ''}
                 <div class="alb-card-art">${img}</div>
                 <div class="alb-card-name">${card.name}</div>
                 <span class="alb-lv">Nv.${lvl}</span>
+                ${pastilles}
             </div>`;
         }
 
@@ -35905,14 +35923,14 @@
         function updateAvatarScale() {
             if (!map) return;
             const z = map.getZoom();
-            // Vue proche (16/11, façon Pokémon GO) : l'avatar garde presque sa taille
-            // en zoomant (il grandit un peu de près) ; ×2 au zoom de départ (≈ 1/9 de
-            // l'écran, mesuré sur une capture de Pokémon GO : ≈ 1/7, mais leur avatar est élancé).
+            // Vue proche (17/11, façon Pokémon GO) : l'avatar suit le zoom de la mappe
+            // comme un objet posé au sol (il double à chaque niveau), ×2 au zoom de
+            // départ. Sur la plage de la caméra (15,8 → 19,2) : ×0,43 → ×4,6.
             // Vue d'ensemble : il suit la carte, comme avant (×2 au zoom 18 : raccord).
             const scale = (typeof _mapViewMode !== 'undefined' && _mapViewMode === 'close')
-                ? 2 * Math.pow(2, (z - CAM_ZOOM_DEFAUT) * 0.25)
+                ? 2 * Math.pow(2, z - CAM_ZOOM_DEFAUT)
                 : Math.pow(2, z - 17);
-            const clamped = Math.max(0.3, Math.min(4, scale));
+            const clamped = Math.max(0.3, Math.min(4.6, scale));
             // Scaler le SVG interne directement — pas le div conteneur
             const svg = document.querySelector('#playerAvatar svg');
             if (svg) {
