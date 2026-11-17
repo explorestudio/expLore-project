@@ -25282,13 +25282,28 @@
                         if (!av.querySelector('.joueur-ombre')) { const o = document.createElement('div'); o.className = 'joueur-ombre'; av.appendChild(o); }
                         av.style.setProperty('--onde-r', Math.round(Math.min(160, 30 * ref)) + 'px');
                     }
+                    // Zoom (17/11, façon Pokémon GO) : en vue proche, les POI grossissent
+                    // aussi en zoomant, un peu moins vite que la mappe (×1,68 par niveau),
+                    // taille d'origine au zoom de départ.
+                    const fz = (typeof _mapViewMode !== 'undefined' && _mapViewMode === 'close')
+                        ? Math.pow(2, (map.getZoom() - CAM_ZOOM_DEFAUT) * 0.75) : 1;
+                    // Horizon (17/11) : un point au-delà est projeté dans le ciel par
+                    // MapLibre ; son marqueur flottait au-dessus de l'horizon. Masqué
+                    // tant que son point n'est pas sous la ligne d'horizon.
+                    let horizonY = -Infinity;
+                    if (pitch > 45 && typeof map.transform.getHorizon === 'function') {
+                        const pad = map.getPadding(), Hc = map.getCanvas().clientHeight;
+                        horizonY = (pad.top + Hc - pad.bottom) / 2 - map.transform.getHorizon() + 8;
+                    }
                     for (const [liste, obj] of TYPES()) {
                         for (const m of liste) {
                             if (!m || !m.el || m.el.style.display === 'none') continue;
                             const o = obj(m);
                             if (!o || o.lat == null) continue;
                             const env = envelopper(m.el);
-                            const s = pitch < 5 ? 1 : Math.max(0.35, Math.min(1.25, pxParMetre(o.lng, o.lat) / ref));
+                            const auCiel = map.project([o.lng, o.lat]).y < horizonY ? 'hidden' : '';
+                            if (env.style.visibility !== auCiel) env.style.visibility = auCiel;
+                            const s = pitch < 5 ? 1 : Math.max(0.3, Math.min(2.6, fz * Math.max(0.35, Math.min(1.25, pxParMetre(o.lng, o.lat) / ref))));
                             const val = s.toFixed(2);
                             if (env.style.scale !== val) env.style.scale = val;
                         }
@@ -26359,6 +26374,7 @@
 
             map.on('zoom', updateAvatarScale);
             updateAvatarScale();   // taille juste dès le départ (avant : seulement au premier zoom, d'où un saut)
+            map.on('load', _avatar3dInit);   // essai d'avatar 3D, seulement avec ?avatar3d=1
 
             POIS.forEach(poi => {
                 const el = document.createElement('div');
@@ -26694,7 +26710,7 @@
         // au départ 68°, au plus près 72°. Rétabli le 17/11 (David) après un essai
         // à 25-35° (lot 6.3 de la charte) : la vue couchée est préférée, au prix
         // d'une hachure des supertypes plus serrée au loin.
-        const CAM_ZOOM_MIN = 15.8, CAM_ZOOM_MAX = 19.2, CAM_ZOOM_DEFAUT = 18;
+        const CAM_ZOOM_MIN = 15.8, CAM_ZOOM_MAX = 19.2, CAM_ZOOM_DEFAUT = 17.5;   // départ au milieu de la plage (17/11, avant 18)
         function _camPitch(z) {
             const p = z <= 18 ? 55 + (z - 15.8) / 2.2 * 13 : 68 + (z - 18) / 1.2 * 4;
             return Math.max(55, Math.min(72, p));
@@ -35916,6 +35932,158 @@
             _studioWalkAnim = requestAnimationFrame(step);
         }
 
+        // ══════════════════════════════════════════════════════════════
+        // AVATAR 3D — essai (17/11), activé seulement par ?avatar3d=1.
+        // Couche custom MapLibre + three.js (chargé à la demande) : un modèle
+        // construit en code dans le style de l'avatar 2D (grosse tête, yeux
+        // noirs), aux couleurs de la tenue. Il se tourne vers sa direction de
+        // marche et anime jambes et bras quand il bouge. Taille à l'écran : celle
+        // de l'avatar 2D (updateAvatarScale). Vue planification : retour au 2D.
+        // La carte n'est redessinée en continu que pendant la marche (batterie).
+        // ══════════════════════════════════════════════════════════════
+        const AVATAR_3D = /[?&]avatar3d=1(&|$)/.test(location.search);
+        function _avatar3dInit() {
+            if (!AVATAR_3D || !map || map.getLayer('avatar-3d')) return;
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js';
+            s.onload = () => { try { _avatar3dCouche(); } catch (e) { console.warn('[expLore] avatar 3D indisponible', e); } };
+            s.onerror = () => console.warn('[expLore] three.js non chargé : avatar 2D conservé');
+            document.head.appendChild(s);
+        }
+        function _avatar3dCouche() {
+            const T = window.THREE;
+            let camera, scene, renderer, perso = null, cleTenue = '';
+            const jambes = [], bras = [];
+            let cap = 180, dernier = null, tDernierPas = 0, phase = 0, ampMarche = 0, tPrec = performance.now();
+
+            // Modèle : hauteur totale 1, y vers le haut, l'avant regarde +z.
+            const construire = () => {
+                const t = tenueAvatar;
+                const peau = _avGet(AV_PEAU, t.peau).c, chev = _avGet(AV_CHEVEUX_COUL, t.coulCheveux).c;
+                const haut = _avGet(AV_HAUTS, t.haut), bas = _avGet(AV_BAS, t.bas);
+                const chapeau = t.chapeau ? _avGet(AV_CHAPEAUX, t.chapeau) : null;
+                const mat = c => new T.MeshLambertMaterial({ color: c });
+                const boite = (w, h, d, c) => new T.Mesh(new T.BoxGeometry(w, h, d), mat(c));
+                const g = new T.Group();
+                jambes.length = 0; bras.length = 0;
+                // Jambes (pivot aux hanches) et chaussures
+                [-1, 1].forEach(sx => {
+                    const pivot = new T.Group(); pivot.position.set(sx * 0.06, 0.3, 0);
+                    const jambe = boite(0.09, 0.25, 0.1, bas.jupe ? AV_COLLANT : bas.c); jambe.position.y = -0.125;
+                    const pied = boite(0.1, 0.05, 0.14, '#2a2420'); pied.position.set(0, -0.27, 0.02);
+                    pivot.add(jambe, pied); g.add(pivot); jambes.push(pivot);
+                });
+                if (bas.jupe) {
+                    const jupe = new T.Mesh(new T.CylinderGeometry(0.15, 0.2, 0.13, 16), mat(bas.c));
+                    jupe.position.y = 0.26; g.add(jupe);
+                }
+                // Buste, chemise visible, bretelle
+                const buste = boite(0.3, 0.27, 0.18, haut.c); buste.position.y = 0.435; g.add(buste);
+                const chemise = boite(0.08, 0.2, 0.01, haut.in); chemise.position.set(0, 0.46, 0.091); g.add(chemise);
+                if (haut.bret) {
+                    const bret = boite(0.035, 0.36, 0.01, haut.bret);
+                    bret.position.set(0, 0.45, 0.096); bret.rotation.z = -0.75; g.add(bret);
+                }
+                // Bras (pivot aux épaules) et mains
+                [-1, 1].forEach(sx => {
+                    const pivot = new T.Group(); pivot.position.set(sx * 0.19, 0.55, 0);
+                    const b = boite(0.08, 0.22, 0.09, haut.b); b.position.y = -0.11;
+                    const main = new T.Mesh(new T.SphereGeometry(0.045, 12, 8), mat(peau)); main.position.y = -0.24;
+                    pivot.add(b, main); g.add(pivot); bras.push(pivot);
+                });
+                // Tête, cheveux (calotte + arrière), yeux
+                const tete = new T.Mesh(new T.SphereGeometry(0.21, 24, 16), mat(peau));
+                tete.position.y = 0.78; tete.scale.set(1, 0.95, 0.95); g.add(tete);
+                const calotte = new T.Mesh(new T.SphereGeometry(0.222, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.42), mat(chev));
+                calotte.position.y = 0.79; g.add(calotte);
+                const nuque = new T.Mesh(new T.SphereGeometry(0.218, 24, 16, Math.PI * 0.6, Math.PI * 0.8, 0, Math.PI * 0.7), mat(chev));
+                nuque.position.y = 0.78; g.add(nuque);
+                [-1, 1].forEach(sx => {
+                    const oeil = new T.Mesh(new T.SphereGeometry(0.03, 12, 8), mat('#1b1512'));
+                    oeil.position.set(sx * 0.075, 0.77, 0.19); oeil.scale.set(1, 1.5, 0.6); g.add(oeil);
+                });
+                if (chapeau) {
+                    const bord = new T.Mesh(new T.CylinderGeometry(0.26, 0.26, 0.02, 24), mat(chapeau.c)); bord.position.y = 0.94;
+                    const fond = new T.Mesh(new T.CylinderGeometry(0.17, 0.19, 0.13, 24), mat(chapeau.c)); fond.position.y = 1.0;
+                    g.add(bord, fond);
+                }
+                return g;
+            };
+            const reconstruireSiTenue = () => {
+                const cle = JSON.stringify(tenueAvatar);
+                if (cle === cleTenue && perso) return;
+                cleTenue = cle;
+                if (perso) scene.remove(perso);
+                perso = construire(); scene.add(perso);
+            };
+            // Pixels par mètre au sol, perpendiculairement à la vue, au point du joueur.
+            const pxParMetre = ll => {
+                const az = (map.getBearing() + 90) * Math.PI / 180;
+                const a = map.project(ll);
+                const b = map.project([ll.lng + 10 * Math.sin(az) / (111320 * Math.cos(ll.lat * Math.PI / 180)),
+                                       ll.lat + 10 * Math.cos(az) / 111320]);
+                return Math.hypot(b.x - a.x, b.y - a.y) / 10 || 1;
+            };
+            const svg2D = on => {
+                const s = document.querySelector('#playerAvatar svg');
+                if (s) s.style.visibility = on ? '' : 'hidden';
+            };
+
+            map.addLayer({
+                id: 'avatar-3d', type: 'custom', renderingMode: '3d',
+                onAdd(m, gl) {
+                    camera = new T.Camera();
+                    scene = new T.Scene();
+                    scene.add(new T.HemisphereLight(0xffffff, 0x8a7a66, 0.95));
+                    const soleil = new T.DirectionalLight(0xffffff, 0.55);
+                    soleil.position.set(0.6, 1, 0.8); scene.add(soleil);
+                    renderer = new T.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true });
+                    renderer.autoClear = false;
+                },
+                render(gl, matrix) {
+                    if (!playerMarker) return;
+                    const proche = _mapViewMode === 'close' && map.getPitch() > 20;
+                    svg2D(!proche);
+                    if (!proche) return;
+                    reconstruireSiTenue();
+                    const ll = playerMarker.getLngLat();
+                    const now = performance.now(), dt = Math.min(0.1, (now - tPrec) / 1000); tPrec = now;
+                    // Direction : celle du dernier pas (au moins 30 cm parcourus).
+                    if (dernier) {
+                        const dx = (ll.lng - dernier.lng) * 111320 * Math.cos(ll.lat * Math.PI / 180);
+                        const dy = (ll.lat - dernier.lat) * 111320;
+                        if (Math.hypot(dx, dy) > 0.3) {
+                            cap = Math.atan2(dx, dy) * 180 / Math.PI;
+                            dernier = { lng: ll.lng, lat: ll.lat }; tDernierPas = now;
+                        }
+                    } else dernier = { lng: ll.lng, lat: ll.lat };
+                    const enMarche = now - tDernierPas < 300;
+                    ampMarche += ((enMarche ? 0.6 : 0) - ampMarche) * Math.min(1, dt * 8);   // arrêt en douceur
+                    if (ampMarche > 0.01) phase += dt * 9;
+                    const amp = Math.sin(phase) * ampMarche;
+                    jambes[0].rotation.x = amp; jambes[1].rotation.x = -amp;
+                    bras[0].rotation.x = -amp * 0.8; bras[1].rotation.x = amp * 0.8;
+                    perso.rotation.y = Math.PI - cap * Math.PI / 180;
+                    perso.position.y = Math.abs(Math.sin(phase)) * 0.04 * ampMarche;
+                    // Taille : hauteur à l'écran de l'avatar 2D, ramenée en mètres au sol
+                    // (une silhouette debout est vue raccourcie de sin(inclinaison)).
+                    const el = document.getElementById('playerAvatar');
+                    const hPx = (el && parseFloat(el.style.height)) || 96;
+                    const hM = hPx / (pxParMetre(ll) * Math.max(0.5, Math.sin(map.getPitch() * Math.PI / 180)));
+                    const mc = maplibregl.MercatorCoordinate.fromLngLat(ll, 0);
+                    const sc = hM * mc.meterInMercatorCoordinateUnits();
+                    const l = new T.Matrix4().makeTranslation(mc.x, mc.y, mc.z)
+                        .scale(new T.Vector3(sc, -sc, sc))
+                        .multiply(new T.Matrix4().makeRotationX(Math.PI / 2));
+                    camera.projectionMatrix = new T.Matrix4().fromArray(matrix).multiply(l);
+                    renderer.resetState();
+                    renderer.render(scene, camera);
+                    // Redessin continu seulement pendant la marche (et le temps de s'arrêter).
+                    if (enMarche || ampMarche > 0.01) map.triggerRepaint();
+                }
+            });
+        }
+
         // Dimensions de base de l'avatar
         const AVATAR_BASE_W = 36;
         const AVATAR_BASE_H = 48;
@@ -35923,14 +36091,17 @@
         function updateAvatarScale() {
             if (!map) return;
             const z = map.getZoom();
-            // Vue proche (17/11, façon Pokémon GO) : l'avatar suit le zoom de la mappe
-            // comme un objet posé au sol (il double à chaque niveau), ×2 au zoom de
-            // départ. Sur la plage de la caméra (15,8 → 19,2) : ×0,43 → ×4,6.
-            // Vue d'ensemble : il suit la carte, comme avant (×2 au zoom 18 : raccord).
+            // Vue proche (17/11, calée sur des captures de Pokémon GO) : hauteur en
+            // part de l'écran, de 5 % au plus loin à 22 % au plus près (taille max,
+            // David : 34 % était trop), en progression régulière avec le zoom.
+            // Départ (17,5, milieu de la plage) : ≈ 10,5 %.
+            // Vue d'ensemble : il suit la carte, comme avant.
+            const H = (map.getCanvas() && map.getCanvas().clientHeight) || window.innerHeight;
+            const tz = Math.max(0, Math.min(1, (z - CAM_ZOOM_MIN) / (CAM_ZOOM_MAX - CAM_ZOOM_MIN)));
             const scale = (typeof _mapViewMode !== 'undefined' && _mapViewMode === 'close')
-                ? 2 * Math.pow(2, z - CAM_ZOOM_DEFAUT)
+                ? 0.05 * H * Math.pow(0.22 / 0.05, tz) / AVATAR_BASE_H
                 : Math.pow(2, z - 17);
-            const clamped = Math.max(0.3, Math.min(4.6, scale));
+            const clamped = Math.max(0.3, Math.min(8, scale));
             // Scaler le SVG interne directement — pas le div conteneur
             const svg = document.querySelector('#playerAvatar svg');
             if (svg) {
