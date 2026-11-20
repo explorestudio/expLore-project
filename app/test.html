@@ -10604,7 +10604,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.98</div>
+            <div class="hud-version" id="hudVersion">v1.9.99</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -13009,7 +13009,12 @@
         ];
         // Code invité (brief sessions et codes, lot D) : accès au jeu sans aucune
         // collecte, réutilisable, jamais vérifié au serveur. Hors de TEST_CODES.
-        const GUEST_CODE = 'TEST123';
+        // TEST123 jusqu'au 20/11, puis TEST124.
+        const GUEST_CODE = 'TEST124';
+        // Code public avec collecte (20/11) : journal et GPS comme un code de test,
+        // mais réutilisable (ni expiration, ni consommation, ni vérification au Sheet).
+        // Pour lui comme pour l'invité, la fin d'une heure = quête Google Form seule.
+        const CODE_PUBLIC_COLLECTE = 'TEST123';
         // Lot B : vérification des codes au Google Sheet (onglet « codes »).
         // Activée le 06/11 avant le test terrain : le script déployé doit avoir l'action check.
         const CODES_SERVEUR_ACTIF = true;
@@ -13304,6 +13309,7 @@
             "Ouvrir le formulaire": "Open the form",
             "Rouvrir le formulaire": "Reopen the form",
             "📜 Deux nouvelles quêtes dans ton journal": "📜 Two new quests in your log",
+            "📜 Nouvelle quête dans ton journal": "📜 New quest in your log",
             "🎬 Jouer la scène finale": "🎬 Play the final scene",
             "📅 Visite le": "📅 Visited on",
 
@@ -15346,6 +15352,8 @@
         // réel passe par le Sheet (lot B, CODES_SERVEUR_ACTIF).
         // Code équipe : ni expiration ni consommation. Code invité (GUEST_CODE) :
         // ni expiration, ni consommation, ni t0, ni journal, ni scène finale.
+        // Il a sa propre horloge (tInvite) : une heure après, la seule quête
+        // Google Form entre au journal, sans scène ni quête de l'after (20/11).
         const ACCES_KEY             = 'explore_acces';
         const ACCES_CONSOMMES_KEY   = 'explore_codes_consommes';
         const ACCES_FINALE_MS       = 60 * 60 * 1000;
@@ -15360,7 +15368,7 @@
         function _accesNormaliser(s) { return String(s || '').toUpperCase().replace(/\s+/g, ''); }
         function codeAccesEstValide(code) {
             const c = _accesNormaliser(code);
-            return c === GUEST_CODE || TEST_CODES.includes(c);
+            return c === GUEST_CODE || c === CODE_PUBLIC_COLLECTE || TEST_CODES.includes(c);
         }
         function accesEstInvite() { const a = _acces || _accesLire(); return !!(a && a.invite); }
         // Codes des sessions expirées sur cet appareil (lot A).
@@ -15391,6 +15399,8 @@
         function _accesPuisDemarrer() {
             _accesLire();
             const demarrer = () => { _accesAppliquerInvite(); _initAppAfterLang(); _accesDemarrerVeille(); };
+            // Appareil resté sur l'ancien TEST123 sans collecte : on redemande le code.
+            if (_acces && _acces.invite && _acces.code !== GUEST_CODE) { _acces = null; try { localStorage.removeItem(ACCES_KEY); } catch (e) {} }
             const actif = !!(_acces && _acces.code && !_acces.expire);
             // Session expirée pendant que l'app était fermée : écran de saisie d'emblée.
             if (actif && _accesDureeDepassee()) { _accesExpirer(demarrer); return; }
@@ -15439,14 +15449,16 @@
             if (_accesMode !== 'cloture') {
                 if (code === GUEST_CODE) { _accesEntrerInvite(); return; }
                 const team = (code === TEST_CODE_EQUIPE);
-                if (!team && _accesConsommes().includes(code)) {
+                // Codes réutilisables : jamais consommés, jamais soumis au Sheet.
+                const libre = team || code === CODE_PUBLIC_COLLECTE;
+                if (!libre && _accesConsommes().includes(code)) {
                     _accesJournal('code_refuse', { raison: 'expire_appareil' });
                     _accesRefus(ACCES_MSG_EXPIREE);
                     return;
                 }
                 // Lot B : le Sheet tranche, à la saisie seulement. Le code équipe passe toujours.
                 const sid = _jrnIdAleatoire();
-                if (CODES_SERVEUR_ACTIF && JOURNAL_ENDPOINT && !team) {
+                if (CODES_SERVEUR_ACTIF && JOURNAL_ENDPOINT && !libre) {
                     _accesVerifierServeur(code, sid, ok => { if (ok) _accesEntrer(code, sid); });
                     return;
                 }
@@ -15468,6 +15480,7 @@
             if (_acces && _acces.code) _jrnRepartir();
             _jrnNouvelleSession(sid);
             _acces = { code, t0: Date.now(), team: (code === TEST_CODE_EQUIPE) };
+            if (code === CODE_PUBLIC_COLLECTE) _acces.formSeul = true;
             _accesEcrire();
             _accesJournal('code_entered', { team: _acces.team });
             _accesTerminerSaisie();
@@ -15477,7 +15490,7 @@
         // contient que ce qui précède la saisie), et rien ne s'y ajoutera.
         function _accesEntrerInvite() {
             if (_acces && _acces.code && !_acces.invite) _jrnRepartir();
-            _acces = { code: GUEST_CODE, invite: true };
+            _acces = { code: GUEST_CODE, invite: true, tInvite: Date.now() };
             _accesEcrire();
             _jrnQueue = [];
             _jrnPersister();
@@ -15520,7 +15533,7 @@
 
         // ── Lot A : expiration ──
         function _accesDureeDepassee() {
-            return !!(_acces && _acces.t0 && !_acces.team && !_acces.invite && !_acces.expire
+            return !!(_acces && _acces.t0 && !_acces.team && !_acces.invite && !_acces.formSeul && !_acces.expire
                 && Date.now() - _acces.t0 >= ACCES_EXPIRATION_MS);
         }
         // Dernier envoi, code consommé, accès fermé. L'enregistrement garde code et
@@ -15584,6 +15597,7 @@
         }
 
         function _accesVerifierEcheances() {
+            if (_acces && _acces.invite) { _accesEcheanceInvite(); return; }
             if (!_acces || !_acces.t0 || _acces.invite || _acces.expire) return;
             if (_accesDureeDepassee()) { _accesExpirer(null); return; }
             const ecoule = Date.now() - _acces.t0;
@@ -15592,11 +15606,23 @@
             // se jouer (dialogue ouvert, carte pas prête) ; on retente au tour suivant.
             if (!_acces.team && !_acces.invite && !_acces.sessionClosed && !_acces.finaleDeclenchee
                 && ecoule >= ACCES_FINALE_MS && typeof declencherSceneFinaleTest === 'function') {
-                if (declencherSceneFinaleTest()) {
+                // TEST123 : quête Google Form seule, ni scène ni after.
+                if (_acces.formSeul ? _finaleQueteFormInvite() : declencherSceneFinaleTest()) {
                     _acces.finaleDeclenchee = true;
                     _accesEcrire();
                 }
             }
+        }
+
+        // Invité (TEST124) : au bout d'une heure, quête Google Form seule.
+        // Invité enregistré avant le 20/11 (sans tInvite) : l'heure part de maintenant.
+        function _accesEcheanceInvite() {
+            if (_acces.finaleDeclenchee) return;
+            if (!_acces.tInvite) { _acces.tInvite = Date.now(); _accesEcrire(); return; }
+            if (Date.now() - _acces.tInvite < ACCES_FINALE_MS) return;
+            if (typeof _finaleQueteFormInvite !== 'function' || !_finaleQueteFormInvite()) return;
+            _acces.finaleDeclenchee = true;
+            _accesEcrire();
         }
 
         // ── Menu test ──
@@ -15607,6 +15633,13 @@
         // Simule le temps qui passe depuis la première saisie.
         function testReculerT0(minutes) {
             _accesLire();
+            if (_acces && _acces.invite) {
+                _acces.tInvite = (_acces.tInvite || Date.now()) - minutes * 60000;
+                _accesEcrire();
+                _accesVerifierEcheances();
+                showToast('⏱️ invité : il y a ' + Math.round((Date.now() - _acces.tInvite) / 60000) + ' min');
+                return;
+            }
             if (!_acces || !_acces.t0) { showToast('Aucun code saisi'); return; }
             _acces.t0 -= minutes * 60000;
             _accesEcrire();
@@ -41128,6 +41161,22 @@
             if (typeof uiEstRevele === 'function' && !uiEstRevele('journal_quetes')) uiReveler('journal_quetes', { pulse: true });
             updateQuestJournalBadge();
             showToast(T('📜 Deux nouvelles quêtes dans ton journal'), 3200);
+        }
+
+        // TEST123 et invité TEST124 : ni PNJ, ni dialogue, ni quête de l'after ; seul le
+        // Google Form entre au journal. false tant que la partie n'est pas chargée.
+        function _finaleQueteFormInvite() {
+            if (!_progressLoaded) return false;
+            _finaleLire();
+            if (!_finale) _finale = { quetes: {} };
+            if (!_finale.quetes) _finale.quetes = {};
+            if (_finale.quetes.posttest_form) return true;
+            _finale.quetes.posttest_form = 'active';
+            _finaleEcrire();
+            if (typeof uiEstRevele === 'function' && !uiEstRevele('journal_quetes')) uiReveler('journal_quetes', { pulse: true });
+            updateQuestJournalBadge();
+            showToast(T('📜 Nouvelle quête dans ton journal'), 3200);
+            return true;
         }
 
         // Quête Google Form : ouvre le formulaire post-test dans un panneau du jeu,
