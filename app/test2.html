@@ -2008,9 +2008,10 @@
            La fiche se ferme en touchant le fond de part et d'autre de la
            carte (cf. handleCardDetailBackdropClick). Depuis le bouton « mappe »
            (David, 24/10), ces deux repères sont toujours visibles et disent
-           « retour » : même icône des deux côtés, sans libellé. Décoratifs —
-           pointer-events:none, le clic passe au travers et c'est bien le
-           backdrop qui ferme. */
+           « retour » : même icône des deux côtés, sans libellé. Depuis le
+           21/11, seule la flèche est cliquable et mène à la carte précédente /
+           suivante (cf. ficheCarteVoisine) ; le reste de la bande laisse passer
+           le clic au backdrop, qui ferme. */
         .ob-exit-hint {
             position: absolute;
             top: 0; bottom: 0;
@@ -2039,7 +2040,10 @@
             background: rgba(255,255,255,0.08);
             border: 1px solid rgba(255,255,255,0.18);
             color: rgba(255,255,255,0.85);
+            pointer-events: auto; cursor: pointer;
         }
+        /* Une seule carte collectée, ou tutoriel guidé : pas de voisine à montrer. */
+        #cardDetailView.fiche-seule .ob-exit-hint { display: none; }
         /* Bandes « Mappe » allumées : le tap ramène à la mappe, pas à l'écran
            précédent. Les écrans intermédiaires s'effacent derrière la fiche pour
            que son flou montre la mappe (A3, David 19/10). */
@@ -2766,7 +2770,8 @@
             cursor: default;
         }
         .card-level-up-btn.btn-orb {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            /* Bleu des orbes de la mappe (David, 21/11) */
+            background: linear-gradient(135deg, #06b6d4 0%, #0e7490 100%);
         }
 
         /* Animation : utilisation d'une orbe pour restaurer l'énergie */
@@ -9249,11 +9254,11 @@
         .vn-line .vn-ico {
             /* 1.4em : à 1.1em (≈15 px) la poussière et l'échoppe ne se lisaient plus */
             display: inline-block; height: 1.4em; width: auto;
-            vertical-align: -0.36em; margin-right: 0.2em;
+            vertical-align: -0.36em; margin-left: 0.2em;
             filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
         }
         /* Mot-clé d'une réplique : couleur de l'objet (style en ligne), gras ;
-           l'icône et le premier mot sont insécables. */
+           le dernier mot et l'icône qui le suit sont insécables. */
         .vn-line .vn-mot { font-weight: 600; }
         .vn-line .vn-mot-ico { white-space: nowrap; }
 
@@ -11368,9 +11373,9 @@
                     <circle cx="13" cy="13" r="3.5" fill="none" stroke="#C2410C" stroke-width="0.8"/>
                 </svg>
             </button>
-            <!-- Repères « retour à l'écran précédent » : flèches vers les bords (on sort par là) -->
-            <div class="ob-exit-hint left" aria-hidden="true"><span class="ob-exit-hint-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></svg></span></div>
-            <div class="ob-exit-hint right" aria-hidden="true"><span class="ob-exit-hint-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span></div>
+            <!-- Flèches des bords : carte précédente / suivante (David, 21/11) ; le reste de la bande ferme toujours la fiche -->
+            <div class="ob-exit-hint left"><span class="ob-exit-hint-arrow" role="button" aria-label="Carte précédente" onclick="event.stopPropagation(); ficheCarteVoisine(-1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></svg></span></div>
+            <div class="ob-exit-hint right"><span class="ob-exit-hint-arrow" role="button" aria-label="Carte suivante" onclick="event.stopPropagation(); ficheCarteVoisine(1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span></div>
             <div class="card-detail-inner" onclick="event.stopPropagation()">
                 <!-- Bouton fermer flottant -->
 
@@ -13151,19 +13156,19 @@
         const I18N_EN = {
             // ══ Tutoriel lissé : carnet, longue-vue, progression, découvertes ══
             // Le carnet, présenté à sa première ouverture (cf. _obJournalHint)
-            "Ah, tu l'as trouvé. C'est le <span style=\"font-weight:600\">📖 carnet</span> de la carte — j'y ai noté tout ce qu'elle m'a déjà raconté.": "Ah, you found it. That is the card's <span style=\"font-weight:600\">📖 notebook</span> — I noted down everything it has already told me.",
+            "Ah, tu l'as trouvé. C'est le <span style=\"font-weight:600\">carnet 📖</span> de la carte — j'y ai noté tout ce qu'elle m'a déjà raconté.": "Ah, you found it. That is the card's <span style=\"font-weight:600\">notebook 📖</span> — I noted down everything it has already told me.",
             "Elle est un peu bavarde, en tout cas elle a encore des choses à dire.": "It is a bit of a talker — either way, it still has things to say.",
             "Prends le temps de lire ce qu'elle a déjà retrouvé. Le reste viendra après.": "Take the time to read what it has already recovered. The rest will come after.",
             "Pour revenir en arrière, touche son image en haut : tu quitteras ce carnet dès que tu le souhaites.": "To go back, touch its picture at the top: you can leave this notebook whenever you like.",
-            "Les pages voilées demandent autre chose que de la poussière : une <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span> pour une image, une <span style=\"color:#FCD34D;font-weight:600\">📼 cassette</span> pour une voix, de l'<span style=\"color:#FCD34D;font-weight:600\">🖋️ encre</span> pour un texte.": "Veiled pages ask for something other than dust: a <span style=\"color:#FCD34D;font-weight:600\">🎞️ roll of film</span> for an image, a <span style=\"color:#FCD34D;font-weight:600\">📼 tape</span> for a voice, <span style=\"color:#FCD34D;font-weight:600\">🖋️ ink</span> for a text.",
+            "Les pages voilées demandent autre chose que de la poussière : une <span style=\"color:#FCD34D;font-weight:600\">pellicule 🎞️</span> pour une image, une <span style=\"color:#FCD34D;font-weight:600\">cassette 📼</span> pour une voix, de l'<span style=\"color:#FCD34D;font-weight:600\">encre 🖋️</span> pour un texte.": "Veiled pages ask for something other than dust: a <span style=\"color:#FCD34D;font-weight:600\">roll of film 🎞️</span> for an image, a <span style=\"color:#FCD34D;font-weight:600\">tape 📼</span> for a voice, <span style=\"color:#FCD34D;font-weight:600\">ink 🖋️</span> for a text.",
             "Ces pages resteront voilées tant que tu n'auras rien pour les révéler. Une échoppe en tient, à %1 mètres d'ici.": "These pages will stay veiled until you have something to reveal them with. A stall keeps some, %1 metres from here.",
             "Ces pages resteront voilées tant que tu n'auras rien pour les révéler. Les échoppes de la ville en tiennent — cherche-les sur la mappe.": "These pages will stay veiled until you have something to reveal them with. The city's stalls keep some — look for them on the map.",
             "D'ailleurs, n'hésite pas à aller te fournir à l'échoppe, à %1 mètres d'ici. Profites-en pour collecter de la poussière ou une orbe si tu en trouves sur ton chemin.": "And do go stock up at the stall, %1 metres from here. While you are out, pick up dust or an orb if you come across any on the way.",
             "D'ailleurs, n'hésite pas à aller te fournir dans une échoppe. Profites-en pour collecter de la poussière ou une orbe si tu en trouves sur ton chemin.": "And do go stock up at a stall. While you are out, pick up dust or an orb if you come across any on the way.",
             // Étape « journal1 » et leçon des trois traces
-            "Tu l'as réveillée. Une page s'est inscrite dans son <span style=\"font-weight:600\">📖 carnet</span> — il t'appelle.": "You have woken it. A page has written itself into its <span style=\"font-weight:600\">📖 notebook</span> — it is calling you.",
-            "L'<span style=\"color:#FCD34D;font-weight:600\">🖋️ encre</span> révèle les mots. La <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span>, les images. La <span style=\"color:#FCD34D;font-weight:600\">📼 cassette</span>, les sons. Tu en as quelques-unes — sers-t'en.": "<span style=\"color:#FCD34D;font-weight:600\">🖋️ Ink</span> reveals words. <span style=\"color:#FCD34D;font-weight:600\">🎞️ Film</span>, images. A <span style=\"color:#FCD34D;font-weight:600\">📼 tape</span>, sounds. You have a few — use them.",
-            "L'<span style=\"color:#FCD34D;font-weight:600\">🖋️ encre</span> révèle les mots. La <span style=\"color:#FCD34D;font-weight:600\">🎞️ pellicule</span>, les images. La <span style=\"color:#FCD34D;font-weight:600\">📼 cassette</span>, les sons.": "<span style=\"color:#FCD34D;font-weight:600\">🖋️ Ink</span> reveals words. <span style=\"color:#FCD34D;font-weight:600\">🎞️ Film</span>, images. A <span style=\"color:#FCD34D;font-weight:600\">📼 tape</span>, sounds.",
+            "Tu l'as réveillée. Une page s'est inscrite dans son <span style=\"font-weight:600\">carnet 📖</span> — il t'appelle.": "You have woken it. A page has written itself into its <span style=\"font-weight:600\">notebook 📖</span> — it is calling you.",
+            "L'<span style=\"color:#FCD34D;font-weight:600\">encre 🖋️</span> révèle les mots. La <span style=\"color:#FCD34D;font-weight:600\">pellicule 🎞️</span>, les images. La <span style=\"color:#FCD34D;font-weight:600\">cassette 📼</span>, les sons. Tu en as quelques-unes — sers-t'en.": "<span style=\"color:#FCD34D;font-weight:600\">Ink 🖋️</span> reveals words. <span style=\"color:#FCD34D;font-weight:600\">Film 🎞️</span>, images. A <span style=\"color:#FCD34D;font-weight:600\">tape 📼</span>, sounds. You have a few — use them.",
+            "L'<span style=\"color:#FCD34D;font-weight:600\">encre 🖋️</span> révèle les mots. La <span style=\"color:#FCD34D;font-weight:600\">pellicule 🎞️</span>, les images. La <span style=\"color:#FCD34D;font-weight:600\">cassette 📼</span>, les sons.": "<span style=\"color:#FCD34D;font-weight:600\">Ink 🖋️</span> reveals words. <span style=\"color:#FCD34D;font-weight:600\">Film 🎞️</span>, images. A <span style=\"color:#FCD34D;font-weight:600\">tape 📼</span>, sounds.",
             // Acte I — la nébuleuse et la première carte
             "Oh, tu la vois ? Une <span style=\"color:#B98CE8;font-weight:600\">nébuleuse</span> ! Plusieurs <span style=\"color:#E09AC0;font-weight:600\">présences</span> flottent à l'intérieur. Ce sera ta première <span style=\"color:#F5B841;font-weight:600\">carte</span>.": "Oh, do you see it? A <span style=\"color:#B98CE8;font-weight:600\">nebula</span>! Several <span style=\"color:#E09AC0;font-weight:600\">presences</span> drift inside. This will be your first <span style=\"color:#F5B841;font-weight:600\">card</span>.",
             "Une <span style=\"color:#F5B841;font-weight:600\">carte</span>. Le nom qu'on donne à une mémoire qu'on a réussi à fixer : un <span style=\"color:#5FC9E8;font-weight:600\">personnage</span>, un <span style=\"color:#5FC9E8;font-weight:600\">lieu</span> ou un <span style=\"color:#5FC9E8;font-weight:600\">objet</span> que la ville avait presque oublié.": "A <span style=\"color:#F5B841;font-weight:600\">card</span>. The name we give a memory we have managed to fix in place: a <span style=\"color:#5FC9E8;font-weight:600\">figure</span>, a <span style=\"color:#5FC9E8;font-weight:600\">place</span> or an <span style=\"color:#5FC9E8;font-weight:600\">object</span> the city had all but forgotten.",
@@ -13944,12 +13949,12 @@
             "Tu l'as recueillie. Mais une carte qu'on vient de réveiller a presque tout oublié — il faut lui rendre sa mémoire.": "You've taken it in. But a card that has only just been woken has forgotten almost everything — its memory has to be given back.",
             "Ouvre ta Collection. Elle t'y attend, désormais.": "Open your Collection. It's waiting for you there now.",
             "Pour qu'une carte se souvienne, il lui faut de la poussière mémorielle. Donne-lui-en — et regarde ce qui remonte.": "For a card to remember, it needs memorial dust. Give it some — and watch what comes back up.",
-            [`Tu l'as réveillée. Une page s'est inscrite dans son <span style="font-weight:600">📖 carnet</span> — il t'appelle.`]:
-                `You've woken it. A page has written itself in its <span style="font-weight:600">📖 notebook</span> — it's calling you.`,
+            [`Tu l'as réveillée. Une page s'est inscrite dans son <span style="font-weight:600">carnet 📖</span> — il t'appelle.`]:
+                `You've woken it. A page has written itself in its <span style="font-weight:600">notebook 📖</span> — it's calling you.`,
             "Cette première page est voilée. Cette fois, c'est moi qui l'écris pour toi.": "This first page is veiled. This time I'll write it for you.",
             "Les voix laissent trois sortes de traces : des mots, des images, des sons.": "Voices leave three kinds of traces: words, images, sounds.",
-            [`L'<span style="color:#FCD34D;font-weight:600">🖋️ encre</span> révèle les mots. La <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span>, les images. La <span style="color:#FCD34D;font-weight:600">📼 cassette</span>, les sons.`]:
-                `<span style="color:#FCD34D;font-weight:600">🖋️ Ink</span> reveals words. <span style="color:#FCD34D;font-weight:600">🎞️ Film</span>, images. <span style="color:#FCD34D;font-weight:600">📼 Tape</span>, sounds.`,
+            [`L'<span style="color:#FCD34D;font-weight:600">encre 🖋️</span> révèle les mots. La <span style="color:#FCD34D;font-weight:600">pellicule 🎞️</span>, les images. La <span style="color:#FCD34D;font-weight:600">cassette 📼</span>, les sons.`]:
+                `<span style="color:#FCD34D;font-weight:600">Ink 🖋️</span> reveals words. <span style="color:#FCD34D;font-weight:600">Film 🎞️</span>, images. <span style="color:#FCD34D;font-weight:600">Tape 📼</span>, sounds.`,
             "L'encre révèle les mots. La pellicule, les images. La cassette, les sons. Tu en as quelques-unes — sers-t'en.": "Ink reveals words. Film, images. Tape, sounds. You have a few — use them.",
             "Tu en as déjà sur toi — sers-t'en. Quand tu n'en auras plus, une échoppe en ville en tient toujours.": "You already have some on you — use them. When you run out, a stall in town always keeps some.",
             "Et l'échoppe n'est pas loin, va voir ce que tu peux y trouver !": "And the stall isn't far, go and see what you can find there!",
@@ -13959,8 +13964,8 @@
             "Reviens à la carte et continue à la nourrir, puis dévoile toi-même les pages qui s'ouvriront.": "Come back to the card and keep feeding it, then reveal for yourself the pages that open.",
             "La carte s'épuise. La mémoire a besoin d'infuser — il faudrait attendre des heures qu'elle se ravive d'elle-même.": "The card is running out. Memory needs to steep — it would take hours for it to revive on its own.",
             "Ou tu sors chercher de quoi la ranimer.": "Or you go out and find something to revive it.",
-            [`Il y a une <span style="color:#67E8F9;font-weight:600">🔮 orbe mémorielle</span> près d'ici : elle rend à la carte toute son énergie d'un coup. Va la chercher.`]:
-                `There's a <span style="color:#67E8F9;font-weight:600">🔮 memory orb</span> nearby: it gives the card back all its energy at once. Go and get it.`,
+            [`Il y a une <span style="color:#67E8F9;font-weight:600">orbe mémorielle 🔮</span> près d'ici : elle rend à la carte toute son énergie d'un coup. Va la chercher.`]:
+                `There's a <span style="color:#67E8F9;font-weight:600">memory orb 🔮</span> nearby: it gives the card back all its energy at once. Go and get it.`,
             "Mais tiens — prends cette orbe mémorielle. Elle lui rend toute son énergie d'un coup. Utilise-la.": "But here — take this memory orb. It gives back all its energy at once. Use it.",
             "Tu portes déjà une orbe mémorielle. Pose-la sur la carte : elle lui rend toute son énergie d'un coup.": "You're already carrying a memory orb. Place it on the card: it gives back all its energy at once.",
             "Elle revit. Continue — mène ce premier chapitre à son terme.": "It's alive again. Keep going — carry this first chapter through to its end.",
@@ -20176,15 +20181,16 @@
             qg:        { couleur: '#A78BFA' },
             explorium: { couleur: '#38BDF8' },
         };
-        // Html d'un mot-clé : [icône] + mot, dans la couleur de l'objet.
+        // Html d'un mot-clé : mot + [icône], dans la couleur de l'objet.
         // icone : vrai à la première mention (ou si le document porte l'emoji).
         function vnMot(cle, mot, icone) {
             const k = VN_MOTS_CLES[cle];
             if (!k) return mot;
-            const ico = !icone ? '' : k.icone ? _vnIcone(k.icone) : (k.emoji ? k.emoji + ' ' : '');
-            // L'icône reste collée au premier mot ; les mots suivants peuvent passer à la ligne.
-            const i = mot.indexOf(' ');
-            const tete = ico ? '<span class="vn-mot-ico">' + ico + (i < 0 ? mot : mot.slice(0, i)) + '</span>' + (i < 0 ? '' : mot.slice(i)) : mot;
+            const ico = !icone ? '' : k.icone ? _vnIcone(k.icone) : (k.emoji ? ' ' + k.emoji : '');
+            // L'icône suit le mot (« de l'encre 🖋️ », David 21/11) et reste collée
+            // au dernier mot ; les mots précédents peuvent passer à la ligne.
+            const j = mot.lastIndexOf(' ');
+            const tete = ico ? (j < 0 ? '' : mot.slice(0, j + 1)) + '<span class="vn-mot-ico">' + (j < 0 ? mot : mot.slice(j + 1)) + ico + '</span>' : mot;
             return '<span class="vn-mot" style="color:' + k.couleur + '">' + tete + '</span>';
         }
 
@@ -20827,14 +20833,14 @@
             const voilees = _guideVaEnseigner ? 0 : _obVeiledEntries().length;
             // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour que la
             // réplique et l'inventaire montrent le même signe.
-            const REPLIQUE_FOURNITURES = { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poussière : une <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span> pour une image, une <span style="color:#FCD34D;font-weight:600">📼 cassette</span> pour une voix, de l\'<span style="color:#FCD34D;font-weight:600">🖋️ encre</span> pour un texte.' };
+            const REPLIQUE_FOURNITURES = { speaker: 'La jeune fille', html: 'Les pages voilées demandent autre chose que de la poussière : une <span style="color:#FCD34D;font-weight:600">pellicule 🎞️</span> pour une image, une <span style="color:#FCD34D;font-weight:600">cassette 📼</span> pour une voix, de l\'<span style="color:#FCD34D;font-weight:600">encre 🖋️</span> pour un texte.' };
 
             if (!_obJournalSeen) {
                 _obJournalSeen = true;
                 // Il vient de L'Organisation, il appartient au joueur (« garde
                 // celui-ci »), et l'oubli du joueur le relie à l'Oubli.
                 const rep = [
-                    { speaker: 'La jeune fille', html: 'Ah, tu l\'as trouvé. C\'est le <span style="font-weight:600">📖 carnet</span> de la carte — j\'y ai noté tout ce qu\'elle m\'a déjà raconté.' },
+                    { speaker: 'La jeune fille', html: 'Ah, tu l\'as trouvé. C\'est le <span style="font-weight:600">carnet 📖</span> de la carte — j\'y ai noté tout ce qu\'elle m\'a déjà raconté.' },
                     { speaker: 'Toi', line: 'Le carnet ?' },
                     { speaker: 'La jeune fille', expr: 'enjouee', line: 'Toi aussi, tu aurais bien besoin d\'un peu de poussière mémorielle ! L\'Organisation nous avait donné ce livret pour noter tout ce dont une carte pourrait se souvenir ! Tu l\'as encore oublié, j\'imagine… Bon, garde celui-ci, j\'en ai plein.' },
                     { speaker: 'La jeune fille', expr: 'enjouee', line: 'Elle est un peu bavarde, en tout cas elle a encore des choses à dire.' },
@@ -20921,7 +20927,7 @@
         function _obGatherLines() {
             const shop = _obTutoBazarNear();
             const lines = [
-                { speaker: 'La jeune fille', expr: 'prete', html: 'Il y a une <span style="color:#67E8F9;font-weight:600">🔮 orbe mémorielle</span> près d\'ici : elle rend à la carte toute son énergie d\'un coup. Va la chercher.' },
+                { speaker: 'La jeune fille', expr: 'prete', html: 'Il y a une <span style="color:#67E8F9;font-weight:600">orbe mémorielle 🔮</span> près d\'ici : elle rend à la carte toute son énergie d\'un coup. Va la chercher.' },
             ];
             if ((memorialDust || 0) < 40) {
                 lines.push({ speaker: 'La jeune fille', html: 'Ta réserve de <span style="color:#C084FC;font-weight:600">poussière</span> est à sec, aussi. Il y en a dehors — ramasses-en en chemin.' });
@@ -21184,7 +21190,7 @@
                         _obSay('carddetail', [
                             // 📖 : l'icône que porte le bouton du carnet sur la fiche
                             // carte (cardCarnetIcon) — le joueur cherche ce signe-là.
-                            { speaker: 'La jeune fille', expr: 'excitee', html: 'Tu l\'as réveillée. Une page s\'est inscrite dans son <span style="font-weight:600">📖 carnet</span> — il t\'appelle.' },
+                            { speaker: 'La jeune fille', expr: 'excitee', html: 'Tu l\'as réveillée. Une page s\'est inscrite dans son <span style="font-weight:600">carnet 📖</span> — il t\'appelle.' },
                         ], () => _obGuideRefresh());
                     }
                     break;
@@ -21212,7 +21218,7 @@
                                     { speaker: 'La jeune fille', line: 'Les voix laissent trois sortes de traces : des mots, des images, des sons.' },
                                     // Emoji des fournitures repris de CARNET_RESOURCE_TYPES, pour
                                     // que la réplique et l'inventaire montrent le même signe.
-                                    { speaker: 'La jeune fille', html: 'L\'<span style="color:#FCD34D;font-weight:600">🖋️ encre</span> révèle les mots. La <span style="color:#FCD34D;font-weight:600">🎞️ pellicule</span>, les images. La <span style="color:#FCD34D;font-weight:600">📼 cassette</span>, les sons.' },
+                                    { speaker: 'La jeune fille', html: 'L\'<span style="color:#FCD34D;font-weight:600">encre 🖋️</span> révèle les mots. La <span style="color:#FCD34D;font-weight:600">pellicule 🎞️</span>, les images. La <span style="color:#FCD34D;font-weight:600">cassette 📼</span>, les sons.' },
                                 ];
                                 if (_sup > 0) {
                                     _lines.push({ speaker: 'La jeune fille', line: 'Tu en as déjà sur toi — sers-t\'en. Quand tu n\'en auras plus, une échoppe en ville en tient toujours.' });
@@ -28617,9 +28623,13 @@
         // ── Animation collecte sur icône ──
         function _animateCollect(inner, onDone) {
             if (!inner) { if (onDone) onDone(); return; }
+            const _anim = inner.style.animation;
             inner.style.transition = 'none';
             inner.style.animation = 'poiCollect 0.45s ease forwards';
-            setTimeout(() => { if (onDone) onDone(); }, 450);
+            // La collecte masque le marqueur (display:none) : on lui rend aussitôt
+            // son animation d'origine. Sans ça, l'état final de poiCollect
+            // (opacité 0) survivait au respawn : la zone revenait, l'orbe non.
+            setTimeout(() => { try { if (onDone) onDone(); } finally { inner.style.animation = _anim; } }, 450);
         }
 
         // ── Feedback tap sur icône POI (style Pokémon GO) ──
@@ -31477,7 +31487,9 @@
         }
 
         function _albCardThumb(card, showNew) {
-            const lvl = (_cdState(card.id)?.level) || 1;
+            // Niveau réel de la carte (cardLevels), affiché comme sur la fiche.
+            const _niv = (cardLevels[card.id] || {}).level || 0;
+            const lvl = _niv >= MAX_LEVEL ? 'MAX' : _niv;
             const img = card.image
                 ? `<img src="${card.image}" style="width:36px;height:36px;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">`
                 : `<span style="font-size:18px;">🎴</span>`;
@@ -32082,6 +32094,9 @@
                 inner.classList.add('animate-in');
             }
             document.getElementById('cardDetailView').classList.add('show');
+            document.getElementById('cardDetailView').classList.toggle('fiche-seule',
+                !collectedCards.includes(card.id) || _ficheCartesVoisines().length < 2
+                || (typeof _obGuide === 'object' && _obGuide.active));
             // Injecter le flavor text d'ambiance dans la zone basse de la carte
             setCardFlavorText(CARD_FLAVOR_TEXTS[card.id] || DEFAULT_FLAVOR);
             // Rangée des visuels : construite après le flavor text, dans lequel
@@ -32107,6 +32122,25 @@
             // Les côtés ramènent toujours à l'écran précédent ; la mappe a son
             // bouton (David, 24/10).
             closeCardDetail();
+        }
+
+        // Flèches de part et d'autre de la fiche (David, 21/11) : carte précédente
+        // / suivante parmi les cartes collectées, par ordre alphabétique (celui
+        // de la Collection, sans le tri « Nouvelles » qui bougerait à chaque
+        // carte consultée). On boucle aux extrémités.
+        function _ficheCartesVoisines() {
+            const vues = new Set();
+            const liste = getAllCards().filter(c => collectedCards.includes(c.id) && !vues.has(c.id) && vues.add(c.id));
+            if (typeof OB_TUTORIAL_CARD === 'object' && collectedCards.includes(OB_TUTORIAL_CARD.id) && !vues.has(OB_TUTORIAL_CARD.id)) liste.push(OB_TUTORIAL_CARD);
+            return liste.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+        }
+        function ficheCarteVoisine(sens) {
+            if (!selectedCard) return;
+            if (typeof _obGuide === 'object' && _obGuide.active) return;
+            const liste = _ficheCartesVoisines();
+            if (liste.length < 2) return;
+            const i = Math.max(0, liste.findIndex(c => c.id === selectedCard.id));
+            openCardDetail(liste[(i + sens + liste.length) % liste.length]);
         }
 
         // Ferme tous les écrans empilés et rend la mappe.
@@ -32407,7 +32441,7 @@
                         btn.disabled = false;
                         btn.onclick = useOrbOnCard;
                         btn.classList.add('btn-orb');
-                        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-right:6px;" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="orbBtnGrad" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#fde68a"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#92400e"/></radialGradient></defs><circle cx="12" cy="12" r="9" fill="url(#orbBtnGrad)"/><circle cx="9" cy="9" r="2.5" fill="rgba(255,255,255,0.6)"/></svg>Utiliser une orbe';
+                        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-right:6px;" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="orbBtnGrad" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#cffafe"/><stop offset="55%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#164e63"/></radialGradient></defs><circle cx="12" cy="12" r="9" fill="url(#orbBtnGrad)"/><circle cx="9" cy="9" r="2.5" fill="rgba(255,255,255,0.6)"/></svg>Utiliser une orbe';
                     } else {
                         btn.disabled = true;
                         btn.onclick = null;
@@ -39125,7 +39159,7 @@
                     const inProg = prog > 0 && !state.unlocked;
                     const item  = document.createElement('div');
                     item.className = 'achievement-item ' + (state.unlocked?'unlocked':inProg?'in-progress':'');
-                    item.innerHTML = '<div class="achievement-icon">' + a.icon + (state.unlocked?'<div class="achievement-check">✓</div>':'') + '</div><div class="achievement-info"><div class="achievement-name">' + a.name + '</div><div class="achievement-desc">' + a.desc + '</div><div class="achievement-progress-row"><div class="achievement-prog-bar"><div class="achievement-prog-fill" style="width:' + pct + '%"></div></div><span class="achievement-prog-label">' + prog + '/' + a.goal + '</span></div></div><div class="achievement-xp">+' + a.xpReward + ' XP</div>';
+                    item.innerHTML = '<div class="achievement-icon">' + a.icon + (state.unlocked?'<div class="achievement-check">✓</div>':'') + '</div><div class="achievement-info"><div class="achievement-name">' + a.name + '</div><div class="achievement-desc">' + a.desc + '</div><div class="achievement-progress-row"><div class="achievement-prog-bar"><div class="achievement-prog-fill" style="width:' + pct + '%"></div></div><span class="achievement-prog-label">' + (a.stat === 'distance_total' ? Math.floor(prog / 1000) + '/' + (a.goal / 1000) + ' km' : prog + '/' + a.goal) + '</span></div></div><div class="achievement-xp">+' + a.xpReward + ' XP</div>';
                     catDiv.appendChild(item);
                 });
                 container.appendChild(catDiv);
