@@ -117,6 +117,58 @@ function normaliser_(s) {
   return String(s || '').toUpperCase().replace(/\s+/g, '');
 }
 
+// ── Expiration des codes au Sheet (22/11) ──
+// L'app clôt la session 3 h après t0, mais seulement sur le téléphone : au Sheet,
+// le code restait « utilise ». Un déclencheur horaire (toutes les 15 min) passe
+// à « desactive » chaque code « utilise » dont le t0 remonte à plus de 3 h, et
+// l'indique dans la colonne note. Les autres états ne sont jamais touchés.
+//
+// Mise en service, une seule fois : dans l'éditeur Apps Script, choisir la
+// fonction installerExpirationCodes dans la liste, puis Exécuter (et accepter
+// l'autorisation demandée). La relancer ne crée pas de doublon.
+const CODES_EXPIRATION_MS = 3 * 60 * 60 * 1000;   // = ACCES_EXPIRATION_MS de l'app
+
+function desactiverCodesExpires() {
+  const lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (err) { return; }   // retenté au prochain passage
+  try {
+    const sheet = codesSheet_();
+    const cols = colonnes_(sheet);
+    const n = sheet.getLastRow() - 1;
+    if (n < 1 || cols.etat === undefined || cols.t0 === undefined) return;
+    const valeurs = sheet.getRange(2, 1, n, sheet.getLastColumn()).getValues();
+    const maintenant = Date.now();
+    let nb = 0;
+    for (let i = 0; i < n; i++) {
+      const etat = String(valeurs[i][cols.etat] || '').trim().toLowerCase()
+        .normalize('NFD').replace(/[̀-ͯ]/g, '');
+      if (etat !== 'utilise') continue;
+      const t0 = valeurs[i][cols.t0];
+      const t0ms = t0 instanceof Date ? t0.getTime() : Date.parse(String(t0 || ''));
+      if (isNaN(t0ms) || maintenant - t0ms < CODES_EXPIRATION_MS) continue;
+      const ligne = i + 2;
+      sheet.getRange(ligne, cols.etat + 1).setValue('desactive');
+      if (cols.note !== undefined) {
+        const note = String(valeurs[i][cols.note] || '');
+        const ajout = 'expiré auto ' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM HH:mm');
+        sheet.getRange(ligne, cols.note + 1).setValue(note ? note + ' · ' + ajout : ajout);
+      }
+      nb++;
+    }
+    if (nb) console.log('[codes] ' + nb + ' code(s) expiré(s) passé(s) à desactive');
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function installerExpirationCodes() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'desactiverCodesExpires') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('desactiverCodesExpires').timeBased().everyMinutes(15).create();
+  desactiverCodesExpires();   // premier passage tout de suite
+}
+
 function jsonp_(cb, obj) {
   return ContentService.createTextOutput(cb + '(' + JSON.stringify(obj) + ');')
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
