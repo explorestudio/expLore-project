@@ -10609,7 +10609,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.100</div>
+            <div class="hud-version" id="hudVersion">v1.9.101</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -10813,6 +10813,7 @@
                     <button onclick="testReculerT0(30)" class="test-action-btn">⏱️ Reculer t0 de 30 min</button>
                     <button onclick="testReculerT0(179)" class="test-action-btn">⏱️ Reculer t0 de 2 h 59</button>
                     <button onclick="testOublierCodesConsommes()" class="test-action-btn">🔑 Réactiver les codes expirés (cet appareil)</button>
+                    <button onclick="closeTestPanel(); if (_obDone) showToast('Tutoriel déjà terminé'); else _obSkipTutorial();" class="test-action-btn">⏭️ Passer le tutoriel</button>
                     <button onclick="testJouerSceneFinale()" class="test-action-btn">🎬 Jouer la scène finale</button>
                     <button onclick="closeTestPanel(); testExporterJournal()" class="test-action-btn">🧾 Exporter le journal utilisateur</button>
                     <button onclick="journalEnvoyer().then(ok => showToast(ok ? '🧾 Journal envoyé' : '🧾 Rien envoyé (pas de point de collecte, file vide ou réseau)'))" class="test-action-btn">🧾 Envoyer le journal maintenant</button>
@@ -20279,10 +20280,13 @@
         // « le tutoriel est en cours » ; l'affichage réel se décide à chaque tick.
         let _obSkipWanted = false;
         let _obSkipTimer  = null;
+        // 22/11 : le bouton flottant n'est plus jamais affiché (des testeurs
+        // passaient le tutoriel par mégarde, sections 9-18 jamais journalisées).
+        // « Passer le tutoriel » ne se fait plus que depuis le menu test.
         function _obSkipBtnSync() {
             const btn = document.getElementById('obSkipBtn');
             if (!btn) return;
-            btn.classList.toggle('visible', _obSkipWanted && _obCurrentScreen() === 'map');
+            btn.classList.remove('visible');
         }
         function _obSkipBtnShow(on) {
             _obSkipWanted = !!on;
