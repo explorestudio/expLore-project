@@ -7561,16 +7561,10 @@
 
         /* ── Phase 3 : Gravure canvas ── */
         #ritualEngrave { justify-content: center; padding-bottom: 0; background: rgba(8,6,15,1); }
-        /* test2 (16/11) : bascule d'écran façon Pokémon GO. Après la plongée de la
-           caméra vers l'horizon, l'écran de cristallisation arrive couché au sol
-           (charnière en bas) et se redresse face au joueur ; il se rabat à la sortie. */
-        #ritualEngrave.bascule {
-            transform-origin: 50% 100%;
-            transform: perspective(900px) rotateX(78deg);
-            opacity: 0;
-            transition: transform 0.65s cubic-bezier(0.2, 0.75, 0.25, 1), opacity 0.3s ease;
-        }
-        #ritualEngrave.bascule.show { transform: perspective(900px) rotateX(0deg); opacity: 1; }
+        /* test2 (22/11) : après la plongée de la caméra, l'écran de cristallisation
+           arrive en fondu (David : plus de bascule depuis le sol). */
+        #ritualEngrave.fondu { opacity: 0; transition: opacity 0.6s ease; }
+        #ritualEngrave.fondu.show { opacity: 1; }
         /* Pendant la plongée et la cristallisation, l'interface s'efface (comme
            pendant une capture dans Pokémon GO) : seule la mappe reste derrière. */
         body.en-plongee .map-hud, body.en-plongee .joystick-container { opacity: 0 !important; transition: opacity 0.35s; pointer-events: none !important; }
@@ -10940,6 +10934,16 @@
                 </label>
                 <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;line-height:1.4;">
                     Permet de pincer pour zoomer, faire glisser pour déplacer et pivoter. En production, la caméra reste verrouillée.
+                </div>
+            </div>
+
+            <!-- Bâtiments et supertypes (test2) : interrupteurs des couches et outils
+                 d'éveil, remplis au chargement de la mappe (section « Bâtiments et supertypes » du script).
+                 Ils vivaient dans une pastille 🏙 sur la mappe, avec ?debug=1. -->
+            <div style="padding:16px; border-bottom:1px solid rgba(255,255,255,0.08);">
+                <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Bâtiments et supertypes</div>
+                <div id="testBatiments" style="display:flex;flex-direction:column;gap:8px;">
+                    <div style="font-size:11px;color:rgba(255,255,255,0.4);">Disponible une fois la mappe chargée.</div>
                 </div>
             </div>
 
@@ -19979,6 +19983,7 @@
                 if (_zoneOk('dust:' + dust.id, dust, DUST_RADIUS)) {
                     currentNearbyDust = dust;
                     document.getElementById('nearbyDust').classList.add('hidden');
+                    _journalCaptureTap('nearbyDust');
                     _animateCollect(inner, () => collectDust());
                 } else {
                     _showPoiTapFeedback('too_far', false);
@@ -20020,6 +20025,7 @@
                 if (_zoneOk('orb:' + orb.id, orb, ORB_RADIUS)) {
                     currentNearbyOrb = orb;
                     document.getElementById('nearbyOrb').classList.add('hidden');
+                    _journalCaptureTap('nearbyOrb');
                     _animateCollect(inner, () => collectOrb());
                 } else {
                     _showPoiTapFeedback('too_far', false);
@@ -25671,7 +25677,10 @@
                 saint_jean: { nom: 'Cathédrale Saint-Jean',  lng: 4.8273, lat: 45.7608, hauteur: 32, cout: 400 },
                 hotel_dieu: { nom: 'Grand Hôtel-Dieu',        lng: 4.8366, lat: 45.7593, hauteur: 32, cout: 300 }
             };
-            const EVEIL_CRANS = 10;   // nombre de versements pour atteindre la hauteur
+            // Versement continu (22/11) : tant que le doigt maintient le bouton du
+            // panneau, la poussière coule à ce débit. 90/s remplit Fourvière en 5,5 s.
+            // À régler au doigt : trop rapide, le geste paraît gratuit ; trop lent, pénible.
+            const EVEIL_DEBIT = 90;   // poussière par seconde
             window.LIEUX_EVEILLABLES = LIEUX_EVEILLABLES;
             // Maquettes (phase 6) : un lieu-phare en plusieurs volumes, chacun à sa
             // hauteur ; elle remplace l'emprise OSM et chaque partie monte en
@@ -25694,6 +25703,16 @@
                     // Clocher de l'ancienne chapelle (la Vierge dorée), au sud de la nef.
                     { nom: 'clocher', h: 30, coords: _pts('4.822365,45.762056 4.822397,45.762071 4.822435,45.762067 4.822462,45.762048 4.822456,45.762018 4.822429,45.761999 4.822387,45.762003 4.822360,45.762022 4.822365,45.762056') }
                 ]
+            };
+            // Modèles 3D (23/11) : remplacent la maquette en volumes une fois chargés
+            // (repli sur la maquette si le chargement échoue). Posés au centre du
+            // contour de la maquette. longueur = mètres le long de l'axe Z du modèle
+            // (sa façade regarde +Z) ; cap = rotation en degrés qui tourne cette
+            // façade vers l'ouest, dans l'axe de la nef (6° au nord de l'ouest).
+            // Fichier allégé (texture WebP, lumière intégrée retirée) depuis
+            // l'export TRELLIS de David.
+            const MODELES_3D = {
+                fourviere: { url: './assets/3D%20assets/Fourviere.web.glb', longueur: 86, cap: -96 }
             };
             // Points d'intérêt OSM → supertype(s). Clé = subclass, sinon class.
             // Musées : arts + histoire. Librairies (books) retirées (David, 11/11) :
@@ -25814,11 +25833,106 @@
             const _eveilEmprises = {};   // clé → anneaux du bâtiment, ou null (aucun au point)
             // Lieu à maquette : emprise = son contour, connue d'emblée (pas de recherche).
             Object.keys(MAQUETTES).forEach(cle => { if (LIEUX_EVEILLABLES[cle]) _eveilEmprises[cle] = MAQUETTES[cle][0].coords; });
-            const _hAffichee = {};       // clé → hauteur dessinée (animation, phase 4)
             const _hauteurEveil = cle => {
                 const l = LIEUX_EVEILLABLES[cle];
                 const p = Math.min(1, (memoireRendue[cle] || 0) / l.cout);
                 return l.hauteur * p;
+            };
+            // ── Modèles 3D (23/11) ──
+            // Chargés à la première poussière versée sur le lieu (ou au démarrage
+            // si le lieu en a déjà reçu) : three.js et le fichier ne pèsent rien
+            // tant que personne n'éveille le bâtiment. Une couche custom par modèle.
+            // Apparition de bas en haut : un plan de coupe horizontal monte avec la
+            // mémoire rendue ; l'intérieur, visible par la coupe, est peint en
+            // violet de poudre (faces arrière) : une tranche pleine qui monte.
+            const _modeles = {};   // clé → { etat: 'charge' | 'pret' | 'echec' }
+            const _modelePret = cle => !!(_modeles[cle] && _modeles[cle].etat === 'pret');
+            // Clé du modèle 3D visible sous un point de l'écran (tap), sinon null.
+            const _modeleSousPoint = pt => Object.keys(_modeles).find(cle => {
+                const m = _modeles[cle];
+                try { return m.etat === 'pret' && m.toucher(pt.x, pt.y); } catch (e) { return false; }
+            }) || null;
+            const _modeleCharger = cle => {
+                const def = MODELES_3D[cle];
+                if (!def || _modeles[cle]) return;
+                _modeles[cle] = { etat: 'charge' };
+                _chargerThree().then(({ THREE: T, GLTFLoader }) =>
+                    new Promise((ok, ko) => new GLTFLoader().load(def.url, ok, undefined, ko)).then(gltf => {
+                        const plan = new T.Plane(new T.Vector3(0, -1, 0), 0);   // garde y ≤ constante
+                        const violet = getComputedStyle(document.documentElement).getPropertyValue('--poudre-500').trim() || '#6338c9';
+                        const tranche = new T.MeshBasicMaterial({ color: violet, side: T.BackSide, clippingPlanes: [plan] });
+                        const maillages = [];
+                        gltf.scene.traverse(o => { if (o.isMesh) maillages.push(o); });
+                        // Sans éclairage : la texture TRELLIS porte déjà son ombrage (éclairée
+                        // une seconde fois, la pierre ivoire virait au gris).
+                        maillages.forEach(o => {
+                            o.material = new T.MeshBasicMaterial({ map: o.material.map, color: o.material.map ? 0xffffff : o.material.color,
+                                side: T.FrontSide, clippingPlanes: [plan] });
+                            o.add(new T.Mesh(o.geometry, tranche));
+                        });
+                        // Base au sol, centré, à l'échelle, façade à l'ouest.
+                        const boite = new T.Box3().setFromObject(gltf.scene);
+                        const taille = boite.getSize(new T.Vector3()), centre = boite.getCenter(new T.Vector3());
+                        gltf.scene.position.set(-centre.x, -boite.min.y, -centre.z);
+                        const k = def.longueur / taille.z;
+                        const groupe = new T.Group();
+                        groupe.add(gltf.scene);
+                        groupe.scale.setScalar(k);
+                        groupe.rotation.y = def.cap * Math.PI / 180;
+                        const H = taille.y * k;   // hauteur totale en mètres
+                        // Centre du contour de la maquette (ou du lieu, à défaut).
+                        const anneau = (MAQUETTES[cle] && MAQUETTES[cle][0].coords[0]) || null;
+                        const l = LIEUX_EVEILLABLES[cle];
+                        const lngs = anneau ? anneau.map(p => p[0]) : [l.lng], lats = anneau ? anneau.map(p => p[1]) : [l.lat];
+                        const origine = [(Math.min(...lngs) + Math.max(...lngs)) / 2, (Math.min(...lats) + Math.max(...lats)) / 2];
+                        let camera, scene, renderer;
+                        const premiere = (map.getStyle().layers.find(x => x.type === 'symbol') || {}).id;
+                        map.addLayer({
+                            id: 'modele-3d-' + cle, type: 'custom', renderingMode: '3d',
+                            onAdd(m, gl) {
+                                camera = new T.Camera();
+                                scene = new T.Scene();
+                                scene.add(groupe);
+                                renderer = new T.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true });
+                                renderer.autoClear = false;
+                                renderer.localClippingEnabled = true;
+                                renderer.outputEncoding = T.sRGBEncoding;
+                            },
+                            render(gl, matrix) {
+                                if (map.getZoom() < 15) return;   // comme la maquette (minzoom 15)
+                                const p = Math.min(1, (memoireRendue[cle] || 0) / l.cout);
+                                if (p <= 0) return;                // rien versé : le bâtiment reste plat
+                                plan.constant = p >= 1 ? H + 1 : p * H;
+                                const mc = maplibregl.MercatorCoordinate.fromLngLat(origine, 0);
+                                const s = mc.meterInMercatorCoordinateUnits();
+                                const t = new T.Matrix4().makeTranslation(mc.x, mc.y, mc.z)
+                                    .scale(new T.Vector3(s, -s, s))
+                                    .multiply(new T.Matrix4().makeRotationX(Math.PI / 2));
+                                camera.projectionMatrix = new T.Matrix4().fromArray(matrix).multiply(t);
+                                renderer.resetState();
+                                renderer.render(scene, camera);
+                            }
+                        }, premiere);
+                        // Tap : rayon lancé depuis le point touché, avec la dernière
+                        // projection dessinée ; seule la partie sous la coupe compte.
+                        const toucher = (x, y) => {
+                            if (!camera || !(memoireRendue[cle] > 0) || map.getZoom() < 15) return false;
+                            const c = map.getCanvas();
+                            const nx = x / c.clientWidth * 2 - 1, ny = 1 - y / c.clientHeight * 2;
+                            const inv = camera.projectionMatrix.clone().invert();
+                            const a = new T.Vector3(nx, ny, -1).applyMatrix4(inv);
+                            const b = new T.Vector3(nx, ny, 1).applyMatrix4(inv);
+                            groupe.updateMatrixWorld(true);
+                            const r = new T.Raycaster(a, b.sub(a).normalize());
+                            return r.intersectObject(groupe, true).some(h => h.point.y <= plan.constant);
+                        };
+                        _modeles[cle] = { etat: 'pret', H, toucher };
+                        reconstruireSourceEveil();   // la maquette en volumes s'efface
+                    })
+                ).catch(e => {
+                    _modeles[cle] = { etat: 'echec' };
+                    console.warn('[expLore] modèle 3D « ' + cle + ' » indisponible : maquette conservée', e);
+                });
             };
             const reconstruireSourceEveil = () => {
                 if (!map.getSource('lieux-eveilles')) return;
@@ -25826,9 +25940,13 @@
                 Object.entries(LIEUX_EVEILLABLES).forEach(([cle, l]) => {
                     const partie = _eveilEmprises[cle];
                     if (!partie) return;
-                    const h = cle in _hAffichee ? _hAffichee[cle] : _hauteurEveil(cle);
+                    const h = _hauteurEveil(cle);
+                    if (h > 0) _modeleCharger(cle);   // sans effet si pas de modèle ou déjà demandé
                     const maq = MAQUETTES[cle];
-                    if (h > 0 && maq) {
+                    // Modèle 3D prêt : il remplace les volumes (le contour reste la zone de tap).
+                    if (h > 0 && _modelePret(cle)) {
+                        // rien dans la source : la couche modele-3d-<clé> dessine le bâtiment
+                    } else if (h > 0 && maq) {
                         const k = h / l.hauteur;   // toutes les parties montent ensemble
                         maq.forEach(m => volumes.push({ type: 'Feature', geometry: { type: 'Polygon', coordinates: m.coords },
                             properties: { cle, nom: l.nom, h: m.h * k, base: (m.base || 0) * k } }));
@@ -25840,6 +25958,7 @@
                 });
                 map.getSource('lieux-eveilles').setData({ type: 'FeatureCollection', features: volumes });
                 map.getSource('lieux-eveilles-signal').setData({ type: 'FeatureCollection', features: pastilles });
+                map.triggerRepaint();   // modèles 3D : la coupe suit la mémoire rendue
             };
             // Emprise cherchée comme pour les lieux : point à l'écran, tuiles
             // chargées (appelée par le passage des 1,5 s). Pas de polygone de repli.
@@ -25893,43 +26012,15 @@
                 const p = _eveilEmprises[cle];
                 return p && _dansAnneau(ll.lng, ll.lat, p[0]) && !p.slice(1).some(t => _dansAnneau(ll.lng, ll.lat, t));
             }) || null;
-            const _eveilCran = cle => Math.ceil(LIEUX_EVEILLABLES[cle].cout / EVEIL_CRANS);
-            let _eveilIgnorerPortee = false;   // outil de démo (?debug=1)
-
-            // Montée d'un cran (phase 4). Un nouveau versement en cours d'animation
-            // repart de la hauteur dessinée vers la nouvelle cible : jamais de
-            // bâtiment laissé à mi-hauteur.
-            const DUREE_CRAN = 650;   // ms
-            const _ease = p => 1 - Math.pow(1 - p, 3);   // easeOutCubic, un bâtiment se pose
-            const _eveilAnims = {};   // clé → jeton de l'animation en cours
+            let _eveilIgnorerPortee = false;   // outil de démo (menu test, « Bâtiments et supertypes »)
+            // Le versement est continu (cf. EVEIL_DEBIT) : la hauteur suit la poussière
+            // versée image par image, sans animation propre.
             const _eveilReduit = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
-            const _terminerEveils = () => {
-                Object.keys(_eveilAnims).forEach(cle => { delete _eveilAnims[cle]; delete _hAffichee[cle]; });
-                reconstruireSourceEveil();
-            };
-            function animerEveil(cle, hDepart) {
-                if (_eveilReduit() || document.hidden) { delete _hAffichee[cle]; reconstruireSourceEveil(); return; }
-                const jeton = {};
-                _eveilAnims[cle] = jeton;
-                const hCible = _hauteurEveil(cle);
-                const t0 = performance.now();
-                const pas = () => {
-                    if (_eveilAnims[cle] !== jeton) return;   // remplacée ou terminée
-                    const p = Math.min(1, (performance.now() - t0) / DUREE_CRAN);
-                    _hAffichee[cle] = hDepart + (hCible - hDepart) * _ease(p);
-                    if (p >= 1) { delete _hAffichee[cle]; delete _eveilAnims[cle]; }
-                    reconstruireSourceEveil();
-                    if (p < 1) requestAnimationFrame(pas);
-                };
-                requestAnimationFrame(pas);
-            }
-            // Arrière-plan : on termine tout de suite à la hauteur cible.
-            document.addEventListener('visibilitychange', () => { if (Object.keys(_eveilAnims).length) _terminerEveils(); });
 
             // Poudre : quelques grains du compteur vers le pied du bâtiment. Même
             // grain et même trajectoire que animerGainPoussiere (.ui-grain-poussiere),
-            // en sens inverse et sans crédit.
-            const _grainsVersEveil = cle => {
+            // en sens inverse et sans crédit. n : nombre de grains (8 par défaut).
+            const _grainsVersEveil = (cle, n = 8) => {
                 if (_eveilReduit() || !Element.prototype.animate) return;
                 const l = LIEUX_EVEILLABLES[cle];
                 const c = map.getCanvas().getBoundingClientRect();
@@ -25939,7 +26030,7 @@
                 const pastille = document.querySelector('.hud-dust');
                 if (pastille) { const r = pastille.getBoundingClientRect(); if (r.width) { ox = r.left + 22; oy = r.top + r.height / 2; } }
                 const pos = (x, y, s) => 'translate(' + (x - 10) + 'px,' + (y - 10) + 'px) scale(' + s + ')';
-                for (let i = 0; i < 8; i++) {
+                for (let i = 0; i < n; i++) {
                     const g = document.createElement('img');
                     g.src = './assets/Icons/Powder.png';
                     g.alt = '';
@@ -25956,24 +26047,24 @@
                 }
             };
 
-            // Versement d'un cran (phase 3) : motif de la dépense des cartes (l. ~32768).
-            // Renvoie le motif du refus, ou null si versé.
-            const verserMemoire = cle => {
+            // Versement de `quantite` poussière (entière), bornée par la réserve et par
+            // ce qui manque pour atteindre le coût : la poussière retirée est toujours
+            // exactement la mémoire ajoutée. Seul chemin de dépense de l'éveil ; le
+            // maintien l'appelle à chaque image, il garde donc pour lui la sauvegarde,
+            // le journal et les grains (cf. _ouvrirPanneauTap).
+            // Renvoie le motif du refus ('max', 'poussiere'), ou null si versé.
+            const verserMemoire = (cle, quantite) => {
                 const l = LIEUX_EVEILLABLES[cle];
                 const deja = memoireRendue[cle] || 0;
                 if (deja >= l.cout) return 'max';
-                const cran = Math.min(_eveilCran(cle), l.cout - deja);
-                if (memorialDust < cran) return 'poussiere';
-                const hAvant = cle in _hAffichee ? _hAffichee[cle] : _hauteurEveil(cle);
-                memorialDust -= cran;
-                memoireRendue[cle] = Math.min(l.cout, deja + cran);
+                if (memorialDust <= 0) return 'poussiere';
+                const q = Math.min(Math.floor(quantite), l.cout - deja, memorialDust);
+                if (q <= 0) return null;
+                memorialDust -= q;
+                memoireRendue[cle] = deja + q;
                 document.getElementById('dustCounter').textContent = memorialDust;
                 const _cd = document.getElementById('cardDetailDustCounter');
                 if (_cd) _cd.textContent = memorialDust;
-                journalEvenement('memoire_rendue', { lieu: cle, quantite: cran });
-                saveProgress();
-                _grainsVersEveil(cle);
-                animerEveil(cle, hAvant);
                 return null;
             };
             const colorerBatimentsVille = () => {
@@ -26082,7 +26173,10 @@
                 return min;
             };
             let _panneauTap = null;
-            const _fermerPanneauTap = () => { if (_panneauTap) { _panneauTap.remove(); _panneauTap = null; } };
+            // Fermer le panneau arrête un maintien en cours (versé gardé, rien de plus).
+            const _fermerPanneauTap = () => { if (_panneauTap) { if (_panneauTap._arreter) _panneauTap._arreter(); _panneauTap.remove(); _panneauTap = null; } };
+            // Arrière-plan : le maintien s'arrête (les images ne tournent plus).
+            document.addEventListener('visibilitychange', () => { if (document.hidden && _panneauTap && _panneauTap._arreter) _panneauTap._arreter(); });
             // cleEveil : clé de LIEUX_EVEILLABLES si le bâtiment est éveillable
             // (bloc jauge + bouton sous les informations existantes).
             const _ouvrirPanneauTap = (f, cleEveil) => {
@@ -26118,36 +26212,84 @@
                     + '</div>';
                 el.querySelector('button').addEventListener('click', _fermerPanneauTap);
                 if (eveil) {
-                    // Bloc d'éveil : jauge (poussière versée / coût) et bouton de versement.
-                    const verse = memoireRendue[cleEveil] || 0;
-                    const pct = Math.round(Math.min(1, verse / eveil.cout) * 100);
-                    const cran = Math.min(_eveilCran(cleEveil), eveil.cout - verse);
-                    const plein = verse >= eveil.cout;
-                    const motif = plein ? ''
-                        : !aPortee ? 'Approche-toi à moins de ' + PORTEE_TAP_M + ' m pour verser.'
-                        : memorialDust < cran ? 'Poussière insuffisante : ' + memorialDust + ' / ' + cran + ' ✦.'
-                        : '';
+                    // Bloc d'éveil : jauge (poussière versée / coût) et zone de maintien.
+                    // Tant que le doigt appuie, la poussière coule (EVEIL_DEBIT) ; la
+                    // jauge, le bâtiment et les grains suivent. Mis à jour sur place :
+                    // reconstruire le panneau casserait le geste en cours.
                     const bloc = document.createElement('div');
                     bloc.style.cssText = 'margin-top:10px;padding-top:10px;border-top:1px solid rgba(212,175,55,0.3);';
                     bloc.innerHTML =
-                        '<div style="display:flex;justify-content:space-between;font-size:12px;"><span>Mémoire rendue</span><span>' + pct + ' %</span></div>'
+                        '<div style="display:flex;justify-content:space-between;font-size:12px;"><span>Mémoire rendue</span><span class="ev-pct"></span></div>'
                         + '<div style="height:8px;border-radius:4px;background:rgba(255,255,255,0.12);margin:5px 0 9px;overflow:hidden;">'
-                        + '<div style="height:100%;width:' + pct + '%;background:var(--poudre-500);border-radius:4px;transition:width .4s;"></div></div>'
-                        + '<button type="button" style="width:100%;border:0;border-radius:10px;padding:9px 10px;font:700 13px system-ui,sans-serif;'
-                        + 'background:var(--poudre-500);color:#fff;cursor:pointer;">'
-                        + (plein ? 'Mémoire entièrement rendue' : 'Rendre de la mémoire (' + cran + ' ✦)') + '</button>'
-                        + (motif ? '<div style="margin-top:6px;font-size:12px;color:#C9BFA4;">' + esc(motif) + '</div>' : '');
-                    const btn = bloc.querySelector('button');
-                    if (plein || motif) {
-                        btn.disabled = true;
-                        btn.style.opacity = plein ? '0.75' : '0.45';
-                        btn.style.cursor = 'default';
-                    }
-                    btn.addEventListener('click', () => {
-                        if (!aPortee) return;
-                        verserMemoire(cleEveil);
-                        _ouvrirPanneauTap(f, cleEveil);   // jauge, coût et motif à jour
+                        + '<div class="ev-barre" style="height:100%;width:0;background:var(--poudre-500);border-radius:4px;"></div></div>'
+                        + '<button type="button" class="ev-btn" style="width:100%;border:0;border-radius:10px;padding:12px 10px;font:700 13px system-ui,sans-serif;'
+                        + 'background:var(--poudre-500);color:#fff;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;"></button>'
+                        + '<div class="ev-motif" style="margin-top:6px;font-size:12px;color:#C9BFA4;display:none;"></div>';
+                    const btn = bloc.querySelector('.ev-btn');
+                    const motifEl = bloc.querySelector('.ev-motif');
+                    let maintien = null;   // { depart, reste, t, tGrain, raf } pendant le geste
+                    const maj = () => {
+                        const verse = memoireRendue[cleEveil] || 0;
+                        const plein = verse >= eveil.cout;
+                        const pct = Math.round(Math.min(1, verse / eveil.cout) * 100);
+                        bloc.querySelector('.ev-pct').textContent = pct + ' %';
+                        bloc.querySelector('.ev-barre').style.width = pct + '%';
+                        const motif = plein ? ''
+                            : !aPortee ? 'Approche-toi à moins de ' + PORTEE_TAP_M + ' m pour verser.'
+                            : memorialDust <= 0 ? 'Plus de poussière : va en ramasser sur la mappe.'
+                            : '';
+                        btn.textContent = plein ? 'Mémoire entièrement rendue'
+                            : maintien ? 'La mémoire revient…' : 'Maintiens pour rendre la mémoire ✦';
+                        btn.disabled = plein || !!motif;
+                        btn.style.opacity = plein ? '0.75' : motif ? '0.45' : '1';
+                        btn.style.cursor = btn.disabled ? 'default' : 'pointer';
+                        motifEl.textContent = motif;
+                        motifEl.style.display = motif ? 'block' : 'none';
+                    };
+                    // Fin du geste (relâché, doigt sorti, panneau fermé, arrière-plan,
+                    // coût atteint, réserve vide) : ce qui est versé reste versé, la
+                    // fraction en attente n'est pas dépensée. Une sauvegarde et une ligne
+                    // de journal par maintien, avec le total.
+                    const arreter = () => {
+                        if (!maintien) return;
+                        cancelAnimationFrame(maintien.raf);
+                        const total = (memoireRendue[cleEveil] || 0) - maintien.depart;
+                        maintien = null;
+                        if (total > 0) {
+                            journalEvenement('memoire_rendue', { lieu: cleEveil, quantite: total });
+                            saveProgress();
+                        }
+                        if (btn.isConnected) maj();
+                    };
+                    const boucle = now => {
+                        if (!maintien) return;
+                        const dt = Math.min(0.25, Math.max(0, (now - maintien.t) / 1000));   // à-coup borné
+                        maintien.t = now;
+                        maintien.reste += EVEIL_DEBIT * dt;
+                        const q = Math.floor(maintien.reste);
+                        if (q > 0) {
+                            maintien.reste -= q;
+                            verserMemoire(cleEveil, q);
+                            reconstruireSourceEveil();
+                        }
+                        if (now - maintien.tGrain > 200) { maintien.tGrain = now; _grainsVersEveil(cleEveil, 3); }
+                        if ((memoireRendue[cleEveil] || 0) >= eveil.cout || memorialDust <= 0) { arreter(); return; }
+                        maj();
+                        maintien.raf = requestAnimationFrame(boucle);
+                    };
+                    btn.addEventListener('pointerdown', e => {
+                        if (maintien || btn.disabled || (!aPortee)) return;
+                        e.preventDefault();
+                        const now = performance.now();
+                        maintien = { depart: memoireRendue[cleEveil] || 0, reste: 0, t: now, tGrain: 0, raf: 0 };
+                        try { if (navigator.vibrate) navigator.vibrate(15); } catch (err) {}
+                        maj();
+                        maintien.raf = requestAnimationFrame(boucle);
                     });
+                    ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => btn.addEventListener(t, arreter));
+                    btn.addEventListener('contextmenu', e => e.preventDefault());   // appui long sans menu
+                    el._arreter = arreter;
+                    maj();
                     el.appendChild(bloc);
                 }
                 map.getContainer().parentElement.appendChild(el);
@@ -26157,23 +26299,27 @@
                 // Bâtiment éveillé (volume) d'abord : il prime sur sa version plate.
                 const v = map.queryRenderedFeatures(e.point, { layers: ['lieux-eveilles-3d'] })[0];
                 const f = map.queryRenderedFeatures(e.point, { layers: ['batiments-lieux-3d', 'batiments-ville-3d'] })[0];
-                const cleEveil = v ? v.properties.cle : _eveilAuPoint(e.lngLat);
-                if (v) {
+                // Modèle 3D touché (tour, toit…) : il prime, comme le volume de la maquette.
+                const cleModele = v ? null : _modeleSousPoint(e.point);
+                const cleEveil = v ? v.properties.cle : (cleModele || _eveilAuPoint(e.lngLat));
+                if (v || cleModele) {
                     // Même bâtiment en version plate (lieu ou ville) : garde les
                     // supertypes et la carte dans le panneau. Sinon, le volume seul.
                     const l = LIEUX_EVEILLABLES[cleEveil];
                     const plate = [...Object.values(_batLieux), ...Object.values(_batVille)]
                         .find(fs => fs && _dansAnneau(l.lng, l.lat, fs[0].geometry.coordinates[0]));
-                    _ouvrirPanneauTap(plate ? plate[0] : v, cleEveil);
+                    _ouvrirPanneauTap(plate ? plate[0] : (v || { properties: {}, geometry: null }), cleEveil);
                 }
                 else if (cleEveil) _ouvrirPanneauTap(f || { properties: {}, geometry: null }, cleEveil);
                 else if (f) _ouvrirPanneauTap(f); else _fermerPanneauTap();
             });
 
-            // ── Interrupteurs de comparaison (test2, lot 3) ──
-            // Avec ?debug=1 seulement : pastille 🏙 repliée, qui déplie trois
-            // interrupteurs. Bascule de visibilité des couches, sans rechargement.
-            if (map.getLayer('batiments-3d') && /[?&]debug=1(&|$)/.test(location.search)) {
+            // ── Bâtiments et supertypes : section du menu test (23/11) ──
+            // Interrupteurs de visibilité des couches (sans rechargement) et outils
+            // d'éveil. Avant : pastille 🏙 sur la mappe, avec ?debug=1 seulement ;
+            // désormais dans le menu test (code équipe), section #testBatiments.
+            const _testBatiments = document.getElementById('testBatiments');
+            if (map.getLayer('batiments-3d') && _testBatiments) {
                 const _vis = (ids, on) => ids.forEach(id => {
                     if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
                 });
@@ -26183,50 +26329,40 @@
                     { label: 'Ville supertypée', bascule: on => _vis(['batiments-ville-3d', 'batiments-ville-trait', 'st-pastilles',
                         ...ZONES_SUPERTYPES.flatMap(z => [z.id, z.id + '-trait'])], on) }
                 ];
-                const panneau = document.createElement('div');
-                panneau.id = 'test2Interrupteurs';
-                panneau.style.cssText = 'position:absolute;left:10px;top:110px;z-index:1500;font:600 12px/1.3 system-ui,sans-serif;'
-                    + 'color:#F3E9C6;background:rgba(26,16,48,0.92);border:1px solid rgba(212,175,55,0.55);'
-                    + 'border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.45);overflow:hidden;';
-                const tete = document.createElement('button');
-                tete.textContent = '🏙';
-                tete.style.cssText = 'display:block;border:0;background:none;color:inherit;font-size:18px;padding:6px 10px;cursor:pointer;';
-                const corps = document.createElement('div');
-                corps.style.cssText = 'display:none;padding:2px 12px 10px;';
+                _testBatiments.innerHTML = '';
                 INTERRUPTEURS.forEach(it => {
                     const ligne = document.createElement('label');
-                    ligne.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;white-space:nowrap;';
+                    ligne.style.cssText = 'display:flex;align-items:center;gap:10px;cursor:pointer;padding:4px 0;';
                     const cb = document.createElement('input');
                     cb.type = 'checkbox'; cb.checked = true;
-                    cb.style.cssText = 'accent-color:#D4AF37;width:18px;height:18px;margin:0;';
+                    cb.style.cssText = 'width:18px;height:18px;accent-color:#6366f1;';
                     cb.addEventListener('change', () => it.bascule(cb.checked));
-                    ligne.append(cb, document.createTextNode(it.label));
-                    corps.appendChild(ligne);
+                    const txt = document.createElement('span');
+                    txt.style.fontSize = '13px';
+                    txt.textContent = it.label;
+                    ligne.append(cb, txt);
+                    _testBatiments.appendChild(ligne);
                 });
-                // Outils de démo de l'éveil des bâtiments (?debug=1 seulement).
+                // Outils de démo de l'éveil des bâtiments.
                 const _outil = (label, action) => {
                     const b = document.createElement('button');
                     b.type = 'button';
+                    b.className = 'test-action-btn';
                     b.textContent = label;
-                    b.style.cssText = 'display:block;width:100%;margin-top:6px;border:1px solid rgba(212,175,55,0.55);border-radius:8px;'
-                        + 'background:none;color:inherit;font:inherit;padding:5px 8px;cursor:pointer;text-align:left;';
                     b.addEventListener('click', () => action(b));
-                    corps.appendChild(b);
+                    _testBatiments.appendChild(b);
                 };
-                _outil('+500 ✦', () => addTestDust(500));
-                _outil('Ignorer la portée : non', b => {
+                _outil('✨ +500 ✦ (éveil)', () => addTestDust(500));
+                _outil('📏 Ignorer la portée : non', b => {
                     _eveilIgnorerPortee = !_eveilIgnorerPortee;
-                    b.textContent = 'Ignorer la portée : ' + (_eveilIgnorerPortee ? 'oui' : 'non');
+                    b.textContent = '📏 Ignorer la portée : ' + (_eveilIgnorerPortee ? 'oui' : 'non');
                 });
-                _outil('Réinitialiser les éveils', () => {
+                _outil('🏛️ Réinitialiser les éveils', () => {
                     memoireRendue = {};
-                    _terminerEveils();
+                    reconstruireSourceEveil();
                     saveProgress();
                     _fermerPanneauTap();
                 });
-                tete.addEventListener('click', () => { corps.style.display = corps.style.display === 'none' ? 'block' : 'none'; });
-                panneau.append(tete, corps);
-                map.getContainer().parentElement.appendChild(panneau);
             }
             window._test2BatVille = _batVille;   // lecture pour le rapport (console)
             // Pas de 'idle' : le jeu redessine la carte en continu (animations), cet
@@ -26766,6 +26902,7 @@
                     if (inRange) {
                         currentNearbyDust = dust;
                         document.getElementById('nearbyDust').classList.add('hidden');
+                        _journalCaptureTap('nearbyDust');
                         _animateCollect(inner, () => collectDust());
                     } else {
                         _showPoiTapFeedback('too_far', false);
@@ -26799,6 +26936,7 @@
                     if (inRange) {
                         currentNearbyCarnetResource = pt;
                         document.getElementById('nearbyCarnetResource').classList.add('hidden');
+                        _journalCaptureTap('nearbyCarnetResource');
                         _animateCollect(inner, () => collectCarnetResource());
                     } else {
                         _showPoiTapFeedback('too_far', false);
@@ -26851,6 +26989,7 @@
                     if (inRange) {
                         currentNearbyEcho = echo;
                         document.getElementById('nearbyEcho').classList.add('hidden');
+                        _journalCaptureTap('nearbyEcho');
                         _animateCollect(inner, () => collectEcho());
                     } else {
                         _showPoiTapFeedback('too_far', false);
@@ -26889,6 +27028,7 @@
                     if (inRange) {
                         currentNearbyOrb = orb;
                         document.getElementById('nearbyOrb').classList.add('hidden');
+                        _journalCaptureTap('nearbyOrb');
                         _animateCollect(inner, () => collectOrb());
                     } else {
                         _showPoiTapFeedback('too_far', false);
@@ -26927,6 +27067,7 @@
                     if (inRange) {
                         currentNearbyScroll = scroll;
                         document.getElementById('nearbyScroll').classList.add('hidden');
+                        _journalCaptureTap('nearbyScroll');
                         _animateCollect(inner, () => collectScroll());
                     } else {
                         _showPoiTapFeedback('too_far', false);
@@ -26965,6 +27106,7 @@
                     if (inRange) {
                         currentNearbyLoot = loot;
                         document.getElementById('nearbyLoot').classList.add('hidden');
+                        _journalCaptureTap('nearbyLoot');
                         _animateCollect(inner, () => collectLoot());
                     } else {
                         _showPoiTapFeedback('too_far', false);
@@ -28337,11 +28479,13 @@
             const _plan = document.body.classList.contains('planning-mode');
             _capZones.forEach(z => {
                 if (_plan && !z.type.startsWith('poi_')) return;
-                // Façon Pokémon GO (16/11) : en vue proche, seules les zones à portée
-                // du joueur sont dessinées ; les autres se chevauchaient partout
-                // (lieux à 60-65 m, ressources à 20-30 m). L'onde sous l'avatar et
-                // l'état des marqueurs disent le reste.
-                if (!_plan && playerPos && !_aPortee(getDistance(playerPos.lat, playerPos.lng, z.lat, z.lng), z.r)) return;
+                // 22/11 (David) : toutes les zones se voient, comme dans Pokémon GO.
+                // Hors de portée : voile et trait discrets (k ≈ 0,45), pour que les
+                // chevauchements restent lisibles. À portée : la zone s'allume
+                // (voile plus dense, trait épais, halo). Avant (16/11), seules les
+                // zones à portée étaient dessinées : on ne savait pas où aller.
+                const aPortee = _plan || !playerPos || _aPortee(getDistance(playerPos.lat, playerPos.lng, z.lat, z.lng), z.r);
+                const k = aPortee ? 1 : 0.45;
                 const c = map.project([z.lng, z.lat]);
                 const e = map.project(_sol(z.lng, z.lat, z.r, _brg + Math.PI / 2));
                 const rx = Math.hypot(e.x - c.x, e.y - c.y);
@@ -28356,7 +28500,7 @@
                     // sur le fond clair de la mappe comme de nuit), pas de remplissage.
                     _capCtx.setLineDash([8, 6]);
                     _capCtx.beginPath(); _capCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-                    _capCtx.strokeStyle = 'rgba(30,27,46,0.40)'; _capCtx.lineWidth = 4; _capCtx.globalAlpha = zoneOpacity; _capCtx.stroke();
+                    _capCtx.strokeStyle = 'rgba(30,27,46,0.40)'; _capCtx.lineWidth = 4; _capCtx.globalAlpha = k * zoneOpacity; _capCtx.stroke();
                     _capCtx.beginPath(); _capCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
                     _capCtx.strokeStyle = '#FFFBF0'; _capCtx.lineWidth = 2; _capCtx.stroke();
                     _capCtx.restore();
@@ -28366,12 +28510,15 @@
                 const sr = Math.min(rx * 0.22, 14);
                 _capCtx.beginPath(); _capCtx.ellipse(0, 0, sr, sr * RATIO_Y, 0, 0, Math.PI * 2);
                 _capCtx.fillStyle = 'rgba(0,0,0,0.18)'; _capCtx.globalAlpha = zoneOpacity; _capCtx.fill();
-                // Remplissage zone
+                // Remplissage zone (allumé à portée)
                 _capCtx.beginPath(); _capCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-                _capCtx.fillStyle = z.color; _capCtx.globalAlpha = fillAlpha * zoneOpacity; _capCtx.fill();
-                // Contour fin
+                _capCtx.fillStyle = z.color; _capCtx.globalAlpha = fillAlpha * (aPortee ? 1.8 : 0.6) * zoneOpacity; _capCtx.fill();
+                // Contour : fin hors de portée, épais et auréolé à portée
                 _capCtx.beginPath(); _capCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-                _capCtx.strokeStyle = z.color; _capCtx.lineWidth = 1.2; _capCtx.globalAlpha = 0.80 * zoneOpacity; _capCtx.stroke();
+                _capCtx.strokeStyle = z.color;
+                _capCtx.lineWidth = aPortee ? 2.4 : 1.2;
+                if (aPortee) { _capCtx.shadowColor = z.color; _capCtx.shadowBlur = 10; }
+                _capCtx.globalAlpha = (aPortee ? 0.95 : 0.55) * zoneOpacity; _capCtx.stroke();
                 _capCtx.restore();
             });
             _capDessinerJoueur(zoneOpacity);
@@ -28632,6 +28779,18 @@
             setTimeout(() => { try { if (onDone) onDone(); } finally { inner.style.animation = _anim; } }, 450);
         }
 
+        // Journal GPS : une capture tentée au tap d'un marqueur, notée comme
+        // l'était celle d'un bouton de console (même événement, même champ
+        // console), via 'marqueur' en plus. Sans elle, plus aucune capture de
+        // ressource n'y figurait depuis que les consoles de ramassage ne s'ouvrent plus.
+        function _journalCaptureTap(consoleId) {
+            try {
+                if (typeof GeoEngine === 'undefined' || !GeoEngine.journal) return;
+                const f = GeoEngine.getFiltered(), r = GeoEngine.getRaw();
+                GeoEngine.journal('capture', { console: consoleId, via: 'marqueur', lat: f && f.lat, lng: f && f.lng, acc: r && r.accuracy });
+            } catch (e) {}
+        }
+
         // ── Feedback tap sur icône POI (style Pokémon GO) ──
         function _showPoiTapFeedback(type, inRange) {
             const existing = document.getElementById('poiTapFeedback');
@@ -28741,6 +28900,27 @@
             scroll: new Set(), loot: new Set(), info: new Set(), bazar: new Set(), carnetResource: new Set(),
             panneau: new Set()
         };
+        // Trois niveaux d'interruption. Tout élément ajouté à la mappe choisit le sien.
+        //
+        //   Aucune    — ramassage. Le marqueur se touche, la ressource part, rien ne s'ouvre.
+        //               Poussière, orbe, écho, parchemin, loot, ressource de carnet.
+        //               La mise à portée se lit au cercle de ramassage, qui s'allume.
+        //
+        //   Partielle — action courte sur place. Un panneau s'ouvre au tap, la mappe
+        //               reste visible autour, il se referme d'un geste. Éveil d'un bâtiment.
+        //
+        //   Totale    — lecture. Plein écran assumé, le joueur s'est arrêté.
+        //               Carte, carnet, panneau, Explorium.
+        //
+        // Le critère : combien de temps le joueur doit-il s'arrêter ? S'il peut continuer
+        // à marcher, rien ne s'ouvre.
+        //
+        // Types qui se ramassent d'un tap (22/11) : pas de console à l'entrée en zone.
+        // Le marqueur est tappable, le cercle de ramassage montre la portée. La
+        // console n'ajoutait rien. currentNearbyXxx reste renseigné par checkNearbyPOI.
+        // Les blocs HTML des consoles restent en place, pour revenir en arrière.
+        const RAMASSAGE_DIRECT = new Set(['dust', 'orb', 'echo', 'scroll', 'loot', 'carnetResource']);
+
         // Helper : un POI doit-il afficher sa console ?
         // Oui si on vient d'entrer (l'id a changé) ET qu'on n'a pas dismissed cette session
         function _shouldShowPoiConsole(type, currentId) {
@@ -28748,6 +28928,7 @@
                 _poiEntered[type] = null;
                 return false;
             }
+            if (RAMASSAGE_DIRECT.has(type)) return false;
             // Si on vient d'entrer dans une nouvelle zone
             if (_poiEntered[type] !== currentId) {
                 _poiEntered[type] = currentId;
@@ -29906,7 +30087,7 @@
                 copie = document.createElement('div');
                 copie.style.cssText = 'position:fixed;width:0;height:0;z-index:299;pointer-events:none;'
                     + 'left:' + (r.left + pt.x) + 'px;top:' + (r.top + pt.y) + 'px;'
-                    + 'transition:left .9s cubic-bezier(.5,0,.3,1),top .9s cubic-bezier(.5,0,.3,1),scale .9s ease-in,opacity .35s ease .6s;';
+                    + 'transition:left 1.4s cubic-bezier(.45,0,.25,1),top 1.4s cubic-bezier(.45,0,.25,1),scale 1.4s ease-in-out,opacity .5s ease .9s;';
                 copie.appendChild(m.inner.cloneNode(true));
                 document.body.appendChild(copie);
                 requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -29920,21 +30101,22 @@
             const voile = document.createElement('div');
             voile.style.cssText = 'position:fixed;inset:0;z-index:2147483000;touch-action:none;';
             document.body.appendChild(voile);
-            // Bascule (David, 16/11) : la caméra se couche jusqu'à l'horizon (85°, au-delà
-            // du plafond de jeu de 75°, rétabli au retour) ; puis l'écran de
-            // cristallisation se redresse depuis le bas (#ritualEngrave.bascule).
-            map.setMaxPitch(85);
+            // 22/11 : plongée adoucie (David) — zoom plus court et plus lent, la
+            // caméra s'incline sans se coucher jusqu'à l'horizon (l'ancienne bascule
+            // à 85° est retirée) ; l'écran de cristallisation arrive en fondu
+            // (#ritualEngrave.fondu) pendant la fin du mouvement.
             map.easeTo({
-                center: [poi.lng, poi.lat], zoom: Math.min(20.6, map.getZoom() + 1.8), pitch: 85,
+                center: [poi.lng, poi.lat], zoom: Math.min(20.6, map.getZoom() + 1.1),
+                pitch: Math.min(72, map.getPitch() + 8),
                 bearing: map.getBearing(), padding: { top: 0, bottom: 0, left: 0, right: 0 },
-                duration: 900, easing: t => t * t * (3 - 2 * t)
+                duration: 1500, easing: t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
             });
             setTimeout(() => {
                 voile.remove();
-                document.getElementById('ritualEngrave').classList.add('bascule');
+                document.getElementById('ritualEngrave').classList.add('fondu');
                 suite();
-            }, 600);
-            setTimeout(() => { if (copie) copie.remove(); }, 1300);
+            }, 1100);
+            setTimeout(() => { if (copie) copie.remove(); }, 1600);
             return true;
         }
         function _plongeeRetour() {
@@ -29945,14 +30127,13 @@
             _camZoomProche = p.zoom;
             map.easeTo({
                 center: [ll.lng, ll.lat], zoom: p.zoom, pitch: _camPitch(p.zoom), bearing: p.bearing,
-                padding: _camPadding('close'), duration: 800, easing: t => t * t * (3 - 2 * t)
+                padding: _camPadding('close'), duration: 1100, easing: t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
             });
             setTimeout(() => {
                 _viewTransition = false;
                 document.body.classList.remove('en-plongee');
-                document.getElementById('ritualEngrave').classList.remove('bascule');
-                try { map.setMaxPitch(75); } catch (e) {}
-            }, 820);
+                document.getElementById('ritualEngrave').classList.remove('fondu');
+            }, 1120);
         }
 
         function openCollectRitual(card, opts) {
@@ -36259,13 +36440,27 @@
         // La carte n'est redessinée en continu que pendant la marche (batterie).
         // ══════════════════════════════════════════════════════════════
         const AVATAR_3D = /[?&]avatar3d=1(&|$)/.test(location.search);
+        // three.js chargé une seule fois, en module (23/11), pour l'avatar 3D et les
+        // modèles des bâtiments. Les URL « +esm » de jsDelivr réécrivent l'import
+        // de three dans GLTFLoader vers la même URL : une seule instance de three.
+        // Échec (réseau) : la promesse est oubliée, un prochain appel retente.
+        let _threePromesse = null;
+        function _chargerThree() {
+            if (!_threePromesse) {
+                _threePromesse = Promise.all([
+                    import('https://cdn.jsdelivr.net/npm/three@0.149.0/+esm'),
+                    import('https://cdn.jsdelivr.net/npm/three@0.149.0/examples/jsm/loaders/GLTFLoader.js/+esm')
+                ]).then(([THREE, chargeurs]) => ({ THREE, GLTFLoader: chargeurs.GLTFLoader }))
+                  .catch(e => { _threePromesse = null; throw e; });
+            }
+            return _threePromesse;
+        }
         function _avatar3dInit() {
             if (!AVATAR_3D || !map || map.getLayer('avatar-3d')) return;
-            const s = document.createElement('script');
-            s.src = 'https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js';
-            s.onload = () => { try { _avatar3dCouche(); } catch (e) { console.warn('[expLore] avatar 3D indisponible', e); } };
-            s.onerror = () => console.warn('[expLore] three.js non chargé : avatar 2D conservé');
-            document.head.appendChild(s);
+            _chargerThree().then(({ THREE }) => {
+                window.THREE = THREE;   // _avatar3dCouche lit window.THREE
+                try { _avatar3dCouche(); } catch (e) { console.warn('[expLore] avatar 3D indisponible', e); }
+            }, () => console.warn('[expLore] three.js non chargé : avatar 2D conservé'));
         }
         function _avatar3dCouche() {
             const T = window.THREE;
