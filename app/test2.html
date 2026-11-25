@@ -26452,33 +26452,8 @@
             // Labels de zone = badges HTML (nom + barre + %), plus lisibles qu'un label
             // MapLibre. Créés par initZoneBadges(), mis à jour par updateZoneBadges().
 
-            // ── Points-souvenirs (v3, §3.4) ──
-            // Au-dessus des zones, sous les POI. Teinte par type.
-            map.addSource('visited-points', {
-                type: 'geojson',
-                data: buildVisitedPointsGeoJSON()
-            });
-            map.addLayer({
-                id: 'visited-points-layer',
-                type: 'circle',
-                source: 'visited-points',
-                paint: {
-                    'circle-radius': 3,
-                    'circle-color': [
-                        'match', ['get', 'type'],
-                        'card', '#C89039',       // or — cartes
-                        'panorama', '#8FB3D4',   // bleu-pierre — panoramas
-                        'info', '#B76E39',       // cuivre — points d'info
-                        'scroll', '#EBCC7E',     // ambre — parchemins
-                        'mystery', '#9E7BAE',    // améthyste — mystères
-                        '#B4A98F'                // fallback
-                    ],
-                    'circle-opacity': 0.65,
-                    'circle-stroke-color': '#F6F2E8',
-                    'circle-stroke-width': 0.5,
-                    'circle-stroke-opacity': 0.4
-                }
-            });
+            // Points-souvenirs (v3, §3.4) : couche retirée de la carte le 25/11 (points
+            // rémanents incompris). Les données restent enregistrées : la jauge s'en sert.
 
             map.addSource('poi-circles', { promoteId: 'id',   // état « à portée » par feature (16/11)
                 type: 'geojson',
