@@ -10609,7 +10609,7 @@
             </div>
 
             <!-- Bandeau version (discret, en haut à gauche sous l'avatar) -->
-            <div class="hud-version" id="hudVersion">v1.9.102</div>
+            <div class="hud-version" id="hudVersion">v1.9.103</div>
 
             <!-- Dust counter (top-right) -->
             <div class="hud-dust">
@@ -15231,6 +15231,8 @@
             "sacoche verte": "green satchel", "sacoche noire": "black satchel", "étui à parchemins": "scroll case",
             "sac à dos": "backpack", "sacoche de ceinture": "belt pouch",
             "casquette": "cap", "béret": "beret", "besicles": "spectacles", "cache-œil": "eyepatch",
+            "pull de Noël": "Christmas jumper", "bonnet de Noël": "Santa hat", "tricorne": "tricorne",
+            "costume de squelette": "skeleton costume", "pantalon de squelette": "skeleton trousers", "chapeau de sorcière": "witch hat",
             "Penderie": "Wardrobe", "Change de tenue avant de ressortir.": "Change your outfit before heading out.",
             "✓ Disponible": "✓ Available",
             "★ Quête suivie": "★ Quest tracked",
@@ -24785,9 +24787,11 @@
                 const kind = poiCollectedKind[poiId];
                 const getter = POI_KIND_ARRAYS[kind];
                 if (getter) {
+                    // Toutes les occurrences : une sauvegarde peut porter un doublon
+                    // (ancien double tap), qui bloquait le respawn pour de bon.
                     const arr = getter();
-                    const idx = arr.indexOf(poiId);
-                    if (idx >= 0) {
+                    let idx;
+                    while ((idx = arr.indexOf(poiId)) >= 0) {
                         arr.splice(idx, 1);
                         changed = true;
                     }
@@ -24797,8 +24801,12 @@
             });
             if (changed) {
                 if (typeof saveProgress === 'function') saveProgress();
-                // Rafraîchir l'affichage carte des POI sans bruit pour le joueur
-                if (typeof updatePOIVisibility === 'function') updatePOIVisibility();
+                // Rafraîchir l'affichage carte sans bruit pour le joueur. Toutes les
+                // ressources : seuls les POI de cartes étaient réaffichés, une orbe
+                // revenue restait cachée jusqu'à la collecte suivante du même type.
+                [updatePOIVisibility, updateDustVisibility, updateEchoVisibility, updateOrbVisibility,
+                 updateScrollVisibility, updateLootVisibility, updateCarnetResourceVisibility]
+                    .forEach(f => { try { f(); } catch (e) {} });
             }
         }
         // Tick toutes les 10 secondes — assez réactif sans surcharger
@@ -25518,8 +25526,10 @@
                     // ressource sont bien visibles, même si une vieille build les avait cachés sans flag
                     setTimeout(() => {
                         if (typeof carnetResourceMarkers !== 'undefined') {
-                            carnetResourceMarkers.forEach(({ el }) => {
-                                if (el && el.style.display === 'none' && !el.dataset.obHidden) {
+                            carnetResourceMarkers.forEach(({ el, pt }) => {
+                                // Une ressource ramassée garde son marqueur caché (respawn).
+                                if (el && el.style.display === 'none' && !el.dataset.obHidden
+                                    && !(pt && collectedCarnetResources.includes(pt.id))) {
                                     el.style.display = '';
                                 }
                             });
@@ -25648,11 +25658,13 @@
 
             // ---- Carnet resource markers (cassettes/pellicules/encre) ----
             CARNET_RESOURCE_POINTS.forEach(pt => {
-                if (collectedCarnetResources.includes(pt.id)) return;
+                // Ramassée : marqueur créé quand même, caché, pour qu'elle puisse
+                // réapparaître au respawn sans recharger la page.
                 const type = _getCarnetResourceType(pt.id);
                 const el = document.createElement('div');
                 el.style.cssText = 'width:0;height:0;overflow:visible;cursor:default;';
                 if (!_obDone) { el.dataset.obHidden = 'true'; el.style.display = 'none'; }
+                if (collectedCarnetResources.includes(pt.id)) el.style.display = 'none';
                 const inner = document.createElement('div');
                 inner.style.cssText = 'position:absolute;transform:translate(-50%,-62%);width:54px;pointer-events:all;cursor:pointer;display:flex;align-items:center;justify-content:center;';
                 const _crIcon = document.createElement('div');
@@ -25944,6 +25956,9 @@
             { id: 'h10', n: 'veste prune', c: '#5d3a52', b: '#492e41', in: '#ddd4bd' },
             { id: 'h11', n: 'manteau sable', c: '#b59a6e', b: '#9a8159', in: '#e8e0cc' },
             { id: 'h12', n: 'gilet sombre', c: '#3a3730', b: '#2d2b25', in: '#cfc6ad' },
+            // Tenues de fête (26/11) : motif dessiné sur le buste (et les bras).
+            { id: 'h_noel', n: 'pull de Noël', c: '#a3242c', b: '#8a1d24', in: '#a3242c', motif: 'noel' },
+            { id: 'h_squelette', n: 'costume de squelette', c: '#1e1b22', b: '#1e1b22', in: '#1e1b22', motif: 'squelette' },
         ];
         // Bas (lot 2, David 19/10) : six pantalons et six jupes, mêmes teintes.
         // Écart au prototype (12 pantalons) voulu par le brief. Jupe : trapèze à la
@@ -25955,6 +25970,7 @@
             { id: 'j1', n: 'jupe anthracite', c: '#36383c', jupe: true }, { id: 'j2', n: 'jupe olive', c: '#454c37', jupe: true },
             { id: 'j3', n: 'jupe brune', c: '#5a4330', jupe: true }, { id: 'j4', n: 'jupe bleu nuit', c: '#2f3b52', jupe: true },
             { id: 'j5', n: 'jupe sable', c: '#8c7a5c', jupe: true }, { id: 'j6', n: 'jupe prune', c: '#4a3340', jupe: true },
+            { id: 'b_squelette', n: 'pantalon de squelette', c: '#1e1b22', os: true },   // Halloween (26/11)
         ];
         const AV_COLLANT = '#3b302a';
         const AV_ACCESSOIRES = [
@@ -25976,6 +25992,9 @@
             { id: 't_feutre', n: 'chapeau', c: '#5c4028' },
             { id: 't_gavroche', n: 'casquette', c: '#36405a' },
             { id: 't_beret', n: 'béret', c: '#3f4a36' },
+            { id: 't_tricorne', n: 'tricorne', c: '#2a2420' },
+            { id: 't_bonnet_noel', n: 'bonnet de Noël', c: '#a3242c' },
+            { id: 't_sorciere', n: 'chapeau de sorcière', c: '#24202c' },
         ];
         const AV_VISAGES = [
             { id: 'v_simple', n: 'simple' }, { id: 'v_rondes', n: 'lunettes rondes' },
@@ -26078,10 +26097,12 @@
             let s = '';
             s += `<ellipse class="avatar-shadow" cx="18" cy="46.4" rx="8" ry="2.4" fill="rgba(0,0,0,0.28)"/>`;
             s += `<g class="avatar-leg-l" style="transform-origin:14.4px 31px;">
-                    <rect x="11.2" y="31" width="6.4" height="11.4" rx="2.6" fill="${b}"/>
+                    <rect x="11.2" y="31" width="6.4" height="11.4" rx="2.6" fill="${b}"/>${bas.os ? `
+                    <rect x="13.9" y="32.4" width="1" height="8.4" rx=".5" fill="#ece6d8"/>` : ''}
                     <rect x="10" y="41.4" width="8.2" height="4" rx="1.8" fill="#2a2420"/></g>`;
             s += `<g class="avatar-leg-r" style="transform-origin:21.6px 31px;">
-                    <rect x="18.4" y="31" width="6.4" height="11.4" rx="2.6" fill="${b}"/>
+                    <rect x="18.4" y="31" width="6.4" height="11.4" rx="2.6" fill="${b}"/>${bas.os ? `
+                    <rect x="21.1" y="32.4" width="1" height="8.4" rx=".5" fill="#ece6d8"/>` : ''}
                     <rect x="17.8" y="41.4" width="8.2" height="4" rx="1.8" fill="#2a2420"/></g>`;
             s += `<g class="avatar-body-g" style="transform-origin:18px 24px;">`;
             if (bas.jupe) s += `<path d="M11.4 28.6 L24.6 28.6 L27.2 37.4 Q18 39.2 8.8 37.4 Z" fill="${bas.c}"/>`;
@@ -26091,10 +26112,24 @@
             s += `<path d="M10.4 21 q0 -3.4 3.4 -3.4 l1.4 0 l0 14 l-4.8 0 Z" fill="${h.c}"/>`;
             s += `<path d="M25.6 21 q0 -3.4 -3.4 -3.4 l-1.4 0 l0 14 l4.8 0 Z" fill="${h.c}"/>`;
             if (h.bret) s += `<path d="M14.6 17.8 L21.6 31.4" stroke="${h.bret}" stroke-width="1.8"/>`;
+            // Pull de Noël : bande de losanges blancs entre deux filets.
+            if (h.motif === 'noel')
+                s += `<g fill="#f2ede4"><rect x="10.4" y="21.4" width="15.2" height=".8"/><rect x="10.4" y="25.4" width="15.2" height=".8"/>
+                      <path d="M12.6 22.8 l1 1 l-1 1 l-1 -1 Z M15.3 22.8 l1 1 l-1 1 l-1 -1 Z M18 22.8 l1 1 l-1 1 l-1 -1 Z
+                               M20.7 22.8 l1 1 l-1 1 l-1 -1 Z M23.4 22.8 l1 1 l-1 1 l-1 -1 Z"/></g>`;
+            // Costume de squelette : colonne et côtes.
+            if (h.motif === 'squelette')
+                s += `<g fill="#ece6d8"><rect x="17.4" y="18.4" width="1.2" height="12" rx=".5"/>
+                      <rect x="13.2" y="19.8" width="9.6" height="1.1" rx=".55"/><rect x="13.6" y="22.2" width="8.8" height="1.1" rx=".55"/>
+                      <rect x="14.2" y="24.6" width="7.6" height="1.1" rx=".55"/>
+                      <path d="M14.4 28.4 q3.6 -1.6 7.2 0 l-.6 1.6 q-3 -1 -6 0 Z"/></g>`;
+            const brasMotif = h.motif === 'squelette'
+                ? (x) => `<rect x="${x}" y="20.6" width="1" height="7" rx=".5" fill="#ece6d8"/>`
+                : h.motif === 'noel' ? (x) => `<rect x="${x - 2.8}" y="26.6" width="6.6" height="2.2" rx="1" fill="#f2ede4"/>` : () => '';
             s += `<g class="avatar-arm-l" style="transform-origin:11px 20px;">
-                    <rect x="4.6" y="19.2" width="6.6" height="9.6" rx="3" fill="${h.b}"/></g>`;
+                    <rect x="4.6" y="19.2" width="6.6" height="9.6" rx="3" fill="${h.b}"/>${brasMotif(7.4)}</g>`;
             s += `<g class="avatar-arm-r" style="transform-origin:25px 20px;">
-                    <rect x="24.8" y="19.2" width="6.6" height="9.6" rx="3" fill="${h.b}"/></g>`;
+                    <rect x="24.8" y="19.2" width="6.6" height="9.6" rx="3" fill="${h.b}"/>${brasMotif(27.6)}</g>`;
             if (acc && acc.k === 'echarpe')
                 s += `<path d="M12.6 18.4 q5.4 2.6 10.8 0 l0 2.6 q-5.4 2.6 -10.8 0 Z" fill="${acc.c}"/>
                       <path d="M21.4 20.6 l2.6 0 l-.6 6.4 l-2.4 0 Z" fill="${acc.c}"/>`;
@@ -26144,6 +26179,22 @@
             if (cha && cha.id === 't_beret')
                 s += `<path d="M10.6 6.2 q0 -5 7.4 -5 q7.4 0 7.4 5 q-7.4 1.6 -14.8 0 Z" fill="${cha.c}"/>
                       <circle cx="18" cy="1" r="1.2" fill="${cha.c}"/>`;
+            // Tricorne : bords relevés en trois pointes, galon doré sur le bord.
+            if (cha && cha.id === 't_tricorne')
+                s += `<path d="M12.4 5.4 q0 -4.8 5.6 -4.8 q5.6 0 5.6 4.8 Z" fill="${cha.c}"/>
+                      <path d="M6.6 6.2 Q8.4 1.4 13 2.6 Q15.6 3.4 18 3 Q20.4 3.4 23 2.6 Q27.6 1.4 29.4 6.2
+                               Q24.6 4.6 18 8 Q11.4 4.6 6.6 6.2 Z" fill="${cha.c}"/>
+                      <path d="M6.6 6.2 Q11.4 4.6 18 8 Q24.6 4.6 29.4 6.2" fill="none" stroke="#c9a24a" stroke-width=".8"/>`;
+            // Bonnet de Noël : pointe retombant à droite, bordure et pompon blancs.
+            if (cha && cha.id === 't_bonnet_noel')
+                s += `<path d="M10.6 5.2 Q11.6 0.2 18.6 0.2 Q26 0.4 28.8 5.6 L27 5.8 Q25.6 2.6 22.8 2 Q24.4 3.4 25.2 5.2 Z" fill="${cha.c}"/>
+                      <circle cx="28" cy="6.4" r="1.9" fill="#f2ede4"/>
+                      <rect x="9.6" y="4.4" width="16.8" height="2.8" rx="1.4" fill="#f2ede4"/>`;
+            // Chapeau de sorcière : pointe cassée vers la droite, ruban violet.
+            if (cha && cha.id === 't_sorciere')
+                s += `<path d="M12.4 6 L15.4 1 Q17.4 -2.6 21.2 -2.4 Q25 -2 26.8 .6 Q22.8 -.4 21.4 1.2 L23.6 6 Z" fill="${cha.c}"/>
+                      <path d="M14.2 3 L22.2 3 L22.9 4.4 L13.4 4.4 Z" fill="#6b3f8f"/>
+                      <ellipse cx="18" cy="6.2" rx="11.8" ry="2.2" fill="${cha.c}"/>`;
             s += `</g>`;
             if (repere === 'studio') return `<g transform="scale(1.42) translate(-18,-45.4)">${s}</g>`;
             return s;
@@ -27454,13 +27505,19 @@
         // ── Animation collecte sur icône ──
         function _animateCollect(inner, onDone) {
             if (!inner) { if (onDone) onDone(); return; }
+            // Double tap pendant l'animation : ignoré. Sinon le second appel
+            // mémorisait poiCollect comme animation « d'origine » et la remettait
+            // à la fin (icône transparente pour de bon, zone seule visible au
+            // respawn), et la ressource était comptée deux fois.
+            if (inner.dataset.collecte === '1') return;
+            inner.dataset.collecte = '1';
             const _anim = inner.style.animation;
             inner.style.transition = 'none';
             inner.style.animation = 'poiCollect 0.45s ease forwards';
             // La collecte masque le marqueur (display:none) : on lui rend aussitôt
             // son animation d'origine. Sans ça, l'état final de poiCollect
             // (opacité 0) survivait au respawn : la zone revenait, l'orbe non.
-            setTimeout(() => { try { if (onDone) onDone(); } finally { inner.style.animation = _anim; } }, 450);
+            setTimeout(() => { try { if (onDone) onDone(); } finally { inner.style.animation = _anim; delete inner.dataset.collecte; } }, 450);
         }
 
         // ── Feedback tap sur icône POI (style Pokémon GO) ──
